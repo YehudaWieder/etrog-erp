@@ -1,0 +1,553 @@
+// Database configuration
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// -----------------------------------------------------------------------------
+// 1. System Settings
+// -----------------------------------------------------------------------------
+model SystemConfig {
+  id         Int      @id @default(1)
+  fields     String[]
+  categories String[]
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// -----------------------------------------------------------------------------
+// 2. Season Management (The Time-Tenant)
+// -----------------------------------------------------------------------------
+model Season {
+  id          Int      @id @default(autoincrement())
+  yearName    Int      @unique // e.g. "2026"
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  slug        String   @unique    // URL-friendly slug
+
+  // Relations
+  fieldHarvests        FieldHarvest[]
+  classifications      Classification[]
+  traderStocks         TraderStock[]
+  customerAllocations  CustomerAllocation[]
+  Customers            Customer[]
+}
+
+// -----------------------------------------------------------------------------
+// 3. User Management
+// -----------------------------------------------------------------------------
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String   @unique
+  email        String   @unique
+  phone        String?  @unique
+  passwordHash String
+  role         Role     @default(WORKER)
+  isActive     Boolean  @default(true)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  slug         String   @unique    // URL-friendly slug
+
+  // Relations
+  fieldHarvests        FieldHarvest[]
+  classifications      Classification[]
+  customerAllocations  CustomerAllocation[]
+  traderStocks         TraderStock[]
+  sentMessages         Message[]            @relation("SentMessages")
+  receivedMessages     Message[]            @relation("ReceivedMessages")
+}
+
+// -----------------------------------------------------------------------------
+// 4. Traders
+// -----------------------------------------------------------------------------
+model Trader {
+  id         Int          @id @default(autoincrement())
+  name       String       @unique
+  stockPercent    Decimal @default(0)
+  paymentPercent  Decimal @default(0)
+  
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  slug       String   @unique    // URL-friendly slug
+
+  // Relations
+  classifications Classification[]
+  traderStocks    TraderStock[]
+}
+
+// -----------------------------------------------------------------------------
+// 5. Customer
+// -----------------------------------------------------------------------------
+model Customer {
+  id           Int      @id @default(autoincrement())
+  customerName String   @unique
+  email        String?  @unique
+  phone        String?  @unique
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  slug         String   @unique    // URL-friendly slug
+
+  // Relations
+  prices                CustomerPrice[]
+  allocations           CustomerAllocation[]
+  classifications       Classification[]
+
+  @@unique([customerName])
+  @@index([customerName])
+}
+
+// -----------------------------------------------------------------------------
+// 6. Customer categories and prices
+// -----------------------------------------------------------------------------
+model CustomerCategories {
+  id           Int      @id @default(autoincrement())
+  seasonId     Int
+  season       Season   @relation(fields: [seasonId], references: [id])
+  
+  customerId   Int
+  customer     Customer @relation(fields: [customerId], references: [id])
+  
+  category     String
+  grade        Grade
+  price        Decimal  @default(0)
+
+  @@unique([seasonId, customerId, category, grade])
+}
+
+// -----------------------------------------------------------------------------
+// 7. Field Operations
+// -----------------------------------------------------------------------------
+model FieldHarvest {
+  id              Int      @id @default(autoincrement())
+  
+  seasonId        Int
+  season          Season   @relation(fields: [seasonId], references: [id])
+  
+  dateGregorian   DateTime
+  dateHebrew      String
+  fieldName       String   
+  
+  updatedById     Int
+  updatedBy       User     @relation(fields: [updatedById], references: [id])
+  
+  totalHarvested  Int      @default(0)
+  totalRejected   Int      @default(0)
+  rejectionRate   Decimal  @default(0)
+  
+  ownerHarvested  Int         @default(0)
+  ownerRejected   Int         @default(0)
+  ownerRejectionRate Decimal  @default(0)
+
+  slug            String   @unique // URL-friendly ID (date-field-season)
+  
+  // Relations
+  classifications Classification[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  isDeleted  Boolean   @default(false)
+
+  @@unique([seasonId, dateGregorian, fieldName]) // Prevent duplicate reports per season
+  @@index([seasonId])
+  @@index([seasonId, fieldName])
+}
+
+// -----------------------------------------------------------------------------
+// 8. Grading & Classification
+// -----------------------------------------------------------------------------
+model Classification {
+  id             Int          @id @default(autoincrement())
+  
+  seasonId       Int
+  season         Season       @relation(fields: [seasonId], references: [id])
+  
+  fieldHarvestId Int
+  fieldHarvest   FieldHarvest @relation(fields: [fieldHarvestId], references: [id])
+  
+  updatedById    Int
+  updatedBy      User         @relation(fields: [updatedById], references: [id])
+  
+  assignmentType AssignmentType
+  traderId       Int?         
+  trader         Trader?      @relation(fields: [traderId], references: [id])
+  customerId     Int?         
+  customer       Customer?    @relation(fields: [customerId], references: [id])   
+  
+  category       String
+  grade          Grade
+  pitamStatus    PitamStatus
+  quantity       Int          @default(0)
+  
+  notes          String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  slug         String   @unique    // URL-friendly slug
+
+  isDeleted  Boolean   @default(false)
+
+  @@unique([fieldHarvestId, category, grade, assignmentType])
+  @@index([seasonId])
+  @@index([seasonId, fieldHarvestId])
+  @@index([seasonId, assignmentType])
+  @@index([seasonId, traderId])
+  @@index([seasonId, customerId])
+}
+
+// -----------------------------------------------------------------------------
+// 9. Trader Inventory & Buffer Management
+// -----------------------------------------------------------------------------
+model TraderStock {
+  id             Int          @id @default(autoincrement())
+  
+  seasonId       Int
+  season         Season       @relation(fields: [seasonId], references: [id])
+  
+  traderId       Int?         // null if Modulo
+  trader         Trader?      @relation(fields: [traderId], references: [id])
+  
+  date           DateTime
+  category       String
+  grade          Grade
+  pitamStatus    PitamStatus
+  quantity       Int          @default(0)
+  isModulo       Boolean      @default(false)
+  
+  type           MovementType @default(HARVEST_IN) 
+  referenceId    Int?         // ID of Classification or CustomerAllocation or Shipment
+  notes          String?  
+
+  // Links to shipment hierarchy
+  shipmentId     Int?         
+  shipment       Shipment?    @relation(fields: [shipmentId], references: [id])
+  boxId          Int?         
+  box            Box?         @relation(fields: [boxId], references: [id])
+  shipmentItemId Int?         
+  shipmentItem   ShipmentItem? @relation(fields: [shipmentItemId], references: [id])
+
+  updatedById    Int
+  updatedBy      User         @relation(fields: [updatedById], references: [id])
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  isDeleted  Boolean   @default(false)
+
+  @@unique([seasonId, traderId, date, category, grade, pitamStatus, referenceId, type])
+  @@index([seasonId, type])
+  @@index([seasonId, traderId, type])
+  @@index([category, grade, pitamStatus, type])
+  @@index([shipmentId])
+  @@index([boxId])
+  @@index([shipmentItemId])
+}
+
+// -----------------------------------------------------------------------------
+// 10. Customer Allocations (Sales)
+// -----------------------------------------------------------------------------
+model CustomerAllocation {
+  id             Int          @id @default(autoincrement())
+  
+  seasonId       Int
+  season         Season       @relation(fields: [seasonId], references: [id])
+  
+  customerId     Int         
+  customer       Customer     @relation(fields: [customerId], references: [id])
+
+  date           DateTime
+  dateHebrew     String
+
+  category       String
+  pitamStatus    PitamStatus
+  grade          Grade
+  quantity       Int
+
+  type           MovementType @default(HARVEST_IN)
+  
+  takenFrom      SourceType   @default(GENERAL)
+  traderId Int? 
+  traderSourceName Trader?    @relation(fields: [traderId], references: [id])
+
+  referenceId     Int?        // ID of Classification or TraderStock or Shipment
+  notes           String?      
+
+  // Links to shipment hierarchy
+  shipmentId     Int?         
+  shipment       Shipment?    @relation(fields: [shipmentId], references: [id])
+  boxId          Int?         
+  box            Box?         @relation(fields: [boxId], references: [id])
+  shipmentItemId Int?         
+  shipmentItem   ShipmentItem? @relation(fields: [shipmentItemId], references: [id])
+  
+  updatedById    Int
+  updatedBy      User         @relation(fields: [updatedById], references: [id])
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  isDeleted  Boolean   @default(false)
+
+  @@unique([seasonId, customerId, date, category, grade, pitamStatus, takenFrom, traderId, referenceId, type])
+  @@index([seasonId, type])
+  @@index([seasonId, customerId, type])
+  @@index([customerId, traderId, type])
+  @@index([category, grade, pitamStatus, type])
+  @@index([shipmentId])
+  @@index([boxId])
+  @@index([shipmentItemId])
+}
+
+// -----------------------------------------------------------------------------
+// 11. Shipment
+// -----------------------------------------------------------------------------
+model Shipment {
+  id              Int              @id @default(autoincrement())
+  seasonId        Int
+  season          Season           @relation(fields: [seasonId], references: [id])
+    
+  totalBoxes      Int              @default(0)
+  totalQuantity   Int              @default(0)
+  
+  status          ShipmentStatus   @default(PREPARING)
+  shippedAt       DateTime?      
+
+  notes           String?   
+  
+  // Relations: One Shipment -> Many Boxes -> Many Items
+  boxes           Box[]            
+  items           ShipmentItem[]   
+
+  // Direct link to inventory movements for fast aggregation
+  traderStocks    TraderStock[]    
+  allocations     CustomerAllocation[]
+
+  updatedById     Int
+  updatedBy       User             @relation(fields: [updatedById], references: [id])
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  slug            String           @unique
+
+  isDeleted  Boolean   @default(false)
+
+  @@unique([seasonId, id])
+  @@index([seasonId])
+  @@index([seasonId, status])
+}
+
+// -----------------------------------------------------------------------------
+// 12. Box - Container
+// -----------------------------------------------------------------------------
+model Box {
+  id              Int            @id @default(autoincrement())
+  shipmentId      Int
+  shipment        Shipment       @relation(fields: [shipmentId], references: [id])
+  
+  boxNumber       Int            // e.g., Box #1 in Shipment X
+  boxType         BoxType        
+  totalQuantity   Int            @default(0)
+
+  status          BoxStatus      @default(OPEN) 
+
+  notes           String? 
+  
+  // Relations: One Box -> Many Items
+  items           ShipmentItem[]
+  
+  // Link to stock for "Where is this specific item located?"
+  traderStocks    TraderStock[]
+  allocations     CustomerAllocation[]
+
+  // Ownership
+  ownershipType   BoxOwnership   @default(UNASSIGNED)
+  traderId        Int?           // optional, if ownershipType = TRADER
+  trader          Trader?        @relation(fields: [traderId], references: [id])
+  customerId      Int?           // optional, if ownershipType = CUSTOMER
+  customer        Customer?
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  isDeleted  Boolean   @default(false)
+
+  @@unique([shipmentId, boxNumber])
+  @@index([seasonId])
+  @@index([shipmentId])
+  @@index([traderId])
+  @@index([customerId])
+  @@index([seasonId, status])
+  @@index([traderId, status])
+  @@index([customerId, status])
+}
+
+// -----------------------------------------------------------------------------
+// 13. Items - Products
+// -----------------------------------------------------------------------------
+model ShipmentItem {
+  id              Int            @id @default(autoincrement())
+  shipmentId      Int
+  shipment        Shipment       @relation(fields: [shipmentId], references: [id])
+  
+  boxId           Int
+  box             Box            @relation(fields: [boxId], references: [id])
+  
+  // Product Specs (Snapshot of what was packed)
+  category        String
+  grade           Grade
+  pitamStatus     PitamStatus
+  quantity        Int      
+        
+  notes           String?
+
+  // Strong reference: Every item row corresponds to an inventory "minus" row
+  traderStocks    TraderStock[]  
+  allocations     CustomerAllocation[]
+
+  // Ownership
+  ownershipType   ItemOwnership  @default(UNASSIGNED)
+  traderId        Int?           // optional, if ownershipType = TRADER
+  trader          Trader?        @relation(fields: [traderId], references: [id])
+  customerId      Int?           // optional, if ownershipType = CUSTOMER
+  customer        Customer?
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  isDeleted  Boolean   @default(false)
+
+  @@unique([boxId, category, grade, pitamStatus, ownershipType, traderId, customerId])
+  @@index([shipmentId])
+  @@index([boxId])
+  @@index([seasonId])
+  @@index([customerId])
+  @@index([seasonId, shipmentId])
+  @@index([traderId, shipmentId])
+  @@index([customerId, shipmentId])
+}
+
+// -----------------------------------------------------------------------------
+// 14. Internal Messaging System
+// -----------------------------------------------------------------------------
+model Message {
+  id            Int          @id @default(autoincrement())
+  
+  senderId      Int
+  sender        User         @relation("SentMessages", fields: [senderId], references: [id])
+  
+  recipientId   Int?         
+  recipient     User?        @relation("ReceivedMessages", fields: [recipientId], references: [id])
+  
+  subject       String
+  content       String       @db.Text
+  priority      Priority     @default(NORMAL)
+  isRead        Boolean      @default(false)
+
+  createdAt     DateTime     @default(now())
+
+  @@index([recipientId])
+  @@index([senderId])
+  @@index([recipientId, isRead])
+}
+
+// -----------------------------------------------------------------------------
+// Enums
+// -----------------------------------------------------------------------------
+enum Role {
+  OWNER
+  MANAGER
+  WORKER
+}
+
+enum PitamStatus {
+  WITH_PITAM    
+  WITHOUT_PITAM 
+  MIXED         
+}
+
+enum Grade {
+  A, B, C, D, E, F
+}
+
+enum AssignmentType {
+  GENERAL
+  TRADER
+  CUSTOMER
+}
+
+enum SourceType {
+  GENERAL
+  TRADER
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum MovementType {
+  // --- Inbound Operations ---
+  HARVEST_IN        // Initial entry from field sorting/grading (Positive)
+  
+  // --- Inventory Logic & Ownership Transfers ---
+  INTERNAL_TRANSFER // Transfer between entities (e.g., Modulo to Trader, or Trader to Customer)
+  
+  // --- Physical Outbound Operations ---
+  PACKED_SHIPPED    // Goods physically left the warehouse via shipment (Negative)
+  SELF_PICKUP       // Goods physically collected by the owner/customer (Negative)
+  
+  // --- Adjustments & Losses ---
+  WASTE             // Spoilage, damage, or quality rejection (Negative)
+  ADJUSTMENT        // Manual inventory correction for typos or audits (Positive/Negative)
+}
+
+enum ShipmentStatus {
+  PREPARING // Not yet departed
+  SHIPPED   // Gone from warehouse
+  DELIVERED // Reached customer
+  CANCELLED // Reverted
+}
+
+enum BoxStatus {
+  OPEN      // Editing allowed
+  CLOSED    // Packed and sealed
+  SHIPPED   // Dispatched
+}
+
+enum BoxType {
+  SMALL
+  MEDIUM
+  LARGE
+  CUSTOM 
+}
+
+enum BoxOwnership {
+  TRADER
+  CUSTOMER
+  SHARED
+  UNASSIGNED
+  CUSTOM
+}
+
+enum ItemOwnership {
+  TRADER
+  CUSTOMER
+  CUSTOM
+}
