@@ -14,7 +14,8 @@ generator client {
 model SystemConfig {
   id         Int      @id @default(1)
   fields     String[]
-  categories String[]
+  currency   Currency?
+  unitPrice  Decimal?
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -33,12 +34,16 @@ model Season {
 
   slug        String   @unique    // URL-friendly slug
 
-  // Relations
+  // 
+  TradersCategories    TradersCategories[]
+  customerCategories   CustomerCategories[]
   fieldHarvests        FieldHarvest[]
   classifications      Classification[]
   traderStocks         TraderStock[]
   customerAllocations  CustomerAllocation[]
-  Customers            Customer[]
+  shipment             Shipment[]
+  box                  Box[]
+  shipmentItem         ShipmentItem[]
 }
 
 // -----------------------------------------------------------------------------
@@ -61,8 +66,11 @@ model User {
   // Relations
   fieldHarvests        FieldHarvest[]
   classifications      Classification[]
-  customerAllocations  CustomerAllocation[]
   traderStocks         TraderStock[]
+  customerAllocations  CustomerAllocation[]
+  shipment             Shipment[]
+  box                  Box[]
+  shipmentItem         ShipmentItem[]
   sentMessages         Message[]            @relation("SentMessages")
   receivedMessages     Message[]            @relation("ReceivedMessages")
 }
@@ -73,7 +81,7 @@ model User {
 model Trader {
   id         Int          @id @default(autoincrement())
   name       String       @unique
-  stockPercent    Decimal @default(0)
+
   paymentPercent  Decimal @default(0)
   
   createdAt  DateTime     @default(now())
@@ -84,6 +92,9 @@ model Trader {
   // Relations
   classifications Classification[]
   traderStocks    TraderStock[]
+  customerAllocations  CustomerAllocation[]
+  box                  Box[]
+  shipmentItem         ShipmentItem[]
 }
 
 // -----------------------------------------------------------------------------
@@ -101,16 +112,38 @@ model Customer {
   slug         String   @unique    // URL-friendly slug
 
   // Relations
-  prices                CustomerPrice[]
+  prices                CustomerCategories[]
   allocations           CustomerAllocation[]
   classifications       Classification[]
+  box                   Box[]
+  shipmentItem          ShipmentItem[]
 
   @@unique([customerName])
   @@index([customerName])
 }
 
 // -----------------------------------------------------------------------------
-// 6. Customer categories and prices
+// 6. Traders categories and prices
+// -----------------------------------------------------------------------------
+model TradersCategories {
+  id        Int      @id @default(autoincrement())
+  name      String   // Category name (e.g., "Yanover")
+  notes     String?
+  seasonId  Int
+  season    Season   @relation(fields: [seasonId], references: [id])
+
+  classifications  Classification[]
+  traderStocks     TraderStock[]
+  shipmentItems    ShipmentItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, seasonId])
+}
+
+// -----------------------------------------------------------------------------
+// 7. Customer categories and prices
 // -----------------------------------------------------------------------------
 model CustomerCategories {
   id           Int      @id @default(autoincrement())
@@ -120,15 +153,46 @@ model CustomerCategories {
   customerId   Int
   customer     Customer @relation(fields: [customerId], references: [id])
   
-  category     String
+  name         String
   grade        Grade
   price        Decimal  @default(0)
+  currency     Currency
 
-  @@unique([seasonId, customerId, category, grade])
+  classifications        Classification[]
+  customerAllocations    CustomerAllocation[]
+  shipmentItems          ShipmentItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([seasonId, customerId, name, grade])
 }
 
 // -----------------------------------------------------------------------------
-// 7. Field Operations
+// 8. Trader Category Share (%)
+// -----------------------------------------------------------------------------
+model TraderCategoryShare {
+  id               Int @id @default(autoincrement())
+
+  seasonId     Int
+  season       Season   @relation(fields: [seasonId], references: [id])
+
+  traderId         Int
+  trader           Trader @relation(fields: [traderId], references: [id])
+
+  traderCategoryId Int
+  traderCategory   TradersCategories @relation(fields: [traderCategoryId], references: [id])
+
+  percent          Decimal
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([traderId, traderCategoryId])
+}
+
+// -----------------------------------------------------------------------------
+// 9. Field Operations
 // -----------------------------------------------------------------------------
 model FieldHarvest {
   id              Int      @id @default(autoincrement())
@@ -164,10 +228,11 @@ model FieldHarvest {
   @@unique([seasonId, dateGregorian, fieldName]) // Prevent duplicate reports per season
   @@index([seasonId])
   @@index([seasonId, fieldName])
+  @@index([isDeleted])
 }
 
 // -----------------------------------------------------------------------------
-// 8. Grading & Classification
+// 10. Grading & Classification
 // -----------------------------------------------------------------------------
 model Classification {
   id             Int          @id @default(autoincrement())
@@ -187,8 +252,13 @@ model Classification {
   customerId     Int?         
   customer       Customer?    @relation(fields: [customerId], references: [id])   
   
-  category       String
-  grade          Grade
+  traderCategoryId Int?
+  traderCategory   TradersCategories? @relation(fields: [traderCategoryId], references: [id])
+
+  customerCategoryId Int?
+  customerCategory   CustomerCategories? @relation(fields: [customerCategoryId], references: [id])
+
+  grade          Grade?
   pitamStatus    PitamStatus
   quantity       Int          @default(0)
   
@@ -201,16 +271,17 @@ model Classification {
 
   isDeleted  Boolean   @default(false)
 
-  @@unique([fieldHarvestId, category, grade, assignmentType])
+  @@unique([fieldHarvestId, traderCategory, customerCategory, grade, assignmentType])
   @@index([seasonId])
   @@index([seasonId, fieldHarvestId])
   @@index([seasonId, assignmentType])
   @@index([seasonId, traderId])
   @@index([seasonId, customerId])
+  @@index([isDeleted])
 }
 
 // -----------------------------------------------------------------------------
-// 9. Trader Inventory & Buffer Management
+// 11. Trader Inventory & Buffer Management
 // -----------------------------------------------------------------------------
 model TraderStock {
   id             Int          @id @default(autoincrement())
@@ -218,27 +289,27 @@ model TraderStock {
   seasonId       Int
   season         Season       @relation(fields: [seasonId], references: [id])
   
+  date           DateTime
+
   traderId       Int?         // null if Modulo
   trader         Trader?      @relation(fields: [traderId], references: [id])
   
-  date           DateTime
-  category       String
+  traderCategoryId Int
+  traderCategory   TradersCategories @relation(fields: [traderCategoryId], references: [id])
+
   grade          Grade
   pitamStatus    PitamStatus
   quantity       Int          @default(0)
   isModulo       Boolean      @default(false)
   
   type           MovementType @default(HARVEST_IN) 
-  referenceId    Int?         // ID of Classification or CustomerAllocation or Shipment
-  notes          String?  
 
-  // Links to shipment hierarchy
-  shipmentId     Int?         
-  shipment       Shipment?    @relation(fields: [shipmentId], references: [id])
-  boxId          Int?         
-  box            Box?         @relation(fields: [boxId], references: [id])
-  shipmentItemId Int?         
-  shipmentItem   ShipmentItem? @relation(fields: [shipmentItemId], references: [id])
+  MovementReferenceId    Int?  // classificationId, shipmentItemId or customerAllocationsId
+
+  shipmentId     Int?
+  boxId          Int?
+
+  notes          String?  
 
   updatedById    Int
   updatedBy      User         @relation(fields: [updatedById], references: [id])
@@ -248,33 +319,31 @@ model TraderStock {
 
   isDeleted  Boolean   @default(false)
 
-  @@unique([seasonId, traderId, date, category, grade, pitamStatus, referenceId, type])
   @@index([seasonId, type])
   @@index([seasonId, traderId, type])
-  @@index([category, grade, pitamStatus, type])
-  @@index([shipmentId])
-  @@index([boxId])
-  @@index([shipmentItemId])
+  @@index([traderCategoryId, grade, pitamStatus, type])
+  @@index([isDeleted])
 }
 
 // -----------------------------------------------------------------------------
-// 10. Customer Allocations (Sales)
+// 12. Customer Allocations (Sales)
 // -----------------------------------------------------------------------------
 model CustomerAllocation {
   id             Int          @id @default(autoincrement())
   
   seasonId       Int
   season         Season       @relation(fields: [seasonId], references: [id])
-  
-  customerId     Int         
-  customer       Customer     @relation(fields: [customerId], references: [id])
 
   date           DateTime
   dateHebrew     String
+    
+  customerId     Int         
+  customer       Customer     @relation(fields: [customerId], references: [id])
 
-  category       String
+  customerCategoryId Int
+  customerCategory   CustomerCategories @relation(fields: [customerCategoryId], references: [id])  
+
   pitamStatus    PitamStatus
-  grade          Grade
   quantity       Int
 
   type           MovementType @default(HARVEST_IN)
@@ -283,16 +352,12 @@ model CustomerAllocation {
   traderId Int? 
   traderSourceName Trader?    @relation(fields: [traderId], references: [id])
 
-  referenceId     Int?        // ID of Classification or TraderStock or Shipment
-  notes           String?      
+  MovementReferenceId    Int?  // classificationId, shipmentItemId or traderStockId
 
-  // Links to shipment hierarchy
-  shipmentId     Int?         
-  shipment       Shipment?    @relation(fields: [shipmentId], references: [id])
-  boxId          Int?         
-  box            Box?         @relation(fields: [boxId], references: [id])
-  shipmentItemId Int?         
-  shipmentItem   ShipmentItem? @relation(fields: [shipmentItemId], references: [id])
+  shipmentId     Int?
+  boxId          Int?
+  
+  notes           String?      
   
   updatedById    Int
   updatedBy      User         @relation(fields: [updatedById], references: [id])
@@ -302,18 +367,15 @@ model CustomerAllocation {
 
   isDeleted  Boolean   @default(false)
 
-  @@unique([seasonId, customerId, date, category, grade, pitamStatus, takenFrom, traderId, referenceId, type])
   @@index([seasonId, type])
   @@index([seasonId, customerId, type])
   @@index([customerId, traderId, type])
-  @@index([category, grade, pitamStatus, type])
-  @@index([shipmentId])
-  @@index([boxId])
-  @@index([shipmentItemId])
+  @@index([customerCategoryId, grade, pitamStatus, type])
+  @@index([isDeleted])
 }
 
 // -----------------------------------------------------------------------------
-// 11. Shipment
+// 13. Shipment
 // -----------------------------------------------------------------------------
 model Shipment {
   id              Int              @id @default(autoincrement())
@@ -332,10 +394,6 @@ model Shipment {
   boxes           Box[]            
   items           ShipmentItem[]   
 
-  // Direct link to inventory movements for fast aggregation
-  traderStocks    TraderStock[]    
-  allocations     CustomerAllocation[]
-
   updatedById     Int
   updatedBy       User             @relation(fields: [updatedById], references: [id])
 
@@ -349,16 +407,20 @@ model Shipment {
   @@unique([seasonId, id])
   @@index([seasonId])
   @@index([seasonId, status])
+  @@index([isDeleted])
 }
 
 // -----------------------------------------------------------------------------
-// 12. Box - Container
+// 14. Box - Container
 // -----------------------------------------------------------------------------
 model Box {
   id              Int            @id @default(autoincrement())
   shipmentId      Int
   shipment        Shipment       @relation(fields: [shipmentId], references: [id])
   
+  seasonId        Int
+  season          Season           @relation(fields: [seasonId], references: [id])
+
   boxNumber       Int            // e.g., Box #1 in Shipment X
   boxType         BoxType        
   totalQuantity   Int            @default(0)
@@ -369,17 +431,16 @@ model Box {
   
   // Relations: One Box -> Many Items
   items           ShipmentItem[]
-  
-  // Link to stock for "Where is this specific item located?"
-  traderStocks    TraderStock[]
-  allocations     CustomerAllocation[]
 
   // Ownership
   ownershipType   BoxOwnership   @default(UNASSIGNED)
   traderId        Int?           // optional, if ownershipType = TRADER
   trader          Trader?        @relation(fields: [traderId], references: [id])
   customerId      Int?           // optional, if ownershipType = CUSTOMER
-  customer        Customer?
+  customer        Customer?      @relation(fields: [customerId], references: [id])
+
+  updatedById     Int
+  updatedBy       User             @relation(fields: [updatedById], references: [id])
 
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
@@ -394,10 +455,11 @@ model Box {
   @@index([seasonId, status])
   @@index([traderId, status])
   @@index([customerId, status])
+  @@index([isDeleted])
 }
 
 // -----------------------------------------------------------------------------
-// 13. Items - Products
+// 15. Items - Products
 // -----------------------------------------------------------------------------
 model ShipmentItem {
   id              Int            @id @default(autoincrement())
@@ -407,17 +469,21 @@ model ShipmentItem {
   boxId           Int
   box             Box            @relation(fields: [boxId], references: [id])
   
+  seasonId        Int
+  season          Season           @relation(fields: [seasonId], references: [id])
+
   // Product Specs (Snapshot of what was packed)
-  category        String
-  grade           Grade
+  traderCategoryId Int?
+  traderCategory   TradersCategories? @relation(fields: [traderCategoryId], references: [id])
+
+  customerCategoryId Int?
+  customerCategory   CustomerCategories? @relation(fields: [customerCategoryId], references: [id])
+  
+  grade           Grade?
   pitamStatus     PitamStatus
   quantity        Int      
         
   notes           String?
-
-  // Strong reference: Every item row corresponds to an inventory "minus" row
-  traderStocks    TraderStock[]  
-  allocations     CustomerAllocation[]
 
   // Ownership
   ownershipType   ItemOwnership  @default(UNASSIGNED)
@@ -426,12 +492,15 @@ model ShipmentItem {
   customerId      Int?           // optional, if ownershipType = CUSTOMER
   customer        Customer?
 
+  updatedById     Int
+  updatedBy       User             @relation(fields: [updatedById], references: [id])
+  
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
   isDeleted  Boolean   @default(false)
 
-  @@unique([boxId, category, grade, pitamStatus, ownershipType, traderId, customerId])
+  @@unique([boxId, traderCategory, customerCategory, grade, pitamStatus, ownershipType, traderId, customerId])
   @@index([shipmentId])
   @@index([boxId])
   @@index([seasonId])
@@ -439,10 +508,11 @@ model ShipmentItem {
   @@index([seasonId, shipmentId])
   @@index([traderId, shipmentId])
   @@index([customerId, shipmentId])
+  @@index([isDeleted])
 }
 
 // -----------------------------------------------------------------------------
-// 14. Internal Messaging System
+// 16. Internal Messaging System
 // -----------------------------------------------------------------------------
 model Message {
   id            Int          @id @default(autoincrement())
@@ -481,7 +551,12 @@ enum PitamStatus {
 }
 
 enum Grade {
-  A, B, C, D, E, F
+  א
+  ב
+  ג
+  ד
+  ה
+  ו
 }
 
 enum AssignmentType {
@@ -507,7 +582,9 @@ enum MovementType {
   HARVEST_IN        // Initial entry from field sorting/grading (Positive)
   
   // --- Inventory Logic & Ownership Transfers ---
-  INTERNAL_TRANSFER // Transfer between entities (e.g., Modulo to Trader, or Trader to Customer)
+  INTERNAL_TRANSFER // Transfer between Trader <-> Customer
+  OWNERSHIP_TRANSFER // Transfer between Trader <-> Trader
+  ASSIGNED // Assigned from general pool (Modulo) to trader
   
   // --- Physical Outbound Operations ---
   PACKED_SHIPPED    // Goods physically left the warehouse via shipment (Negative)
@@ -549,5 +626,12 @@ enum BoxOwnership {
 enum ItemOwnership {
   TRADER
   CUSTOMER
+  UNASSIGNED
   CUSTOM
+}
+
+enum Currency {
+  ILS
+  USD
+  EUR
 }
