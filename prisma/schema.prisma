@@ -4,35 +4,40 @@ generator client {
   provider = "prisma-client-js"
 }
 
+datasource db {
+  provider = "postgresql"
+}
+
 // -----------------------------------------------------------------------------
 // 1. System Settings
 // -----------------------------------------------------------------------------
 model SystemConfig {
-  id         Int      @id @default(1)
-  fields     String[]
-  currency   Currency?
-  unitPrice  Decimal?
+  id        Int       @id @default(1)
+  fields    String[]
+  currency  Currency?
+  unitPrice Decimal?
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // -----------------------------------------------------------------------------
 // 2. Season Management (The Time-Tenant)
 // -----------------------------------------------------------------------------
 model Season {
-  id          Int      @id @default(autoincrement())
-  yearName    Int      @unique // e.g. "2026"
-  isActive    Boolean  @default(true)
+  id       Int     @id @default(autoincrement())
+  yearName Int     @unique // e.g. "2026"
+  isActive Boolean @default(true)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  slug        String   @unique    // URL-friendly slug
+  slug String @unique // URL-friendly slug
 
   // 
   TradersCategories    TradersCategories[]
   customerCategories   CustomerCategories[]
+  traderCategoryShares TraderCategoryShare[]
   fieldHarvests        FieldHarvest[]
   classifications      Classification[]
   traderStocks         TraderStock[]
@@ -46,48 +51,49 @@ model Season {
 // 3. User Management
 // -----------------------------------------------------------------------------
 model User {
-  id           Int      @id @default(autoincrement())
-  name         String   @unique
-  email        String   @unique
-  phone        String?  @unique
+  id           Int     @id @default(autoincrement())
+  name         String  @unique
+  email        String  @unique
+  phone        String? @unique
   passwordHash String
-  role         Role     @default(WORKER)
-  isActive     Boolean  @default(true)
+  role         Role    @default(WORKER)
+  isActive     Boolean @default(true)
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  slug         String   @unique    // URL-friendly slug
+  slug String @unique // URL-friendly slug
 
   // Relations
-  fieldHarvests        FieldHarvest[]
-  classifications      Classification[]
-  traderStocks         TraderStock[]
-  customerAllocations  CustomerAllocation[]
-  shipment             Shipment[]
-  box                  Box[]
-  shipmentItem         ShipmentItem[]
-  sentMessages         Message[]            @relation("SentMessages")
-  receivedMessages     Message[]            @relation("ReceivedMessages")
+  fieldHarvests       FieldHarvest[]
+  classifications     Classification[]
+  traderStocks        TraderStock[]
+  customerAllocations CustomerAllocation[]
+  shipment            Shipment[]
+  box                 Box[]
+  shipmentItem        ShipmentItem[]
+  sentMessages        Message[]            @relation("SentMessages")
+  receivedMessages    Message[]            @relation("ReceivedMessages")
 }
 
 // -----------------------------------------------------------------------------
 // 4. Traders
 // -----------------------------------------------------------------------------
 model Trader {
-  id         Int          @id @default(autoincrement())
-  name       String       @unique
+  id   Int    @id @default(autoincrement())
+  name String @unique
 
-  paymentPercent  Decimal @default(0)
-  
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
+  paymentPercent Decimal @default(0)
 
-  slug       String   @unique    // URL-friendly slug
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  slug String @unique // URL-friendly slug
 
   // Relations
-  classifications Classification[]
-  traderStocks    TraderStock[]
+  traderCategoryShares TraderCategoryShare[]
+  classifications      Classification[]
+  traderStocks         TraderStock[]
   customerAllocations  CustomerAllocation[]
   box                  Box[]
   shipmentItem         ShipmentItem[]
@@ -97,24 +103,23 @@ model Trader {
 // 5. Customer
 // -----------------------------------------------------------------------------
 model Customer {
-  id           Int      @id @default(autoincrement())
-  customerName String   @unique
-  email        String?  @unique
-  phone        String?  @unique
+  id           Int     @id @default(autoincrement())
+  customerName String  @unique
+  email        String? @unique
+  phone        String? @unique
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  slug         String   @unique    // URL-friendly slug
+  slug String @unique // URL-friendly slug
 
   // Relations
-  prices                CustomerCategories[]
-  allocations           CustomerAllocation[]
-  classifications       Classification[]
-  box                   Box[]
-  shipmentItem          ShipmentItem[]
+  prices          CustomerCategories[]
+  allocations     CustomerAllocation[]
+  classifications Classification[]
+  box             Box[]
+  shipmentItem    ShipmentItem[]
 
-  @@unique([customerName])
   @@index([customerName])
 }
 
@@ -122,15 +127,16 @@ model Customer {
 // 6. Traders categories and prices
 // -----------------------------------------------------------------------------
 model TradersCategories {
-  id        Int      @id @default(autoincrement())
-  name      String   // Category name (e.g., "Yanover")
-  notes     String?
-  seasonId  Int
-  season    Season   @relation(fields: [seasonId], references: [id])
+  id       Int     @id @default(autoincrement())
+  name     String // Category name (e.g., "Yanover")
+  notes    String?
+  seasonId Int
+  season   Season  @relation(fields: [seasonId], references: [id])
 
-  classifications  Classification[]
-  traderStocks     TraderStock[]
-  shipmentItems    ShipmentItem[]
+  traderCategoryShares TraderCategoryShare[]
+  classifications      Classification[]
+  traderStocks         TraderStock[]
+  shipmentItems        ShipmentItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -142,21 +148,21 @@ model TradersCategories {
 // 7. Customer categories and prices
 // -----------------------------------------------------------------------------
 model CustomerCategories {
-  id           Int      @id @default(autoincrement())
-  seasonId     Int
-  season       Season   @relation(fields: [seasonId], references: [id])
-  
-  customerId   Int
-  customer     Customer @relation(fields: [customerId], references: [id])
-  
-  name         String
-  grade        Grade
-  price        Decimal  @default(0)
-  currency     Currency
+  id       Int    @id @default(autoincrement())
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
 
-  classifications        Classification[]
-  customerAllocations    CustomerAllocation[]
-  shipmentItems          ShipmentItem[]
+  customerId Int
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  name     String
+  grade    Grade
+  price    Decimal  @default(0)
+  currency Currency
+
+  classifications     Classification[]
+  customerAllocations CustomerAllocation[]
+  shipmentItems       ShipmentItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -168,21 +174,21 @@ model CustomerCategories {
 // 8. Trader Category Share (%)
 // -----------------------------------------------------------------------------
 model TraderCategoryShare {
-  id               Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  seasonId     Int
-  season       Season   @relation(fields: [seasonId], references: [id])
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
 
-  traderId         Int
-  trader           Trader @relation(fields: [traderId], references: [id])
+  traderId Int
+  trader   Trader @relation(fields: [traderId], references: [id])
 
   traderCategoryId Int
   traderCategory   TradersCategories @relation(fields: [traderCategoryId], references: [id])
 
-  percent          Decimal
+  percent Decimal
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([traderId, traderCategoryId])
 }
@@ -191,35 +197,35 @@ model TraderCategoryShare {
 // 9. Field Operations
 // -----------------------------------------------------------------------------
 model FieldHarvest {
-  id              Int      @id @default(autoincrement())
-  
-  seasonId        Int
-  season          Season   @relation(fields: [seasonId], references: [id])
-  
-  dateGregorian   DateTime
-  dateHebrew      String
-  fieldName       String   
-  
-  updatedById     Int
-  updatedBy       User     @relation(fields: [updatedById], references: [id])
-  
-  totalHarvested  Int      @default(0)
-  totalRejected   Int      @default(0)
-  rejectionRate   Decimal  @default(0)
-  
-  ownerHarvested  Int         @default(0)
-  ownerRejected   Int         @default(0)
-  ownerRejectionRate Decimal  @default(0)
+  id Int @id @default(autoincrement())
 
-  slug            String   @unique // URL-friendly ID (date-field-season)
-  
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  dateGregorian DateTime
+  dateHebrew    String
+  fieldName     String
+
+  updatedById Int
+  updatedBy   User @relation(fields: [updatedById], references: [id])
+
+  totalHarvested Int     @default(0)
+  totalRejected  Int     @default(0)
+  rejectionRate  Decimal @default(0)
+
+  ownerHarvested     Int     @default(0)
+  ownerRejected      Int     @default(0)
+  ownerRejectionRate Decimal @default(0)
+
+  slug String @unique // URL-friendly ID (date-field-season)
+
   // Relations
   classifications Classification[]
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  isDeleted  Boolean   @default(false)
+  isDeleted Boolean @default(false)
 
   @@unique([seasonId, dateGregorian, fieldName]) // Prevent duplicate reports per season
   @@index([seasonId])
@@ -231,41 +237,41 @@ model FieldHarvest {
 // 10. Grading & Classification
 // -----------------------------------------------------------------------------
 model Classification {
-  id             Int          @id @default(autoincrement())
-  
-  seasonId       Int
-  season         Season       @relation(fields: [seasonId], references: [id])
-  
+  id Int @id @default(autoincrement())
+
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
+
   fieldHarvestId Int
   fieldHarvest   FieldHarvest @relation(fields: [fieldHarvestId], references: [id])
-  
-  updatedById    Int
-  updatedBy      User         @relation(fields: [updatedById], references: [id])
-  
+
+  updatedById Int
+  updatedBy   User @relation(fields: [updatedById], references: [id])
+
   assignmentType AssignmentType
-  traderId       Int?         
-  trader         Trader?      @relation(fields: [traderId], references: [id])
-  customerId     Int?         
-  customer       Customer?    @relation(fields: [customerId], references: [id])   
-  
+  traderId       Int?
+  trader         Trader?        @relation(fields: [traderId], references: [id])
+  customerId     Int?
+  customer       Customer?      @relation(fields: [customerId], references: [id])
+
   traderCategoryId Int?
   traderCategory   TradersCategories? @relation(fields: [traderCategoryId], references: [id])
 
   customerCategoryId Int?
   customerCategory   CustomerCategories? @relation(fields: [customerCategoryId], references: [id])
 
-  grade          Grade?
-  pitamStatus    PitamStatus
-  quantity       Int          @default(0)
-  
-  notes          String?
+  grade       Grade?
+  pitamStatus PitamStatus
+  quantity    Int         @default(0)
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  notes String?
 
-  slug         String   @unique    // URL-friendly slug
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  isDeleted  Boolean   @default(false)
+  slug String @unique // URL-friendly slug
+
+  isDeleted Boolean @default(false)
 
   @@unique([fieldHarvestId, traderCategoryId, customerCategoryId, grade, assignmentType])
   @@index([seasonId])
@@ -280,40 +286,40 @@ model Classification {
 // 11. Trader Inventory & Buffer Management
 // -----------------------------------------------------------------------------
 model TraderStock {
-  id             Int          @id @default(autoincrement())
-  
-  seasonId       Int
-  season         Season       @relation(fields: [seasonId], references: [id])
-  
-  date           DateTime
+  id Int @id @default(autoincrement())
 
-  traderId       Int?         // null if Modulo
-  trader         Trader?      @relation(fields: [traderId], references: [id])
-  
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  date DateTime
+
+  traderId Int? // null if Modulo
+  trader   Trader? @relation(fields: [traderId], references: [id])
+
   traderCategoryId Int
   traderCategory   TradersCategories @relation(fields: [traderCategoryId], references: [id])
 
-  grade          Grade
-  pitamStatus    PitamStatus
-  quantity       Int          @default(0)
-  isModulo       Boolean      @default(false)
-  
-  type           MovementType @default(HARVEST_IN) 
+  grade       Grade
+  pitamStatus PitamStatus
+  quantity    Int         @default(0)
+  isModulo    Boolean     @default(false)
 
-  MovementReferenceId    Int?  // classificationId, shipmentItemId or customerAllocationsId
+  type MovementType @default(HARVEST_IN)
 
-  shipmentId     Int?
-  boxId          Int?
+  MovementReferenceId Int? // classificationId, shipmentItemId or customerAllocationsId
 
-  notes          String?  
+  shipmentId Int?
+  boxId      Int?
 
-  updatedById    Int
-  updatedBy      User         @relation(fields: [updatedById], references: [id])
+  notes String?
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  updatedById Int
+  updatedBy   User @relation(fields: [updatedById], references: [id])
 
-  isDeleted  Boolean   @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  isDeleted Boolean @default(false)
 
   @@index([seasonId, type])
   @@index([seasonId, traderId, type])
@@ -325,43 +331,43 @@ model TraderStock {
 // 12. Customer Allocations (Sales)
 // -----------------------------------------------------------------------------
 model CustomerAllocation {
-  id             Int          @id @default(autoincrement())
-  
-  seasonId       Int
-  season         Season       @relation(fields: [seasonId], references: [id])
+  id Int @id @default(autoincrement())
 
-  date           DateTime
-  dateHebrew     String
-    
-  customerId     Int         
-  customer       Customer     @relation(fields: [customerId], references: [id])
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  date       DateTime
+  dateHebrew String
+
+  customerId Int
+  customer   Customer @relation(fields: [customerId], references: [id])
 
   customerCategoryId Int
-  customerCategory   CustomerCategories @relation(fields: [customerCategoryId], references: [id])  
+  customerCategory   CustomerCategories @relation(fields: [customerCategoryId], references: [id])
 
-  pitamStatus    PitamStatus
-  quantity       Int
+  pitamStatus PitamStatus
+  quantity    Int
 
-  type           MovementType @default(HARVEST_IN)
-  
-  takenFrom      SourceType   @default(GENERAL)
-  traderId Int? 
+  type MovementType @default(HARVEST_IN)
+
+  takenFrom        SourceType @default(GENERAL)
+  traderId         Int?
   traderSourceName Trader?    @relation(fields: [traderId], references: [id])
 
-  MovementReferenceId    Int?  // classificationId, shipmentItemId or traderStockId
+  MovementReferenceId Int? // classificationId, shipmentItemId or traderStockId
 
-  shipmentId     Int?
-  boxId          Int?
-  
-  notes           String?      
-  
-  updatedById    Int
-  updatedBy      User         @relation(fields: [updatedById], references: [id])
+  shipmentId Int?
+  boxId      Int?
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  notes String?
 
-  isDeleted  Boolean   @default(false)
+  updatedById Int
+  updatedBy   User @relation(fields: [updatedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  isDeleted Boolean @default(false)
 
   @@index([seasonId, type])
   @@index([seasonId, customerId, type])
@@ -374,31 +380,31 @@ model CustomerAllocation {
 // 13. Shipment
 // -----------------------------------------------------------------------------
 model Shipment {
-  id              Int              @id @default(autoincrement())
-  seasonId        Int
-  season          Season           @relation(fields: [seasonId], references: [id])
-    
-  totalBoxes      Int              @default(0)
-  totalQuantity   Int              @default(0)
-  
-  status          ShipmentStatus   @default(PREPARING)
-  shippedAt       DateTime?      
+  id       Int    @id @default(autoincrement())
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
 
-  notes           String?   
-  
+  totalBoxes    Int @default(0)
+  totalQuantity Int @default(0)
+
+  status    ShipmentStatus @default(PREPARING)
+  shippedAt DateTime?
+
+  notes String?
+
   // Relations: One Shipment -> Many Boxes -> Many Items
-  boxes           Box[]            
-  items           ShipmentItem[]   
+  boxes Box[]
+  items ShipmentItem[]
 
-  updatedById     Int
-  updatedBy       User             @relation(fields: [updatedById], references: [id])
+  updatedById Int
+  updatedBy   User @relation(fields: [updatedById], references: [id])
 
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  slug            String           @unique
+  slug String @unique
 
-  isDeleted  Boolean   @default(false)
+  isDeleted Boolean @default(false)
 
   @@unique([seasonId, id])
   @@index([seasonId])
@@ -410,38 +416,38 @@ model Shipment {
 // 14. Box - Container
 // -----------------------------------------------------------------------------
 model Box {
-  id              Int            @id @default(autoincrement())
-  shipmentId      Int
-  shipment        Shipment       @relation(fields: [shipmentId], references: [id])
-  
-  seasonId        Int
-  season          Season           @relation(fields: [seasonId], references: [id])
+  id         Int      @id @default(autoincrement())
+  shipmentId Int
+  shipment   Shipment @relation(fields: [shipmentId], references: [id])
 
-  boxNumber       Int            // e.g., Box #1 in Shipment X
-  boxType         BoxType        
-  totalQuantity   Int            @default(0)
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
 
-  status          BoxStatus      @default(OPEN) 
+  boxNumber     Int // e.g., Box #1 in Shipment X
+  boxType       BoxType
+  totalQuantity Int     @default(0)
 
-  notes           String? 
-  
+  status BoxStatus @default(OPEN)
+
+  notes String?
+
   // Relations: One Box -> Many Items
-  items           ShipmentItem[]
+  items ShipmentItem[]
 
   // Ownership
-  ownershipType   BoxOwnership   @default(UNASSIGNED)
-  traderId        Int?           // optional, if ownershipType = TRADER
-  trader          Trader?        @relation(fields: [traderId], references: [id])
-  customerId      Int?           // optional, if ownershipType = CUSTOMER
-  customer        Customer?      @relation(fields: [customerId], references: [id])
+  ownershipType BoxOwnership @default(UNASSIGNED)
+  traderId      Int? // optional, if ownershipType = TRADER
+  trader        Trader?      @relation(fields: [traderId], references: [id])
+  customerId    Int? // optional, if ownershipType = CUSTOMER
+  customer      Customer?    @relation(fields: [customerId], references: [id])
 
-  updatedById     Int
-  updatedBy       User             @relation(fields: [updatedById], references: [id])
+  updatedById Int
+  updatedBy   User @relation(fields: [updatedById], references: [id])
 
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  isDeleted  Boolean   @default(false)
+  isDeleted Boolean @default(false)
 
   @@unique([shipmentId, boxNumber])
   @@index([seasonId])
@@ -458,15 +464,15 @@ model Box {
 // 15. Items - Products
 // -----------------------------------------------------------------------------
 model ShipmentItem {
-  id              Int            @id @default(autoincrement())
-  shipmentId      Int
-  shipment        Shipment       @relation(fields: [shipmentId], references: [id])
-  
-  boxId           Int
-  box             Box            @relation(fields: [boxId], references: [id])
-  
-  seasonId        Int
-  season          Season           @relation(fields: [seasonId], references: [id])
+  id         Int      @id @default(autoincrement())
+  shipmentId Int
+  shipment   Shipment @relation(fields: [shipmentId], references: [id])
+
+  boxId Int
+  box   Box @relation(fields: [boxId], references: [id])
+
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
 
   // Product Specs (Snapshot of what was packed)
   traderCategoryId Int?
@@ -474,27 +480,27 @@ model ShipmentItem {
 
   customerCategoryId Int?
   customerCategory   CustomerCategories? @relation(fields: [customerCategoryId], references: [id])
-  
-  grade           Grade?
-  pitamStatus     PitamStatus
-  quantity        Int      
-        
-  notes           String?
+
+  grade       Grade?
+  pitamStatus PitamStatus
+  quantity    Int
+
+  notes String?
 
   // Ownership
-  ownershipType   ItemOwnership  @default(UNASSIGNED)
-  traderId        Int?           // optional, if ownershipType = TRADER
-  trader          Trader?        @relation(fields: [traderId], references: [id])
-  customerId      Int?           // optional, if ownershipType = CUSTOMER
-  customer        Customer?      @relation(fields: [customerId], references: [id])
+  ownershipType ItemOwnership @default(UNASSIGNED)
+  traderId      Int? // optional, if ownershipType = TRADER
+  trader        Trader?       @relation(fields: [traderId], references: [id])
+  customerId    Int? // optional, if ownershipType = CUSTOMER
+  customer      Customer?     @relation(fields: [customerId], references: [id])
 
-  updatedById     Int
-  updatedBy       User             @relation(fields: [updatedById], references: [id])
-  
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  updatedById Int
+  updatedBy   User @relation(fields: [updatedById], references: [id])
 
-  isDeleted  Boolean   @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  isDeleted Boolean @default(false)
 
   @@unique([boxId, traderCategoryId, customerCategoryId, grade, pitamStatus, ownershipType, traderId, customerId])
   @@index([shipmentId])
@@ -511,20 +517,20 @@ model ShipmentItem {
 // 16. Internal Messaging System
 // -----------------------------------------------------------------------------
 model Message {
-  id            Int          @id @default(autoincrement())
-  
-  senderId      Int
-  sender        User         @relation("SentMessages", fields: [senderId], references: [id])
-  
-  recipientId   Int?         
-  recipient     User?        @relation("ReceivedMessages", fields: [recipientId], references: [id])
-  
-  subject       String
-  content       String       @db.Text
-  priority      Priority     @default(NORMAL)
-  isRead        Boolean      @default(false)
+  id Int @id @default(autoincrement())
 
-  createdAt     DateTime     @default(now())
+  senderId Int
+  sender   User @relation("SentMessages", fields: [senderId], references: [id])
+
+  recipientId Int?
+  recipient   User? @relation("ReceivedMessages", fields: [recipientId], references: [id])
+
+  subject  String
+  content  String   @db.Text
+  priority Priority @default(NORMAL)
+  isRead   Boolean  @default(false)
+
+  createdAt DateTime @default(now())
 
   @@index([recipientId])
   @@index([senderId])
@@ -541,9 +547,9 @@ enum Role {
 }
 
 enum PitamStatus {
-  WITH_PITAM    
-  WITHOUT_PITAM 
-  MIXED         
+  WITH_PITAM
+  WITHOUT_PITAM
+  MIXED
 }
 
 enum Grade {
@@ -575,40 +581,40 @@ enum Priority {
 
 enum MovementType {
   // --- Inbound Operations ---
-  HARVEST_IN        // Initial entry from field sorting/grading (Positive)
-  
+  HARVEST_IN // Initial entry from field sorting/grading (Positive)
+
   // --- Inventory Logic & Ownership Transfers ---
   INTERNAL_TRANSFER // Transfer between Trader <-> Customer
   OWNERSHIP_TRANSFER // Transfer between Trader <-> Trader
   ASSIGNED // Assigned from general pool (Modulo) to trader
-  
+
   // --- Physical Outbound Operations ---
-  PACKED_SHIPPED    // Goods physically left the warehouse via shipment (Negative)
-  SELF_PICKUP       // Goods physically collected by the owner/customer (Negative)
-  
+  PACKED_SHIPPED // Goods physically left the warehouse via shipment (Negative)
+  SELF_PICKUP // Goods physically collected by the owner/customer (Negative)
+
   // --- Adjustments & Losses ---
-  WASTE             // Spoilage, damage, or quality rejection (Negative)
-  ADJUSTMENT        // Manual inventory correction for typos or audits (Positive/Negative)
+  WASTE // Spoilage, damage, or quality rejection (Negative)
+  ADJUSTMENT // Manual inventory correction for typos or audits (Positive/Negative)
 }
 
 enum ShipmentStatus {
   PREPARING // Not yet departed
-  SHIPPED   // Gone from warehouse
+  SHIPPED // Gone from warehouse
   DELIVERED // Reached customer
   CANCELLED // Reverted
 }
 
 enum BoxStatus {
-  OPEN      // Editing allowed
-  CLOSED    // Packed and sealed
-  SHIPPED   // Dispatched
+  OPEN // Editing allowed
+  CLOSED // Packed and sealed
+  SHIPPED // Dispatched
 }
 
 enum BoxType {
   SMALL
   MEDIUM
   LARGE
-  CUSTOM 
+  CUSTOM
 }
 
 enum BoxOwnership {
