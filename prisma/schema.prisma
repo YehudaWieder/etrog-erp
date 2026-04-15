@@ -486,7 +486,7 @@ model ShipmentItem {
   traderId        Int?           // optional, if ownershipType = TRADER
   trader          Trader?        @relation(fields: [traderId], references: [id])
   customerId      Int?           // optional, if ownershipType = CUSTOMER
-  customer        Customer?
+  customer        Customer?      @relation(fields: [customerId], references: [id])
 
   updatedById     Int
   updatedBy       User             @relation(fields: [updatedById], references: [id])
