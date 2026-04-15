@@ -267,7 +267,7 @@ model Classification {
 
   isDeleted  Boolean   @default(false)
 
-  @@unique([fieldHarvestId, traderCategory, customerCategory, grade, assignmentType])
+  @@unique([fieldHarvestId, traderCategoryId, customerCategoryId, grade, assignmentType])
   @@index([seasonId])
   @@index([seasonId, fieldHarvestId])
   @@index([seasonId, assignmentType])
@@ -366,7 +366,7 @@ model CustomerAllocation {
   @@index([seasonId, type])
   @@index([seasonId, customerId, type])
   @@index([customerId, traderId, type])
-  @@index([customerCategoryId, grade, pitamStatus, type])
+  @@index([customerCategoryId, pitamStatus, type])
   @@index([isDeleted])
 }
 
@@ -496,7 +496,7 @@ model ShipmentItem {
 
   isDeleted  Boolean   @default(false)
 
-  @@unique([boxId, traderCategory, customerCategory, grade, pitamStatus, ownershipType, traderId, customerId])
+  @@unique([boxId, traderCategoryId, customerCategoryId, grade, pitamStatus, ownershipType, traderId, customerId])
   @@index([shipmentId])
   @@index([boxId])
   @@index([seasonId])
