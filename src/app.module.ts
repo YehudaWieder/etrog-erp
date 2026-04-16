@@ -8,9 +8,10 @@ import { HarvestModule } from './harvest/harvest.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { ShipmentsModule } from './shipments/shipments.module';
 import { MessagesModule } from './messages/messages.module';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
-  imports: [UsersModule, SeasonsModule, PartnersModule, HarvestModule, InventoryModule, ShipmentsModule, MessagesModule],
+  imports: [UsersModule, SeasonsModule, PartnersModule, HarvestModule, InventoryModule, ShipmentsModule, MessagesModule, CategoriesModule],
   controllers: [AppController],
   providers: [AppService],
 })
