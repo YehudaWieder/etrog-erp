@@ -13,6 +13,10 @@ datasource db {
 // -----------------------------------------------------------------------------
 model SystemConfig {
   id        Int       @id @default(1)
+
+  seasonId Int
+  season   Season  @relation(fields: [seasonId], references: [id])
+
   fields    String[]
   currency  Currency?
   unitPrice Decimal?
@@ -35,6 +39,7 @@ model Season {
   slug String @unique // URL-friendly slug
 
   // 
+  systemConfigs        SystemConfig[]
   TradersCategories    TradersCategories[]
   customerCategories   CustomerCategories[]
   traderCategoryShares TraderCategoryShare[]
@@ -124,7 +129,7 @@ model Customer {
 }
 
 // -----------------------------------------------------------------------------
-// 6. Traders categories and prices
+// 6. Traders categories
 // -----------------------------------------------------------------------------
 model TradersCategories {
   id       Int     @id @default(autoincrement())
