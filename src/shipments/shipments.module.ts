@@ -1,15 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ShipmentsService } from './shipments.service';
-import { ItemManagerController } from './controllers/item-manager/item-manager.controller';
-import { BoxManagerController } from './controllers/box-manager/box-manager.controller';
-import { ShipmentCoreController } from './controllers/shipment-core/shipment-core.controller';
-import { ItemManagerService } from './services/item-manager/item-manager.service';
-import { BoxManagerService } from './services/box-manager/box-manager.service';
-import { ShipmentCoreService } from './services/shipment-core/shipment-core.service';
-import { ShipmentsService } from './shipments.service';
+import { ItemController } from './controllers/item/item.controller';
+import { BoxController } from './controllers/box/box.controller';
+import { ShipmentController } from './controllers/shipment/shipment.controller';
+import { ItemService } from './services/item/item.service';
+import { BoxService } from './services/box/box.service';
+import { ShipmentService } from './services/shipment/shipment.service';
 
 @Module({
-  providers: [ShipmentsService, ShipmentCoreService, BoxManagerService, ItemManagerService],
-  controllers: [ShipmentCoreController, BoxManagerController, ItemManagerController]
+  providers: [ShipmentsService, ShipmentService, BoxService, ItemService],
+  controllers: [ShipmentController, BoxController, ItemController]
 })
 export class ShipmentsModule {}
