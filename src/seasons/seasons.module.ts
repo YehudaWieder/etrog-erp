@@ -1,13 +1,11 @@
 import { Module } from '@nestjs/common';
 import { SeasonsService } from './seasons.service';
+import { SystemConfigService } from 'src/system-config/system-config.service';
 import { SeasonsController } from './seasons.controller';
-import { SeasonsService } from './services/seasons/seasons.service';
-import { ConfigService } from './services/config/config.service';
-import { SeasonsController } from './controllers/seasons/seasons.controller';
-import { ConfigController } from './controllers/config/config.controller';
+import { SystemConfigController } from 'src/system-config/system-config.controller';
 
 @Module({
-  providers: [SeasonsService, ConfigService],
-  controllers: [SeasonsController, ConfigController]
+  providers: [SeasonsService, SystemConfigService],
+  controllers: [SeasonsController, SystemConfigController]
 })
 export class SeasonsModule {}
