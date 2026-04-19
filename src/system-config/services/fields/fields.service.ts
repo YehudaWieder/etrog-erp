@@ -19,8 +19,8 @@ export class FieldService {
     try {
       return await this.prisma.field.create({
         data: {
-          name: "Some name",
-          slug: "some-name"
+          name,
+          slug: name.toLowerCase().replace(/\s+/g, '-')
         },
       });
     } catch (error) {
