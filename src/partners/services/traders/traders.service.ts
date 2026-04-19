@@ -9,7 +9,7 @@ export class TradersService {
   constructor(private prisma: PrismaService) {}
 
   // Create a new trader
-  async create(name: string, paymentPercent: number = 0) {
+  async create(name: string, paymentPercent: number = 33.33) {
     const existing = await this.prisma.trader.findUnique({ where: { name } });
     if (existing) throw new ConflictException(`Trader with name ${name} already exists`);
 
