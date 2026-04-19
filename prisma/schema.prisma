@@ -12,7 +12,7 @@ datasource db {
 // 1. System Settings
 // -----------------------------------------------------------------------------
 model SystemConfig {
-  id        Int       @id @default(1)
+  id        Int       @id @default(autoincrement())
 
   seasonId Int
   season   Season  @relation(fields: [seasonId], references: [id])
@@ -26,17 +26,24 @@ model SystemConfig {
 }
 
 // -----------------------------------------------------------------------------
-// 1. FieldS Settings
+// 2. FieldS Settings
 // -----------------------------------------------------------------------------
 model Field {
   id        Int    @id @default(autoincrement())
   name      String
 
+  fieldHarvests  FieldHarvest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  slug String @unique // URL-friendly slug
+
   @@unique([name])
 }
 
 // -----------------------------------------------------------------------------
-// 2. Season Management (The Time-Tenant)
+// 3. Season Management (The Time-Tenant)
 // -----------------------------------------------------------------------------
 model Season {
   id       Int     @id @default(autoincrement())
@@ -63,7 +70,7 @@ model Season {
 }
 
 // -----------------------------------------------------------------------------
-// 3. User Management
+// 4. User Management
 // -----------------------------------------------------------------------------
 model User {
   id           Int     @id @default(autoincrement())
@@ -92,7 +99,7 @@ model User {
 }
 
 // -----------------------------------------------------------------------------
-// 4. Traders
+// 5. Traders
 // -----------------------------------------------------------------------------
 model Trader {
   id   Int    @id @default(autoincrement())
@@ -115,7 +122,7 @@ model Trader {
 }
 
 // -----------------------------------------------------------------------------
-// 5. Customer
+// 6. Customer
 // -----------------------------------------------------------------------------
 model Customer {
   id           Int     @id @default(autoincrement())
@@ -139,7 +146,7 @@ model Customer {
 }
 
 // -----------------------------------------------------------------------------
-// 6. Traders categories
+// 7. Traders categories
 // -----------------------------------------------------------------------------
 model TradersCategories {
   id       Int     @id @default(autoincrement())
@@ -160,7 +167,7 @@ model TradersCategories {
 }
 
 // -----------------------------------------------------------------------------
-// 7. Customer categories and prices
+// 8. Customer categories and prices
 // -----------------------------------------------------------------------------
 model CustomerCategories {
   id       Int    @id @default(autoincrement())
@@ -186,7 +193,7 @@ model CustomerCategories {
 }
 
 // -----------------------------------------------------------------------------
-// 8. Trader Category Share (%)
+// 9. Trader Category Share (%)
 // -----------------------------------------------------------------------------
 model TraderCategoryShare {
   id Int @id @default(autoincrement())
@@ -209,7 +216,7 @@ model TraderCategoryShare {
 }
 
 // -----------------------------------------------------------------------------
-// 9. Field Operations
+// 10. Field Operations
 // -----------------------------------------------------------------------------
 model FieldHarvest {
   id Int @id @default(autoincrement())
@@ -243,14 +250,14 @@ model FieldHarvest {
 
   isDeleted Boolean @default(false)
 
-  @@unique([seasonId, dateGregorian, fieldName]) // Prevent duplicate reports per season
+  @@unique([seasonId, dateGregorian, fieldId]) // Prevent duplicate reports per season
   @@index([seasonId])
-  @@index([seasonId, fieldName])
+  @@index([seasonId, fieldId])
   @@index([isDeleted])
 }
 
 // -----------------------------------------------------------------------------
-// 10. Grading & Classification
+// 11. Grading & Classification
 // -----------------------------------------------------------------------------
 model Classification {
   id Int @id @default(autoincrement())
@@ -299,7 +306,7 @@ model Classification {
 }
 
 // -----------------------------------------------------------------------------
-// 11. Trader Inventory & Buffer Management
+// 12. Trader Inventory & Buffer Management
 // -----------------------------------------------------------------------------
 model TraderStock {
   id Int @id @default(autoincrement())
@@ -344,7 +351,7 @@ model TraderStock {
 }
 
 // -----------------------------------------------------------------------------
-// 12. Customer Allocations (Sales)
+// 13. Customer Allocations (Sales)
 // -----------------------------------------------------------------------------
 model CustomerAllocation {
   id Int @id @default(autoincrement())
@@ -393,7 +400,7 @@ model CustomerAllocation {
 }
 
 // -----------------------------------------------------------------------------
-// 13. Shipment
+// 14. Shipment
 // -----------------------------------------------------------------------------
 model Shipment {
   id       Int    @id @default(autoincrement())
@@ -429,7 +436,7 @@ model Shipment {
 }
 
 // -----------------------------------------------------------------------------
-// 14. Box - Container
+// 15. Box - Container
 // -----------------------------------------------------------------------------
 model Box {
   id         Int      @id @default(autoincrement())
@@ -477,7 +484,7 @@ model Box {
 }
 
 // -----------------------------------------------------------------------------
-// 15. Items - Products
+// 16. Items - Products
 // -----------------------------------------------------------------------------
 model ShipmentItem {
   id         Int      @id @default(autoincrement())
@@ -530,7 +537,7 @@ model ShipmentItem {
 }
 
 // -----------------------------------------------------------------------------
-// 16. Internal Messaging System
+// 17. Internal Messaging System
 // -----------------------------------------------------------------------------
 model Message {
   id Int @id @default(autoincrement())
