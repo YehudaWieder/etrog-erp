@@ -178,7 +178,7 @@ model CustomerCategories {
   customer   Customer @relation(fields: [customerId], references: [id])
 
   name     String
-  grade    Grade
+  grade    String
   price    Decimal  @default(0)
   currency Currency
 
