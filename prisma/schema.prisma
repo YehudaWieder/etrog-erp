@@ -26,6 +26,16 @@ model SystemConfig {
 }
 
 // -----------------------------------------------------------------------------
+// 1. FieldS Settings
+// -----------------------------------------------------------------------------
+model Field {
+  id        Int    @id @default(autoincrement())
+  name      String
+
+  @@unique([name])
+}
+
+// -----------------------------------------------------------------------------
 // 2. Season Management (The Time-Tenant)
 // -----------------------------------------------------------------------------
 model Season {
@@ -209,7 +219,8 @@ model FieldHarvest {
 
   dateGregorian DateTime
   dateHebrew    String
-  fieldName     String
+  fieldId     Int
+  field       Field @relation(fields: [fieldId], references: [id])
 
   updatedById Int
   updatedBy   User @relation(fields: [updatedById], references: [id])
