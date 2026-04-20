@@ -10,14 +10,17 @@ export class ShipmentService {
 
   // Create a new shipment shell
   async create(data: Prisma.ShipmentUncheckedCreateInput) {
-    // Generate a slug based on year and ID (using a transaction to get the next ID or date)
     const year = new Date().getFullYear();
-    
-    return this.prisma.shipment.create({
-      data: {
-        ...data,
-        slug: `SHP-${year}-${Math.floor(Math.random() * 10000)}`, // Temporary slug, can be improved with a sequence
-      },
+
+    const shipment = await this.prisma.shipment.create({
+        data,
+    });
+
+    const slug = `SHP-${year}-${shipment.shipmentNumber}`;
+
+    return this.prisma.shipment.update({
+        where: { id: shipment.id },
+        data: { slug },
     });
   }
 
