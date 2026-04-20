@@ -432,7 +432,7 @@ model Shipment {
 
   isDeleted Boolean @default(false)
 
-  @@unique([seasonId, id])
+  @@unique([seasonId, shipmentNumber])
   @@index([seasonId])
   @@index([seasonId, status])
   @@index([isDeleted])
@@ -475,7 +475,7 @@ model Box {
 
   isDeleted Boolean @default(false)
 
-  @@unique([shipmentId, boxNumber])
+  @@unique([seasonId, shipmentId, boxNumber])
   @@index([seasonId])
   @@index([shipmentId])
   @@index([traderId])
@@ -528,7 +528,7 @@ model ShipmentItem {
 
   isDeleted Boolean @default(false)
 
-  @@unique([boxId, traderCategoryId, customerCategoryId, grade, pitamStatus, ownershipType, traderId, customerId])
+  @@unique([seasonId, boxId, traderCategoryId, customerCategoryId, grade, pitamStatus, ownershipType, traderId, customerId])
   @@index([shipmentId])
   @@index([boxId])
   @@index([seasonId])
