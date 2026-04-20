@@ -23,6 +23,14 @@ export class HarvestController {
     return this.harvestService.findOne(id);
   }
 
+  @Get('search')
+  findByFieldNameAndDate(
+    @Query('fieldName') fieldName: string,
+    @Query('date') date: string,
+  ) {
+    return this.harvestService.findByFieldNameAndDate(fieldName, date);
+  }
+
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
