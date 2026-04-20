@@ -18,6 +18,15 @@ export class ShipmentController {
     return this.shipmentService.findAllBySeason(seasonId);
   }
 
+  @Get('by-number')
+  findByNumber(
+    @Query('seasonId', ParseIntPipe) seasonId: number,
+    @Query('shipmentNumber', ParseIntPipe) shipmentNumber: number,
+  ) {
+    return this.shipmentService.findByNumber(seasonId, shipmentNumber);
+  }
+
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.shipmentService.findOne(id);

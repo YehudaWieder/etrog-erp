@@ -12,16 +12,33 @@ export class ShipmentService {
   async create(data: Prisma.ShipmentUncheckedCreateInput) {
     const year = new Date().getFullYear();
 
+    // create shipment first to get the auto-incremented shipmentNumber for slug generation
     const shipment = await this.prisma.shipment.create({
-        data,
+      data,
     });
 
     const slug = `SHP-${year}-${shipment.shipmentNumber}`;
 
     return this.prisma.shipment.update({
-        where: { id: shipment.id },
-        data: { slug },
+      where: { id: shipment.id },
+      data: { slug },
     });
+  }
+
+  // Find by the new unique constraint (Season + Number)
+  async findByNumber(seasonId: number, shipmentNumber: number) {
+    const shipment = await this.prisma.shipment.findUnique({
+      where: {
+        seasonId_shipmentNumber: { seasonId, shipmentNumber },
+      },
+      include: {
+        boxes: { where: { isDeleted: false } },
+        _count: { select: { items: true } }
+      },
+    });
+
+    if (!shipment) throw new NotFoundException(`Shipment #${shipmentNumber} not found in this season`);
+    return shipment;
   }
 
   // Get all shipments for a season
@@ -34,7 +51,7 @@ export class ShipmentService {
           select: { boxes: true, items: true }
         }
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { shipmentNumber: 'desc' },
     });
   }
 
