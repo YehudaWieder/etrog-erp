@@ -39,6 +39,19 @@ export class TraderStockController {
     return this.stockService.getMovementHistory(seasonId, traderId, traderCategoryId);
   }
 
+  @Get('ledger')
+  getLedger(
+    @Query('seasonId', ParseIntPipe) seasonId: number,
+    @Query('traderId', ParseIntPipe) traderId: number,
+  ) {
+    return this.stockService.getLedger(seasonId, traderId);
+  }
+
+  @Get('reference/:referenceId')
+  findByReference(@Param('referenceId', ParseIntPipe) referenceId: number) {
+    return this.stockService.findByReference(referenceId);
+  }
+
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.stockService.remove(id);
