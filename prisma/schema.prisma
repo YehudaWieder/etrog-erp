@@ -404,6 +404,9 @@ model CustomerAllocation {
 // -----------------------------------------------------------------------------
 model Shipment {
   id       Int    @id @default(autoincrement())
+
+  shipmentNumber Int @unique @default(autoincrement())
+  
   seasonId Int
   season   Season @relation(fields: [seasonId], references: [id])
 
