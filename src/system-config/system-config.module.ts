@@ -1,14 +1,14 @@
 // src/system-config/system-config.module.ts
 import { Module } from '@nestjs/common';
-import { SystemConfigService } from './system-config.service';
-import { SystemConfigController } from 'src/system-config/system-config.controller';
-import { ConfigService } from './services/config/config.service';
-import { FieldsService } from './services/fields/fields.service';
-import { FieldsController } from './controllers/fields/fields.controller';
-import { ConfigController } from './controllers/config/config.controller';
+import { SystemConfigService } from './services/config/config.service';
+import { SystemConfigController } from './controllers/config/config.controller';
+import { FieldService } from './services/fields/fields.service';
+import { FieldController } from './controllers/fields/fields.controller';
+import { ConfigService } from './system-config.service';
+import { ConfigController } from './system-config.controller';
 
 @Module({
-  controllers: [SystemConfigController, FieldsController, ConfigController],
-  providers: [SystemConfigService, ConfigService, FieldsService],
+  controllers: [SystemConfigController, FieldController, ConfigController],
+  providers: [SystemConfigService, ConfigService, FieldService],
 })
 export class SystemConfigModule {}
