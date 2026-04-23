@@ -10,12 +10,11 @@ import { ShipmentsModule } from './shipments/shipments.module';
 import { MessagesModule } from './messages/messages.module';
 import { CategoriesModule } from './categories/categories.module';
 import { PrismaModule } from './prisma/prisma.module';
-import { SystemConfigService } from './system-config/system-config.service';
 import { SystemConfigModule } from './system-config/system-config.module';
 
 @Module({
   imports: [UsersModule, SeasonsModule, PartnersModule, HarvestModule, InventoryModule, ShipmentsModule, MessagesModule, CategoriesModule, PrismaModule, SystemConfigModule],
   controllers: [AppController],
-  providers: [AppService, SystemConfigService],
+  providers: [AppService],
 })
 export class AppModule {}
