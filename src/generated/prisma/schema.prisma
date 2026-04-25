@@ -13,10 +13,10 @@ datasource db {
 // 1. System Settings
 // -----------------------------------------------------------------------------
 model SystemConfig {
-  id        Int       @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
   seasonId Int
-  season   Season  @relation(fields: [seasonId], references: [id])
+  season   Season @relation(fields: [seasonId], references: [id])
 
   fields    String[]
   currency  Currency?
@@ -30,10 +30,10 @@ model SystemConfig {
 // 2. Fields Settings
 // -----------------------------------------------------------------------------
 model Field {
-  id        Int    @id @default(autoincrement())
-  name      String
+  id   Int    @id @default(autoincrement())
+  name String
 
-  fieldHarvests  FieldHarvest[]
+  fieldHarvests FieldHarvest[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -227,8 +227,8 @@ model FieldHarvest {
 
   dateGregorian DateTime
   dateHebrew    String
-  fieldId     Int
-  field       Field @relation(fields: [fieldId], references: [id])
+  fieldId       Int
+  field         Field    @relation(fields: [fieldId], references: [id])
 
   updatedById Int
   updatedBy   User @relation(fields: [updatedById], references: [id])
@@ -404,10 +404,10 @@ model CustomerAllocation {
 // 14. Shipment
 // -----------------------------------------------------------------------------
 model Shipment {
-  id       Int    @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
   shipmentNumber Int @unique @default(autoincrement())
-  
+
   seasonId Int
   season   Season @relation(fields: [seasonId], references: [id])
 
