@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { SeasonsModule } from './seasons/seasons.module';
 import { PartnersModule } from './partners/partners.module';
@@ -13,7 +14,19 @@ import { PrismaModule } from './prisma/prisma.module';
 import { SystemConfigModule } from './system-config/system-config.module';
 
 @Module({
-  imports: [UsersModule, SeasonsModule, PartnersModule, HarvestModule, InventoryModule, ShipmentsModule, MessagesModule, CategoriesModule, PrismaModule, SystemConfigModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    UsersModule,
+    SeasonsModule,
+    PartnersModule,
+    HarvestModule,
+    InventoryModule,
+    ShipmentsModule,
+    MessagesModule,
+    CategoriesModule,
+    PrismaModule,
+    SystemConfigModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

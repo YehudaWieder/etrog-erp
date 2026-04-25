@@ -7,6 +7,10 @@ const { PrismaPg } = require('@prisma/adapter-pg');
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor() {
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL is missing. Set it in your environment or .env file before starting the app.');
+    }
+
     const adapter = new PrismaPg({
       connectionString: process.env.DATABASE_URL,
     });
