@@ -310,3 +310,32 @@ export class PricingConfigSwaggerDto {
   @ApiProperty({ description: 'Unit price value.' })
   unitPrice!: number;
 }
+
+export class SystemConfigCreateSwaggerDto {
+  @ApiProperty({ description: 'Season ID for which the configuration is created or retrieved.', example: 1 })
+  seasonId!: number;
+
+  @ApiPropertyOptional({
+    enum: Currency,
+    enumName: 'Currency',
+    description: 'Optional initial currency value.',
+    example: 'ILS',
+  })
+  currency?: Currency;
+
+  @ApiPropertyOptional({ description: 'Optional initial unit price value.', example: 8.5 })
+  unitPrice?: number;
+}
+
+export class SystemConfigUpdateSwaggerDto {
+  @ApiPropertyOptional({
+    enum: Currency,
+    enumName: 'Currency',
+    description: 'Updated pricing currency.',
+    example: 'USD',
+  })
+  currency?: Currency;
+
+  @ApiPropertyOptional({ description: 'Updated unit price value.', example: 10.25 })
+  unitPrice?: number;
+}

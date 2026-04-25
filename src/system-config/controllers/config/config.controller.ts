@@ -4,7 +4,11 @@ import { Controller, Get, Post, Patch, Body, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
 import { SystemConfigService } from 'src/system-config/services/config/config.service';
 import { Currency } from '@prisma/client';
-import { PricingConfigSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+import {
+  PricingConfigSwaggerDto,
+  SystemConfigCreateSwaggerDto,
+  SystemConfigUpdateSwaggerDto,
+} from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('System Configuration')
 @ApiBearerAuth('access-token')
@@ -24,18 +28,31 @@ export class SystemConfigController {
   @Post()
   @ApiOperation({ summary: 'Create or retrieve the system configuration for a given season' })
   @ApiBody({
-    schema: {
-      type: 'object',
-      required: ['seasonId'],
-      properties: {
-        seasonId: { type: 'integer', description: 'The ID of the season to create or retrieve config for.' },
+    type: SystemConfigCreateSwaggerDto,
+    examples: {
+      minimal: {
+        summary: 'Create or get config with minimum required payload',
+        value: {
+          seasonId: 1,
+        },
+      },
+      full: {
+        summary: 'Create config with initial pricing values',
+        value: {
+          seasonId: 1,
+          currency: 'ILS',
+          unitPrice: 8.5,
+        },
       },
     },
   })
   @ApiResponse({ status: 201, description: 'System configuration created or retrieved successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input.' })
-  createConfig(@Body() body: { seasonId: number }) {
-    return this.systemConfigService.getOrCreateConfig(body.seasonId);
+  createConfig(@Body() body: { seasonId: number; currency?: Currency; unitPrice?: number }) {
+    return this.systemConfigService.getOrCreateConfig(body.seasonId, {
+      currency: body.currency,
+      unitPrice: body.unitPrice,
+    });
   }
 
   @Patch(':seasonId/pricing')
@@ -56,28 +73,20 @@ export class SystemConfigController {
   @ApiOperation({ summary: 'Update general system configuration fields for a season' })
   @ApiParam({ name: 'seasonId', type: Number, description: 'The ID of the season.' })
   @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        fields: {
-          type: 'array',
-          items: { type: 'string' },
-          example: ['North Orchard', 'South Orchard'],
-        },
-        currency: {
-          type: 'string',
-          enum: ['ILS', 'USD', 'EUR'],
-          example: 'ILS',
-        },
-        unitPrice: {
-          type: 'number',
-          example: 8.5,
+    type: SystemConfigUpdateSwaggerDto,
+    examples: {
+      full: {
+        summary: 'Update both currency and unit price',
+        value: {
+          currency: 'USD',
+          unitPrice: 10.25,
         },
       },
-      example: {
-        fields: ['North Orchard', 'South Orchard'],
-        currency: 'ILS',
-        unitPrice: 8.5,
+      partial: {
+        summary: 'Update only currency',
+        value: {
+          currency: 'EUR',
+        },
       },
     },
   })

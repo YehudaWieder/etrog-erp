@@ -9,14 +9,29 @@ export class SystemConfigService {
   constructor(private prisma: PrismaService) {}
 
   // Get or create config per season
-  async getOrCreateConfig(seasonId: number) {
+  async getOrCreateConfig(
+    seasonId: number,
+    data?: { currency?: Currency; unitPrice?: number },
+  ) {
+    const updateData: Prisma.SystemConfigUpdateInput = {};
+    const createData: Prisma.SystemConfigUncheckedCreateInput = {
+      seasonId,
+    };
+
+    if (data?.currency !== undefined) {
+      updateData.currency = data.currency;
+      createData.currency = data.currency;
+    }
+
+    if (data?.unitPrice !== undefined) {
+      updateData.unitPrice = data.unitPrice;
+      createData.unitPrice = data.unitPrice;
+    }
+
     return this.prisma.systemConfig.upsert({
       where: { id: seasonId }, 
-      update: {},
-      create: {
-        id: seasonId,
-        seasonId,
-      },
+      update: updateData,
+      create: createData,
     });
   }
 
