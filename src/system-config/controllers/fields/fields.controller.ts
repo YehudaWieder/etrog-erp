@@ -1,39 +1,64 @@
 // src/system-config/controllers/fields/fields.controller.ts
 
-import {
-  Controller, Get, Post, Delete, Patch, Body, Param,} from '@nestjs/common';
+import { Controller, Get, Post, Delete, Patch, Body, Param } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
 import { FieldService } from 'src/system-config/services/fields/fields.service';
 
+@ApiTags('System Configuration')
+@ApiBearerAuth('access-token')
 @Controller('fields')
 export class FieldController {
   constructor(private readonly fieldService: FieldService) {}
 
-  // Get all fields
   @Get()
+  @ApiOperation({ summary: 'Retrieve a list of all registered harvest fields' })
+  @ApiResponse({ status: 200, description: 'List of fields returned successfully.' })
   getAllFields() {
     return this.fieldService.getAllFields();
   }
 
-  // Create field
   @Post()
+  @ApiOperation({ summary: 'Register a new harvest field. Unique constraint: [name].' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['name'],
+      properties: {
+        name: { type: 'string', description: 'The unique name of the field.' },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Field created successfully.' })
+  @ApiResponse({ status: 400, description: 'Invalid input or duplicate field name.' })
   addField(@Body() body: { name: string }) {
     return this.fieldService.addField(body.name);
   }
 
-  // Delete field
   @Delete(':name')
+  @ApiOperation({ summary: 'Remove a harvest field by its name' })
+  @ApiParam({ name: 'name', type: String, description: 'The name of the field to remove.' })
+  @ApiResponse({ status: 200, description: 'Field removed successfully.' })
+  @ApiResponse({ status: 404, description: 'Field not found.' })
   removeField(@Param('name') name: string) {
     return this.fieldService.removeField(name);
   }
 
-  // Update field name
   @Patch()
-  updateField(
-    @Body() body: { oldName: string; newName: string },
-  ) {
-    return this.fieldService.updateFieldName(
-      body.oldName,
-      body.newName,
-    );
+  @ApiOperation({ summary: 'Rename an existing harvest field' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['oldName', 'newName'],
+      properties: {
+        oldName: { type: 'string', description: 'The current name of the field.' },
+        newName: { type: 'string', description: 'The new name for the field.' },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Field renamed successfully.' })
+  @ApiResponse({ status: 400, description: 'Invalid input or duplicate new field name.' })
+  @ApiResponse({ status: 404, description: 'Field with the given name not found.' })
+  updateField(@Body() body: { oldName: string; newName: string }) {
+    return this.fieldService.updateFieldName(body.oldName, body.newName);
   }
 }

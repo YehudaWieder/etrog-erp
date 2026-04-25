@@ -1,0 +1,312 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  AssignmentType,
+  BoxOwnership,
+  BoxStatus,
+  BoxType,
+  Currency,
+  Grade,
+  ItemOwnership,
+  MovementType,
+  PitamStatus,
+  Priority,
+  Role,
+  ShipmentStatus,
+  SourceType,
+} from '@prisma/client';
+
+export class UserSwaggerDto {
+  @ApiProperty({ description: 'Unique display name of the user.' })
+  name!: string;
+
+  @ApiProperty({ description: 'Unique email of the user.' })
+  email!: string;
+
+  @ApiPropertyOptional({ description: 'Optional unique phone number.' })
+  phone?: string;
+
+  @ApiProperty({ description: 'Hashed password value.' })
+  passwordHash!: string;
+
+  @ApiPropertyOptional({ enum: Role, enumName: 'Role', description: 'Role assigned to the user.' })
+  role?: Role;
+}
+
+export class MessageSwaggerDto {
+  @ApiProperty({ description: 'Sender user ID.' })
+  senderId!: number;
+
+  @ApiPropertyOptional({ description: 'Recipient user ID for direct messages.' })
+  recipientId?: number;
+
+  @ApiProperty({ description: 'Message subject.' })
+  subject!: string;
+
+  @ApiProperty({ description: 'Message body content.' })
+  content!: string;
+
+  @ApiPropertyOptional({ enum: Priority, enumName: 'Priority', description: 'Message priority level.' })
+  priority?: Priority;
+
+  @ApiPropertyOptional({ description: 'Read state of the message.' })
+  isRead?: boolean;
+}
+
+export class ClassificationSwaggerDto {
+  @ApiProperty({ description: 'Season ID.' })
+  seasonId!: number;
+
+  @ApiProperty({ description: 'Field harvest ID.' })
+  fieldHarvestId!: number;
+
+  @ApiProperty({ description: 'User ID who updated the record.' })
+  updatedById!: number;
+
+  @ApiProperty({ enum: AssignmentType, enumName: 'AssignmentType', description: 'Classification assignment type.' })
+  assignmentType!: AssignmentType;
+
+  @ApiPropertyOptional({ description: 'Trader ID when assignmentType is TRADER.' })
+  traderId?: number;
+
+  @ApiPropertyOptional({ description: 'Customer ID when assignmentType is CUSTOMER.' })
+  customerId?: number;
+
+  @ApiPropertyOptional({ description: 'Trader category ID.' })
+  traderCategoryId?: number;
+
+  @ApiPropertyOptional({ description: 'Customer category ID.' })
+  customerCategoryId?: number;
+
+  @ApiPropertyOptional({ enum: Grade, enumName: 'Grade', description: 'Etrog grade.' })
+  grade?: Grade;
+
+  @ApiProperty({ enum: PitamStatus, enumName: 'PitamStatus', description: 'Pitam status of the classified fruit.' })
+  pitamStatus!: PitamStatus;
+
+  @ApiPropertyOptional({ description: 'Quantity in this classification.' })
+  quantity?: number;
+
+  @ApiPropertyOptional({ description: 'Optional notes.' })
+  notes?: string;
+}
+
+export class TraderStockSwaggerDto {
+  @ApiProperty({ description: 'Season ID.' })
+  seasonId!: number;
+
+  @ApiProperty({ description: 'Movement date-time in ISO format.' })
+  date!: Date | string;
+
+  @ApiPropertyOptional({ description: 'Trader ID. Keep empty for Modulo stock.' })
+  traderId?: number;
+
+  @ApiProperty({ description: 'Trader category ID.' })
+  traderCategoryId!: number;
+
+  @ApiProperty({ enum: Grade, enumName: 'Grade', description: 'Etrog grade.' })
+  grade!: Grade;
+
+  @ApiProperty({ enum: PitamStatus, enumName: 'PitamStatus', description: 'Pitam status.' })
+  pitamStatus!: PitamStatus;
+
+  @ApiProperty({ description: 'Movement quantity.' })
+  quantity!: number;
+
+  @ApiPropertyOptional({ description: 'Whether movement belongs to Modulo pool.' })
+  isModulo?: boolean;
+
+  @ApiPropertyOptional({ enum: MovementType, enumName: 'MovementType', description: 'Inventory movement type.' })
+  type?: MovementType;
+
+  @ApiPropertyOptional({ description: 'Reference entity ID (classification, shipment item, or allocation).' })
+  MovementReferenceId?: number;
+
+  @ApiPropertyOptional({ description: 'Shipment ID if movement is linked to shipment.' })
+  shipmentId?: number;
+
+  @ApiPropertyOptional({ description: 'Box ID if movement is linked to box.' })
+  boxId?: number;
+
+  @ApiPropertyOptional({ description: 'Optional notes.' })
+  notes?: string;
+
+  @ApiProperty({ description: 'User ID who updated the movement.' })
+  updatedById!: number;
+}
+
+export class CustomerAllocationSwaggerDto {
+  @ApiProperty({ description: 'Season ID.' })
+  seasonId!: number;
+
+  @ApiProperty({ description: 'Allocation date-time in ISO format.' })
+  date!: Date | string;
+
+  @ApiProperty({ description: 'Hebrew date representation.' })
+  dateHebrew!: string;
+
+  @ApiProperty({ description: 'Customer ID.' })
+  customerId!: number;
+
+  @ApiProperty({ description: 'Customer category ID.' })
+  customerCategoryId!: number;
+
+  @ApiProperty({ enum: PitamStatus, enumName: 'PitamStatus', description: 'Pitam status.' })
+  pitamStatus!: PitamStatus;
+
+  @ApiProperty({ description: 'Allocated quantity.' })
+  quantity!: number;
+
+  @ApiPropertyOptional({ enum: MovementType, enumName: 'MovementType', description: 'Inventory movement type.' })
+  type?: MovementType;
+
+  @ApiPropertyOptional({ enum: SourceType, enumName: 'SourceType', description: 'Source of allocation inventory.' })
+  takenFrom?: SourceType;
+
+  @ApiPropertyOptional({ description: 'Trader ID if source is trader-specific.' })
+  traderId?: number;
+
+  @ApiPropertyOptional({ description: 'Reference entity ID (classification, shipment item, or stock movement).' })
+  MovementReferenceId?: number;
+
+  @ApiPropertyOptional({ description: 'Shipment ID if linked.' })
+  shipmentId?: number;
+
+  @ApiPropertyOptional({ description: 'Box ID if linked.' })
+  boxId?: number;
+
+  @ApiPropertyOptional({ description: 'Optional notes.' })
+  notes?: string;
+
+  @ApiProperty({ description: 'User ID who updated the allocation.' })
+  updatedById!: number;
+}
+
+export class ShipmentSwaggerDto {
+  @ApiProperty({ description: 'Season ID.' })
+  seasonId!: number;
+
+  @ApiPropertyOptional({ description: 'Total boxes in shipment.' })
+  totalBoxes?: number;
+
+  @ApiPropertyOptional({ description: 'Total quantity in shipment.' })
+  totalQuantity?: number;
+
+  @ApiPropertyOptional({ enum: ShipmentStatus, enumName: 'ShipmentStatus', description: 'Shipment lifecycle status.' })
+  status?: ShipmentStatus;
+
+  @ApiPropertyOptional({ description: 'Date-time when shipment was sent.' })
+  shippedAt?: Date | string;
+
+  @ApiPropertyOptional({ description: 'Optional notes.' })
+  notes?: string;
+
+  @ApiProperty({ description: 'User ID who updated shipment.' })
+  updatedById!: number;
+
+  @ApiProperty({ description: 'Unique slug for shipment.' })
+  slug!: string;
+}
+
+export class BoxSwaggerDto {
+  @ApiProperty({ description: 'Shipment ID.' })
+  shipmentId!: number;
+
+  @ApiProperty({ description: 'Season ID.' })
+  seasonId!: number;
+
+  @ApiProperty({ description: 'Box sequence number within shipment.' })
+  boxNumber!: number;
+
+  @ApiProperty({ enum: BoxType, enumName: 'BoxType', description: 'Physical box type.' })
+  boxType!: BoxType;
+
+  @ApiPropertyOptional({ description: 'Total quantity in box.' })
+  totalQuantity?: number;
+
+  @ApiPropertyOptional({ enum: BoxStatus, enumName: 'BoxStatus', description: 'Operational status of the box.' })
+  status?: BoxStatus;
+
+  @ApiPropertyOptional({ description: 'Optional notes.' })
+  notes?: string;
+
+  @ApiPropertyOptional({ enum: BoxOwnership, enumName: 'BoxOwnership', description: 'Ownership model for the box.' })
+  ownershipType?: BoxOwnership;
+
+  @ApiPropertyOptional({ description: 'Trader ID when ownership is trader-based.' })
+  traderId?: number;
+
+  @ApiPropertyOptional({ description: 'Customer ID when ownership is customer-based.' })
+  customerId?: number;
+
+  @ApiProperty({ description: 'User ID who updated box.' })
+  updatedById!: number;
+}
+
+export class ShipmentItemSwaggerDto {
+  @ApiProperty({ description: 'Shipment ID.' })
+  shipmentId!: number;
+
+  @ApiProperty({ description: 'Box ID.' })
+  boxId!: number;
+
+  @ApiProperty({ description: 'Season ID.' })
+  seasonId!: number;
+
+  @ApiPropertyOptional({ description: 'Trader category ID.' })
+  traderCategoryId?: number;
+
+  @ApiPropertyOptional({ description: 'Customer category ID.' })
+  customerCategoryId?: number;
+
+  @ApiPropertyOptional({ enum: Grade, enumName: 'Grade', description: 'Etrog grade.' })
+  grade?: Grade;
+
+  @ApiProperty({ enum: PitamStatus, enumName: 'PitamStatus', description: 'Pitam status.' })
+  pitamStatus!: PitamStatus;
+
+  @ApiProperty({ description: 'Item quantity.' })
+  quantity!: number;
+
+  @ApiPropertyOptional({ description: 'Optional notes.' })
+  notes?: string;
+
+  @ApiPropertyOptional({ enum: ItemOwnership, enumName: 'ItemOwnership', description: 'Ownership model for item.' })
+  ownershipType?: ItemOwnership;
+
+  @ApiPropertyOptional({ description: 'Trader ID when ownership is trader-based.' })
+  traderId?: number;
+
+  @ApiPropertyOptional({ description: 'Customer ID when ownership is customer-based.' })
+  customerId?: number;
+
+  @ApiProperty({ description: 'User ID who updated item.' })
+  updatedById!: number;
+}
+
+export class CustomerCategorySwaggerDto {
+  @ApiProperty({ description: 'Season ID.' })
+  seasonId!: number;
+
+  @ApiProperty({ description: 'Customer ID.' })
+  customerId!: number;
+
+  @ApiProperty({ description: 'Category name.' })
+  name!: string;
+
+  @ApiProperty({ enum: Grade, enumName: 'Grade', description: 'Etrog grade.' })
+  grade!: Grade;
+
+  @ApiProperty({ description: 'Configured price.' })
+  price!: number;
+
+  @ApiProperty({ enum: Currency, enumName: 'Currency', description: 'Pricing currency.' })
+  currency!: Currency;
+}
+
+export class PricingConfigSwaggerDto {
+  @ApiProperty({ enum: Currency, enumName: 'Currency', description: 'Pricing currency.' })
+  currency!: Currency;
+
+  @ApiProperty({ description: 'Unit price value.' })
+  unitPrice!: number;
+}
