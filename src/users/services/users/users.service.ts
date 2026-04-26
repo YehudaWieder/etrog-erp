@@ -24,11 +24,16 @@ type UpdateUserByActorInput = SelfUpdateInput & AdminUpdateInput;
 @Injectable()
 export class UsersService {
   private readonly saltRounds = 10;
+  private readonly emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  private readonly passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 
   constructor(private prisma: PrismaService) {}
 
   // Create a new user with hashed password and slug
   async createUser(data: Prisma.UserCreateInput) {
+    this.assertEmailFormat(data.email);
+    this.assertPasswordFormat(data.passwordHash);
+
     // Check if email or name exists
     const existing = await this.prisma.user.findFirst({
       where: { OR: [{ email: data.email }, { name: data.name }] },
@@ -117,9 +122,15 @@ export class UsersService {
       throw new ForbiddenException('You are not allowed to update role or isActive on your own account.');
     }
 
+    if (profileFields.email !== undefined) {
+      this.assertEmailFormat(profileFields.email);
+    }
+
     const updateData: Prisma.UserUpdateInput = { ...profileFields };
 
     if (newPassword !== undefined) {
+      this.assertPasswordFormat(newPassword);
+
       if (!currentPassword) {
         throw new BadRequestException('currentPassword is required to change password.');
       }
@@ -172,6 +183,20 @@ export class UsersService {
         ...(isActive !== undefined ? { isActive } : {}),
       },
     });
+  }
+
+  private assertEmailFormat(email: string) {
+    if (!this.emailRegex.test(email)) {
+      throw new BadRequestException('Invalid email format.');
+    }
+  }
+
+  private assertPasswordFormat(password: string) {
+    if (!this.passwordRegex.test(password)) {
+      throw new BadRequestException(
+        'Password must be at least 8 characters long and include letters and numbers.',
+      );
+    }
   }
 
   // Soft delete / Deactivate
