@@ -24,7 +24,6 @@ export class FieldController {
   @Roles()
   @ApiOperation({ summary: 'Retrieve a list of all registered harvest fields' })
   @ApiResponse({ status: 200, description: 'List of fields returned successfully.' })
-  @Public()
   getAllFields() {
     return this.fieldService.getAllFields();
   }
