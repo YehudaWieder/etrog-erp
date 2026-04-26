@@ -1,5 +1,5 @@
 import { Injectable, ConflictException, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma, Priority, Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
@@ -43,12 +43,36 @@ export class UsersService {
 		const hashedPassword = await bcrypt.hash(data.passwordHash, this.saltRounds);
 		const slug = data.name.toLowerCase().replace(/ /g, '-');
 
-		return this.prisma.user.create({
-			data: {
-				...data,
-				passwordHash: hashedPassword,
-				slug,
-			},
+		return this.prisma.$transaction(async (tx) => {
+			const newUser = await tx.user.create({
+				data: {
+					...data,
+					passwordHash: hashedPassword,
+					slug,
+				},
+			});
+
+			const managementUsers = await tx.user.findMany({
+				where: {
+					role: { in: [Role.OWNER, Role.MANAGER] },
+					id: { not: newUser.id },
+				},
+				select: { id: true },
+			});
+
+			if (managementUsers.length > 0) {
+				await tx.message.createMany({
+					data: managementUsers.map((manager) => ({
+						senderId: newUser.id,
+						recipientId: manager.id,
+						subject: 'משתמש חדש נרשם - מחכה לאישור הפעלה',
+						content: `משתמש חדש (${newUser.name}, ${newUser.email}) נרשם ומחכה לאישור הפעלה.`,
+						priority: Priority.NORMAL,
+					})),
+				});
+			}
+
+			return newUser;
 		});
 	}
 
