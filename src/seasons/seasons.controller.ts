@@ -1,11 +1,13 @@
 // src/seasons/seasons.controller.ts
 
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { SeasonsService } from './seasons.service';
 
 @ApiTags('Seasons')
 @ApiBearerAuth('access-token')
+@ApiUnauthorizedResponse({ description: 'JWT authentication failed or token is missing.' })
+@ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
 @Controller('seasons')
 export class SeasonsController {
   constructor(private readonly seasonsService: SeasonsService) {}

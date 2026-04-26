@@ -1,13 +1,15 @@
 // src/categories/controllers/customer-cat/customer-cat.controller.ts
 
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { CustomerCatService } from 'src/categories/services/customrs-cat/customrs-cat.service';
 import { Prisma, Grade, Currency } from '@prisma/client';
 import { CustomerCategorySwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Categories')
 @ApiBearerAuth('access-token')
+@ApiUnauthorizedResponse({ description: 'JWT authentication failed or token is missing.' })
+@ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
 @Controller('customer-categories')
 export class CustomerCatController {
   constructor(private readonly customerCatService: CustomerCatService) {}

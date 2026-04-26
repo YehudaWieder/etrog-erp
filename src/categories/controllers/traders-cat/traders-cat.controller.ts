@@ -1,12 +1,14 @@
 // src/categories/controllers/traders-cat/traders-cat.controller.ts
 
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { TradersCatService } from '../../services/traders-cat/traders-cat.service';
 import { Prisma } from '@prisma/client';
 
 @ApiTags('Categories')
 @ApiBearerAuth('access-token')
+@ApiUnauthorizedResponse({ description: 'JWT authentication failed or token is missing.' })
+@ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
 @Controller('traders-categories')
 export class TradersCatController {
   constructor(private readonly tradersCatService: TradersCatService) {}

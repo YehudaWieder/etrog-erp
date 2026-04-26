@@ -1,13 +1,15 @@
 // src/shipments/controllers/box/box.controller.ts
 
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { BoxService } from '../../services/box/box.service';
 import { Prisma } from '@prisma/client';
 import { BoxSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Logistics')
 @ApiBearerAuth('access-token')
+@ApiUnauthorizedResponse({ description: 'JWT authentication failed or token is missing.' })
+@ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
 @Controller('boxes')
 export class BoxController {
   constructor(private readonly boxService: BoxService) {}

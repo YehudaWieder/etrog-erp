@@ -1,13 +1,15 @@
 // src/messages/messages.controller.ts
 
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { MessagesService } from './messages.service';
 import { Prisma } from '@prisma/client';
 import { MessageSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Messages')
 @ApiBearerAuth('access-token')
+@ApiUnauthorizedResponse({ description: 'JWT authentication failed or token is missing.' })
+@ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
 @Controller('messages')
 export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}

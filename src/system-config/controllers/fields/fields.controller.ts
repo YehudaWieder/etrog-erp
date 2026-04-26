@@ -1,11 +1,13 @@
 // src/system-config/controllers/fields/fields.controller.ts
 
 import { Controller, Get, Post, Delete, Patch, Body, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { FieldService } from 'src/system-config/services/fields/fields.service';
 
 @ApiTags('System Configuration')
 @ApiBearerAuth('access-token')
+@ApiUnauthorizedResponse({ description: 'JWT authentication failed or token is missing.' })
+@ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
 @Controller('fields')
 export class FieldController {
   constructor(private readonly fieldService: FieldService) {}

@@ -18,7 +18,6 @@ model SystemConfig {
   seasonId Int
   season   Season @relation(fields: [seasonId], references: [id])
 
-  fields    String[]
   currency  Currency?
   unitPrice Decimal?
 

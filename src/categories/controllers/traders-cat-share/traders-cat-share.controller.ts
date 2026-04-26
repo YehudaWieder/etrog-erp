@@ -1,12 +1,14 @@
 // src/categories/controllers/traders-cat-share/traders-cat-share.controller.ts
 
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { TraderCatShareService } from 'src/categories/services/traders-cat-share/traders-cat-share.service';
 import { Prisma } from '@prisma/client';
 
 @ApiTags('Categories')
 @ApiBearerAuth('access-token')
+@ApiUnauthorizedResponse({ description: 'JWT authentication failed or token is missing.' })
+@ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
 @Controller('trader-shares')
 export class TraderCatShareController {
   constructor(private readonly shareService: TraderCatShareService) {}

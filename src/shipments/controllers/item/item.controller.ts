@@ -1,13 +1,15 @@
 // src/shipments/controllers/item/item.controller.ts
 
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { ItemService } from '../../services/item/item.service';
 import { Prisma } from '@prisma/client';
 import { ShipmentItemSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Logistics')
 @ApiBearerAuth('access-token')
+@ApiUnauthorizedResponse({ description: 'JWT authentication failed or token is missing.' })
+@ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
 @Controller('shipment-items')
 export class ItemController {
   constructor(private readonly itemService: ItemService) {}

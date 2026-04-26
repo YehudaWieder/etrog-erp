@@ -1,13 +1,15 @@
 // src/inventory/controllers/trader-stock/trader-stock.controller.ts
 
 import { Controller, Get, Post, Delete, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { TraderStockService } from '../../services/trader-stock/trader-stock.service';
 import { Prisma, Grade, PitamStatus } from '@prisma/client';
 import { TraderStockSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('access-token')
+@ApiUnauthorizedResponse({ description: 'JWT authentication failed or token is missing.' })
+@ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
 @Controller('trader-stock')
 export class TraderStockController {
   constructor(private readonly stockService: TraderStockService) {}

@@ -1,12 +1,14 @@
 // src/partners/controllers/traders/traders.controller.ts
 
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { TradersService } from '../../services/traders/traders.service';
 import { Prisma } from '@prisma/client';
 
 @ApiTags('Partners')
 @ApiBearerAuth('access-token')
+@ApiUnauthorizedResponse({ description: 'JWT authentication failed or token is missing.' })
+@ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
 @Controller('traders')
 export class TradersController {
   constructor(private readonly tradersService: TradersService) {}

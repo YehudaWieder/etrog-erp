@@ -1,13 +1,15 @@
 // src/inventory/controllers/customer-allocation/customer-allocation.controller.ts
 
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { CustomerAllocationService } from '../../services/customer-allocation/customer-allocation.service';
 import { Prisma, PitamStatus } from '@prisma/client';
 import { CustomerAllocationSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('access-token')
+@ApiUnauthorizedResponse({ description: 'JWT authentication failed or token is missing.' })
+@ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
 @Controller('customer-allocations')
 export class CustomerAllocationController {
   constructor(private readonly allocationService: CustomerAllocationService) {}

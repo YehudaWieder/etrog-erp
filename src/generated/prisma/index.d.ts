@@ -3160,7 +3160,6 @@ export namespace Prisma {
   export type SystemConfigCountAggregateOutputType = {
     id: number
     seasonId: number
-    fields: number
     currency: number
     unitPrice: number
     createdAt: number
@@ -3202,7 +3201,6 @@ export namespace Prisma {
   export type SystemConfigCountAggregateInputType = {
     id?: true
     seasonId?: true
-    fields?: true
     currency?: true
     unitPrice?: true
     createdAt?: true
@@ -3299,7 +3297,6 @@ export namespace Prisma {
   export type SystemConfigGroupByOutputType = {
     id: number
     seasonId: number
-    fields: string[]
     currency: $Enums.Currency | null
     unitPrice: Decimal | null
     createdAt: Date
@@ -3328,7 +3325,6 @@ export namespace Prisma {
   export type SystemConfigSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     seasonId?: boolean
-    fields?: boolean
     currency?: boolean
     unitPrice?: boolean
     createdAt?: boolean
@@ -3339,7 +3335,6 @@ export namespace Prisma {
   export type SystemConfigSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     seasonId?: boolean
-    fields?: boolean
     currency?: boolean
     unitPrice?: boolean
     createdAt?: boolean
@@ -3350,7 +3345,6 @@ export namespace Prisma {
   export type SystemConfigSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     seasonId?: boolean
-    fields?: boolean
     currency?: boolean
     unitPrice?: boolean
     createdAt?: boolean
@@ -3361,14 +3355,13 @@ export namespace Prisma {
   export type SystemConfigSelectScalar = {
     id?: boolean
     seasonId?: boolean
-    fields?: boolean
     currency?: boolean
     unitPrice?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type SystemConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "seasonId" | "fields" | "currency" | "unitPrice" | "createdAt" | "updatedAt", ExtArgs["result"]["systemConfig"]>
+  export type SystemConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "seasonId" | "currency" | "unitPrice" | "createdAt" | "updatedAt", ExtArgs["result"]["systemConfig"]>
   export type SystemConfigInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     season?: boolean | SeasonDefaultArgs<ExtArgs>
   }
@@ -3387,7 +3380,6 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: number
       seasonId: number
-      fields: string[]
       currency: $Enums.Currency | null
       unitPrice: Prisma.Decimal | null
       createdAt: Date
@@ -3818,7 +3810,6 @@ export namespace Prisma {
   interface SystemConfigFieldRefs {
     readonly id: FieldRef<"SystemConfig", 'Int'>
     readonly seasonId: FieldRef<"SystemConfig", 'Int'>
-    readonly fields: FieldRef<"SystemConfig", 'String[]'>
     readonly currency: FieldRef<"SystemConfig", 'Currency'>
     readonly unitPrice: FieldRef<"SystemConfig", 'Decimal'>
     readonly createdAt: FieldRef<"SystemConfig", 'DateTime'>
@@ -24995,7 +24986,6 @@ export namespace Prisma {
   export const SystemConfigScalarFieldEnum: {
     id: 'id',
     seasonId: 'seasonId',
-    fields: 'fields',
     currency: 'currency',
     unitPrice: 'unitPrice',
     createdAt: 'createdAt',
@@ -25324,20 +25314,6 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'String[]'
-   */
-  export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'String'
-   */
-  export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String'>
-    
-
-
-  /**
    * Reference to a field of type 'Currency'
    */
   export type EnumCurrencyFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Currency'>
@@ -25376,6 +25352,20 @@ export namespace Prisma {
    * Reference to a field of type 'DateTime[]'
    */
   export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'String'
+   */
+  export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String'>
+    
+
+
+  /**
+   * Reference to a field of type 'String[]'
+   */
+  export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String[]'>
     
 
 
@@ -25577,7 +25567,6 @@ export namespace Prisma {
     NOT?: SystemConfigWhereInput | SystemConfigWhereInput[]
     id?: IntFilter<"SystemConfig"> | number
     seasonId?: IntFilter<"SystemConfig"> | number
-    fields?: StringNullableListFilter<"SystemConfig">
     currency?: EnumCurrencyNullableFilter<"SystemConfig"> | $Enums.Currency | null
     unitPrice?: DecimalNullableFilter<"SystemConfig"> | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFilter<"SystemConfig"> | Date | string
@@ -25588,7 +25577,6 @@ export namespace Prisma {
   export type SystemConfigOrderByWithRelationInput = {
     id?: SortOrder
     seasonId?: SortOrder
-    fields?: SortOrder
     currency?: SortOrderInput | SortOrder
     unitPrice?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -25602,7 +25590,6 @@ export namespace Prisma {
     OR?: SystemConfigWhereInput[]
     NOT?: SystemConfigWhereInput | SystemConfigWhereInput[]
     seasonId?: IntFilter<"SystemConfig"> | number
-    fields?: StringNullableListFilter<"SystemConfig">
     currency?: EnumCurrencyNullableFilter<"SystemConfig"> | $Enums.Currency | null
     unitPrice?: DecimalNullableFilter<"SystemConfig"> | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFilter<"SystemConfig"> | Date | string
@@ -25613,7 +25600,6 @@ export namespace Prisma {
   export type SystemConfigOrderByWithAggregationInput = {
     id?: SortOrder
     seasonId?: SortOrder
-    fields?: SortOrder
     currency?: SortOrderInput | SortOrder
     unitPrice?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -25631,7 +25617,6 @@ export namespace Prisma {
     NOT?: SystemConfigScalarWhereWithAggregatesInput | SystemConfigScalarWhereWithAggregatesInput[]
     id?: IntWithAggregatesFilter<"SystemConfig"> | number
     seasonId?: IntWithAggregatesFilter<"SystemConfig"> | number
-    fields?: StringNullableListFilter<"SystemConfig">
     currency?: EnumCurrencyNullableWithAggregatesFilter<"SystemConfig"> | $Enums.Currency | null
     unitPrice?: DecimalNullableWithAggregatesFilter<"SystemConfig"> | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeWithAggregatesFilter<"SystemConfig"> | Date | string
@@ -27261,7 +27246,6 @@ export namespace Prisma {
   }
 
   export type SystemConfigCreateInput = {
-    fields?: SystemConfigCreatefieldsInput | string[]
     currency?: $Enums.Currency | null
     unitPrice?: Decimal | DecimalJsLike | number | string | null
     createdAt?: Date | string
@@ -27272,7 +27256,6 @@ export namespace Prisma {
   export type SystemConfigUncheckedCreateInput = {
     id?: number
     seasonId: number
-    fields?: SystemConfigCreatefieldsInput | string[]
     currency?: $Enums.Currency | null
     unitPrice?: Decimal | DecimalJsLike | number | string | null
     createdAt?: Date | string
@@ -27280,7 +27263,6 @@ export namespace Prisma {
   }
 
   export type SystemConfigUpdateInput = {
-    fields?: SystemConfigUpdatefieldsInput | string[]
     currency?: NullableEnumCurrencyFieldUpdateOperationsInput | $Enums.Currency | null
     unitPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -27291,7 +27273,6 @@ export namespace Prisma {
   export type SystemConfigUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
     seasonId?: IntFieldUpdateOperationsInput | number
-    fields?: SystemConfigUpdatefieldsInput | string[]
     currency?: NullableEnumCurrencyFieldUpdateOperationsInput | $Enums.Currency | null
     unitPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -27301,7 +27282,6 @@ export namespace Prisma {
   export type SystemConfigCreateManyInput = {
     id?: number
     seasonId: number
-    fields?: SystemConfigCreatefieldsInput | string[]
     currency?: $Enums.Currency | null
     unitPrice?: Decimal | DecimalJsLike | number | string | null
     createdAt?: Date | string
@@ -27309,7 +27289,6 @@ export namespace Prisma {
   }
 
   export type SystemConfigUpdateManyMutationInput = {
-    fields?: SystemConfigUpdatefieldsInput | string[]
     currency?: NullableEnumCurrencyFieldUpdateOperationsInput | $Enums.Currency | null
     unitPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -27319,7 +27298,6 @@ export namespace Prisma {
   export type SystemConfigUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
     seasonId?: IntFieldUpdateOperationsInput | number
-    fields?: SystemConfigUpdatefieldsInput | string[]
     currency?: NullableEnumCurrencyFieldUpdateOperationsInput | $Enums.Currency | null
     unitPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -29006,14 +28984,6 @@ export namespace Prisma {
     not?: NestedIntFilter<$PrismaModel> | number
   }
 
-  export type StringNullableListFilter<$PrismaModel = never> = {
-    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    has?: string | StringFieldRefInput<$PrismaModel> | null
-    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
-    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
-    isEmpty?: boolean
-  }
-
   export type EnumCurrencyNullableFilter<$PrismaModel = never> = {
     equals?: $Enums.Currency | EnumCurrencyFieldRefInput<$PrismaModel> | null
     in?: $Enums.Currency[] | ListEnumCurrencyFieldRefInput<$PrismaModel> | null
@@ -29056,7 +29026,6 @@ export namespace Prisma {
   export type SystemConfigCountOrderByAggregateInput = {
     id?: SortOrder
     seasonId?: SortOrder
-    fields?: SortOrder
     currency?: SortOrder
     unitPrice?: SortOrder
     createdAt?: SortOrder
@@ -30733,19 +30702,10 @@ export namespace Prisma {
     _max?: NestedEnumPriorityFilter<$PrismaModel>
   }
 
-  export type SystemConfigCreatefieldsInput = {
-    set: string[]
-  }
-
   export type SeasonCreateNestedOneWithoutSystemConfigsInput = {
     create?: XOR<SeasonCreateWithoutSystemConfigsInput, SeasonUncheckedCreateWithoutSystemConfigsInput>
     connectOrCreate?: SeasonCreateOrConnectWithoutSystemConfigsInput
     connect?: SeasonWhereUniqueInput
-  }
-
-  export type SystemConfigUpdatefieldsInput = {
-    set?: string[]
-    push?: string | string[]
   }
 
   export type NullableEnumCurrencyFieldUpdateOperationsInput = {
@@ -33974,7 +33934,6 @@ export namespace Prisma {
   }
 
   export type SystemConfigCreateWithoutSeasonInput = {
-    fields?: SystemConfigCreatefieldsInput | string[]
     currency?: $Enums.Currency | null
     unitPrice?: Decimal | DecimalJsLike | number | string | null
     createdAt?: Date | string
@@ -33983,7 +33942,6 @@ export namespace Prisma {
 
   export type SystemConfigUncheckedCreateWithoutSeasonInput = {
     id?: number
-    fields?: SystemConfigCreatefieldsInput | string[]
     currency?: $Enums.Currency | null
     unitPrice?: Decimal | DecimalJsLike | number | string | null
     createdAt?: Date | string
@@ -34448,7 +34406,6 @@ export namespace Prisma {
     NOT?: SystemConfigScalarWhereInput | SystemConfigScalarWhereInput[]
     id?: IntFilter<"SystemConfig"> | number
     seasonId?: IntFilter<"SystemConfig"> | number
-    fields?: StringNullableListFilter<"SystemConfig">
     currency?: EnumCurrencyNullableFilter<"SystemConfig"> | $Enums.Currency | null
     unitPrice?: DecimalNullableFilter<"SystemConfig"> | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFilter<"SystemConfig"> | Date | string
@@ -40150,7 +40107,6 @@ export namespace Prisma {
 
   export type SystemConfigCreateManySeasonInput = {
     id?: number
-    fields?: SystemConfigCreatefieldsInput | string[]
     currency?: $Enums.Currency | null
     unitPrice?: Decimal | DecimalJsLike | number | string | null
     createdAt?: Date | string
@@ -40315,7 +40271,6 @@ export namespace Prisma {
   }
 
   export type SystemConfigUpdateWithoutSeasonInput = {
-    fields?: SystemConfigUpdatefieldsInput | string[]
     currency?: NullableEnumCurrencyFieldUpdateOperationsInput | $Enums.Currency | null
     unitPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -40324,7 +40279,6 @@ export namespace Prisma {
 
   export type SystemConfigUncheckedUpdateWithoutSeasonInput = {
     id?: IntFieldUpdateOperationsInput | number
-    fields?: SystemConfigUpdatefieldsInput | string[]
     currency?: NullableEnumCurrencyFieldUpdateOperationsInput | $Enums.Currency | null
     unitPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -40333,7 +40287,6 @@ export namespace Prisma {
 
   export type SystemConfigUncheckedUpdateManyWithoutSeasonInput = {
     id?: IntFieldUpdateOperationsInput | number
-    fields?: SystemConfigUpdatefieldsInput | string[]
     currency?: NullableEnumCurrencyFieldUpdateOperationsInput | $Enums.Currency | null
     unitPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
