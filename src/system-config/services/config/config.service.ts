@@ -1,6 +1,6 @@
 // src/system-config/services/config/config.service.ts
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Currency, Prisma } from '@prisma/client';
 
@@ -8,10 +8,16 @@ import { Currency, Prisma } from '@prisma/client';
 export class SystemConfigService {
   constructor(private prisma: PrismaService) {}
 
-  // Get or create config per season
+  private hasCompletePricingDefinition(data?: { currency?: Currency; unitPrice?: number }) {
+    return data?.currency !== undefined && data?.unitPrice !== undefined;
+  }
+
+  // Upsert season config with pricing-focused data.
+  // When creating a new config, both pricing fields must be provided.
   async getOrCreateConfig(
     seasonId: number,
     data?: { currency?: Currency; unitPrice?: number },
+    options?: { requirePricingOnCreate?: boolean },
   ) {
     const updateData: Prisma.SystemConfigUpdateInput = {};
     const createData: Prisma.SystemConfigUncheckedCreateInput = {
@@ -28,11 +34,28 @@ export class SystemConfigService {
       createData.unitPrice = data.unitPrice;
     }
 
-    return this.prisma.systemConfig.upsert({
-      where: { id: seasonId }, 
-      update: updateData,
-      create: createData,
+    const existingConfig = await this.prisma.systemConfig.findFirst({
+      where: { seasonId },
     });
+
+    if (existingConfig) {
+      if (Object.keys(updateData).length === 0) {
+        return existingConfig;
+      }
+
+      return this.prisma.systemConfig.update({
+        where: { id: existingConfig.id },
+        data: updateData,
+      });
+    }
+
+    if (options?.requirePricingOnCreate && !this.hasCompletePricingDefinition(data)) {
+      throw new BadRequestException(
+        'Creating a configuration requires both pricing fields: currency and unitPrice.',
+      );
+    }
+
+    return this.prisma.systemConfig.create({ data: createData });
   }
 
   // Get config
@@ -42,7 +65,7 @@ export class SystemConfigService {
     });
 
     if (!config) {
-      return this.getOrCreateConfig(seasonId);
+      throw new NotFoundException(`Configuration for season ${seasonId} was not found.`);
     }
 
     return config;
@@ -54,7 +77,7 @@ export class SystemConfigService {
     currency: Currency,
     unitPrice: number,
   ) {
-    const config = await this.getOrCreateConfig(seasonId);
+    const config = await this.getConfig(seasonId);
 
     return this.prisma.systemConfig.update({
       where: { id: config.id },
@@ -70,7 +93,11 @@ export class SystemConfigService {
     seasonId: number,
     data: Prisma.SystemConfigUpdateInput,
   ) {
-    const config = await this.getOrCreateConfig(seasonId);
+    if (!data || Object.keys(data).length === 0) {
+      throw new BadRequestException('At least one configuration field must be provided for update.');
+    }
+
+    const config = await this.getConfig(seasonId);
 
     return this.prisma.systemConfig.update({
       where: { id: config.id },
