@@ -1,10 +1,23 @@
 // src/users/controllers/users/users.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { UsersService } from '../../services/users/users.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { UserSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+import { Public } from 'src/auth/decorators/public.decorator';
+import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+import { Request } from 'express';
+
+type UpdateUserRequestBody = {
+  name?: string;
+  email?: string;
+  phone?: string | null;
+  currentPassword?: string;
+  newPassword?: string;
+  role?: Role;
+  isActive?: boolean;
+};
 
 @ApiTags('Users')
 @ApiBearerAuth('access-token')
@@ -19,6 +32,7 @@ export class UsersController {
   @ApiBody({ type: UserSwaggerDto })
   @ApiResponse({ status: 201, description: 'User created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate name/email/phone.' })
+  @Public() // Assuming user creation is a public endpoint, adjust as needed
   create(@Body() createUserDto: Prisma.UserCreateInput) {
     return this.usersService.createUser(createUserDto);
   }
@@ -49,12 +63,16 @@ export class UsersController {
         name: { type: 'string', example: 'warehouse_manager' },
         email: { type: 'string', format: 'email', example: 'manager@etrog-erp.com' },
         phone: { type: 'string', example: '0541112233' },
+        currentPassword: { type: 'string', example: 'OldPassword123!' },
+        newPassword: { type: 'string', example: 'NewPassword123!' },
         role: { type: 'string', enum: ['OWNER', 'MANAGER', 'WORKER'], example: 'MANAGER' },
         isActive: { type: 'boolean', example: true },
       },
       example: {
         name: 'warehouse_manager',
         email: 'manager@etrog-erp.com',
+        currentPassword: 'OldPassword123!',
+        newPassword: 'NewPassword123!',
         role: 'MANAGER',
         isActive: true,
       },
@@ -63,8 +81,12 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'User updated successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'User not found.' })
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateData: any) {
-    return this.usersService.updateUser(id, updateData);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateData: UpdateUserRequestBody,
+    @Req() req: Request,
+  ) {
+    return this.usersService.updateUserByActor(id, updateData, req.user as AuthenticatedUser);
   }
 
   @Delete(':id')
