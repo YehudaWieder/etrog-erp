@@ -16,12 +16,18 @@ export class SeasonsService {
     });
     if (existing) throw new ConflictException(`Season ${yearName} already exists`);
 
-    return this.prisma.season.create({
-      data: {
-        yearName,
-        slug: `season-${yearName}`,
-        isActive: true,
-      },
+    return this.prisma.$transaction(async (tx) => {
+      await tx.season.updateMany({
+        data: { isActive: false },
+      });
+
+      return tx.season.create({
+        data: {
+          yearName,
+          slug: `season-${yearName}`,
+          isActive: true,
+        },
+      });
     });
   }
 
@@ -30,6 +36,16 @@ export class SeasonsService {
     return this.prisma.season.findMany({
       orderBy: { yearName: 'desc' },
     });
+  }
+
+  async findActiveSeason() {
+    const activeSeason = await this.prisma.season.findFirst({
+      where: { isActive: true },
+      orderBy: { yearName: 'desc' },
+    });
+
+    if (!activeSeason) throw new NotFoundException('Active season not found');
+    return activeSeason;
   }
 
   // Get a single season by ID or Slug

@@ -2,12 +2,15 @@
 
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { Role } from '@prisma/client';
 import { SeasonsService } from './seasons.service';
+import { Roles } from 'src/authorization/decorators/roles.decorator';
 
 @ApiTags('Seasons')
 @ApiBearerAuth('access-token')
 @ApiUnauthorizedResponse({ description: 'JWT authentication failed or token is missing.' })
 @ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
+@Roles(Role.OWNER, Role.MANAGER)
 @Controller('seasons')
 export class SeasonsController {
   constructor(private readonly seasonsService: SeasonsService) {}
@@ -30,10 +33,20 @@ export class SeasonsController {
   }
 
   @Get()
+  @Roles()
   @ApiOperation({ summary: 'Retrieve all seasons' })
   @ApiResponse({ status: 200, description: 'List of all seasons returned successfully.' })
   findAll() {
     return this.seasonsService.findAll();
+  }
+
+  @Get('active')
+  @Roles()
+  @ApiOperation({ summary: 'Retrieve the currently active season' })
+  @ApiResponse({ status: 200, description: 'Active season returned successfully.' })
+  @ApiResponse({ status: 404, description: 'Active season not found.' })
+  findActive() {
+    return this.seasonsService.findActiveSeason();
   }
 
   @Get(':idOrSlug')
