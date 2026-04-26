@@ -24,6 +24,7 @@ export class UsersService {
 	private readonly saltRounds = 10;
 	private readonly emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	private readonly passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+	private readonly privilegedRoles = new Set<Role>([Role.OWNER, Role.MANAGER]);
 
 	constructor(private prisma: PrismaService) {}
 
@@ -51,8 +52,41 @@ export class UsersService {
 		});
 	}
 
-	async findAll() {
+	async findAllByActor(actor: AuthenticatedUser) {
+		if (!actor) {
+			throw new ForbiddenException('Authenticated user context is missing.');
+		}
+
+		if (this.isPrivileged(actor.role)) {
+			return this.prisma.user.findMany({
+				select: {
+					id: true,
+					name: true,
+					email: true,
+					phone: true,
+					role: true,
+					isActive: true,
+					slug: true,
+					createdAt: true,
+					updatedAt: true,
+				},
+				orderBy: { name: 'asc' },
+			});
+		}
+
 		return this.prisma.user.findMany({
+			select: { name: true },
+			orderBy: { name: 'asc' },
+		});
+	}
+
+	async findOneByActor(idOrSlug: number | string, actor: AuthenticatedUser) {
+		if (!actor) {
+			throw new ForbiddenException('Authenticated user context is missing.');
+		}
+
+		const user = await this.prisma.user.findFirst({
+			where: typeof idOrSlug === 'number' ? { id: idOrSlug } : { slug: idOrSlug },
 			select: {
 				id: true,
 				name: true,
@@ -62,35 +96,19 @@ export class UsersService {
 				isActive: true,
 				slug: true,
 				createdAt: true,
+				updatedAt: true,
 			},
-		});
-	}
-
-	async findOne(identifier: { id?: number; email?: string; slug?: string }) {
-		const user = await this.prisma.user.findUnique({
-			where: identifier as Prisma.UserWhereUniqueInput,
 		});
 
 		if (!user) {
 			throw new NotFoundException('User not found');
 		}
 
+		if (!this.isPrivileged(actor.role) && actor.id !== user.id) {
+			throw new ForbiddenException('You can only access your own user.');
+		}
+
 		return user;
-	}
-
-	async updateUser(id: number, data: Partial<Prisma.UserUpdateInput>) {
-		if (data.passwordHash && typeof data.passwordHash === 'string') {
-			data.passwordHash = await bcrypt.hash(data.passwordHash, this.saltRounds);
-		}
-
-		if (data.name && typeof data.name === 'string') {
-			data.slug = data.name.toLowerCase().replace(/ /g, '-');
-		}
-
-		return this.prisma.user.update({
-			where: { id },
-			data,
-		});
 	}
 
 	async updateUserByActor(id: number, data: UpdateUserByActorInput, actor: AuthenticatedUser) {
@@ -102,7 +120,7 @@ export class UsersService {
 			return this.updateOwnProfile(id, data);
 		}
 
-		if (actor.role === Role.OWNER || actor.role === Role.MANAGER) {
+		if (this.isPrivileged(actor.role)) {
 			return this.updateByManagement(id, data);
 		}
 
@@ -200,9 +218,21 @@ export class UsersService {
 		});
 	}
 
-	async remove(id: number) {
+	async removeByActor(id: number, actor: AuthenticatedUser) {
+		if (!actor) {
+			throw new ForbiddenException('Authenticated user context is missing.');
+		}
+
+		if (!this.isPrivileged(actor.role) && actor.id !== id) {
+			throw new ForbiddenException('You can only remove your own user.');
+		}
+
 		return this.prisma.user.delete({
 			where: { id },
 		});
+	}
+
+	private isPrivileged(role: Role) {
+		return this.privilegedRoles.has(role);
 	}
 }

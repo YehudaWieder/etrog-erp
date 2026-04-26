@@ -37,18 +37,21 @@ export class UsersController {
 
 	@Get()
 	@ApiOperation({ summary: 'Retrieve a list of all system users' })
-	@ApiResponse({ status: 200, description: 'List of users returned successfully.' })
-	findAll() {
-		return this.usersService.findAll();
+	@ApiResponse({ status: 200, description: 'Users list returned successfully (manager+: full details, worker: names only).' })
+	findAll(@Req() req: Request) {
+		return this.usersService.findAllByActor(req.user as AuthenticatedUser);
 	}
 
-	@Get(':slug')
-	@ApiOperation({ summary: 'Retrieve a single user by their URL-friendly slug' })
-	@ApiParam({ name: 'slug', type: String, description: 'The unique slug identifier of the user.' })
+	@Get(':idOrSlug')
+	@ApiOperation({ summary: 'Retrieve a single user by ID or slug (manager/owner or the user themself)' })
+	@ApiParam({ name: 'idOrSlug', type: String, description: 'The numeric ID or unique slug identifier of the user.' })
 	@ApiResponse({ status: 200, description: 'User returned successfully.' })
 	@ApiResponse({ status: 404, description: 'User not found.' })
-	findOne(@Param('slug') slug: string) {
-		return this.usersService.findOne({ slug });
+	@ApiResponse({ status: 403, description: 'You can only access your own user unless you are manager/owner.' })
+	findOne(@Param('idOrSlug') idOrSlug: string, @Req() req: Request) {
+		const parsedId = Number.parseInt(idOrSlug, 10);
+		const identifier = Number.isNaN(parsedId) ? idOrSlug : parsedId;
+		return this.usersService.findOneByActor(identifier, req.user as AuthenticatedUser);
 	}
 
 	@Patch(':id')
@@ -88,11 +91,12 @@ export class UsersController {
 	}
 
 	@Delete(':id')
-	@ApiOperation({ summary: 'Deactivate or remove a user by ID' })
+	@ApiOperation({ summary: 'Remove a user by ID (manager/owner or the user themself)' })
 	@ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the user to delete.' })
 	@ApiResponse({ status: 200, description: 'User removed successfully.' })
 	@ApiResponse({ status: 404, description: 'User not found.' })
-	remove(@Param('id', ParseIntPipe) id: number) {
-		return this.usersService.remove(id);
+	@ApiResponse({ status: 403, description: 'You can only remove your own user unless you are manager/owner.' })
+	remove(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+		return this.usersService.removeByActor(id, req.user as AuthenticatedUser);
 	}
 }
