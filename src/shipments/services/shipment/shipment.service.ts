@@ -3,18 +3,26 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma, ShipmentStatus } from '@prisma/client';
+import { SeasonsService } from 'src/seasons/seasons.service';
 
 @Injectable()
 export class ShipmentService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private seasonsService: SeasonsService,
+  ) {}
 
   // Create a new shipment shell
   async create(data: Prisma.ShipmentUncheckedCreateInput) {
+    const { id: seasonId } = await this.seasonsService.findActiveSeason();
     const year = new Date().getFullYear();
 
     // create shipment first to get the auto-incremented shipmentNumber for slug generation
     const shipment = await this.prisma.shipment.create({
-      data,
+      data: {
+        ...data,
+        seasonId,
+      },
     });
 
     const slug = `SHP-${year}-${shipment.shipmentNumber}`;

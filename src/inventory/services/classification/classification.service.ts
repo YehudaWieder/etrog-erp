@@ -3,13 +3,19 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { SeasonsService } from 'src/seasons/seasons.service';
 
 @Injectable()
 export class ClassificationService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private seasonsService: SeasonsService,
+  ) {}
 
   // Create a new classification entry
   async create(data: Prisma.ClassificationUncheckedCreateInput) {
+    const { id: seasonId } = await this.seasonsService.findActiveSeason();
+
     // Generate unique slug to prevent duplicates based on your unique constraint
     const slug = `harvest-${data.fieldHarvestId}-tcat-${data.traderCategoryId ?? 0}-ccat-${data.customerCategoryId ?? 0}-g-${data.grade ?? 'NA'}-a-${data.assignmentType}`;
 
@@ -20,7 +26,7 @@ export class ClassificationService {
     if (existing) {
       if (existing.isDeleted) {
         // If it was soft-deleted, we "restore" and update it
-        return this.update(existing.id, { ...data, isDeleted: false });
+        return this.update(existing.id, { ...data, seasonId, isDeleted: false });
       }
       throw new ConflictException('This classification combination already exists for this harvest');
     }
@@ -28,6 +34,7 @@ export class ClassificationService {
     return this.prisma.classification.create({
       data: {
         ...data,
+        seasonId,
         slug,
       },
     });

@@ -3,13 +3,19 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { SeasonsService } from 'src/seasons/seasons.service';
 
 @Injectable()
 export class TradersCatService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private seasonsService: SeasonsService,
+  ) {}
 
   // Create a new category for a specific season
-  async create(seasonId: number, name: string, notes?: string) {
+  async create(_seasonId: number, name: string, notes?: string) {
+    const { id: seasonId } = await this.seasonsService.findActiveSeason();
+
     const existing = await this.prisma.tradersCategories.findUnique({
       where: {
         name_seasonId: { name, seasonId },

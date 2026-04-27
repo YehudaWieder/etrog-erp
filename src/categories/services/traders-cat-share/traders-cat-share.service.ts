@@ -3,10 +3,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { SeasonsService } from 'src/seasons/seasons.service';
 
 @Injectable()
 export class TraderCatShareService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private seasonsService: SeasonsService,
+  ) {}
 
   // Set or Update a share for a trader in a category for a specific season
   async setShare(data: {
@@ -15,19 +19,21 @@ export class TraderCatShareService {
     traderCategoryId: number;
     percent: number;
   }) {
+    const { id: seasonId } = await this.seasonsService.findActiveSeason();
+
     return this.prisma.traderCategoryShare.upsert({
       where: {
         traderId_traderCategoryId_seasonId: {
           traderId: data.traderId,
           traderCategoryId: data.traderCategoryId,
-          seasonId: data.seasonId,
+          seasonId,
         },
       },
       update: { 
         percent: data.percent 
       },
       create: {
-        seasonId: data.seasonId,
+        seasonId,
         traderId: data.traderId,
         traderCategoryId: data.traderCategoryId,
         percent: data.percent,

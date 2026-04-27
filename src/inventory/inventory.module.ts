@@ -7,8 +7,10 @@ import { CustomerAllocationService } from './services/customer-allocation/custom
 import { ClassificationController } from './controllers/classification/classification.controller';
 import { TraderStockController } from './controllers/trader-stock/trader-stock.controller';
 import { CustomerAllocationController } from './controllers/customer-allocation/customer-allocation.controller';
+import { SeasonsModule } from 'src/seasons/seasons.module';
 
 @Module({
+  imports: [SeasonsModule],
   controllers: [InventoryController, ClassificationController, TraderStockController, CustomerAllocationController],
   providers: [InventoryService, ClassificationService, TraderStockService, CustomerAllocationService]
 })

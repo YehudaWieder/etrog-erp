@@ -4,10 +4,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Currency, Prisma, Role } from '@prisma/client';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+import { SeasonsService } from 'src/seasons/seasons.service';
 
 @Injectable()
 export class CustomerCatService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private seasonsService: SeasonsService,
+  ) {}
 
   private isManagerOrAbove(actor: AuthenticatedUser) {
     return actor.role === Role.MANAGER || actor.role === Role.OWNER;
@@ -36,14 +40,15 @@ export class CustomerCatService {
     price?: number;
     currency?: Currency;
   }, actor: AuthenticatedUser) {
+    const { id: seasonId } = await this.seasonsService.findActiveSeason();
     const managerOrAbove = this.isManagerOrAbove(actor);
-    const currency = await this.resolveCurrency(data.seasonId, data.currency);
+    const currency = await this.resolveCurrency(seasonId, data.currency);
 
     if (!managerOrAbove) {
       return this.prisma.customerCategories.upsert({
         where: {
           seasonId_customerId_name_grade: {
-            seasonId: data.seasonId,
+            seasonId,
             customerId: data.customerId,
             name: data.name,
             grade: data.grade,
@@ -51,7 +56,7 @@ export class CustomerCatService {
         },
         update: {},
         create: {
-          seasonId: data.seasonId,
+          seasonId,
           customerId: data.customerId,
           name: data.name,
           grade: data.grade,
@@ -64,7 +69,7 @@ export class CustomerCatService {
     return this.prisma.customerCategories.upsert({
       where: {
         seasonId_customerId_name_grade: {
-          seasonId: data.seasonId,
+          seasonId,
           customerId: data.customerId,
           name: data.name,
           grade: data.grade,
@@ -75,7 +80,7 @@ export class CustomerCatService {
         ...(data.currency !== undefined ? { currency: data.currency } : {}),
       },
       create: {
-        seasonId: data.seasonId,
+        seasonId,
         customerId: data.customerId,
         name: data.name,
         grade: data.grade,

@@ -3,18 +3,24 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { SeasonsService } from 'src/seasons/seasons.service';
 
 @Injectable()
 export class BoxService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private seasonsService: SeasonsService,
+  ) {}
 
   // Create a new box within a shipment
   async create(data: Prisma.BoxUncheckedCreateInput) {
+    const { id: seasonId } = await this.seasonsService.findActiveSeason();
+
     // Check if boxNumber already exists in this shipment
     const existing = await this.prisma.box.findUnique({
       where: {
         seasonId_shipmentId_boxNumber: {
-          seasonId: data.seasonId,
+          seasonId,
           shipmentId: data.shipmentId,
           boxNumber: data.boxNumber,
         },
@@ -26,7 +32,10 @@ export class BoxService {
     }
 
     return this.prisma.box.create({
-      data,
+      data: {
+        ...data,
+        seasonId,
+      },
     });
   }
 

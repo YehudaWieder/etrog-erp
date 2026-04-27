@@ -3,19 +3,25 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma } from 'src/generated/prisma';
+import { SeasonsService } from 'src/seasons/seasons.service';
 
 @Injectable()
 export class ItemService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private seasonsService: SeasonsService,
+  ) {}
 
   // Creates a shipment item and triggers totals recalculation for Box and Shipment.
   // Uses a transaction to ensure all updates succeed or fail together.
   async create(data: Prisma.ShipmentItemUncheckedCreateInput) {
+    const { id: seasonId } = await this.seasonsService.findActiveSeason();
+
     return this.prisma.$transaction(async (tx) => {
       // 1. Check for duplicate based on the complex unique constraint
       const existing = await tx.shipmentItem.findFirst({
         where: {
-          seasonId: data.seasonId,
+          seasonId,
           boxId: data.boxId,
           traderCategoryId: data.traderCategoryId,
           customerCategoryId: data.customerCategoryId,
@@ -33,7 +39,12 @@ export class ItemService {
       }
 
       // 2. Create the shipment item
-      const newItem = await tx.shipmentItem.create({ data });
+      const newItem = await tx.shipmentItem.create({
+        data: {
+          ...data,
+          seasonId,
+        },
+      });
 
       // 3. Recalculate Box total quantity
       const boxItems = await tx.shipmentItem.aggregate({

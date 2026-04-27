@@ -3,15 +3,24 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { SeasonsService } from 'src/seasons/seasons.service';
 
 @Injectable()
 export class CustomerAllocationService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private seasonsService: SeasonsService,
+  ) {}
 
   // Create a new allocation record
   async create(data: Prisma.CustomerAllocationUncheckedCreateInput) {
+    const { id: seasonId } = await this.seasonsService.findActiveSeason();
+
     return this.prisma.customerAllocation.create({
-      data,
+      data: {
+        ...data,
+        seasonId,
+      },
     });
   }
 

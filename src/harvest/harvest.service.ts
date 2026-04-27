@@ -3,10 +3,14 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { SeasonsService } from 'src/seasons/seasons.service';
 
 @Injectable()
 export class HarvestService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private seasonsService: SeasonsService,
+  ) {}
 
   // Calculate rejection rates before saving
   private calculateRates(data: any) {
@@ -23,9 +27,11 @@ export class HarvestService {
 
   // Create a new harvest report
   async create(data: Prisma.FieldHarvestUncheckedCreateInput) {
+    const { id: seasonId } = await this.seasonsService.findActiveSeason();
+
     // Generate unique slug: date-field-season
     const dateStr = new Date(data.dateGregorian).toISOString().split('T')[0];
-    const slug = `${dateStr}-f${data.fieldId}-s${data.seasonId}`;
+    const slug = `${dateStr}-f${data.fieldId}-s${seasonId}`;
 
     const existing = await this.prisma.fieldHarvest.findUnique({ where: { slug } });
     if (existing) throw new ConflictException('A report for this field and date already exists');
@@ -35,6 +41,7 @@ export class HarvestService {
     return this.prisma.fieldHarvest.create({
       data: {
         ...data,
+        seasonId,
         slug,
         ...rates,
       },

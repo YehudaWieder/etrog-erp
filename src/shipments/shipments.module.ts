@@ -6,8 +6,10 @@ import { ShipmentController } from './controllers/shipment/shipment.controller';
 import { ItemService } from './services/item/item.service';
 import { BoxService } from './services/box/box.service';
 import { ShipmentService } from './services/shipment/shipment.service';
+import { SeasonsModule } from 'src/seasons/seasons.module';
 
 @Module({
+  imports: [SeasonsModule],
   providers: [ShipmentsService, ShipmentService, BoxService, ItemService],
   controllers: [ShipmentController, BoxController, ItemController]
 })
