@@ -108,14 +108,7 @@ export class HarvestBulkService {
           }
 
           // Get all traders for this category
-          const shares = await tx.traderCategoryShare.findMany({
-            where: {
-              seasonId,
-              traderCategoryId: classItem.traderCategoryId,
-            },
-            orderBy: { traderId: 'asc' },
-            include: { trader: true },
-          });
+          const shares = await this.getTraderCategoryShares(tx, seasonId, classItem.traderCategoryId);
 
           if (shares.length === 0) {
             throw new BadRequestException(
@@ -124,10 +117,7 @@ export class HarvestBulkService {
           }
 
           // Pre-calculate allocations; if any trader would get 0, push everything to modulo.
-          const allocations = shares.map((share) => ({
-            share,
-            quantity: Math.floor((classItem.quantity * Number(share.percent)) / 100),
-          }));
+          const allocations = this.calculateShareAllocations(classItem.quantity, shares);
 
           const canDistributeToAll = allocations.every((allocation) => allocation.quantity > 0);
           let didAddModulo = false;
@@ -276,21 +266,15 @@ export class HarvestBulkService {
       return;
     }
 
-    const shares = await tx.traderCategoryShare.findMany({
-      where: {
-        seasonId: params.seasonId,
-        traderCategoryId: params.traderCategoryId,
-      },
-      orderBy: { traderId: 'asc' },
-    });
+    const shares = await this.getTraderCategoryShares(tx, params.seasonId, params.traderCategoryId);
 
     if (shares.length === 0) {
       return;
     }
 
-    const allocations = shares.map((share) => ({
-      traderId: share.traderId,
-      quantity: Math.floor((availableQty * Number(share.percent)) / 100),
+    const allocations = this.calculateShareAllocations(availableQty, shares).map((allocation) => ({
+      traderId: allocation.share.traderId,
+      quantity: allocation.quantity,
     }));
 
     const canAssignToAll = allocations.every((allocation) => allocation.quantity > 0);
@@ -338,5 +322,25 @@ export class HarvestBulkService {
         },
       });
     }
+  }
+
+  private async getTraderCategoryShares(tx: any, seasonId: number, traderCategoryId: number) {
+    return tx.traderCategoryShare.findMany({
+      where: {
+        seasonId,
+        traderCategoryId,
+      },
+      orderBy: { traderId: 'asc' },
+    });
+  }
+
+  private calculateShareAllocations(
+    quantity: number,
+    shares: Array<{ traderId: number; percent: Prisma.Decimal | number | string }>,
+  ) {
+    return shares.map((share) => ({
+      share,
+      quantity: Math.floor((quantity * Number(share.percent)) / 100),
+    }));
   }
 }
