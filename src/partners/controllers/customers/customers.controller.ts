@@ -1,9 +1,12 @@
 // src/partners/controllers/customers/customers.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { CustomersService } from '../../services/customers/customers.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
+import { Roles } from 'src/authorization/decorators/roles.decorator';
+import { Request } from 'express';
+import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 
 @ApiTags('Partners')
 @ApiBearerAuth('access-token')
@@ -33,15 +36,16 @@ export class CustomersController {
   })
   @ApiResponse({ status: 201, description: 'Customer created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate customer name/email/phone.' })
+  @Roles(Role.OWNER, Role.MANAGER)
   create(@Body() data: { customerName: string; email?: string; phone?: string }) {
     return this.customersService.create(data);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Retrieve a list of all registered customers' })
+  @ApiOperation({ summary: 'Retrieve a list of all registered customers. Worker returns only id and customerName.' })
   @ApiResponse({ status: 200, description: 'List of customers returned successfully.' })
-  findAll() {
-    return this.customersService.findAll();
+  findAll(@Req() req: Request) {
+    return this.customersService.findAllByActor(req.user as AuthenticatedUser);
   }
 
   @Get(':idOrSlug')
@@ -49,9 +53,9 @@ export class CustomersController {
   @ApiParam({ name: 'idOrSlug', type: String, description: 'The numeric ID or slug of the customer.' })
   @ApiResponse({ status: 200, description: 'Customer returned successfully.' })
   @ApiResponse({ status: 404, description: 'Customer not found.' })
-  findOne(@Param('idOrSlug') idOrSlug: string) {
+  findOne(@Param('idOrSlug') idOrSlug: string, @Req() req: Request) {
     const id = parseInt(idOrSlug);
-    return this.customersService.findOne(isNaN(id) ? idOrSlug : id);
+    return this.customersService.findOneByActor(isNaN(id) ? idOrSlug : id, req.user as AuthenticatedUser);
   }
 
   @Patch(':id')
@@ -75,6 +79,7 @@ export class CustomersController {
   @ApiResponse({ status: 200, description: 'Customer updated successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Customer not found.' })
+  @Roles(Role.OWNER, Role.MANAGER)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateData: Partial<Prisma.CustomerUpdateInput>,
@@ -87,6 +92,7 @@ export class CustomersController {
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the customer to remove.' })
   @ApiResponse({ status: 200, description: 'Customer removed successfully.' })
   @ApiResponse({ status: 404, description: 'Customer not found.' })
+  @Roles(Role.OWNER, Role.MANAGER)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.customersService.remove(id);
   }

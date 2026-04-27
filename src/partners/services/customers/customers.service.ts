@@ -2,7 +2,8 @@
 
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
+import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 
 @Injectable()
 export class CustomersService {
@@ -23,17 +24,29 @@ export class CustomersService {
     });
   }
 
-  // Get all customers
-  async findAll() {
+  // Get all customers. Worker receives only id and customerName.
+  async findAllByActor(actor: AuthenticatedUser) {
+    const isManagerOrAbove = actor.role === Role.MANAGER || actor.role === Role.OWNER;
+
+    if (!isManagerOrAbove) {
+      return this.prisma.customer.findMany({
+        select: { id: true, customerName: true },
+        orderBy: { customerName: 'asc' },
+      });
+    }
+
     return this.prisma.customer.findMany({
       orderBy: { customerName: 'asc' },
     });
   }
 
-  // Find one by ID or Slug
-  async findOne(idOrSlug: string | number) {
+  // Find one by ID or Slug. Worker receives only id and customerName.
+  async findOneByActor(idOrSlug: string | number, actor: AuthenticatedUser) {
+    const isManagerOrAbove = actor.role === Role.MANAGER || actor.role === Role.OWNER;
+
     const customer = await this.prisma.customer.findFirst({
       where: typeof idOrSlug === 'number' ? { id: idOrSlug } : { slug: idOrSlug },
+      ...(isManagerOrAbove ? {} : { select: { id: true, customerName: true } }),
     });
 
     if (!customer) throw new NotFoundException(`Customer not found`);
