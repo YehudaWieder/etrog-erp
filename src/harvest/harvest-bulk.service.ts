@@ -57,7 +57,7 @@ export class HarvestBulkService {
       const classifications: any[] = [];
       for (const classItem of bulkDto.classifications) {
         // Create Classification
-        const classSlug = `harvest-${harvest.id}-tcat-${classItem.traderCategoryId ?? 0}-ccat-${classItem.customerCategoryId ?? 0}-g-${classItem.grade ?? 'NA'}-a-${classItem.assignmentType}`;
+        const classSlug = `harvest-${harvest.id}-tcat-${classItem.traderCategoryId ?? 0}-ccat-${classItem.customerCategoryId ?? 0}-g-${classItem.grade ?? 'NA'}-pitam-${classItem.pitamStatus}-a-${classItem.assignmentType}`;
 
         const classification = await tx.classification.create({
           data: {
@@ -99,12 +99,21 @@ export class HarvestBulkService {
             },
           });
         } else if (classItem.assignmentType === AssignmentType.TRADER) {
+          if (!classItem.traderCategoryId) {
+            throw new BadRequestException('traderCategoryId is required for TRADER classifications');
+          }
+
+          if (!classItem.grade) {
+            throw new BadRequestException('grade is required for TRADER classifications');
+          }
+
           // Get all traders for this category
           const shares = await tx.traderCategoryShare.findMany({
             where: {
               seasonId,
-              traderCategoryId: classItem.traderCategoryId!,
+              traderCategoryId: classItem.traderCategoryId,
             },
+            orderBy: { traderId: 'asc' },
             include: { trader: true },
           });
 
@@ -121,6 +130,7 @@ export class HarvestBulkService {
           }));
 
           const canDistributeToAll = allocations.every((allocation) => allocation.quantity > 0);
+          let didAddModulo = false;
 
           if (!canDistributeToAll) {
             await tx.traderStock.create({
@@ -128,8 +138,8 @@ export class HarvestBulkService {
                 seasonId,
                 date: new Date(bulkDto.dateGregorian),
                 traderId: null, // Modulo pool
-                traderCategoryId: classItem.traderCategoryId!,
-                grade: classItem.grade || undefined,
+                traderCategoryId: classItem.traderCategoryId,
+                grade: classItem.grade,
                 pitamStatus: classItem.pitamStatus,
                 quantity: classItem.quantity,
                 isModulo: true,
@@ -137,8 +147,9 @@ export class HarvestBulkService {
                 MovementReferenceId: classification.id,
                 updatedById: bulkDto.updatedById,
                 notes: classItem.notes,
-              } as any,
+              },
             });
+            didAddModulo = true;
           } else {
             let totalAllocated = 0;
 
@@ -148,8 +159,8 @@ export class HarvestBulkService {
                   seasonId,
                   date: new Date(bulkDto.dateGregorian),
                   traderId: allocation.share.traderId,
-                  traderCategoryId: classItem.traderCategoryId!,
-                  grade: classItem.grade || undefined,
+                  traderCategoryId: classItem.traderCategoryId,
+                  grade: classItem.grade,
                   pitamStatus: classItem.pitamStatus,
                   quantity: allocation.quantity,
                   isModulo: false,
@@ -157,7 +168,7 @@ export class HarvestBulkService {
                   MovementReferenceId: classification.id,
                   updatedById: bulkDto.updatedById,
                   notes: classItem.notes,
-                } as any,
+                },
               });
 
               totalAllocated += allocation.quantity;
@@ -171,8 +182,8 @@ export class HarvestBulkService {
                   seasonId,
                   date: new Date(bulkDto.dateGregorian),
                   traderId: null, // Modulo pool
-                  traderCategoryId: classItem.traderCategoryId!,
-                  grade: classItem.grade || undefined,
+                  traderCategoryId: classItem.traderCategoryId,
+                  grade: classItem.grade,
                   pitamStatus: classItem.pitamStatus,
                   quantity: remainder,
                   isModulo: true,
@@ -180,9 +191,23 @@ export class HarvestBulkService {
                   MovementReferenceId: classification.id,
                   updatedById: bulkDto.updatedById,
                   notes: classItem.notes,
-                } as any,
+                },
               });
+              didAddModulo = true;
             }
+          }
+
+          if (didAddModulo) {
+            await this.tryAssignFromModuloPool(tx, {
+              seasonId,
+              date: new Date(bulkDto.dateGregorian),
+              traderCategoryId: classItem.traderCategoryId,
+              grade: classItem.grade,
+              pitamStatus: classItem.pitamStatus,
+              updatedById: bulkDto.updatedById,
+              notes: classItem.notes,
+              movementReferenceId: classification.id,
+            });
           }
         }
       }
@@ -218,5 +243,100 @@ export class HarvestBulkService {
       rejectionRate: totalHarvested > 0 ? (totalRejected / totalHarvested) * 100 : 0,
       ownerRejectionRate: ownerHarvested > 0 ? (ownerRejected / ownerHarvested) * 100 : 0,
     };
+  }
+
+  private async tryAssignFromModuloPool(
+    tx: any,
+    params: {
+      seasonId: number;
+      date: Date;
+      traderCategoryId: number;
+      grade: NonNullable<ClassificationBulkItemDto['grade']>;
+      pitamStatus: ClassificationBulkItemDto['pitamStatus'];
+      updatedById: number;
+      notes?: string;
+      movementReferenceId?: number;
+    },
+  ) {
+    const moduloBalance = await tx.traderStock.aggregate({
+      _sum: { quantity: true },
+      where: {
+        seasonId: params.seasonId,
+        traderId: null,
+        isModulo: true,
+        traderCategoryId: params.traderCategoryId,
+        grade: params.grade,
+        pitamStatus: params.pitamStatus,
+        isDeleted: false,
+      },
+    });
+
+    const availableQty = moduloBalance._sum.quantity ?? 0;
+    if (availableQty <= 0) {
+      return;
+    }
+
+    const shares = await tx.traderCategoryShare.findMany({
+      where: {
+        seasonId: params.seasonId,
+        traderCategoryId: params.traderCategoryId,
+      },
+      orderBy: { traderId: 'asc' },
+    });
+
+    if (shares.length === 0) {
+      return;
+    }
+
+    const allocations = shares.map((share) => ({
+      traderId: share.traderId,
+      quantity: Math.floor((availableQty * Number(share.percent)) / 100),
+    }));
+
+    const canAssignToAll = allocations.every((allocation) => allocation.quantity > 0);
+    if (!canAssignToAll) {
+      return;
+    }
+
+    let totalAssigned = 0;
+    for (const allocation of allocations) {
+      await tx.traderStock.create({
+        data: {
+          seasonId: params.seasonId,
+          date: params.date,
+          traderId: allocation.traderId,
+          traderCategoryId: params.traderCategoryId,
+          grade: params.grade,
+          pitamStatus: params.pitamStatus,
+          quantity: allocation.quantity,
+          isModulo: false,
+          type: 'ASSIGNED',
+          MovementReferenceId: params.movementReferenceId,
+          updatedById: params.updatedById,
+          notes: params.notes,
+        },
+      });
+
+      totalAssigned += allocation.quantity;
+    }
+
+    if (totalAssigned > 0) {
+      await tx.traderStock.create({
+        data: {
+          seasonId: params.seasonId,
+          date: params.date,
+          traderId: null,
+          traderCategoryId: params.traderCategoryId,
+          grade: params.grade,
+          pitamStatus: params.pitamStatus,
+          quantity: -totalAssigned,
+          isModulo: true,
+          type: 'ASSIGNED',
+          MovementReferenceId: params.movementReferenceId,
+          updatedById: params.updatedById,
+          notes: params.notes,
+        },
+      });
+    }
   }
 }
