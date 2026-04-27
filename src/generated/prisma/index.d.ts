@@ -2669,7 +2669,6 @@ export namespace Prisma {
     box: number
     shipmentItem: number
     sentMessages: number
-    receivedMessages: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2681,7 +2680,6 @@ export namespace Prisma {
     box?: boolean | UserCountOutputTypeCountBoxArgs
     shipmentItem?: boolean | UserCountOutputTypeCountShipmentItemArgs
     sentMessages?: boolean | UserCountOutputTypeCountSentMessagesArgs
-    receivedMessages?: boolean | UserCountOutputTypeCountReceivedMessagesArgs
   }
 
   // Custom InputTypes
@@ -2748,13 +2746,6 @@ export namespace Prisma {
    * UserCountOutputType without action
    */
   export type UserCountOutputTypeCountSentMessagesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: MessageWhereInput
-  }
-
-  /**
-   * UserCountOutputType without action
-   */
-  export type UserCountOutputTypeCountReceivedMessagesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: MessageWhereInput
   }
 
@@ -3108,6 +3099,37 @@ export namespace Prisma {
    */
   export type BoxCountOutputTypeCountItemsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ShipmentItemWhereInput
+  }
+
+
+  /**
+   * Count Type MessageCountOutputType
+   */
+
+  export type MessageCountOutputType = {
+    replies: number
+  }
+
+  export type MessageCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    replies?: boolean | MessageCountOutputTypeCountRepliesArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * MessageCountOutputType without action
+   */
+  export type MessageCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MessageCountOutputType
+     */
+    select?: MessageCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * MessageCountOutputType without action
+   */
+  export type MessageCountOutputTypeCountRepliesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MessageWhereInput
   }
 
 
@@ -6994,7 +7016,6 @@ export namespace Prisma {
     box?: boolean | User$boxArgs<ExtArgs>
     shipmentItem?: boolean | User$shipmentItemArgs<ExtArgs>
     sentMessages?: boolean | User$sentMessagesArgs<ExtArgs>
-    receivedMessages?: boolean | User$receivedMessagesArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -7047,7 +7068,6 @@ export namespace Prisma {
     box?: boolean | User$boxArgs<ExtArgs>
     shipmentItem?: boolean | User$shipmentItemArgs<ExtArgs>
     sentMessages?: boolean | User$sentMessagesArgs<ExtArgs>
-    receivedMessages?: boolean | User$receivedMessagesArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -7064,7 +7084,6 @@ export namespace Prisma {
       box: Prisma.$BoxPayload<ExtArgs>[]
       shipmentItem: Prisma.$ShipmentItemPayload<ExtArgs>[]
       sentMessages: Prisma.$MessagePayload<ExtArgs>[]
-      receivedMessages: Prisma.$MessagePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -7479,7 +7498,6 @@ export namespace Prisma {
     box<T extends User$boxArgs<ExtArgs> = {}>(args?: Subset<T, User$boxArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BoxPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     shipmentItem<T extends User$shipmentItemArgs<ExtArgs> = {}>(args?: Subset<T, User$shipmentItemArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ShipmentItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     sentMessages<T extends User$sentMessagesArgs<ExtArgs> = {}>(args?: Subset<T, User$sentMessagesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    receivedMessages<T extends User$receivedMessagesArgs<ExtArgs> = {}>(args?: Subset<T, User$receivedMessagesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -8083,30 +8101,6 @@ export namespace Prisma {
    * User.sentMessages
    */
   export type User$sentMessagesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Message
-     */
-    select?: MessageSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Message
-     */
-    omit?: MessageOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: MessageInclude<ExtArgs> | null
-    where?: MessageWhereInput
-    orderBy?: MessageOrderByWithRelationInput | MessageOrderByWithRelationInput[]
-    cursor?: MessageWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: MessageScalarFieldEnum | MessageScalarFieldEnum[]
-  }
-
-  /**
-   * User.receivedMessages
-   */
-  export type User$receivedMessagesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
      * Select specific fields to fetch from the Message
      */
@@ -23813,45 +23807,48 @@ export namespace Prisma {
   export type MessageAvgAggregateOutputType = {
     id: number | null
     senderId: number | null
-    recipientId: number | null
+    recipientIds: number | null
+    readByIds: number | null
+    replyToMessageId: number | null
   }
 
   export type MessageSumAggregateOutputType = {
     id: number | null
     senderId: number | null
-    recipientId: number | null
+    recipientIds: number[]
+    readByIds: number[]
+    replyToMessageId: number | null
   }
 
   export type MessageMinAggregateOutputType = {
     id: number | null
     senderId: number | null
-    recipientId: number | null
+    replyToMessageId: number | null
     subject: string | null
     content: string | null
     priority: $Enums.Priority | null
-    isRead: boolean | null
     createdAt: Date | null
   }
 
   export type MessageMaxAggregateOutputType = {
     id: number | null
     senderId: number | null
-    recipientId: number | null
+    replyToMessageId: number | null
     subject: string | null
     content: string | null
     priority: $Enums.Priority | null
-    isRead: boolean | null
     createdAt: Date | null
   }
 
   export type MessageCountAggregateOutputType = {
     id: number
     senderId: number
-    recipientId: number
+    recipientIds: number
+    readByIds: number
+    replyToMessageId: number
     subject: number
     content: number
     priority: number
-    isRead: number
     createdAt: number
     _all: number
   }
@@ -23860,45 +23857,48 @@ export namespace Prisma {
   export type MessageAvgAggregateInputType = {
     id?: true
     senderId?: true
-    recipientId?: true
+    recipientIds?: true
+    readByIds?: true
+    replyToMessageId?: true
   }
 
   export type MessageSumAggregateInputType = {
     id?: true
     senderId?: true
-    recipientId?: true
+    recipientIds?: true
+    readByIds?: true
+    replyToMessageId?: true
   }
 
   export type MessageMinAggregateInputType = {
     id?: true
     senderId?: true
-    recipientId?: true
+    replyToMessageId?: true
     subject?: true
     content?: true
     priority?: true
-    isRead?: true
     createdAt?: true
   }
 
   export type MessageMaxAggregateInputType = {
     id?: true
     senderId?: true
-    recipientId?: true
+    replyToMessageId?: true
     subject?: true
     content?: true
     priority?: true
-    isRead?: true
     createdAt?: true
   }
 
   export type MessageCountAggregateInputType = {
     id?: true
     senderId?: true
-    recipientId?: true
+    recipientIds?: true
+    readByIds?: true
+    replyToMessageId?: true
     subject?: true
     content?: true
     priority?: true
-    isRead?: true
     createdAt?: true
     _all?: true
   }
@@ -23992,11 +23992,12 @@ export namespace Prisma {
   export type MessageGroupByOutputType = {
     id: number
     senderId: number
-    recipientId: number | null
+    recipientIds: number[]
+    readByIds: number[]
+    replyToMessageId: number | null
     subject: string
     content: string
     priority: $Enums.Priority
-    isRead: boolean
     createdAt: Date
     _count: MessageCountAggregateOutputType | null
     _avg: MessageAvgAggregateOutputType | null
@@ -24022,81 +24023,91 @@ export namespace Prisma {
   export type MessageSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     senderId?: boolean
-    recipientId?: boolean
+    recipientIds?: boolean
+    readByIds?: boolean
+    replyToMessageId?: boolean
     subject?: boolean
     content?: boolean
     priority?: boolean
-    isRead?: boolean
     createdAt?: boolean
     sender?: boolean | UserDefaultArgs<ExtArgs>
-    recipient?: boolean | Message$recipientArgs<ExtArgs>
+    replyToMessage?: boolean | Message$replyToMessageArgs<ExtArgs>
+    replies?: boolean | Message$repliesArgs<ExtArgs>
+    _count?: boolean | MessageCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["message"]>
 
   export type MessageSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     senderId?: boolean
-    recipientId?: boolean
+    recipientIds?: boolean
+    readByIds?: boolean
+    replyToMessageId?: boolean
     subject?: boolean
     content?: boolean
     priority?: boolean
-    isRead?: boolean
     createdAt?: boolean
     sender?: boolean | UserDefaultArgs<ExtArgs>
-    recipient?: boolean | Message$recipientArgs<ExtArgs>
+    replyToMessage?: boolean | Message$replyToMessageArgs<ExtArgs>
   }, ExtArgs["result"]["message"]>
 
   export type MessageSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     senderId?: boolean
-    recipientId?: boolean
+    recipientIds?: boolean
+    readByIds?: boolean
+    replyToMessageId?: boolean
     subject?: boolean
     content?: boolean
     priority?: boolean
-    isRead?: boolean
     createdAt?: boolean
     sender?: boolean | UserDefaultArgs<ExtArgs>
-    recipient?: boolean | Message$recipientArgs<ExtArgs>
+    replyToMessage?: boolean | Message$replyToMessageArgs<ExtArgs>
   }, ExtArgs["result"]["message"]>
 
   export type MessageSelectScalar = {
     id?: boolean
     senderId?: boolean
-    recipientId?: boolean
+    recipientIds?: boolean
+    readByIds?: boolean
+    replyToMessageId?: boolean
     subject?: boolean
     content?: boolean
     priority?: boolean
-    isRead?: boolean
     createdAt?: boolean
   }
 
-  export type MessageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "senderId" | "recipientId" | "subject" | "content" | "priority" | "isRead" | "createdAt", ExtArgs["result"]["message"]>
+  export type MessageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "senderId" | "recipientIds" | "readByIds" | "replyToMessageId" | "subject" | "content" | "priority" | "createdAt", ExtArgs["result"]["message"]>
   export type MessageInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     sender?: boolean | UserDefaultArgs<ExtArgs>
-    recipient?: boolean | Message$recipientArgs<ExtArgs>
+    replyToMessage?: boolean | Message$replyToMessageArgs<ExtArgs>
+    replies?: boolean | Message$repliesArgs<ExtArgs>
+    _count?: boolean | MessageCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type MessageIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     sender?: boolean | UserDefaultArgs<ExtArgs>
-    recipient?: boolean | Message$recipientArgs<ExtArgs>
+    replyToMessage?: boolean | Message$replyToMessageArgs<ExtArgs>
   }
   export type MessageIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     sender?: boolean | UserDefaultArgs<ExtArgs>
-    recipient?: boolean | Message$recipientArgs<ExtArgs>
+    replyToMessage?: boolean | Message$replyToMessageArgs<ExtArgs>
   }
 
   export type $MessagePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Message"
     objects: {
       sender: Prisma.$UserPayload<ExtArgs>
-      recipient: Prisma.$UserPayload<ExtArgs> | null
+      replyToMessage: Prisma.$MessagePayload<ExtArgs> | null
+      replies: Prisma.$MessagePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
       senderId: number
-      recipientId: number | null
+      recipientIds: number[]
+      readByIds: number[]
+      replyToMessageId: number | null
       subject: string
       content: string
       priority: $Enums.Priority
-      isRead: boolean
       createdAt: Date
     }, ExtArgs["result"]["message"]>
     composites: {}
@@ -24493,7 +24504,8 @@ export namespace Prisma {
   export interface Prisma__MessageClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     sender<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    recipient<T extends Message$recipientArgs<ExtArgs> = {}>(args?: Subset<T, Message$recipientArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    replyToMessage<T extends Message$replyToMessageArgs<ExtArgs> = {}>(args?: Subset<T, Message$replyToMessageArgs<ExtArgs>>): Prisma__MessageClient<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    replies<T extends Message$repliesArgs<ExtArgs> = {}>(args?: Subset<T, Message$repliesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -24525,11 +24537,12 @@ export namespace Prisma {
   interface MessageFieldRefs {
     readonly id: FieldRef<"Message", 'Int'>
     readonly senderId: FieldRef<"Message", 'Int'>
-    readonly recipientId: FieldRef<"Message", 'Int'>
+    readonly recipientIds: FieldRef<"Message", 'Int[]'>
+    readonly readByIds: FieldRef<"Message", 'Int[]'>
+    readonly replyToMessageId: FieldRef<"Message", 'Int'>
     readonly subject: FieldRef<"Message", 'String'>
     readonly content: FieldRef<"Message", 'String'>
     readonly priority: FieldRef<"Message", 'Priority'>
-    readonly isRead: FieldRef<"Message", 'Boolean'>
     readonly createdAt: FieldRef<"Message", 'DateTime'>
   }
     
@@ -24932,22 +24945,46 @@ export namespace Prisma {
   }
 
   /**
-   * Message.recipient
+   * Message.replyToMessage
    */
-  export type Message$recipientArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type Message$replyToMessageArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the User
+     * Select specific fields to fetch from the Message
      */
-    select?: UserSelect<ExtArgs> | null
+    select?: MessageSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the User
+     * Omit specific fields from the Message
      */
-    omit?: UserOmit<ExtArgs> | null
+    omit?: MessageOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: UserInclude<ExtArgs> | null
-    where?: UserWhereInput
+    include?: MessageInclude<ExtArgs> | null
+    where?: MessageWhereInput
+  }
+
+  /**
+   * Message.replies
+   */
+  export type Message$repliesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Message
+     */
+    select?: MessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Message
+     */
+    omit?: MessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MessageInclude<ExtArgs> | null
+    where?: MessageWhereInput
+    orderBy?: MessageOrderByWithRelationInput | MessageOrderByWithRelationInput[]
+    cursor?: MessageWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MessageScalarFieldEnum | MessageScalarFieldEnum[]
   }
 
   /**
@@ -25259,11 +25296,12 @@ export namespace Prisma {
   export const MessageScalarFieldEnum: {
     id: 'id',
     senderId: 'senderId',
-    recipientId: 'recipientId',
+    recipientIds: 'recipientIds',
+    readByIds: 'readByIds',
+    replyToMessageId: 'replyToMessageId',
     subject: 'subject',
     content: 'content',
     priority: 'priority',
-    isRead: 'isRead',
     createdAt: 'createdAt'
   };
 
@@ -25794,7 +25832,6 @@ export namespace Prisma {
     box?: BoxListRelationFilter
     shipmentItem?: ShipmentItemListRelationFilter
     sentMessages?: MessageListRelationFilter
-    receivedMessages?: MessageListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -25816,7 +25853,6 @@ export namespace Prisma {
     box?: BoxOrderByRelationAggregateInput
     shipmentItem?: ShipmentItemOrderByRelationAggregateInput
     sentMessages?: MessageOrderByRelationAggregateInput
-    receivedMessages?: MessageOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -25841,7 +25877,6 @@ export namespace Prisma {
     box?: BoxListRelationFilter
     shipmentItem?: ShipmentItemListRelationFilter
     sentMessages?: MessageListRelationFilter
-    receivedMessages?: MessageListRelationFilter
   }, "id" | "name" | "email" | "phone" | "slug">
 
   export type UserOrderByWithAggregationInput = {
@@ -27176,27 +27211,31 @@ export namespace Prisma {
     NOT?: MessageWhereInput | MessageWhereInput[]
     id?: IntFilter<"Message"> | number
     senderId?: IntFilter<"Message"> | number
-    recipientId?: IntNullableFilter<"Message"> | number | null
+    recipientIds?: IntNullableListFilter<"Message">
+    readByIds?: IntNullableListFilter<"Message">
+    replyToMessageId?: IntNullableFilter<"Message"> | number | null
     subject?: StringFilter<"Message"> | string
     content?: StringFilter<"Message"> | string
     priority?: EnumPriorityFilter<"Message"> | $Enums.Priority
-    isRead?: BoolFilter<"Message"> | boolean
     createdAt?: DateTimeFilter<"Message"> | Date | string
     sender?: XOR<UserScalarRelationFilter, UserWhereInput>
-    recipient?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    replyToMessage?: XOR<MessageNullableScalarRelationFilter, MessageWhereInput> | null
+    replies?: MessageListRelationFilter
   }
 
   export type MessageOrderByWithRelationInput = {
     id?: SortOrder
     senderId?: SortOrder
-    recipientId?: SortOrderInput | SortOrder
+    recipientIds?: SortOrder
+    readByIds?: SortOrder
+    replyToMessageId?: SortOrderInput | SortOrder
     subject?: SortOrder
     content?: SortOrder
     priority?: SortOrder
-    isRead?: SortOrder
     createdAt?: SortOrder
     sender?: UserOrderByWithRelationInput
-    recipient?: UserOrderByWithRelationInput
+    replyToMessage?: MessageOrderByWithRelationInput
+    replies?: MessageOrderByRelationAggregateInput
   }
 
   export type MessageWhereUniqueInput = Prisma.AtLeast<{
@@ -27205,24 +27244,27 @@ export namespace Prisma {
     OR?: MessageWhereInput[]
     NOT?: MessageWhereInput | MessageWhereInput[]
     senderId?: IntFilter<"Message"> | number
-    recipientId?: IntNullableFilter<"Message"> | number | null
+    recipientIds?: IntNullableListFilter<"Message">
+    readByIds?: IntNullableListFilter<"Message">
+    replyToMessageId?: IntNullableFilter<"Message"> | number | null
     subject?: StringFilter<"Message"> | string
     content?: StringFilter<"Message"> | string
     priority?: EnumPriorityFilter<"Message"> | $Enums.Priority
-    isRead?: BoolFilter<"Message"> | boolean
     createdAt?: DateTimeFilter<"Message"> | Date | string
     sender?: XOR<UserScalarRelationFilter, UserWhereInput>
-    recipient?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    replyToMessage?: XOR<MessageNullableScalarRelationFilter, MessageWhereInput> | null
+    replies?: MessageListRelationFilter
   }, "id">
 
   export type MessageOrderByWithAggregationInput = {
     id?: SortOrder
     senderId?: SortOrder
-    recipientId?: SortOrderInput | SortOrder
+    recipientIds?: SortOrder
+    readByIds?: SortOrder
+    replyToMessageId?: SortOrderInput | SortOrder
     subject?: SortOrder
     content?: SortOrder
     priority?: SortOrder
-    isRead?: SortOrder
     createdAt?: SortOrder
     _count?: MessageCountOrderByAggregateInput
     _avg?: MessageAvgOrderByAggregateInput
@@ -27237,11 +27279,12 @@ export namespace Prisma {
     NOT?: MessageScalarWhereWithAggregatesInput | MessageScalarWhereWithAggregatesInput[]
     id?: IntWithAggregatesFilter<"Message"> | number
     senderId?: IntWithAggregatesFilter<"Message"> | number
-    recipientId?: IntNullableWithAggregatesFilter<"Message"> | number | null
+    recipientIds?: IntNullableListFilter<"Message">
+    readByIds?: IntNullableListFilter<"Message">
+    replyToMessageId?: IntNullableWithAggregatesFilter<"Message"> | number | null
     subject?: StringWithAggregatesFilter<"Message"> | string
     content?: StringWithAggregatesFilter<"Message"> | string
     priority?: EnumPriorityWithAggregatesFilter<"Message"> | $Enums.Priority
-    isRead?: BoolWithAggregatesFilter<"Message"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"Message"> | Date | string
   }
 
@@ -27483,7 +27526,6 @@ export namespace Prisma {
     box?: BoxCreateNestedManyWithoutUpdatedByInput
     shipmentItem?: ShipmentItemCreateNestedManyWithoutUpdatedByInput
     sentMessages?: MessageCreateNestedManyWithoutSenderInput
-    receivedMessages?: MessageCreateNestedManyWithoutRecipientInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -27505,7 +27547,6 @@ export namespace Prisma {
     box?: BoxUncheckedCreateNestedManyWithoutUpdatedByInput
     shipmentItem?: ShipmentItemUncheckedCreateNestedManyWithoutUpdatedByInput
     sentMessages?: MessageUncheckedCreateNestedManyWithoutSenderInput
-    receivedMessages?: MessageUncheckedCreateNestedManyWithoutRecipientInput
   }
 
   export type UserUpdateInput = {
@@ -27526,7 +27567,6 @@ export namespace Prisma {
     box?: BoxUpdateManyWithoutUpdatedByNestedInput
     shipmentItem?: ShipmentItemUpdateManyWithoutUpdatedByNestedInput
     sentMessages?: MessageUpdateManyWithoutSenderNestedInput
-    receivedMessages?: MessageUpdateManyWithoutRecipientNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -27548,7 +27588,6 @@ export namespace Prisma {
     box?: BoxUncheckedUpdateManyWithoutUpdatedByNestedInput
     shipmentItem?: ShipmentItemUncheckedUpdateManyWithoutUpdatedByNestedInput
     sentMessages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
-    receivedMessages?: MessageUncheckedUpdateManyWithoutRecipientNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -28902,74 +28941,85 @@ export namespace Prisma {
   }
 
   export type MessageCreateInput = {
+    recipientIds?: MessageCreaterecipientIdsInput | number[]
+    readByIds?: MessageCreatereadByIdsInput | number[]
     subject: string
     content: string
     priority?: $Enums.Priority
-    isRead?: boolean
     createdAt?: Date | string
     sender: UserCreateNestedOneWithoutSentMessagesInput
-    recipient?: UserCreateNestedOneWithoutReceivedMessagesInput
+    replyToMessage?: MessageCreateNestedOneWithoutRepliesInput
+    replies?: MessageCreateNestedManyWithoutReplyToMessageInput
   }
 
   export type MessageUncheckedCreateInput = {
     id?: number
     senderId: number
-    recipientId?: number | null
+    recipientIds?: MessageCreaterecipientIdsInput | number[]
+    readByIds?: MessageCreatereadByIdsInput | number[]
+    replyToMessageId?: number | null
     subject: string
     content: string
     priority?: $Enums.Priority
-    isRead?: boolean
     createdAt?: Date | string
+    replies?: MessageUncheckedCreateNestedManyWithoutReplyToMessageInput
   }
 
   export type MessageUpdateInput = {
+    recipientIds?: MessageUpdaterecipientIdsInput | number[]
+    readByIds?: MessageUpdatereadByIdsInput | number[]
     subject?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
-    isRead?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     sender?: UserUpdateOneRequiredWithoutSentMessagesNestedInput
-    recipient?: UserUpdateOneWithoutReceivedMessagesNestedInput
+    replyToMessage?: MessageUpdateOneWithoutRepliesNestedInput
+    replies?: MessageUpdateManyWithoutReplyToMessageNestedInput
   }
 
   export type MessageUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
     senderId?: IntFieldUpdateOperationsInput | number
-    recipientId?: NullableIntFieldUpdateOperationsInput | number | null
+    recipientIds?: MessageUpdaterecipientIdsInput | number[]
+    readByIds?: MessageUpdatereadByIdsInput | number[]
+    replyToMessageId?: NullableIntFieldUpdateOperationsInput | number | null
     subject?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
-    isRead?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    replies?: MessageUncheckedUpdateManyWithoutReplyToMessageNestedInput
   }
 
   export type MessageCreateManyInput = {
     id?: number
     senderId: number
-    recipientId?: number | null
+    recipientIds?: MessageCreaterecipientIdsInput | number[]
+    readByIds?: MessageCreatereadByIdsInput | number[]
+    replyToMessageId?: number | null
     subject: string
     content: string
     priority?: $Enums.Priority
-    isRead?: boolean
     createdAt?: Date | string
   }
 
   export type MessageUpdateManyMutationInput = {
+    recipientIds?: MessageUpdaterecipientIdsInput | number[]
+    readByIds?: MessageUpdatereadByIdsInput | number[]
     subject?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
-    isRead?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type MessageUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
     senderId?: IntFieldUpdateOperationsInput | number
-    recipientId?: NullableIntFieldUpdateOperationsInput | number | null
+    recipientIds?: MessageUpdaterecipientIdsInput | number[]
+    readByIds?: MessageUpdatereadByIdsInput | number[]
+    replyToMessageId?: NullableIntFieldUpdateOperationsInput | number | null
     subject?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
-    isRead?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -30635,6 +30685,14 @@ export namespace Prisma {
     _max?: NestedEnumItemOwnershipFilter<$PrismaModel>
   }
 
+  export type IntNullableListFilter<$PrismaModel = never> = {
+    equals?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    has?: number | IntFieldRefInput<$PrismaModel> | null
+    hasEvery?: number[] | ListIntFieldRefInput<$PrismaModel>
+    hasSome?: number[] | ListIntFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
+  }
+
   export type EnumPriorityFilter<$PrismaModel = never> = {
     equals?: $Enums.Priority | EnumPriorityFieldRefInput<$PrismaModel>
     in?: $Enums.Priority[] | ListEnumPriorityFieldRefInput<$PrismaModel>
@@ -30642,54 +30700,57 @@ export namespace Prisma {
     not?: NestedEnumPriorityFilter<$PrismaModel> | $Enums.Priority
   }
 
-  export type UserNullableScalarRelationFilter = {
-    is?: UserWhereInput | null
-    isNot?: UserWhereInput | null
+  export type MessageNullableScalarRelationFilter = {
+    is?: MessageWhereInput | null
+    isNot?: MessageWhereInput | null
   }
 
   export type MessageCountOrderByAggregateInput = {
     id?: SortOrder
     senderId?: SortOrder
-    recipientId?: SortOrder
+    recipientIds?: SortOrder
+    readByIds?: SortOrder
+    replyToMessageId?: SortOrder
     subject?: SortOrder
     content?: SortOrder
     priority?: SortOrder
-    isRead?: SortOrder
     createdAt?: SortOrder
   }
 
   export type MessageAvgOrderByAggregateInput = {
     id?: SortOrder
     senderId?: SortOrder
-    recipientId?: SortOrder
+    recipientIds?: SortOrder
+    readByIds?: SortOrder
+    replyToMessageId?: SortOrder
   }
 
   export type MessageMaxOrderByAggregateInput = {
     id?: SortOrder
     senderId?: SortOrder
-    recipientId?: SortOrder
+    replyToMessageId?: SortOrder
     subject?: SortOrder
     content?: SortOrder
     priority?: SortOrder
-    isRead?: SortOrder
     createdAt?: SortOrder
   }
 
   export type MessageMinOrderByAggregateInput = {
     id?: SortOrder
     senderId?: SortOrder
-    recipientId?: SortOrder
+    replyToMessageId?: SortOrder
     subject?: SortOrder
     content?: SortOrder
     priority?: SortOrder
-    isRead?: SortOrder
     createdAt?: SortOrder
   }
 
   export type MessageSumOrderByAggregateInput = {
     id?: SortOrder
     senderId?: SortOrder
-    recipientId?: SortOrder
+    recipientIds?: SortOrder
+    readByIds?: SortOrder
+    replyToMessageId?: SortOrder
   }
 
   export type EnumPriorityWithAggregatesFilter<$PrismaModel = never> = {
@@ -31308,13 +31369,6 @@ export namespace Prisma {
     connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
   }
 
-  export type MessageCreateNestedManyWithoutRecipientInput = {
-    create?: XOR<MessageCreateWithoutRecipientInput, MessageUncheckedCreateWithoutRecipientInput> | MessageCreateWithoutRecipientInput[] | MessageUncheckedCreateWithoutRecipientInput[]
-    connectOrCreate?: MessageCreateOrConnectWithoutRecipientInput | MessageCreateOrConnectWithoutRecipientInput[]
-    createMany?: MessageCreateManyRecipientInputEnvelope
-    connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
-  }
-
   export type FieldHarvestUncheckedCreateNestedManyWithoutUpdatedByInput = {
     create?: XOR<FieldHarvestCreateWithoutUpdatedByInput, FieldHarvestUncheckedCreateWithoutUpdatedByInput> | FieldHarvestCreateWithoutUpdatedByInput[] | FieldHarvestUncheckedCreateWithoutUpdatedByInput[]
     connectOrCreate?: FieldHarvestCreateOrConnectWithoutUpdatedByInput | FieldHarvestCreateOrConnectWithoutUpdatedByInput[]
@@ -31368,13 +31422,6 @@ export namespace Prisma {
     create?: XOR<MessageCreateWithoutSenderInput, MessageUncheckedCreateWithoutSenderInput> | MessageCreateWithoutSenderInput[] | MessageUncheckedCreateWithoutSenderInput[]
     connectOrCreate?: MessageCreateOrConnectWithoutSenderInput | MessageCreateOrConnectWithoutSenderInput[]
     createMany?: MessageCreateManySenderInputEnvelope
-    connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
-  }
-
-  export type MessageUncheckedCreateNestedManyWithoutRecipientInput = {
-    create?: XOR<MessageCreateWithoutRecipientInput, MessageUncheckedCreateWithoutRecipientInput> | MessageCreateWithoutRecipientInput[] | MessageUncheckedCreateWithoutRecipientInput[]
-    connectOrCreate?: MessageCreateOrConnectWithoutRecipientInput | MessageCreateOrConnectWithoutRecipientInput[]
-    createMany?: MessageCreateManyRecipientInputEnvelope
     connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
   }
 
@@ -31498,20 +31545,6 @@ export namespace Prisma {
     deleteMany?: MessageScalarWhereInput | MessageScalarWhereInput[]
   }
 
-  export type MessageUpdateManyWithoutRecipientNestedInput = {
-    create?: XOR<MessageCreateWithoutRecipientInput, MessageUncheckedCreateWithoutRecipientInput> | MessageCreateWithoutRecipientInput[] | MessageUncheckedCreateWithoutRecipientInput[]
-    connectOrCreate?: MessageCreateOrConnectWithoutRecipientInput | MessageCreateOrConnectWithoutRecipientInput[]
-    upsert?: MessageUpsertWithWhereUniqueWithoutRecipientInput | MessageUpsertWithWhereUniqueWithoutRecipientInput[]
-    createMany?: MessageCreateManyRecipientInputEnvelope
-    set?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
-    disconnect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
-    delete?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
-    connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
-    update?: MessageUpdateWithWhereUniqueWithoutRecipientInput | MessageUpdateWithWhereUniqueWithoutRecipientInput[]
-    updateMany?: MessageUpdateManyWithWhereWithoutRecipientInput | MessageUpdateManyWithWhereWithoutRecipientInput[]
-    deleteMany?: MessageScalarWhereInput | MessageScalarWhereInput[]
-  }
-
   export type FieldHarvestUncheckedUpdateManyWithoutUpdatedByNestedInput = {
     create?: XOR<FieldHarvestCreateWithoutUpdatedByInput, FieldHarvestUncheckedCreateWithoutUpdatedByInput> | FieldHarvestCreateWithoutUpdatedByInput[] | FieldHarvestUncheckedCreateWithoutUpdatedByInput[]
     connectOrCreate?: FieldHarvestCreateOrConnectWithoutUpdatedByInput | FieldHarvestCreateOrConnectWithoutUpdatedByInput[]
@@ -31621,20 +31654,6 @@ export namespace Prisma {
     connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
     update?: MessageUpdateWithWhereUniqueWithoutSenderInput | MessageUpdateWithWhereUniqueWithoutSenderInput[]
     updateMany?: MessageUpdateManyWithWhereWithoutSenderInput | MessageUpdateManyWithWhereWithoutSenderInput[]
-    deleteMany?: MessageScalarWhereInput | MessageScalarWhereInput[]
-  }
-
-  export type MessageUncheckedUpdateManyWithoutRecipientNestedInput = {
-    create?: XOR<MessageCreateWithoutRecipientInput, MessageUncheckedCreateWithoutRecipientInput> | MessageCreateWithoutRecipientInput[] | MessageUncheckedCreateWithoutRecipientInput[]
-    connectOrCreate?: MessageCreateOrConnectWithoutRecipientInput | MessageCreateOrConnectWithoutRecipientInput[]
-    upsert?: MessageUpsertWithWhereUniqueWithoutRecipientInput | MessageUpsertWithWhereUniqueWithoutRecipientInput[]
-    createMany?: MessageCreateManyRecipientInputEnvelope
-    set?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
-    disconnect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
-    delete?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
-    connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
-    update?: MessageUpdateWithWhereUniqueWithoutRecipientInput | MessageUpdateWithWhereUniqueWithoutRecipientInput[]
-    updateMany?: MessageUpdateManyWithWhereWithoutRecipientInput | MessageUpdateManyWithWhereWithoutRecipientInput[]
     deleteMany?: MessageScalarWhereInput | MessageScalarWhereInput[]
   }
 
@@ -33214,16 +33233,48 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutShipmentItemInput, UserUpdateWithoutShipmentItemInput>, UserUncheckedUpdateWithoutShipmentItemInput>
   }
 
+  export type MessageCreaterecipientIdsInput = {
+    set: number[]
+  }
+
+  export type MessageCreatereadByIdsInput = {
+    set: number[]
+  }
+
   export type UserCreateNestedOneWithoutSentMessagesInput = {
     create?: XOR<UserCreateWithoutSentMessagesInput, UserUncheckedCreateWithoutSentMessagesInput>
     connectOrCreate?: UserCreateOrConnectWithoutSentMessagesInput
     connect?: UserWhereUniqueInput
   }
 
-  export type UserCreateNestedOneWithoutReceivedMessagesInput = {
-    create?: XOR<UserCreateWithoutReceivedMessagesInput, UserUncheckedCreateWithoutReceivedMessagesInput>
-    connectOrCreate?: UserCreateOrConnectWithoutReceivedMessagesInput
-    connect?: UserWhereUniqueInput
+  export type MessageCreateNestedOneWithoutRepliesInput = {
+    create?: XOR<MessageCreateWithoutRepliesInput, MessageUncheckedCreateWithoutRepliesInput>
+    connectOrCreate?: MessageCreateOrConnectWithoutRepliesInput
+    connect?: MessageWhereUniqueInput
+  }
+
+  export type MessageCreateNestedManyWithoutReplyToMessageInput = {
+    create?: XOR<MessageCreateWithoutReplyToMessageInput, MessageUncheckedCreateWithoutReplyToMessageInput> | MessageCreateWithoutReplyToMessageInput[] | MessageUncheckedCreateWithoutReplyToMessageInput[]
+    connectOrCreate?: MessageCreateOrConnectWithoutReplyToMessageInput | MessageCreateOrConnectWithoutReplyToMessageInput[]
+    createMany?: MessageCreateManyReplyToMessageInputEnvelope
+    connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+  }
+
+  export type MessageUncheckedCreateNestedManyWithoutReplyToMessageInput = {
+    create?: XOR<MessageCreateWithoutReplyToMessageInput, MessageUncheckedCreateWithoutReplyToMessageInput> | MessageCreateWithoutReplyToMessageInput[] | MessageUncheckedCreateWithoutReplyToMessageInput[]
+    connectOrCreate?: MessageCreateOrConnectWithoutReplyToMessageInput | MessageCreateOrConnectWithoutReplyToMessageInput[]
+    createMany?: MessageCreateManyReplyToMessageInputEnvelope
+    connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+  }
+
+  export type MessageUpdaterecipientIdsInput = {
+    set?: number[]
+    push?: number | number[]
+  }
+
+  export type MessageUpdatereadByIdsInput = {
+    set?: number[]
+    push?: number | number[]
   }
 
   export type EnumPriorityFieldUpdateOperationsInput = {
@@ -33238,14 +33289,42 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutSentMessagesInput, UserUpdateWithoutSentMessagesInput>, UserUncheckedUpdateWithoutSentMessagesInput>
   }
 
-  export type UserUpdateOneWithoutReceivedMessagesNestedInput = {
-    create?: XOR<UserCreateWithoutReceivedMessagesInput, UserUncheckedCreateWithoutReceivedMessagesInput>
-    connectOrCreate?: UserCreateOrConnectWithoutReceivedMessagesInput
-    upsert?: UserUpsertWithoutReceivedMessagesInput
-    disconnect?: UserWhereInput | boolean
-    delete?: UserWhereInput | boolean
-    connect?: UserWhereUniqueInput
-    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutReceivedMessagesInput, UserUpdateWithoutReceivedMessagesInput>, UserUncheckedUpdateWithoutReceivedMessagesInput>
+  export type MessageUpdateOneWithoutRepliesNestedInput = {
+    create?: XOR<MessageCreateWithoutRepliesInput, MessageUncheckedCreateWithoutRepliesInput>
+    connectOrCreate?: MessageCreateOrConnectWithoutRepliesInput
+    upsert?: MessageUpsertWithoutRepliesInput
+    disconnect?: MessageWhereInput | boolean
+    delete?: MessageWhereInput | boolean
+    connect?: MessageWhereUniqueInput
+    update?: XOR<XOR<MessageUpdateToOneWithWhereWithoutRepliesInput, MessageUpdateWithoutRepliesInput>, MessageUncheckedUpdateWithoutRepliesInput>
+  }
+
+  export type MessageUpdateManyWithoutReplyToMessageNestedInput = {
+    create?: XOR<MessageCreateWithoutReplyToMessageInput, MessageUncheckedCreateWithoutReplyToMessageInput> | MessageCreateWithoutReplyToMessageInput[] | MessageUncheckedCreateWithoutReplyToMessageInput[]
+    connectOrCreate?: MessageCreateOrConnectWithoutReplyToMessageInput | MessageCreateOrConnectWithoutReplyToMessageInput[]
+    upsert?: MessageUpsertWithWhereUniqueWithoutReplyToMessageInput | MessageUpsertWithWhereUniqueWithoutReplyToMessageInput[]
+    createMany?: MessageCreateManyReplyToMessageInputEnvelope
+    set?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+    disconnect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+    delete?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+    connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+    update?: MessageUpdateWithWhereUniqueWithoutReplyToMessageInput | MessageUpdateWithWhereUniqueWithoutReplyToMessageInput[]
+    updateMany?: MessageUpdateManyWithWhereWithoutReplyToMessageInput | MessageUpdateManyWithWhereWithoutReplyToMessageInput[]
+    deleteMany?: MessageScalarWhereInput | MessageScalarWhereInput[]
+  }
+
+  export type MessageUncheckedUpdateManyWithoutReplyToMessageNestedInput = {
+    create?: XOR<MessageCreateWithoutReplyToMessageInput, MessageUncheckedCreateWithoutReplyToMessageInput> | MessageCreateWithoutReplyToMessageInput[] | MessageUncheckedCreateWithoutReplyToMessageInput[]
+    connectOrCreate?: MessageCreateOrConnectWithoutReplyToMessageInput | MessageCreateOrConnectWithoutReplyToMessageInput[]
+    upsert?: MessageUpsertWithWhereUniqueWithoutReplyToMessageInput | MessageUpsertWithWhereUniqueWithoutReplyToMessageInput[]
+    createMany?: MessageCreateManyReplyToMessageInputEnvelope
+    set?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+    disconnect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+    delete?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+    connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+    update?: MessageUpdateWithWhereUniqueWithoutReplyToMessageInput | MessageUpdateWithWhereUniqueWithoutReplyToMessageInput[]
+    updateMany?: MessageUpdateManyWithWhereWithoutReplyToMessageInput | MessageUpdateManyWithWhereWithoutReplyToMessageInput[]
+    deleteMany?: MessageScalarWhereInput | MessageScalarWhereInput[]
   }
 
   export type NestedIntFilter<$PrismaModel = never> = {
@@ -35077,22 +35156,26 @@ export namespace Prisma {
   }
 
   export type MessageCreateWithoutSenderInput = {
+    recipientIds?: MessageCreaterecipientIdsInput | number[]
+    readByIds?: MessageCreatereadByIdsInput | number[]
     subject: string
     content: string
     priority?: $Enums.Priority
-    isRead?: boolean
     createdAt?: Date | string
-    recipient?: UserCreateNestedOneWithoutReceivedMessagesInput
+    replyToMessage?: MessageCreateNestedOneWithoutRepliesInput
+    replies?: MessageCreateNestedManyWithoutReplyToMessageInput
   }
 
   export type MessageUncheckedCreateWithoutSenderInput = {
     id?: number
-    recipientId?: number | null
+    recipientIds?: MessageCreaterecipientIdsInput | number[]
+    readByIds?: MessageCreatereadByIdsInput | number[]
+    replyToMessageId?: number | null
     subject: string
     content: string
     priority?: $Enums.Priority
-    isRead?: boolean
     createdAt?: Date | string
+    replies?: MessageUncheckedCreateNestedManyWithoutReplyToMessageInput
   }
 
   export type MessageCreateOrConnectWithoutSenderInput = {
@@ -35102,35 +35185,6 @@ export namespace Prisma {
 
   export type MessageCreateManySenderInputEnvelope = {
     data: MessageCreateManySenderInput | MessageCreateManySenderInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type MessageCreateWithoutRecipientInput = {
-    subject: string
-    content: string
-    priority?: $Enums.Priority
-    isRead?: boolean
-    createdAt?: Date | string
-    sender: UserCreateNestedOneWithoutSentMessagesInput
-  }
-
-  export type MessageUncheckedCreateWithoutRecipientInput = {
-    id?: number
-    senderId: number
-    subject: string
-    content: string
-    priority?: $Enums.Priority
-    isRead?: boolean
-    createdAt?: Date | string
-  }
-
-  export type MessageCreateOrConnectWithoutRecipientInput = {
-    where: MessageWhereUniqueInput
-    create: XOR<MessageCreateWithoutRecipientInput, MessageUncheckedCreateWithoutRecipientInput>
-  }
-
-  export type MessageCreateManyRecipientInputEnvelope = {
-    data: MessageCreateManyRecipientInput | MessageCreateManyRecipientInput[]
     skipDuplicates?: boolean
   }
 
@@ -35268,28 +35322,13 @@ export namespace Prisma {
     NOT?: MessageScalarWhereInput | MessageScalarWhereInput[]
     id?: IntFilter<"Message"> | number
     senderId?: IntFilter<"Message"> | number
-    recipientId?: IntNullableFilter<"Message"> | number | null
+    recipientIds?: IntNullableListFilter<"Message">
+    readByIds?: IntNullableListFilter<"Message">
+    replyToMessageId?: IntNullableFilter<"Message"> | number | null
     subject?: StringFilter<"Message"> | string
     content?: StringFilter<"Message"> | string
     priority?: EnumPriorityFilter<"Message"> | $Enums.Priority
-    isRead?: BoolFilter<"Message"> | boolean
     createdAt?: DateTimeFilter<"Message"> | Date | string
-  }
-
-  export type MessageUpsertWithWhereUniqueWithoutRecipientInput = {
-    where: MessageWhereUniqueInput
-    update: XOR<MessageUpdateWithoutRecipientInput, MessageUncheckedUpdateWithoutRecipientInput>
-    create: XOR<MessageCreateWithoutRecipientInput, MessageUncheckedCreateWithoutRecipientInput>
-  }
-
-  export type MessageUpdateWithWhereUniqueWithoutRecipientInput = {
-    where: MessageWhereUniqueInput
-    data: XOR<MessageUpdateWithoutRecipientInput, MessageUncheckedUpdateWithoutRecipientInput>
-  }
-
-  export type MessageUpdateManyWithWhereWithoutRecipientInput = {
-    where: MessageScalarWhereInput
-    data: XOR<MessageUpdateManyMutationInput, MessageUncheckedUpdateManyWithoutRecipientInput>
   }
 
   export type TraderCategoryShareCreateWithoutTraderInput = {
@@ -36939,7 +36978,6 @@ export namespace Prisma {
     box?: BoxCreateNestedManyWithoutUpdatedByInput
     shipmentItem?: ShipmentItemCreateNestedManyWithoutUpdatedByInput
     sentMessages?: MessageCreateNestedManyWithoutSenderInput
-    receivedMessages?: MessageCreateNestedManyWithoutRecipientInput
   }
 
   export type UserUncheckedCreateWithoutFieldHarvestsInput = {
@@ -36960,7 +36998,6 @@ export namespace Prisma {
     box?: BoxUncheckedCreateNestedManyWithoutUpdatedByInput
     shipmentItem?: ShipmentItemUncheckedCreateNestedManyWithoutUpdatedByInput
     sentMessages?: MessageUncheckedCreateNestedManyWithoutSenderInput
-    receivedMessages?: MessageUncheckedCreateNestedManyWithoutRecipientInput
   }
 
   export type UserCreateOrConnectWithoutFieldHarvestsInput = {
@@ -37117,7 +37154,6 @@ export namespace Prisma {
     box?: BoxUpdateManyWithoutUpdatedByNestedInput
     shipmentItem?: ShipmentItemUpdateManyWithoutUpdatedByNestedInput
     sentMessages?: MessageUpdateManyWithoutSenderNestedInput
-    receivedMessages?: MessageUpdateManyWithoutRecipientNestedInput
   }
 
   export type UserUncheckedUpdateWithoutFieldHarvestsInput = {
@@ -37138,7 +37174,6 @@ export namespace Prisma {
     box?: BoxUncheckedUpdateManyWithoutUpdatedByNestedInput
     shipmentItem?: ShipmentItemUncheckedUpdateManyWithoutUpdatedByNestedInput
     sentMessages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
-    receivedMessages?: MessageUncheckedUpdateManyWithoutRecipientNestedInput
   }
 
   export type ClassificationUpsertWithWhereUniqueWithoutFieldHarvestInput = {
@@ -37258,7 +37293,6 @@ export namespace Prisma {
     box?: BoxCreateNestedManyWithoutUpdatedByInput
     shipmentItem?: ShipmentItemCreateNestedManyWithoutUpdatedByInput
     sentMessages?: MessageCreateNestedManyWithoutSenderInput
-    receivedMessages?: MessageCreateNestedManyWithoutRecipientInput
   }
 
   export type UserUncheckedCreateWithoutClassificationsInput = {
@@ -37279,7 +37313,6 @@ export namespace Prisma {
     box?: BoxUncheckedCreateNestedManyWithoutUpdatedByInput
     shipmentItem?: ShipmentItemUncheckedCreateNestedManyWithoutUpdatedByInput
     sentMessages?: MessageUncheckedCreateNestedManyWithoutSenderInput
-    receivedMessages?: MessageUncheckedCreateNestedManyWithoutRecipientInput
   }
 
   export type UserCreateOrConnectWithoutClassificationsInput = {
@@ -37535,7 +37568,6 @@ export namespace Prisma {
     box?: BoxUpdateManyWithoutUpdatedByNestedInput
     shipmentItem?: ShipmentItemUpdateManyWithoutUpdatedByNestedInput
     sentMessages?: MessageUpdateManyWithoutSenderNestedInput
-    receivedMessages?: MessageUpdateManyWithoutRecipientNestedInput
   }
 
   export type UserUncheckedUpdateWithoutClassificationsInput = {
@@ -37556,7 +37588,6 @@ export namespace Prisma {
     box?: BoxUncheckedUpdateManyWithoutUpdatedByNestedInput
     shipmentItem?: ShipmentItemUncheckedUpdateManyWithoutUpdatedByNestedInput
     sentMessages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
-    receivedMessages?: MessageUncheckedUpdateManyWithoutRecipientNestedInput
   }
 
   export type TraderUpsertWithoutClassificationsInput = {
@@ -37826,7 +37857,6 @@ export namespace Prisma {
     box?: BoxCreateNestedManyWithoutUpdatedByInput
     shipmentItem?: ShipmentItemCreateNestedManyWithoutUpdatedByInput
     sentMessages?: MessageCreateNestedManyWithoutSenderInput
-    receivedMessages?: MessageCreateNestedManyWithoutRecipientInput
   }
 
   export type UserUncheckedCreateWithoutTraderStocksInput = {
@@ -37847,7 +37877,6 @@ export namespace Prisma {
     box?: BoxUncheckedCreateNestedManyWithoutUpdatedByInput
     shipmentItem?: ShipmentItemUncheckedCreateNestedManyWithoutUpdatedByInput
     sentMessages?: MessageUncheckedCreateNestedManyWithoutSenderInput
-    receivedMessages?: MessageUncheckedCreateNestedManyWithoutRecipientInput
   }
 
   export type UserCreateOrConnectWithoutTraderStocksInput = {
@@ -38003,7 +38032,6 @@ export namespace Prisma {
     box?: BoxUpdateManyWithoutUpdatedByNestedInput
     shipmentItem?: ShipmentItemUpdateManyWithoutUpdatedByNestedInput
     sentMessages?: MessageUpdateManyWithoutSenderNestedInput
-    receivedMessages?: MessageUpdateManyWithoutRecipientNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTraderStocksInput = {
@@ -38024,7 +38052,6 @@ export namespace Prisma {
     box?: BoxUncheckedUpdateManyWithoutUpdatedByNestedInput
     shipmentItem?: ShipmentItemUncheckedUpdateManyWithoutUpdatedByNestedInput
     sentMessages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
-    receivedMessages?: MessageUncheckedUpdateManyWithoutRecipientNestedInput
   }
 
   export type SeasonCreateWithoutCustomerAllocationsInput = {
@@ -38182,7 +38209,6 @@ export namespace Prisma {
     box?: BoxCreateNestedManyWithoutUpdatedByInput
     shipmentItem?: ShipmentItemCreateNestedManyWithoutUpdatedByInput
     sentMessages?: MessageCreateNestedManyWithoutSenderInput
-    receivedMessages?: MessageCreateNestedManyWithoutRecipientInput
   }
 
   export type UserUncheckedCreateWithoutCustomerAllocationsInput = {
@@ -38203,7 +38229,6 @@ export namespace Prisma {
     box?: BoxUncheckedCreateNestedManyWithoutUpdatedByInput
     shipmentItem?: ShipmentItemUncheckedCreateNestedManyWithoutUpdatedByInput
     sentMessages?: MessageUncheckedCreateNestedManyWithoutSenderInput
-    receivedMessages?: MessageUncheckedCreateNestedManyWithoutRecipientInput
   }
 
   export type UserCreateOrConnectWithoutCustomerAllocationsInput = {
@@ -38401,7 +38426,6 @@ export namespace Prisma {
     box?: BoxUpdateManyWithoutUpdatedByNestedInput
     shipmentItem?: ShipmentItemUpdateManyWithoutUpdatedByNestedInput
     sentMessages?: MessageUpdateManyWithoutSenderNestedInput
-    receivedMessages?: MessageUpdateManyWithoutRecipientNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCustomerAllocationsInput = {
@@ -38422,7 +38446,6 @@ export namespace Prisma {
     box?: BoxUncheckedUpdateManyWithoutUpdatedByNestedInput
     shipmentItem?: ShipmentItemUncheckedUpdateManyWithoutUpdatedByNestedInput
     sentMessages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
-    receivedMessages?: MessageUncheckedUpdateManyWithoutRecipientNestedInput
   }
 
   export type SeasonCreateWithoutShipmentInput = {
@@ -38576,7 +38599,6 @@ export namespace Prisma {
     box?: BoxCreateNestedManyWithoutUpdatedByInput
     shipmentItem?: ShipmentItemCreateNestedManyWithoutUpdatedByInput
     sentMessages?: MessageCreateNestedManyWithoutSenderInput
-    receivedMessages?: MessageCreateNestedManyWithoutRecipientInput
   }
 
   export type UserUncheckedCreateWithoutShipmentInput = {
@@ -38597,7 +38619,6 @@ export namespace Prisma {
     box?: BoxUncheckedCreateNestedManyWithoutUpdatedByInput
     shipmentItem?: ShipmentItemUncheckedCreateNestedManyWithoutUpdatedByInput
     sentMessages?: MessageUncheckedCreateNestedManyWithoutSenderInput
-    receivedMessages?: MessageUncheckedCreateNestedManyWithoutRecipientInput
   }
 
   export type UserCreateOrConnectWithoutShipmentInput = {
@@ -38713,7 +38734,6 @@ export namespace Prisma {
     box?: BoxUpdateManyWithoutUpdatedByNestedInput
     shipmentItem?: ShipmentItemUpdateManyWithoutUpdatedByNestedInput
     sentMessages?: MessageUpdateManyWithoutSenderNestedInput
-    receivedMessages?: MessageUpdateManyWithoutRecipientNestedInput
   }
 
   export type UserUncheckedUpdateWithoutShipmentInput = {
@@ -38734,7 +38754,6 @@ export namespace Prisma {
     box?: BoxUncheckedUpdateManyWithoutUpdatedByNestedInput
     shipmentItem?: ShipmentItemUncheckedUpdateManyWithoutUpdatedByNestedInput
     sentMessages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
-    receivedMessages?: MessageUncheckedUpdateManyWithoutRecipientNestedInput
   }
 
   export type ShipmentCreateWithoutBoxesInput = {
@@ -38945,7 +38964,6 @@ export namespace Prisma {
     shipment?: ShipmentCreateNestedManyWithoutUpdatedByInput
     shipmentItem?: ShipmentItemCreateNestedManyWithoutUpdatedByInput
     sentMessages?: MessageCreateNestedManyWithoutSenderInput
-    receivedMessages?: MessageCreateNestedManyWithoutRecipientInput
   }
 
   export type UserUncheckedCreateWithoutBoxInput = {
@@ -38966,7 +38984,6 @@ export namespace Prisma {
     shipment?: ShipmentUncheckedCreateNestedManyWithoutUpdatedByInput
     shipmentItem?: ShipmentItemUncheckedCreateNestedManyWithoutUpdatedByInput
     sentMessages?: MessageUncheckedCreateNestedManyWithoutSenderInput
-    receivedMessages?: MessageUncheckedCreateNestedManyWithoutRecipientInput
   }
 
   export type UserCreateOrConnectWithoutBoxInput = {
@@ -39185,7 +39202,6 @@ export namespace Prisma {
     shipment?: ShipmentUpdateManyWithoutUpdatedByNestedInput
     shipmentItem?: ShipmentItemUpdateManyWithoutUpdatedByNestedInput
     sentMessages?: MessageUpdateManyWithoutSenderNestedInput
-    receivedMessages?: MessageUpdateManyWithoutRecipientNestedInput
   }
 
   export type UserUncheckedUpdateWithoutBoxInput = {
@@ -39206,7 +39222,6 @@ export namespace Prisma {
     shipment?: ShipmentUncheckedUpdateManyWithoutUpdatedByNestedInput
     shipmentItem?: ShipmentItemUncheckedUpdateManyWithoutUpdatedByNestedInput
     sentMessages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
-    receivedMessages?: MessageUncheckedUpdateManyWithoutRecipientNestedInput
   }
 
   export type ShipmentCreateWithoutItemsInput = {
@@ -39470,7 +39485,6 @@ export namespace Prisma {
     shipment?: ShipmentCreateNestedManyWithoutUpdatedByInput
     box?: BoxCreateNestedManyWithoutUpdatedByInput
     sentMessages?: MessageCreateNestedManyWithoutSenderInput
-    receivedMessages?: MessageCreateNestedManyWithoutRecipientInput
   }
 
   export type UserUncheckedCreateWithoutShipmentItemInput = {
@@ -39491,7 +39505,6 @@ export namespace Prisma {
     shipment?: ShipmentUncheckedCreateNestedManyWithoutUpdatedByInput
     box?: BoxUncheckedCreateNestedManyWithoutUpdatedByInput
     sentMessages?: MessageUncheckedCreateNestedManyWithoutSenderInput
-    receivedMessages?: MessageUncheckedCreateNestedManyWithoutRecipientInput
   }
 
   export type UserCreateOrConnectWithoutShipmentItemInput = {
@@ -39812,7 +39825,6 @@ export namespace Prisma {
     shipment?: ShipmentUpdateManyWithoutUpdatedByNestedInput
     box?: BoxUpdateManyWithoutUpdatedByNestedInput
     sentMessages?: MessageUpdateManyWithoutSenderNestedInput
-    receivedMessages?: MessageUpdateManyWithoutRecipientNestedInput
   }
 
   export type UserUncheckedUpdateWithoutShipmentItemInput = {
@@ -39833,7 +39845,6 @@ export namespace Prisma {
     shipment?: ShipmentUncheckedUpdateManyWithoutUpdatedByNestedInput
     box?: BoxUncheckedUpdateManyWithoutUpdatedByNestedInput
     sentMessages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
-    receivedMessages?: MessageUncheckedUpdateManyWithoutRecipientNestedInput
   }
 
   export type UserCreateWithoutSentMessagesInput = {
@@ -39853,7 +39864,6 @@ export namespace Prisma {
     shipment?: ShipmentCreateNestedManyWithoutUpdatedByInput
     box?: BoxCreateNestedManyWithoutUpdatedByInput
     shipmentItem?: ShipmentItemCreateNestedManyWithoutUpdatedByInput
-    receivedMessages?: MessageCreateNestedManyWithoutRecipientInput
   }
 
   export type UserUncheckedCreateWithoutSentMessagesInput = {
@@ -39874,7 +39884,6 @@ export namespace Prisma {
     shipment?: ShipmentUncheckedCreateNestedManyWithoutUpdatedByInput
     box?: BoxUncheckedCreateNestedManyWithoutUpdatedByInput
     shipmentItem?: ShipmentItemUncheckedCreateNestedManyWithoutUpdatedByInput
-    receivedMessages?: MessageUncheckedCreateNestedManyWithoutRecipientInput
   }
 
   export type UserCreateOrConnectWithoutSentMessagesInput = {
@@ -39882,50 +39891,65 @@ export namespace Prisma {
     create: XOR<UserCreateWithoutSentMessagesInput, UserUncheckedCreateWithoutSentMessagesInput>
   }
 
-  export type UserCreateWithoutReceivedMessagesInput = {
-    name: string
-    email: string
-    phone?: string | null
-    passwordHash: string
-    role?: $Enums.Role
-    isActive?: boolean
+  export type MessageCreateWithoutRepliesInput = {
+    recipientIds?: MessageCreaterecipientIdsInput | number[]
+    readByIds?: MessageCreatereadByIdsInput | number[]
+    subject: string
+    content: string
+    priority?: $Enums.Priority
     createdAt?: Date | string
-    updatedAt?: Date | string
-    slug: string
-    fieldHarvests?: FieldHarvestCreateNestedManyWithoutUpdatedByInput
-    classifications?: ClassificationCreateNestedManyWithoutUpdatedByInput
-    traderStocks?: TraderStockCreateNestedManyWithoutUpdatedByInput
-    customerAllocations?: CustomerAllocationCreateNestedManyWithoutUpdatedByInput
-    shipment?: ShipmentCreateNestedManyWithoutUpdatedByInput
-    box?: BoxCreateNestedManyWithoutUpdatedByInput
-    shipmentItem?: ShipmentItemCreateNestedManyWithoutUpdatedByInput
-    sentMessages?: MessageCreateNestedManyWithoutSenderInput
+    sender: UserCreateNestedOneWithoutSentMessagesInput
+    replyToMessage?: MessageCreateNestedOneWithoutRepliesInput
   }
 
-  export type UserUncheckedCreateWithoutReceivedMessagesInput = {
+  export type MessageUncheckedCreateWithoutRepliesInput = {
     id?: number
-    name: string
-    email: string
-    phone?: string | null
-    passwordHash: string
-    role?: $Enums.Role
-    isActive?: boolean
+    senderId: number
+    recipientIds?: MessageCreaterecipientIdsInput | number[]
+    readByIds?: MessageCreatereadByIdsInput | number[]
+    replyToMessageId?: number | null
+    subject: string
+    content: string
+    priority?: $Enums.Priority
     createdAt?: Date | string
-    updatedAt?: Date | string
-    slug: string
-    fieldHarvests?: FieldHarvestUncheckedCreateNestedManyWithoutUpdatedByInput
-    classifications?: ClassificationUncheckedCreateNestedManyWithoutUpdatedByInput
-    traderStocks?: TraderStockUncheckedCreateNestedManyWithoutUpdatedByInput
-    customerAllocations?: CustomerAllocationUncheckedCreateNestedManyWithoutUpdatedByInput
-    shipment?: ShipmentUncheckedCreateNestedManyWithoutUpdatedByInput
-    box?: BoxUncheckedCreateNestedManyWithoutUpdatedByInput
-    shipmentItem?: ShipmentItemUncheckedCreateNestedManyWithoutUpdatedByInput
-    sentMessages?: MessageUncheckedCreateNestedManyWithoutSenderInput
   }
 
-  export type UserCreateOrConnectWithoutReceivedMessagesInput = {
-    where: UserWhereUniqueInput
-    create: XOR<UserCreateWithoutReceivedMessagesInput, UserUncheckedCreateWithoutReceivedMessagesInput>
+  export type MessageCreateOrConnectWithoutRepliesInput = {
+    where: MessageWhereUniqueInput
+    create: XOR<MessageCreateWithoutRepliesInput, MessageUncheckedCreateWithoutRepliesInput>
+  }
+
+  export type MessageCreateWithoutReplyToMessageInput = {
+    recipientIds?: MessageCreaterecipientIdsInput | number[]
+    readByIds?: MessageCreatereadByIdsInput | number[]
+    subject: string
+    content: string
+    priority?: $Enums.Priority
+    createdAt?: Date | string
+    sender: UserCreateNestedOneWithoutSentMessagesInput
+    replies?: MessageCreateNestedManyWithoutReplyToMessageInput
+  }
+
+  export type MessageUncheckedCreateWithoutReplyToMessageInput = {
+    id?: number
+    senderId: number
+    recipientIds?: MessageCreaterecipientIdsInput | number[]
+    readByIds?: MessageCreatereadByIdsInput | number[]
+    subject: string
+    content: string
+    priority?: $Enums.Priority
+    createdAt?: Date | string
+    replies?: MessageUncheckedCreateNestedManyWithoutReplyToMessageInput
+  }
+
+  export type MessageCreateOrConnectWithoutReplyToMessageInput = {
+    where: MessageWhereUniqueInput
+    create: XOR<MessageCreateWithoutReplyToMessageInput, MessageUncheckedCreateWithoutReplyToMessageInput>
+  }
+
+  export type MessageCreateManyReplyToMessageInputEnvelope = {
+    data: MessageCreateManyReplyToMessageInput | MessageCreateManyReplyToMessageInput[]
+    skipDuplicates?: boolean
   }
 
   export type UserUpsertWithoutSentMessagesInput = {
@@ -39956,7 +39980,6 @@ export namespace Prisma {
     shipment?: ShipmentUpdateManyWithoutUpdatedByNestedInput
     box?: BoxUpdateManyWithoutUpdatedByNestedInput
     shipmentItem?: ShipmentItemUpdateManyWithoutUpdatedByNestedInput
-    receivedMessages?: MessageUpdateManyWithoutRecipientNestedInput
   }
 
   export type UserUncheckedUpdateWithoutSentMessagesInput = {
@@ -39977,59 +40000,56 @@ export namespace Prisma {
     shipment?: ShipmentUncheckedUpdateManyWithoutUpdatedByNestedInput
     box?: BoxUncheckedUpdateManyWithoutUpdatedByNestedInput
     shipmentItem?: ShipmentItemUncheckedUpdateManyWithoutUpdatedByNestedInput
-    receivedMessages?: MessageUncheckedUpdateManyWithoutRecipientNestedInput
   }
 
-  export type UserUpsertWithoutReceivedMessagesInput = {
-    update: XOR<UserUpdateWithoutReceivedMessagesInput, UserUncheckedUpdateWithoutReceivedMessagesInput>
-    create: XOR<UserCreateWithoutReceivedMessagesInput, UserUncheckedCreateWithoutReceivedMessagesInput>
-    where?: UserWhereInput
+  export type MessageUpsertWithoutRepliesInput = {
+    update: XOR<MessageUpdateWithoutRepliesInput, MessageUncheckedUpdateWithoutRepliesInput>
+    create: XOR<MessageCreateWithoutRepliesInput, MessageUncheckedCreateWithoutRepliesInput>
+    where?: MessageWhereInput
   }
 
-  export type UserUpdateToOneWithWhereWithoutReceivedMessagesInput = {
-    where?: UserWhereInput
-    data: XOR<UserUpdateWithoutReceivedMessagesInput, UserUncheckedUpdateWithoutReceivedMessagesInput>
+  export type MessageUpdateToOneWithWhereWithoutRepliesInput = {
+    where?: MessageWhereInput
+    data: XOR<MessageUpdateWithoutRepliesInput, MessageUncheckedUpdateWithoutRepliesInput>
   }
 
-  export type UserUpdateWithoutReceivedMessagesInput = {
-    name?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    passwordHash?: StringFieldUpdateOperationsInput | string
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
-    isActive?: BoolFieldUpdateOperationsInput | boolean
+  export type MessageUpdateWithoutRepliesInput = {
+    recipientIds?: MessageUpdaterecipientIdsInput | number[]
+    readByIds?: MessageUpdatereadByIdsInput | number[]
+    subject?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    slug?: StringFieldUpdateOperationsInput | string
-    fieldHarvests?: FieldHarvestUpdateManyWithoutUpdatedByNestedInput
-    classifications?: ClassificationUpdateManyWithoutUpdatedByNestedInput
-    traderStocks?: TraderStockUpdateManyWithoutUpdatedByNestedInput
-    customerAllocations?: CustomerAllocationUpdateManyWithoutUpdatedByNestedInput
-    shipment?: ShipmentUpdateManyWithoutUpdatedByNestedInput
-    box?: BoxUpdateManyWithoutUpdatedByNestedInput
-    shipmentItem?: ShipmentItemUpdateManyWithoutUpdatedByNestedInput
-    sentMessages?: MessageUpdateManyWithoutSenderNestedInput
+    sender?: UserUpdateOneRequiredWithoutSentMessagesNestedInput
+    replyToMessage?: MessageUpdateOneWithoutRepliesNestedInput
   }
 
-  export type UserUncheckedUpdateWithoutReceivedMessagesInput = {
+  export type MessageUncheckedUpdateWithoutRepliesInput = {
     id?: IntFieldUpdateOperationsInput | number
-    name?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    passwordHash?: StringFieldUpdateOperationsInput | string
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
-    isActive?: BoolFieldUpdateOperationsInput | boolean
+    senderId?: IntFieldUpdateOperationsInput | number
+    recipientIds?: MessageUpdaterecipientIdsInput | number[]
+    readByIds?: MessageUpdatereadByIdsInput | number[]
+    replyToMessageId?: NullableIntFieldUpdateOperationsInput | number | null
+    subject?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    slug?: StringFieldUpdateOperationsInput | string
-    fieldHarvests?: FieldHarvestUncheckedUpdateManyWithoutUpdatedByNestedInput
-    classifications?: ClassificationUncheckedUpdateManyWithoutUpdatedByNestedInput
-    traderStocks?: TraderStockUncheckedUpdateManyWithoutUpdatedByNestedInput
-    customerAllocations?: CustomerAllocationUncheckedUpdateManyWithoutUpdatedByNestedInput
-    shipment?: ShipmentUncheckedUpdateManyWithoutUpdatedByNestedInput
-    box?: BoxUncheckedUpdateManyWithoutUpdatedByNestedInput
-    shipmentItem?: ShipmentItemUncheckedUpdateManyWithoutUpdatedByNestedInput
-    sentMessages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
+  }
+
+  export type MessageUpsertWithWhereUniqueWithoutReplyToMessageInput = {
+    where: MessageWhereUniqueInput
+    update: XOR<MessageUpdateWithoutReplyToMessageInput, MessageUncheckedUpdateWithoutReplyToMessageInput>
+    create: XOR<MessageCreateWithoutReplyToMessageInput, MessageUncheckedCreateWithoutReplyToMessageInput>
+  }
+
+  export type MessageUpdateWithWhereUniqueWithoutReplyToMessageInput = {
+    where: MessageWhereUniqueInput
+    data: XOR<MessageUpdateWithoutReplyToMessageInput, MessageUncheckedUpdateWithoutReplyToMessageInput>
+  }
+
+  export type MessageUpdateManyWithWhereWithoutReplyToMessageInput = {
+    where: MessageScalarWhereInput
+    data: XOR<MessageUpdateManyMutationInput, MessageUncheckedUpdateManyWithoutReplyToMessageInput>
   }
 
   export type FieldHarvestCreateManyFieldInput = {
@@ -40906,21 +40926,12 @@ export namespace Prisma {
 
   export type MessageCreateManySenderInput = {
     id?: number
-    recipientId?: number | null
+    recipientIds?: MessageCreaterecipientIdsInput | number[]
+    readByIds?: MessageCreatereadByIdsInput | number[]
+    replyToMessageId?: number | null
     subject: string
     content: string
     priority?: $Enums.Priority
-    isRead?: boolean
-    createdAt?: Date | string
-  }
-
-  export type MessageCreateManyRecipientInput = {
-    id?: number
-    senderId: number
-    subject: string
-    content: string
-    priority?: $Enums.Priority
-    isRead?: boolean
     createdAt?: Date | string
   }
 
@@ -41312,60 +41323,36 @@ export namespace Prisma {
   }
 
   export type MessageUpdateWithoutSenderInput = {
+    recipientIds?: MessageUpdaterecipientIdsInput | number[]
+    readByIds?: MessageUpdatereadByIdsInput | number[]
     subject?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
-    isRead?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    recipient?: UserUpdateOneWithoutReceivedMessagesNestedInput
+    replyToMessage?: MessageUpdateOneWithoutRepliesNestedInput
+    replies?: MessageUpdateManyWithoutReplyToMessageNestedInput
   }
 
   export type MessageUncheckedUpdateWithoutSenderInput = {
     id?: IntFieldUpdateOperationsInput | number
-    recipientId?: NullableIntFieldUpdateOperationsInput | number | null
+    recipientIds?: MessageUpdaterecipientIdsInput | number[]
+    readByIds?: MessageUpdatereadByIdsInput | number[]
+    replyToMessageId?: NullableIntFieldUpdateOperationsInput | number | null
     subject?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
-    isRead?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    replies?: MessageUncheckedUpdateManyWithoutReplyToMessageNestedInput
   }
 
   export type MessageUncheckedUpdateManyWithoutSenderInput = {
     id?: IntFieldUpdateOperationsInput | number
-    recipientId?: NullableIntFieldUpdateOperationsInput | number | null
+    recipientIds?: MessageUpdaterecipientIdsInput | number[]
+    readByIds?: MessageUpdatereadByIdsInput | number[]
+    replyToMessageId?: NullableIntFieldUpdateOperationsInput | number | null
     subject?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
-    isRead?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type MessageUpdateWithoutRecipientInput = {
-    subject?: StringFieldUpdateOperationsInput | string
-    content?: StringFieldUpdateOperationsInput | string
-    priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
-    isRead?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    sender?: UserUpdateOneRequiredWithoutSentMessagesNestedInput
-  }
-
-  export type MessageUncheckedUpdateWithoutRecipientInput = {
-    id?: IntFieldUpdateOperationsInput | number
-    senderId?: IntFieldUpdateOperationsInput | number
-    subject?: StringFieldUpdateOperationsInput | string
-    content?: StringFieldUpdateOperationsInput | string
-    priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
-    isRead?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type MessageUncheckedUpdateManyWithoutRecipientInput = {
-    id?: IntFieldUpdateOperationsInput | number
-    senderId?: IntFieldUpdateOperationsInput | number
-    subject?: StringFieldUpdateOperationsInput | string
-    content?: StringFieldUpdateOperationsInput | string
-    priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
-    isRead?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -42925,6 +42912,51 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type MessageCreateManyReplyToMessageInput = {
+    id?: number
+    senderId: number
+    recipientIds?: MessageCreaterecipientIdsInput | number[]
+    readByIds?: MessageCreatereadByIdsInput | number[]
+    subject: string
+    content: string
+    priority?: $Enums.Priority
+    createdAt?: Date | string
+  }
+
+  export type MessageUpdateWithoutReplyToMessageInput = {
+    recipientIds?: MessageUpdaterecipientIdsInput | number[]
+    readByIds?: MessageUpdatereadByIdsInput | number[]
+    subject?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sender?: UserUpdateOneRequiredWithoutSentMessagesNestedInput
+    replies?: MessageUpdateManyWithoutReplyToMessageNestedInput
+  }
+
+  export type MessageUncheckedUpdateWithoutReplyToMessageInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    senderId?: IntFieldUpdateOperationsInput | number
+    recipientIds?: MessageUpdaterecipientIdsInput | number[]
+    readByIds?: MessageUpdatereadByIdsInput | number[]
+    subject?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    replies?: MessageUncheckedUpdateManyWithoutReplyToMessageNestedInput
+  }
+
+  export type MessageUncheckedUpdateManyWithoutReplyToMessageInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    senderId?: IntFieldUpdateOperationsInput | number
+    recipientIds?: MessageUpdaterecipientIdsInput | number[]
+    readByIds?: MessageUpdatereadByIdsInput | number[]
+    subject?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    priority?: EnumPriorityFieldUpdateOperationsInput | $Enums.Priority
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

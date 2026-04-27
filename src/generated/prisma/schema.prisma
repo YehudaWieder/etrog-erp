@@ -95,7 +95,6 @@ model User {
   box                 Box[]
   shipmentItem        ShipmentItem[]
   sentMessages        Message[]            @relation("SentMessages")
-  receivedMessages    Message[]            @relation("ReceivedMessages")
 }
 
 // -----------------------------------------------------------------------------
@@ -548,19 +547,21 @@ model Message {
   senderId Int
   sender   User @relation("SentMessages", fields: [senderId], references: [id])
 
-  recipientId Int?
-  recipient   User? @relation("ReceivedMessages", fields: [recipientId], references: [id])
+  recipientIds Int[] @default([])
+  readByIds    Int[] @default([])
+
+  replyToMessageId Int?
+  replyToMessage   Message?  @relation("MessageReplies", fields: [replyToMessageId], references: [id])
+  replies          Message[] @relation("MessageReplies")
 
   subject  String
   content  String   @db.Text
   priority Priority @default(NORMAL)
-  isRead   Boolean  @default(false)
 
   createdAt DateTime @default(now())
 
-  @@index([recipientId])
   @@index([senderId])
-  @@index([recipientId, isRead])
+  @@index([replyToMessageId])
 }
 
 // -----------------------------------------------------------------------------

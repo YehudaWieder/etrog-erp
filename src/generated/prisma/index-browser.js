@@ -348,11 +348,12 @@ exports.Prisma.ShipmentItemScalarFieldEnum = {
 exports.Prisma.MessageScalarFieldEnum = {
   id: 'id',
   senderId: 'senderId',
-  recipientId: 'recipientId',
+  recipientIds: 'recipientIds',
+  readByIds: 'readByIds',
+  replyToMessageId: 'replyToMessageId',
   subject: 'subject',
   content: 'content',
   priority: 'priority',
-  isRead: 'isRead',
   createdAt: 'createdAt'
 };
 

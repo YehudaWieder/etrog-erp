@@ -36,8 +36,12 @@ export class MessageSwaggerDto {
   @ApiProperty({ description: 'Sender user ID.' })
   senderId!: number;
 
-  @ApiPropertyOptional({ description: 'Recipient user ID for direct messages.' })
-  recipientId?: number;
+  @ApiProperty({
+    type: [Number],
+    description: 'Recipient user IDs. Supports one or more users per message.',
+    example: [2, 5, 8],
+  })
+  recipientIds!: number[];
 
   @ApiProperty({ description: 'Message subject.' })
   subject!: string;
@@ -48,8 +52,15 @@ export class MessageSwaggerDto {
   @ApiPropertyOptional({ enum: Priority, enumName: 'Priority', description: 'Message priority level.' })
   priority?: Priority;
 
-  @ApiPropertyOptional({ description: 'Read state of the message.' })
-  isRead?: boolean;
+  @ApiPropertyOptional({
+    type: [Number],
+    description: 'User IDs that already read the message.',
+    example: [2],
+  })
+  readByIds?: number[];
+
+  @ApiPropertyOptional({ description: 'Optional parent message ID when this message is a reply.' })
+  replyToMessageId?: number;
 }
 
 export class ClassificationSwaggerDto {

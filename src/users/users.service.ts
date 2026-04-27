@@ -54,7 +54,7 @@ export class UsersService {
 
 			const managementUsers = await tx.user.findMany({
 				where: {
-					role: { in: [Role.OWNER, Role.MANAGER] },
+					role: { in: [Role.MANAGER] },
 					id: { not: newUser.id },
 				},
 				select: { id: true },
@@ -64,7 +64,7 @@ export class UsersService {
 				await tx.message.createMany({
 					data: managementUsers.map((manager) => ({
 						senderId: newUser.id,
-						recipientId: manager.id,
+						recipientIds: [manager.id],
 						subject: 'משתמש חדש נרשם - מחכה לאישור הפעלה',
 						content: `משתמש חדש (${newUser.name}, ${newUser.email}) נרשם ומחכה לאישור הפעלה.`,
 						priority: Priority.NORMAL,

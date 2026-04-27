@@ -8,13 +8,13 @@ import { Prisma } from '@prisma/client';
 export class MessagesService {
   constructor(private prisma: PrismaService) {}
 
-  // Creates a new message in the database, linking it to the sender and recipient.
+  // Creates a new message in the database.
   async sendMessage(data: Prisma.MessageUncheckedCreateInput) {
     return this.prisma.message.create({
       data,
       include: {
         sender: { select: { name: true, email: true } },
-        recipient: { select: { name: true } },
+        replyToMessage: { select: { id: true, subject: true, senderId: true } },
       },
     });
   }
@@ -22,9 +22,10 @@ export class MessagesService {
   // Retrieves all messages received by a specific user, ordered by most recent first.
   async getInbox(recipientId: number) {
     return this.prisma.message.findMany({
-      where: { recipientId },
+      where: { recipientIds: { has: recipientId } },
       include: {
         sender: { select: { name: true } },
+        replyToMessage: { select: { id: true, subject: true, senderId: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -35,31 +36,39 @@ export class MessagesService {
     return this.prisma.message.findMany({
       where: { senderId },
       include: {
-        recipient: { select: { name: true } },
+        replyToMessage: { select: { id: true, subject: true, senderId: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  // Marks a specific message as read, ensuring only the recipient can perform this action.
+  // Marks a specific message as read for a recipient user.
   async markAsRead(id: number, recipientId: number) {
-    // Ensure only the recipient can mark it as read
     const message = await this.prisma.message.findUnique({ where: { id } });
     
-    if (!message || message.recipientId !== recipientId) {
+    if (!message || !message.recipientIds.includes(recipientId)) {
       throw new NotFoundException('Message not found or unauthorized');
+    }
+
+    if (message.readByIds.includes(recipientId)) {
+      return message;
     }
 
     return this.prisma.message.update({
       where: { id },
-      data: { isRead: true },
+      data: {
+        readByIds: { push: recipientId },
+      },
     });
   }
 
   // Counts the number of unread messages for a specific user.
   async getUnreadCount(recipientId: number) {
     return this.prisma.message.count({
-      where: { recipientId, isRead: false },
+      where: {
+        recipientIds: { has: recipientId },
+        NOT: { readByIds: { has: recipientId } },
+      },
     });
   }
 
