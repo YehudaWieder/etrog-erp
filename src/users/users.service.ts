@@ -3,6 +3,7 @@ import { Prisma, Priority, Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+import { buildNewUserPendingActivationMessage } from 'src/notifications/templates/user-registration-notification';
 
 type SelfUpdateInput = {
 	name?: string;
@@ -61,12 +62,14 @@ export class UsersService {
 			});
 
 			if (managementUsers.length > 0) {
+				const registrationNotification = buildNewUserPendingActivationMessage(newUser.name, newUser.email);
+
 				await tx.message.createMany({
 					data: managementUsers.map((manager) => ({
 						senderId: newUser.id,
 						recipientIds: [manager.id],
-						subject: 'משתמש חדש נרשם - מחכה לאישור הפעלה',
-						content: `משתמש חדש (${newUser.name}, ${newUser.email}) נרשם ומחכה לאישור הפעלה.`,
+						subject: registrationNotification.subject,
+						content: registrationNotification.content,
 						priority: Priority.NORMAL,
 					})),
 				});
