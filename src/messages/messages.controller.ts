@@ -1,10 +1,12 @@
 // src/messages/messages.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { MessagesService } from './messages.service';
 import { Prisma } from '@prisma/client';
 import { MessageSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+import { Request } from 'express';
+import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 
 @ApiTags('Messages')
 @ApiBearerAuth('access-token')
@@ -19,48 +21,48 @@ export class MessagesController {
   @ApiBody({ type: MessageSwaggerDto })
   @ApiResponse({ status: 201, description: 'Message sent successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid message data.' })
-  sendMessage(@Body() data: Prisma.MessageUncheckedCreateInput) {
-    return this.messagesService.sendMessage(data);
+  sendMessage(@Body() data: Prisma.MessageUncheckedCreateInput, @Req() req: Request) {
+    return this.messagesService.sendMessage(data, req.user as AuthenticatedUser);
   }
 
-  @Get('inbox/:userId')
-  @ApiOperation({ summary: 'Retrieve the inbox (received messages) for a specific user' })
-  @ApiParam({ name: 'userId', type: Number, description: 'The ID of the recipient user.' })
+  @Get('inbox')
+  @ApiOperation({ summary: 'Retrieve the inbox (received messages) for the authenticated user' })
   @ApiResponse({ status: 200, description: 'Inbox messages returned successfully.' })
-  @ApiResponse({ status: 404, description: 'User not found.' })
-  getInbox(@Param('userId', ParseIntPipe) userId: number) {
-    return this.messagesService.getInbox(userId);
+  getInbox(@Req() req: Request) {
+    return this.messagesService.getInbox((req.user as AuthenticatedUser).id);
   }
 
-  @Get('outbox/:userId')
-  @ApiOperation({ summary: 'Retrieve the outbox (sent messages) for a specific user' })
-  @ApiParam({ name: 'userId', type: Number, description: 'The ID of the sender user.' })
+  @Get('outbox')
+  @ApiOperation({ summary: 'Retrieve the outbox (sent messages) for the authenticated user' })
   @ApiResponse({ status: 200, description: 'Outbox messages returned successfully.' })
-  @ApiResponse({ status: 404, description: 'User not found.' })
-  getOutbox(@Param('userId', ParseIntPipe) userId: number) {
-    return this.messagesService.getOutbox(userId);
+  getOutbox(@Req() req: Request) {
+    return this.messagesService.getOutbox((req.user as AuthenticatedUser).id);
   }
 
-  @Get('unread-count/:userId')
-  @ApiOperation({ summary: 'Get the count of unread messages in the inbox of a specific user' })
-  @ApiParam({ name: 'userId', type: Number, description: 'The ID of the user.' })
+  @Get('all')
+  @ApiOperation({ summary: 'Retrieve all messages (inbox and outbox) for the authenticated user' })
+  @ApiResponse({ status: 200, description: 'All messages returned successfully.' })
+  getAllMessages(@Req() req: Request) {
+    return this.messagesService.getAllMessages((req.user as AuthenticatedUser).id);
+  }
+
+  @Get('unread-count')
+  @ApiOperation({ summary: 'Get the count of unread messages in the inbox of the authenticated user' })
   @ApiResponse({ status: 200, description: 'Unread message count returned.' })
-  @ApiResponse({ status: 404, description: 'User not found.' })
-  getUnreadCount(@Param('userId', ParseIntPipe) userId: number) {
-    return this.messagesService.getUnreadCount(userId);
+  getUnreadCount(@Req() req: Request) {
+    return this.messagesService.getUnreadCount((req.user as AuthenticatedUser).id);
   }
 
-  @Patch(':id/read/:userId')
-  @ApiOperation({ summary: 'Mark a specific message as read by the recipient user' })
+  @Patch(':id/read')
+  @ApiOperation({ summary: 'Mark a specific message as read by the authenticated user' })
   @ApiParam({ name: 'id', type: Number, description: 'The ID of the message to mark as read.' })
-  @ApiParam({ name: 'userId', type: Number, description: 'The ID of the user marking the message as read.' })
   @ApiResponse({ status: 200, description: 'Message marked as read successfully.' })
   @ApiResponse({ status: 404, description: 'Message not found.' })
   markAsRead(
     @Param('id', ParseIntPipe) id: number,
-    @Param('userId', ParseIntPipe) userId: number,
+    @Req() req: Request,
   ) {
-    return this.messagesService.markAsRead(id, userId);
+    return this.messagesService.markAsRead(id, (req.user as AuthenticatedUser).id);
   }
 
   @Delete(':id')
@@ -68,7 +70,8 @@ export class MessagesController {
   @ApiParam({ name: 'id', type: Number, description: 'The ID of the message to delete.' })
   @ApiResponse({ status: 200, description: 'Message deleted successfully.' })
   @ApiResponse({ status: 404, description: 'Message not found.' })
-  deleteMessage(@Param('id', ParseIntPipe) id: number) {
-    return this.messagesService.deleteMessage(id);
+  @ApiResponse({ status: 403, description: 'Only the sender can delete this message.' })
+  deleteMessage(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    return this.messagesService.deleteMessage(id, (req.user as AuthenticatedUser).id);
   }
 }
