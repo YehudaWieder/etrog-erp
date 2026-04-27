@@ -6,7 +6,7 @@ import { ClassificationService } from '../../services/classification/classificat
 import { Prisma } from '@prisma/client';
 import { ClassificationSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
-@ApiTags('Inventory')
+@ApiTags('Operations')
 @ApiBearerAuth('access-token')
 @ApiUnauthorizedResponse({ description: 'JWT authentication failed or token is missing.' })
 @ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
