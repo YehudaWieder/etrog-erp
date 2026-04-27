@@ -1,10 +1,12 @@
 // src/categories/controllers/customer-cat/customer-cat.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { CustomerCatService } from 'src/categories/services/customrs-cat/customrs-cat.service';
 import { Prisma, Grade, Currency } from '@prisma/client';
 import { CustomerCategorySwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+import type { Request } from 'express';
+import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 
 @ApiTags('Categories')
 @ApiBearerAuth('access-token')
@@ -24,10 +26,10 @@ export class CustomerCatController {
     customerId: number; 
     name: string; 
     grade: any; 
-    price: number; 
-    currency: any 
-  }) {
-    return this.customerCatService.setPrice(data);
+    price?: number; 
+    currency?: Currency 
+  }, @Req() req: Request) {
+    return this.customerCatService.setPrice(data, req.user as AuthenticatedUser);
   }
 
   @Get('customer/:customerId')
@@ -39,8 +41,9 @@ export class CustomerCatController {
   findByCustomer(
     @Param('customerId', ParseIntPipe) customerId: number,
     @Query('seasonId', ParseIntPipe) seasonId: number,
+    @Req() req: Request,
   ) {
-    return this.customerCatService.findByCustomer(customerId, seasonId);
+    return this.customerCatService.findByCustomer(customerId, seasonId, req.user as AuthenticatedUser);
   }
 
   @Get('by-customer-and-name-grade')
@@ -56,8 +59,9 @@ export class CustomerCatController {
     @Query('seasonId', ParseIntPipe) seasonId: number,
     @Query('name') name: string,
     @Query('grade') grade: any,
+    @Req() req: Request,
   ) {
-    return this.customerCatService.findByCustomerAndNameGrade(customerId, seasonId, name, grade);
+    return this.customerCatService.findByCustomerAndNameGrade(customerId, seasonId, name, grade, req.user as AuthenticatedUser);
   }
 
   @Get('season/:seasonId')
@@ -65,8 +69,17 @@ export class CustomerCatController {
   @ApiParam({ name: 'seasonId', type: Number, description: 'The ID of the season.' })
   @ApiResponse({ status: 200, description: 'List of all customer categories for the season returned.' })
   @ApiResponse({ status: 400, description: 'Invalid season ID.' })
-  findAllBySeason(@Param('seasonId', ParseIntPipe) seasonId: number) {
-    return this.customerCatService.findAllBySeason(seasonId);
+  findAllBySeason(@Param('seasonId', ParseIntPipe) seasonId: number, @Req() req: Request) {
+    return this.customerCatService.findAllBySeason(seasonId, req.user as AuthenticatedUser);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Retrieve a single customer category by ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the customer category.' })
+  @ApiResponse({ status: 200, description: 'Customer category returned successfully.' })
+  @ApiResponse({ status: 404, description: 'Customer category not found.' })
+  findOne(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    return this.customerCatService.findOne(id, req.user as AuthenticatedUser);
   }
 
   @Patch(':id')
@@ -78,8 +91,9 @@ export class CustomerCatController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateData: Prisma.CustomerCategoriesUpdateInput,
+    @Req() req: Request,
   ) {
-    return this.customerCatService.update(id, updateData);
+    return this.customerCatService.update(id, updateData, req.user as AuthenticatedUser);
   }
 
   @Delete(':id')
