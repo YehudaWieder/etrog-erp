@@ -114,37 +114,15 @@ export class HarvestBulkService {
             );
           }
 
-          // Allocate to each trader based on percentage
-          let totalAllocated = 0;
+          // Pre-calculate allocations; if any trader would get 0, push everything to modulo.
+          const allocations = shares.map((share) => ({
+            share,
+            quantity: Math.floor((classItem.quantity * Number(share.percent)) / 100),
+          }));
 
-          for (const share of shares) {
-            const allocatedQty = Math.floor((classItem.quantity * Number(share.percent)) / 100);
+          const canDistributeToAll = allocations.every((allocation) => allocation.quantity > 0);
 
-            if (allocatedQty > 0) {
-              await tx.traderStock.create({
-                data: {
-                  seasonId,
-                  date: new Date(bulkDto.dateGregorian),
-                  traderId: share.traderId,
-                  traderCategoryId: classItem.traderCategoryId!,
-                  grade: classItem.grade || undefined,
-                  pitamStatus: classItem.pitamStatus,
-                  quantity: allocatedQty,
-                  isModulo: false,
-                  type: 'HARVEST_IN',
-                  MovementReferenceId: classification.id,
-                  updatedById: bulkDto.updatedById,
-                  notes: classItem.notes,
-                } as any,
-              });
-
-              totalAllocated += allocatedQty;
-            }
-          }
-
-          // Handle remainder (modulo)
-          const remainder = classItem.quantity - totalAllocated;
-          if (remainder > 0) {
+          if (!canDistributeToAll) {
             await tx.traderStock.create({
               data: {
                 seasonId,
@@ -153,7 +131,7 @@ export class HarvestBulkService {
                 traderCategoryId: classItem.traderCategoryId!,
                 grade: classItem.grade || undefined,
                 pitamStatus: classItem.pitamStatus,
-                quantity: remainder,
+                quantity: classItem.quantity,
                 isModulo: true,
                 type: 'HARVEST_IN',
                 MovementReferenceId: classification.id,
@@ -161,6 +139,50 @@ export class HarvestBulkService {
                 notes: classItem.notes,
               } as any,
             });
+          } else {
+            let totalAllocated = 0;
+
+            for (const allocation of allocations) {
+              await tx.traderStock.create({
+                data: {
+                  seasonId,
+                  date: new Date(bulkDto.dateGregorian),
+                  traderId: allocation.share.traderId,
+                  traderCategoryId: classItem.traderCategoryId!,
+                  grade: classItem.grade || undefined,
+                  pitamStatus: classItem.pitamStatus,
+                  quantity: allocation.quantity,
+                  isModulo: false,
+                  type: 'HARVEST_IN',
+                  MovementReferenceId: classification.id,
+                  updatedById: bulkDto.updatedById,
+                  notes: classItem.notes,
+                } as any,
+              });
+
+              totalAllocated += allocation.quantity;
+            }
+
+            // Handle remainder (modulo)
+            const remainder = classItem.quantity - totalAllocated;
+            if (remainder > 0) {
+              await tx.traderStock.create({
+                data: {
+                  seasonId,
+                  date: new Date(bulkDto.dateGregorian),
+                  traderId: null, // Modulo pool
+                  traderCategoryId: classItem.traderCategoryId!,
+                  grade: classItem.grade || undefined,
+                  pitamStatus: classItem.pitamStatus,
+                  quantity: remainder,
+                  isModulo: true,
+                  type: 'HARVEST_IN',
+                  MovementReferenceId: classification.id,
+                  updatedById: bulkDto.updatedById,
+                  notes: classItem.notes,
+                } as any,
+              });
+            }
           }
         }
       }
