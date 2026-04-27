@@ -3,7 +3,9 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { HarvestService } from './harvest.service';
+import { HarvestBulkService } from './harvest-bulk.service';
 import { Prisma } from '@prisma/client';
+import { HarvestBulkCreateDto } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Operations')
 @ApiBearerAuth('access-token')
@@ -11,7 +13,10 @@ import { Prisma } from '@prisma/client';
 @ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
 @Controller('harvests')
 export class HarvestController {
-  constructor(private readonly harvestService: HarvestService) {}
+  constructor(
+    private readonly harvestService: HarvestService,
+    private readonly harvestBulkService: HarvestBulkService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Record a new field harvest entry' })
@@ -109,5 +114,15 @@ export class HarvestController {
   @ApiResponse({ status: 404, description: 'Harvest record not found.' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.harvestService.remove(id);
+  }
+
+  @Post('bulk-with-classifications')
+  @ApiOperation({ summary: 'Create harvest with classifications and auto-allocate to customers/traders in single transaction' })
+  @ApiBody({ type: HarvestBulkCreateDto })
+  @ApiResponse({ status: 201, description: 'Harvest and classifications created with auto-allocations.' })
+  @ApiResponse({ status: 400, description: 'Duplicate classifications or validation error.' })
+  @ApiResponse({ status: 409, description: 'Harvest for this field and date already exists.' })
+  async createBulk(@Body() bulkDto: HarvestBulkCreateDto) {
+    return this.harvestBulkService.createHarvestWithClassifications(bulkDto);
   }
 }

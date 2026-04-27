@@ -350,3 +350,69 @@ export class SystemConfigUpdateSwaggerDto {
   @ApiPropertyOptional({ description: 'Updated unit price value.', example: 10.25 })
   unitPrice?: number;
 }
+
+// Bulk Harvest Form DTOs
+export class ClassificationBulkItemDto {
+  @ApiProperty({ enum: AssignmentType, enumName: 'AssignmentType' })
+  assignmentType!: AssignmentType;
+
+  @ApiPropertyOptional({ description: 'Trader ID if assignmentType is TRADER' })
+  traderId?: number;
+
+  @ApiPropertyOptional({ description: 'Customer ID if assignmentType is CUSTOMER' })
+  customerId?: number;
+
+  @ApiPropertyOptional({ description: 'Trader category ID' })
+  traderCategoryId?: number;
+
+  @ApiPropertyOptional({ description: 'Customer category ID' })
+  customerCategoryId?: number;
+
+  @ApiPropertyOptional({ enum: Grade, enumName: 'Grade' })
+  grade?: Grade;
+
+  @ApiProperty({ enum: PitamStatus, enumName: 'PitamStatus' })
+  pitamStatus!: PitamStatus;
+
+  @ApiProperty({ description: 'Quantity of items in this classification' })
+  quantity!: number;
+
+  @ApiPropertyOptional({ description: 'Optional notes' })
+  notes?: string;
+}
+
+export class HarvestBulkCreateDto {
+  @ApiProperty({ description: 'Gregorian date of harvest', format: 'date-time', example: '2026-10-05T06:00:00.000Z' })
+  dateGregorian!: string;
+
+  @ApiProperty({ description: 'Hebrew date representation', example: 'י"ב תשרי תשפ"ז' })
+  dateHebrew!: string;
+
+  @ApiProperty({ description: 'Field ID', example: 2 })
+  fieldId!: number;
+
+  @ApiProperty({ description: 'User ID who updated this harvest', example: 1 })
+  updatedById!: number;
+
+  @ApiPropertyOptional({ description: 'Total harvested units', example: 1500 })
+  totalHarvested?: number;
+
+  @ApiPropertyOptional({ description: 'Total rejected units', example: 50 })
+  totalRejected?: number;
+
+  @ApiPropertyOptional({ description: 'Owner harvested units', example: 1000 })
+  ownerHarvested?: number;
+
+  @ApiPropertyOptional({ description: 'Owner rejected units', example: 30 })
+  ownerRejected?: number;
+
+  @ApiPropertyOptional({ description: 'Additional notes', example: 'Morning harvest' })
+  notes?: string;
+
+  @ApiProperty({
+    type: [ClassificationBulkItemDto],
+    description: 'At least one classification record. No duplicate combinations allowed (same assignmentType+trader/customer+category, ignoring quantity).',
+    minItems: 1,
+  })
+  classifications!: ClassificationBulkItemDto[];
+}
