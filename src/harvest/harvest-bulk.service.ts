@@ -20,6 +20,7 @@ export class HarvestBulkService {
   async createHarvestWithClassifications(bulkDto: HarvestBulkCreateDto) {
     // 1. Validate no duplicate classifications
     this.validateNoDuplicateClassifications(bulkDto.classifications);
+    this.validateClassificationsTotalMatchesHarvested(bulkDto);
 
     // 2. Get active season
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
@@ -220,6 +221,23 @@ export class HarvestBulkService {
         );
       }
       seen.add(key);
+    }
+  }
+
+  private validateClassificationsTotalMatchesHarvested(data: HarvestBulkCreateDto) {
+    if (data.totalHarvested === undefined || data.totalHarvested === null) {
+      throw new BadRequestException('totalHarvested is required for bulk classifications validation');
+    }
+
+    const classificationsTotal = data.classifications.reduce(
+      (sum, item) => sum + (item.quantity || 0),
+      0,
+    );
+
+    if (classificationsTotal !== data.totalHarvested) {
+      throw new BadRequestException(
+        `Total classifications quantity (${classificationsTotal}) must equal totalHarvested (${data.totalHarvested})`,
+      );
     }
   }
 
