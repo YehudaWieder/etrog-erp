@@ -1,9 +1,12 @@
 // src/partners/controllers/traders/traders.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { TradersService } from '../../services/traders/traders.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
+import { Roles } from 'src/authorization/decorators/roles.decorator';
+import { Request } from 'express';
+import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 
 @ApiTags('Partners')
 @ApiBearerAuth('access-token')
@@ -31,6 +34,7 @@ export class TradersController {
   })
   @ApiResponse({ status: 201, description: 'Trader created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate trader name.' })
+  @Roles(Role.OWNER, Role.MANAGER)
   create(
     @Body('name') name: string,
     @Body('paymentPercent') paymentPercent?: number,
@@ -39,10 +43,10 @@ export class TradersController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Retrieve a list of all registered traders' })
+  @ApiOperation({ summary: 'Retrieve a list of all registered traders. Worker returns only id and name.' })
   @ApiResponse({ status: 200, description: 'List of traders returned successfully.' })
-  findAll() {
-    return this.tradersService.findAll();
+  findAll(@Req() req: Request) {
+    return this.tradersService.findAllByActor(req.user as AuthenticatedUser);
   }
 
   @Get(':idOrSlug')
@@ -50,9 +54,9 @@ export class TradersController {
   @ApiParam({ name: 'idOrSlug', type: String, description: 'The numeric ID or slug of the trader.' })
   @ApiResponse({ status: 200, description: 'Trader returned successfully.' })
   @ApiResponse({ status: 404, description: 'Trader not found.' })
-  findOne(@Param('idOrSlug') idOrSlug: string) {
+  findOne(@Param('idOrSlug') idOrSlug: string, @Req() req: Request) {
     const id = parseInt(idOrSlug);
-    return this.tradersService.findOne(isNaN(id) ? idOrSlug : id);
+    return this.tradersService.findOneByActor(isNaN(id) ? idOrSlug : id, req.user as AuthenticatedUser);
   }
 
   @Patch(':id')
@@ -74,6 +78,7 @@ export class TradersController {
   @ApiResponse({ status: 200, description: 'Trader updated successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Trader not found.' })
+  @Roles(Role.OWNER, Role.MANAGER)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateData: Partial<Prisma.TraderUpdateInput>,
@@ -86,6 +91,7 @@ export class TradersController {
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the trader to remove.' })
   @ApiResponse({ status: 200, description: 'Trader removed successfully.' })
   @ApiResponse({ status: 404, description: 'Trader not found.' })
+  @Roles(Role.OWNER, Role.MANAGER)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.tradersService.remove(id);
   }
