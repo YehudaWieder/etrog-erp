@@ -117,7 +117,7 @@ export class CustomerAllocationController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Soft-delete a customer allocation record by ID' })
+  @ApiOperation({ summary: 'Delete a customer allocation record by ID' })
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the allocation to delete.' })
   @ApiResponse({ status: 200, description: 'Allocation deleted successfully.' })
   @ApiResponse({ status: 404, description: 'Allocation not found.' })
