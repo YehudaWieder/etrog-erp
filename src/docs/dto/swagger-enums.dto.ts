@@ -381,6 +381,35 @@ export class ClassificationBulkItemDto {
   notes?: string;
 }
 
+export class UpdateClassificationDto {
+  @ApiPropertyOptional({ enum: AssignmentType, enumName: 'AssignmentType', description: 'Update assignment type' })
+  assignmentType?: AssignmentType;
+
+  @ApiPropertyOptional({ description: 'Update trader ID' })
+  traderId?: number;
+
+  @ApiPropertyOptional({ description: 'Update customer ID' })
+  customerId?: number;
+
+  @ApiPropertyOptional({ description: 'Update trader category ID' })
+  traderCategoryId?: number;
+
+  @ApiPropertyOptional({ description: 'Update customer category ID' })
+  customerCategoryId?: number;
+
+  @ApiPropertyOptional({ enum: Grade, enumName: 'Grade', description: 'Update etrog grade' })
+  grade?: Grade;
+
+  @ApiPropertyOptional({ enum: PitamStatus, enumName: 'PitamStatus', description: 'Update pitam status' })
+  pitamStatus?: PitamStatus;
+
+  @ApiPropertyOptional({ description: 'Update quantity' })
+  quantity?: number;
+
+  @ApiPropertyOptional({ description: 'Update notes (only field that does not trigger reprocessing if changed alone)' })
+  notes?: string;
+}
+
 export class HarvestBulkCreateDto {
   @ApiProperty({ description: 'Gregorian date of harvest', format: 'date-time', example: '2026-10-05T06:00:00.000Z' })
   dateGregorian!: string;

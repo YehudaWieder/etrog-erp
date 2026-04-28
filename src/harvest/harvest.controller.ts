@@ -5,7 +5,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedRespo
 import { HarvestService } from './harvest.service';
 import { HarvestBulkService } from './harvest-bulk.service';
 import { Prisma } from '@prisma/client';
-import { HarvestBulkCreateDto } from 'src/docs/dto/swagger-enums.dto';
+import { HarvestBulkCreateDto, UpdateClassificationDto } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Operations')
 @ApiBearerAuth('access-token')
@@ -124,5 +124,21 @@ export class HarvestController {
   @ApiResponse({ status: 409, description: 'Harvest for this field and date already exists.' })
   async createBulk(@Body() bulkDto: HarvestBulkCreateDto) {
     return this.harvestBulkService.createHarvestWithClassifications(bulkDto);
+  }
+
+  @Patch(':harvestId/classifications/:classificationId')
+  @ApiOperation({ summary: 'Update a classification with automatic movement reprocessing' })
+  @ApiParam({ name: 'harvestId', type: Number, description: 'The numeric ID of the harvest record.' })
+  @ApiParam({ name: 'classificationId', type: Number, description: 'The numeric ID of the classification to update.' })
+  @ApiBody({ type: UpdateClassificationDto })
+  @ApiResponse({ status: 200, description: 'Classification updated successfully. If only notes changed: simple update. Otherwise: full reprocessing with movement reversal.' })
+  @ApiResponse({ status: 400, description: 'Validation error or invalid update data.' })
+  @ApiResponse({ status: 404, description: 'Classification or harvest not found.' })
+  async updateClassification(
+    @Param('harvestId', ParseIntPipe) harvestId: number,
+    @Param('classificationId', ParseIntPipe) classificationId: number,
+    @Body() updateDto: UpdateClassificationDto,
+  ) {
+    return this.harvestBulkService.updateClassification(harvestId, classificationId, updateDto);
   }
 }
