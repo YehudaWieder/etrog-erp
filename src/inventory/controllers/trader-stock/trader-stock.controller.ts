@@ -105,7 +105,7 @@ export class TraderStockController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Soft-delete a stock movement record by ID' })
+  @ApiOperation({ summary: 'Delete a stock movement record by ID' })
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the stock movement to delete.' })
   @ApiResponse({ status: 200, description: 'Stock movement deleted successfully.' })
   @ApiResponse({ status: 404, description: 'Stock movement not found.' })

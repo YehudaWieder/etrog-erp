@@ -108,7 +108,7 @@ export class HarvestController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Soft-delete a harvest record by ID' })
+  @ApiOperation({ summary: 'Delete a harvest record by ID' })
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the harvest record to delete.' })
   @ApiResponse({ status: 200, description: 'Harvest record deleted successfully.' })
   @ApiResponse({ status: 404, description: 'Harvest record not found.' })
