@@ -8,5 +8,6 @@ import { SeasonsModule } from 'src/seasons/seasons.module';
   imports: [SeasonsModule],
   controllers: [HarvestController],
   providers: [HarvestService, HarvestBulkService],
+  exports: [HarvestBulkService],
 })
 export class HarvestModule {}

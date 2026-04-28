@@ -351,7 +351,7 @@ export class HarvestBulkService {
     }));
   }
 
-  private async processAllocationsForClassification(
+  async processAllocationsForClassification(
     tx: any,
     params: {
       seasonId: number;

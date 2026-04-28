@@ -4,35 +4,67 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
+import { HarvestBulkService } from 'src/harvest/harvest-bulk.service';
+import { ClassificationBulkItemDto } from 'src/docs/dto/swagger-enums.dto';
 
 @Injectable()
 export class ClassificationService {
   constructor(
     private prisma: PrismaService,
     private seasonsService: SeasonsService,
+    private harvestBulkService: HarvestBulkService,
   ) {}
 
-  // Create a new classification entry
+  // Create a new classification entry with automatic allocation to traders/customers
   async create(data: Prisma.ClassificationUncheckedCreateInput) {
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
 
-    // Generate unique slug to prevent duplicates based on your unique constraint
-    const slug = `harvest-${data.fieldHarvestId}-tcat-${data.traderCategoryId ?? 0}-ccat-${data.customerCategoryId ?? 0}-g-${data.grade ?? 'NA'}-a-${data.assignmentType}`;
+    const slug = `harvest-${data.fieldHarvestId}-tcat-${data.traderCategoryId ?? 0}-ccat-${data.customerCategoryId ?? 0}-g-${data.grade ?? 'NA'}-pitam-${data.pitamStatus}-a-${data.assignmentType}`;
 
-    const existing = await this.prisma.classification.findUnique({
-      where: { slug },
-    });
-    
+    const existing = await this.prisma.classification.findUnique({ where: { slug } });
     if (existing) {
       throw new ConflictException('This classification combination already exists for this harvest');
     }
 
-    return this.prisma.classification.create({
-      data: {
-        ...data,
+    return this.prisma.$transaction(async (tx) => {
+      const harvest = await tx.fieldHarvest.findUnique({
+        where: { id: Number(data.fieldHarvestId) },
+        select: { id: true, dateGregorian: true, updatedById: true },
+      });
+
+      if (!harvest) {
+        throw new NotFoundException(`FieldHarvest #${data.fieldHarvestId} not found`);
+      }
+
+      const classification = await tx.classification.create({
+        data: {
+          ...data,
+          seasonId,
+          slug,
+        },
+      });
+
+      const classificationItem: ClassificationBulkItemDto = {
+        assignmentType: classification.assignmentType,
+        traderId: classification.traderId ?? undefined,
+        customerId: classification.customerId ?? undefined,
+        traderCategoryId: classification.traderCategoryId ?? undefined,
+        customerCategoryId: classification.customerCategoryId ?? undefined,
+        grade: classification.grade ?? undefined,
+        pitamStatus: classification.pitamStatus,
+        quantity: classification.quantity,
+        notes: classification.notes ?? undefined,
+      };
+
+      await this.harvestBulkService.processAllocationsForClassification(tx, {
         seasonId,
-        slug,
-      },
+        classificationId: classification.id,
+        classificationItem,
+        harvestDate: harvest.dateGregorian,
+        updatedById: Number(data.updatedById),
+      });
+
+      return classification;
     });
   }
 
