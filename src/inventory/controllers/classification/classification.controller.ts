@@ -86,9 +86,9 @@ export class ClassificationController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Soft-delete a classification record by ID' })
+  @ApiOperation({ summary: 'Delete a classification and rollback related movements and harvest quantity' })
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the classification to delete.' })
-  @ApiResponse({ status: 200, description: 'Classification deleted successfully.' })
+  @ApiResponse({ status: 200, description: 'Classification deleted successfully and linked allocations/stocks were rolled back.' })
   @ApiResponse({ status: 404, description: 'Classification not found.' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.classificationService.remove(id);

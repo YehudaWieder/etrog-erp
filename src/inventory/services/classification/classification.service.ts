@@ -79,9 +79,53 @@ export class ClassificationService {
 
   // Soft Delete
   async remove(id: number) {
-    return this.prisma.classification.update({
-      where: { id },
-      data: { isDeleted: true },
+    const classification = await this.prisma.classification.findFirst({
+      where: { id, isDeleted: false },
+      include: {
+        fieldHarvest: {
+          select: {
+            id: true,
+            totalHarvested: true,
+            totalRejected: true,
+          },
+        },
+      },
+    });
+
+    if (!classification) {
+      throw new NotFoundException(`Classification #${id} not found`);
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      // Revert movements created from this classification.
+      await tx.customerAllocation.deleteMany({
+        where: { MovementReferenceId: id },
+      });
+
+      await tx.traderStock.deleteMany({
+        where: { MovementReferenceId: id },
+      });
+
+      const nextTotalHarvested = Math.max(
+        0,
+        (classification.fieldHarvest?.totalHarvested ?? 0) - classification.quantity,
+      );
+
+      await tx.fieldHarvest.update({
+        where: { id: classification.fieldHarvestId },
+        data: {
+          totalHarvested: nextTotalHarvested,
+          rejectionRate:
+            nextTotalHarvested > 0
+              ? ((classification.fieldHarvest?.totalRejected ?? 0) / nextTotalHarvested) * 100
+              : 0,
+        },
+      });
+
+      return tx.classification.update({
+        where: { id },
+        data: { isDeleted: true },
+      });
     });
   }
 }
