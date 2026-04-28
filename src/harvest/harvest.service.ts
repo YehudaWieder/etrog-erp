@@ -105,11 +105,42 @@ export class HarvestService {
     });
   }
 
-  // Soft delete
+  // Hard delete with cascading cleanup of classifications and movements
   async remove(id: number) {
-    return this.prisma.fieldHarvest.update({
+    const harvest = await this.prisma.fieldHarvest.findUnique({
       where: { id },
-      data: { isDeleted: true },
+      select: { id: true },
+    });
+
+    if (!harvest) {
+      throw new NotFoundException(`Harvest report #${id} not found`);
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const classificationIds = await tx.classification.findMany({
+        where: { fieldHarvestId: id },
+        select: { id: true },
+      });
+
+      const ids = classificationIds.map((item) => item.id);
+
+      if (ids.length > 0) {
+        await tx.customerAllocation.deleteMany({
+          where: { MovementReferenceId: { in: ids } },
+        });
+
+        await tx.traderStock.deleteMany({
+          where: { MovementReferenceId: { in: ids } },
+        });
+
+        await tx.classification.deleteMany({
+          where: { id: { in: ids } },
+        });
+      }
+
+      return tx.fieldHarvest.delete({
+        where: { id },
+      });
     });
   }
 }

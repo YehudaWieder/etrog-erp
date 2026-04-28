@@ -1,6 +1,6 @@
 // src/inventory/services/customer-allocation/customer-allocation.service.ts
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
@@ -84,11 +84,10 @@ export class CustomerAllocationService {
     });
   }
 
-  // Soft delete
+  // Hard delete
   async remove(id: number) {
-    return this.prisma.customerAllocation.update({
+    return this.prisma.customerAllocation.delete({
       where: { id },
-      data: { isDeleted: true },
     });
   }
 }

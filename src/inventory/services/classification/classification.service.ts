@@ -24,10 +24,6 @@ export class ClassificationService {
     });
     
     if (existing) {
-      if (existing.isDeleted) {
-        // If it was soft-deleted, we "restore" and update it
-        return this.update(existing.id, { ...data, seasonId, isDeleted: false });
-      }
       throw new ConflictException('This classification combination already exists for this harvest');
     }
 
@@ -77,10 +73,10 @@ export class ClassificationService {
     });
   }
 
-  // Soft Delete
+  // Hard delete with rollback of linked movements and harvest total update
   async remove(id: number) {
     const classification = await this.prisma.classification.findFirst({
-      where: { id, isDeleted: false },
+      where: { id },
       include: {
         fieldHarvest: {
           select: {
@@ -122,9 +118,8 @@ export class ClassificationService {
         },
       });
 
-      return tx.classification.update({
+      return tx.classification.delete({
         where: { id },
-        data: { isDeleted: true },
       });
     });
   }

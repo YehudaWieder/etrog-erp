@@ -1,6 +1,6 @@
 // src/inventory/services/trader-stock/trader-stock.service.ts
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma, MovementType } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
@@ -87,11 +87,10 @@ export class TraderStockService {
         });
     }
 
-    // Soft delete a movement
+    // Hard delete a movement
     async remove(id: number) {
-        return this.prisma.traderStock.update({
+        return this.prisma.traderStock.delete({
         where: { id },
-        data: { isDeleted: true },
         });
     }
 }
