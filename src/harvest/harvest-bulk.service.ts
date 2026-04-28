@@ -300,7 +300,19 @@ export class HarvestBulkService {
       return;
     }
 
-    let totalAssigned = 0;
+    const totalAssigned = allocations.reduce((sum, allocation) => sum + allocation.quantity, 0);
+    const moduloRemainder = availableQty - totalAssigned;
+
+    if (totalAssigned <= 0) {
+      return;
+    }
+
+    if (moduloRemainder < 0) {
+      throw new BadRequestException(
+        `Invalid trader shares configuration for category ${params.traderCategoryId}: total assigned (${totalAssigned}) exceeds available modulo (${availableQty})`,
+      );
+    }
+
     for (const allocation of allocations) {
       await tx.traderStock.create({
         data: {
@@ -318,28 +330,25 @@ export class HarvestBulkService {
           notes: params.notes,
         },
       });
-
-      totalAssigned += allocation.quantity;
     }
 
-    if (totalAssigned > 0) {
-      await tx.traderStock.create({
-        data: {
-          seasonId: params.seasonId,
-          date: params.date,
-          traderId: null,
-          traderCategoryId: params.traderCategoryId,
-          grade: params.grade,
-          pitamStatus: params.pitamStatus,
-          quantity: -totalAssigned,
-          isModulo: true,
-          type: 'ASSIGNED',
-          MovementReferenceId: params.movementReferenceId,
-          updatedById: params.updatedById,
-          notes: params.notes,
-        },
-      });
-    }
+    // Subtract only what was actually assigned; modulo remainder stays as-is.
+    await tx.traderStock.create({
+      data: {
+        seasonId: params.seasonId,
+        date: params.date,
+        traderId: null,
+        traderCategoryId: params.traderCategoryId,
+        grade: params.grade,
+        pitamStatus: params.pitamStatus,
+        quantity: -totalAssigned,
+        isModulo: true,
+        type: 'ASSIGNED',
+        MovementReferenceId: params.movementReferenceId,
+        updatedById: params.updatedById,
+        notes: params.notes,
+      },
+    });
   }
 
   private async getTraderCategoryShares(tx: any, seasonId: number, traderCategoryId: number) {
