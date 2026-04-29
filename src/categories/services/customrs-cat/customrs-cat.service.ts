@@ -17,6 +17,24 @@ export class CustomerCatService {
     return actor.role === Role.MANAGER || actor.role === Role.OWNER;
   }
 
+  private toWorkerCategoryView(record: {
+    id: number;
+    name: string;
+    grade: string | null;
+    customerId?: number;
+    customer?: { customerName: string } | null;
+  }) {
+    return {
+      id: record.id,
+      name: record.name,
+      grade: record.grade,
+      percent: null,
+      notes: null,
+      customerId: record.customerId ?? null,
+      customerName: record.customer?.customerName ?? null,
+    };
+  }
+
   private async resolveCurrency(seasonId: number, providedCurrency?: Currency) {
     if (providedCurrency) {
       return providedCurrency;
@@ -94,23 +112,26 @@ export class CustomerCatService {
   async findByCustomer(customerId: number, seasonId: number, actor: AuthenticatedUser) {
     const managerOrAbove = this.isManagerOrAbove(actor);
 
-    return this.prisma.customerCategories.findMany({
+    if (managerOrAbove) {
+      return this.prisma.customerCategories.findMany({
+        where: { customerId, seasonId },
+        orderBy: [{ name: 'asc' }, { grade: 'asc' }],
+      });
+    }
+
+    const records = await this.prisma.customerCategories.findMany({
       where: { customerId, seasonId },
-      ...(managerOrAbove
-        ? {}
-        : {
-            select: {
-              id: true,
-              seasonId: true,
-              customerId: true,
-              name: true,
-              grade: true,
-              createdAt: true,
-              updatedAt: true,
-            },
-          }),
+      select: {
+        id: true,
+        name: true,
+        grade: true,
+        customerId: true,
+        customer: { select: { customerName: true } },
+      },
       orderBy: [{ name: 'asc' }, { grade: 'asc' }],
     });
+
+    return records.map((record) => this.toWorkerCategoryView(record));
   }
 
   // Get all prices for a specific season (for overview)
@@ -127,20 +148,19 @@ export class CustomerCatService {
       });
     }
 
-    return this.prisma.customerCategories.findMany({
+    const records = await this.prisma.customerCategories.findMany({
       where: { seasonId },
       select: {
         id: true,
-        seasonId: true,
-        customerId: true,
         name: true,
         grade: true,
-        createdAt: true,
-        updatedAt: true,
+        customerId: true,
         customer: { select: { customerName: true } },
       },
       orderBy: { customerId: 'asc' },
     });
+
+    return records.map((record) => this.toWorkerCategoryView(record));
   }
 
   // Find single record by ID
@@ -156,24 +176,21 @@ export class CustomerCatService {
           where: { id },
           select: {
             id: true,
-            seasonId: true,
-            customerId: true,
             name: true,
             grade: true,
-            createdAt: true,
-            updatedAt: true,
+            customerId: true,
             customer: { select: { customerName: true } },
           },
         });
 
     if (!record) throw new NotFoundException(`Customer category price #${id} not found`);
-    return record;
+    return managerOrAbove ? record : this.toWorkerCategoryView(record);
   }
 
   async findByCustomerAndNameGrade(customerId: number, seasonId: number, name: string, grade: any, actor: AuthenticatedUser) {
     const managerOrAbove = this.isManagerOrAbove(actor);
 
-    return this.prisma.customerCategories.findUnique({
+    const record = await this.prisma.customerCategories.findUnique({
       where: {
         seasonId_customerId_name_grade: {
           seasonId,
@@ -187,15 +204,15 @@ export class CustomerCatService {
         : {
             select: {
               id: true,
-              seasonId: true,
-              customerId: true,
               name: true,
               grade: true,
-              createdAt: true,
-              updatedAt: true,
+              customerId: true,
+              customer: { select: { customerName: true } },
             },
           }),
     });
+
+    return !managerOrAbove && record ? this.toWorkerCategoryView(record) : record;
   }
 
 

@@ -2,8 +2,9 @@
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
+import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 
 @Injectable()
 export class TraderCatShareService {
@@ -11,6 +12,28 @@ export class TraderCatShareService {
     private prisma: PrismaService,
     private seasonsService: SeasonsService,
   ) {}
+
+  private isManagerOrAbove(actor: AuthenticatedUser) {
+    return actor.role === Role.MANAGER || actor.role === Role.OWNER;
+  }
+
+  private toWorkerShareView(record: {
+    id: number;
+    traderId: number;
+    percent: Prisma.Decimal;
+    traderCategory: { name: string };
+    trader: { name: string };
+  }) {
+    return {
+      id: record.id,
+      traderId: record.traderId,
+      name: record.traderCategory.name,
+      grade: null,
+      percent: Number(record.percent),
+      notes: null,
+      traderName: record.trader.name,
+    };
+  }
 
   // Set or Update a share for a trader in a category for a specific season
   async setShare(data: {
@@ -42,36 +65,83 @@ export class TraderCatShareService {
   }
 
   // Find shares for a specific season with names included
-  async findAllBySeason(seasonId: number) {
-    return this.prisma.traderCategoryShare.findMany({
+  async findAllBySeason(seasonId: number, actor: AuthenticatedUser) {
+    if (this.isManagerOrAbove(actor)) {
+      return this.prisma.traderCategoryShare.findMany({
+        where: { seasonId },
+        include: {
+          trader: { select: { name: true } },
+          traderCategory: { select: { name: true } },
+        },
+        orderBy: [
+          { traderCategory: { name: 'asc' } },
+          { trader: { name: 'asc' } }
+        ]
+      });
+    }
+
+    const records = await this.prisma.traderCategoryShare.findMany({
       where: { seasonId },
-      include: {
+      select: {
+        id: true,
+        traderId: true,
+        percent: true,
         trader: { select: { name: true } },
         traderCategory: { select: { name: true } },
       },
       orderBy: [
         { traderCategory: { name: 'asc' } },
-        { trader: { name: 'asc' } }
+        { id: 'asc' }
       ]
     });
+
+    return records.map((record) => this.toWorkerShareView(record));
   }
 
   // Find a specific share by ID
-  async findOne(id: number) {
-    const share = await this.prisma.traderCategoryShare.findUnique({
-      where: { id },
-      include: {
-        trader: { select: { name: true } },
-        traderCategory: { select: { name: true } },
-      },
-    });
+  async findOne(id: number, actor: AuthenticatedUser) {
+    const managerOrAbove = this.isManagerOrAbove(actor);
+
+    const share = managerOrAbove
+      ? await this.prisma.traderCategoryShare.findUnique({
+          where: { id },
+          include: {
+            trader: { select: { name: true } },
+            traderCategory: { select: { name: true } },
+          },
+        })
+      : await this.prisma.traderCategoryShare.findUnique({
+          where: { id },
+          select: {
+            id: true,
+            traderId: true,
+            percent: true,
+            trader: { select: { name: true } },
+            traderCategory: { select: { name: true } },
+          },
+        });
+
     if (!share) throw new NotFoundException(`Share record #${id} not found`);
-    return share;
+    return managerOrAbove ? share : this.toWorkerShareView(share);
   }
 
   // Find a share by trader, category, and season
-  async findByTraderAndCategory(traderId: number, traderCategoryId: number, seasonId: number) {
-    return this.prisma.traderCategoryShare.findUnique({
+  async findByTraderAndCategory(traderId: number, traderCategoryId: number, seasonId: number, actor: AuthenticatedUser) {
+    const managerOrAbove = this.isManagerOrAbove(actor);
+
+    if (managerOrAbove) {
+      return this.prisma.traderCategoryShare.findUnique({
+        where: {
+          traderId_traderCategoryId_seasonId: {
+            traderId,
+            traderCategoryId,
+            seasonId,
+          },
+        },
+      });
+    }
+
+    const share = await this.prisma.traderCategoryShare.findUnique({
       where: {
         traderId_traderCategoryId_seasonId: {
           traderId,
@@ -79,7 +149,16 @@ export class TraderCatShareService {
           seasonId,
         },
       },
+      select: {
+        id: true,
+        traderId: true,
+        percent: true,
+        trader: { select: { name: true } },
+        traderCategory: { select: { name: true } },
+      },
     });
+
+    return share ? this.toWorkerShareView(share) : share;
   }
 
   // Standard Update

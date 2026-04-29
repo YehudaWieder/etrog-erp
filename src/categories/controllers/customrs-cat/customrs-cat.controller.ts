@@ -3,15 +3,17 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { CustomerCatService } from 'src/categories/services/customrs-cat/customrs-cat.service';
-import { Prisma, Grade, Currency } from '@prisma/client';
+import { Prisma, Grade, Currency, Role } from '@prisma/client';
 import { CustomerCategorySwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 import type { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+import { Roles } from 'src/authorization/decorators/roles.decorator';
 
 @ApiTags('Categories')
 @ApiBearerAuth('access-token')
 @ApiUnauthorizedResponse({ description: 'JWT authentication failed or token is missing.' })
 @ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
+@Roles(Role.OWNER, Role.MANAGER)
 @Controller('customer-categories')
 export class CustomerCatController {
   constructor(private readonly customerCatService: CustomerCatService) {}
@@ -33,6 +35,7 @@ export class CustomerCatController {
   }
 
   @Get('customer/:customerId')
+  @Roles()
   @ApiOperation({ summary: 'Retrieve all category prices for a specific customer within a season' })
   @ApiParam({ name: 'customerId', type: Number, description: 'The ID of the customer.' })
   @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season.' })
@@ -47,6 +50,7 @@ export class CustomerCatController {
   }
 
   @Get('by-customer-and-name-grade')
+  @Roles()
   @ApiOperation({ summary: 'Find a specific customer category by customer, name, grade, and season (composite key lookup)' })
   @ApiQuery({ name: 'customerId', type: Number, description: 'The ID of the customer.' })
   @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season.' })
@@ -65,6 +69,7 @@ export class CustomerCatController {
   }
 
   @Get('season/:seasonId')
+  @Roles()
   @ApiOperation({ summary: 'Retrieve all customer categories across all customers for a specific season' })
   @ApiParam({ name: 'seasonId', type: Number, description: 'The ID of the season.' })
   @ApiResponse({ status: 200, description: 'List of all customer categories for the season returned.' })
@@ -74,6 +79,7 @@ export class CustomerCatController {
   }
 
   @Get(':id')
+  @Roles()
   @ApiOperation({ summary: 'Retrieve a single customer category by ID' })
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the customer category.' })
   @ApiResponse({ status: 200, description: 'Customer category returned successfully.' })

@@ -1,14 +1,18 @@
 // src/categories/controllers/traders-cat/traders-cat.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { TradersCatService } from '../../services/traders-cat/traders-cat.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
+import { Roles } from 'src/authorization/decorators/roles.decorator';
+import type { Request } from 'express';
+import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 
 @ApiTags('Categories')
 @ApiBearerAuth('access-token')
 @ApiUnauthorizedResponse({ description: 'JWT authentication failed or token is missing.' })
 @ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
+@Roles(Role.OWNER, Role.MANAGER)
 @Controller('traders-categories')
 export class TradersCatController {
   constructor(private readonly tradersCatService: TradersCatService) {}
@@ -42,24 +46,27 @@ export class TradersCatController {
   }
 
   @Get()
+  @Roles()
   @ApiOperation({ summary: 'Retrieve all trader categories for a specific season' })
   @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season to filter categories by.' })
   @ApiResponse({ status: 200, description: 'List of trader categories returned successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid or missing seasonId query parameter.' })
-  findAll(@Query('seasonId', ParseIntPipe) seasonId: number) {
-    return this.tradersCatService.findAllBySeason(seasonId);
+  findAll(@Query('seasonId', ParseIntPipe) seasonId: number, @Req() req: Request) {
+    return this.tradersCatService.findAllBySeason(seasonId, req.user as AuthenticatedUser);
   }
 
   @Get(':id')
+  @Roles()
   @ApiOperation({ summary: 'Retrieve a single trader category by ID' })
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the trader category.' })
   @ApiResponse({ status: 200, description: 'Trader category returned successfully.' })
   @ApiResponse({ status: 404, description: 'Trader category not found.' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.tradersCatService.findOne(id);
+  findOne(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    return this.tradersCatService.findOne(id, req.user as AuthenticatedUser);
   }
 
   @Get('by-name')
+  @Roles()
   @ApiOperation({ summary: 'Find a trader category by name within a season (composite key lookup)' })
   @ApiQuery({ name: 'name', type: String, description: 'The name of the trader category.' })
   @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season.' })
@@ -68,8 +75,9 @@ export class TradersCatController {
   findByName(
     @Query('name') name: string,
     @Query('seasonId', ParseIntPipe) seasonId: number,
+    @Req() req: Request,
   ) {
-    return this.tradersCatService.findByName(name, seasonId);
+    return this.tradersCatService.findByName(name, seasonId, req.user as AuthenticatedUser);
   }
 
   @Patch(':id')

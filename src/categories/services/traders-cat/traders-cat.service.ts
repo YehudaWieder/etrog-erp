@@ -2,8 +2,9 @@
 
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
+import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 
 @Injectable()
 export class TradersCatService {
@@ -11,6 +12,20 @@ export class TradersCatService {
     private prisma: PrismaService,
     private seasonsService: SeasonsService,
   ) {}
+
+  private isManagerOrAbove(actor: AuthenticatedUser) {
+    return actor.role === Role.MANAGER || actor.role === Role.OWNER;
+  }
+
+  private toWorkerCategoryView(record: { id: number; name: string; notes: string | null }) {
+    return {
+      id: record.id,
+      name: record.name,
+      grade: null,
+      percent: null,
+      notes: record.notes,
+    };
+  }
 
   // Create a new category for a specific season
   async create(_seasonId: number, name: string, notes?: string) {
@@ -36,32 +51,71 @@ export class TradersCatService {
   }
 
   // Find all categories for a specific season
-  async findAllBySeason(seasonId: number) {
-    return this.prisma.tradersCategories.findMany({
+  async findAllBySeason(seasonId: number, actor: AuthenticatedUser) {
+    if (this.isManagerOrAbove(actor)) {
+      return this.prisma.tradersCategories.findMany({
+        where: { seasonId },
+        orderBy: { name: 'asc' },
+      });
+    }
+
+    const records = await this.prisma.tradersCategories.findMany({
       where: { seasonId },
+      select: {
+        id: true,
+        name: true,
+        notes: true,
+      },
       orderBy: { name: 'asc' },
     });
+
+    return records.map((record) => this.toWorkerCategoryView(record));
   }
 
   // Find one category by ID
-  async findOne(id: number) {
-    const category = await this.prisma.tradersCategories.findUnique({
-      where: { id },
-    });
+  async findOne(id: number, actor: AuthenticatedUser) {
+    const managerOrAbove = this.isManagerOrAbove(actor);
+
+    const category = managerOrAbove
+      ? await this.prisma.tradersCategories.findUnique({
+          where: { id },
+        })
+      : await this.prisma.tradersCategories.findUnique({
+          where: { id },
+          select: {
+            id: true,
+            name: true,
+            notes: true,
+          },
+        });
 
     if (!category) throw new NotFoundException(`Category not found`);
-    return category;
+    return managerOrAbove ? category : this.toWorkerCategoryView(category);
   }
 
   // Find one category by name and season
-  async findByName(name: string, seasonId: number) {
-    const category = await this.prisma.tradersCategories.findUnique({
-        where: {
-        name_seasonId: { name, seasonId },
-        },
-    });
+  async findByName(name: string, seasonId: number, actor: AuthenticatedUser) {
+    const managerOrAbove = this.isManagerOrAbove(actor);
+
+    const category = managerOrAbove
+      ? await this.prisma.tradersCategories.findUnique({
+          where: {
+            name_seasonId: { name, seasonId },
+          },
+        })
+      : await this.prisma.tradersCategories.findUnique({
+          where: {
+            name_seasonId: { name, seasonId },
+          },
+          select: {
+            id: true,
+            name: true,
+            notes: true,
+          },
+        });
+
     if (!category) throw new NotFoundException(`Category ${name} not found in this season`);
-    return category;
+    return managerOrAbove ? category : this.toWorkerCategoryView(category);
   }
 
   // Update category details
