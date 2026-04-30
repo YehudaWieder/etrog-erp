@@ -1,6 +1,6 @@
 // src/shipments/controllers/item/item.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { ItemService } from '../../services/item/item.service';
 import { Prisma } from '@prisma/client';
@@ -22,9 +22,7 @@ export class ItemController {
       sample: {
         summary: 'Sample shipment item create payload',
         value: {
-          shipmentId: 15,
           boxId: 42,
-          seasonId: 1,
           traderCategoryId: 2,
           grade: 'א',
           pitamStatus: 'WITH_PITAM',

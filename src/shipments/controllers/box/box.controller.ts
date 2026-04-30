@@ -23,7 +23,6 @@ export class BoxController {
         summary: 'Sample box create payload',
         value: {
           shipmentId: 15,
-          seasonId: 1,
           boxNumber: 3,
           boxType: 'MEDIUM',
           status: 'OPEN',

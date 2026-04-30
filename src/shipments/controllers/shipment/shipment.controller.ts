@@ -22,10 +22,7 @@ export class ShipmentController {
       sample: {
         summary: 'Sample shipment create payload',
         value: {
-          seasonId: 1,
-          status: 'PREPARING',
           updatedById: 1,
-          slug: 'season-1-shipment-1001',
           notes: 'Shipment for EU distribution center',
         },
       },
