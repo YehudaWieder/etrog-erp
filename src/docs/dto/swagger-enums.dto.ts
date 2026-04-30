@@ -419,6 +419,26 @@ export class ClassificationMutationMetaDto {
   validationMode!: 'PARTIAL' | 'FINAL';
 }
 
+export class HarvestInlineUpdateDto {
+  @ApiPropertyOptional({ description: 'Update total harvested units', example: 210 })
+  totalHarvested?: number;
+
+  @ApiPropertyOptional({ description: 'Update total rejected units', example: 5 })
+  totalRejected?: number;
+
+  @ApiPropertyOptional({ description: 'Update owner harvested units', example: 120 })
+  ownerHarvested?: number;
+
+  @ApiPropertyOptional({ description: 'Update owner rejected units', example: 3 })
+  ownerRejected?: number;
+
+  @ApiPropertyOptional({ description: 'Update harvest notes', example: 'Received another 10 after recount' })
+  notes?: string;
+
+  @ApiPropertyOptional({ description: 'User ID that performs this harvest update', example: 1 })
+  updatedById?: number;
+}
+
 export class CreateHarvestClassificationDto extends ClassificationBulkItemDto {
   @ApiProperty({ description: 'User ID performing the action', example: 1 })
   updatedById!: number;
@@ -429,6 +449,12 @@ export class CreateHarvestClassificationDto extends ClassificationBulkItemDto {
     example: 'PARTIAL',
   })
   validationMode!: 'PARTIAL' | 'FINAL';
+
+  @ApiPropertyOptional({
+    type: HarvestInlineUpdateDto,
+    description: 'Optional harvest fields update applied atomically with classification creation.',
+  })
+  harvestUpdate?: HarvestInlineUpdateDto;
 }
 
 export class UpdateHarvestClassificationDto extends UpdateClassificationDto {
@@ -441,6 +467,12 @@ export class UpdateHarvestClassificationDto extends UpdateClassificationDto {
     example: 'FINAL',
   })
   validationMode!: 'PARTIAL' | 'FINAL';
+
+  @ApiPropertyOptional({
+    type: HarvestInlineUpdateDto,
+    description: 'Optional harvest fields update applied atomically with classification update.',
+  })
+  harvestUpdate?: HarvestInlineUpdateDto;
 }
 
 export class DeleteHarvestClassificationDto {
@@ -450,6 +482,12 @@ export class DeleteHarvestClassificationDto {
     example: 'PARTIAL',
   })
   validationMode!: 'PARTIAL' | 'FINAL';
+
+  @ApiPropertyOptional({
+    type: HarvestInlineUpdateDto,
+    description: 'Optional harvest fields update applied atomically with classification delete.',
+  })
+  harvestUpdate?: HarvestInlineUpdateDto;
 }
 
 export class UpdateHarvestPartialClassificationDto {

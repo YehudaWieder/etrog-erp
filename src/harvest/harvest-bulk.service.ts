@@ -9,6 +9,8 @@ import {
   ClassificationBulkItemDto,
   CreateHarvestClassificationDto,
   UpdateHarvestClassificationDto,
+  DeleteHarvestClassificationDto,
+  HarvestInlineUpdateDto,
 } from 'src/docs/dto/swagger-enums.dto';
 
 @Injectable()
@@ -33,6 +35,8 @@ export class HarvestBulkService {
       if (!harvest) {
         throw new NotFoundException(`Harvest ${harvestId} not found`);
       }
+
+      await this.applyHarvestInlineUpdate(tx, harvestId, createDto.harvestUpdate);
 
       const classSlug = `harvest-${harvestId}-tcat-${createDto.traderCategoryId ?? 0}-ccat-${createDto.customerCategoryId ?? 0}-g-${createDto.grade ?? 'NA'}-pitam-${createDto.pitamStatus}-a-${createDto.assignmentType}`;
 
@@ -110,15 +114,23 @@ export class HarvestBulkService {
       );
     }
 
-    // Check if only notes are being updated
-    const changedFields = Object.keys(updateDto).filter(
-      (key) => updateDto[key as keyof UpdateHarvestClassificationDto] !== undefined,
-    );
-    const isOnlyNotesUpdate = changedFields.length === 1 && changedFields[0] === 'notes';
+    const hasClassificationStructuralChanges =
+      updateDto.assignmentType !== undefined ||
+      updateDto.traderId !== undefined ||
+      updateDto.customerId !== undefined ||
+      updateDto.traderCategoryId !== undefined ||
+      updateDto.customerCategoryId !== undefined ||
+      updateDto.grade !== undefined ||
+      updateDto.pitamStatus !== undefined ||
+      updateDto.quantity !== undefined;
+
+    const isOnlyNotesUpdate = !hasClassificationStructuralChanges && updateDto.notes !== undefined;
+    const hasNoClassificationChanges = !hasClassificationStructuralChanges && updateDto.notes === undefined;
 
     if (isOnlyNotesUpdate) {
-      // Simple notes-only update
       return this.prisma.$transaction(async (tx) => {
+        await this.applyHarvestInlineUpdate(tx, harvestId, updateDto.harvestUpdate);
+
         const updated = await tx.classification.update({
           where: { id: classificationId },
           data: { notes: updateDto.notes },
@@ -127,6 +139,15 @@ export class HarvestBulkService {
         await this.syncHarvestClassificationProgress(tx, harvestId, updateDto.validationMode);
 
         return updated;
+      });
+    }
+
+    if (hasNoClassificationChanges) {
+      return this.prisma.$transaction(async (tx) => {
+        await this.applyHarvestInlineUpdate(tx, harvestId, updateDto.harvestUpdate);
+        await this.syncHarvestClassificationProgress(tx, harvestId, updateDto.validationMode);
+
+        return tx.classification.findUnique({ where: { id: classificationId } });
       });
     }
 
@@ -150,6 +171,8 @@ export class HarvestBulkService {
       if (!harvest) {
         throw new NotFoundException(`Harvest ${harvestId} not found`);
       }
+
+      await this.applyHarvestInlineUpdate(tx, harvestId, updateDto.harvestUpdate);
 
       const newQuantity = updateDto.quantity ?? oldClassification.quantity;
 
@@ -200,7 +223,7 @@ export class HarvestBulkService {
   async deleteClassification(
     harvestId: number,
     classificationId: number,
-    validationMode: 'PARTIAL' | 'FINAL',
+    deleteDto: DeleteHarvestClassificationDto,
   ) {
     return this.prisma.$transaction(async (tx) => {
       const classification = await tx.classification.findUnique({
@@ -218,6 +241,8 @@ export class HarvestBulkService {
         );
       }
 
+      await this.applyHarvestInlineUpdate(tx, harvestId, deleteDto.harvestUpdate);
+
       await tx.customerAllocation.deleteMany({
         where: { MovementReferenceId: classificationId },
       });
@@ -230,9 +255,67 @@ export class HarvestBulkService {
         where: { id: classificationId },
       });
 
-      await this.syncHarvestClassificationProgress(tx, harvestId, validationMode);
+      await this.syncHarvestClassificationProgress(tx, harvestId, deleteDto.validationMode);
 
       return deleted;
+    });
+  }
+
+  private async applyHarvestInlineUpdate(
+    tx: any,
+    harvestId: number,
+    harvestUpdate?: HarvestInlineUpdateDto,
+  ) {
+    if (!harvestUpdate) {
+      return;
+    }
+
+    const hasAnyField =
+      harvestUpdate.totalHarvested !== undefined ||
+      harvestUpdate.totalRejected !== undefined ||
+      harvestUpdate.ownerHarvested !== undefined ||
+      harvestUpdate.ownerRejected !== undefined ||
+      harvestUpdate.notes !== undefined ||
+      harvestUpdate.updatedById !== undefined;
+
+    if (!hasAnyField) {
+      return;
+    }
+
+    const current = await tx.fieldHarvest.findUnique({
+      where: { id: harvestId },
+      select: {
+        id: true,
+        totalHarvested: true,
+        totalRejected: true,
+        ownerHarvested: true,
+        ownerRejected: true,
+      },
+    });
+
+    if (!current) {
+      throw new NotFoundException(`Harvest ${harvestId} not found`);
+    }
+
+    const totalHarvested = harvestUpdate.totalHarvested ?? current.totalHarvested;
+    const totalRejected = harvestUpdate.totalRejected ?? current.totalRejected;
+    const ownerHarvested = harvestUpdate.ownerHarvested ?? current.ownerHarvested;
+    const ownerRejected = harvestUpdate.ownerRejected ?? current.ownerRejected;
+
+    await tx.fieldHarvest.update({
+      where: { id: harvestId },
+      data: {
+        totalHarvested,
+        totalRejected,
+        ownerHarvested,
+        ownerRejected,
+        notes: harvestUpdate.notes,
+        updatedById: harvestUpdate.updatedById,
+        rejectionRate: totalHarvested > 0 ? (totalRejected / totalHarvested) * 100 : 0,
+        ownerRejectionRate: ownerHarvested > 0 ? (ownerRejected / ownerHarvested) * 100 : 0,
+        totalAfterRejected: Math.max(totalHarvested - totalRejected, 0),
+        ownerAfterRejected: Math.max(ownerHarvested - ownerRejected, 0),
+      },
     });
   }
 

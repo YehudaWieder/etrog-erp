@@ -189,10 +189,6 @@ export class HarvestController {
     @Param('classificationId', ParseIntPipe) classificationId: number,
     @Body() body: DeleteHarvestClassificationDto,
   ) {
-    return this.harvestBulkService.deleteClassification(
-      harvestId,
-      classificationId,
-      body.validationMode,
-    );
+    return this.harvestBulkService.deleteClassification(harvestId, classificationId, body);
   }
 }
