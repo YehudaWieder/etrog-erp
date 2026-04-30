@@ -12,16 +12,25 @@ export class HarvestService {
     private seasonsService: SeasonsService,
   ) {}
 
-  // Calculate rejection rates before saving
-  private calculateRates(data: any) {
+  // Calculate derived harvest fields before saving
+  private calculateHarvestFields(data: any) {
     const totalHarvested = data.totalHarvested || 0;
     const totalRejected = data.totalRejected || 0;
     const ownerHarvested = data.ownerHarvested || 0;
     const ownerRejected = data.ownerRejected || 0;
+    const totalAfterRejected = Math.max(totalHarvested - totalRejected, 0);
+    const ownerAfterRejected = Math.max(ownerHarvested - ownerRejected, 0);
+    const classifiedTotal = data.classifiedTotal || 0;
+    const isPartialClassification =
+      data.isPartialClassification ?? classifiedTotal < totalAfterRejected;
 
     return {
       rejectionRate: totalHarvested > 0 ? (totalRejected / totalHarvested) * 100 : 0,
       ownerRejectionRate: ownerHarvested > 0 ? (ownerRejected / ownerHarvested) * 100 : 0,
+      totalAfterRejected,
+      ownerAfterRejected,
+      classifiedTotal,
+      isPartialClassification,
     };
   }
 
@@ -36,7 +45,7 @@ export class HarvestService {
     const existing = await this.prisma.fieldHarvest.findUnique({ where: { slug } });
     if (existing) throw new ConflictException('A report for this field and date already exists');
 
-    const rates = this.calculateRates(data);
+    const rates = this.calculateHarvestFields(data);
 
     return this.prisma.fieldHarvest.create({
       data: {
@@ -94,7 +103,7 @@ export class HarvestService {
     
     // Merge current and new data for rate calculation
     const mergedData = { ...current, ...data };
-    const rates = this.calculateRates(mergedData);
+    const rates = this.calculateHarvestFields(mergedData);
 
     return this.prisma.fieldHarvest.update({
       where: { id },

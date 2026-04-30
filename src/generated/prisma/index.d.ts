@@ -14311,9 +14311,12 @@ export namespace Prisma {
     totalHarvested: number | null
     totalRejected: number | null
     rejectionRate: Decimal | null
+    totalAfterRejected: number | null
     ownerHarvested: number | null
     ownerRejected: number | null
     ownerRejectionRate: Decimal | null
+    ownerAfterRejected: number | null
+    classifiedTotal: number | null
   }
 
   export type FieldHarvestSumAggregateOutputType = {
@@ -14324,9 +14327,12 @@ export namespace Prisma {
     totalHarvested: number | null
     totalRejected: number | null
     rejectionRate: Decimal | null
+    totalAfterRejected: number | null
     ownerHarvested: number | null
     ownerRejected: number | null
     ownerRejectionRate: Decimal | null
+    ownerAfterRejected: number | null
+    classifiedTotal: number | null
   }
 
   export type FieldHarvestMinAggregateOutputType = {
@@ -14339,9 +14345,14 @@ export namespace Prisma {
     totalHarvested: number | null
     totalRejected: number | null
     rejectionRate: Decimal | null
+    totalAfterRejected: number | null
     ownerHarvested: number | null
     ownerRejected: number | null
     ownerRejectionRate: Decimal | null
+    ownerAfterRejected: number | null
+    classifiedTotal: number | null
+    isPartialClassification: boolean | null
+    notes: string | null
     slug: string | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -14358,9 +14369,14 @@ export namespace Prisma {
     totalHarvested: number | null
     totalRejected: number | null
     rejectionRate: Decimal | null
+    totalAfterRejected: number | null
     ownerHarvested: number | null
     ownerRejected: number | null
     ownerRejectionRate: Decimal | null
+    ownerAfterRejected: number | null
+    classifiedTotal: number | null
+    isPartialClassification: boolean | null
+    notes: string | null
     slug: string | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -14377,9 +14393,14 @@ export namespace Prisma {
     totalHarvested: number
     totalRejected: number
     rejectionRate: number
+    totalAfterRejected: number
     ownerHarvested: number
     ownerRejected: number
     ownerRejectionRate: number
+    ownerAfterRejected: number
+    classifiedTotal: number
+    isPartialClassification: number
+    notes: number
     slug: number
     createdAt: number
     updatedAt: number
@@ -14396,9 +14417,12 @@ export namespace Prisma {
     totalHarvested?: true
     totalRejected?: true
     rejectionRate?: true
+    totalAfterRejected?: true
     ownerHarvested?: true
     ownerRejected?: true
     ownerRejectionRate?: true
+    ownerAfterRejected?: true
+    classifiedTotal?: true
   }
 
   export type FieldHarvestSumAggregateInputType = {
@@ -14409,9 +14433,12 @@ export namespace Prisma {
     totalHarvested?: true
     totalRejected?: true
     rejectionRate?: true
+    totalAfterRejected?: true
     ownerHarvested?: true
     ownerRejected?: true
     ownerRejectionRate?: true
+    ownerAfterRejected?: true
+    classifiedTotal?: true
   }
 
   export type FieldHarvestMinAggregateInputType = {
@@ -14424,9 +14451,14 @@ export namespace Prisma {
     totalHarvested?: true
     totalRejected?: true
     rejectionRate?: true
+    totalAfterRejected?: true
     ownerHarvested?: true
     ownerRejected?: true
     ownerRejectionRate?: true
+    ownerAfterRejected?: true
+    classifiedTotal?: true
+    isPartialClassification?: true
+    notes?: true
     slug?: true
     createdAt?: true
     updatedAt?: true
@@ -14443,9 +14475,14 @@ export namespace Prisma {
     totalHarvested?: true
     totalRejected?: true
     rejectionRate?: true
+    totalAfterRejected?: true
     ownerHarvested?: true
     ownerRejected?: true
     ownerRejectionRate?: true
+    ownerAfterRejected?: true
+    classifiedTotal?: true
+    isPartialClassification?: true
+    notes?: true
     slug?: true
     createdAt?: true
     updatedAt?: true
@@ -14462,9 +14499,14 @@ export namespace Prisma {
     totalHarvested?: true
     totalRejected?: true
     rejectionRate?: true
+    totalAfterRejected?: true
     ownerHarvested?: true
     ownerRejected?: true
     ownerRejectionRate?: true
+    ownerAfterRejected?: true
+    classifiedTotal?: true
+    isPartialClassification?: true
+    notes?: true
     slug?: true
     createdAt?: true
     updatedAt?: true
@@ -14568,9 +14610,14 @@ export namespace Prisma {
     totalHarvested: number
     totalRejected: number
     rejectionRate: Decimal
+    totalAfterRejected: number
     ownerHarvested: number
     ownerRejected: number
     ownerRejectionRate: Decimal
+    ownerAfterRejected: number
+    classifiedTotal: number
+    isPartialClassification: boolean
+    notes: string | null
     slug: string
     createdAt: Date
     updatedAt: Date
@@ -14606,9 +14653,14 @@ export namespace Prisma {
     totalHarvested?: boolean
     totalRejected?: boolean
     rejectionRate?: boolean
+    totalAfterRejected?: boolean
     ownerHarvested?: boolean
     ownerRejected?: boolean
     ownerRejectionRate?: boolean
+    ownerAfterRejected?: boolean
+    classifiedTotal?: boolean
+    isPartialClassification?: boolean
+    notes?: boolean
     slug?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -14630,9 +14682,14 @@ export namespace Prisma {
     totalHarvested?: boolean
     totalRejected?: boolean
     rejectionRate?: boolean
+    totalAfterRejected?: boolean
     ownerHarvested?: boolean
     ownerRejected?: boolean
     ownerRejectionRate?: boolean
+    ownerAfterRejected?: boolean
+    classifiedTotal?: boolean
+    isPartialClassification?: boolean
+    notes?: boolean
     slug?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -14652,9 +14709,14 @@ export namespace Prisma {
     totalHarvested?: boolean
     totalRejected?: boolean
     rejectionRate?: boolean
+    totalAfterRejected?: boolean
     ownerHarvested?: boolean
     ownerRejected?: boolean
     ownerRejectionRate?: boolean
+    ownerAfterRejected?: boolean
+    classifiedTotal?: boolean
+    isPartialClassification?: boolean
+    notes?: boolean
     slug?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -14674,16 +14736,21 @@ export namespace Prisma {
     totalHarvested?: boolean
     totalRejected?: boolean
     rejectionRate?: boolean
+    totalAfterRejected?: boolean
     ownerHarvested?: boolean
     ownerRejected?: boolean
     ownerRejectionRate?: boolean
+    ownerAfterRejected?: boolean
+    classifiedTotal?: boolean
+    isPartialClassification?: boolean
+    notes?: boolean
     slug?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     isDeleted?: boolean
   }
 
-  export type FieldHarvestOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "seasonId" | "dateGregorian" | "dateHebrew" | "fieldId" | "updatedById" | "totalHarvested" | "totalRejected" | "rejectionRate" | "ownerHarvested" | "ownerRejected" | "ownerRejectionRate" | "slug" | "createdAt" | "updatedAt" | "isDeleted", ExtArgs["result"]["fieldHarvest"]>
+  export type FieldHarvestOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "seasonId" | "dateGregorian" | "dateHebrew" | "fieldId" | "updatedById" | "totalHarvested" | "totalRejected" | "rejectionRate" | "totalAfterRejected" | "ownerHarvested" | "ownerRejected" | "ownerRejectionRate" | "ownerAfterRejected" | "classifiedTotal" | "isPartialClassification" | "notes" | "slug" | "createdAt" | "updatedAt" | "isDeleted", ExtArgs["result"]["fieldHarvest"]>
   export type FieldHarvestInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     season?: boolean | SeasonDefaultArgs<ExtArgs>
     field?: boolean | FieldDefaultArgs<ExtArgs>
@@ -14720,9 +14787,14 @@ export namespace Prisma {
       totalHarvested: number
       totalRejected: number
       rejectionRate: Prisma.Decimal
+      totalAfterRejected: number
       ownerHarvested: number
       ownerRejected: number
       ownerRejectionRate: Prisma.Decimal
+      ownerAfterRejected: number
+      classifiedTotal: number
+      isPartialClassification: boolean
+      notes: string | null
       slug: string
       createdAt: Date
       updatedAt: Date
@@ -15163,9 +15235,14 @@ export namespace Prisma {
     readonly totalHarvested: FieldRef<"FieldHarvest", 'Int'>
     readonly totalRejected: FieldRef<"FieldHarvest", 'Int'>
     readonly rejectionRate: FieldRef<"FieldHarvest", 'Decimal'>
+    readonly totalAfterRejected: FieldRef<"FieldHarvest", 'Int'>
     readonly ownerHarvested: FieldRef<"FieldHarvest", 'Int'>
     readonly ownerRejected: FieldRef<"FieldHarvest", 'Int'>
     readonly ownerRejectionRate: FieldRef<"FieldHarvest", 'Decimal'>
+    readonly ownerAfterRejected: FieldRef<"FieldHarvest", 'Int'>
+    readonly classifiedTotal: FieldRef<"FieldHarvest", 'Int'>
+    readonly isPartialClassification: FieldRef<"FieldHarvest", 'Boolean'>
+    readonly notes: FieldRef<"FieldHarvest", 'String'>
     readonly slug: FieldRef<"FieldHarvest", 'String'>
     readonly createdAt: FieldRef<"FieldHarvest", 'DateTime'>
     readonly updatedAt: FieldRef<"FieldHarvest", 'DateTime'>
@@ -25146,9 +25223,14 @@ export namespace Prisma {
     totalHarvested: 'totalHarvested',
     totalRejected: 'totalRejected',
     rejectionRate: 'rejectionRate',
+    totalAfterRejected: 'totalAfterRejected',
     ownerHarvested: 'ownerHarvested',
     ownerRejected: 'ownerRejected',
     ownerRejectionRate: 'ownerRejectionRate',
+    ownerAfterRejected: 'ownerAfterRejected',
+    classifiedTotal: 'classifiedTotal',
+    isPartialClassification: 'isPartialClassification',
+    notes: 'notes',
     slug: 'slug',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
@@ -26321,9 +26403,14 @@ export namespace Prisma {
     totalHarvested?: IntFilter<"FieldHarvest"> | number
     totalRejected?: IntFilter<"FieldHarvest"> | number
     rejectionRate?: DecimalFilter<"FieldHarvest"> | Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: IntFilter<"FieldHarvest"> | number
     ownerHarvested?: IntFilter<"FieldHarvest"> | number
     ownerRejected?: IntFilter<"FieldHarvest"> | number
     ownerRejectionRate?: DecimalFilter<"FieldHarvest"> | Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: IntFilter<"FieldHarvest"> | number
+    classifiedTotal?: IntFilter<"FieldHarvest"> | number
+    isPartialClassification?: BoolFilter<"FieldHarvest"> | boolean
+    notes?: StringNullableFilter<"FieldHarvest"> | string | null
     slug?: StringFilter<"FieldHarvest"> | string
     createdAt?: DateTimeFilter<"FieldHarvest"> | Date | string
     updatedAt?: DateTimeFilter<"FieldHarvest"> | Date | string
@@ -26344,9 +26431,14 @@ export namespace Prisma {
     totalHarvested?: SortOrder
     totalRejected?: SortOrder
     rejectionRate?: SortOrder
+    totalAfterRejected?: SortOrder
     ownerHarvested?: SortOrder
     ownerRejected?: SortOrder
     ownerRejectionRate?: SortOrder
+    ownerAfterRejected?: SortOrder
+    classifiedTotal?: SortOrder
+    isPartialClassification?: SortOrder
+    notes?: SortOrderInput | SortOrder
     slug?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -26372,9 +26464,14 @@ export namespace Prisma {
     totalHarvested?: IntFilter<"FieldHarvest"> | number
     totalRejected?: IntFilter<"FieldHarvest"> | number
     rejectionRate?: DecimalFilter<"FieldHarvest"> | Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: IntFilter<"FieldHarvest"> | number
     ownerHarvested?: IntFilter<"FieldHarvest"> | number
     ownerRejected?: IntFilter<"FieldHarvest"> | number
     ownerRejectionRate?: DecimalFilter<"FieldHarvest"> | Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: IntFilter<"FieldHarvest"> | number
+    classifiedTotal?: IntFilter<"FieldHarvest"> | number
+    isPartialClassification?: BoolFilter<"FieldHarvest"> | boolean
+    notes?: StringNullableFilter<"FieldHarvest"> | string | null
     createdAt?: DateTimeFilter<"FieldHarvest"> | Date | string
     updatedAt?: DateTimeFilter<"FieldHarvest"> | Date | string
     isDeleted?: BoolFilter<"FieldHarvest"> | boolean
@@ -26394,9 +26491,14 @@ export namespace Prisma {
     totalHarvested?: SortOrder
     totalRejected?: SortOrder
     rejectionRate?: SortOrder
+    totalAfterRejected?: SortOrder
     ownerHarvested?: SortOrder
     ownerRejected?: SortOrder
     ownerRejectionRate?: SortOrder
+    ownerAfterRejected?: SortOrder
+    classifiedTotal?: SortOrder
+    isPartialClassification?: SortOrder
+    notes?: SortOrderInput | SortOrder
     slug?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -26421,9 +26523,14 @@ export namespace Prisma {
     totalHarvested?: IntWithAggregatesFilter<"FieldHarvest"> | number
     totalRejected?: IntWithAggregatesFilter<"FieldHarvest"> | number
     rejectionRate?: DecimalWithAggregatesFilter<"FieldHarvest"> | Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: IntWithAggregatesFilter<"FieldHarvest"> | number
     ownerHarvested?: IntWithAggregatesFilter<"FieldHarvest"> | number
     ownerRejected?: IntWithAggregatesFilter<"FieldHarvest"> | number
     ownerRejectionRate?: DecimalWithAggregatesFilter<"FieldHarvest"> | Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: IntWithAggregatesFilter<"FieldHarvest"> | number
+    classifiedTotal?: IntWithAggregatesFilter<"FieldHarvest"> | number
+    isPartialClassification?: BoolWithAggregatesFilter<"FieldHarvest"> | boolean
+    notes?: StringNullableWithAggregatesFilter<"FieldHarvest"> | string | null
     slug?: StringWithAggregatesFilter<"FieldHarvest"> | string
     createdAt?: DateTimeWithAggregatesFilter<"FieldHarvest"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"FieldHarvest"> | Date | string
@@ -28035,9 +28142,14 @@ export namespace Prisma {
     totalHarvested?: number
     totalRejected?: number
     rejectionRate?: Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: number
     ownerHarvested?: number
     ownerRejected?: number
     ownerRejectionRate?: Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: number
+    classifiedTotal?: number
+    isPartialClassification?: boolean
+    notes?: string | null
     slug: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -28058,9 +28170,14 @@ export namespace Prisma {
     totalHarvested?: number
     totalRejected?: number
     rejectionRate?: Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: number
     ownerHarvested?: number
     ownerRejected?: number
     ownerRejectionRate?: Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: number
+    classifiedTotal?: number
+    isPartialClassification?: boolean
+    notes?: string | null
     slug: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -28074,9 +28191,14 @@ export namespace Prisma {
     totalHarvested?: IntFieldUpdateOperationsInput | number
     totalRejected?: IntFieldUpdateOperationsInput | number
     rejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: IntFieldUpdateOperationsInput | number
     ownerHarvested?: IntFieldUpdateOperationsInput | number
     ownerRejected?: IntFieldUpdateOperationsInput | number
     ownerRejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: IntFieldUpdateOperationsInput | number
+    classifiedTotal?: IntFieldUpdateOperationsInput | number
+    isPartialClassification?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28097,9 +28219,14 @@ export namespace Prisma {
     totalHarvested?: IntFieldUpdateOperationsInput | number
     totalRejected?: IntFieldUpdateOperationsInput | number
     rejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: IntFieldUpdateOperationsInput | number
     ownerHarvested?: IntFieldUpdateOperationsInput | number
     ownerRejected?: IntFieldUpdateOperationsInput | number
     ownerRejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: IntFieldUpdateOperationsInput | number
+    classifiedTotal?: IntFieldUpdateOperationsInput | number
+    isPartialClassification?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28117,9 +28244,14 @@ export namespace Prisma {
     totalHarvested?: number
     totalRejected?: number
     rejectionRate?: Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: number
     ownerHarvested?: number
     ownerRejected?: number
     ownerRejectionRate?: Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: number
+    classifiedTotal?: number
+    isPartialClassification?: boolean
+    notes?: string | null
     slug: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -28132,9 +28264,14 @@ export namespace Prisma {
     totalHarvested?: IntFieldUpdateOperationsInput | number
     totalRejected?: IntFieldUpdateOperationsInput | number
     rejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: IntFieldUpdateOperationsInput | number
     ownerHarvested?: IntFieldUpdateOperationsInput | number
     ownerRejected?: IntFieldUpdateOperationsInput | number
     ownerRejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: IntFieldUpdateOperationsInput | number
+    classifiedTotal?: IntFieldUpdateOperationsInput | number
+    isPartialClassification?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28151,9 +28288,14 @@ export namespace Prisma {
     totalHarvested?: IntFieldUpdateOperationsInput | number
     totalRejected?: IntFieldUpdateOperationsInput | number
     rejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: IntFieldUpdateOperationsInput | number
     ownerHarvested?: IntFieldUpdateOperationsInput | number
     ownerRejected?: IntFieldUpdateOperationsInput | number
     ownerRejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: IntFieldUpdateOperationsInput | number
+    classifiedTotal?: IntFieldUpdateOperationsInput | number
+    isPartialClassification?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -29811,9 +29953,14 @@ export namespace Prisma {
     totalHarvested?: SortOrder
     totalRejected?: SortOrder
     rejectionRate?: SortOrder
+    totalAfterRejected?: SortOrder
     ownerHarvested?: SortOrder
     ownerRejected?: SortOrder
     ownerRejectionRate?: SortOrder
+    ownerAfterRejected?: SortOrder
+    classifiedTotal?: SortOrder
+    isPartialClassification?: SortOrder
+    notes?: SortOrder
     slug?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -29828,9 +29975,12 @@ export namespace Prisma {
     totalHarvested?: SortOrder
     totalRejected?: SortOrder
     rejectionRate?: SortOrder
+    totalAfterRejected?: SortOrder
     ownerHarvested?: SortOrder
     ownerRejected?: SortOrder
     ownerRejectionRate?: SortOrder
+    ownerAfterRejected?: SortOrder
+    classifiedTotal?: SortOrder
   }
 
   export type FieldHarvestMaxOrderByAggregateInput = {
@@ -29843,9 +29993,14 @@ export namespace Prisma {
     totalHarvested?: SortOrder
     totalRejected?: SortOrder
     rejectionRate?: SortOrder
+    totalAfterRejected?: SortOrder
     ownerHarvested?: SortOrder
     ownerRejected?: SortOrder
     ownerRejectionRate?: SortOrder
+    ownerAfterRejected?: SortOrder
+    classifiedTotal?: SortOrder
+    isPartialClassification?: SortOrder
+    notes?: SortOrder
     slug?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -29862,9 +30017,14 @@ export namespace Prisma {
     totalHarvested?: SortOrder
     totalRejected?: SortOrder
     rejectionRate?: SortOrder
+    totalAfterRejected?: SortOrder
     ownerHarvested?: SortOrder
     ownerRejected?: SortOrder
     ownerRejectionRate?: SortOrder
+    ownerAfterRejected?: SortOrder
+    classifiedTotal?: SortOrder
+    isPartialClassification?: SortOrder
+    notes?: SortOrder
     slug?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -29879,9 +30039,12 @@ export namespace Prisma {
     totalHarvested?: SortOrder
     totalRejected?: SortOrder
     rejectionRate?: SortOrder
+    totalAfterRejected?: SortOrder
     ownerHarvested?: SortOrder
     ownerRejected?: SortOrder
     ownerRejectionRate?: SortOrder
+    ownerAfterRejected?: SortOrder
+    classifiedTotal?: SortOrder
   }
 
   export type EnumAssignmentTypeFilter<$PrismaModel = never> = {
@@ -33933,9 +34096,14 @@ export namespace Prisma {
     totalHarvested?: number
     totalRejected?: number
     rejectionRate?: Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: number
     ownerHarvested?: number
     ownerRejected?: number
     ownerRejectionRate?: Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: number
+    classifiedTotal?: number
+    isPartialClassification?: boolean
+    notes?: string | null
     slug: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -33954,9 +34122,14 @@ export namespace Prisma {
     totalHarvested?: number
     totalRejected?: number
     rejectionRate?: Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: number
     ownerHarvested?: number
     ownerRejected?: number
     ownerRejectionRate?: Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: number
+    classifiedTotal?: number
+    isPartialClassification?: boolean
+    notes?: string | null
     slug: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -34003,9 +34176,14 @@ export namespace Prisma {
     totalHarvested?: IntFilter<"FieldHarvest"> | number
     totalRejected?: IntFilter<"FieldHarvest"> | number
     rejectionRate?: DecimalFilter<"FieldHarvest"> | Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: IntFilter<"FieldHarvest"> | number
     ownerHarvested?: IntFilter<"FieldHarvest"> | number
     ownerRejected?: IntFilter<"FieldHarvest"> | number
     ownerRejectionRate?: DecimalFilter<"FieldHarvest"> | Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: IntFilter<"FieldHarvest"> | number
+    classifiedTotal?: IntFilter<"FieldHarvest"> | number
+    isPartialClassification?: BoolFilter<"FieldHarvest"> | boolean
+    notes?: StringNullableFilter<"FieldHarvest"> | string | null
     slug?: StringFilter<"FieldHarvest"> | string
     createdAt?: DateTimeFilter<"FieldHarvest"> | Date | string
     updatedAt?: DateTimeFilter<"FieldHarvest"> | Date | string
@@ -34140,9 +34318,14 @@ export namespace Prisma {
     totalHarvested?: number
     totalRejected?: number
     rejectionRate?: Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: number
     ownerHarvested?: number
     ownerRejected?: number
     ownerRejectionRate?: Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: number
+    classifiedTotal?: number
+    isPartialClassification?: boolean
+    notes?: string | null
     slug: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -34161,9 +34344,14 @@ export namespace Prisma {
     totalHarvested?: number
     totalRejected?: number
     rejectionRate?: Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: number
     ownerHarvested?: number
     ownerRejected?: number
     ownerRejectionRate?: Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: number
+    classifiedTotal?: number
+    isPartialClassification?: boolean
+    notes?: string | null
     slug: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -34832,9 +35020,14 @@ export namespace Prisma {
     totalHarvested?: number
     totalRejected?: number
     rejectionRate?: Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: number
     ownerHarvested?: number
     ownerRejected?: number
     ownerRejectionRate?: Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: number
+    classifiedTotal?: number
+    isPartialClassification?: boolean
+    notes?: string | null
     slug: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -34853,9 +35046,14 @@ export namespace Prisma {
     totalHarvested?: number
     totalRejected?: number
     rejectionRate?: Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: number
     ownerHarvested?: number
     ownerRejected?: number
     ownerRejectionRate?: Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: number
+    classifiedTotal?: number
+    isPartialClassification?: boolean
+    notes?: string | null
     slug: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -37240,9 +37438,14 @@ export namespace Prisma {
     totalHarvested?: number
     totalRejected?: number
     rejectionRate?: Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: number
     ownerHarvested?: number
     ownerRejected?: number
     ownerRejectionRate?: Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: number
+    classifiedTotal?: number
+    isPartialClassification?: boolean
+    notes?: string | null
     slug: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -37262,9 +37465,14 @@ export namespace Prisma {
     totalHarvested?: number
     totalRejected?: number
     rejectionRate?: Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: number
     ownerHarvested?: number
     ownerRejected?: number
     ownerRejectionRate?: Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: number
+    classifiedTotal?: number
+    isPartialClassification?: boolean
+    notes?: string | null
     slug: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -37509,9 +37717,14 @@ export namespace Prisma {
     totalHarvested?: IntFieldUpdateOperationsInput | number
     totalRejected?: IntFieldUpdateOperationsInput | number
     rejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: IntFieldUpdateOperationsInput | number
     ownerHarvested?: IntFieldUpdateOperationsInput | number
     ownerRejected?: IntFieldUpdateOperationsInput | number
     ownerRejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: IntFieldUpdateOperationsInput | number
+    classifiedTotal?: IntFieldUpdateOperationsInput | number
+    isPartialClassification?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -37531,9 +37744,14 @@ export namespace Prisma {
     totalHarvested?: IntFieldUpdateOperationsInput | number
     totalRejected?: IntFieldUpdateOperationsInput | number
     rejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: IntFieldUpdateOperationsInput | number
     ownerHarvested?: IntFieldUpdateOperationsInput | number
     ownerRejected?: IntFieldUpdateOperationsInput | number
     ownerRejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: IntFieldUpdateOperationsInput | number
+    classifiedTotal?: IntFieldUpdateOperationsInput | number
+    isPartialClassification?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -40061,9 +40279,14 @@ export namespace Prisma {
     totalHarvested?: number
     totalRejected?: number
     rejectionRate?: Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: number
     ownerHarvested?: number
     ownerRejected?: number
     ownerRejectionRate?: Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: number
+    classifiedTotal?: number
+    isPartialClassification?: boolean
+    notes?: string | null
     slug: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -40076,9 +40299,14 @@ export namespace Prisma {
     totalHarvested?: IntFieldUpdateOperationsInput | number
     totalRejected?: IntFieldUpdateOperationsInput | number
     rejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: IntFieldUpdateOperationsInput | number
     ownerHarvested?: IntFieldUpdateOperationsInput | number
     ownerRejected?: IntFieldUpdateOperationsInput | number
     ownerRejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: IntFieldUpdateOperationsInput | number
+    classifiedTotal?: IntFieldUpdateOperationsInput | number
+    isPartialClassification?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -40097,9 +40325,14 @@ export namespace Prisma {
     totalHarvested?: IntFieldUpdateOperationsInput | number
     totalRejected?: IntFieldUpdateOperationsInput | number
     rejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: IntFieldUpdateOperationsInput | number
     ownerHarvested?: IntFieldUpdateOperationsInput | number
     ownerRejected?: IntFieldUpdateOperationsInput | number
     ownerRejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: IntFieldUpdateOperationsInput | number
+    classifiedTotal?: IntFieldUpdateOperationsInput | number
+    isPartialClassification?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -40116,9 +40349,14 @@ export namespace Prisma {
     totalHarvested?: IntFieldUpdateOperationsInput | number
     totalRejected?: IntFieldUpdateOperationsInput | number
     rejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: IntFieldUpdateOperationsInput | number
     ownerHarvested?: IntFieldUpdateOperationsInput | number
     ownerRejected?: IntFieldUpdateOperationsInput | number
     ownerRejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: IntFieldUpdateOperationsInput | number
+    classifiedTotal?: IntFieldUpdateOperationsInput | number
+    isPartialClassification?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -40170,9 +40408,14 @@ export namespace Prisma {
     totalHarvested?: number
     totalRejected?: number
     rejectionRate?: Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: number
     ownerHarvested?: number
     ownerRejected?: number
     ownerRejectionRate?: Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: number
+    classifiedTotal?: number
+    isPartialClassification?: boolean
+    notes?: string | null
     slug: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -40414,9 +40657,14 @@ export namespace Prisma {
     totalHarvested?: IntFieldUpdateOperationsInput | number
     totalRejected?: IntFieldUpdateOperationsInput | number
     rejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: IntFieldUpdateOperationsInput | number
     ownerHarvested?: IntFieldUpdateOperationsInput | number
     ownerRejected?: IntFieldUpdateOperationsInput | number
     ownerRejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: IntFieldUpdateOperationsInput | number
+    classifiedTotal?: IntFieldUpdateOperationsInput | number
+    isPartialClassification?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -40435,9 +40683,14 @@ export namespace Prisma {
     totalHarvested?: IntFieldUpdateOperationsInput | number
     totalRejected?: IntFieldUpdateOperationsInput | number
     rejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: IntFieldUpdateOperationsInput | number
     ownerHarvested?: IntFieldUpdateOperationsInput | number
     ownerRejected?: IntFieldUpdateOperationsInput | number
     ownerRejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: IntFieldUpdateOperationsInput | number
+    classifiedTotal?: IntFieldUpdateOperationsInput | number
+    isPartialClassification?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -40454,9 +40707,14 @@ export namespace Prisma {
     totalHarvested?: IntFieldUpdateOperationsInput | number
     totalRejected?: IntFieldUpdateOperationsInput | number
     rejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: IntFieldUpdateOperationsInput | number
     ownerHarvested?: IntFieldUpdateOperationsInput | number
     ownerRejected?: IntFieldUpdateOperationsInput | number
     ownerRejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: IntFieldUpdateOperationsInput | number
+    classifiedTotal?: IntFieldUpdateOperationsInput | number
+    isPartialClassification?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -40804,9 +41062,14 @@ export namespace Prisma {
     totalHarvested?: number
     totalRejected?: number
     rejectionRate?: Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: number
     ownerHarvested?: number
     ownerRejected?: number
     ownerRejectionRate?: Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: number
+    classifiedTotal?: number
+    isPartialClassification?: boolean
+    notes?: string | null
     slug: string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -40941,9 +41204,14 @@ export namespace Prisma {
     totalHarvested?: IntFieldUpdateOperationsInput | number
     totalRejected?: IntFieldUpdateOperationsInput | number
     rejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: IntFieldUpdateOperationsInput | number
     ownerHarvested?: IntFieldUpdateOperationsInput | number
     ownerRejected?: IntFieldUpdateOperationsInput | number
     ownerRejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: IntFieldUpdateOperationsInput | number
+    classifiedTotal?: IntFieldUpdateOperationsInput | number
+    isPartialClassification?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -40962,9 +41230,14 @@ export namespace Prisma {
     totalHarvested?: IntFieldUpdateOperationsInput | number
     totalRejected?: IntFieldUpdateOperationsInput | number
     rejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: IntFieldUpdateOperationsInput | number
     ownerHarvested?: IntFieldUpdateOperationsInput | number
     ownerRejected?: IntFieldUpdateOperationsInput | number
     ownerRejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: IntFieldUpdateOperationsInput | number
+    classifiedTotal?: IntFieldUpdateOperationsInput | number
+    isPartialClassification?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -40981,9 +41254,14 @@ export namespace Prisma {
     totalHarvested?: IntFieldUpdateOperationsInput | number
     totalRejected?: IntFieldUpdateOperationsInput | number
     rejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    totalAfterRejected?: IntFieldUpdateOperationsInput | number
     ownerHarvested?: IntFieldUpdateOperationsInput | number
     ownerRejected?: IntFieldUpdateOperationsInput | number
     ownerRejectionRate?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    ownerAfterRejected?: IntFieldUpdateOperationsInput | number
+    classifiedTotal?: IntFieldUpdateOperationsInput | number
+    isPartialClassification?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

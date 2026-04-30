@@ -72,18 +72,7 @@ export class HarvestBulkService {
         throw new NotFoundException(`Harvest ${harvestId} not found`);
       }
 
-      // Update harvest quantities if quantity changed
       const newQuantity = updateDto.quantity ?? oldClassification.quantity;
-      const oldQuantity = oldClassification.quantity;
-      if (newQuantity !== oldQuantity) {
-        const diff = newQuantity - oldQuantity;
-        await tx.fieldHarvest.update({
-          where: { id: harvestId },
-          data: {
-            totalHarvested: Math.max(0, harvest.totalHarvested + diff),
-          },
-        });
-      }
 
       // Update classification with new values
       const updatedClassification = await tx.classification.update({
@@ -123,7 +112,50 @@ export class HarvestBulkService {
         updatedById: harvest.updatedById,
       });
 
+      await this.syncHarvestClassificationProgress(tx, harvestId);
+
       return updatedClassification;
+    });
+  }
+
+  private async syncHarvestClassificationProgress(tx: any, harvestId: number) {
+    const harvest = await tx.fieldHarvest.findUnique({
+      where: { id: harvestId },
+      select: {
+        id: true,
+        totalHarvested: true,
+        totalRejected: true,
+        isPartialClassification: true,
+      },
+    });
+
+    if (!harvest) {
+      throw new NotFoundException(`Harvest ${harvestId} not found`);
+    }
+
+    const classifiedAgg = await tx.classification.aggregate({
+      _sum: { quantity: true },
+      where: { fieldHarvestId: harvestId, isDeleted: false },
+    });
+
+    const classifiedTotal = classifiedAgg._sum.quantity ?? 0;
+    const totalAfterRejected = Math.max(harvest.totalHarvested - harvest.totalRejected, 0);
+
+    if (classifiedTotal > totalAfterRejected) {
+      throw new BadRequestException(
+        `Total classifications quantity (${classifiedTotal}) cannot exceed net harvested quantity (${totalAfterRejected})`,
+      );
+    }
+
+    if (!harvest.isPartialClassification && classifiedTotal !== totalAfterRejected) {
+      throw new BadRequestException(
+        `Total classifications quantity (${classifiedTotal}) must equal net harvested quantity (${totalAfterRejected}) when partial classification is disabled`,
+      );
+    }
+
+    await tx.fieldHarvest.update({
+      where: { id: harvestId },
+      data: { classifiedTotal },
     });
   }
 
@@ -150,7 +182,19 @@ export class HarvestBulkService {
         throw new ConflictException('A report for this field and date already exists');
       }
 
-      const rates = this.calculateRates(bulkDto);
+      const classifiedTotal = bulkDto.classifications.reduce(
+        (sum, item) => sum + (item.quantity || 0),
+        0,
+      );
+
+      const rates = this.calculateHarvestFields({
+        totalHarvested: bulkDto.totalHarvested,
+        totalRejected: bulkDto.totalRejected,
+        ownerHarvested: bulkDto.ownerHarvested,
+        ownerRejected: bulkDto.ownerRejected,
+        classifiedTotal,
+        isPartialClassification: bulkDto.isPartialClassification,
+      });
 
       const harvest = await tx.fieldHarvest.create({
         data: {
@@ -163,6 +207,7 @@ export class HarvestBulkService {
           totalRejected: bulkDto.totalRejected || 0,
           ownerHarvested: bulkDto.ownerHarvested || 0,
           ownerRejected: bulkDto.ownerRejected || 0,
+          notes: bulkDto.notes,
           slug,
           ...rates,
         },
@@ -209,27 +254,55 @@ export class HarvestBulkService {
       throw new BadRequestException('totalHarvested is required for bulk classifications validation');
     }
 
+    const totalRejected = data.totalRejected || 0;
+    const netHarvested = Math.max((data.totalHarvested || 0) - totalRejected, 0);
     const classificationsTotal = data.classifications.reduce(
       (sum, item) => sum + (item.quantity || 0),
       0,
     );
 
-    if (classificationsTotal !== data.totalHarvested) {
+    if (classificationsTotal > netHarvested) {
       throw new BadRequestException(
-        `Total classifications quantity (${classificationsTotal}) must equal totalHarvested (${data.totalHarvested})`,
+        `Total classifications quantity (${classificationsTotal}) cannot exceed net harvested quantity (${netHarvested})`,
+      );
+    }
+
+    if (data.isPartialClassification) {
+      return;
+    }
+
+    if (classificationsTotal !== netHarvested) {
+      throw new BadRequestException(
+        `Total classifications quantity (${classificationsTotal}) must equal net harvested quantity (${netHarvested})`,
       );
     }
   }
 
-  private calculateRates(data: any) {
+  private calculateHarvestFields(data: {
+    totalHarvested?: number;
+    totalRejected?: number;
+    ownerHarvested?: number;
+    ownerRejected?: number;
+    classifiedTotal?: number;
+    isPartialClassification?: boolean;
+  }) {
     const totalHarvested = data.totalHarvested || 0;
     const totalRejected = data.totalRejected || 0;
     const ownerHarvested = data.ownerHarvested || 0;
     const ownerRejected = data.ownerRejected || 0;
+    const totalAfterRejected = Math.max(totalHarvested - totalRejected, 0);
+    const ownerAfterRejected = Math.max(ownerHarvested - ownerRejected, 0);
+    const classifiedTotal = data.classifiedTotal || 0;
+    const isPartialClassification =
+      data.isPartialClassification ?? classifiedTotal < totalAfterRejected;
 
     return {
       rejectionRate: totalHarvested > 0 ? (totalRejected / totalHarvested) * 100 : 0,
       ownerRejectionRate: ownerHarvested > 0 ? (ownerRejected / ownerHarvested) * 100 : 0,
+      totalAfterRejected,
+      ownerAfterRejected,
+      classifiedTotal,
+      isPartialClassification,
     };
   }
 

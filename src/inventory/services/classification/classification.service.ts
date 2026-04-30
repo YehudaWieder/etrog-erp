@@ -64,6 +64,8 @@ export class ClassificationService {
         updatedById: Number(data.updatedById),
       });
 
+      await this.syncHarvestClassificationProgress(tx, harvest.id);
+
       return classification;
     });
   }
@@ -99,9 +101,24 @@ export class ClassificationService {
   }
 
   async update(id: number, data: Prisma.ClassificationUncheckedUpdateInput) {
-    return this.prisma.classification.update({
-      where: { id },
-      data,
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.classification.findUnique({
+        where: { id },
+        select: { id: true, fieldHarvestId: true },
+      });
+
+      if (!existing) {
+        throw new NotFoundException(`Classification #${id} not found`);
+      }
+
+      const updated = await tx.classification.update({
+        where: { id },
+        data,
+      });
+
+      await this.syncHarvestClassificationProgress(tx, existing.fieldHarvestId);
+
+      return updated;
     });
   }
 
@@ -109,15 +126,7 @@ export class ClassificationService {
   async remove(id: number) {
     const classification = await this.prisma.classification.findFirst({
       where: { id },
-      include: {
-        fieldHarvest: {
-          select: {
-            id: true,
-            totalHarvested: true,
-            totalRejected: true,
-          },
-        },
-      },
+      select: { id: true, fieldHarvestId: true },
     });
 
     if (!classification) {
@@ -134,25 +143,54 @@ export class ClassificationService {
         where: { MovementReferenceId: id },
       });
 
-      const nextTotalHarvested = Math.max(
-        0,
-        (classification.fieldHarvest?.totalHarvested ?? 0) - classification.quantity,
-      );
-
-      await tx.fieldHarvest.update({
-        where: { id: classification.fieldHarvestId },
-        data: {
-          totalHarvested: nextTotalHarvested,
-          rejectionRate:
-            nextTotalHarvested > 0
-              ? ((classification.fieldHarvest?.totalRejected ?? 0) / nextTotalHarvested) * 100
-              : 0,
-        },
-      });
-
-      return tx.classification.delete({
+      const deleted = await tx.classification.delete({
         where: { id },
       });
+
+      await this.syncHarvestClassificationProgress(tx, classification.fieldHarvestId);
+
+      return deleted;
+    });
+  }
+
+  private async syncHarvestClassificationProgress(tx: any, fieldHarvestId: number) {
+    const harvest = await tx.fieldHarvest.findUnique({
+      where: { id: fieldHarvestId },
+      select: {
+        id: true,
+        totalHarvested: true,
+        totalRejected: true,
+        isPartialClassification: true,
+      },
+    });
+
+    if (!harvest) {
+      throw new NotFoundException(`Harvest report #${fieldHarvestId} not found`);
+    }
+
+    const aggregate = await tx.classification.aggregate({
+      _sum: { quantity: true },
+      where: { fieldHarvestId, isDeleted: false },
+    });
+
+    const classifiedTotal = aggregate._sum.quantity ?? 0;
+    const totalAfterRejected = Math.max(harvest.totalHarvested - harvest.totalRejected, 0);
+
+    if (classifiedTotal > totalAfterRejected) {
+      throw new ConflictException(
+        `Total classifications quantity (${classifiedTotal}) cannot exceed net harvested quantity (${totalAfterRejected})`,
+      );
+    }
+
+    if (!harvest.isPartialClassification && classifiedTotal !== totalAfterRejected) {
+      throw new ConflictException(
+        `Total classifications quantity (${classifiedTotal}) must equal net harvested quantity (${totalAfterRejected}) when partial classification is disabled`,
+      );
+    }
+
+    await tx.fieldHarvest.update({
+      where: { id: fieldHarvestId },
+      data: { classifiedTotal },
     });
   }
 }

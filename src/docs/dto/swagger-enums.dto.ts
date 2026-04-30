@@ -438,6 +438,12 @@ export class HarvestBulkCreateDto {
   @ApiPropertyOptional({ description: 'Additional notes', example: 'Morning harvest' })
   notes?: string;
 
+  @ApiPropertyOptional({
+    description: 'Whether classification is partial (if true, classifications total can be less than net harvested)',
+    example: true,
+  })
+  isPartialClassification?: boolean;
+
   @ApiProperty({
     type: [ClassificationBulkItemDto],
     description: 'At least one classification record. No duplicate combinations allowed (same assignmentType+trader/customer+category, ignoring quantity).',

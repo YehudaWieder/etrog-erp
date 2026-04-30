@@ -235,9 +235,18 @@ model FieldHarvest {
   totalRejected  Int     @default(0)
   rejectionRate  Decimal @default(0)
 
+  totalAfterRejected Int @default(0)
+
   ownerHarvested     Int     @default(0)
   ownerRejected      Int     @default(0)
   ownerRejectionRate Decimal @default(0)
+
+  ownerAfterRejected Int @default(0)
+
+  classifiedTotal         Int     @default(0)
+  isPartialClassification Boolean @default(false)
+
+  notes String?
 
   slug String @unique // URL-friendly ID (date-field-season)
 
