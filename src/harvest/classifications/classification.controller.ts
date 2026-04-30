@@ -1,8 +1,15 @@
-// src/inventory/controllers/classification/classification.controller.ts
-
 import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam } from '@nestjs/swagger';
-import { ClassificationService } from '../../services/classification/classification.service';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiQuery,
+  ApiParam,
+} from '@nestjs/swagger';
+import { ClassificationService } from './classification.service';
 
 @ApiTags('Operations')
 @ApiBearerAuth('access-token')
@@ -29,5 +36,4 @@ export class ClassificationController {
   findAll(@Query('seasonId', ParseIntPipe) seasonId: number) {
     return this.classificationService.findAllBySeason(seasonId);
   }
-
 }

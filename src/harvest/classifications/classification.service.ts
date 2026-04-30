@@ -1,7 +1,5 @@
-// src/inventory/services/classification/classification.service.ts
-
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../../../prisma/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
