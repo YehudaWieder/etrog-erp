@@ -120,8 +120,7 @@ export class HarvestService {
       where: { id },
       select: {
         id: true,
-        totalHarvested: true,
-        totalRejected: true,
+        totalAfterRejected: true,
         classifiedTotal: true,
       },
     });
@@ -130,7 +129,7 @@ export class HarvestService {
       throw new NotFoundException(`Harvest report #${id} not found`);
     }
 
-    const netHarvested = Math.max(harvest.totalHarvested - harvest.totalRejected, 0);
+    const netHarvested = harvest.totalAfterRejected;
 
     if (!isPartialClassification && harvest.classifiedTotal !== netHarvested) {
       throw new BadRequestException(

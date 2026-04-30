@@ -245,8 +245,7 @@ export class HarvestBulkService {
       where: { id: harvestId },
       select: {
         id: true,
-        totalHarvested: true,
-        totalRejected: true,
+        totalAfterRejected: true,
         isPartialClassification: true,
       },
     });
@@ -261,7 +260,7 @@ export class HarvestBulkService {
     });
 
     const classifiedTotal = classifiedAgg._sum.quantity ?? 0;
-    const totalAfterRejected = Math.max(harvest.totalHarvested - harvest.totalRejected, 0);
+    const totalAfterRejected = harvest.totalAfterRejected;
 
     if (classifiedTotal > totalAfterRejected) {
       throw new BadRequestException(
