@@ -73,7 +73,11 @@ export class ClassificationSwaggerDto {
   @ApiProperty({ description: 'User ID who updated the record.' })
   updatedById!: number;
 
-  @ApiProperty({ enum: AssignmentType, enumName: 'AssignmentType', description: 'Classification assignment type.' })
+  @ApiProperty({
+    enum: AssignmentType,
+    enumName: 'AssignmentType',
+    description: 'Ownership target of the classification: GENERAL distributes by trader shares, TRADER belongs to one trader, CUSTOMER belongs to one customer.',
+  })
   assignmentType!: AssignmentType;
 
   @ApiPropertyOptional({ description: 'Trader ID when assignmentType is TRADER.' })
@@ -82,7 +86,7 @@ export class ClassificationSwaggerDto {
   @ApiPropertyOptional({ description: 'Customer ID when assignmentType is CUSTOMER.' })
   customerId?: number;
 
-  @ApiPropertyOptional({ description: 'Trader category ID.' })
+  @ApiPropertyOptional({ description: 'Trader category ID. Required for GENERAL and TRADER inventory classifications.' })
   traderCategoryId?: number;
 
   @ApiPropertyOptional({ description: 'Customer category ID.' })
@@ -353,7 +357,11 @@ export class SystemConfigUpdateSwaggerDto {
 
 // Bulk Harvest Form DTOs
 export class ClassificationBulkItemDto {
-  @ApiProperty({ enum: AssignmentType, enumName: 'AssignmentType' })
+  @ApiProperty({
+    enum: AssignmentType,
+    enumName: 'AssignmentType',
+    description: 'Ownership target of the classification: GENERAL distributes by trader shares, TRADER belongs to one trader, CUSTOMER belongs to one customer.',
+  })
   assignmentType!: AssignmentType;
 
   @ApiPropertyOptional({ description: 'Trader ID if assignmentType is TRADER' })
@@ -362,7 +370,7 @@ export class ClassificationBulkItemDto {
   @ApiPropertyOptional({ description: 'Customer ID if assignmentType is CUSTOMER' })
   customerId?: number;
 
-  @ApiPropertyOptional({ description: 'Trader category ID' })
+  @ApiPropertyOptional({ description: 'Trader category ID. Required for GENERAL and TRADER inventory classifications' })
   traderCategoryId?: number;
 
   @ApiPropertyOptional({ description: 'Customer category ID' })

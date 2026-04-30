@@ -627,12 +627,41 @@ export class HarvestBulkService {
         },
       });
     } else if (classItem.assignmentType === AssignmentType.TRADER) {
+      if (!classItem.traderId) {
+        throw new BadRequestException('traderId is required for TRADER classifications');
+      }
+
       if (!classItem.traderCategoryId) {
         throw new BadRequestException('traderCategoryId is required for TRADER classifications');
       }
 
       if (!classItem.grade) {
         throw new BadRequestException('grade is required for TRADER classifications');
+      }
+
+      await tx.traderStock.create({
+        data: {
+          seasonId: params.seasonId,
+          date: params.harvestDate,
+          traderId: classItem.traderId,
+          traderCategoryId: classItem.traderCategoryId,
+          grade: classItem.grade,
+          pitamStatus: classItem.pitamStatus,
+          quantity: classItem.quantity,
+          isModulo: false,
+          type: 'HARVEST_IN',
+          MovementReferenceId: params.classificationId,
+          updatedById: params.updatedById,
+          notes: classItem.notes,
+        },
+      });
+    } else if (classItem.assignmentType === AssignmentType.GENERAL) {
+      if (!classItem.traderCategoryId) {
+        throw new BadRequestException('traderCategoryId is required for GENERAL classifications');
+      }
+
+      if (!classItem.grade) {
+        throw new BadRequestException('grade is required for GENERAL classifications');
       }
 
       // Get all traders for this category
@@ -727,6 +756,10 @@ export class HarvestBulkService {
           movementReferenceId: params.classificationId,
         });
       }
+    } else {
+      throw new BadRequestException(
+        `Unsupported assignmentType for allocation processing: ${classItem.assignmentType}`,
+      );
     }
   }
 
