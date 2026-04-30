@@ -8,10 +8,9 @@ import { ClassificationController } from './controllers/classification/classific
 import { TraderStockController } from './controllers/trader-stock/trader-stock.controller';
 import { CustomerAllocationController } from './controllers/customer-allocation/customer-allocation.controller';
 import { SeasonsModule } from 'src/seasons/seasons.module';
-import { HarvestModule } from 'src/harvest/harvest.module';
 
 @Module({
-  imports: [SeasonsModule, HarvestModule],
+  imports: [SeasonsModule],
   controllers: [InventoryController, ClassificationController, TraderStockController, CustomerAllocationController],
   providers: [InventoryService, ClassificationService, TraderStockService, CustomerAllocationService]
 })

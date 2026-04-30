@@ -410,6 +410,48 @@ export class UpdateClassificationDto {
   notes?: string;
 }
 
+export class ClassificationMutationMetaDto {
+  @ApiProperty({
+    enum: ['PARTIAL', 'FINAL'],
+    description: 'Validation mode for harvest-classification consistency. PARTIAL allows gap, FINAL requires full match.',
+    example: 'PARTIAL',
+  })
+  validationMode!: 'PARTIAL' | 'FINAL';
+}
+
+export class CreateHarvestClassificationDto extends ClassificationBulkItemDto {
+  @ApiProperty({ description: 'User ID performing the action', example: 1 })
+  updatedById!: number;
+
+  @ApiProperty({
+    enum: ['PARTIAL', 'FINAL'],
+    description: 'Validation mode for harvest-classification consistency after create.',
+    example: 'PARTIAL',
+  })
+  validationMode!: 'PARTIAL' | 'FINAL';
+}
+
+export class UpdateHarvestClassificationDto extends UpdateClassificationDto {
+  @ApiProperty({ description: 'User ID performing the action', example: 1 })
+  updatedById!: number;
+
+  @ApiProperty({
+    enum: ['PARTIAL', 'FINAL'],
+    description: 'Validation mode for harvest-classification consistency after update.',
+    example: 'FINAL',
+  })
+  validationMode!: 'PARTIAL' | 'FINAL';
+}
+
+export class DeleteHarvestClassificationDto {
+  @ApiProperty({
+    enum: ['PARTIAL', 'FINAL'],
+    description: 'Validation mode for harvest-classification consistency after delete.',
+    example: 'PARTIAL',
+  })
+  validationMode!: 'PARTIAL' | 'FINAL';
+}
+
 export class HarvestBulkCreateDto {
   @ApiProperty({ description: 'Gregorian date of harvest', format: 'date-time', example: '2026-10-05T06:00:00.000Z' })
   dateGregorian!: string;

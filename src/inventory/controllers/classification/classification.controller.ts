@@ -1,10 +1,8 @@
 // src/inventory/controllers/classification/classification.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
+import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { ClassificationService } from '../../services/classification/classification.service';
-import { Prisma } from '@prisma/client';
-import { ClassificationSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Operations')
 @ApiBearerAuth('access-token')
@@ -13,34 +11,6 @@ import { ClassificationSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 @Controller('classifications')
 export class ClassificationController {
   constructor(private readonly classificationService: ClassificationService) {}
-
-  @Post()
-  @ApiOperation({ summary: 'Create a new grading classification record for a harvest. Unique constraint: [fieldHarvestId, traderCategoryId, customerCategoryId, grade, assignmentType].' })
-  @ApiBody({
-    type: ClassificationSwaggerDto,
-    examples: {
-      sample: {
-        summary: 'Sample classification create payload',
-        value: {
-          seasonId: 1,
-          fieldHarvestId: 10,
-          updatedById: 1,
-          assignmentType: 'TRADER',
-          traderId: 3,
-          traderCategoryId: 2,
-          grade: 'א',
-          pitamStatus: 'WITH_PITAM',
-          quantity: 120,
-          notes: 'First sorting batch',
-        },
-      },
-    },
-  })
-  @ApiResponse({ status: 201, description: 'Classification record created successfully.' })
-  @ApiResponse({ status: 400, description: 'Invalid input or duplicate classification for this harvest.' })
-  create(@Body() data: Prisma.ClassificationUncheckedCreateInput) {
-    return this.classificationService.create(data);
-  }
 
   @Get('harvest/:harvestId')
   @ApiOperation({ summary: 'Retrieve all classification records for a specific field harvest' })
@@ -60,37 +30,4 @@ export class ClassificationController {
     return this.classificationService.findAllBySeason(seasonId);
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update an existing classification record by ID' })
-  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the classification to update.' })
-  @ApiBody({
-    type: ClassificationSwaggerDto,
-    examples: {
-      sample: {
-        summary: 'Sample classification update payload',
-        value: {
-          quantity: 140,
-          notes: 'Adjusted after recount',
-        },
-      },
-    },
-  })
-  @ApiResponse({ status: 200, description: 'Classification updated successfully.' })
-  @ApiResponse({ status: 400, description: 'Invalid update data.' })
-  @ApiResponse({ status: 404, description: 'Classification not found.' })
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateData: Prisma.ClassificationUncheckedUpdateInput,
-  ) {
-    return this.classificationService.update(id, updateData);
-  }
-
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete a classification and rollback related movements and harvest quantity' })
-  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the classification to delete.' })
-  @ApiResponse({ status: 200, description: 'Classification deleted successfully and linked allocations/stocks were rolled back.' })
-  @ApiResponse({ status: 404, description: 'Classification not found.' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.classificationService.remove(id);
-  }
 }

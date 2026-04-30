@@ -5,7 +5,12 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedRespo
 import { HarvestService } from './harvest.service';
 import { HarvestBulkService } from './harvest-bulk.service';
 import { Prisma } from '@prisma/client';
-import { HarvestBulkCreateDto, UpdateClassificationDto } from 'src/docs/dto/swagger-enums.dto';
+import {
+  HarvestBulkCreateDto,
+  CreateHarvestClassificationDto,
+  UpdateHarvestClassificationDto,
+  DeleteHarvestClassificationDto,
+} from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Operations')
 @ApiBearerAuth('access-token')
@@ -126,19 +131,53 @@ export class HarvestController {
     return this.harvestBulkService.createHarvestWithClassifications(bulkDto);
   }
 
+  @Post(':harvestId/classifications')
+  @ApiOperation({ summary: 'Create a classification through harvest workflow with explicit PARTIAL/FINAL validation mode' })
+  @ApiParam({ name: 'harvestId', type: Number, description: 'The numeric ID of the harvest record.' })
+  @ApiBody({ type: CreateHarvestClassificationDto })
+  @ApiResponse({ status: 201, description: 'Classification created and allocations processed successfully.' })
+  @ApiResponse({ status: 400, description: 'Validation error for classification consistency or allocation data.' })
+  @ApiResponse({ status: 404, description: 'Harvest not found.' })
+  async createClassification(
+    @Param('harvestId', ParseIntPipe) harvestId: number,
+    @Body() createDto: CreateHarvestClassificationDto,
+  ) {
+    return this.harvestBulkService.createClassification(harvestId, createDto);
+  }
+
   @Patch(':harvestId/classifications/:classificationId')
-  @ApiOperation({ summary: 'Update a classification with automatic movement reprocessing' })
+  @ApiOperation({ summary: 'Update a classification through harvest workflow with explicit PARTIAL/FINAL validation mode' })
   @ApiParam({ name: 'harvestId', type: Number, description: 'The numeric ID of the harvest record.' })
   @ApiParam({ name: 'classificationId', type: Number, description: 'The numeric ID of the classification to update.' })
-  @ApiBody({ type: UpdateClassificationDto })
-  @ApiResponse({ status: 200, description: 'Classification updated successfully. If only notes changed: simple update. Otherwise: full reprocessing with movement reversal.' })
+  @ApiBody({ type: UpdateHarvestClassificationDto })
+  @ApiResponse({ status: 200, description: 'Classification updated successfully with movement reprocessing when required.' })
   @ApiResponse({ status: 400, description: 'Validation error or invalid update data.' })
   @ApiResponse({ status: 404, description: 'Classification or harvest not found.' })
   async updateClassification(
     @Param('harvestId', ParseIntPipe) harvestId: number,
     @Param('classificationId', ParseIntPipe) classificationId: number,
-    @Body() updateDto: UpdateClassificationDto,
+    @Body() updateDto: UpdateHarvestClassificationDto,
   ) {
     return this.harvestBulkService.updateClassification(harvestId, classificationId, updateDto);
+  }
+
+  @Delete(':harvestId/classifications/:classificationId')
+  @ApiOperation({ summary: 'Delete a classification through harvest workflow with explicit PARTIAL/FINAL validation mode' })
+  @ApiParam({ name: 'harvestId', type: Number, description: 'The numeric ID of the harvest record.' })
+  @ApiParam({ name: 'classificationId', type: Number, description: 'The numeric ID of the classification to delete.' })
+  @ApiBody({ type: DeleteHarvestClassificationDto })
+  @ApiResponse({ status: 200, description: 'Classification deleted and movements rolled back successfully.' })
+  @ApiResponse({ status: 400, description: 'Validation error for FINAL mode or invalid classification linkage.' })
+  @ApiResponse({ status: 404, description: 'Classification or harvest not found.' })
+  async deleteClassification(
+    @Param('harvestId', ParseIntPipe) harvestId: number,
+    @Param('classificationId', ParseIntPipe) classificationId: number,
+    @Body() body: DeleteHarvestClassificationDto,
+  ) {
+    return this.harvestBulkService.deleteClassification(
+      harvestId,
+      classificationId,
+      body.validationMode,
+    );
   }
 }
