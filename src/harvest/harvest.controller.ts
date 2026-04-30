@@ -10,6 +10,7 @@ import {
   CreateHarvestClassificationDto,
   UpdateHarvestClassificationDto,
   DeleteHarvestClassificationDto,
+  UpdateHarvestPartialClassificationDto,
 } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Operations')
@@ -110,6 +111,20 @@ export class HarvestController {
     @Body() updateData: Prisma.FieldHarvestUncheckedUpdateInput,
   ) {
     return this.harvestService.update(id, updateData);
+  }
+
+  @Patch(':id/partial-classification')
+  @ApiOperation({ summary: 'Update harvest partial/final classification mode with immediate classifiedTotal validation' })
+  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the harvest record.' })
+  @ApiBody({ type: UpdateHarvestPartialClassificationDto })
+  @ApiResponse({ status: 200, description: 'Harvest classification mode updated successfully.' })
+  @ApiResponse({ status: 400, description: 'Cannot switch to FINAL mode while classifiedTotal does not match net harvested.' })
+  @ApiResponse({ status: 404, description: 'Harvest record not found.' })
+  updatePartialClassificationMode(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateHarvestPartialClassificationDto,
+  ) {
+    return this.harvestService.updatePartialClassificationMode(id, body.isPartialClassification);
   }
 
   @Delete(':id')

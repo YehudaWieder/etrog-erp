@@ -452,6 +452,14 @@ export class DeleteHarvestClassificationDto {
   validationMode!: 'PARTIAL' | 'FINAL';
 }
 
+export class UpdateHarvestPartialClassificationDto {
+  @ApiProperty({
+    description: 'Whether this harvest is currently in partial classification mode.',
+    example: true,
+  })
+  isPartialClassification!: boolean;
+}
+
 export class HarvestBulkCreateDto {
   @ApiProperty({ description: 'Gregorian date of harvest', format: 'date-time', example: '2026-10-05T06:00:00.000Z' })
   dateGregorian!: string;

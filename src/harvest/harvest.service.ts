@@ -1,6 +1,6 @@
 // src/harvest/harvest.service.ts
 
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
@@ -110,6 +110,38 @@ export class HarvestService {
       data: {
         ...data,
         ...rates,
+      },
+    });
+  }
+
+  // Update partial/final classification mode with immediate consistency validation
+  async updatePartialClassificationMode(id: number, isPartialClassification: boolean) {
+    const harvest = await this.prisma.fieldHarvest.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        totalHarvested: true,
+        totalRejected: true,
+        classifiedTotal: true,
+      },
+    });
+
+    if (!harvest) {
+      throw new NotFoundException(`Harvest report #${id} not found`);
+    }
+
+    const netHarvested = Math.max(harvest.totalHarvested - harvest.totalRejected, 0);
+
+    if (!isPartialClassification && harvest.classifiedTotal !== netHarvested) {
+      throw new BadRequestException(
+        `Cannot switch to FINAL classification mode. classifiedTotal (${harvest.classifiedTotal}) must equal net harvested (${netHarvested}).`,
+      );
+    }
+
+    return this.prisma.fieldHarvest.update({
+      where: { id },
+      data: {
+        isPartialClassification,
       },
     });
   }
