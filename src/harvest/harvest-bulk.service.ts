@@ -4,6 +4,7 @@ import { Injectable, BadRequestException, ConflictException, NotFoundException }
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, AssignmentType, Classification } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
+import { calculateHarvestFields } from './harvest.utils';
 import {
   HarvestBulkCreateDto,
   ClassificationBulkItemDto,
@@ -12,7 +13,6 @@ import {
   DeleteHarvestClassificationDto,
   HarvestInlineUpdateDto,
 } from 'src/docs/dto/swagger-enums.dto';
-import { calculateHarvestFields } from './harvest.utils';
 
 @Injectable()
 export class HarvestBulkService {
