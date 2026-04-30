@@ -1,8 +1,8 @@
 // src/inventory/services/customer-allocation/customer-allocation.service.ts
 
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, MovementType } from 'src/generated/prisma';
 import { SeasonsService } from 'src/seasons/seasons.service';
 
 @Injectable()
@@ -84,10 +84,112 @@ export class CustomerAllocationService {
     });
   }
 
+  async createAdjustment(data: Prisma.CustomerAllocationUncheckedCreateInput) {
+    this.validateAdjustmentType(data.type);
+    const { id: seasonId } = await this.seasonsService.findActiveSeason();
+    const movementType = data.type as MovementType;
+    const quantity = this.requireQuantity(data.quantity);
+
+    return this.prisma.$transaction(async (tx) => {
+      return tx.customerAllocation.create({
+        data: {
+          ...data,
+          seasonId,
+          quantity: this.normalizeAdjustmentQuantity(movementType, quantity),
+          shipmentId: null,
+          boxId: null,
+        },
+      });
+    });
+  }
+
+  async updateAdjustment(id: number, data: Prisma.CustomerAllocationUncheckedUpdateInput) {
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.customerAllocation.findFirst({
+        where: {
+          id,
+          isDeleted: false,
+          type: { in: [MovementType.WASTE, MovementType.ADJUSTMENT] },
+        },
+      });
+
+      if (!existing) {
+        throw new NotFoundException(`Customer adjustment ${id} not found`);
+      }
+
+      const nextType = (data.type ?? existing.type) as MovementType;
+      this.validateAdjustmentType(nextType);
+
+      return tx.customerAllocation.update({
+        where: { id },
+        data: {
+          ...data,
+          shipmentId: null,
+          boxId: null,
+          quantity:
+            data.quantity === undefined
+              ? undefined
+              : this.normalizeAdjustmentQuantity(nextType, Number(data.quantity)),
+        },
+      });
+    });
+  }
+
+  async removeAdjustment(id: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.customerAllocation.findFirst({
+        where: {
+          id,
+          isDeleted: false,
+          type: { in: [MovementType.WASTE, MovementType.ADJUSTMENT] },
+        },
+      });
+
+      if (!existing) {
+        throw new NotFoundException(`Customer adjustment ${id} not found`);
+      }
+
+      return tx.customerAllocation.update({
+        where: { id },
+        data: { isDeleted: true },
+      });
+    });
+  }
+
   // Hard delete
   async remove(id: number) {
     return this.prisma.customerAllocation.delete({
       where: { id },
     });
+  }
+
+  private validateAdjustmentType(type?: MovementType | null) {
+    if (!type) {
+      throw new BadRequestException('type is required for adjustment movement');
+    }
+
+    if (type !== MovementType.WASTE && type !== MovementType.ADJUSTMENT) {
+      throw new BadRequestException('type must be WASTE or ADJUSTMENT');
+    }
+  }
+
+  private normalizeAdjustmentQuantity(type: MovementType, quantity: number) {
+    if (!Number.isFinite(quantity) || quantity === 0) {
+      throw new BadRequestException('quantity must be a non-zero number');
+    }
+
+    if (type === MovementType.WASTE) {
+      return -Math.abs(quantity);
+    }
+
+    return quantity;
+  }
+
+  private requireQuantity(value?: number) {
+    if (value === undefined || value === null) {
+      throw new BadRequestException('quantity is required for adjustment movement');
+    }
+
+    return Number(value);
   }
 }

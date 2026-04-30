@@ -1,6 +1,6 @@
 // src/inventory/controllers/trader-stock/trader-stock.controller.ts
 
-import { Controller, Get, Post, Delete, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, ParseIntPipe, Query, Patch } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { TraderStockService } from '../../services/trader-stock/trader-stock.service';
 import { Prisma, Grade, PitamStatus } from '@prisma/client';
@@ -111,5 +111,36 @@ export class TraderStockController {
   @ApiResponse({ status: 404, description: 'Stock movement not found.' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.stockService.remove(id);
+  }
+
+  @Post('adjustments')
+  @ApiOperation({ summary: 'Create trader WASTE/ADJUSTMENT movement (same endpoint, different type).' })
+  @ApiBody({ type: TraderStockSwaggerDto })
+  @ApiResponse({ status: 201, description: 'Trader adjustment movement created successfully.' })
+  @ApiResponse({ status: 400, description: 'Invalid adjustment payload.' })
+  createAdjustment(@Body() data: Prisma.TraderStockUncheckedCreateInput) {
+    return this.stockService.createAdjustment(data);
+  }
+
+  @Patch('adjustments/:id')
+  @ApiOperation({ summary: 'Update trader WASTE/ADJUSTMENT movement.' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiBody({ type: TraderStockSwaggerDto })
+  @ApiResponse({ status: 200, description: 'Trader adjustment movement updated successfully.' })
+  @ApiResponse({ status: 404, description: 'Trader adjustment movement not found.' })
+  updateAdjustment(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: Prisma.TraderStockUncheckedUpdateInput,
+  ) {
+    return this.stockService.updateAdjustment(id, data);
+  }
+
+  @Delete('adjustments/:id')
+  @ApiOperation({ summary: 'Soft delete trader WASTE/ADJUSTMENT movement.' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: 'Trader adjustment movement deleted successfully.' })
+  @ApiResponse({ status: 404, description: 'Trader adjustment movement not found.' })
+  removeAdjustment(@Param('id', ParseIntPipe) id: number) {
+    return this.stockService.removeAdjustment(id);
   }
 }

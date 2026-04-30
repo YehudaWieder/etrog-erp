@@ -1,8 +1,8 @@
 // src/inventory/services/trader-stock/trader-stock.service.ts
 
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Prisma, MovementType } from '@prisma/client';
+import { Prisma, MovementType } from 'src/generated/prisma';
 import { SeasonsService } from 'src/seasons/seasons.service';
 
 @Injectable()
@@ -87,10 +87,112 @@ export class TraderStockService {
         });
     }
 
+    async createAdjustment(data: Prisma.TraderStockUncheckedCreateInput) {
+        this.validateAdjustmentType(data.type);
+        const { id: seasonId } = await this.seasonsService.findActiveSeason();
+        const movementType = data.type as MovementType;
+        const quantity = this.requireQuantity(data.quantity);
+
+        return this.prisma.$transaction(async (tx) => {
+            return tx.traderStock.create({
+                data: {
+                    ...data,
+                    seasonId,
+                    quantity: this.normalizeAdjustmentQuantity(movementType, quantity),
+                    shipmentId: null,
+                    boxId: null,
+                },
+            });
+        });
+    }
+
+    async updateAdjustment(id: number, data: Prisma.TraderStockUncheckedUpdateInput) {
+        return this.prisma.$transaction(async (tx) => {
+            const existing = await tx.traderStock.findFirst({
+                where: {
+                    id,
+                    isDeleted: false,
+                    type: { in: [MovementType.WASTE, MovementType.ADJUSTMENT] },
+                },
+            });
+
+            if (!existing) {
+                throw new NotFoundException(`Trader adjustment ${id} not found`);
+            }
+
+            const nextType = (data.type ?? existing.type) as MovementType;
+            this.validateAdjustmentType(nextType);
+
+            return tx.traderStock.update({
+                where: { id },
+                data: {
+                    ...data,
+                    shipmentId: null,
+                    boxId: null,
+                    quantity:
+                        data.quantity === undefined
+                            ? undefined
+                            : this.normalizeAdjustmentQuantity(nextType, Number(data.quantity)),
+                },
+            });
+        });
+    }
+
+    async removeAdjustment(id: number) {
+        return this.prisma.$transaction(async (tx) => {
+            const existing = await tx.traderStock.findFirst({
+                where: {
+                    id,
+                    isDeleted: false,
+                    type: { in: [MovementType.WASTE, MovementType.ADJUSTMENT] },
+                },
+            });
+
+            if (!existing) {
+                throw new NotFoundException(`Trader adjustment ${id} not found`);
+            }
+
+            return tx.traderStock.update({
+                where: { id },
+                data: { isDeleted: true },
+            });
+        });
+    }
+
     // Hard delete a movement
     async remove(id: number) {
         return this.prisma.traderStock.delete({
         where: { id },
         });
+    }
+
+    private validateAdjustmentType(type?: MovementType | null) {
+        if (!type) {
+            throw new BadRequestException('type is required for adjustment movement');
+        }
+
+        if (type !== MovementType.WASTE && type !== MovementType.ADJUSTMENT) {
+            throw new BadRequestException('type must be WASTE or ADJUSTMENT');
+        }
+    }
+
+    private normalizeAdjustmentQuantity(type: MovementType, quantity: number) {
+        if (!Number.isFinite(quantity) || quantity === 0) {
+            throw new BadRequestException('quantity must be a non-zero number');
+        }
+
+        if (type === MovementType.WASTE) {
+            return -Math.abs(quantity);
+        }
+
+        return quantity;
+    }
+
+    private requireQuantity(value?: number) {
+        if (value === undefined || value === null) {
+            throw new BadRequestException('quantity is required for adjustment movement');
+        }
+
+        return Number(value);
     }
 }

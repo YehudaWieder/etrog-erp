@@ -124,4 +124,35 @@ export class CustomerAllocationController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.allocationService.remove(id);
   }
+
+  @Post('adjustments')
+  @ApiOperation({ summary: 'Create customer WASTE/ADJUSTMENT movement (same endpoint, different type).' })
+  @ApiBody({ type: CustomerAllocationSwaggerDto })
+  @ApiResponse({ status: 201, description: 'Customer adjustment movement created successfully.' })
+  @ApiResponse({ status: 400, description: 'Invalid adjustment payload.' })
+  createAdjustment(@Body() data: Prisma.CustomerAllocationUncheckedCreateInput) {
+    return this.allocationService.createAdjustment(data);
+  }
+
+  @Patch('adjustments/:id')
+  @ApiOperation({ summary: 'Update customer WASTE/ADJUSTMENT movement.' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiBody({ type: CustomerAllocationSwaggerDto })
+  @ApiResponse({ status: 200, description: 'Customer adjustment movement updated successfully.' })
+  @ApiResponse({ status: 404, description: 'Customer adjustment movement not found.' })
+  updateAdjustment(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: Prisma.CustomerAllocationUncheckedUpdateInput,
+  ) {
+    return this.allocationService.updateAdjustment(id, data);
+  }
+
+  @Delete('adjustments/:id')
+  @ApiOperation({ summary: 'Soft delete customer WASTE/ADJUSTMENT movement.' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: 'Customer adjustment movement deleted successfully.' })
+  @ApiResponse({ status: 404, description: 'Customer adjustment movement not found.' })
+  removeAdjustment(@Param('id', ParseIntPipe) id: number) {
+    return this.allocationService.removeAdjustment(id);
+  }
 }
