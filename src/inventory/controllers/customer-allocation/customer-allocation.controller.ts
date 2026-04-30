@@ -126,7 +126,7 @@ export class CustomerAllocationController {
   }
 
   @Post('adjustments')
-  @ApiOperation({ summary: 'Create customer WASTE/ADJUSTMENT movement (same endpoint, different type).' })
+  @ApiOperation({ summary: 'Create customer WASTE/ADJUSTMENT/SELF_PICKUP movement (same endpoint, different type).' })
   @ApiBody({ type: CustomerAllocationSwaggerDto })
   @ApiResponse({ status: 201, description: 'Customer adjustment movement created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid adjustment payload.' })
@@ -135,7 +135,7 @@ export class CustomerAllocationController {
   }
 
   @Patch('adjustments/:id')
-  @ApiOperation({ summary: 'Update customer WASTE/ADJUSTMENT movement.' })
+  @ApiOperation({ summary: 'Update customer WASTE/ADJUSTMENT/SELF_PICKUP movement.' })
   @ApiParam({ name: 'id', type: Number })
   @ApiBody({ type: CustomerAllocationSwaggerDto })
   @ApiResponse({ status: 200, description: 'Customer adjustment movement updated successfully.' })
@@ -148,7 +148,7 @@ export class CustomerAllocationController {
   }
 
   @Delete('adjustments/:id')
-  @ApiOperation({ summary: 'Soft delete customer WASTE/ADJUSTMENT movement.' })
+  @ApiOperation({ summary: 'Soft delete customer WASTE/ADJUSTMENT/SELF_PICKUP movement.' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Customer adjustment movement deleted successfully.' })
   @ApiResponse({ status: 404, description: 'Customer adjustment movement not found.' })

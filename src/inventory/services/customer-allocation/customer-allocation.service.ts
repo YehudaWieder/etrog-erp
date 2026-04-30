@@ -109,7 +109,7 @@ export class CustomerAllocationService {
         where: {
           id,
           isDeleted: false,
-          type: { in: [MovementType.WASTE, MovementType.ADJUSTMENT] },
+          type: { in: [MovementType.WASTE, MovementType.ADJUSTMENT, MovementType.SELF_PICKUP] },
         },
       });
 
@@ -141,7 +141,7 @@ export class CustomerAllocationService {
         where: {
           id,
           isDeleted: false,
-          type: { in: [MovementType.WASTE, MovementType.ADJUSTMENT] },
+          type: { in: [MovementType.WASTE, MovementType.ADJUSTMENT, MovementType.SELF_PICKUP] },
         },
       });
 
@@ -168,8 +168,8 @@ export class CustomerAllocationService {
       throw new BadRequestException('type is required for adjustment movement');
     }
 
-    if (type !== MovementType.WASTE && type !== MovementType.ADJUSTMENT) {
-      throw new BadRequestException('type must be WASTE or ADJUSTMENT');
+    if (type !== MovementType.WASTE && type !== MovementType.ADJUSTMENT && type !== MovementType.SELF_PICKUP) {
+      throw new BadRequestException('type must be WASTE, ADJUSTMENT, or SELF_PICKUP');
     }
   }
 
@@ -178,7 +178,7 @@ export class CustomerAllocationService {
       throw new BadRequestException('quantity must be a non-zero number');
     }
 
-    if (type === MovementType.WASTE) {
+    if (type === MovementType.WASTE || type === MovementType.SELF_PICKUP) {
       return -Math.abs(quantity);
     }
 

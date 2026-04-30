@@ -114,7 +114,7 @@ export class TraderStockController {
   }
 
   @Post('adjustments')
-  @ApiOperation({ summary: 'Create trader WASTE/ADJUSTMENT movement (same endpoint, different type).' })
+  @ApiOperation({ summary: 'Create trader WASTE/ADJUSTMENT/SELF_PICKUP movement (same endpoint, different type).' })
   @ApiBody({ type: TraderStockSwaggerDto })
   @ApiResponse({ status: 201, description: 'Trader adjustment movement created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid adjustment payload.' })
@@ -123,7 +123,7 @@ export class TraderStockController {
   }
 
   @Patch('adjustments/:id')
-  @ApiOperation({ summary: 'Update trader WASTE/ADJUSTMENT movement.' })
+  @ApiOperation({ summary: 'Update trader WASTE/ADJUSTMENT/SELF_PICKUP movement.' })
   @ApiParam({ name: 'id', type: Number })
   @ApiBody({ type: TraderStockSwaggerDto })
   @ApiResponse({ status: 200, description: 'Trader adjustment movement updated successfully.' })
@@ -136,7 +136,7 @@ export class TraderStockController {
   }
 
   @Delete('adjustments/:id')
-  @ApiOperation({ summary: 'Soft delete trader WASTE/ADJUSTMENT movement.' })
+  @ApiOperation({ summary: 'Soft delete trader WASTE/ADJUSTMENT/SELF_PICKUP movement.' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Trader adjustment movement deleted successfully.' })
   @ApiResponse({ status: 404, description: 'Trader adjustment movement not found.' })
