@@ -2,7 +2,7 @@
 
 import { Injectable, BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma, AssignmentType } from '@prisma/client';
+import { Prisma, AssignmentType, Classification } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import {
   HarvestBulkCreateDto,
@@ -12,6 +12,7 @@ import {
   DeleteHarvestClassificationDto,
   HarvestInlineUpdateDto,
 } from 'src/docs/dto/swagger-enums.dto';
+import { calculateHarvestFields } from './harvest.utils';
 
 @Injectable()
 export class HarvestBulkService {
@@ -69,17 +70,7 @@ export class HarvestBulkService {
       await this.processAllocationsForClassification(tx, {
         seasonId,
         classificationId: classification.id,
-        classificationItem: {
-          assignmentType: classification.assignmentType,
-          traderId: classification.traderId ?? undefined,
-          customerId: classification.customerId ?? undefined,
-          traderCategoryId: classification.traderCategoryId ?? undefined,
-          customerCategoryId: classification.customerCategoryId ?? undefined,
-          grade: classification.grade ?? undefined,
-          pitamStatus: classification.pitamStatus,
-          quantity: classification.quantity,
-          notes: classification.notes ?? undefined,
-        },
+        classificationItem: this.mapToClassificationBulkItem(classification),
         harvestDate: harvest.dateGregorian,
         updatedById: createDto.updatedById,
       });
@@ -193,25 +184,12 @@ export class HarvestBulkService {
       });
 
       // Recreate allocations with updated data
-      const classificationItem: ClassificationBulkItemDto = {
-        assignmentType: updatedClassification.assignmentType,
-        traderId: updatedClassification.traderId ?? undefined,
-        customerId: updatedClassification.customerId ?? undefined,
-        traderCategoryId: updatedClassification.traderCategoryId ?? undefined,
-        customerCategoryId: updatedClassification.customerCategoryId ?? undefined,
-        grade: updatedClassification.grade ?? undefined,
-        pitamStatus: updatedClassification.pitamStatus,
-        quantity: updatedClassification.quantity,
-        notes: updatedClassification.notes ?? undefined,
-      };
-
-      // Process allocations for the updated classification
       await this.processAllocationsForClassification(tx, {
         seasonId,
         classificationId: classificationId,
-        classificationItem,
+        classificationItem: this.mapToClassificationBulkItem(updatedClassification),
         harvestDate: harvest.dateGregorian,
-        updatedById: harvest.updatedById,
+        updatedById: updateDto.updatedById,
       });
 
       await this.syncHarvestClassificationProgress(tx, harvestId, updateDto.validationMode);
@@ -394,7 +372,7 @@ export class HarvestBulkService {
         0,
       );
 
-      const rates = this.calculateHarvestFields({
+      const rates = calculateHarvestFields({
         totalHarvested: bulkDto.totalHarvested,
         totalRejected: bulkDto.totalRejected,
         ownerHarvested: bulkDto.ownerHarvested,
@@ -485,31 +463,17 @@ export class HarvestBulkService {
     }
   }
 
-  private calculateHarvestFields(data: {
-    totalHarvested?: number;
-    totalRejected?: number;
-    ownerHarvested?: number;
-    ownerRejected?: number;
-    classifiedTotal?: number;
-    isPartialClassification?: boolean;
-  }) {
-    const totalHarvested = data.totalHarvested || 0;
-    const totalRejected = data.totalRejected || 0;
-    const ownerHarvested = data.ownerHarvested || 0;
-    const ownerRejected = data.ownerRejected || 0;
-    const totalAfterRejected = Math.max(totalHarvested - totalRejected, 0);
-    const ownerAfterRejected = Math.max(ownerHarvested - ownerRejected, 0);
-    const classifiedTotal = data.classifiedTotal || 0;
-    const isPartialClassification =
-      data.isPartialClassification ?? classifiedTotal < totalAfterRejected;
-
+  private mapToClassificationBulkItem(c: Classification): ClassificationBulkItemDto {
     return {
-      rejectionRate: totalHarvested > 0 ? (totalRejected / totalHarvested) * 100 : 0,
-      ownerRejectionRate: ownerHarvested > 0 ? (ownerRejected / ownerHarvested) * 100 : 0,
-      totalAfterRejected,
-      ownerAfterRejected,
-      classifiedTotal,
-      isPartialClassification,
+      assignmentType: c.assignmentType,
+      traderId: c.traderId ?? undefined,
+      customerId: c.customerId ?? undefined,
+      traderCategoryId: c.traderCategoryId ?? undefined,
+      customerCategoryId: c.customerCategoryId ?? undefined,
+      grade: c.grade ?? undefined,
+      pitamStatus: c.pitamStatus,
+      quantity: c.quantity,
+      notes: c.notes ?? undefined,
     };
   }
 
