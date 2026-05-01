@@ -2,7 +2,7 @@
 
 import { Controller, Get, Post, Delete, Body, Param, ParseIntPipe, Query, Patch } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
-import { TraderStockService } from '../../services/trader-stock/trader-stock.service';
+import { InventoryOwnerScope, InventoryShipmentScope, InventorySortBy, TraderStockService } from '../../services/trader-stock/trader-stock.service';
 import { Prisma, Grade, PitamStatus } from '@prisma/client';
 import { TraderStockSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
@@ -93,6 +93,45 @@ export class TraderStockController {
     @Query('traderId', ParseIntPipe) traderId: number,
   ) {
     return this.stockService.getLedger(seasonId, traderId);
+  }
+
+  @Get('summary')
+  @ApiOperation({
+    summary:
+      'Get aggregated inventory summary for all traders, a specific trader, or modulo, with shipped/unshipped filters and sorting.',
+  })
+  @ApiQuery({ name: 'seasonId', type: Number, required: false, description: 'Optional season ID. Defaults to active season.' })
+  @ApiQuery({ name: 'traderId', type: Number, required: false, description: 'Filter by a specific trader ID.' })
+  @ApiQuery({ name: 'ownerScope', required: false, enum: ['ALL', 'TRADER', 'MODULO'], description: 'ALL = all traders + modulo, TRADER = one trader, MODULO = unassigned stock only.' })
+  @ApiQuery({ name: 'shipmentScope', required: false, enum: ['ALL', 'SHIPPED', 'UNSHIPPED'], description: 'SHIPPED = PACKED_SHIPPED rows only, UNSHIPPED = all rows except PACKED_SHIPPED.' })
+  @ApiQuery({ name: 'traderCategoryId', type: Number, required: false, description: 'Optional trader category filter.' })
+  @ApiQuery({ name: 'grade', enum: Grade, enumName: 'Grade', required: false, description: 'Optional grade filter.' })
+  @ApiQuery({ name: 'pitamStatus', enum: PitamStatus, enumName: 'PitamStatus', required: false, description: 'Optional pitam status filter.' })
+  @ApiQuery({ name: 'sortBy', required: false, enum: ['category', 'trader', 'quantity', 'grade', 'pitamStatus', 'updatedAt'], description: 'Sort field.' })
+  @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'], description: 'Sort direction.' })
+  @ApiResponse({ status: 200, description: 'Aggregated inventory summary returned successfully.' })
+  getSummary(
+    @Query('seasonId') seasonId?: string,
+    @Query('traderId') traderId?: string,
+    @Query('ownerScope') ownerScope?: InventoryOwnerScope,
+    @Query('shipmentScope') shipmentScope?: InventoryShipmentScope,
+    @Query('traderCategoryId') traderCategoryId?: string,
+    @Query('grade') grade?: Grade,
+    @Query('pitamStatus') pitamStatus?: PitamStatus,
+    @Query('sortBy') sortBy?: InventorySortBy,
+    @Query('sortOrder') sortOrder?: 'asc' | 'desc',
+  ) {
+    return this.stockService.getInventorySummary({
+      seasonId: seasonId ? parseInt(seasonId) : undefined,
+      traderId: traderId ? parseInt(traderId) : undefined,
+      ownerScope,
+      shipmentScope,
+      traderCategoryId: traderCategoryId ? parseInt(traderCategoryId) : undefined,
+      grade,
+      pitamStatus,
+      sortBy,
+      sortOrder,
+    });
   }
 
   @Get('reference/:referenceId')

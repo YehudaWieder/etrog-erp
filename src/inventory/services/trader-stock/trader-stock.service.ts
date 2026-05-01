@@ -2,8 +2,48 @@
 
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Prisma, MovementType } from 'src/generated/prisma';
+import { Prisma, MovementType, Grade, PitamStatus } from 'src/generated/prisma';
 import { SeasonsService } from 'src/seasons/seasons.service';
+
+export type InventoryOwnerScope = 'ALL' | 'TRADER' | 'MODULO';
+export type InventoryShipmentScope = 'ALL' | 'SHIPPED' | 'UNSHIPPED';
+export type InventorySortBy = 'category' | 'trader' | 'quantity' | 'grade' | 'pitamStatus' | 'updatedAt';
+export type InventorySortOrder = 'asc' | 'desc';
+
+export interface InventorySummaryQuery {
+    seasonId?: number;
+    traderId?: number;
+    traderCategoryId?: number;
+    grade?: Grade;
+    pitamStatus?: PitamStatus;
+    ownerScope?: InventoryOwnerScope;
+    shipmentScope?: InventoryShipmentScope;
+    sortBy?: InventorySortBy;
+    sortOrder?: InventorySortOrder;
+}
+
+export interface InventorySummaryTotals {
+    totalQuantity: number;
+    moduloQuantity: number;
+    traderQuantity: number;
+}
+
+export interface InventorySummaryResult {
+    rows: InventorySummaryRow[];
+    totals: InventorySummaryTotals;
+}
+
+export interface InventorySummaryRow {
+    traderId: number | null;
+    traderName: string | null;
+    isModulo: boolean;
+    traderCategoryId: number;
+    traderCategoryName: string | null;
+    grade: Grade;
+    pitamStatus: PitamStatus;
+    quantity: number;
+    lastUpdatedAt: Date | null;
+}
 
 @Injectable()
 export class TraderStockService {
@@ -85,6 +125,95 @@ export class TraderStockService {
         where: { id },
         data,
         });
+    }
+
+    async getInventorySummary(query: InventorySummaryQuery) {
+        const seasonId = query.seasonId ?? (await this.seasonsService.findActiveSeason()).id;
+        const ownerScope = query.ownerScope ?? 'ALL';
+        const shipmentScope = query.shipmentScope ?? 'ALL';
+        const sortBy = query.sortBy ?? 'category';
+        const sortOrder = query.sortOrder ?? 'asc';
+
+        this.validateSummaryQuery(query, ownerScope, shipmentScope, sortBy, sortOrder);
+
+        const where: Prisma.TraderStockWhereInput = {
+            seasonId,
+            isDeleted: false,
+            traderCategoryId: query.traderCategoryId,
+            grade: query.grade,
+            pitamStatus: query.pitamStatus,
+        };
+
+        this.applyOwnerScope(where, ownerScope, query.traderId);
+        this.applyShipmentScope(where, shipmentScope);
+
+        const rows = await this.prisma.traderStock.groupBy({
+            by: ['traderId', 'isModulo', 'traderCategoryId', 'grade', 'pitamStatus'],
+            where,
+            _sum: { quantity: true },
+            _max: { updatedAt: true },
+        });
+
+        const filteredRows = rows.filter((row) => (row._sum.quantity ?? 0) !== 0);
+
+        const traderIds = filteredRows
+            .map((row) => row.traderId)
+            .filter((traderId): traderId is number => traderId !== null);
+        const categoryIds = [...new Set(filteredRows.map((row) => row.traderCategoryId))];
+
+        const [traders, categories] = await Promise.all([
+            traderIds.length
+                ? this.prisma.trader.findMany({
+                    where: { id: { in: traderIds } },
+                    select: { id: true, name: true },
+                })
+                : Promise.resolve([]),
+            categoryIds.length
+                ? this.prisma.tradersCategories.findMany({
+                    where: { id: { in: categoryIds } },
+                    select: { id: true, name: true },
+                })
+                : Promise.resolve([]),
+        ]);
+
+        const traderMap = new Map<number, string>();
+        for (const trader of traders) {
+            traderMap.set(trader.id, trader.name);
+        }
+
+        const categoryMap = new Map<number, string>();
+        for (const category of categories) {
+            categoryMap.set(category.id, category.name);
+        }
+
+        const summary: InventorySummaryRow[] = filteredRows.map((row) => ({
+            traderId: row.traderId,
+            traderName: row.isModulo ? 'MODULO' : row.traderId ? traderMap.get(row.traderId) ?? null : null,
+            isModulo: row.isModulo,
+            traderCategoryId: row.traderCategoryId,
+            traderCategoryName: categoryMap.get(row.traderCategoryId) ?? null,
+            grade: row.grade,
+            pitamStatus: row.pitamStatus,
+            quantity: row._sum.quantity ?? 0,
+            lastUpdatedAt: row._max.updatedAt,
+        }));
+
+        const sorted = this.sortSummary(summary, sortBy, sortOrder);
+
+        const totals: InventorySummaryTotals = sorted.reduce(
+            (acc, row) => {
+                acc.totalQuantity += row.quantity;
+                if (row.isModulo) {
+                    acc.moduloQuantity += row.quantity;
+                } else {
+                    acc.traderQuantity += row.quantity;
+                }
+                return acc;
+            },
+            { totalQuantity: 0, moduloQuantity: 0, traderQuantity: 0 },
+        );
+
+        return { rows: sorted, totals };
     }
 
     async createAdjustment(data: Prisma.TraderStockUncheckedCreateInput) {
@@ -194,5 +323,105 @@ export class TraderStockService {
         }
 
         return Number(value);
+    }
+
+    private validateSummaryQuery(
+        query: InventorySummaryQuery,
+        ownerScope: InventoryOwnerScope,
+        shipmentScope: InventoryShipmentScope,
+        sortBy: InventorySortBy,
+        sortOrder: InventorySortOrder,
+    ) {
+        if (!['ALL', 'TRADER', 'MODULO'].includes(ownerScope)) {
+            throw new BadRequestException('ownerScope must be ALL, TRADER, or MODULO');
+        }
+
+        if (!['ALL', 'SHIPPED', 'UNSHIPPED'].includes(shipmentScope)) {
+            throw new BadRequestException('shipmentScope must be ALL, SHIPPED, or UNSHIPPED');
+        }
+
+        if (!['category', 'trader', 'quantity', 'grade', 'pitamStatus', 'updatedAt'].includes(sortBy)) {
+            throw new BadRequestException('sortBy must be category, trader, quantity, grade, pitamStatus, or updatedAt');
+        }
+
+        if (!['asc', 'desc'].includes(sortOrder)) {
+            throw new BadRequestException('sortOrder must be asc or desc');
+        }
+
+        if (ownerScope === 'TRADER' && !query.traderId) {
+            throw new BadRequestException('traderId is required when ownerScope=TRADER');
+        }
+
+        if (ownerScope === 'MODULO' && query.traderId) {
+            throw new BadRequestException('traderId must be empty when ownerScope=MODULO');
+        }
+    }
+
+    private applyOwnerScope(where: Prisma.TraderStockWhereInput, ownerScope: InventoryOwnerScope, traderId?: number) {
+        if (ownerScope === 'TRADER') {
+            where.isModulo = false;
+            where.traderId = traderId;
+            return;
+        }
+
+        if (ownerScope === 'MODULO') {
+            where.isModulo = true;
+            where.traderId = null;
+            return;
+        }
+
+        if (traderId) {
+            where.isModulo = false;
+            where.traderId = traderId;
+        }
+    }
+
+    private applyShipmentScope(where: Prisma.TraderStockWhereInput, shipmentScope: InventoryShipmentScope) {
+        if (shipmentScope === 'SHIPPED') {
+            where.type = MovementType.PACKED_SHIPPED;
+            return;
+        }
+
+        if (shipmentScope === 'UNSHIPPED') {
+            where.type = { not: MovementType.PACKED_SHIPPED };
+        }
+    }
+
+    private sortSummary(
+        summary: InventorySummaryRow[],
+        sortBy: InventorySortBy,
+        sortOrder: InventorySortOrder,
+    ) {
+        const factor = sortOrder === 'asc' ? 1 : -1;
+
+        return summary.sort((left, right) => {
+            switch (sortBy) {
+                case 'trader':
+                    return this.compareValues(left.traderName ?? '', right.traderName ?? '', factor);
+                case 'quantity':
+                    return this.compareValues(left.quantity, right.quantity, factor);
+                case 'grade':
+                    return this.compareValues(left.grade, right.grade, factor);
+                case 'pitamStatus':
+                    return this.compareValues(left.pitamStatus, right.pitamStatus, factor);
+                case 'updatedAt':
+                    return this.compareValues(left.lastUpdatedAt?.getTime() ?? 0, right.lastUpdatedAt?.getTime() ?? 0, factor);
+                case 'category':
+                default:
+                    return this.compareValues(left.traderCategoryName ?? '', right.traderCategoryName ?? '', factor);
+            }
+        });
+    }
+
+    private compareValues(left: string | number, right: string | number, factor: number) {
+        if (left < right) {
+            return -1 * factor;
+        }
+
+        if (left > right) {
+            return 1 * factor;
+        }
+
+        return 0;
     }
 }
