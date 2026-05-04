@@ -2,8 +2,12 @@
 
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
-import { CustomerAllocationService } from '../../services/customer-allocation/customer-allocation.service';
-import { Prisma, PitamStatus } from '@prisma/client';
+import {
+  CustomerAllocationService,
+  CustomerInventoryShipmentScope,
+  CustomerInventorySortBy,
+} from '../../services/customer-allocation/customer-allocation.service';
+import { Prisma, PitamStatus } from 'src/generated/prisma';
 import { CustomerAllocationSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Inventory')
@@ -89,6 +93,39 @@ export class CustomerAllocationController {
     @Query('customerId', ParseIntPipe) customerId: number,
   ) {
     return this.allocationService.getLedger(seasonId, customerId);
+  }
+
+  @Get('summary')
+  @ApiOperation({
+    summary:
+      'Get aggregated customer inventory summary for all customers or a specific customer, with shipped/unshipped filters and sorting.',
+  })
+  @ApiQuery({ name: 'seasonId', type: Number, required: false, description: 'Optional season ID. Defaults to active season.' })
+  @ApiQuery({ name: 'customerId', type: Number, required: false, description: 'Optional customer ID. When omitted, returns all customers together.' })
+  @ApiQuery({ name: 'shipmentScope', required: false, enum: ['ALL', 'SHIPPED', 'UNSHIPPED'], description: 'SHIPPED = PACKED_SHIPPED rows only, UNSHIPPED = all rows except PACKED_SHIPPED.' })
+  @ApiQuery({ name: 'customerCategoryId', type: Number, required: false, description: 'Optional customer category filter.' })
+  @ApiQuery({ name: 'pitamStatus', enum: PitamStatus, enumName: 'PitamStatus', required: false, description: 'Optional pitam status filter.' })
+  @ApiQuery({ name: 'sortBy', required: false, enum: ['category', 'customer', 'quantity', 'pitamStatus', 'updatedAt'], description: 'Sort field.' })
+  @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'], description: 'Sort direction.' })
+  @ApiResponse({ status: 200, description: 'Aggregated customer inventory summary returned successfully.' })
+  getSummary(
+    @Query('seasonId') seasonId?: string,
+    @Query('customerId') customerId?: string,
+    @Query('shipmentScope') shipmentScope?: CustomerInventoryShipmentScope,
+    @Query('customerCategoryId') customerCategoryId?: string,
+    @Query('pitamStatus') pitamStatus?: PitamStatus,
+    @Query('sortBy') sortBy?: CustomerInventorySortBy,
+    @Query('sortOrder') sortOrder?: 'asc' | 'desc',
+  ) {
+    return this.allocationService.getInventorySummary({
+      seasonId: seasonId ? parseInt(seasonId) : undefined,
+      customerId: customerId ? parseInt(customerId) : undefined,
+      shipmentScope,
+      customerCategoryId: customerCategoryId ? parseInt(customerCategoryId) : undefined,
+      pitamStatus,
+      sortBy,
+      sortOrder,
+    });
   }
 
   @Patch(':id')
