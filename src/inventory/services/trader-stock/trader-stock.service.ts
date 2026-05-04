@@ -6,7 +6,7 @@ import { Prisma, MovementType, Grade, PitamStatus } from 'src/generated/prisma';
 import { SeasonsService } from 'src/seasons/seasons.service';
 
 export type InventoryOwnerScope = 'ALL' | 'TRADER' | 'MODULO';
-export type InventoryShipmentScope = 'ALL' | 'SHIPPED' | 'UNSHIPPED';
+export type InventoryShipmentScope = 'ALL' | 'SHIPPED' | 'UNSHIPPED' | 'PACKED_SHIPPED' | 'SELF_PICKUP';
 export type InventorySortBy = 'category' | 'trader' | 'quantity' | 'grade' | 'pitamStatus' | 'updatedAt';
 export type InventorySortOrder = 'asc' | 'desc';
 
@@ -336,8 +336,8 @@ export class TraderStockService {
             throw new BadRequestException('ownerScope must be ALL, TRADER, or MODULO');
         }
 
-        if (!['ALL', 'SHIPPED', 'UNSHIPPED'].includes(shipmentScope)) {
-            throw new BadRequestException('shipmentScope must be ALL, SHIPPED, or UNSHIPPED');
+        if (!['ALL', 'SHIPPED', 'UNSHIPPED', 'PACKED_SHIPPED', 'SELF_PICKUP'].includes(shipmentScope)) {
+            throw new BadRequestException('shipmentScope must be ALL, SHIPPED, UNSHIPPED, PACKED_SHIPPED, or SELF_PICKUP');
         }
 
         if (!['category', 'trader', 'quantity', 'grade', 'pitamStatus', 'updatedAt'].includes(sortBy)) {
@@ -377,13 +377,23 @@ export class TraderStockService {
     }
 
     private applyShipmentScope(where: Prisma.TraderStockWhereInput, shipmentScope: InventoryShipmentScope) {
-        if (shipmentScope === 'SHIPPED') {
+        if (shipmentScope === 'PACKED_SHIPPED') {
             where.type = MovementType.PACKED_SHIPPED;
             return;
         }
 
+        if (shipmentScope === 'SELF_PICKUP') {
+            where.type = MovementType.SELF_PICKUP;
+            return;
+        }
+
+        if (shipmentScope === 'SHIPPED') {
+            where.type = { in: [MovementType.PACKED_SHIPPED, MovementType.SELF_PICKUP] };
+            return;
+        }
+
         if (shipmentScope === 'UNSHIPPED') {
-            where.type = { not: MovementType.PACKED_SHIPPED };
+            where.type = { notIn: [MovementType.PACKED_SHIPPED, MovementType.SELF_PICKUP] };
         }
     }
 
