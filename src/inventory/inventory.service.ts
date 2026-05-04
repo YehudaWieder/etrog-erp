@@ -32,6 +32,34 @@ type TransferLedgerRecord =
 	| { table: 'traderStock'; record: Prisma.TraderStockGetPayload<{}> }
 	| { table: 'customerAllocation'; record: Prisma.CustomerAllocationGetPayload<{}> };
 
+export type CombinedMovementScope =
+	| 'ALL'
+	| 'SHIPPED'
+	| 'UNSHIPPED'
+	| 'PACKED_SHIPPED'
+	| 'SELF_PICKUP'
+	| 'HARVEST_IN'
+	| 'INTERNAL_TRANSFER'
+	| 'OWNERSHIP_TRANSFER'
+	| 'ASSIGNED'
+	| 'WASTE'
+	| 'ADJUSTMENT';
+
+export interface CombinedInventorySummaryQuery {
+	seasonId?: number;
+	// Trader-specific (MODULO scope affects trader side only)
+	ownerScope?: 'ALL' | 'TRADER' | 'MODULO';
+	traderId?: number;
+	traderCategoryId?: number;
+	grade?: Grade;
+	// Customer-specific
+	customerId?: number;
+	customerCategoryId?: number;
+	// Common
+	pitamStatus?: PitamStatus;
+	movementScope?: CombinedMovementScope;
+}
+
 @Injectable()
 export class InventoryService {
 	constructor(
@@ -96,6 +124,179 @@ export class InventoryService {
 				deleted,
 			};
 		});
+	}
+
+	async getCombinedSummary(query: CombinedInventorySummaryQuery) {
+		const seasonId = query.seasonId ?? (await this.seasonsService.findActiveSeason()).id;
+		const ownerScope = query.ownerScope ?? 'ALL';
+		const movementScope = query.movementScope ?? 'ALL';
+
+		this.validateCombinedQuery(ownerScope, movementScope, query.traderId);
+
+		// ── Trader where ──
+		const traderWhere: Prisma.TraderStockWhereInput = { seasonId, isDeleted: false };
+		if (query.traderCategoryId) traderWhere.traderCategoryId = query.traderCategoryId;
+		if (query.grade) traderWhere.grade = query.grade;
+		if (query.pitamStatus) traderWhere.pitamStatus = query.pitamStatus;
+		this.applyCombinedOwnerScope(traderWhere, ownerScope, query.traderId);
+
+		// ── Customer where ──
+		const customerWhere: Prisma.CustomerAllocationWhereInput = { seasonId, isDeleted: false };
+		if (query.customerId) customerWhere.customerId = query.customerId;
+		if (query.customerCategoryId) customerWhere.customerCategoryId = query.customerCategoryId;
+		if (query.pitamStatus) customerWhere.pitamStatus = query.pitamStatus;
+
+		// Apply movement scope to both sides
+		const typeFilter = this.buildCombinedMovementFilter(movementScope);
+		if (typeFilter !== undefined) {
+			(traderWhere as Record<string, unknown>).type = typeFilter;
+			(customerWhere as Record<string, unknown>).type = typeFilter;
+		}
+
+		// ── Parallel group-by queries ──
+		const [traderGrouped, customerGrouped] = await Promise.all([
+			this.prisma.traderStock.groupBy({
+				by: ['traderId', 'isModulo', 'traderCategoryId', 'grade', 'pitamStatus'],
+				where: traderWhere,
+				_sum: { quantity: true },
+				_max: { updatedAt: true },
+			}),
+			this.prisma.customerAllocation.groupBy({
+				by: ['customerId', 'customerCategoryId', 'pitamStatus'],
+				where: customerWhere,
+				_sum: { quantity: true },
+				_max: { updatedAt: true },
+			}),
+		]);
+
+		const traderRows = traderGrouped.filter((r) => (r._sum.quantity ?? 0) !== 0);
+		const customerRows = customerGrouped.filter((r) => (r._sum.quantity ?? 0) !== 0);
+
+		// ── Name lookups ──
+		const traderIds = traderRows.map((r) => r.traderId).filter((id): id is number => id !== null);
+		const traderCatIds = [...new Set(traderRows.map((r) => r.traderCategoryId))];
+		const customerIds = [...new Set(customerRows.map((r) => r.customerId))];
+		const customerCatIds = [...new Set(customerRows.map((r) => r.customerCategoryId))];
+
+		const [traders, traderCats, customers, customerCats] = await Promise.all([
+			traderIds.length
+				? this.prisma.trader.findMany({ where: { id: { in: traderIds } }, select: { id: true, name: true } })
+				: Promise.resolve([]),
+			traderCatIds.length
+				? this.prisma.tradersCategories.findMany({ where: { id: { in: traderCatIds } }, select: { id: true, name: true } })
+				: Promise.resolve([]),
+			customerIds.length
+				? this.prisma.customer.findMany({ where: { id: { in: customerIds } }, select: { id: true, customerName: true } })
+				: Promise.resolve([]),
+			customerCatIds.length
+				? this.prisma.customerCategories.findMany({ where: { id: { in: customerCatIds } }, select: { id: true, name: true, grade: true } })
+				: Promise.resolve([]),
+		]);
+
+		const traderMap = new Map(traders.map((t): [number, string] => [t.id, t.name]));
+		const traderCatMap = new Map(traderCats.map((c): [number, string] => [c.id, c.name]));
+		const customerMap = new Map(customers.map((c): [number, string] => [c.id, c.customerName]));
+		const customerCatMap = new Map(customerCats.map((c): [number, { name: string; grade: string | null }] => [c.id, { name: c.name, grade: c.grade }]));
+
+		// ── Map to response rows ──
+		const mappedTraderRows = traderRows.map((row) => ({
+			traderId: row.traderId,
+			traderName: row.isModulo ? 'MODULO' : (row.traderId ? (traderMap.get(row.traderId) ?? null) : null),
+			isModulo: row.isModulo,
+			traderCategoryId: row.traderCategoryId,
+			traderCategoryName: traderCatMap.get(row.traderCategoryId) ?? null,
+			grade: row.grade,
+			pitamStatus: row.pitamStatus,
+			quantity: row._sum.quantity ?? 0,
+			lastUpdatedAt: row._max.updatedAt,
+		}));
+
+		const mappedCustomerRows = customerRows.map((row) => {
+			const cat = customerCatMap.get(row.customerCategoryId);
+			return {
+				customerId: row.customerId,
+				customerName: customerMap.get(row.customerId) ?? null,
+				customerCategoryId: row.customerCategoryId,
+				customerCategoryName: cat?.name ?? null,
+				categoryGrade: cat?.grade ?? null,
+				pitamStatus: row.pitamStatus,
+				quantity: row._sum.quantity ?? 0,
+				lastUpdatedAt: row._max.updatedAt,
+			};
+		});
+
+		// ── Totals ──
+		const traderSubtotals = mappedTraderRows.reduce(
+			(acc, row) => {
+				acc.totalQuantity += row.quantity;
+				if (row.isModulo) acc.moduloQuantity += row.quantity;
+				else acc.traderQuantity += row.quantity;
+				return acc;
+			},
+			{ totalQuantity: 0, moduloQuantity: 0, traderQuantity: 0 },
+		);
+
+		const customerSubtotals = {
+			totalQuantity: mappedCustomerRows.reduce((acc, r) => acc + r.quantity, 0),
+		};
+
+		return {
+			trader: { rows: mappedTraderRows, subtotals: traderSubtotals },
+			customer: { rows: mappedCustomerRows, subtotals: customerSubtotals },
+			grandTotal: traderSubtotals.totalQuantity + customerSubtotals.totalQuantity,
+		};
+	}
+
+	private validateCombinedQuery(ownerScope: string, movementScope: string, traderId?: number) {
+		if (!['ALL', 'TRADER', 'MODULO'].includes(ownerScope)) {
+			throw new BadRequestException('ownerScope must be ALL, TRADER, or MODULO');
+		}
+		const validScopes: CombinedMovementScope[] = [
+			'ALL', 'SHIPPED', 'UNSHIPPED',
+			'PACKED_SHIPPED', 'SELF_PICKUP',
+			'HARVEST_IN', 'INTERNAL_TRANSFER', 'OWNERSHIP_TRANSFER', 'ASSIGNED',
+			'WASTE', 'ADJUSTMENT',
+		];
+		if (!validScopes.includes(movementScope as CombinedMovementScope)) {
+			throw new BadRequestException('movementScope must be one of: ' + validScopes.join(', '));
+		}
+		if (ownerScope === 'TRADER' && !traderId) {
+			throw new BadRequestException('traderId is required when ownerScope=TRADER');
+		}
+	}
+
+	private applyCombinedOwnerScope(
+		where: Prisma.TraderStockWhereInput,
+		ownerScope: string,
+		traderId?: number,
+	) {
+		if (ownerScope === 'TRADER') {
+			where.isModulo = false;
+			where.traderId = traderId;
+		} else if (ownerScope === 'MODULO') {
+			where.isModulo = true;
+			where.traderId = null;
+		} else if (traderId) {
+			where.isModulo = false;
+			where.traderId = traderId;
+		}
+	}
+
+	private buildCombinedMovementFilter(scope: CombinedMovementScope) {
+		if (scope === 'ALL') return undefined;
+		if (scope === 'SHIPPED') return { in: [MovementType.PACKED_SHIPPED, MovementType.SELF_PICKUP] };
+		if (scope === 'UNSHIPPED') return { notIn: [MovementType.PACKED_SHIPPED, MovementType.SELF_PICKUP] };
+		const exactMap: Partial<Record<CombinedMovementScope, MovementType>> = {
+			PACKED_SHIPPED: MovementType.PACKED_SHIPPED,
+			SELF_PICKUP: MovementType.SELF_PICKUP,
+			HARVEST_IN: MovementType.HARVEST_IN,
+			INTERNAL_TRANSFER: MovementType.INTERNAL_TRANSFER,
+			OWNERSHIP_TRANSFER: MovementType.OWNERSHIP_TRANSFER,
+			ASSIGNED: MovementType.ASSIGNED,
+			WASTE: MovementType.WASTE,
+			ADJUSTMENT: MovementType.ADJUSTMENT,
+		};
+		return exactMap[scope];
 	}
 
 	private validateTransferDto(data: InternalTransferRequest) {
