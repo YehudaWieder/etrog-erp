@@ -5,7 +5,18 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma, MovementType, PitamStatus } from 'src/generated/prisma';
 import { SeasonsService } from 'src/seasons/seasons.service';
 
-export type CustomerInventoryShipmentScope = 'ALL' | 'SHIPPED' | 'UNSHIPPED' | 'PACKED_SHIPPED' | 'SELF_PICKUP';
+export type CustomerInventoryShipmentScope =
+  | 'ALL'
+  | 'SHIPPED'
+  | 'UNSHIPPED'
+  | 'PACKED_SHIPPED'
+  | 'SELF_PICKUP'
+  | 'HARVEST_IN'
+  | 'INTERNAL_TRANSFER'
+  | 'OWNERSHIP_TRANSFER'
+  | 'ASSIGNED'
+  | 'WASTE'
+  | 'ADJUSTMENT';
 export type CustomerInventorySortBy = 'category' | 'customer' | 'quantity' | 'pitamStatus' | 'updatedAt';
 export type CustomerInventorySortOrder = 'asc' | 'desc';
 
@@ -314,8 +325,16 @@ export class CustomerAllocationService {
     sortBy: CustomerInventorySortBy,
     sortOrder: CustomerInventorySortOrder,
   ) {
-    if (!['ALL', 'SHIPPED', 'UNSHIPPED', 'PACKED_SHIPPED', 'SELF_PICKUP'].includes(shipmentScope)) {
-      throw new BadRequestException('shipmentScope must be ALL, SHIPPED, UNSHIPPED, PACKED_SHIPPED, or SELF_PICKUP');
+    const validShipmentScopes: CustomerInventoryShipmentScope[] = [
+      'ALL', 'SHIPPED', 'UNSHIPPED',
+      'PACKED_SHIPPED', 'SELF_PICKUP',
+      'HARVEST_IN', 'INTERNAL_TRANSFER', 'OWNERSHIP_TRANSFER', 'ASSIGNED',
+      'WASTE', 'ADJUSTMENT',
+    ];
+    if (!validShipmentScopes.includes(shipmentScope)) {
+      throw new BadRequestException(
+        'shipmentScope must be one of: ALL, SHIPPED, UNSHIPPED, PACKED_SHIPPED, SELF_PICKUP, HARVEST_IN, INTERNAL_TRANSFER, OWNERSHIP_TRANSFER, ASSIGNED, WASTE, ADJUSTMENT',
+      );
     }
 
     if (!['category', 'customer', 'quantity', 'pitamStatus', 'updatedAt'].includes(sortBy)) {
@@ -331,24 +350,31 @@ export class CustomerAllocationService {
     where: Prisma.CustomerAllocationWhereInput,
     shipmentScope: CustomerInventoryShipmentScope,
   ) {
-    if (shipmentScope === 'PACKED_SHIPPED') {
-      where.type = MovementType.PACKED_SHIPPED;
-      return;
-    }
-
-    if (shipmentScope === 'SELF_PICKUP') {
-      where.type = MovementType.SELF_PICKUP;
-      return;
-    }
-
+    // Logical groups
     if (shipmentScope === 'SHIPPED') {
       where.type = { in: [MovementType.PACKED_SHIPPED, MovementType.SELF_PICKUP] };
       return;
     }
-
     if (shipmentScope === 'UNSHIPPED') {
       where.type = { notIn: [MovementType.PACKED_SHIPPED, MovementType.SELF_PICKUP] };
+      return;
     }
+    // Exact movement type matches
+    const exactMap: Partial<Record<CustomerInventoryShipmentScope, MovementType>> = {
+      PACKED_SHIPPED: MovementType.PACKED_SHIPPED,
+      SELF_PICKUP: MovementType.SELF_PICKUP,
+      HARVEST_IN: MovementType.HARVEST_IN,
+      INTERNAL_TRANSFER: MovementType.INTERNAL_TRANSFER,
+      OWNERSHIP_TRANSFER: MovementType.OWNERSHIP_TRANSFER,
+      ASSIGNED: MovementType.ASSIGNED,
+      WASTE: MovementType.WASTE,
+      ADJUSTMENT: MovementType.ADJUSTMENT,
+    };
+    const exact = exactMap[shipmentScope];
+    if (exact) {
+      where.type = exact;
+    }
+    // ALL → no type filter applied
   }
 
   private sortSummary(

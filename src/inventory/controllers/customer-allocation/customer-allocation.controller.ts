@@ -102,7 +102,7 @@ export class CustomerAllocationController {
   })
   @ApiQuery({ name: 'seasonId', type: Number, required: false, description: 'Optional season ID. Defaults to active season.' })
   @ApiQuery({ name: 'customerId', type: Number, required: false, description: 'Optional customer ID. When omitted, returns all customers together.' })
-  @ApiQuery({ name: 'shipmentScope', required: false, enum: ['ALL', 'SHIPPED', 'UNSHIPPED', 'PACKED_SHIPPED', 'SELF_PICKUP'], description: 'PACKED_SHIPPED = shipment only, SELF_PICKUP = self pickup only, SHIPPED = both outbound types together, UNSHIPPED = all other movement types. Quantity sign is preserved from the ledger.' })
+  @ApiQuery({ name: 'shipmentScope', required: false, enum: ['ALL', 'SHIPPED', 'UNSHIPPED', 'PACKED_SHIPPED', 'SELF_PICKUP', 'HARVEST_IN', 'INTERNAL_TRANSFER', 'OWNERSHIP_TRANSFER', 'ASSIGNED', 'WASTE', 'ADJUSTMENT'], description: 'Filter by movement type. Logical groups: SHIPPED = PACKED_SHIPPED + SELF_PICKUP, UNSHIPPED = all non-outbound types. Exact types: PACKED_SHIPPED, SELF_PICKUP, HARVEST_IN, INTERNAL_TRANSFER, OWNERSHIP_TRANSFER, ASSIGNED, WASTE, ADJUSTMENT.' })
   @ApiQuery({ name: 'customerCategoryId', type: Number, required: false, description: 'Optional customer category filter.' })
   @ApiQuery({ name: 'pitamStatus', enum: PitamStatus, enumName: 'PitamStatus', required: false, description: 'Optional pitam status filter.' })
   @ApiQuery({ name: 'sortBy', required: false, enum: ['category', 'customer', 'quantity', 'pitamStatus', 'updatedAt'], description: 'Sort field.' })

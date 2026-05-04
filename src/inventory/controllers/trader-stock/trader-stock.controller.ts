@@ -103,7 +103,7 @@ export class TraderStockController {
   @ApiQuery({ name: 'seasonId', type: Number, required: false, description: 'Optional season ID. Defaults to active season.' })
   @ApiQuery({ name: 'traderId', type: Number, required: false, description: 'Filter by a specific trader ID.' })
   @ApiQuery({ name: 'ownerScope', required: false, enum: ['ALL', 'TRADER', 'MODULO'], description: 'ALL = all traders + modulo, TRADER = one trader, MODULO = unassigned stock only.' })
-  @ApiQuery({ name: 'shipmentScope', required: false, enum: ['ALL', 'SHIPPED', 'UNSHIPPED', 'PACKED_SHIPPED', 'SELF_PICKUP'], description: 'PACKED_SHIPPED = shipment only, SELF_PICKUP = self pickup only, SHIPPED = both outbound types together, UNSHIPPED = all other movement types. Quantity sign is preserved from the ledger.' })
+  @ApiQuery({ name: 'shipmentScope', required: false, enum: ['ALL', 'SHIPPED', 'UNSHIPPED', 'PACKED_SHIPPED', 'SELF_PICKUP', 'HARVEST_IN', 'INTERNAL_TRANSFER', 'OWNERSHIP_TRANSFER', 'ASSIGNED', 'WASTE', 'ADJUSTMENT'], description: 'Filter by movement type. Logical groups: SHIPPED = PACKED_SHIPPED + SELF_PICKUP, UNSHIPPED = all non-outbound types. Exact types: PACKED_SHIPPED, SELF_PICKUP, HARVEST_IN, INTERNAL_TRANSFER, OWNERSHIP_TRANSFER, ASSIGNED, WASTE, ADJUSTMENT.' })
   @ApiQuery({ name: 'traderCategoryId', type: Number, required: false, description: 'Optional trader category filter.' })
   @ApiQuery({ name: 'grade', enum: Grade, enumName: 'Grade', required: false, description: 'Optional grade filter.' })
   @ApiQuery({ name: 'pitamStatus', enum: PitamStatus, enumName: 'PitamStatus', required: false, description: 'Optional pitam status filter.' })
