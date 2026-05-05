@@ -70,7 +70,66 @@ export class InventoryController {
 		summary:
 			'Create internal transfer in TX with both sides (minus/plus): INTERNAL_TRANSFER, OWNERSHIP_TRANSFER, ASSIGNED manual.',
 	})
-	@ApiBody({ type: Object })
+	@ApiBody({
+		type: InternalTransferRequest,
+		description:
+			'Always provide source and destination owners. For TRADER<->CUSTOMER flows you can provide side-specific fields (from*/to*) to map different source/target category/grade/pitam snapshots.',
+		examples: {
+			traderToCustomer: {
+				summary: 'INTERNAL_TRANSFER - trader to customer with separate source/target snapshots',
+				value: {
+					type: 'INTERNAL_TRANSFER',
+					date: '2026-10-10T09:00:00.000Z',
+					dateHebrew: 'יז תשרי תשפז',
+					quantity: 80,
+					fromOwnerType: 'TRADER',
+					fromTraderId: 4,
+					fromTraderCategoryId: 3,
+					fromGrade: 'א',
+					fromPitamStatus: 'WITH_PITAM',
+					toOwnerType: 'CUSTOMER',
+					toCustomerId: 5,
+					toCustomerCategoryId: 11,
+					toPitamStatus: 'WITHOUT_PITAM',
+					updatedById: 1,
+					notes: 'Reserved for customer order #A120',
+				},
+			},
+			moduloToTrader: {
+				summary: 'ASSIGNED - modulo to trader (single snapshot is enough)',
+				value: {
+					type: 'ASSIGNED',
+					date: '2026-10-11T08:00:00.000Z',
+					quantity: 50,
+					pitamStatus: 'MIXED',
+					traderCategoryId: 3,
+					grade: 'ב',
+					fromOwnerType: 'MODULO',
+					toOwnerType: 'TRADER',
+					toTraderId: 9,
+					updatedById: 1,
+					notes: 'Assign modulo stock to trader',
+				},
+			},
+			traderToTrader: {
+				summary: 'OWNERSHIP_TRANSFER - trader to trader (single snapshot is enough)',
+				value: {
+					type: 'OWNERSHIP_TRANSFER',
+					date: '2026-10-12T10:15:00.000Z',
+					quantity: 30,
+					pitamStatus: 'WITH_PITAM',
+					traderCategoryId: 2,
+					grade: 'ג',
+					fromOwnerType: 'TRADER',
+					fromTraderId: 7,
+					toOwnerType: 'TRADER',
+					toTraderId: 10,
+					updatedById: 1,
+					notes: 'Ownership reallocation',
+				},
+			},
+		},
+	})
 	@ApiResponse({ status: 201, description: 'Internal transfer created successfully.' })
 	@ApiResponse({ status: 400, description: 'Invalid payload or unsupported owner flow.' })
 	create(@Body() data: InternalTransferRequest) {
@@ -82,7 +141,28 @@ export class InventoryController {
 		summary:
 			'Create customer INTERNAL_TRANSFER from GENERAL in one TX: consume modulo first, then pull proportionally from traders by configured shares, and return rounding remainder to modulo as ASSIGNED.',
 	})
-	@ApiBody({ type: Object })
+	@ApiBody({
+		type: CustomerGeneralAllocationRequest,
+		description:
+			'Creates customer allocation from general pool. System consumes modulo first, then completes from trader shares if needed.',
+		examples: {
+			default: {
+				summary: 'Customer allocation from general inventory',
+				value: {
+					date: '2026-10-10T09:00:00.000Z',
+					dateHebrew: 'יז תשרי תשפז',
+					quantity: 80,
+					pitamStatus: 'WITH_PITAM',
+					grade: 'א',
+					traderCategoryId: 3,
+					customerId: 5,
+					customerCategoryId: 11,
+					updatedById: 1,
+					notes: 'Reserved for customer order #A120',
+				},
+			},
+		},
+	})
 	@ApiResponse({ status: 201, description: 'Customer general transfer created successfully.' })
 	@ApiResponse({ status: 400, description: 'Invalid payload, missing shares, or insufficient stock.' })
 	createCustomerAllocationFromGeneral(@Body() data: CustomerGeneralAllocationRequest) {
@@ -92,7 +172,32 @@ export class InventoryController {
 	@Patch('internal-transfer/:operationId')
 	@ApiOperation({ summary: 'Update internal transfer in TX while preserving minus/plus integrity.' })
 	@ApiParam({ name: 'operationId', type: Number })
-	@ApiBody({ type: Object })
+	@ApiBody({
+		type: InternalTransferRequest,
+		description: 'Same payload contract as create endpoint.',
+		examples: {
+			updateExample: {
+				summary: 'Patch existing trader->customer transfer with side-specific fields',
+				value: {
+					type: 'INTERNAL_TRANSFER',
+					date: '2026-10-10T09:30:00.000Z',
+					dateHebrew: 'יז תשרי תשפז',
+					quantity: 90,
+					fromOwnerType: 'TRADER',
+					fromTraderId: 4,
+					fromTraderCategoryId: 3,
+					fromGrade: 'א',
+					fromPitamStatus: 'WITH_PITAM',
+					toOwnerType: 'CUSTOMER',
+					toCustomerId: 5,
+					toCustomerCategoryId: 11,
+					toPitamStatus: 'WITHOUT_PITAM',
+					updatedById: 1,
+					notes: 'Updated allocation quantity',
+				},
+			},
+		},
+	})
 	@ApiResponse({ status: 200, description: 'Internal transfer updated successfully.' })
 	@ApiResponse({ status: 404, description: 'Internal transfer not found.' })
 	update(

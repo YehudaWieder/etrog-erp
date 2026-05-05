@@ -14,10 +14,18 @@ export class InternalTransferRequest {
 	date!: string;
 	dateHebrew?: string;
 	quantity!: number;
-	pitamStatus!: PitamStatus;
+	pitamStatus?: PitamStatus;
 	grade?: Grade;
 	traderCategoryId?: number;
 	customerCategoryId?: number;
+	fromPitamStatus?: PitamStatus;
+	toPitamStatus?: PitamStatus;
+	fromTraderCategoryId?: number;
+	fromGrade?: Grade;
+	fromCustomerCategoryId?: number;
+	toTraderCategoryId?: number;
+	toGrade?: Grade;
+	toCustomerCategoryId?: number;
 	fromOwnerType!: InventoryOwnerType;
 	fromTraderId?: number;
 	fromCustomerId?: number;
@@ -44,6 +52,13 @@ export class CustomerGeneralAllocationRequest {
 type TransferLedgerRecord =
 	| { table: 'traderStock'; record: Prisma.TraderStockGetPayload<{}> }
 	| { table: 'customerAllocation'; record: Prisma.CustomerAllocationGetPayload<{}> };
+
+type TransferSideSpec = {
+	pitamStatus: PitamStatus;
+	traderCategoryId?: number;
+	grade?: Grade;
+	customerCategoryId?: number;
+};
 
 export type CombinedMovementScope =
 	| 'ALL'
@@ -513,9 +528,18 @@ export class InventoryService {
 
 	private validateTransferDto(data: InternalTransferRequest) {
 		this.assertSupportedTransferType(data.type);
+		this.assertOwnerFlow(data);
 
 		if (!Number.isFinite(data.quantity) || data.quantity <= 0) {
 			throw new BadRequestException('quantity must be a positive number');
+		}
+
+		if (!data.date) {
+			throw new BadRequestException('date is required');
+		}
+
+		if (!data.updatedById) {
+			throw new BadRequestException('updatedById is required');
 		}
 
 		if (data.fromOwnerType === InventoryOwnerType.MODULO && data.fromTraderId) {
@@ -526,19 +550,7 @@ export class InventoryService {
 			throw new BadRequestException('toOwnerType MODULO is not supported for transfer target');
 		}
 
-		if (this.usesTraderLedger(data.fromOwnerType) || this.usesTraderLedger(data.toOwnerType)) {
-			if (!data.traderCategoryId) {
-				throw new BadRequestException('traderCategoryId is required for trader/modulo movements');
-			}
-			if (!data.grade) {
-				throw new BadRequestException('grade is required for trader/modulo movements');
-			}
-		}
-
 		if (this.usesCustomerLedger(data.fromOwnerType) || this.usesCustomerLedger(data.toOwnerType)) {
-			if (!data.customerCategoryId) {
-				throw new BadRequestException('customerCategoryId is required for customer movements');
-			}
 			if (!data.dateHebrew) {
 				throw new BadRequestException('dateHebrew is required for customer movements');
 			}
@@ -560,7 +572,8 @@ export class InventoryService {
 			throw new BadRequestException('toCustomerId is required when toOwnerType=CUSTOMER');
 		}
 
-		this.assertOwnerFlow(data);
+		this.resolveTransferSideSpec(data, 'from');
+		this.resolveTransferSideSpec(data, 'to');
 	}
 
 	private assertSupportedTransferType(type: MovementType) {
@@ -741,6 +754,7 @@ export class InventoryService {
 		side: 'from' | 'to',
 	) {
 		const ownerType = side === 'from' ? data.fromOwnerType : data.toOwnerType;
+		const sideSpec = this.resolveTransferSideSpec(data, side);
 
 		if (ownerType === InventoryOwnerType.TRADER || ownerType === InventoryOwnerType.MODULO) {
 			return {
@@ -749,9 +763,9 @@ export class InventoryService {
 					seasonId,
 					date: new Date(data.date),
 					traderId: ownerType === InventoryOwnerType.MODULO ? null : side === 'from' ? data.fromTraderId! : data.toTraderId!,
-					traderCategoryId: data.traderCategoryId!,
-					grade: data.grade!,
-					pitamStatus: data.pitamStatus,
+					traderCategoryId: sideSpec.traderCategoryId!,
+					grade: sideSpec.grade!,
+					pitamStatus: sideSpec.pitamStatus,
 					quantity: signedQuantity,
 					isModulo: ownerType === InventoryOwnerType.MODULO,
 					type: data.type,
@@ -770,8 +784,8 @@ export class InventoryService {
 				date: new Date(data.date),
 				dateHebrew: data.dateHebrew!,
 				customerId: side === 'from' ? data.fromCustomerId! : data.toCustomerId!,
-				customerCategoryId: data.customerCategoryId!,
-				pitamStatus: data.pitamStatus,
+				customerCategoryId: sideSpec.customerCategoryId!,
+				pitamStatus: sideSpec.pitamStatus,
 				quantity: signedQuantity,
 				type: data.type,
 				takenFrom: this.resolveTakenFrom(data, side),
@@ -796,6 +810,54 @@ export class InventoryService {
 		}
 
 		return null;
+	}
+
+	private resolveTransferSideSpec(data: InternalTransferRequest, side: 'from' | 'to'): TransferSideSpec {
+		const ownerType = side === 'from' ? data.fromOwnerType : data.toOwnerType;
+		const pitamStatus =
+			side === 'from'
+				? (data.fromPitamStatus ?? data.pitamStatus)
+				: (data.toPitamStatus ?? data.pitamStatus);
+
+		if (!pitamStatus) {
+			throw new BadRequestException(`${side}PitamStatus is required`);
+		}
+
+		if (ownerType === InventoryOwnerType.TRADER || ownerType === InventoryOwnerType.MODULO) {
+			const traderCategoryId =
+				side === 'from'
+					? (data.fromTraderCategoryId ?? data.traderCategoryId)
+					: (data.toTraderCategoryId ?? data.traderCategoryId);
+			const grade = side === 'from' ? (data.fromGrade ?? data.grade) : (data.toGrade ?? data.grade);
+
+			if (!traderCategoryId) {
+				throw new BadRequestException(`${side}TraderCategoryId is required for trader/modulo movements`);
+			}
+
+			if (!grade) {
+				throw new BadRequestException(`${side}Grade is required for trader/modulo movements`);
+			}
+
+			return {
+				pitamStatus,
+				traderCategoryId,
+				grade,
+			};
+		}
+
+		const customerCategoryId =
+			side === 'from'
+				? (data.fromCustomerCategoryId ?? data.customerCategoryId)
+				: (data.toCustomerCategoryId ?? data.customerCategoryId);
+
+		if (!customerCategoryId) {
+			throw new BadRequestException(`${side}CustomerCategoryId is required for customer movements`);
+		}
+
+		return {
+			pitamStatus,
+			customerCategoryId,
+		};
 	}
 
 	private async createTransferPairTx(tx: Prisma.TransactionClient, seasonId: number, data: InternalTransferRequest) {
