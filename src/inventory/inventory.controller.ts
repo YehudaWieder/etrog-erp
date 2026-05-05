@@ -10,7 +10,13 @@ import {
 	ApiTags,
 	ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { CombinedInventorySummaryQuery, CombinedMovementScope, InternalTransferRequest, InventoryService } from './inventory.service';
+import {
+	CombinedInventorySummaryQuery,
+	CombinedMovementScope,
+	CustomerGeneralAllocationRequest,
+	InternalTransferRequest,
+	InventoryService,
+} from './inventory.service';
 import { Grade, PitamStatus } from 'src/generated/prisma';
 
 @ApiTags('Inventory')
@@ -69,6 +75,18 @@ export class InventoryController {
 	@ApiResponse({ status: 400, description: 'Invalid payload or unsupported owner flow.' })
 	create(@Body() data: InternalTransferRequest) {
 		return this.inventoryService.createInternalTransfer(data);
+	}
+
+	@Post('customer-general-transfer')
+	@ApiOperation({
+		summary:
+			'Create customer INTERNAL_TRANSFER from GENERAL in one TX: consume modulo first, then pull proportionally from traders by configured shares, and return rounding remainder to modulo as ASSIGNED.',
+	})
+	@ApiBody({ type: Object })
+	@ApiResponse({ status: 201, description: 'Customer general transfer created successfully.' })
+	@ApiResponse({ status: 400, description: 'Invalid payload, missing shares, or insufficient stock.' })
+	createCustomerAllocationFromGeneral(@Body() data: CustomerGeneralAllocationRequest) {
+		return this.inventoryService.createCustomerAllocationFromGeneral(data);
 	}
 
 	@Patch('internal-transfer/:operationId')

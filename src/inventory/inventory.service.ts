@@ -28,6 +28,19 @@ export class InternalTransferRequest {
 	notes?: string;
 }
 
+export class CustomerGeneralAllocationRequest {
+	date!: string;
+	dateHebrew!: string;
+	quantity!: number;
+	pitamStatus!: PitamStatus;
+	grade!: Grade;
+	traderCategoryId!: number;
+	customerId!: number;
+	customerCategoryId!: number;
+	updatedById!: number;
+	notes?: string;
+}
+
 type TransferLedgerRecord =
 	| { table: 'traderStock'; record: Prisma.TraderStockGetPayload<{}> }
 	| { table: 'customerAllocation'; record: Prisma.CustomerAllocationGetPayload<{}> };
@@ -73,6 +86,205 @@ export class InventoryService {
 
 		return this.prisma.$transaction(async (tx) => {
 			return this.createTransferPairTx(tx, seasonId, data);
+		});
+	}
+
+	async createCustomerAllocationFromGeneral(data: CustomerGeneralAllocationRequest) {
+		this.validateCustomerGeneralAllocationDto(data);
+		const { id: seasonId } = await this.seasonsService.findActiveSeason();
+
+		return this.prisma.$transaction(async (tx) => {
+			const requestQuantity = Math.trunc(data.quantity);
+			const moduloAvailableRaw = await tx.traderStock.aggregate({
+				_sum: { quantity: true },
+				where: {
+					seasonId,
+					traderId: null,
+					isModulo: true,
+					traderCategoryId: data.traderCategoryId,
+					grade: data.grade,
+					pitamStatus: data.pitamStatus,
+					isDeleted: false,
+				},
+			});
+
+			const moduloAvailable = Math.max(0, moduloAvailableRaw._sum.quantity ?? 0);
+			const moduloUsed = Math.min(moduloAvailable, requestQuantity);
+			const deficit = requestQuantity - moduloUsed;
+
+			const customerAllocation = await tx.customerAllocation.create({
+				data: {
+					seasonId,
+					date: new Date(data.date),
+					dateHebrew: data.dateHebrew,
+					customerId: data.customerId,
+					customerCategoryId: data.customerCategoryId,
+					pitamStatus: data.pitamStatus,
+					quantity: requestQuantity,
+					type: MovementType.INTERNAL_TRANSFER,
+					takenFrom: SourceType.GENERAL,
+					traderId: null,
+					updatedById: data.updatedById,
+					notes: data.notes,
+				},
+			});
+
+			const movementReferenceId = customerAllocation.id;
+
+			await tx.customerAllocation.update({
+				where: { id: customerAllocation.id },
+				data: { MovementReferenceId: movementReferenceId },
+			});
+
+			if (moduloUsed > 0) {
+				await tx.traderStock.create({
+					data: {
+						seasonId,
+						date: new Date(data.date),
+						traderId: null,
+						traderCategoryId: data.traderCategoryId,
+						grade: data.grade,
+						pitamStatus: data.pitamStatus,
+						quantity: -moduloUsed,
+						isModulo: true,
+						type: MovementType.INTERNAL_TRANSFER,
+						MovementReferenceId: movementReferenceId,
+						shipmentId: null,
+						boxId: null,
+						updatedById: data.updatedById,
+						notes: data.notes,
+					},
+				});
+			}
+
+			let traderTakenTotal = 0;
+			let moduloRemainder = 0;
+
+			if (deficit > 0) {
+				const shares = await tx.traderCategoryShare.findMany({
+					where: {
+						seasonId,
+						traderCategoryId: data.traderCategoryId,
+					},
+					orderBy: { traderId: 'asc' },
+				});
+
+				if (shares.length === 0) {
+					throw new BadRequestException(
+						`No trader shares found for category ${data.traderCategoryId} in season ${seasonId}`,
+					);
+				}
+
+				const normalizedShares = shares.map((share) => ({
+					traderId: share.traderId,
+					percent: Number(share.percent),
+					percentText: share.percent.toString(),
+				}));
+
+				const totalPercent = normalizedShares.reduce((sum, share) => sum + share.percent, 0);
+				if (Math.abs(totalPercent - 100) > 1e-9) {
+					throw new BadRequestException(
+						`Invalid shares for category ${data.traderCategoryId}: sum of percents must be exactly 100`,
+					);
+				}
+
+				const grossFromTraders = this.calculateMinimalGrossByShares(deficit, normalizedShares.map((share) => share.percentText));
+				const traderAllocations = normalizedShares.map((share) => ({
+					traderId: share.traderId,
+					quantity: this.calculateExactShareQuantity(grossFromTraders, share.percentText),
+				}));
+
+				if (traderAllocations.some((allocation) => allocation.quantity <= 0)) {
+					throw new BadRequestException(
+						'Requested quantity cannot be distributed to all traders by configured shares; increase quantity or adjust shares',
+					);
+				}
+
+				const traderIds = traderAllocations.map((allocation) => allocation.traderId);
+				const traderBalances = await tx.traderStock.groupBy({
+					by: ['traderId'],
+					where: {
+						seasonId,
+						isDeleted: false,
+						isModulo: false,
+						traderId: { in: traderIds },
+						traderCategoryId: data.traderCategoryId,
+						grade: data.grade,
+						pitamStatus: data.pitamStatus,
+					},
+					_sum: { quantity: true },
+				});
+
+				const balanceMap = new Map<number, number>();
+				for (const row of traderBalances) {
+					if (row.traderId !== null) {
+						balanceMap.set(row.traderId, row._sum.quantity ?? 0);
+					}
+				}
+
+				for (const allocation of traderAllocations) {
+					const available = balanceMap.get(allocation.traderId) ?? 0;
+					if (available < allocation.quantity) {
+						throw new BadRequestException(
+							`Insufficient stock for trader ${allocation.traderId}. Required ${allocation.quantity}, available ${available}`,
+						);
+					}
+				}
+
+				for (const allocation of traderAllocations) {
+					await tx.traderStock.create({
+						data: {
+							seasonId,
+							date: new Date(data.date),
+							traderId: allocation.traderId,
+							traderCategoryId: data.traderCategoryId,
+							grade: data.grade,
+							pitamStatus: data.pitamStatus,
+							quantity: -allocation.quantity,
+							isModulo: false,
+							type: MovementType.INTERNAL_TRANSFER,
+							MovementReferenceId: movementReferenceId,
+							shipmentId: null,
+							boxId: null,
+							updatedById: data.updatedById,
+							notes: data.notes,
+						},
+					});
+				}
+
+				traderTakenTotal = traderAllocations.reduce((sum, allocation) => sum + allocation.quantity, 0);
+				moduloRemainder = traderTakenTotal - deficit;
+
+				if (moduloRemainder > 0) {
+					await tx.traderStock.create({
+						data: {
+							seasonId,
+							date: new Date(data.date),
+							traderId: null,
+							traderCategoryId: data.traderCategoryId,
+							grade: data.grade,
+							pitamStatus: data.pitamStatus,
+							quantity: moduloRemainder,
+							isModulo: true,
+							type: MovementType.ASSIGNED,
+							MovementReferenceId: movementReferenceId,
+							shipmentId: null,
+							boxId: null,
+							updatedById: data.updatedById,
+							notes: data.notes,
+						},
+					});
+				}
+			}
+
+			return {
+				movementReferenceId,
+				customerAllocationId: customerAllocation.id,
+				requestedQuantity: requestQuantity,
+				usedFromModulo: moduloUsed,
+				takenFromTraders: traderTakenTotal,
+				returnedToModulo: moduloRemainder,
+			};
 		});
 	}
 
@@ -360,6 +572,130 @@ export class InventoryService {
 			default:
 				throw new BadRequestException(`Unsupported transfer type: ${type}`);
 		}
+	}
+
+	private validateCustomerGeneralAllocationDto(data: CustomerGeneralAllocationRequest) {
+		if (!Number.isFinite(data.quantity) || data.quantity <= 0 || !Number.isInteger(data.quantity)) {
+			throw new BadRequestException('quantity must be a positive integer');
+		}
+
+		if (!data.date) {
+			throw new BadRequestException('date is required');
+		}
+
+		if (!data.dateHebrew) {
+			throw new BadRequestException('dateHebrew is required');
+		}
+
+		if (!data.customerId) {
+			throw new BadRequestException('customerId is required');
+		}
+
+		if (!data.customerCategoryId) {
+			throw new BadRequestException('customerCategoryId is required');
+		}
+
+		if (!data.traderCategoryId) {
+			throw new BadRequestException('traderCategoryId is required');
+		}
+
+		if (!data.grade) {
+			throw new BadRequestException('grade is required');
+		}
+
+		if (!data.pitamStatus) {
+			throw new BadRequestException('pitamStatus is required');
+		}
+
+		if (!data.updatedById) {
+			throw new BadRequestException('updatedById is required');
+		}
+	}
+
+	private calculateMinimalGrossByShares(deficit: number, sharePercents: string[]) {
+		const deficitBig = BigInt(deficit);
+		const hundred = 100n;
+
+		let step = 1n;
+		for (const percentText of sharePercents) {
+			const fraction = this.decimalToFraction(percentText);
+			if (fraction.numerator <= 0n) {
+				throw new BadRequestException('All trader shares must be positive numbers');
+			}
+
+			const denominator = hundred * fraction.denominator;
+			const unitStep = denominator / this.gcd(fraction.numerator, denominator);
+			step = this.lcm(step, unitStep);
+		}
+
+		const gross = ((deficitBig + step - 1n) / step) * step;
+		if (gross > BigInt(Number.MAX_SAFE_INTEGER)) {
+			throw new BadRequestException('Calculated gross quantity is too large');
+		}
+
+		return Number(gross);
+	}
+
+	private calculateExactShareQuantity(total: number, percentText: string) {
+		const totalBig = BigInt(total);
+		const fraction = this.decimalToFraction(percentText);
+		const numerator = totalBig * fraction.numerator;
+		const denominator = 100n * fraction.denominator;
+
+		if (numerator % denominator !== 0n) {
+			throw new BadRequestException('Share distribution produced non-integer quantity');
+		}
+
+		const value = numerator / denominator;
+		if (value > BigInt(Number.MAX_SAFE_INTEGER)) {
+			throw new BadRequestException('Calculated share quantity is too large');
+		}
+
+		return Number(value);
+	}
+
+	private decimalToFraction(value: string) {
+		const normalized = value.trim();
+		if (!/^\d+(\.\d+)?$/.test(normalized)) {
+			throw new BadRequestException(`Invalid share percent value: ${value}`);
+		}
+
+		const parts = normalized.split('.');
+		if (parts.length === 1) {
+			return { numerator: BigInt(parts[0]), denominator: 1n };
+		}
+
+		const whole = parts[0];
+		const frac = parts[1];
+		const denominator = 10n ** BigInt(frac.length);
+		const numerator = BigInt(whole + frac);
+		const divisor = this.gcd(numerator, denominator);
+
+		return {
+			numerator: numerator / divisor,
+			denominator: denominator / divisor,
+		};
+	}
+
+	private gcd(a: bigint, b: bigint): bigint {
+		let left = a < 0n ? -a : a;
+		let right = b < 0n ? -b : b;
+
+		while (right !== 0n) {
+			const temp = left % right;
+			left = right;
+			right = temp;
+		}
+
+		return left;
+	}
+
+	private lcm(a: bigint, b: bigint): bigint {
+		if (a === 0n || b === 0n) {
+			return 0n;
+		}
+
+		return (a / this.gcd(a, b)) * b;
 	}
 
 	private assertOwnerFlow(data: InternalTransferRequest) {
