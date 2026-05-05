@@ -169,6 +169,36 @@ export class InventoryController {
 		return this.inventoryService.createCustomerAllocationFromGeneral(data);
 	}
 
+	@Patch('customer-general-transfer/:customerAllocationId')
+	@ApiOperation({
+		summary:
+			'Update customer general transfer in one TX: rollback linked trader movements and rebuild by current modulo+shares rules.',
+	})
+	@ApiParam({ name: 'customerAllocationId', type: Number })
+	@ApiBody({ type: Object })
+	@ApiResponse({ status: 200, description: 'Customer general transfer updated successfully.' })
+	@ApiResponse({ status: 404, description: 'Customer general transfer not found.' })
+	updateCustomerAllocationFromGeneral(
+		@Param('customerAllocationId', ParseIntPipe) customerAllocationId: number,
+		@Body() data: CustomerGeneralAllocationRequest,
+	) {
+		return this.inventoryService.updateCustomerAllocationFromGeneral(customerAllocationId, data);
+	}
+
+	@Delete('customer-general-transfer/:customerAllocationId')
+	@ApiOperation({
+		summary:
+			'Delete customer general transfer in one TX: soft-delete customer row and all linked trader INTERNAL_TRANSFER/ASSIGNED movements.',
+	})
+	@ApiParam({ name: 'customerAllocationId', type: Number })
+	@ApiResponse({ status: 200, description: 'Customer general transfer deleted successfully.' })
+	@ApiResponse({ status: 404, description: 'Customer general transfer not found.' })
+	removeCustomerAllocationFromGeneral(
+		@Param('customerAllocationId', ParseIntPipe) customerAllocationId: number,
+	) {
+		return this.inventoryService.removeCustomerAllocationFromGeneral(customerAllocationId);
+	}
+
 	@Patch('internal-transfer/:operationId')
 	@ApiOperation({ summary: 'Update internal transfer in TX while preserving minus/plus integrity.' })
 	@ApiParam({ name: 'operationId', type: Number })

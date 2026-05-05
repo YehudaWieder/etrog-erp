@@ -110,23 +110,6 @@ export class InventoryService {
 
 		return this.prisma.$transaction(async (tx) => {
 			const requestQuantity = Math.trunc(data.quantity);
-			const moduloAvailableRaw = await tx.traderStock.aggregate({
-				_sum: { quantity: true },
-				where: {
-					seasonId,
-					traderId: null,
-					isModulo: true,
-					traderCategoryId: data.traderCategoryId,
-					grade: data.grade,
-					pitamStatus: data.pitamStatus,
-					isDeleted: false,
-				},
-			});
-
-			const moduloAvailable = Math.max(0, moduloAvailableRaw._sum.quantity ?? 0);
-			const moduloUsed = Math.min(moduloAvailable, requestQuantity);
-			const deficit = requestQuantity - moduloUsed;
-
 			const customerAllocation = await tx.customerAllocation.create({
 				data: {
 					seasonId,
@@ -151,17 +134,241 @@ export class InventoryService {
 				data: { MovementReferenceId: movementReferenceId },
 			});
 
-			if (moduloUsed > 0) {
+			const movementSummary = await this.applyCustomerGeneralAllocationMovementsTx(
+				tx,
+				seasonId,
+				data,
+				movementReferenceId,
+				requestQuantity,
+			);
+
+			return {
+				movementReferenceId,
+				customerAllocationId: customerAllocation.id,
+				requestedQuantity: requestQuantity,
+				...movementSummary,
+			};
+		});
+	}
+
+	async updateCustomerAllocationFromGeneral(customerAllocationId: number, data: CustomerGeneralAllocationRequest) {
+		this.validateCustomerGeneralAllocationDto(data);
+		const { id: seasonId } = await this.seasonsService.findActiveSeason();
+
+		return this.prisma.$transaction(async (tx) => {
+			const existing = await this.getCustomerGeneralAllocationOperationTx(tx, customerAllocationId);
+			const movementReferenceId = existing.MovementReferenceId ?? existing.id;
+			const requestQuantity = Math.trunc(data.quantity);
+
+			await tx.traderStock.updateMany({
+				where: {
+					MovementReferenceId: movementReferenceId,
+					isDeleted: false,
+					type: { in: [MovementType.INTERNAL_TRANSFER, MovementType.ASSIGNED] },
+				},
+				data: { isDeleted: true },
+			});
+
+			await tx.customerAllocation.update({
+				where: { id: existing.id },
+				data: {
+					seasonId,
+					date: new Date(data.date),
+					dateHebrew: data.dateHebrew,
+					customerId: data.customerId,
+					customerCategoryId: data.customerCategoryId,
+					pitamStatus: data.pitamStatus,
+					quantity: requestQuantity,
+					type: MovementType.INTERNAL_TRANSFER,
+					takenFrom: SourceType.GENERAL,
+					traderId: null,
+					updatedById: data.updatedById,
+					notes: data.notes,
+					MovementReferenceId: movementReferenceId,
+					isDeleted: false,
+				},
+			});
+
+			const movementSummary = await this.applyCustomerGeneralAllocationMovementsTx(
+				tx,
+				seasonId,
+				data,
+				movementReferenceId,
+				requestQuantity,
+			);
+
+			return {
+				movementReferenceId,
+				customerAllocationId: existing.id,
+				requestedQuantity: requestQuantity,
+				...movementSummary,
+			};
+		});
+	}
+
+	async removeCustomerAllocationFromGeneral(customerAllocationId: number) {
+		return this.prisma.$transaction(async (tx) => {
+			const existing = await this.getCustomerGeneralAllocationOperationTx(tx, customerAllocationId);
+			const movementReferenceId = existing.MovementReferenceId ?? existing.id;
+
+			const customerDeleted = await tx.customerAllocation.updateMany({
+				where: {
+					id: existing.id,
+					isDeleted: false,
+				},
+				data: { isDeleted: true },
+			});
+
+			const traderDeleted = await tx.traderStock.updateMany({
+				where: {
+					MovementReferenceId: movementReferenceId,
+					isDeleted: false,
+					type: { in: [MovementType.INTERNAL_TRANSFER, MovementType.ASSIGNED] },
+				},
+				data: { isDeleted: true },
+			});
+
+			return {
+				movementReferenceId,
+				customerAllocationId: existing.id,
+				deleted: {
+					customerAllocations: customerDeleted.count,
+					traderStocks: traderDeleted.count,
+				},
+			};
+		});
+	}
+
+	private async applyCustomerGeneralAllocationMovementsTx(
+		tx: Prisma.TransactionClient,
+		seasonId: number,
+		data: CustomerGeneralAllocationRequest,
+		movementReferenceId: number,
+		requestQuantity: number,
+	) {
+		const moduloAvailableRaw = await tx.traderStock.aggregate({
+			_sum: { quantity: true },
+			where: {
+				seasonId,
+				traderId: null,
+				isModulo: true,
+				traderCategoryId: data.traderCategoryId,
+				grade: data.grade,
+				pitamStatus: data.pitamStatus,
+				isDeleted: false,
+			},
+		});
+
+		const moduloAvailable = Math.max(0, moduloAvailableRaw._sum.quantity ?? 0);
+		const moduloUsed = Math.min(moduloAvailable, requestQuantity);
+		const deficit = requestQuantity - moduloUsed;
+
+		if (moduloUsed > 0) {
+			await tx.traderStock.create({
+				data: {
+					seasonId,
+					date: new Date(data.date),
+					traderId: null,
+					traderCategoryId: data.traderCategoryId,
+					grade: data.grade,
+					pitamStatus: data.pitamStatus,
+					quantity: -moduloUsed,
+					isModulo: true,
+					type: MovementType.INTERNAL_TRANSFER,
+					MovementReferenceId: movementReferenceId,
+					shipmentId: null,
+					boxId: null,
+					updatedById: data.updatedById,
+					notes: data.notes,
+				},
+			});
+		}
+
+		let traderTakenTotal = 0;
+		let moduloRemainder = 0;
+
+		if (deficit > 0) {
+			const shares = await tx.traderCategoryShare.findMany({
+				where: {
+					seasonId,
+					traderCategoryId: data.traderCategoryId,
+				},
+				orderBy: { traderId: 'asc' },
+			});
+
+			if (shares.length === 0) {
+				throw new BadRequestException(
+					`No trader shares found for category ${data.traderCategoryId} in season ${seasonId}`,
+				);
+			}
+
+			const normalizedShares = shares.map((share) => ({
+				traderId: share.traderId,
+				percent: Number(share.percent),
+				percentText: share.percent.toString(),
+			}));
+
+			const totalPercent = normalizedShares.reduce((sum, share) => sum + share.percent, 0);
+			if (Math.abs(totalPercent - 100) > 1e-9) {
+				throw new BadRequestException(
+					`Invalid shares for category ${data.traderCategoryId}: sum of percents must be exactly 100`,
+				);
+			}
+
+			const grossFromTraders = this.calculateMinimalGrossByShares(deficit, normalizedShares.map((share) => share.percentText));
+			const traderAllocations = normalizedShares.map((share) => ({
+				traderId: share.traderId,
+				quantity: this.calculateExactShareQuantity(grossFromTraders, share.percentText),
+			}));
+
+			if (traderAllocations.some((allocation) => allocation.quantity <= 0)) {
+				throw new BadRequestException(
+					'Requested quantity cannot be distributed to all traders by configured shares; increase quantity or adjust shares',
+				);
+			}
+
+			const traderIds = traderAllocations.map((allocation) => allocation.traderId);
+			const traderBalances = await tx.traderStock.groupBy({
+				by: ['traderId'],
+				where: {
+					seasonId,
+					isDeleted: false,
+					isModulo: false,
+					traderId: { in: traderIds },
+					traderCategoryId: data.traderCategoryId,
+					grade: data.grade,
+					pitamStatus: data.pitamStatus,
+				},
+				_sum: { quantity: true },
+			});
+
+			const balanceMap = new Map<number, number>();
+			for (const row of traderBalances) {
+				if (row.traderId !== null) {
+					balanceMap.set(row.traderId, row._sum.quantity ?? 0);
+				}
+			}
+
+			for (const allocation of traderAllocations) {
+				const available = balanceMap.get(allocation.traderId) ?? 0;
+				if (available < allocation.quantity) {
+					throw new BadRequestException(
+						`Insufficient stock for trader ${allocation.traderId}. Required ${allocation.quantity}, available ${available}`,
+					);
+				}
+			}
+
+			for (const allocation of traderAllocations) {
 				await tx.traderStock.create({
 					data: {
 						seasonId,
 						date: new Date(data.date),
-						traderId: null,
+						traderId: allocation.traderId,
 						traderCategoryId: data.traderCategoryId,
 						grade: data.grade,
 						pitamStatus: data.pitamStatus,
-						quantity: -moduloUsed,
-						isModulo: true,
+						quantity: -allocation.quantity,
+						isModulo: false,
 						type: MovementType.INTERNAL_TRANSFER,
 						MovementReferenceId: movementReferenceId,
 						shipmentId: null,
@@ -172,135 +379,56 @@ export class InventoryService {
 				});
 			}
 
-			let traderTakenTotal = 0;
-			let moduloRemainder = 0;
+			traderTakenTotal = traderAllocations.reduce((sum, allocation) => sum + allocation.quantity, 0);
+			moduloRemainder = traderTakenTotal - deficit;
 
-			if (deficit > 0) {
-				const shares = await tx.traderCategoryShare.findMany({
-					where: {
+			if (moduloRemainder > 0) {
+				await tx.traderStock.create({
+					data: {
 						seasonId,
-						traderCategoryId: data.traderCategoryId,
-					},
-					orderBy: { traderId: 'asc' },
-				});
-
-				if (shares.length === 0) {
-					throw new BadRequestException(
-						`No trader shares found for category ${data.traderCategoryId} in season ${seasonId}`,
-					);
-				}
-
-				const normalizedShares = shares.map((share) => ({
-					traderId: share.traderId,
-					percent: Number(share.percent),
-					percentText: share.percent.toString(),
-				}));
-
-				const totalPercent = normalizedShares.reduce((sum, share) => sum + share.percent, 0);
-				if (Math.abs(totalPercent - 100) > 1e-9) {
-					throw new BadRequestException(
-						`Invalid shares for category ${data.traderCategoryId}: sum of percents must be exactly 100`,
-					);
-				}
-
-				const grossFromTraders = this.calculateMinimalGrossByShares(deficit, normalizedShares.map((share) => share.percentText));
-				const traderAllocations = normalizedShares.map((share) => ({
-					traderId: share.traderId,
-					quantity: this.calculateExactShareQuantity(grossFromTraders, share.percentText),
-				}));
-
-				if (traderAllocations.some((allocation) => allocation.quantity <= 0)) {
-					throw new BadRequestException(
-						'Requested quantity cannot be distributed to all traders by configured shares; increase quantity or adjust shares',
-					);
-				}
-
-				const traderIds = traderAllocations.map((allocation) => allocation.traderId);
-				const traderBalances = await tx.traderStock.groupBy({
-					by: ['traderId'],
-					where: {
-						seasonId,
-						isDeleted: false,
-						isModulo: false,
-						traderId: { in: traderIds },
+						date: new Date(data.date),
+						traderId: null,
 						traderCategoryId: data.traderCategoryId,
 						grade: data.grade,
 						pitamStatus: data.pitamStatus,
+						quantity: moduloRemainder,
+						isModulo: true,
+						type: MovementType.ASSIGNED,
+						MovementReferenceId: movementReferenceId,
+						shipmentId: null,
+						boxId: null,
+						updatedById: data.updatedById,
+						notes: data.notes,
 					},
-					_sum: { quantity: true },
 				});
-
-				const balanceMap = new Map<number, number>();
-				for (const row of traderBalances) {
-					if (row.traderId !== null) {
-						balanceMap.set(row.traderId, row._sum.quantity ?? 0);
-					}
-				}
-
-				for (const allocation of traderAllocations) {
-					const available = balanceMap.get(allocation.traderId) ?? 0;
-					if (available < allocation.quantity) {
-						throw new BadRequestException(
-							`Insufficient stock for trader ${allocation.traderId}. Required ${allocation.quantity}, available ${available}`,
-						);
-					}
-				}
-
-				for (const allocation of traderAllocations) {
-					await tx.traderStock.create({
-						data: {
-							seasonId,
-							date: new Date(data.date),
-							traderId: allocation.traderId,
-							traderCategoryId: data.traderCategoryId,
-							grade: data.grade,
-							pitamStatus: data.pitamStatus,
-							quantity: -allocation.quantity,
-							isModulo: false,
-							type: MovementType.INTERNAL_TRANSFER,
-							MovementReferenceId: movementReferenceId,
-							shipmentId: null,
-							boxId: null,
-							updatedById: data.updatedById,
-							notes: data.notes,
-						},
-					});
-				}
-
-				traderTakenTotal = traderAllocations.reduce((sum, allocation) => sum + allocation.quantity, 0);
-				moduloRemainder = traderTakenTotal - deficit;
-
-				if (moduloRemainder > 0) {
-					await tx.traderStock.create({
-						data: {
-							seasonId,
-							date: new Date(data.date),
-							traderId: null,
-							traderCategoryId: data.traderCategoryId,
-							grade: data.grade,
-							pitamStatus: data.pitamStatus,
-							quantity: moduloRemainder,
-							isModulo: true,
-							type: MovementType.ASSIGNED,
-							MovementReferenceId: movementReferenceId,
-							shipmentId: null,
-							boxId: null,
-							updatedById: data.updatedById,
-							notes: data.notes,
-						},
-					});
-				}
 			}
+		}
 
-			return {
-				movementReferenceId,
-				customerAllocationId: customerAllocation.id,
-				requestedQuantity: requestQuantity,
-				usedFromModulo: moduloUsed,
-				takenFromTraders: traderTakenTotal,
-				returnedToModulo: moduloRemainder,
-			};
+		return {
+			usedFromModulo: moduloUsed,
+			takenFromTraders: traderTakenTotal,
+			returnedToModulo: moduloRemainder,
+		};
+	}
+
+	private async getCustomerGeneralAllocationOperationTx(
+		tx: Prisma.TransactionClient,
+		customerAllocationId: number,
+	) {
+		const row = await tx.customerAllocation.findFirst({
+			where: {
+				id: customerAllocationId,
+				isDeleted: false,
+				type: MovementType.INTERNAL_TRANSFER,
+				takenFrom: SourceType.GENERAL,
+			},
 		});
+
+		if (!row) {
+			throw new NotFoundException(`Customer general transfer ${customerAllocationId} not found`);
+		}
+
+		return row;
 	}
 
 	async updateInternalTransfer(operationId: number, data: InternalTransferRequest) {
