@@ -5,12 +5,14 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma } from 'src/generated/prisma';
 import { BoxOwnership, Grade, ItemOwnership, MovementType, PitamStatus, SourceType } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
+import { ShipmentTotalsService } from '../common/shipment-totals.service';
 
 @Injectable()
 export class ItemService {
   constructor(
     private prisma: PrismaService,
     private seasonsService: SeasonsService,
+    private shipmentTotalsService: ShipmentTotalsService,
   ) {}
 
   private assertPositiveInt(value: unknown, fieldName: string) {
@@ -683,7 +685,7 @@ export class ItemService {
         updatedById: newItem.updatedById,
       });
 
-      await this.syncTotals(tx, box.id, box.shipmentId);
+      await this.shipmentTotalsService.syncBoxAndShipmentTotals(tx, box.id, box.shipmentId);
 
       return newItem;
     });
@@ -809,10 +811,10 @@ export class ItemService {
       });
 
       // Re-sync totals for the associated box and shipment
-      await this.syncTotals(tx, currentItem.boxId, currentItem.shipmentId);
+      await this.shipmentTotalsService.syncBoxAndShipmentTotals(tx, currentItem.boxId, currentItem.shipmentId);
 
       if (currentItem.boxId !== updatedItem.boxId || currentItem.shipmentId !== updatedItem.shipmentId) {
-        await this.syncTotals(tx, updatedItem.boxId, updatedItem.shipmentId);
+        await this.shipmentTotalsService.syncBoxAndShipmentTotals(tx, updatedItem.boxId, updatedItem.shipmentId);
       }
 
       return updatedItem;
@@ -837,39 +839,9 @@ export class ItemService {
         where: { id },
       });
 
-      await this.syncTotals(tx, existing.boxId, existing.shipmentId);
+      await this.shipmentTotalsService.syncBoxAndShipmentTotals(tx, existing.boxId, existing.shipmentId);
 
       return item;
-    });
-  }
-
-  // Helper method to synchronize totals for Box and Shipment after item changes
-  private async syncTotals(tx: Prisma.TransactionClient, boxId: number, shipmentId: number) {
-    const [boxSum, shipmentSum, boxCount] = await Promise.all([
-      tx.shipmentItem.aggregate({
-        where: { boxId, isDeleted: false },
-        _sum: { quantity: true },
-      }),
-      tx.shipmentItem.aggregate({
-        where: { shipmentId, isDeleted: false },
-        _sum: { quantity: true },
-      }),
-      tx.box.count({
-        where: { shipmentId, isDeleted: false },
-      }),
-    ]);
-
-    await tx.box.update({
-      where: { id: boxId },
-      data: { totalQuantity: boxSum._sum.quantity || 0 },
-    });
-
-    await tx.shipment.update({
-      where: { id: shipmentId },
-      data: {
-        totalQuantity: shipmentSum._sum.quantity || 0,
-        totalBoxes: boxCount,
-      },
     });
   }
 }

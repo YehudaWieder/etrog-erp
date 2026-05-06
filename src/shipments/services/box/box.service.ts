@@ -2,9 +2,9 @@
 
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Prisma } from 'src/generated/prisma';
 import { BoxOwnership, BoxStatus, BoxType } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
+import { ShipmentTotalsService } from '../common/shipment-totals.service';
 
 type CreateBoxInput = {
   shipmentId: number;
@@ -33,27 +33,8 @@ export class BoxService {
   constructor(
     private prisma: PrismaService,
     private seasonsService: SeasonsService,
+    private shipmentTotalsService: ShipmentTotalsService,
   ) {}
-
-  private async syncShipmentTotals(tx: Prisma.TransactionClient, shipmentId: number) {
-    const [boxCount, shipmentItems] = await Promise.all([
-      tx.box.count({
-        where: { shipmentId, isDeleted: false },
-      }),
-      tx.shipmentItem.aggregate({
-        where: { shipmentId, isDeleted: false },
-        _sum: { quantity: true },
-      }),
-    ]);
-
-    await tx.shipment.update({
-      where: { id: shipmentId },
-      data: {
-        totalBoxes: boxCount,
-        totalQuantity: shipmentItems._sum.quantity || 0,
-      },
-    });
-  }
 
   private assertPositiveInt(value: unknown, fieldName: string) {
     if (!Number.isInteger(value) || Number(value) <= 0) {
@@ -193,7 +174,7 @@ export class BoxService {
         },
       });
 
-      await this.syncShipmentTotals(tx, data.shipmentId);
+      await this.shipmentTotalsService.syncShipmentTotals(tx, data.shipmentId);
 
       return box;
     });
@@ -260,7 +241,7 @@ export class BoxService {
         },
       });
 
-      await this.syncShipmentTotals(tx, box.shipmentId);
+      await this.shipmentTotalsService.syncShipmentTotals(tx, box.shipmentId);
 
       return updatedBox;
     });
@@ -274,7 +255,7 @@ export class BoxService {
         data: { isDeleted: true },
       });
 
-      await this.syncShipmentTotals(tx, box.shipmentId);
+      await this.shipmentTotalsService.syncShipmentTotals(tx, box.shipmentId);
 
       return box;
     });
@@ -293,7 +274,7 @@ export class BoxService {
       await tx.shipmentItem.deleteMany({ where: { boxId: id } });
       await tx.box.delete({ where: { id } });
 
-      await this.syncShipmentTotals(tx, box.shipmentId);
+      await this.shipmentTotalsService.syncShipmentTotals(tx, box.shipmentId);
 
       return { deleted: true, id };
     });

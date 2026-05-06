@@ -7,10 +7,11 @@ import { ItemService } from './services/item/item.service';
 import { BoxService } from './services/box/box.service';
 import { ShipmentService } from './services/shipment/shipment.service';
 import { SeasonsModule } from 'src/seasons/seasons.module';
+import { ShipmentTotalsService } from './services/common/shipment-totals.service';
 
 @Module({
   imports: [SeasonsModule],
-  providers: [ShipmentsService, ShipmentService, BoxService, ItemService],
+  providers: [ShipmentsService, ShipmentService, BoxService, ItemService, ShipmentTotalsService],
   controllers: [ShipmentController, BoxController, ItemController]
 })
 export class ShipmentsModule {}
