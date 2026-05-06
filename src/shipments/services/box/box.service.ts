@@ -6,6 +6,28 @@ import { Prisma } from 'src/generated/prisma';
 import { BoxOwnership, BoxStatus, BoxType } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
 
+type CreateBoxInput = {
+  shipmentId: number;
+  boxNumber: number;
+  boxType: BoxType;
+  updatedById: number;
+  status?: BoxStatus;
+  notes?: string;
+  ownershipType?: BoxOwnership;
+  traderId?: number;
+  customerId?: number;
+};
+
+type UpdateBoxInput = {
+  updatedById?: number;
+  boxType?: BoxType;
+  status?: BoxStatus;
+  notes?: string | null;
+  ownershipType?: BoxOwnership;
+  traderId?: number | null;
+  customerId?: number | null;
+};
+
 @Injectable()
 export class BoxService {
   constructor(
@@ -39,6 +61,13 @@ export class BoxService {
     }
   }
 
+  private assertOnlyAllowedFields(data: Record<string, unknown>, allowedFields: string[], message: string) {
+    const invalid = Object.keys(data).filter((k) => !allowedFields.includes(k));
+    if (invalid.length > 0) {
+      throw new BadRequestException(message);
+    }
+  }
+
   private validateOwnership(ownershipType: unknown, traderId: unknown, customerId: unknown) {
     if (ownershipType !== undefined && !Object.values(BoxOwnership).includes(ownershipType as BoxOwnership)) {
       throw new BadRequestException('ownershipType is invalid');
@@ -69,14 +98,16 @@ export class BoxService {
     }
   }
 
-  private validateCreateInput(data: Prisma.BoxUncheckedCreateInput) {
+  private validateCreateInput(data: CreateBoxInput) {
+    this.assertOnlyAllowedFields(
+      data as Record<string, unknown>,
+      ['shipmentId', 'boxNumber', 'boxType', 'updatedById', 'status', 'notes', 'ownershipType', 'traderId', 'customerId'],
+      'Only shipmentId, boxNumber, boxType, updatedById, status, notes, ownershipType, traderId, customerId are allowed on create. seasonId and totalQuantity are managed by the server',
+    );
+
     this.assertPositiveInt(data.shipmentId, 'shipmentId');
     this.assertPositiveInt(data.boxNumber, 'boxNumber');
     this.assertPositiveInt(data.updatedById, 'updatedById');
-
-    if (data.seasonId !== undefined || data.totalQuantity !== undefined) {
-      throw new BadRequestException('seasonId and totalQuantity are managed by the server');
-    }
 
     if (!Object.values(BoxType).includes(data.boxType as BoxType)) {
       throw new BadRequestException('boxType is invalid');
@@ -93,14 +124,16 @@ export class BoxService {
     this.validateOwnership(data.ownershipType, data.traderId, data.customerId);
   }
 
-  private validateUpdateInput(data: Prisma.BoxUncheckedUpdateInput) {
+  private validateUpdateInput(data: UpdateBoxInput) {
     if (Object.keys(data).length === 0) {
       throw new BadRequestException('At least one box field must be provided for update');
     }
 
-    if (data.shipmentId !== undefined || data.seasonId !== undefined || data.boxNumber !== undefined || data.totalQuantity !== undefined || data.isDeleted !== undefined) {
-      throw new BadRequestException('shipmentId, seasonId, boxNumber, totalQuantity, and isDeleted cannot be updated here');
-    }
+    this.assertOnlyAllowedFields(
+      data as Record<string, unknown>,
+      ['updatedById', 'boxType', 'status', 'notes', 'ownershipType', 'traderId', 'customerId'],
+      'Only updatedById, boxType, status, notes, ownershipType, traderId, customerId can be updated here',
+    );
 
     if (data.updatedById !== undefined) {
       this.assertPositiveInt(data.updatedById, 'updatedById');
@@ -122,7 +155,7 @@ export class BoxService {
   }
 
   // Create a new box within a shipment
-  async create(data: Prisma.BoxUncheckedCreateInput) {
+  async create(data: CreateBoxInput) {
     this.validateCreateInput(data);
 
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
@@ -194,7 +227,7 @@ export class BoxService {
   }
 
   // Update box details (status, type, etc.)
-  async update(id: number, data: Prisma.BoxUncheckedUpdateInput) {
+  async update(id: number, data: UpdateBoxInput) {
     this.validateUpdateInput(data);
 
     return this.prisma.box.update({
@@ -244,6 +277,25 @@ export class BoxService {
       await this.syncShipmentTotals(tx, box.shipmentId);
 
       return box;
+    });
+  }
+
+  // Hard (permanent) delete – removes all items in the box first, then the box itself
+  async removeHard(id: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const box = await tx.box.findFirst({
+        where: { id },
+        select: { id: true, shipmentId: true },
+      });
+
+      if (!box) throw new NotFoundException(`Box #${id} not found`);
+
+      await tx.shipmentItem.deleteMany({ where: { boxId: id } });
+      await tx.box.delete({ where: { id } });
+
+      await this.syncShipmentTotals(tx, box.shipmentId);
+
+      return { deleted: true, id };
     });
   }
 }

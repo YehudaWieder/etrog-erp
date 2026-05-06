@@ -293,39 +293,113 @@ export class ShipmentResponseSwaggerDto {
   updatedAt!: Date | string;
 }
 
-export class BoxSwaggerDto {
-  @ApiProperty({ description: 'Shipment ID.' })
+export class CreateBoxSwaggerDto {
+  @ApiProperty({ description: 'Shipment ID to place the box in.', example: 15 })
   shipmentId!: number;
 
-  @ApiPropertyOptional({ description: 'Season ID. Automatically assigned from the active season when creating a box.' })
+  @ApiProperty({ description: 'Box sequence number within the shipment.', example: 3 })
+  boxNumber!: number;
+
+  @ApiProperty({ enum: BoxType, enumName: 'BoxType', description: 'Physical box type.', example: 'MEDIUM' })
+  boxType!: BoxType;
+
+  @ApiProperty({ description: 'User ID who creates/updates the record.', example: 1 })
+  updatedById!: number;
+
+  @ApiPropertyOptional({ enum: BoxStatus, enumName: 'BoxStatus', description: 'Box status. Defaults to OPEN.', example: 'OPEN' })
+  status?: BoxStatus;
+
+  @ApiPropertyOptional({ description: 'Optional notes.', example: 'Dedicated box for trader 3' })
+  notes?: string;
+
+  @ApiPropertyOptional({
+    enum: BoxOwnership,
+    enumName: 'BoxOwnership',
+    description: 'Ownership model. Defaults to UNASSIGNED. TRADER requires traderId, CUSTOMER requires customerId.',
+    example: 'TRADER',
+  })
+  ownershipType?: BoxOwnership;
+
+  @ApiPropertyOptional({ description: 'Required when ownershipType=TRADER.', example: 3 })
+  traderId?: number;
+
+  @ApiPropertyOptional({ description: 'Required when ownershipType=CUSTOMER.', example: null })
+  customerId?: number;
+}
+
+export class UpdateBoxSwaggerDto {
+  @ApiPropertyOptional({ description: 'User ID who updates the record.', example: 2 })
+  updatedById?: number;
+
+  @ApiPropertyOptional({ enum: BoxType, enumName: 'BoxType', description: 'Updated physical box type.', example: 'LARGE' })
+  boxType?: BoxType;
+
+  @ApiPropertyOptional({ enum: BoxStatus, enumName: 'BoxStatus', description: 'Updated box status.', example: 'CLOSED' })
+  status?: BoxStatus;
+
+  @ApiPropertyOptional({ description: 'Updated notes. Can be null to clear.', example: 'Sealed and ready for dispatch' })
+  notes?: string | null;
+
+  @ApiPropertyOptional({
+    enum: BoxOwnership,
+    enumName: 'BoxOwnership',
+    description: 'Updated ownership model. TRADER requires traderId, CUSTOMER requires customerId.',
+    example: 'CUSTOMER',
+  })
+  ownershipType?: BoxOwnership;
+
+  @ApiPropertyOptional({ description: 'Required when ownershipType=TRADER. Pass null to clear.', example: null })
+  traderId?: number | null;
+
+  @ApiPropertyOptional({ description: 'Required when ownershipType=CUSTOMER. Pass null to clear.', example: 7 })
+  customerId?: number | null;
+}
+
+export class BoxResponseSwaggerDto {
+  @ApiProperty({ description: 'Box database ID (auto-generated).', example: 101 })
+  id!: number;
+
+  @ApiProperty({ description: 'Shipment ID.', example: 15 })
+  shipmentId!: number;
+
+  @ApiProperty({ description: 'Season ID (auto-assigned from active season on create).', example: 1 })
   seasonId!: number;
 
-  @ApiProperty({ description: 'Box sequence number within shipment.' })
+  @ApiProperty({ description: 'Box sequence number within the shipment.', example: 3 })
   boxNumber!: number;
 
   @ApiProperty({ enum: BoxType, enumName: 'BoxType', description: 'Physical box type.' })
   boxType!: BoxType;
 
-  @ApiPropertyOptional({ description: 'Total quantity in box.' })
-  totalQuantity?: number;
+  @ApiProperty({ description: 'Total item quantity in the box (server-calculated).', example: 0 })
+  totalQuantity!: number;
 
-  @ApiPropertyOptional({ enum: BoxStatus, enumName: 'BoxStatus', description: 'Operational status of the box.' })
-  status?: BoxStatus;
+  @ApiProperty({ enum: BoxStatus, enumName: 'BoxStatus', description: 'Box operational status.' })
+  status!: BoxStatus;
 
   @ApiPropertyOptional({ description: 'Optional notes.' })
-  notes?: string;
+  notes?: string | null;
 
-  @ApiPropertyOptional({ enum: BoxOwnership, enumName: 'BoxOwnership', description: 'Ownership model for the box.' })
-  ownershipType?: BoxOwnership;
+  @ApiProperty({ enum: BoxOwnership, enumName: 'BoxOwnership', description: 'Ownership model.' })
+  ownershipType!: BoxOwnership;
 
-  @ApiPropertyOptional({ description: 'Trader ID when ownership is trader-based.' })
-  traderId?: number;
+  @ApiPropertyOptional({ description: 'Trader ID (set when ownershipType=TRADER).' })
+  traderId?: number | null;
 
-  @ApiPropertyOptional({ description: 'Customer ID when ownership is customer-based.' })
-  customerId?: number;
+  @ApiPropertyOptional({ description: 'Customer ID (set when ownershipType=CUSTOMER).' })
+  customerId?: number | null;
 
-  @ApiProperty({ description: 'User ID who updated box.' })
+  @ApiProperty({ description: 'User ID of last updater.', example: 1 })
   updatedById!: number;
+
+  @ApiProperty({ description: 'Soft-delete flag.', example: false })
+  isDeleted!: boolean;
+
+  @ApiProperty({ description: 'Creation date-time.', example: '2026-10-10T08:30:00.000Z' })
+  createdAt!: Date | string;
+
+  @ApiProperty({ description: 'Last update date-time.', example: '2026-10-12T13:20:00.000Z' })
+  updatedAt!: Date | string;
 }
 
 export class ShipmentItemSwaggerDto {

@@ -261,4 +261,22 @@ export class ShipmentService {
       data: { isDeleted: true },
     });
   }
+
+  // Hard (permanent) delete – removes all items and boxes first, then the shipment
+  async removeHard(id: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const shipment = await tx.shipment.findFirst({
+        where: { id },
+        select: { id: true },
+      });
+
+      if (!shipment) throw new NotFoundException(`Shipment #${id} not found`);
+
+      await tx.shipmentItem.deleteMany({ where: { shipmentId: id } });
+      await tx.box.deleteMany({ where: { shipmentId: id } });
+      await tx.shipment.delete({ where: { id } });
+
+      return { deleted: true, id };
+    });
+  }
 }

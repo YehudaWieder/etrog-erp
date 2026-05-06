@@ -117,11 +117,11 @@ export class ShipmentController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Soft-delete a shipment by ID' })
-  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the shipment to delete.' })
-  @ApiResponse({ status: 200, description: 'Shipment deleted successfully.' })
+  @ApiOperation({ summary: 'Permanently delete a shipment, all its boxes and all their items. This action is irreversible.' })
+  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the shipment to permanently delete.' })
+  @ApiResponse({ status: 200, description: 'Shipment and all related data permanently deleted.' })
   @ApiResponse({ status: 404, description: 'Shipment not found.' })
   remove(@Param('id', ParseIntPipe) id: number) {
-    return this.shipmentService.remove(id);
+    return this.shipmentService.removeHard(id);
   }
 }
