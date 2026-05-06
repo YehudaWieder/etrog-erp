@@ -164,7 +164,41 @@ export class CustomerAllocationController {
 
   @Post('adjustments')
   @ApiOperation({ summary: 'Create customer WASTE/ADJUSTMENT/SELF_PICKUP movement (same endpoint, different type).' })
-  @ApiBody({ type: CustomerAllocationSwaggerDto })
+  @ApiBody({
+    type: CustomerAllocationSwaggerDto,
+    examples: {
+      waste: {
+        summary: 'Create customer WASTE adjustment',
+        value: {
+          date: '2026-10-12T08:00:00.000Z',
+          dateHebrew: 'יט תשרי תשפז',
+          customerId: 5,
+          customerCategoryId: 11,
+          pitamStatus: 'WITH_PITAM',
+          quantity: 7,
+          type: 'WASTE',
+          takenFrom: 'GENERAL',
+          updatedById: 1,
+          notes: 'Packaging damage',
+        },
+      },
+      adjustment: {
+        summary: 'Create customer ADJUSTMENT',
+        value: {
+          date: '2026-10-12T10:00:00.000Z',
+          dateHebrew: 'יט תשרי תשפז',
+          customerId: 7,
+          customerCategoryId: 13,
+          pitamStatus: 'WITHOUT_PITAM',
+          quantity: 5,
+          type: 'ADJUSTMENT',
+          takenFrom: 'GENERAL',
+          updatedById: 1,
+          notes: 'Audit correction',
+        },
+      },
+    },
+  })
   @ApiResponse({ status: 201, description: 'Customer adjustment movement created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid adjustment payload.' })
   createAdjustment(@Body() data: Prisma.CustomerAllocationUncheckedCreateInput) {
@@ -174,7 +208,19 @@ export class CustomerAllocationController {
   @Patch('adjustments/:id')
   @ApiOperation({ summary: 'Update customer WASTE/ADJUSTMENT/SELF_PICKUP movement.' })
   @ApiParam({ name: 'id', type: Number })
-  @ApiBody({ type: CustomerAllocationSwaggerDto })
+  @ApiBody({
+    type: CustomerAllocationSwaggerDto,
+    examples: {
+      update: {
+        summary: 'Update customer adjustment payload',
+        value: {
+          quantity: 9,
+          notes: 'Updated after recount',
+          updatedById: 1,
+        },
+      },
+    },
+  })
   @ApiResponse({ status: 200, description: 'Customer adjustment movement updated successfully.' })
   @ApiResponse({ status: 404, description: 'Customer adjustment movement not found.' })
   updateAdjustment(

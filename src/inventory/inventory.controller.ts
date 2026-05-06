@@ -175,7 +175,26 @@ export class InventoryController {
 			'Update customer general transfer in one TX: rollback linked trader movements and rebuild by current modulo+shares rules.',
 	})
 	@ApiParam({ name: 'customerAllocationId', type: Number })
-	@ApiBody({ type: Object })
+	@ApiBody({
+		type: CustomerGeneralAllocationRequest,
+		examples: {
+			default: {
+				summary: 'Update customer allocation from general inventory',
+				value: {
+					date: '2026-10-10T09:00:00.000Z',
+					dateHebrew: 'יז תשרי תשפז',
+					quantity: 95,
+					pitamStatus: 'WITH_PITAM',
+					grade: 'א',
+					traderCategoryId: 3,
+					customerId: 5,
+					customerCategoryId: 11,
+					updatedById: 1,
+					notes: 'Updated allocation after customer confirmation',
+				},
+			},
+		},
+	})
 	@ApiResponse({ status: 200, description: 'Customer general transfer updated successfully.' })
 	@ApiResponse({ status: 404, description: 'Customer general transfer not found.' })
 	updateCustomerAllocationFromGeneral(

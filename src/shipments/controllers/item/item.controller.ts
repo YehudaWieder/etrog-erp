@@ -35,7 +35,7 @@ export class ItemController {
       },
     },
   })
-  @ApiResponse({ status: 201, description: 'Shipment item created successfully.' })
+  @ApiResponse({ status: 201, description: 'Shipment item created successfully.', type: ShipmentItemSwaggerDto })
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate item for this box combination.' })
   create(@Body() data: Prisma.ShipmentItemUncheckedCreateInput) {
     return this.itemService.create(data);

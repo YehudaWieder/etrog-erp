@@ -154,7 +154,41 @@ export class TraderStockController {
 
   @Post('adjustments')
   @ApiOperation({ summary: 'Create trader WASTE/ADJUSTMENT/SELF_PICKUP movement (same endpoint, different type).' })
-  @ApiBody({ type: TraderStockSwaggerDto })
+  @ApiBody({
+    type: TraderStockSwaggerDto,
+    examples: {
+      waste: {
+        summary: 'Create WASTE adjustment',
+        value: {
+          date: '2026-10-11T07:30:00.000Z',
+          traderId: 3,
+          traderCategoryId: 2,
+          grade: 'ב',
+          pitamStatus: 'WITH_PITAM',
+          quantity: 12,
+          isModulo: false,
+          type: 'WASTE',
+          updatedById: 1,
+          notes: 'Damaged in storage',
+        },
+      },
+      selfPickup: {
+        summary: 'Create SELF_PICKUP adjustment',
+        value: {
+          date: '2026-10-11T09:30:00.000Z',
+          traderId: 9,
+          traderCategoryId: 3,
+          grade: 'א',
+          pitamStatus: 'MIXED',
+          quantity: 25,
+          isModulo: false,
+          type: 'SELF_PICKUP',
+          updatedById: 1,
+          notes: 'Trader collected directly',
+        },
+      },
+    },
+  })
   @ApiResponse({ status: 201, description: 'Trader adjustment movement created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid adjustment payload.' })
   createAdjustment(@Body() data: Prisma.TraderStockUncheckedCreateInput) {
@@ -164,7 +198,19 @@ export class TraderStockController {
   @Patch('adjustments/:id')
   @ApiOperation({ summary: 'Update trader WASTE/ADJUSTMENT/SELF_PICKUP movement.' })
   @ApiParam({ name: 'id', type: Number })
-  @ApiBody({ type: TraderStockSwaggerDto })
+  @ApiBody({
+    type: TraderStockSwaggerDto,
+    examples: {
+      update: {
+        summary: 'Update trader adjustment payload',
+        value: {
+          quantity: 10,
+          notes: 'Updated after recount',
+          updatedById: 1,
+        },
+      },
+    },
+  })
   @ApiResponse({ status: 200, description: 'Trader adjustment movement updated successfully.' })
   @ApiResponse({ status: 404, description: 'Trader adjustment movement not found.' })
   updateAdjustment(

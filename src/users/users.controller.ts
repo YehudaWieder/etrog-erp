@@ -27,7 +27,22 @@ export class UsersController {
 
 	@Post()
 	@ApiOperation({ summary: 'Create a new system user. Unique constraints: [name], [email], [phone].' })
-	@ApiBody({ type: UserSwaggerDto })
+	@ApiBody({
+		type: UserSwaggerDto,
+		examples: {
+			default: {
+				summary: 'Create user payload',
+				value: {
+					name: 'warehouse_manager',
+					email: 'manager@etrog-erp.com',
+					phone: '0541112233',
+					password: 'StrongPass123!',
+					role: 'MANAGER',
+					isActive: true,
+				},
+			},
+		},
+	})
 	@ApiResponse({ status: 201, description: 'User created successfully.' })
 	@ApiResponse({ status: 400, description: 'Invalid input or duplicate name/email/phone.' })
 	@Public()

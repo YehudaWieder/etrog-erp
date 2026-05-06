@@ -116,7 +116,23 @@ export class HarvestController {
   @Patch(':id/partial-classification')
   @ApiOperation({ summary: 'Update harvest partial/final classification mode with immediate classifiedTotal validation' })
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the harvest record.' })
-  @ApiBody({ type: UpdateHarvestPartialClassificationDto })
+  @ApiBody({
+    type: UpdateHarvestPartialClassificationDto,
+    examples: {
+      partial: {
+        summary: 'Keep harvest in partial mode',
+        value: {
+          isPartialClassification: true,
+        },
+      },
+      final: {
+        summary: 'Close harvest in final mode',
+        value: {
+          isPartialClassification: false,
+        },
+      },
+    },
+  })
   @ApiResponse({ status: 200, description: 'Harvest classification mode updated successfully.' })
   @ApiResponse({ status: 400, description: 'Cannot switch to FINAL mode while classifiedTotal does not match net harvested.' })
   @ApiResponse({ status: 404, description: 'Harvest record not found.' })
@@ -138,7 +154,41 @@ export class HarvestController {
 
   @Post('bulk-with-classifications')
   @ApiOperation({ summary: 'Create harvest with classifications and auto-allocate to customers/traders in single transaction' })
-  @ApiBody({ type: HarvestBulkCreateDto })
+  @ApiBody({
+    type: HarvestBulkCreateDto,
+    examples: {
+      sample: {
+        summary: 'Bulk create harvest with classifications',
+        value: {
+          harvest: {
+            dateGregorian: '2026-10-15T06:00:00.000Z',
+            dateHebrew: 'כב תשרי תשפז',
+            fieldId: 2,
+            updatedById: 1,
+            totalHarvested: 1500,
+            totalRejected: 80,
+          },
+          classifications: [
+            {
+              assignmentType: 'TRADER',
+              traderId: 3,
+              traderCategoryId: 2,
+              grade: 'א',
+              pitamStatus: 'WITH_PITAM',
+              quantity: 700,
+            },
+            {
+              assignmentType: 'GENERAL',
+              traderCategoryId: 2,
+              grade: 'ב',
+              pitamStatus: 'WITHOUT_PITAM',
+              quantity: 720,
+            },
+          ],
+        },
+      },
+    },
+  })
   @ApiResponse({ status: 201, description: 'Harvest and classifications created with auto-allocations.' })
   @ApiResponse({ status: 400, description: 'Duplicate classifications or validation error.' })
   @ApiResponse({ status: 409, description: 'Harvest for this field and date already exists.' })
@@ -149,7 +199,27 @@ export class HarvestController {
   @Post(':harvestId/classifications')
   @ApiOperation({ summary: 'Create a classification through harvest workflow with explicit PARTIAL/FINAL validation mode' })
   @ApiParam({ name: 'harvestId', type: Number, description: 'The numeric ID of the harvest record.' })
-  @ApiBody({ type: CreateHarvestClassificationDto })
+  @ApiBody({
+    type: CreateHarvestClassificationDto,
+    examples: {
+      sample: {
+        summary: 'Create harvest classification payload',
+        value: {
+          classification: {
+            assignmentType: 'CUSTOMER',
+            customerId: 5,
+            customerCategoryId: 11,
+            pitamStatus: 'WITH_PITAM',
+            quantity: 120,
+            notes: 'Allocation for premium customer',
+          },
+          harvestUpdate: {
+            isPartialClassification: true,
+          },
+        },
+      },
+    },
+  })
   @ApiResponse({ status: 201, description: 'Classification created and allocations processed successfully.' })
   @ApiResponse({ status: 400, description: 'Validation error for classification consistency or allocation data.' })
   @ApiResponse({ status: 404, description: 'Harvest not found.' })
@@ -164,7 +234,23 @@ export class HarvestController {
   @ApiOperation({ summary: 'Update a classification through harvest workflow with explicit PARTIAL/FINAL validation mode' })
   @ApiParam({ name: 'harvestId', type: Number, description: 'The numeric ID of the harvest record.' })
   @ApiParam({ name: 'classificationId', type: Number, description: 'The numeric ID of the classification to update.' })
-  @ApiBody({ type: UpdateHarvestClassificationDto })
+  @ApiBody({
+    type: UpdateHarvestClassificationDto,
+    examples: {
+      sample: {
+        summary: 'Update classification payload',
+        value: {
+          classificationUpdate: {
+            quantity: 140,
+            notes: 'Updated after sort correction',
+          },
+          harvestUpdate: {
+            isPartialClassification: true,
+          },
+        },
+      },
+    },
+  })
   @ApiResponse({ status: 200, description: 'Classification updated successfully with movement reprocessing when required.' })
   @ApiResponse({ status: 400, description: 'Validation error or invalid update data.' })
   @ApiResponse({ status: 404, description: 'Classification or harvest not found.' })
@@ -180,7 +266,19 @@ export class HarvestController {
   @ApiOperation({ summary: 'Delete a classification through harvest workflow with explicit PARTIAL/FINAL validation mode' })
   @ApiParam({ name: 'harvestId', type: Number, description: 'The numeric ID of the harvest record.' })
   @ApiParam({ name: 'classificationId', type: Number, description: 'The numeric ID of the classification to delete.' })
-  @ApiBody({ type: DeleteHarvestClassificationDto })
+  @ApiBody({
+    type: DeleteHarvestClassificationDto,
+    examples: {
+      sample: {
+        summary: 'Delete classification payload',
+        value: {
+          harvestUpdate: {
+            isPartialClassification: true,
+          },
+        },
+      },
+    },
+  })
   @ApiResponse({ status: 200, description: 'Classification deleted and movements rolled back successfully.' })
   @ApiResponse({ status: 400, description: 'Validation error for FINAL mode or invalid classification linkage.' })
   @ApiResponse({ status: 404, description: 'Classification or harvest not found.' })
