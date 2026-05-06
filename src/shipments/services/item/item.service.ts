@@ -121,8 +121,161 @@ export class ItemService {
     this.validateOwnership(data.ownershipType, data.traderId, data.customerId);
   }
 
+  private async getTraderAvailabilityForDistribution(
+    tx: Prisma.TransactionClient,
+    params: {
+      seasonId: number;
+      traderCategoryId: number;
+      grade: Grade;
+      pitamStatus: PitamStatus;
+    },
+  ) {
+    const grouped = await tx.traderStock.groupBy({
+      by: ['traderId'],
+      where: {
+        seasonId: params.seasonId,
+        isDeleted: false,
+        traderCategoryId: params.traderCategoryId,
+        grade: params.grade,
+        pitamStatus: params.pitamStatus,
+        traderId: { not: null },
+        isModulo: false,
+      },
+      _sum: { quantity: true },
+    });
+
+    return grouped
+      .filter((row) => row.traderId !== null)
+      .map((row) => ({
+        traderId: row.traderId as number,
+        available: row._sum.quantity || 0,
+      }))
+      .filter((row) => row.available > 0);
+  }
+
+  private async buildUnassignedTraderDeductions(
+    tx: Prisma.TransactionClient,
+    params: {
+      seasonId: number;
+      traderCategoryId: number;
+      grade: Grade;
+      pitamStatus: PitamStatus;
+      quantity: number;
+    },
+  ): Promise<Array<{ traderId: number; quantity: number }>> {
+    const traders = await this.getTraderAvailabilityForDistribution(tx, {
+      seasonId: params.seasonId,
+      traderCategoryId: params.traderCategoryId,
+      grade: params.grade,
+      pitamStatus: params.pitamStatus,
+    });
+
+    if (traders.length === 0) {
+      throw new BadRequestException('No trader stock available for unassigned packing distribution');
+    }
+
+    const shares = await tx.traderCategoryShare.findMany({
+      where: {
+        seasonId: params.seasonId,
+        traderCategoryId: params.traderCategoryId,
+        traderId: { in: traders.map((t) => t.traderId) },
+      },
+      select: { traderId: true, percent: true },
+    });
+
+    const shareMap = new Map<number, number>();
+    for (const share of shares) {
+      shareMap.set(share.traderId, Number(share.percent));
+    }
+
+    const allocated = new Map<number, number>();
+    for (const trader of traders) {
+      allocated.set(trader.traderId, 0);
+    }
+
+    let remaining = params.quantity;
+
+    // Phase 1: percentage-based allocation where each trader can satisfy its own share chunk.
+    for (const trader of traders) {
+      if (remaining <= 0) break;
+
+      const percent = shareMap.get(trader.traderId) || 0;
+      if (percent <= 0) continue;
+
+      const planned = Math.floor((params.quantity * percent) / 100);
+      if (planned <= 0) continue;
+
+      if (trader.available >= planned) {
+        const qty = Math.min(planned, remaining);
+        allocated.set(trader.traderId, qty);
+        remaining -= qty;
+      }
+    }
+
+    // Phase 2: distribute remaining quantity equally among traders with capacity.
+    while (remaining > 0) {
+      const candidates = traders.filter((trader) => {
+        const used = allocated.get(trader.traderId) || 0;
+        return trader.available > used;
+      });
+
+      if (candidates.length === 0) {
+        break;
+      }
+
+      const perTrader = Math.floor(remaining / candidates.length);
+      if (perTrader <= 0) {
+        break;
+      }
+
+      for (const trader of candidates) {
+        const used = allocated.get(trader.traderId) || 0;
+        const capacity = trader.available - used;
+        if (capacity <= 0) continue;
+
+        const toTake = Math.min(perTrader, capacity, remaining);
+        if (toTake > 0) {
+          allocated.set(trader.traderId, used + toTake);
+          remaining -= toTake;
+        }
+      }
+    }
+
+    // Phase 3: remaining one-by-one from traders with the highest free stock first.
+    while (remaining > 0) {
+      const candidates = traders
+        .map((trader) => {
+          const used = allocated.get(trader.traderId) || 0;
+          return {
+            traderId: trader.traderId,
+            free: trader.available - used,
+          };
+        })
+        .filter((row) => row.free > 0)
+        .sort((a, b) => b.free - a.free);
+
+      if (candidates.length === 0) {
+        break;
+      }
+
+      const top = candidates[0];
+      allocated.set(top.traderId, (allocated.get(top.traderId) || 0) + 1);
+      remaining -= 1;
+    }
+
+    if (remaining > 0) {
+      throw new BadRequestException(
+        `Not enough combined trader stock for unassigned packing. Missing=${remaining}`,
+      );
+    }
+
+    return Array.from(allocated.entries())
+      .map(([traderId, quantity]) => ({ traderId, quantity }))
+      .filter((row) => row.quantity > 0);
+  }
+
   private ensureAllowedBoxOwnership(boxOwnership: BoxOwnership) {
-    if (boxOwnership === BoxOwnership.UNASSIGNED || boxOwnership === BoxOwnership.CUSTOM) {
+    if (boxOwnership === BoxOwnership.CUSTOM) {
       throw new BadRequestException(
         `Box ownership ${boxOwnership} is not supported yet for item packing.`,
       );
@@ -161,8 +314,19 @@ export class ItemService {
     }
 
     if (boxOwnership === BoxOwnership.SHARED) {
-      if (itemOwnership !== ItemOwnership.TRADER && itemOwnership !== ItemOwnership.CUSTOMER) {
-        throw new BadRequestException('In SHARED box, item ownership must be TRADER or CUSTOMER');
+      if (
+        itemOwnership !== ItemOwnership.TRADER
+        && itemOwnership !== ItemOwnership.CUSTOMER
+        && itemOwnership !== ItemOwnership.UNASSIGNED
+      ) {
+        throw new BadRequestException('In SHARED box, item ownership must be TRADER, CUSTOMER, or UNASSIGNED');
+      }
+      return;
+    }
+
+    if (boxOwnership === BoxOwnership.UNASSIGNED) {
+      if (itemOwnership !== ItemOwnership.UNASSIGNED) {
+        throw new BadRequestException('In UNASSIGNED box, item ownership must be UNASSIGNED');
       }
     }
   }
@@ -171,6 +335,7 @@ export class ItemService {
     tx: Prisma.TransactionClient,
     params: {
       seasonId: number;
+      boxOwnership: BoxOwnership;
       itemOwnership: ItemOwnership;
       itemTraderId: number | null;
       itemCustomerId: number | null;
@@ -234,6 +399,47 @@ export class ItemService {
       return;
     }
 
+    if (params.itemOwnership === ItemOwnership.UNASSIGNED) {
+      if (!params.traderCategoryId || !params.grade) {
+        throw new BadRequestException('Unassigned packed items require traderCategoryId and grade');
+      }
+
+      if (params.boxOwnership === BoxOwnership.SHARED) {
+        const moduloBalance = await tx.traderStock.aggregate({
+          where: {
+            seasonId: params.seasonId,
+            isDeleted: false,
+            traderId: null,
+            isModulo: true,
+            traderCategoryId: params.traderCategoryId,
+            grade: params.grade,
+            pitamStatus: params.pitamStatus,
+          },
+          _sum: { quantity: true },
+        });
+
+        const available = moduloBalance._sum.quantity || 0;
+        if (available < params.quantity) {
+          throw new BadRequestException(
+            `Not enough modulo stock available for packing. Requested=${params.quantity}, available=${available}`,
+          );
+        }
+
+        return;
+      }
+
+      if (params.boxOwnership === BoxOwnership.UNASSIGNED) {
+        await this.buildUnassignedTraderDeductions(tx, {
+          seasonId: params.seasonId,
+          traderCategoryId: params.traderCategoryId,
+          grade: params.grade,
+          pitamStatus: params.pitamStatus,
+          quantity: params.quantity,
+        });
+        return;
+      }
+    }
+
     throw new BadRequestException('Item ownership is not supported for packing into this box');
   }
 
@@ -259,6 +465,7 @@ export class ItemService {
     params: {
       itemId: number;
       seasonId: number;
+      boxOwnership: BoxOwnership;
       shipmentId: number;
       boxId: number;
       quantity: number;
@@ -325,6 +532,66 @@ export class ItemService {
       return;
     }
 
+    if (params.itemOwnership === ItemOwnership.UNASSIGNED) {
+      if (!params.traderCategoryId || !params.grade) {
+        throw new BadRequestException('Unassigned packed movement requires traderCategoryId and grade');
+      }
+
+      if (params.boxOwnership === BoxOwnership.SHARED) {
+        await tx.traderStock.create({
+          data: {
+            seasonId: params.seasonId,
+            date: new Date(),
+            traderId: null,
+            traderCategoryId: params.traderCategoryId,
+            grade: params.grade,
+            pitamStatus: params.pitamStatus,
+            quantity: -Math.abs(params.quantity),
+            isModulo: true,
+            type: MovementType.PACKED_SHIPPED,
+            MovementReferenceId: params.itemId,
+            shipmentId: params.shipmentId,
+            boxId: params.boxId,
+            notes: `Packed from modulo for shipment item #${params.itemId}`,
+            updatedById: params.updatedById,
+          },
+        });
+        return;
+      }
+
+      if (params.boxOwnership === BoxOwnership.UNASSIGNED) {
+        const traderDeductions = await this.buildUnassignedTraderDeductions(tx, {
+          seasonId: params.seasonId,
+          traderCategoryId: params.traderCategoryId,
+          grade: params.grade,
+          pitamStatus: params.pitamStatus,
+          quantity: params.quantity,
+        });
+
+        for (const deduction of traderDeductions) {
+          await tx.traderStock.create({
+            data: {
+              seasonId: params.seasonId,
+              date: new Date(),
+              traderId: deduction.traderId,
+              traderCategoryId: params.traderCategoryId,
+              grade: params.grade,
+              pitamStatus: params.pitamStatus,
+              quantity: -Math.abs(deduction.quantity),
+              isModulo: false,
+              type: MovementType.PACKED_SHIPPED,
+              MovementReferenceId: params.itemId,
+              shipmentId: params.shipmentId,
+              boxId: params.boxId,
+              notes: `Packed by share allocation for shipment item #${params.itemId}`,
+              updatedById: params.updatedById,
+            },
+          });
+        }
+        return;
+      }
+    }
+
     throw new BadRequestException('Unsupported item ownership for packed movement creation');
   }
 
@@ -359,6 +626,7 @@ export class ItemService {
 
       await this.ensureEnoughAvailableStock(tx, {
         seasonId,
+        boxOwnership: box.ownershipType,
         itemOwnership,
         itemTraderId: data.traderId ?? null,
         itemCustomerId: data.customerId ?? null,
@@ -401,6 +669,7 @@ export class ItemService {
       await this.createPackedMovement(tx, {
         itemId: newItem.id,
         seasonId,
+        boxOwnership: box.ownershipType,
         shipmentId: box.shipmentId,
         boxId: newItem.boxId,
         quantity: newItem.quantity,
@@ -503,6 +772,7 @@ export class ItemService {
 
       await this.ensureEnoughAvailableStock(tx, {
         seasonId: currentItem.seasonId,
+        boxOwnership: targetBox.ownershipType,
         itemOwnership: nextOwnershipType,
         itemTraderId: nextTraderId,
         itemCustomerId: nextCustomerId,
@@ -524,6 +794,7 @@ export class ItemService {
       await this.createPackedMovement(tx, {
         itemId: updatedItem.id,
         seasonId: currentItem.seasonId,
+        boxOwnership: targetBox.ownershipType,
         shipmentId: updatedItem.shipmentId,
         boxId: updatedItem.boxId,
         quantity: updatedItem.quantity,
