@@ -4,6 +4,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma, MovementType, PitamStatus } from 'src/generated/prisma';
 import { SeasonsService } from 'src/seasons/seasons.service';
+import { InventoryAvailabilityService } from '../inventory-availability.service';
 
 export type CustomerInventoryShipmentScope =
   | 'ALL'
@@ -55,11 +56,17 @@ export class CustomerAllocationService {
   constructor(
     private prisma: PrismaService,
     private seasonsService: SeasonsService,
+    private inventoryAvailabilityService: InventoryAvailabilityService,
   ) {}
 
   // Create a new allocation record
   async create(data: Prisma.CustomerAllocationUncheckedCreateInput) {
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
+
+    await this.assertNegativeCustomerMovementHasStock(this.prisma, {
+      ...data,
+      seasonId,
+    });
 
     return this.prisma.customerAllocation.create({
       data: {
@@ -216,13 +223,20 @@ export class CustomerAllocationService {
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
     const movementType = data.type as MovementType;
     const quantity = this.requireQuantity(data.quantity);
+    const normalizedQuantity = this.normalizeAdjustmentQuantity(movementType, quantity);
 
     return this.prisma.$transaction(async (tx) => {
+      await this.assertNegativeCustomerMovementHasStock(tx, {
+        ...data,
+        seasonId,
+        quantity: normalizedQuantity,
+      });
+
       return tx.customerAllocation.create({
         data: {
           ...data,
           seasonId,
-          quantity: this.normalizeAdjustmentQuantity(movementType, quantity),
+          quantity: normalizedQuantity,
           shipmentId: null,
           boxId: null,
         },
@@ -247,16 +261,28 @@ export class CustomerAllocationService {
       const nextType = (data.type ?? existing.type) as MovementType;
       this.validateAdjustmentType(nextType);
 
+      const nextQuantityRaw =
+        data.quantity === undefined ? existing.quantity : Number(data.quantity);
+      const nextQuantity =
+        data.quantity === undefined
+          ? existing.quantity
+          : this.normalizeAdjustmentQuantity(nextType, nextQuantityRaw);
+
+      await this.assertNegativeCustomerMovementHasStock(tx, {
+        seasonId: existing.seasonId,
+        customerId: Number(data.customerId ?? existing.customerId),
+        customerCategoryId: Number(data.customerCategoryId ?? existing.customerCategoryId),
+        pitamStatus: (data.pitamStatus ?? existing.pitamStatus) as PitamStatus,
+        quantity: nextQuantity,
+      }, Math.abs(existing.quantity));
+
       return tx.customerAllocation.update({
         where: { id },
         data: {
           ...data,
           shipmentId: null,
           boxId: null,
-          quantity:
-            data.quantity === undefined
-              ? undefined
-              : this.normalizeAdjustmentQuantity(nextType, Number(data.quantity)),
+          quantity: data.quantity === undefined ? undefined : nextQuantity,
         },
       });
     });
@@ -318,6 +344,39 @@ export class CustomerAllocationService {
     }
 
     return Number(value);
+  }
+
+  private async assertNegativeCustomerMovementHasStock(
+    client: Prisma.TransactionClient | PrismaService,
+    data: {
+      seasonId: number;
+      customerId?: number;
+      customerCategoryId?: number;
+      pitamStatus?: PitamStatus;
+      quantity?: number;
+    },
+    creditQuantity: number = 0,
+  ) {
+    const quantity = Number(data.quantity ?? 0);
+    if (!Number.isFinite(quantity) || quantity >= 0) {
+      return;
+    }
+
+    if (!data.customerId || !data.customerCategoryId || !data.pitamStatus) {
+      throw new BadRequestException(
+        'Negative customer movement requires customerId, customerCategoryId, and pitamStatus',
+      );
+    }
+
+    await this.inventoryAvailabilityService.assertCustomerHasUnshippedStock(client, {
+      seasonId: data.seasonId,
+      customerId: data.customerId,
+      customerCategoryId: data.customerCategoryId,
+      pitamStatus: data.pitamStatus,
+      requiredQuantity: Math.abs(quantity),
+      creditQuantity,
+      contextLabel: 'Customer movement validation',
+    });
   }
 
   private validateSummaryQuery(

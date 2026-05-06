@@ -4,6 +4,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma, MovementType, Grade, PitamStatus } from 'src/generated/prisma';
 import { SeasonsService } from 'src/seasons/seasons.service';
+import { InventoryAvailabilityService } from '../inventory-availability.service';
 
 export type InventoryOwnerScope = 'ALL' | 'TRADER' | 'MODULO';
 export type InventoryShipmentScope =
@@ -61,17 +62,23 @@ export class TraderStockService {
     constructor(
         private prisma: PrismaService,
         private seasonsService: SeasonsService,
+        private inventoryAvailabilityService: InventoryAvailabilityService,
     ) {}
 
     // Create a new stock movement
     async createMovement(data: Prisma.TraderStockUncheckedCreateInput) {
-                const { id: seasonId } = await this.seasonsService.findActiveSeason();
+        const { id: seasonId } = await this.seasonsService.findActiveSeason();
 
-        return this.prisma.traderStock.create({
-        data: {
+        await this.assertNegativeTraderMovementHasStock(this.prisma, {
             ...data,
             seasonId,
-        },
+        });
+
+        return this.prisma.traderStock.create({
+            data: {
+                ...data,
+                seasonId,
+            },
         });
     }
 
@@ -232,13 +239,20 @@ export class TraderStockService {
         const { id: seasonId } = await this.seasonsService.findActiveSeason();
         const movementType = data.type as MovementType;
         const quantity = this.requireQuantity(data.quantity);
+        const normalizedQuantity = this.normalizeAdjustmentQuantity(movementType, quantity);
 
         return this.prisma.$transaction(async (tx) => {
+            await this.assertNegativeTraderMovementHasStock(tx, {
+                ...data,
+                seasonId,
+                quantity: normalizedQuantity,
+            });
+
             return tx.traderStock.create({
                 data: {
                     ...data,
                     seasonId,
-                    quantity: this.normalizeAdjustmentQuantity(movementType, quantity),
+                    quantity: normalizedQuantity,
                     shipmentId: null,
                     boxId: null,
                 },
@@ -263,16 +277,30 @@ export class TraderStockService {
             const nextType = (data.type ?? existing.type) as MovementType;
             this.validateAdjustmentType(nextType);
 
+            const nextQuantityRaw =
+                data.quantity === undefined ? existing.quantity : Number(data.quantity);
+            const nextQuantity =
+                data.quantity === undefined
+                    ? existing.quantity
+                    : this.normalizeAdjustmentQuantity(nextType, nextQuantityRaw);
+
+            await this.assertNegativeTraderMovementHasStock(tx, {
+                seasonId: existing.seasonId,
+                traderId: (data.traderId ?? existing.traderId) as number | null,
+                traderCategoryId: Number(data.traderCategoryId ?? existing.traderCategoryId),
+                grade: (data.grade ?? existing.grade) as Grade,
+                pitamStatus: (data.pitamStatus ?? existing.pitamStatus) as PitamStatus,
+                isModulo: Boolean(data.isModulo ?? existing.isModulo),
+                quantity: nextQuantity,
+            }, Math.abs(existing.quantity));
+
             return tx.traderStock.update({
                 where: { id },
                 data: {
                     ...data,
                     shipmentId: null,
                     boxId: null,
-                    quantity:
-                        data.quantity === undefined
-                            ? undefined
-                            : this.normalizeAdjustmentQuantity(nextType, Number(data.quantity)),
+                    quantity: data.quantity === undefined ? undefined : nextQuantity,
                 },
             });
         });
@@ -334,6 +362,50 @@ export class TraderStockService {
         }
 
         return Number(value);
+    }
+
+    private async assertNegativeTraderMovementHasStock(
+        client: Prisma.TransactionClient | PrismaService,
+        data: {
+            seasonId: number;
+            traderId?: number | null;
+            traderCategoryId?: number;
+            grade?: Grade | null;
+            pitamStatus?: PitamStatus;
+            isModulo?: boolean;
+            quantity?: number;
+        },
+        creditQuantity: number = 0,
+    ) {
+        const quantity = Number(data.quantity ?? 0);
+        if (!Number.isFinite(quantity) || quantity >= 0) {
+            return;
+        }
+
+        if (!data.traderCategoryId || !data.grade || !data.pitamStatus) {
+            throw new BadRequestException('Negative trader movement requires traderCategoryId, grade, and pitamStatus');
+        }
+
+        const isModulo = Boolean(data.isModulo);
+        if (isModulo && data.traderId !== null && data.traderId !== undefined) {
+            throw new BadRequestException('Modulo movements must use traderId=null');
+        }
+
+        if (!isModulo && (data.traderId === null || data.traderId === undefined)) {
+            throw new BadRequestException('Trader movement requires traderId when isModulo=false');
+        }
+
+        await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(client, {
+            seasonId: data.seasonId,
+            traderId: isModulo ? null : (data.traderId as number),
+            traderCategoryId: data.traderCategoryId,
+            grade: data.grade,
+            pitamStatus: data.pitamStatus,
+            isModulo,
+            requiredQuantity: Math.abs(quantity),
+            creditQuantity,
+            contextLabel: 'Trader movement validation',
+        });
     }
 
     private validateSummaryQuery(

@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { MovementType, PitamStatus, Grade, Prisma, SourceType } from 'src/generated/prisma';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SeasonsService } from 'src/seasons/seasons.service';
+import { InventoryAvailabilityService } from './services/inventory-availability.service';
 
 export enum InventoryOwnerType {
 	TRADER = 'TRADER',
@@ -93,6 +94,7 @@ export class InventoryService {
 	constructor(
 		private readonly prisma: PrismaService,
 		private readonly seasonsService: SeasonsService,
+		private readonly inventoryAvailabilityService: InventoryAvailabilityService,
 	) {}
 
 	async createInternalTransfer(data: InternalTransferRequest) {
@@ -246,20 +248,17 @@ export class InventoryService {
 		movementReferenceId: number,
 		requestQuantity: number,
 	) {
-		const moduloAvailableRaw = await tx.traderStock.aggregate({
-			_sum: { quantity: true },
-			where: {
+		const moduloAvailable = Math.max(
+			0,
+			await this.inventoryAvailabilityService.getTraderUnshippedBalance(tx, {
 				seasonId,
 				traderId: null,
-				isModulo: true,
 				traderCategoryId: data.traderCategoryId,
 				grade: data.grade,
 				pitamStatus: data.pitamStatus,
-				isDeleted: false,
-			},
-		});
-
-		const moduloAvailable = Math.max(0, moduloAvailableRaw._sum.quantity ?? 0);
+				isModulo: true,
+			}),
+		);
 		const moduloUsed = Math.min(moduloAvailable, requestQuantity);
 		const deficit = requestQuantity - moduloUsed;
 
@@ -327,35 +326,17 @@ export class InventoryService {
 				);
 			}
 
-			const traderIds = traderAllocations.map((allocation) => allocation.traderId);
-			const traderBalances = await tx.traderStock.groupBy({
-				by: ['traderId'],
-				where: {
+			for (const allocation of traderAllocations) {
+				await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
 					seasonId,
-					isDeleted: false,
-					isModulo: false,
-					traderId: { in: traderIds },
+					traderId: allocation.traderId,
 					traderCategoryId: data.traderCategoryId,
 					grade: data.grade,
 					pitamStatus: data.pitamStatus,
-				},
-				_sum: { quantity: true },
-			});
-
-			const balanceMap = new Map<number, number>();
-			for (const row of traderBalances) {
-				if (row.traderId !== null) {
-					balanceMap.set(row.traderId, row._sum.quantity ?? 0);
-				}
-			}
-
-			for (const allocation of traderAllocations) {
-				const available = balanceMap.get(allocation.traderId) ?? 0;
-				if (available < allocation.quantity) {
-					throw new BadRequestException(
-						`Insufficient stock for trader ${allocation.traderId}. Required ${allocation.quantity}, available ${available}`,
-					);
-				}
+					isModulo: false,
+					requiredQuantity: allocation.quantity,
+					contextLabel: `Customer allocation from general (trader ${allocation.traderId})`,
+				});
 			}
 
 			for (const allocation of traderAllocations) {
@@ -447,6 +428,7 @@ export class InventoryService {
 			}
 
 			const rebuilt = this.buildTransferPayloads(seasonId, data);
+			await this.assertNegativeLedgerHasEnoughStockTx(tx, rebuilt.negative, pair.negative);
 
 			const updatedNegative = await this.updateByLedgerTx(
 				tx,
@@ -990,6 +972,7 @@ export class InventoryService {
 
 	private async createTransferPairTx(tx: Prisma.TransactionClient, seasonId: number, data: InternalTransferRequest) {
 		const built = this.buildTransferPayloads(seasonId, data);
+		await this.assertNegativeLedgerHasEnoughStockTx(tx, built.negative);
 
 		const negative = await this.createByLedgerTx(tx, built.negative);
 
@@ -1091,6 +1074,92 @@ export class InventoryService {
 		}
 
 		return { negative, positive };
+	}
+
+	private async assertNegativeLedgerHasEnoughStockTx(
+		tx: Prisma.TransactionClient,
+		negative:
+			| { table: 'traderStock'; payload: Prisma.TraderStockUncheckedCreateInput }
+			| { table: 'customerAllocation'; payload: Prisma.CustomerAllocationUncheckedCreateInput },
+		existingNegative?: TransferLedgerRecord,
+	) {
+		const requiredQuantity = Math.abs(Number(negative.payload.quantity));
+		if (requiredQuantity <= 0) {
+			return;
+		}
+
+		if (negative.table === 'traderStock') {
+			const payload = negative.payload;
+			const creditQuantity =
+				existingNegative && this.isSameTraderSource(existingNegative, payload)
+					? Math.abs(Number(existingNegative.record.quantity))
+					: 0;
+
+			await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
+				seasonId: payload.seasonId,
+				traderId: payload.traderId ?? null,
+				traderCategoryId: payload.traderCategoryId,
+				grade: payload.grade,
+				pitamStatus: payload.pitamStatus,
+				isModulo: Boolean(payload.isModulo),
+				requiredQuantity,
+				creditQuantity,
+				contextLabel: 'Inventory transfer source check',
+			});
+			return;
+		}
+
+		const payload = negative.payload;
+		const creditQuantity =
+			existingNegative && this.isSameCustomerSource(existingNegative, payload)
+				? Math.abs(Number(existingNegative.record.quantity))
+				: 0;
+
+		await this.inventoryAvailabilityService.assertCustomerHasUnshippedStock(tx, {
+			seasonId: payload.seasonId,
+			customerId: payload.customerId,
+			customerCategoryId: payload.customerCategoryId,
+			pitamStatus: payload.pitamStatus,
+			requiredQuantity,
+			creditQuantity,
+			contextLabel: 'Inventory transfer source check',
+		});
+	}
+
+	private isSameTraderSource(
+		existingNegative: TransferLedgerRecord,
+		nextPayload: Prisma.TraderStockUncheckedCreateInput,
+	) {
+		if (existingNegative.table !== 'traderStock') {
+			return false;
+		}
+
+		const current = existingNegative.record;
+		return (
+			current.seasonId === nextPayload.seasonId
+			&& current.traderId === (nextPayload.traderId ?? null)
+			&& current.traderCategoryId === nextPayload.traderCategoryId
+			&& current.grade === nextPayload.grade
+			&& current.pitamStatus === nextPayload.pitamStatus
+			&& current.isModulo === nextPayload.isModulo
+		);
+	}
+
+	private isSameCustomerSource(
+		existingNegative: TransferLedgerRecord,
+		nextPayload: Prisma.CustomerAllocationUncheckedCreateInput,
+	) {
+		if (existingNegative.table !== 'customerAllocation') {
+			return false;
+		}
+
+		const current = existingNegative.record;
+		return (
+			current.seasonId === nextPayload.seasonId
+			&& current.customerId === nextPayload.customerId
+			&& current.customerCategoryId === nextPayload.customerCategoryId
+			&& current.pitamStatus === nextPayload.pitamStatus
+		);
 	}
 
 	private async softDeletePairTx(tx: Prisma.TransactionClient, leftId: number, rightId: number) {

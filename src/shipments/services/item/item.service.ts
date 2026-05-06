@@ -6,6 +6,7 @@ import { Prisma } from 'src/generated/prisma';
 import { BoxOwnership, Grade, ItemOwnership, MovementType, PitamStatus, SourceType } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { ShipmentsService } from '../../shipments.service';
+import { InventoryAvailabilityService } from 'src/inventory/services/inventory-availability.service';
 
 @Injectable()
 export class ItemService {
@@ -13,6 +14,7 @@ export class ItemService {
     private prisma: PrismaService,
     private seasonsService: SeasonsService,
     private shipmentsService: ShipmentsService,
+    private inventoryAvailabilityService: InventoryAvailabilityService,
   ) {}
 
   private assertPositiveInt(value: unknown, fieldName: string) {
@@ -132,27 +134,12 @@ export class ItemService {
       pitamStatus: PitamStatus;
     },
   ) {
-    const grouped = await tx.traderStock.groupBy({
-      by: ['traderId'],
-      where: {
-        seasonId: params.seasonId,
-        isDeleted: false,
-        traderCategoryId: params.traderCategoryId,
-        grade: params.grade,
-        pitamStatus: params.pitamStatus,
-        traderId: { not: null },
-        isModulo: false,
-      },
-      _sum: { quantity: true },
+    return this.inventoryAvailabilityService.getTraderUnshippedAvailabilityByCategory(tx, {
+      seasonId: params.seasonId,
+      traderCategoryId: params.traderCategoryId,
+      grade: params.grade,
+      pitamStatus: params.pitamStatus,
     });
-
-    return grouped
-      .filter((row) => row.traderId !== null)
-      .map((row) => ({
-        traderId: row.traderId as number,
-        available: row._sum.quantity || 0,
-      }))
-      .filter((row) => row.available > 0);
   }
 
   private async buildUnassignedTraderDeductions(
@@ -353,24 +340,16 @@ export class ItemService {
         throw new BadRequestException('Trader-packed items require traderId, traderCategoryId and grade');
       }
 
-      const traderBalance = await tx.traderStock.aggregate({
-        where: {
-          seasonId: params.seasonId,
-          isDeleted: false,
-          traderId: params.itemTraderId,
-          traderCategoryId: params.traderCategoryId,
-          grade: params.grade,
-          pitamStatus: params.pitamStatus,
-        },
-        _sum: { quantity: true },
+      await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
+        seasonId: params.seasonId,
+        traderId: params.itemTraderId,
+        traderCategoryId: params.traderCategoryId,
+        grade: params.grade,
+        pitamStatus: params.pitamStatus,
+        isModulo: false,
+        requiredQuantity: params.quantity,
+        contextLabel: 'Packing TRADER item',
       });
-
-      const available = traderBalance._sum.quantity || 0;
-      if (available < params.quantity) {
-        throw new BadRequestException(
-          `Not enough trader stock available for packing. Requested=${params.quantity}, available=${available}`,
-        );
-      }
 
       return;
     }
@@ -380,23 +359,14 @@ export class ItemService {
         throw new BadRequestException('Customer-packed items require customerId and customerCategoryId');
       }
 
-      const customerBalance = await tx.customerAllocation.aggregate({
-        where: {
-          seasonId: params.seasonId,
-          isDeleted: false,
-          customerId: params.itemCustomerId,
-          customerCategoryId: params.customerCategoryId,
-          pitamStatus: params.pitamStatus,
-        },
-        _sum: { quantity: true },
+      await this.inventoryAvailabilityService.assertCustomerHasUnshippedStock(tx, {
+        seasonId: params.seasonId,
+        customerId: params.itemCustomerId,
+        customerCategoryId: params.customerCategoryId,
+        pitamStatus: params.pitamStatus,
+        requiredQuantity: params.quantity,
+        contextLabel: 'Packing CUSTOMER item',
       });
-
-      const available = customerBalance._sum.quantity || 0;
-      if (available < params.quantity) {
-        throw new BadRequestException(
-          `Not enough customer stock available for packing. Requested=${params.quantity}, available=${available}`,
-        );
-      }
 
       return;
     }
@@ -407,25 +377,16 @@ export class ItemService {
       }
 
       if (params.boxOwnership === BoxOwnership.SHARED) {
-        const moduloBalance = await tx.traderStock.aggregate({
-          where: {
-            seasonId: params.seasonId,
-            isDeleted: false,
-            traderId: null,
-            isModulo: true,
-            traderCategoryId: params.traderCategoryId,
-            grade: params.grade,
-            pitamStatus: params.pitamStatus,
-          },
-          _sum: { quantity: true },
+        await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
+          seasonId: params.seasonId,
+          traderId: null,
+          traderCategoryId: params.traderCategoryId,
+          grade: params.grade,
+          pitamStatus: params.pitamStatus,
+          isModulo: true,
+          requiredQuantity: params.quantity,
+          contextLabel: 'Packing UNASSIGNED item from SHARED box',
         });
-
-        const available = moduloBalance._sum.quantity || 0;
-        if (available < params.quantity) {
-          throw new BadRequestException(
-            `Not enough modulo stock available for packing. Requested=${params.quantity}, available=${available}`,
-          );
-        }
 
         return;
       }
