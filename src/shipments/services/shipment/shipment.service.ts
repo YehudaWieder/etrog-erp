@@ -2,8 +2,22 @@
 
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Prisma, ShipmentStatus } from '@prisma/client';
+import { ShipmentStatus } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
+
+type CreateShipmentInput = {
+  updatedById: number;
+  status?: ShipmentStatus;
+  shippedAt?: Date | string;
+  notes?: string;
+};
+
+type UpdateShipmentInput = {
+  updatedById?: number;
+  status?: ShipmentStatus;
+  shippedAt?: Date | string;
+  notes?: string | null;
+};
 
 @Injectable()
 export class ShipmentService {
@@ -37,12 +51,25 @@ export class ShipmentService {
     }
   }
 
-  private validateCreateInput(data: Prisma.ShipmentUncheckedCreateInput) {
-    this.assertPositiveInt(data.updatedById, 'updatedById');
-
-    if (data.seasonId !== undefined || data.shipmentNumber !== undefined || data.totalBoxes !== undefined || data.totalQuantity !== undefined || data.slug !== undefined) {
-      throw new BadRequestException('seasonId, shipmentNumber, totalBoxes, totalQuantity, and slug are managed by the server');
+  private assertOnlyAllowedFields(
+    data: Record<string, unknown>,
+    allowedFields: string[],
+    blockedMessage: string,
+  ) {
+    const invalidKeys = Object.keys(data).filter((key) => !allowedFields.includes(key));
+    if (invalidKeys.length > 0) {
+      throw new BadRequestException(blockedMessage);
     }
+  }
+
+  private validateCreateInput(data: CreateShipmentInput) {
+    this.assertOnlyAllowedFields(
+      data as Record<string, unknown>,
+      ['updatedById', 'status', 'shippedAt', 'notes'],
+      'Only updatedById, status, shippedAt, and notes are allowed. seasonId, shipmentNumber, totals, slug, and isDeleted are managed by the server',
+    );
+
+    this.assertPositiveInt(data.updatedById, 'updatedById');
 
     if (data.status !== undefined && !Object.values(ShipmentStatus).includes(data.status as ShipmentStatus)) {
       throw new BadRequestException('status is invalid');
@@ -55,14 +82,16 @@ export class ShipmentService {
     }
   }
 
-  private validateUpdateInput(data: Prisma.ShipmentUncheckedUpdateInput) {
+  private validateUpdateInput(data: UpdateShipmentInput) {
     if (Object.keys(data).length === 0) {
       throw new BadRequestException('At least one shipment field must be provided for update');
     }
 
-    if (data.seasonId !== undefined || data.shipmentNumber !== undefined || data.totalBoxes !== undefined || data.totalQuantity !== undefined || data.slug !== undefined || data.isDeleted !== undefined) {
-      throw new BadRequestException('seasonId, shipmentNumber, totalBoxes, totalQuantity, slug, and isDeleted cannot be updated here');
-    }
+    this.assertOnlyAllowedFields(
+      data as Record<string, unknown>,
+      ['updatedById', 'status', 'shippedAt', 'notes'],
+      'Only updatedById, status, shippedAt, and notes can be updated here',
+    );
 
     if (data.updatedById !== undefined) {
       this.assertPositiveInt(data.updatedById, 'updatedById');
@@ -80,7 +109,7 @@ export class ShipmentService {
   }
 
   // Create a new shipment shell
-  async create(data: Prisma.ShipmentUncheckedCreateInput) {
+  async create(data: CreateShipmentInput) {
     this.validateCreateInput(data);
 
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
@@ -169,7 +198,7 @@ export class ShipmentService {
   }
 
   // Update shipment status or details
-  async update(id: number, data: Prisma.ShipmentUncheckedUpdateInput) {
+  async update(id: number, data: UpdateShipmentInput) {
     this.validateUpdateInput(data);
 
     const existing = await this.prisma.shipment.findFirst({
