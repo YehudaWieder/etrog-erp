@@ -4,7 +4,7 @@ import { Injectable, NotFoundException, ConflictException, BadRequestException }
 import { PrismaService } from '../../../prisma/prisma.service';
 import { BoxOwnership, BoxStatus, BoxType } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
-import { ShipmentTotalsService } from '../common/shipment-totals.service';
+import { ShipmentsService } from '../../shipments.service';
 
 type CreateBoxInput = {
   shipmentId: number;
@@ -33,7 +33,7 @@ export class BoxService {
   constructor(
     private prisma: PrismaService,
     private seasonsService: SeasonsService,
-    private shipmentTotalsService: ShipmentTotalsService,
+    private shipmentsService: ShipmentsService,
   ) {}
 
   private assertPositiveInt(value: unknown, fieldName: string) {
@@ -174,7 +174,7 @@ export class BoxService {
         },
       });
 
-      await this.shipmentTotalsService.syncShipmentTotals(tx, data.shipmentId);
+      await this.shipmentsService.syncShipmentTotals(tx, data.shipmentId);
 
       return box;
     });
@@ -241,7 +241,7 @@ export class BoxService {
         },
       });
 
-      await this.shipmentTotalsService.syncShipmentTotals(tx, box.shipmentId);
+      await this.shipmentsService.syncShipmentTotals(tx, box.shipmentId);
 
       return updatedBox;
     });
@@ -255,7 +255,7 @@ export class BoxService {
         data: { isDeleted: true },
       });
 
-      await this.shipmentTotalsService.syncShipmentTotals(tx, box.shipmentId);
+      await this.shipmentsService.syncShipmentTotals(tx, box.shipmentId);
 
       return box;
     });
@@ -274,7 +274,7 @@ export class BoxService {
       await tx.shipmentItem.deleteMany({ where: { boxId: id } });
       await tx.box.delete({ where: { id } });
 
-      await this.shipmentTotalsService.syncShipmentTotals(tx, box.shipmentId);
+      await this.shipmentsService.syncShipmentTotals(tx, box.shipmentId);
 
       return { deleted: true, id };
     });

@@ -5,14 +5,14 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma } from 'src/generated/prisma';
 import { BoxOwnership, Grade, ItemOwnership, MovementType, PitamStatus, SourceType } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
-import { ShipmentTotalsService } from '../common/shipment-totals.service';
+import { ShipmentsService } from '../../shipments.service';
 
 @Injectable()
 export class ItemService {
   constructor(
     private prisma: PrismaService,
     private seasonsService: SeasonsService,
-    private shipmentTotalsService: ShipmentTotalsService,
+    private shipmentsService: ShipmentsService,
   ) {}
 
   private assertPositiveInt(value: unknown, fieldName: string) {
@@ -685,7 +685,7 @@ export class ItemService {
         updatedById: newItem.updatedById,
       });
 
-      await this.shipmentTotalsService.syncBoxAndShipmentTotals(tx, box.id, box.shipmentId);
+      await this.shipmentsService.syncBoxAndShipmentTotals(tx, box.id, box.shipmentId);
 
       return newItem;
     });
@@ -811,10 +811,10 @@ export class ItemService {
       });
 
       // Re-sync totals for the associated box and shipment
-      await this.shipmentTotalsService.syncBoxAndShipmentTotals(tx, currentItem.boxId, currentItem.shipmentId);
+      await this.shipmentsService.syncBoxAndShipmentTotals(tx, currentItem.boxId, currentItem.shipmentId);
 
       if (currentItem.boxId !== updatedItem.boxId || currentItem.shipmentId !== updatedItem.shipmentId) {
-        await this.shipmentTotalsService.syncBoxAndShipmentTotals(tx, updatedItem.boxId, updatedItem.shipmentId);
+        await this.shipmentsService.syncBoxAndShipmentTotals(tx, updatedItem.boxId, updatedItem.shipmentId);
       }
 
       return updatedItem;
@@ -839,7 +839,7 @@ export class ItemService {
         where: { id },
       });
 
-      await this.shipmentTotalsService.syncBoxAndShipmentTotals(tx, existing.boxId, existing.shipmentId);
+      await this.shipmentsService.syncBoxAndShipmentTotals(tx, existing.boxId, existing.shipmentId);
 
       return item;
     });

@@ -4,7 +4,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ShipmentStatus } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
-import { ShipmentTotalsService } from '../common/shipment-totals.service';
+import { ShipmentsService } from '../../shipments.service';
 
 type CreateShipmentInput = {
   updatedById: number;
@@ -25,7 +25,7 @@ export class ShipmentService {
   constructor(
     private prisma: PrismaService,
     private seasonsService: SeasonsService,
-    private shipmentTotalsService: ShipmentTotalsService,
+    private shipmentsService: ShipmentsService,
   ) {}
 
   private resolveShippedAt(status: ShipmentStatus | undefined, shippedAt: Date | string | null | undefined) {
@@ -238,7 +238,7 @@ export class ShipmentService {
   // Recalculate totals (call this when items/boxes are added/removed)
   async updateTotals(id: number) {
     return this.prisma.$transaction(async (tx) => {
-      return this.shipmentTotalsService.syncShipmentTotals(tx, id);
+      return this.shipmentsService.syncShipmentTotals(tx, id);
     });
   }
 
