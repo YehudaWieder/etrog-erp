@@ -53,16 +53,6 @@ export class TraderCatShareController {
     return this.shareService.findAllBySeason(seasonId, req.user as AuthenticatedUser);
   }
 
-  @Get(':id')
-  @Roles()
-  @ApiOperation({ summary: 'Retrieve a single trader category share by ID' })
-  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the share record.' })
-  @ApiResponse({ status: 200, description: 'Trader category share returned successfully.' })
-  @ApiResponse({ status: 404, description: 'Share record not found.' })
-  findOne(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
-    return this.shareService.findOne(id, req.user as AuthenticatedUser);
-  }
-
   @Get('by-trader-category')
   @Roles()
   @ApiOperation({ summary: 'Retrieve share record by trader, category, and season (composite key lookup)' })
@@ -78,6 +68,16 @@ export class TraderCatShareController {
     @Req() req: Request,
   ) {
     return this.shareService.findByTraderAndCategory(traderId, traderCategoryId, seasonId, req.user as AuthenticatedUser);
+  }
+
+  @Get(':id')
+  @Roles()
+  @ApiOperation({ summary: 'Retrieve a single trader category share by ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the share record.' })
+  @ApiResponse({ status: 200, description: 'Trader category share returned successfully.' })
+  @ApiResponse({ status: 404, description: 'Share record not found.' })
+  findOne(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    return this.shareService.findOne(id, req.user as AuthenticatedUser);
   }
 
   @Patch(':id')
