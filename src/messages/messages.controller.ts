@@ -24,7 +24,7 @@ export class MessagesController {
       default: {
         summary: 'Send message payload',
         value: {
-          recipientId: 4,
+          recipientIds: [4],
           subject: 'Packing completed',
           content: 'Shipment #102 is ready for dispatch.',
           priority: 'NORMAL',
@@ -33,7 +33,7 @@ export class MessagesController {
       urgent: {
         summary: 'Urgent message payload',
         value: {
-          recipientId: 2,
+          recipientIds: [2],
           subject: 'Quality alert',
           content: 'Please review rejected batch from field 3 immediately.',
           priority: 'URGENT',
