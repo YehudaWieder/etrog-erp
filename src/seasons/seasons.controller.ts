@@ -50,6 +50,7 @@ export class SeasonsController {
   }
 
   @Get(':idOrSlug')
+  @Roles()
   @ApiOperation({ summary: 'Retrieve a season by its numeric ID or URL-friendly slug' })
   @ApiParam({ name: 'idOrSlug', type: String, description: 'The numeric ID or slug of the season.' })
   @ApiResponse({ status: 200, description: 'Season returned successfully.' })
