@@ -60,6 +60,20 @@ export class MessageSwaggerDto {
   replyToMessageId?: number;
 }
 
+export class MessageFilterDto {
+  @ApiPropertyOptional({ description: 'Filter messages by sender user ID.' })
+  senderId?: number;
+
+  @ApiPropertyOptional({ enum: Priority, enumName: 'Priority', description: 'Filter messages by priority level.' })
+  priority?: Priority;
+
+  @ApiPropertyOptional({ description: 'Filter messages that are replies to this message ID. Pass 0 to retrieve top-level messages only (no parent).' })
+  replyToMessageId?: number;
+
+  @ApiPropertyOptional({ description: 'Filter by read status for the authenticated user. true = read, false = unread.' })
+  isRead?: boolean;
+}
+
 export class ClassificationSwaggerDto {
   @ApiProperty({ description: 'Season ID.' })
   seasonId!: number;

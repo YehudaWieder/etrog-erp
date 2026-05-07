@@ -1,10 +1,10 @@
 // src/messages/messages.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Req } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, ParseBoolPipe, Req, Query, ParseEnumPipe } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { MessagesService } from './messages.service';
-import { Prisma } from '@prisma/client';
-import { MessageSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+import { Prisma, Priority } from '@prisma/client';
+import { MessageSwaggerDto, MessageFilterDto } from 'src/docs/dto/swagger-enums.dto';
 import { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 
@@ -85,6 +85,39 @@ export class MessagesController {
     @Req() req: Request,
   ) {
     return this.messagesService.markAsRead(id, (req.user as AuthenticatedUser).id);
+  }
+  
+  @Get('filter')
+  @ApiOperation({ summary: 'Retrieve messages for the authenticated user filtered by sender, priority, thread, or read status' })
+  @ApiQuery({ name: 'senderId', required: false, type: Number, description: 'Filter by sender user ID.' })
+  @ApiQuery({ name: 'priority', required: false, enum: Priority, description: 'Filter by priority level.' })
+  @ApiQuery({ name: 'replyToMessageId', required: false, type: Number, description: 'Filter by parent message ID. Pass 0 to get top-level messages only.' })
+  @ApiQuery({ name: 'isRead', required: false, type: Boolean, description: 'true = read messages only, false = unread messages only.' })
+  @ApiResponse({ status: 200, description: 'Filtered messages returned successfully.' })
+  getFiltered(
+    @Req() req: Request,
+    @Query('senderId') senderIdRaw?: string,
+    @Query('priority') priority?: string,
+    @Query('replyToMessageId') replyToIdRaw?: string,
+    @Query('isRead') isReadRaw?: string,
+  ) {
+    const userId = (req.user as AuthenticatedUser).id;
+
+    const senderId = senderIdRaw !== undefined ? parseInt(senderIdRaw, 10) : undefined;
+    const replyToMessageId = replyToIdRaw !== undefined
+      ? (parseInt(replyToIdRaw, 10) === 0 ? null : parseInt(replyToIdRaw, 10))
+      : undefined;
+    const isRead = isReadRaw !== undefined ? isReadRaw === 'true' : undefined;
+    const parsedPriority = priority !== undefined && Object.values(Priority).includes(priority as Priority)
+      ? (priority as Priority)
+      : undefined;
+
+    return this.messagesService.getFiltered(userId, {
+      senderId,
+      priority: parsedPriority,
+      replyToMessageId,
+      isRead,
+    });
   }
 
   @Delete(':id')

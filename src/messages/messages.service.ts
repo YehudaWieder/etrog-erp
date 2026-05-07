@@ -2,8 +2,17 @@
 
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma } from 'src/generated/prisma';
+import { Priority } from '@prisma/client';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+
+export interface MessageFilterOptions {
+  senderId?: number;
+  priority?: Priority;
+  /** Pass null to retrieve top-level messages (no parent). Pass a number to retrieve replies of that message. */
+  replyToMessageId?: number | null;
+  isRead?: boolean;
+}
 
 @Injectable()
 export class MessagesService {
@@ -91,6 +100,43 @@ export class MessagesService {
         recipientIds: { has: recipientId },
         NOT: { readByIds: { has: recipientId } },
       },
+    });
+  }
+
+  // Returns messages visible to the user, filtered by any combination of senderId, priority,
+  // replyToMessageId (null = top-level only), and read/unread status.
+  async getFiltered(userId: number, filters: MessageFilterOptions) {
+    const where: Prisma.MessageWhereInput = {
+      OR: [{ senderId: userId }, { recipientIds: { has: userId } }],
+    };
+
+    if (filters.senderId !== undefined) {
+      where.senderId = filters.senderId;
+    }
+
+    if (filters.priority !== undefined) {
+      where.priority = filters.priority;
+    }
+
+    if (filters.replyToMessageId !== undefined) {
+      where.replyToMessageId = filters.replyToMessageId === null
+        ? null
+        : filters.replyToMessageId;
+    }
+
+    if (filters.isRead === true) {
+      where.readByIds = { has: userId };
+    } else if (filters.isRead === false) {
+      where.NOT = { readByIds: { has: userId } };
+    }
+
+    return this.prisma.message.findMany({
+      where,
+      include: {
+        sender: { select: { id: true, name: true } },
+        replyToMessage: { select: { id: true, subject: true, senderId: true } },
+      },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
