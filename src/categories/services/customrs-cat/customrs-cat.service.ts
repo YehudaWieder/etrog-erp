@@ -211,7 +211,7 @@ export class CustomerCatService {
             },
           }),
     });
-
+    if (!record) throw new NotFoundException(`Customer category price not found for customerId=${customerId}, seasonId=${seasonId}, name=${name}, grade=${grade}`);
     return !managerOrAbove && record ? this.toWorkerCategoryView(record) : record;
   }
 
