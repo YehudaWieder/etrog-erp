@@ -158,7 +158,8 @@ export class TraderCatShareService {
       },
     });
 
-    return share ? this.toWorkerShareView(share) : share;
+    if (!share) throw new NotFoundException(`Share record not found for traderId=${traderId}, traderCategoryId=${traderCategoryId}, seasonId=${seasonId}`);
+    return this.toWorkerShareView(share);
   }
 
   // Standard Update
