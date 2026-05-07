@@ -55,16 +55,6 @@ export class TradersCatController {
     return this.tradersCatService.findAllBySeason(seasonId, req.user as AuthenticatedUser);
   }
 
-  @Get(':id')
-  @Roles()
-  @ApiOperation({ summary: 'Retrieve a single trader category by ID' })
-  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the trader category.' })
-  @ApiResponse({ status: 200, description: 'Trader category returned successfully.' })
-  @ApiResponse({ status: 404, description: 'Trader category not found.' })
-  findOne(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
-    return this.tradersCatService.findOne(id, req.user as AuthenticatedUser);
-  }
-
   @Get('by-name')
   @Roles()
   @ApiOperation({ summary: 'Find a trader category by name within a season (composite key lookup)' })
@@ -78,6 +68,16 @@ export class TradersCatController {
     @Req() req: Request,
   ) {
     return this.tradersCatService.findByName(name, seasonId, req.user as AuthenticatedUser);
+  }
+
+  @Get(':id')
+  @Roles()
+  @ApiOperation({ summary: 'Retrieve a single trader category by ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the trader category.' })
+  @ApiResponse({ status: 200, description: 'Trader category returned successfully.' })
+  @ApiResponse({ status: 404, description: 'Trader category not found.' })
+  findOne(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    return this.tradersCatService.findOne(id, req.user as AuthenticatedUser);
   }
 
   @Patch(':id')
