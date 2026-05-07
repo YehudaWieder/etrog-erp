@@ -12,6 +12,8 @@ export interface MessageFilterOptions {
   /** Pass null to retrieve top-level messages (no parent). Pass a number to retrieve replies of that message. */
   replyToMessageId?: number | null;
   isRead?: boolean;
+  /** Filter by message box: 'inbox' (received), 'outbox' (sent), or 'all' (default). */
+  box?: 'inbox' | 'outbox' | 'all';
 }
 
 @Injectable()
@@ -106,9 +108,15 @@ export class MessagesService {
   // Returns messages visible to the user, filtered by any combination of senderId, priority,
   // replyToMessageId (null = top-level only), and read/unread status.
   async getFiltered(userId: number, filters: MessageFilterOptions) {
-    const where: Prisma.MessageWhereInput = {
-      OR: [{ senderId: userId }, { recipientIds: { has: userId } }],
-    };
+    let baseWhere: Prisma.MessageWhereInput;
+    if (filters.box === 'inbox') {
+      baseWhere = { recipientIds: { has: userId } };
+    } else if (filters.box === 'outbox') {
+      baseWhere = { senderId: userId };
+    } else {
+      baseWhere = { OR: [{ senderId: userId }, { recipientIds: { has: userId } }] };
+    }
+    const where: Prisma.MessageWhereInput = { ...baseWhere };
 
     if (filters.senderId !== undefined) {
       where.senderId = filters.senderId;

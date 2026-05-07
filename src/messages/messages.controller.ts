@@ -93,6 +93,7 @@ export class MessagesController {
   @ApiQuery({ name: 'priority', required: false, enum: Priority, description: 'Filter by priority level.' })
   @ApiQuery({ name: 'replyToMessageId', required: false, type: Number, description: 'Filter by parent message ID. Pass 0 to get top-level messages only.' })
   @ApiQuery({ name: 'isRead', required: false, type: Boolean, description: 'true = read messages only, false = unread messages only.' })
+  @ApiQuery({ name: 'box', required: false, enum: ['inbox', 'outbox', 'all'], description: 'Filter by message box: inbox, outbox, or all (default).' })
   @ApiResponse({ status: 200, description: 'Filtered messages returned successfully.' })
   getFiltered(
     @Req() req: Request,
@@ -100,6 +101,7 @@ export class MessagesController {
     @Query('priority') priority?: string,
     @Query('replyToMessageId') replyToIdRaw?: string,
     @Query('isRead') isReadRaw?: string,
+    @Query('box') box?: string,
   ) {
     const userId = (req.user as AuthenticatedUser).id;
 
@@ -111,12 +113,14 @@ export class MessagesController {
     const parsedPriority = priority !== undefined && Object.values(Priority).includes(priority as Priority)
       ? (priority as Priority)
       : undefined;
+    const parsedBox = box === 'inbox' || box === 'outbox' || box === 'all' ? box : undefined;
 
     return this.messagesService.getFiltered(userId, {
       senderId,
       priority: parsedPriority,
       replyToMessageId,
       isRead,
+      box: parsedBox,
     });
   }
 
