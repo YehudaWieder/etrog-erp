@@ -5,6 +5,15 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { buildNewUserPendingActivationMessage } from 'src/notifications/templates/user-registration-notification';
 
+type CreateUserInput = {
+	name: string;
+	email: string;
+	phone?: string;
+	password: string;
+	role?: never;
+	isActive?: never;
+};
+
 type SelfUpdateInput = {
 	name?: string;
 	email?: string;
@@ -29,26 +38,40 @@ export class UsersService {
 
 	constructor(private prisma: PrismaService) {}
 
-	async createUser(data: Prisma.UserCreateInput) {
+	async createUser(data: CreateUserInput) {
+		if ((data as Record<string, unknown>).role !== undefined || (data as Record<string, unknown>).isActive !== undefined) {
+			throw new BadRequestException('role and isActive cannot be set during user registration.');
+		}
+
 		this.assertEmailFormat(data.email);
-		this.assertPasswordFormat(data.passwordHash);
+		this.assertPasswordFormat(data.password);
 
 		const existing = await this.prisma.user.findFirst({
-			where: { OR: [{ email: data.email }, { name: data.name }] },
+			where: {
+				OR: [
+					{ email: data.email },
+					{ name: data.name },
+					...(data.phone ? [{ phone: data.phone }] : []),
+				],
+			},
 		});
 
 		if (existing) {
-			throw new ConflictException('User with this email or name already exists');
+			throw new ConflictException('User with this email, name, or phone already exists');
 		}
 
-		const hashedPassword = await bcrypt.hash(data.passwordHash, this.saltRounds);
+		const hashedPassword = await bcrypt.hash(data.password, this.saltRounds);
 		const slug = data.name.toLowerCase().replace(/ /g, '-');
 
 		return this.prisma.$transaction(async (tx) => {
 			const newUser = await tx.user.create({
 				data: {
-					...data,
+					name: data.name,
+					email: data.email,
+					phone: data.phone,
 					passwordHash: hashedPassword,
+					role: Role.WORKER,
+					isActive: false,
 					slug,
 				},
 			});

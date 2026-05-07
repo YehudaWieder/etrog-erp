@@ -1,11 +1,18 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
-import { Prisma, Role } from '@prisma/client';
+import { Role } from '@prisma/client';
 import { Request } from 'express';
 import { UserSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { UsersService } from './users.service';
+
+type CreateUserRequestBody = {
+	name: string;
+	email: string;
+	phone?: string;
+	password: string;
+};
 
 type UpdateUserRequestBody = {
 	name?: string;
@@ -37,16 +44,14 @@ export class UsersController {
 					email: 'manager@etrog-erp.com',
 					phone: '0541112233',
 					password: 'StrongPass123!',
-					role: 'MANAGER',
-					isActive: true,
 				},
 			},
 		},
 	})
 	@ApiResponse({ status: 201, description: 'User created successfully.' })
-	@ApiResponse({ status: 400, description: 'Invalid input or duplicate name/email/phone.' })
+	@ApiResponse({ status: 400, description: 'Invalid input, forbidden fields (role/isActive), or duplicate name/email/phone.' })
 	@Public()
-	create(@Body() createUserDto: Prisma.UserCreateInput) {
+	create(@Body() createUserDto: CreateUserRequestBody) {
 		return this.usersService.createUser(createUserDto);
 	}
 

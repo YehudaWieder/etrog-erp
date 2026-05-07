@@ -25,11 +25,8 @@ export class UserSwaggerDto {
   @ApiPropertyOptional({ description: 'Optional unique phone number.' })
   phone?: string;
 
-  @ApiProperty({ description: 'Hashed password value.' })
-  passwordHash!: string;
-
-  @ApiPropertyOptional({ enum: Role, enumName: 'Role', description: 'Role assigned to the user.' })
-  role?: Role;
+  @ApiProperty({ description: 'Plain-text password. Must be at least 8 characters and include letters and numbers.' })
+  password!: string;
 }
 
 export class MessageSwaggerDto {
