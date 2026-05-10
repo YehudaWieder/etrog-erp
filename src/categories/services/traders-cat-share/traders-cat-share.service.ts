@@ -37,7 +37,6 @@ export class TraderCatShareService {
 
   // Set or Update a share for a trader in a category for a specific season
   async setShare(data: {
-    seasonId: number;
     traderId: number;
     traderCategoryId: number;
     percent: number;

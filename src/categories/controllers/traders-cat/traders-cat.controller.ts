@@ -18,18 +18,16 @@ export class TradersCatController {
   constructor(private readonly tradersCatService: TradersCatService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new trader category for a season. Unique constraint: [name, seasonId].' })
+  @ApiOperation({ summary: 'Create a new trader category for the active season. Unique constraint: [name, seasonId].' })
   @ApiBody({
     schema: {
       type: 'object',
-      required: ['seasonId', 'name'],
+      required: ['name'],
       properties: {
-        seasonId: { type: 'integer', description: 'The ID of the season this category belongs to.', example: 1 },
         name: { type: 'string', description: 'The category name (e.g., "Yanover").', example: 'Yanover Premium' },
         notes: { type: 'string', description: 'Optional notes about the category.', nullable: true, example: 'Large-size export category' },
       },
       example: {
-        seasonId: 1,
         name: 'Yanover Premium',
         notes: 'Large-size export category',
       },
@@ -38,11 +36,10 @@ export class TradersCatController {
   @ApiResponse({ status: 201, description: 'Trader category created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate category name within the season.' })
   create(
-    @Body('seasonId', ParseIntPipe) seasonId: number,
     @Body('name') name: string,
     @Body('notes') notes?: string,
   ) {
-    return this.tradersCatService.create(seasonId, name, notes);
+    return this.tradersCatService.create(name, notes);
   }
 
   @Get()

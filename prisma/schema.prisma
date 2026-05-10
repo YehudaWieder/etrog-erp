@@ -43,6 +43,37 @@ model Field {
 }
 
 // -----------------------------------------------------------------------------
+// 2.5 Trader Category Templates (Global Defaults)
+// -----------------------------------------------------------------------------
+model TraderCategoryTemplate {
+  id    Int     @id @default(autoincrement())
+  name  String  @unique
+  notes String?
+
+  defaultShares TraderCategoryShareTemplate[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TraderCategoryShareTemplate {
+  id Int @id @default(autoincrement())
+
+  traderId Int
+  trader   Trader @relation(fields: [traderId], references: [id], onDelete: Cascade)
+
+  traderCategoryTemplateId Int
+  traderCategoryTemplate   TraderCategoryTemplate @relation(fields: [traderCategoryTemplateId], references: [id], onDelete: Cascade)
+
+  percent Decimal
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([traderId, traderCategoryTemplateId])
+}
+
+// -----------------------------------------------------------------------------
 // 3. Season Management (The Time-Tenant)
 // -----------------------------------------------------------------------------
 model Season {
@@ -112,6 +143,7 @@ model Trader {
   slug String @unique // URL-friendly slug
 
   // Relations
+  defaultCategoryShares TraderCategoryShareTemplate[]
   traderCategoryShares TraderCategoryShare[]
   classifications      Classification[]
   traderStocks         TraderStock[]

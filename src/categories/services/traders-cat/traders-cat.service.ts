@@ -27,8 +27,8 @@ export class TradersCatService {
     };
   }
 
-  // Create a new category for a specific season
-  async create(_seasonId: number, name: string, notes?: string) {
+  // Create a new category for the active season
+  async create(name: string, notes?: string) {
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
 
     const existing = await this.prisma.tradersCategories.findUnique({

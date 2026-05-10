@@ -15,6 +15,22 @@ import { Roles } from 'src/authorization/decorators/roles.decorator';
 export class SeasonsController {
   constructor(private readonly seasonsService: SeasonsService) {}
 
+  @Post('preview')
+  @ApiOperation({ summary: 'Preview creation of a new season including default category/share bootstrap counts.' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['yearName'],
+      properties: {
+        yearName: { type: 'integer', example: 2027, description: 'The four-digit year for the season.' },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Preview data returned successfully.' })
+  previewCreate(@Body('yearName', ParseIntPipe) yearName: number) {
+    return this.seasonsService.previewSeasonCreation(yearName);
+  }
+
   @Post()
   @ApiOperation({ summary: 'Create a new harvest season. Unique constraint: [yearName].' })
   @ApiBody({

@@ -137,6 +137,23 @@ exports.Prisma.FieldScalarFieldEnum = {
   slug: 'slug'
 };
 
+exports.Prisma.TraderCategoryTemplateScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.TraderCategoryShareTemplateScalarFieldEnum = {
+  id: 'id',
+  traderId: 'traderId',
+  traderCategoryTemplateId: 'traderCategoryTemplateId',
+  percent: 'percent',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SeasonScalarFieldEnum = {
   id: 'id',
   yearName: 'yearName',
@@ -470,6 +487,8 @@ exports.Priority = exports.$Enums.Priority = {
 exports.Prisma.ModelName = {
   SystemConfig: 'SystemConfig',
   Field: 'Field',
+  TraderCategoryTemplate: 'TraderCategoryTemplate',
+  TraderCategoryShareTemplate: 'TraderCategoryShareTemplate',
   Season: 'Season',
   User: 'User',
   Trader: 'Trader',

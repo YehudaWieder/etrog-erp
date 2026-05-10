@@ -2,11 +2,43 @@
 
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class SeasonsService {
   constructor(private prisma: PrismaService) {}
+
+  async previewSeasonCreation(yearName: number) {
+    const existingSeason = await this.prisma.season.findUnique({
+      where: { yearName },
+      select: { id: true, yearName: true, slug: true, isActive: true },
+    });
+
+    const templates = await this.prisma.traderCategoryTemplate.findMany({
+      select: { id: true },
+    });
+
+    const templateShares = await this.prisma.traderCategoryShareTemplate.findMany({
+      select: {
+        id: true,
+        traderId: true,
+        traderCategoryTemplateId: true,
+      },
+    });
+
+    return {
+      canCreate: !existingSeason,
+      yearName,
+      existingSeason,
+      defaults: {
+        traderCategoryTemplates: templates.length,
+        traderCategoryShareTemplates: templateShares.length,
+      },
+      projectedForNewSeason: {
+        traderCategoriesToCreate: templates.length,
+        traderSharesToCreate: templateShares.length,
+      },
+    };
+  }
 
   // Create a new season
   async createSeason(yearName: number) {
@@ -21,13 +53,53 @@ export class SeasonsService {
         data: { isActive: false },
       });
 
-      return tx.season.create({
+      const season = await tx.season.create({
         data: {
           yearName,
           slug: `${yearName}`,
           isActive: true,
         },
       });
+
+      const templates = await tx.traderCategoryTemplate.findMany({
+        orderBy: { name: 'asc' },
+      });
+
+      const templateToSeasonCategoryId = new Map<number, number>();
+
+      for (const template of templates) {
+        const createdCategory = await tx.tradersCategories.create({
+          data: {
+            seasonId: season.id,
+            name: template.name,
+            notes: template.notes,
+          },
+        });
+
+        templateToSeasonCategoryId.set(template.id, createdCategory.id);
+      }
+
+      const shareTemplates = await tx.traderCategoryShareTemplate.findMany({
+        orderBy: [{ traderCategoryTemplateId: 'asc' }, { traderId: 'asc' }],
+      });
+
+      for (const templateShare of shareTemplates) {
+        const seasonCategoryId = templateToSeasonCategoryId.get(templateShare.traderCategoryTemplateId);
+        if (!seasonCategoryId) {
+          continue;
+        }
+
+        await tx.traderCategoryShare.create({
+          data: {
+            seasonId: season.id,
+            traderId: templateShare.traderId,
+            traderCategoryId: seasonCategoryId,
+            percent: templateShare.percent,
+          },
+        });
+      }
+
+      return season;
     });
   }
 

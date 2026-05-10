@@ -18,19 +18,17 @@ export class TraderCatShareController {
   constructor(private readonly shareService: TraderCatShareService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Set or upsert a trader\'s percentage share for a category within a season. Unique constraint: [traderId, traderCategoryId, seasonId].' })
+  @ApiOperation({ summary: 'Set or upsert a trader\'s percentage share in the active season. Unique constraint: [traderId, traderCategoryId, seasonId].' })
   @ApiBody({
     schema: {
       type: 'object',
-      required: ['seasonId', 'traderId', 'traderCategoryId', 'percent'],
+      required: ['traderId', 'traderCategoryId', 'percent'],
       properties: {
-        seasonId: { type: 'integer', example: 1 },
         traderId: { type: 'integer', example: 3 },
         traderCategoryId: { type: 'integer', example: 2 },
         percent: { type: 'number', example: 35.5 },
       },
       example: {
-        seasonId: 1,
         traderId: 3,
         traderCategoryId: 2,
         percent: 35.5,
@@ -39,7 +37,7 @@ export class TraderCatShareController {
   })
   @ApiResponse({ status: 201, description: 'Trader category share created or updated successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input data.' })
-  setShare(@Body() data: { seasonId: number; traderId: number; traderCategoryId: number; percent: number }) {
+  setShare(@Body() data: { traderId: number; traderCategoryId: number; percent: number }) {
     return this.shareService.setShare(data);
   }
 
