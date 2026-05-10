@@ -24,7 +24,7 @@ export class SeasonsService {
       return tx.season.create({
         data: {
           yearName,
-          slug: `season-${yearName}`,
+          slug: `${yearName}`,
           isActive: true,
         },
       });
