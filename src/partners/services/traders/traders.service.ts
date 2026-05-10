@@ -1,6 +1,6 @@
 // src/partners/services/traders/traders.service.ts
 
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma, Role } from '@prisma/client';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
@@ -13,6 +13,9 @@ export class TradersService {
   async create(name: string, paymentPercent: number = 33.33) {
     const existing = await this.prisma.trader.findUnique({ where: { name } });
     if (existing) throw new ConflictException(`Trader with name ${name} already exists`);
+
+    // Validate payment percent
+    await this.validateTotalPaymentPercent(paymentPercent);
 
     return this.prisma.trader.create({
       data: {
@@ -54,6 +57,22 @@ export class TradersService {
 
   // Update trader details
   async update(id: number, data: Partial<Prisma.TraderUpdateInput>) {
+    // If paymentPercent is being updated, validate the total
+    if (data.paymentPercent !== undefined && typeof data.paymentPercent === 'number') {
+      // Get the current trader's old payment percent
+      const currentTrader = await this.prisma.trader.findUnique({ where: { id } });
+      if (!currentTrader) throw new NotFoundException('Trader not found');
+
+      // Calculate the difference in payment percent (convert Decimal to number)
+      const currentPercentNumber = typeof currentTrader.paymentPercent === 'number' 
+        ? currentTrader.paymentPercent 
+        : parseFloat(currentTrader.paymentPercent.toString());
+      const percentDifference = (data.paymentPercent as number) - currentPercentNumber;
+      
+      // Validate against the new total
+      await this.validateTotalPaymentPercent(percentDifference, id);
+    }
+
     // If name is changed, update the slug accordingly
     if (data.name && typeof data.name === 'string') {
       data.slug = data.name.toLowerCase().replace(/ /g, '-');
@@ -63,6 +82,33 @@ export class TradersService {
       where: { id },
       data,
     });
+  }
+
+  // Private helper method to validate total payment percent across all traders
+  private async validateTotalPaymentPercent(additionalPercent: number, excludeTrader?: number) {
+    // Get sum of all traders' payment percentages (excluding the one being updated if provided)
+    const traders = await this.prisma.trader.findMany({
+      select: { id: true, paymentPercent: true },
+    });
+
+    let totalPercent = additionalPercent;
+    for (const trader of traders) {
+      if (excludeTrader && trader.id === excludeTrader) {
+        // Skip the trader being updated
+        continue;
+      }
+      // Convert Decimal to number for calculation
+      const traderPercent = typeof trader.paymentPercent === 'number'
+        ? trader.paymentPercent
+        : parseFloat(trader.paymentPercent.toString());
+      totalPercent += traderPercent;
+    }
+
+    if (totalPercent > 100) {
+      throw new BadRequestException(
+        `Total payment percentage would exceed 100%. Current: ${totalPercent.toFixed(2)}%`,
+      );
+    }
   }
 
   // Remove a trader
