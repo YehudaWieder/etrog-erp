@@ -58,14 +58,6 @@ export class SeasonsService {
     return season;
   }
 
-  // Update season status (e.g., closing a season)
-  async updateSeason(id: number, data: Partial<Prisma.SeasonUpdateInput>) {
-    return this.prisma.season.update({
-      where: { id },
-      data,
-    });
-  }
-
   // Set as active and deactivate all others
   async setActiveSeason(id: number) {
     return this.prisma.$transaction(async (tx) => {

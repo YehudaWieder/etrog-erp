@@ -60,29 +60,6 @@ export class SeasonsController {
     return this.seasonsService.findOne(isNaN(id) ? idOrSlug : id);
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update season details by ID' })
-  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the season to update.' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        yearName: { type: 'integer', example: 2027 },
-        isActive: { type: 'boolean', example: false },
-      },
-      example: {
-        yearName: 2027,
-        isActive: false,
-      },
-    },
-  })
-  @ApiResponse({ status: 200, description: 'Season updated successfully.' })
-  @ApiResponse({ status: 400, description: 'Invalid update data.' })
-  @ApiResponse({ status: 404, description: 'Season not found.' })
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateData: any) {
-    return this.seasonsService.updateSeason(id, updateData);
-  }
-
   @Patch(':id/set-active')
   @ApiOperation({ summary: 'Set a season as the currently active season (deactivates all others)' })
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the season to activate.' })
