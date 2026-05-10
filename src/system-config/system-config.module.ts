@@ -6,9 +6,11 @@ import { FieldService } from './services/fields/fields.service';
 import { FieldController } from './controllers/fields/fields.controller';
 import { ConfigService } from './system-config.service';
 import { ConfigController } from './system-config.controller';
+import { SeedService } from './services/seed/seed.service';
 
 @Module({
   controllers: [SystemConfigController, FieldController, ConfigController],
-  providers: [SystemConfigService, ConfigService, FieldService],
+  providers: [SystemConfigService, ConfigService, FieldService, SeedService],
+  exports: [SeedService],
 })
 export class SystemConfigModule {}

@@ -24,15 +24,15 @@ export type SystemConfig = $Result.DefaultSelection<Prisma.$SystemConfigPayload>
  */
 export type Field = $Result.DefaultSelection<Prisma.$FieldPayload>
 /**
- * Model TraderCategoryTemplate
+ * Model DefaultTraderCategory
  * 
  */
-export type TraderCategoryTemplate = $Result.DefaultSelection<Prisma.$TraderCategoryTemplatePayload>
+export type DefaultTraderCategory = $Result.DefaultSelection<Prisma.$DefaultTraderCategoryPayload>
 /**
- * Model TraderCategoryShareTemplate
+ * Model DefaultTraderCategoryShare
  * 
  */
-export type TraderCategoryShareTemplate = $Result.DefaultSelection<Prisma.$TraderCategoryShareTemplatePayload>
+export type DefaultTraderCategoryShare = $Result.DefaultSelection<Prisma.$DefaultTraderCategorySharePayload>
 /**
  * Model Season
  * 
@@ -438,24 +438,24 @@ export class PrismaClient<
   get field(): Prisma.FieldDelegate<ExtArgs, ClientOptions>;
 
   /**
-   * `prisma.traderCategoryTemplate`: Exposes CRUD operations for the **TraderCategoryTemplate** model.
+   * `prisma.defaultTraderCategory`: Exposes CRUD operations for the **DefaultTraderCategory** model.
     * Example usage:
     * ```ts
-    * // Fetch zero or more TraderCategoryTemplates
-    * const traderCategoryTemplates = await prisma.traderCategoryTemplate.findMany()
+    * // Fetch zero or more DefaultTraderCategories
+    * const defaultTraderCategories = await prisma.defaultTraderCategory.findMany()
     * ```
     */
-  get traderCategoryTemplate(): Prisma.TraderCategoryTemplateDelegate<ExtArgs, ClientOptions>;
+  get defaultTraderCategory(): Prisma.DefaultTraderCategoryDelegate<ExtArgs, ClientOptions>;
 
   /**
-   * `prisma.traderCategoryShareTemplate`: Exposes CRUD operations for the **TraderCategoryShareTemplate** model.
+   * `prisma.defaultTraderCategoryShare`: Exposes CRUD operations for the **DefaultTraderCategoryShare** model.
     * Example usage:
     * ```ts
-    * // Fetch zero or more TraderCategoryShareTemplates
-    * const traderCategoryShareTemplates = await prisma.traderCategoryShareTemplate.findMany()
+    * // Fetch zero or more DefaultTraderCategoryShares
+    * const defaultTraderCategoryShares = await prisma.defaultTraderCategoryShare.findMany()
     * ```
     */
-  get traderCategoryShareTemplate(): Prisma.TraderCategoryShareTemplateDelegate<ExtArgs, ClientOptions>;
+  get defaultTraderCategoryShare(): Prisma.DefaultTraderCategoryShareDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.season`: Exposes CRUD operations for the **Season** model.
@@ -1042,8 +1042,8 @@ export namespace Prisma {
   export const ModelName: {
     SystemConfig: 'SystemConfig',
     Field: 'Field',
-    TraderCategoryTemplate: 'TraderCategoryTemplate',
-    TraderCategoryShareTemplate: 'TraderCategoryShareTemplate',
+    DefaultTraderCategory: 'DefaultTraderCategory',
+    DefaultTraderCategoryShare: 'DefaultTraderCategoryShare',
     Season: 'Season',
     User: 'User',
     Trader: 'Trader',
@@ -1074,7 +1074,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "systemConfig" | "field" | "traderCategoryTemplate" | "traderCategoryShareTemplate" | "season" | "user" | "trader" | "customer" | "tradersCategories" | "customerCategories" | "traderCategoryShare" | "fieldHarvest" | "classification" | "traderStock" | "customerAllocation" | "shipment" | "box" | "shipmentItem" | "message"
+      modelProps: "systemConfig" | "field" | "defaultTraderCategory" | "defaultTraderCategoryShare" | "season" | "user" | "trader" | "customer" | "tradersCategories" | "customerCategories" | "traderCategoryShare" | "fieldHarvest" | "classification" | "traderStock" | "customerAllocation" | "shipment" | "box" | "shipmentItem" | "message"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1226,151 +1226,151 @@ export namespace Prisma {
           }
         }
       }
-      TraderCategoryTemplate: {
-        payload: Prisma.$TraderCategoryTemplatePayload<ExtArgs>
-        fields: Prisma.TraderCategoryTemplateFieldRefs
+      DefaultTraderCategory: {
+        payload: Prisma.$DefaultTraderCategoryPayload<ExtArgs>
+        fields: Prisma.DefaultTraderCategoryFieldRefs
         operations: {
           findUnique: {
-            args: Prisma.TraderCategoryTemplateFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryTemplatePayload> | null
+            args: Prisma.DefaultTraderCategoryFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategoryPayload> | null
           }
           findUniqueOrThrow: {
-            args: Prisma.TraderCategoryTemplateFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryTemplatePayload>
+            args: Prisma.DefaultTraderCategoryFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategoryPayload>
           }
           findFirst: {
-            args: Prisma.TraderCategoryTemplateFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryTemplatePayload> | null
+            args: Prisma.DefaultTraderCategoryFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategoryPayload> | null
           }
           findFirstOrThrow: {
-            args: Prisma.TraderCategoryTemplateFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryTemplatePayload>
+            args: Prisma.DefaultTraderCategoryFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategoryPayload>
           }
           findMany: {
-            args: Prisma.TraderCategoryTemplateFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryTemplatePayload>[]
+            args: Prisma.DefaultTraderCategoryFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategoryPayload>[]
           }
           create: {
-            args: Prisma.TraderCategoryTemplateCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryTemplatePayload>
+            args: Prisma.DefaultTraderCategoryCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategoryPayload>
           }
           createMany: {
-            args: Prisma.TraderCategoryTemplateCreateManyArgs<ExtArgs>
+            args: Prisma.DefaultTraderCategoryCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
           createManyAndReturn: {
-            args: Prisma.TraderCategoryTemplateCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryTemplatePayload>[]
+            args: Prisma.DefaultTraderCategoryCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategoryPayload>[]
           }
           delete: {
-            args: Prisma.TraderCategoryTemplateDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryTemplatePayload>
+            args: Prisma.DefaultTraderCategoryDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategoryPayload>
           }
           update: {
-            args: Prisma.TraderCategoryTemplateUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryTemplatePayload>
+            args: Prisma.DefaultTraderCategoryUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategoryPayload>
           }
           deleteMany: {
-            args: Prisma.TraderCategoryTemplateDeleteManyArgs<ExtArgs>
+            args: Prisma.DefaultTraderCategoryDeleteManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateMany: {
-            args: Prisma.TraderCategoryTemplateUpdateManyArgs<ExtArgs>
+            args: Prisma.DefaultTraderCategoryUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateManyAndReturn: {
-            args: Prisma.TraderCategoryTemplateUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryTemplatePayload>[]
+            args: Prisma.DefaultTraderCategoryUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategoryPayload>[]
           }
           upsert: {
-            args: Prisma.TraderCategoryTemplateUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryTemplatePayload>
+            args: Prisma.DefaultTraderCategoryUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategoryPayload>
           }
           aggregate: {
-            args: Prisma.TraderCategoryTemplateAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateTraderCategoryTemplate>
+            args: Prisma.DefaultTraderCategoryAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateDefaultTraderCategory>
           }
           groupBy: {
-            args: Prisma.TraderCategoryTemplateGroupByArgs<ExtArgs>
-            result: $Utils.Optional<TraderCategoryTemplateGroupByOutputType>[]
+            args: Prisma.DefaultTraderCategoryGroupByArgs<ExtArgs>
+            result: $Utils.Optional<DefaultTraderCategoryGroupByOutputType>[]
           }
           count: {
-            args: Prisma.TraderCategoryTemplateCountArgs<ExtArgs>
-            result: $Utils.Optional<TraderCategoryTemplateCountAggregateOutputType> | number
+            args: Prisma.DefaultTraderCategoryCountArgs<ExtArgs>
+            result: $Utils.Optional<DefaultTraderCategoryCountAggregateOutputType> | number
           }
         }
       }
-      TraderCategoryShareTemplate: {
-        payload: Prisma.$TraderCategoryShareTemplatePayload<ExtArgs>
-        fields: Prisma.TraderCategoryShareTemplateFieldRefs
+      DefaultTraderCategoryShare: {
+        payload: Prisma.$DefaultTraderCategorySharePayload<ExtArgs>
+        fields: Prisma.DefaultTraderCategoryShareFieldRefs
         operations: {
           findUnique: {
-            args: Prisma.TraderCategoryShareTemplateFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryShareTemplatePayload> | null
+            args: Prisma.DefaultTraderCategoryShareFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategorySharePayload> | null
           }
           findUniqueOrThrow: {
-            args: Prisma.TraderCategoryShareTemplateFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryShareTemplatePayload>
+            args: Prisma.DefaultTraderCategoryShareFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategorySharePayload>
           }
           findFirst: {
-            args: Prisma.TraderCategoryShareTemplateFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryShareTemplatePayload> | null
+            args: Prisma.DefaultTraderCategoryShareFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategorySharePayload> | null
           }
           findFirstOrThrow: {
-            args: Prisma.TraderCategoryShareTemplateFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryShareTemplatePayload>
+            args: Prisma.DefaultTraderCategoryShareFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategorySharePayload>
           }
           findMany: {
-            args: Prisma.TraderCategoryShareTemplateFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryShareTemplatePayload>[]
+            args: Prisma.DefaultTraderCategoryShareFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategorySharePayload>[]
           }
           create: {
-            args: Prisma.TraderCategoryShareTemplateCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryShareTemplatePayload>
+            args: Prisma.DefaultTraderCategoryShareCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategorySharePayload>
           }
           createMany: {
-            args: Prisma.TraderCategoryShareTemplateCreateManyArgs<ExtArgs>
+            args: Prisma.DefaultTraderCategoryShareCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
           createManyAndReturn: {
-            args: Prisma.TraderCategoryShareTemplateCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryShareTemplatePayload>[]
+            args: Prisma.DefaultTraderCategoryShareCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategorySharePayload>[]
           }
           delete: {
-            args: Prisma.TraderCategoryShareTemplateDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryShareTemplatePayload>
+            args: Prisma.DefaultTraderCategoryShareDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategorySharePayload>
           }
           update: {
-            args: Prisma.TraderCategoryShareTemplateUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryShareTemplatePayload>
+            args: Prisma.DefaultTraderCategoryShareUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategorySharePayload>
           }
           deleteMany: {
-            args: Prisma.TraderCategoryShareTemplateDeleteManyArgs<ExtArgs>
+            args: Prisma.DefaultTraderCategoryShareDeleteManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateMany: {
-            args: Prisma.TraderCategoryShareTemplateUpdateManyArgs<ExtArgs>
+            args: Prisma.DefaultTraderCategoryShareUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateManyAndReturn: {
-            args: Prisma.TraderCategoryShareTemplateUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryShareTemplatePayload>[]
+            args: Prisma.DefaultTraderCategoryShareUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategorySharePayload>[]
           }
           upsert: {
-            args: Prisma.TraderCategoryShareTemplateUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TraderCategoryShareTemplatePayload>
+            args: Prisma.DefaultTraderCategoryShareUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DefaultTraderCategorySharePayload>
           }
           aggregate: {
-            args: Prisma.TraderCategoryShareTemplateAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateTraderCategoryShareTemplate>
+            args: Prisma.DefaultTraderCategoryShareAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateDefaultTraderCategoryShare>
           }
           groupBy: {
-            args: Prisma.TraderCategoryShareTemplateGroupByArgs<ExtArgs>
-            result: $Utils.Optional<TraderCategoryShareTemplateGroupByOutputType>[]
+            args: Prisma.DefaultTraderCategoryShareGroupByArgs<ExtArgs>
+            result: $Utils.Optional<DefaultTraderCategoryShareGroupByOutputType>[]
           }
           count: {
-            args: Prisma.TraderCategoryShareTemplateCountArgs<ExtArgs>
-            result: $Utils.Optional<TraderCategoryShareTemplateCountAggregateOutputType> | number
+            args: Prisma.DefaultTraderCategoryShareCountArgs<ExtArgs>
+            result: $Utils.Optional<DefaultTraderCategoryShareCountAggregateOutputType> | number
           }
         }
       }
@@ -2594,8 +2594,8 @@ export namespace Prisma {
   export type GlobalOmitConfig = {
     systemConfig?: SystemConfigOmit
     field?: FieldOmit
-    traderCategoryTemplate?: TraderCategoryTemplateOmit
-    traderCategoryShareTemplate?: TraderCategoryShareTemplateOmit
+    defaultTraderCategory?: DefaultTraderCategoryOmit
+    defaultTraderCategoryShare?: DefaultTraderCategoryShareOmit
     season?: SeasonOmit
     user?: UserOmit
     trader?: TraderOmit
@@ -2718,33 +2718,33 @@ export namespace Prisma {
 
 
   /**
-   * Count Type TraderCategoryTemplateCountOutputType
+   * Count Type DefaultTraderCategoryCountOutputType
    */
 
-  export type TraderCategoryTemplateCountOutputType = {
-    defaultShares: number
+  export type DefaultTraderCategoryCountOutputType = {
+    shares: number
   }
 
-  export type TraderCategoryTemplateCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    defaultShares?: boolean | TraderCategoryTemplateCountOutputTypeCountDefaultSharesArgs
+  export type DefaultTraderCategoryCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    shares?: boolean | DefaultTraderCategoryCountOutputTypeCountSharesArgs
   }
 
   // Custom InputTypes
   /**
-   * TraderCategoryTemplateCountOutputType without action
+   * DefaultTraderCategoryCountOutputType without action
    */
-  export type TraderCategoryTemplateCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryTemplateCountOutputType
+     * Select specific fields to fetch from the DefaultTraderCategoryCountOutputType
      */
-    select?: TraderCategoryTemplateCountOutputTypeSelect<ExtArgs> | null
+    select?: DefaultTraderCategoryCountOutputTypeSelect<ExtArgs> | null
   }
 
   /**
-   * TraderCategoryTemplateCountOutputType without action
+   * DefaultTraderCategoryCountOutputType without action
    */
-  export type TraderCategoryTemplateCountOutputTypeCountDefaultSharesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: TraderCategoryShareTemplateWhereInput
+  export type DefaultTraderCategoryCountOutputTypeCountSharesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DefaultTraderCategoryShareWhereInput
   }
 
 
@@ -3002,7 +3002,7 @@ export namespace Prisma {
    * TraderCountOutputType without action
    */
   export type TraderCountOutputTypeCountDefaultCategorySharesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: TraderCategoryShareTemplateWhereInput
+    where?: DefaultTraderCategoryShareWhereInput
   }
 
   /**
@@ -5587,34 +5587,26 @@ export namespace Prisma {
 
 
   /**
-   * Model TraderCategoryTemplate
+   * Model DefaultTraderCategory
    */
 
-  export type AggregateTraderCategoryTemplate = {
-    _count: TraderCategoryTemplateCountAggregateOutputType | null
-    _avg: TraderCategoryTemplateAvgAggregateOutputType | null
-    _sum: TraderCategoryTemplateSumAggregateOutputType | null
-    _min: TraderCategoryTemplateMinAggregateOutputType | null
-    _max: TraderCategoryTemplateMaxAggregateOutputType | null
+  export type AggregateDefaultTraderCategory = {
+    _count: DefaultTraderCategoryCountAggregateOutputType | null
+    _avg: DefaultTraderCategoryAvgAggregateOutputType | null
+    _sum: DefaultTraderCategorySumAggregateOutputType | null
+    _min: DefaultTraderCategoryMinAggregateOutputType | null
+    _max: DefaultTraderCategoryMaxAggregateOutputType | null
   }
 
-  export type TraderCategoryTemplateAvgAggregateOutputType = {
+  export type DefaultTraderCategoryAvgAggregateOutputType = {
     id: number | null
   }
 
-  export type TraderCategoryTemplateSumAggregateOutputType = {
+  export type DefaultTraderCategorySumAggregateOutputType = {
     id: number | null
   }
 
-  export type TraderCategoryTemplateMinAggregateOutputType = {
-    id: number | null
-    name: string | null
-    notes: string | null
-    createdAt: Date | null
-    updatedAt: Date | null
-  }
-
-  export type TraderCategoryTemplateMaxAggregateOutputType = {
+  export type DefaultTraderCategoryMinAggregateOutputType = {
     id: number | null
     name: string | null
     notes: string | null
@@ -5622,7 +5614,15 @@ export namespace Prisma {
     updatedAt: Date | null
   }
 
-  export type TraderCategoryTemplateCountAggregateOutputType = {
+  export type DefaultTraderCategoryMaxAggregateOutputType = {
+    id: number | null
+    name: string | null
+    notes: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type DefaultTraderCategoryCountAggregateOutputType = {
     id: number
     name: number
     notes: number
@@ -5632,23 +5632,15 @@ export namespace Prisma {
   }
 
 
-  export type TraderCategoryTemplateAvgAggregateInputType = {
+  export type DefaultTraderCategoryAvgAggregateInputType = {
     id?: true
   }
 
-  export type TraderCategoryTemplateSumAggregateInputType = {
+  export type DefaultTraderCategorySumAggregateInputType = {
     id?: true
   }
 
-  export type TraderCategoryTemplateMinAggregateInputType = {
-    id?: true
-    name?: true
-    notes?: true
-    createdAt?: true
-    updatedAt?: true
-  }
-
-  export type TraderCategoryTemplateMaxAggregateInputType = {
+  export type DefaultTraderCategoryMinAggregateInputType = {
     id?: true
     name?: true
     notes?: true
@@ -5656,7 +5648,15 @@ export namespace Prisma {
     updatedAt?: true
   }
 
-  export type TraderCategoryTemplateCountAggregateInputType = {
+  export type DefaultTraderCategoryMaxAggregateInputType = {
+    id?: true
+    name?: true
+    notes?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type DefaultTraderCategoryCountAggregateInputType = {
     id?: true
     name?: true
     notes?: true
@@ -5665,146 +5665,146 @@ export namespace Prisma {
     _all?: true
   }
 
-  export type TraderCategoryTemplateAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which TraderCategoryTemplate to aggregate.
+     * Filter which DefaultTraderCategory to aggregate.
      */
-    where?: TraderCategoryTemplateWhereInput
+    where?: DefaultTraderCategoryWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of TraderCategoryTemplates to fetch.
+     * Determine the order of DefaultTraderCategories to fetch.
      */
-    orderBy?: TraderCategoryTemplateOrderByWithRelationInput | TraderCategoryTemplateOrderByWithRelationInput[]
+    orderBy?: DefaultTraderCategoryOrderByWithRelationInput | DefaultTraderCategoryOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
      * Sets the start position
      */
-    cursor?: TraderCategoryTemplateWhereUniqueInput
+    cursor?: DefaultTraderCategoryWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` TraderCategoryTemplates from the position of the cursor.
+     * Take `±n` DefaultTraderCategories from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` TraderCategoryTemplates.
+     * Skip the first `n` DefaultTraderCategories.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Count returned TraderCategoryTemplates
+     * Count returned DefaultTraderCategories
     **/
-    _count?: true | TraderCategoryTemplateCountAggregateInputType
+    _count?: true | DefaultTraderCategoryCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to average
     **/
-    _avg?: TraderCategoryTemplateAvgAggregateInputType
+    _avg?: DefaultTraderCategoryAvgAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to sum
     **/
-    _sum?: TraderCategoryTemplateSumAggregateInputType
+    _sum?: DefaultTraderCategorySumAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the minimum value
     **/
-    _min?: TraderCategoryTemplateMinAggregateInputType
+    _min?: DefaultTraderCategoryMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the maximum value
     **/
-    _max?: TraderCategoryTemplateMaxAggregateInputType
+    _max?: DefaultTraderCategoryMaxAggregateInputType
   }
 
-  export type GetTraderCategoryTemplateAggregateType<T extends TraderCategoryTemplateAggregateArgs> = {
-        [P in keyof T & keyof AggregateTraderCategoryTemplate]: P extends '_count' | 'count'
+  export type GetDefaultTraderCategoryAggregateType<T extends DefaultTraderCategoryAggregateArgs> = {
+        [P in keyof T & keyof AggregateDefaultTraderCategory]: P extends '_count' | 'count'
       ? T[P] extends true
         ? number
-        : GetScalarType<T[P], AggregateTraderCategoryTemplate[P]>
-      : GetScalarType<T[P], AggregateTraderCategoryTemplate[P]>
+        : GetScalarType<T[P], AggregateDefaultTraderCategory[P]>
+      : GetScalarType<T[P], AggregateDefaultTraderCategory[P]>
   }
 
 
 
 
-  export type TraderCategoryTemplateGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: TraderCategoryTemplateWhereInput
-    orderBy?: TraderCategoryTemplateOrderByWithAggregationInput | TraderCategoryTemplateOrderByWithAggregationInput[]
-    by: TraderCategoryTemplateScalarFieldEnum[] | TraderCategoryTemplateScalarFieldEnum
-    having?: TraderCategoryTemplateScalarWhereWithAggregatesInput
+  export type DefaultTraderCategoryGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DefaultTraderCategoryWhereInput
+    orderBy?: DefaultTraderCategoryOrderByWithAggregationInput | DefaultTraderCategoryOrderByWithAggregationInput[]
+    by: DefaultTraderCategoryScalarFieldEnum[] | DefaultTraderCategoryScalarFieldEnum
+    having?: DefaultTraderCategoryScalarWhereWithAggregatesInput
     take?: number
     skip?: number
-    _count?: TraderCategoryTemplateCountAggregateInputType | true
-    _avg?: TraderCategoryTemplateAvgAggregateInputType
-    _sum?: TraderCategoryTemplateSumAggregateInputType
-    _min?: TraderCategoryTemplateMinAggregateInputType
-    _max?: TraderCategoryTemplateMaxAggregateInputType
+    _count?: DefaultTraderCategoryCountAggregateInputType | true
+    _avg?: DefaultTraderCategoryAvgAggregateInputType
+    _sum?: DefaultTraderCategorySumAggregateInputType
+    _min?: DefaultTraderCategoryMinAggregateInputType
+    _max?: DefaultTraderCategoryMaxAggregateInputType
   }
 
-  export type TraderCategoryTemplateGroupByOutputType = {
+  export type DefaultTraderCategoryGroupByOutputType = {
     id: number
     name: string
     notes: string | null
     createdAt: Date
     updatedAt: Date
-    _count: TraderCategoryTemplateCountAggregateOutputType | null
-    _avg: TraderCategoryTemplateAvgAggregateOutputType | null
-    _sum: TraderCategoryTemplateSumAggregateOutputType | null
-    _min: TraderCategoryTemplateMinAggregateOutputType | null
-    _max: TraderCategoryTemplateMaxAggregateOutputType | null
+    _count: DefaultTraderCategoryCountAggregateOutputType | null
+    _avg: DefaultTraderCategoryAvgAggregateOutputType | null
+    _sum: DefaultTraderCategorySumAggregateOutputType | null
+    _min: DefaultTraderCategoryMinAggregateOutputType | null
+    _max: DefaultTraderCategoryMaxAggregateOutputType | null
   }
 
-  type GetTraderCategoryTemplateGroupByPayload<T extends TraderCategoryTemplateGroupByArgs> = Prisma.PrismaPromise<
+  type GetDefaultTraderCategoryGroupByPayload<T extends DefaultTraderCategoryGroupByArgs> = Prisma.PrismaPromise<
     Array<
-      PickEnumerable<TraderCategoryTemplateGroupByOutputType, T['by']> &
+      PickEnumerable<DefaultTraderCategoryGroupByOutputType, T['by']> &
         {
-          [P in ((keyof T) & (keyof TraderCategoryTemplateGroupByOutputType))]: P extends '_count'
+          [P in ((keyof T) & (keyof DefaultTraderCategoryGroupByOutputType))]: P extends '_count'
             ? T[P] extends boolean
               ? number
-              : GetScalarType<T[P], TraderCategoryTemplateGroupByOutputType[P]>
-            : GetScalarType<T[P], TraderCategoryTemplateGroupByOutputType[P]>
+              : GetScalarType<T[P], DefaultTraderCategoryGroupByOutputType[P]>
+            : GetScalarType<T[P], DefaultTraderCategoryGroupByOutputType[P]>
         }
       >
     >
 
 
-  export type TraderCategoryTemplateSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type DefaultTraderCategorySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
     notes?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    defaultShares?: boolean | TraderCategoryTemplate$defaultSharesArgs<ExtArgs>
-    _count?: boolean | TraderCategoryTemplateCountOutputTypeDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["traderCategoryTemplate"]>
+    shares?: boolean | DefaultTraderCategory$sharesArgs<ExtArgs>
+    _count?: boolean | DefaultTraderCategoryCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["defaultTraderCategory"]>
 
-  export type TraderCategoryTemplateSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type DefaultTraderCategorySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
     notes?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-  }, ExtArgs["result"]["traderCategoryTemplate"]>
+  }, ExtArgs["result"]["defaultTraderCategory"]>
 
-  export type TraderCategoryTemplateSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type DefaultTraderCategorySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
     notes?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-  }, ExtArgs["result"]["traderCategoryTemplate"]>
+  }, ExtArgs["result"]["defaultTraderCategory"]>
 
-  export type TraderCategoryTemplateSelectScalar = {
+  export type DefaultTraderCategorySelectScalar = {
     id?: boolean
     name?: boolean
     notes?: boolean
@@ -5812,18 +5812,18 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type TraderCategoryTemplateOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "notes" | "createdAt" | "updatedAt", ExtArgs["result"]["traderCategoryTemplate"]>
-  export type TraderCategoryTemplateInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    defaultShares?: boolean | TraderCategoryTemplate$defaultSharesArgs<ExtArgs>
-    _count?: boolean | TraderCategoryTemplateCountOutputTypeDefaultArgs<ExtArgs>
+  export type DefaultTraderCategoryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "notes" | "createdAt" | "updatedAt", ExtArgs["result"]["defaultTraderCategory"]>
+  export type DefaultTraderCategoryInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    shares?: boolean | DefaultTraderCategory$sharesArgs<ExtArgs>
+    _count?: boolean | DefaultTraderCategoryCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type TraderCategoryTemplateIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type TraderCategoryTemplateIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type DefaultTraderCategoryIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type DefaultTraderCategoryIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
-  export type $TraderCategoryTemplatePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "TraderCategoryTemplate"
+  export type $DefaultTraderCategoryPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "DefaultTraderCategory"
     objects: {
-      defaultShares: Prisma.$TraderCategoryShareTemplatePayload<ExtArgs>[]
+      shares: Prisma.$DefaultTraderCategorySharePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -5831,136 +5831,136 @@ export namespace Prisma {
       notes: string | null
       createdAt: Date
       updatedAt: Date
-    }, ExtArgs["result"]["traderCategoryTemplate"]>
+    }, ExtArgs["result"]["defaultTraderCategory"]>
     composites: {}
   }
 
-  type TraderCategoryTemplateGetPayload<S extends boolean | null | undefined | TraderCategoryTemplateDefaultArgs> = $Result.GetResult<Prisma.$TraderCategoryTemplatePayload, S>
+  type DefaultTraderCategoryGetPayload<S extends boolean | null | undefined | DefaultTraderCategoryDefaultArgs> = $Result.GetResult<Prisma.$DefaultTraderCategoryPayload, S>
 
-  type TraderCategoryTemplateCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<TraderCategoryTemplateFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: TraderCategoryTemplateCountAggregateInputType | true
+  type DefaultTraderCategoryCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<DefaultTraderCategoryFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: DefaultTraderCategoryCountAggregateInputType | true
     }
 
-  export interface TraderCategoryTemplateDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['TraderCategoryTemplate'], meta: { name: 'TraderCategoryTemplate' } }
+  export interface DefaultTraderCategoryDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['DefaultTraderCategory'], meta: { name: 'DefaultTraderCategory' } }
     /**
-     * Find zero or one TraderCategoryTemplate that matches the filter.
-     * @param {TraderCategoryTemplateFindUniqueArgs} args - Arguments to find a TraderCategoryTemplate
+     * Find zero or one DefaultTraderCategory that matches the filter.
+     * @param {DefaultTraderCategoryFindUniqueArgs} args - Arguments to find a DefaultTraderCategory
      * @example
-     * // Get one TraderCategoryTemplate
-     * const traderCategoryTemplate = await prisma.traderCategoryTemplate.findUnique({
+     * // Get one DefaultTraderCategory
+     * const defaultTraderCategory = await prisma.defaultTraderCategory.findUnique({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUnique<T extends TraderCategoryTemplateFindUniqueArgs>(args: SelectSubset<T, TraderCategoryTemplateFindUniqueArgs<ExtArgs>>): Prisma__TraderCategoryTemplateClient<$Result.GetResult<Prisma.$TraderCategoryTemplatePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findUnique<T extends DefaultTraderCategoryFindUniqueArgs>(args: SelectSubset<T, DefaultTraderCategoryFindUniqueArgs<ExtArgs>>): Prisma__DefaultTraderCategoryClient<$Result.GetResult<Prisma.$DefaultTraderCategoryPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find one TraderCategoryTemplate that matches the filter or throw an error with `error.code='P2025'`
+     * Find one DefaultTraderCategory that matches the filter or throw an error with `error.code='P2025'`
      * if no matches were found.
-     * @param {TraderCategoryTemplateFindUniqueOrThrowArgs} args - Arguments to find a TraderCategoryTemplate
+     * @param {DefaultTraderCategoryFindUniqueOrThrowArgs} args - Arguments to find a DefaultTraderCategory
      * @example
-     * // Get one TraderCategoryTemplate
-     * const traderCategoryTemplate = await prisma.traderCategoryTemplate.findUniqueOrThrow({
+     * // Get one DefaultTraderCategory
+     * const defaultTraderCategory = await prisma.defaultTraderCategory.findUniqueOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUniqueOrThrow<T extends TraderCategoryTemplateFindUniqueOrThrowArgs>(args: SelectSubset<T, TraderCategoryTemplateFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TraderCategoryTemplateClient<$Result.GetResult<Prisma.$TraderCategoryTemplatePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findUniqueOrThrow<T extends DefaultTraderCategoryFindUniqueOrThrowArgs>(args: SelectSubset<T, DefaultTraderCategoryFindUniqueOrThrowArgs<ExtArgs>>): Prisma__DefaultTraderCategoryClient<$Result.GetResult<Prisma.$DefaultTraderCategoryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first TraderCategoryTemplate that matches the filter.
+     * Find the first DefaultTraderCategory that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TraderCategoryTemplateFindFirstArgs} args - Arguments to find a TraderCategoryTemplate
+     * @param {DefaultTraderCategoryFindFirstArgs} args - Arguments to find a DefaultTraderCategory
      * @example
-     * // Get one TraderCategoryTemplate
-     * const traderCategoryTemplate = await prisma.traderCategoryTemplate.findFirst({
+     * // Get one DefaultTraderCategory
+     * const defaultTraderCategory = await prisma.defaultTraderCategory.findFirst({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirst<T extends TraderCategoryTemplateFindFirstArgs>(args?: SelectSubset<T, TraderCategoryTemplateFindFirstArgs<ExtArgs>>): Prisma__TraderCategoryTemplateClient<$Result.GetResult<Prisma.$TraderCategoryTemplatePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findFirst<T extends DefaultTraderCategoryFindFirstArgs>(args?: SelectSubset<T, DefaultTraderCategoryFindFirstArgs<ExtArgs>>): Prisma__DefaultTraderCategoryClient<$Result.GetResult<Prisma.$DefaultTraderCategoryPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first TraderCategoryTemplate that matches the filter or
+     * Find the first DefaultTraderCategory that matches the filter or
      * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TraderCategoryTemplateFindFirstOrThrowArgs} args - Arguments to find a TraderCategoryTemplate
+     * @param {DefaultTraderCategoryFindFirstOrThrowArgs} args - Arguments to find a DefaultTraderCategory
      * @example
-     * // Get one TraderCategoryTemplate
-     * const traderCategoryTemplate = await prisma.traderCategoryTemplate.findFirstOrThrow({
+     * // Get one DefaultTraderCategory
+     * const defaultTraderCategory = await prisma.defaultTraderCategory.findFirstOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirstOrThrow<T extends TraderCategoryTemplateFindFirstOrThrowArgs>(args?: SelectSubset<T, TraderCategoryTemplateFindFirstOrThrowArgs<ExtArgs>>): Prisma__TraderCategoryTemplateClient<$Result.GetResult<Prisma.$TraderCategoryTemplatePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findFirstOrThrow<T extends DefaultTraderCategoryFindFirstOrThrowArgs>(args?: SelectSubset<T, DefaultTraderCategoryFindFirstOrThrowArgs<ExtArgs>>): Prisma__DefaultTraderCategoryClient<$Result.GetResult<Prisma.$DefaultTraderCategoryPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find zero or more TraderCategoryTemplates that matches the filter.
+     * Find zero or more DefaultTraderCategories that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TraderCategoryTemplateFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @param {DefaultTraderCategoryFindManyArgs} args - Arguments to filter and select certain fields only.
      * @example
-     * // Get all TraderCategoryTemplates
-     * const traderCategoryTemplates = await prisma.traderCategoryTemplate.findMany()
+     * // Get all DefaultTraderCategories
+     * const defaultTraderCategories = await prisma.defaultTraderCategory.findMany()
      * 
-     * // Get first 10 TraderCategoryTemplates
-     * const traderCategoryTemplates = await prisma.traderCategoryTemplate.findMany({ take: 10 })
+     * // Get first 10 DefaultTraderCategories
+     * const defaultTraderCategories = await prisma.defaultTraderCategory.findMany({ take: 10 })
      * 
      * // Only select the `id`
-     * const traderCategoryTemplateWithIdOnly = await prisma.traderCategoryTemplate.findMany({ select: { id: true } })
+     * const defaultTraderCategoryWithIdOnly = await prisma.defaultTraderCategory.findMany({ select: { id: true } })
      * 
      */
-    findMany<T extends TraderCategoryTemplateFindManyArgs>(args?: SelectSubset<T, TraderCategoryTemplateFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TraderCategoryTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+    findMany<T extends DefaultTraderCategoryFindManyArgs>(args?: SelectSubset<T, DefaultTraderCategoryFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DefaultTraderCategoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
 
     /**
-     * Create a TraderCategoryTemplate.
-     * @param {TraderCategoryTemplateCreateArgs} args - Arguments to create a TraderCategoryTemplate.
+     * Create a DefaultTraderCategory.
+     * @param {DefaultTraderCategoryCreateArgs} args - Arguments to create a DefaultTraderCategory.
      * @example
-     * // Create one TraderCategoryTemplate
-     * const TraderCategoryTemplate = await prisma.traderCategoryTemplate.create({
+     * // Create one DefaultTraderCategory
+     * const DefaultTraderCategory = await prisma.defaultTraderCategory.create({
      *   data: {
-     *     // ... data to create a TraderCategoryTemplate
+     *     // ... data to create a DefaultTraderCategory
      *   }
      * })
      * 
      */
-    create<T extends TraderCategoryTemplateCreateArgs>(args: SelectSubset<T, TraderCategoryTemplateCreateArgs<ExtArgs>>): Prisma__TraderCategoryTemplateClient<$Result.GetResult<Prisma.$TraderCategoryTemplatePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    create<T extends DefaultTraderCategoryCreateArgs>(args: SelectSubset<T, DefaultTraderCategoryCreateArgs<ExtArgs>>): Prisma__DefaultTraderCategoryClient<$Result.GetResult<Prisma.$DefaultTraderCategoryPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Create many TraderCategoryTemplates.
-     * @param {TraderCategoryTemplateCreateManyArgs} args - Arguments to create many TraderCategoryTemplates.
+     * Create many DefaultTraderCategories.
+     * @param {DefaultTraderCategoryCreateManyArgs} args - Arguments to create many DefaultTraderCategories.
      * @example
-     * // Create many TraderCategoryTemplates
-     * const traderCategoryTemplate = await prisma.traderCategoryTemplate.createMany({
+     * // Create many DefaultTraderCategories
+     * const defaultTraderCategory = await prisma.defaultTraderCategory.createMany({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      *     
      */
-    createMany<T extends TraderCategoryTemplateCreateManyArgs>(args?: SelectSubset<T, TraderCategoryTemplateCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    createMany<T extends DefaultTraderCategoryCreateManyArgs>(args?: SelectSubset<T, DefaultTraderCategoryCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many TraderCategoryTemplates and returns the data saved in the database.
-     * @param {TraderCategoryTemplateCreateManyAndReturnArgs} args - Arguments to create many TraderCategoryTemplates.
+     * Create many DefaultTraderCategories and returns the data saved in the database.
+     * @param {DefaultTraderCategoryCreateManyAndReturnArgs} args - Arguments to create many DefaultTraderCategories.
      * @example
-     * // Create many TraderCategoryTemplates
-     * const traderCategoryTemplate = await prisma.traderCategoryTemplate.createManyAndReturn({
+     * // Create many DefaultTraderCategories
+     * const defaultTraderCategory = await prisma.defaultTraderCategory.createManyAndReturn({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      * 
-     * // Create many TraderCategoryTemplates and only return the `id`
-     * const traderCategoryTemplateWithIdOnly = await prisma.traderCategoryTemplate.createManyAndReturn({
+     * // Create many DefaultTraderCategories and only return the `id`
+     * const defaultTraderCategoryWithIdOnly = await prisma.defaultTraderCategory.createManyAndReturn({
      *   select: { id: true },
      *   data: [
      *     // ... provide data here
@@ -5970,28 +5970,28 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends TraderCategoryTemplateCreateManyAndReturnArgs>(args?: SelectSubset<T, TraderCategoryTemplateCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TraderCategoryTemplatePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+    createManyAndReturn<T extends DefaultTraderCategoryCreateManyAndReturnArgs>(args?: SelectSubset<T, DefaultTraderCategoryCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DefaultTraderCategoryPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Delete a TraderCategoryTemplate.
-     * @param {TraderCategoryTemplateDeleteArgs} args - Arguments to delete one TraderCategoryTemplate.
+     * Delete a DefaultTraderCategory.
+     * @param {DefaultTraderCategoryDeleteArgs} args - Arguments to delete one DefaultTraderCategory.
      * @example
-     * // Delete one TraderCategoryTemplate
-     * const TraderCategoryTemplate = await prisma.traderCategoryTemplate.delete({
+     * // Delete one DefaultTraderCategory
+     * const DefaultTraderCategory = await prisma.defaultTraderCategory.delete({
      *   where: {
-     *     // ... filter to delete one TraderCategoryTemplate
+     *     // ... filter to delete one DefaultTraderCategory
      *   }
      * })
      * 
      */
-    delete<T extends TraderCategoryTemplateDeleteArgs>(args: SelectSubset<T, TraderCategoryTemplateDeleteArgs<ExtArgs>>): Prisma__TraderCategoryTemplateClient<$Result.GetResult<Prisma.$TraderCategoryTemplatePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    delete<T extends DefaultTraderCategoryDeleteArgs>(args: SelectSubset<T, DefaultTraderCategoryDeleteArgs<ExtArgs>>): Prisma__DefaultTraderCategoryClient<$Result.GetResult<Prisma.$DefaultTraderCategoryPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Update one TraderCategoryTemplate.
-     * @param {TraderCategoryTemplateUpdateArgs} args - Arguments to update one TraderCategoryTemplate.
+     * Update one DefaultTraderCategory.
+     * @param {DefaultTraderCategoryUpdateArgs} args - Arguments to update one DefaultTraderCategory.
      * @example
-     * // Update one TraderCategoryTemplate
-     * const traderCategoryTemplate = await prisma.traderCategoryTemplate.update({
+     * // Update one DefaultTraderCategory
+     * const defaultTraderCategory = await prisma.defaultTraderCategory.update({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -6001,30 +6001,30 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends TraderCategoryTemplateUpdateArgs>(args: SelectSubset<T, TraderCategoryTemplateUpdateArgs<ExtArgs>>): Prisma__TraderCategoryTemplateClient<$Result.GetResult<Prisma.$TraderCategoryTemplatePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    update<T extends DefaultTraderCategoryUpdateArgs>(args: SelectSubset<T, DefaultTraderCategoryUpdateArgs<ExtArgs>>): Prisma__DefaultTraderCategoryClient<$Result.GetResult<Prisma.$DefaultTraderCategoryPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Delete zero or more TraderCategoryTemplates.
-     * @param {TraderCategoryTemplateDeleteManyArgs} args - Arguments to filter TraderCategoryTemplates to delete.
+     * Delete zero or more DefaultTraderCategories.
+     * @param {DefaultTraderCategoryDeleteManyArgs} args - Arguments to filter DefaultTraderCategories to delete.
      * @example
-     * // Delete a few TraderCategoryTemplates
-     * const { count } = await prisma.traderCategoryTemplate.deleteMany({
+     * // Delete a few DefaultTraderCategories
+     * const { count } = await prisma.defaultTraderCategory.deleteMany({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      * 
      */
-    deleteMany<T extends TraderCategoryTemplateDeleteManyArgs>(args?: SelectSubset<T, TraderCategoryTemplateDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    deleteMany<T extends DefaultTraderCategoryDeleteManyArgs>(args?: SelectSubset<T, DefaultTraderCategoryDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more TraderCategoryTemplates.
+     * Update zero or more DefaultTraderCategories.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TraderCategoryTemplateUpdateManyArgs} args - Arguments to update one or more rows.
+     * @param {DefaultTraderCategoryUpdateManyArgs} args - Arguments to update one or more rows.
      * @example
-     * // Update many TraderCategoryTemplates
-     * const traderCategoryTemplate = await prisma.traderCategoryTemplate.updateMany({
+     * // Update many DefaultTraderCategories
+     * const defaultTraderCategory = await prisma.defaultTraderCategory.updateMany({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -6034,14 +6034,14 @@ export namespace Prisma {
      * })
      * 
      */
-    updateMany<T extends TraderCategoryTemplateUpdateManyArgs>(args: SelectSubset<T, TraderCategoryTemplateUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    updateMany<T extends DefaultTraderCategoryUpdateManyArgs>(args: SelectSubset<T, DefaultTraderCategoryUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more TraderCategoryTemplates and returns the data updated in the database.
-     * @param {TraderCategoryTemplateUpdateManyAndReturnArgs} args - Arguments to update many TraderCategoryTemplates.
+     * Update zero or more DefaultTraderCategories and returns the data updated in the database.
+     * @param {DefaultTraderCategoryUpdateManyAndReturnArgs} args - Arguments to update many DefaultTraderCategories.
      * @example
-     * // Update many TraderCategoryTemplates
-     * const traderCategoryTemplate = await prisma.traderCategoryTemplate.updateManyAndReturn({
+     * // Update many DefaultTraderCategories
+     * const defaultTraderCategory = await prisma.defaultTraderCategory.updateManyAndReturn({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -6050,8 +6050,8 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Update zero or more TraderCategoryTemplates and only return the `id`
-     * const traderCategoryTemplateWithIdOnly = await prisma.traderCategoryTemplate.updateManyAndReturn({
+     * // Update zero or more DefaultTraderCategories and only return the `id`
+     * const defaultTraderCategoryWithIdOnly = await prisma.defaultTraderCategory.updateManyAndReturn({
      *   select: { id: true },
      *   where: {
      *     // ... provide filter here
@@ -6064,56 +6064,56 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    updateManyAndReturn<T extends TraderCategoryTemplateUpdateManyAndReturnArgs>(args: SelectSubset<T, TraderCategoryTemplateUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TraderCategoryTemplatePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+    updateManyAndReturn<T extends DefaultTraderCategoryUpdateManyAndReturnArgs>(args: SelectSubset<T, DefaultTraderCategoryUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DefaultTraderCategoryPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Create or update one TraderCategoryTemplate.
-     * @param {TraderCategoryTemplateUpsertArgs} args - Arguments to update or create a TraderCategoryTemplate.
+     * Create or update one DefaultTraderCategory.
+     * @param {DefaultTraderCategoryUpsertArgs} args - Arguments to update or create a DefaultTraderCategory.
      * @example
-     * // Update or create a TraderCategoryTemplate
-     * const traderCategoryTemplate = await prisma.traderCategoryTemplate.upsert({
+     * // Update or create a DefaultTraderCategory
+     * const defaultTraderCategory = await prisma.defaultTraderCategory.upsert({
      *   create: {
-     *     // ... data to create a TraderCategoryTemplate
+     *     // ... data to create a DefaultTraderCategory
      *   },
      *   update: {
      *     // ... in case it already exists, update
      *   },
      *   where: {
-     *     // ... the filter for the TraderCategoryTemplate we want to update
+     *     // ... the filter for the DefaultTraderCategory we want to update
      *   }
      * })
      */
-    upsert<T extends TraderCategoryTemplateUpsertArgs>(args: SelectSubset<T, TraderCategoryTemplateUpsertArgs<ExtArgs>>): Prisma__TraderCategoryTemplateClient<$Result.GetResult<Prisma.$TraderCategoryTemplatePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    upsert<T extends DefaultTraderCategoryUpsertArgs>(args: SelectSubset<T, DefaultTraderCategoryUpsertArgs<ExtArgs>>): Prisma__DefaultTraderCategoryClient<$Result.GetResult<Prisma.$DefaultTraderCategoryPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
 
     /**
-     * Count the number of TraderCategoryTemplates.
+     * Count the number of DefaultTraderCategories.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TraderCategoryTemplateCountArgs} args - Arguments to filter TraderCategoryTemplates to count.
+     * @param {DefaultTraderCategoryCountArgs} args - Arguments to filter DefaultTraderCategories to count.
      * @example
-     * // Count the number of TraderCategoryTemplates
-     * const count = await prisma.traderCategoryTemplate.count({
+     * // Count the number of DefaultTraderCategories
+     * const count = await prisma.defaultTraderCategory.count({
      *   where: {
-     *     // ... the filter for the TraderCategoryTemplates we want to count
+     *     // ... the filter for the DefaultTraderCategories we want to count
      *   }
      * })
     **/
-    count<T extends TraderCategoryTemplateCountArgs>(
-      args?: Subset<T, TraderCategoryTemplateCountArgs>,
+    count<T extends DefaultTraderCategoryCountArgs>(
+      args?: Subset<T, DefaultTraderCategoryCountArgs>,
     ): Prisma.PrismaPromise<
       T extends $Utils.Record<'select', any>
         ? T['select'] extends true
           ? number
-          : GetScalarType<T['select'], TraderCategoryTemplateCountAggregateOutputType>
+          : GetScalarType<T['select'], DefaultTraderCategoryCountAggregateOutputType>
         : number
     >
 
     /**
-     * Allows you to perform aggregations operations on a TraderCategoryTemplate.
+     * Allows you to perform aggregations operations on a DefaultTraderCategory.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TraderCategoryTemplateAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @param {DefaultTraderCategoryAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
      * @example
      * // Ordered by age ascending
      * // Where email contains prisma.io
@@ -6133,13 +6133,13 @@ export namespace Prisma {
      *   take: 10,
      * })
     **/
-    aggregate<T extends TraderCategoryTemplateAggregateArgs>(args: Subset<T, TraderCategoryTemplateAggregateArgs>): Prisma.PrismaPromise<GetTraderCategoryTemplateAggregateType<T>>
+    aggregate<T extends DefaultTraderCategoryAggregateArgs>(args: Subset<T, DefaultTraderCategoryAggregateArgs>): Prisma.PrismaPromise<GetDefaultTraderCategoryAggregateType<T>>
 
     /**
-     * Group by TraderCategoryTemplate.
+     * Group by DefaultTraderCategory.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TraderCategoryTemplateGroupByArgs} args - Group by arguments.
+     * @param {DefaultTraderCategoryGroupByArgs} args - Group by arguments.
      * @example
      * // Group by city, order by createdAt, get count
      * const result = await prisma.user.groupBy({
@@ -6154,14 +6154,14 @@ export namespace Prisma {
      * 
     **/
     groupBy<
-      T extends TraderCategoryTemplateGroupByArgs,
+      T extends DefaultTraderCategoryGroupByArgs,
       HasSelectOrTake extends Or<
         Extends<'skip', Keys<T>>,
         Extends<'take', Keys<T>>
       >,
       OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: TraderCategoryTemplateGroupByArgs['orderBy'] }
-        : { orderBy?: TraderCategoryTemplateGroupByArgs['orderBy'] },
+        ? { orderBy: DefaultTraderCategoryGroupByArgs['orderBy'] }
+        : { orderBy?: DefaultTraderCategoryGroupByArgs['orderBy'] },
       OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
       ByFields extends MaybeTupleToUnion<T['by']>,
       ByValid extends Has<ByFields, OrderFields>,
@@ -6210,22 +6210,22 @@ export namespace Prisma {
             ? never
             : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
         }[OrderFields]
-    >(args: SubsetIntersection<T, TraderCategoryTemplateGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTraderCategoryTemplateGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+    >(args: SubsetIntersection<T, DefaultTraderCategoryGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDefaultTraderCategoryGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
   /**
-   * Fields of the TraderCategoryTemplate model
+   * Fields of the DefaultTraderCategory model
    */
-  readonly fields: TraderCategoryTemplateFieldRefs;
+  readonly fields: DefaultTraderCategoryFieldRefs;
   }
 
   /**
-   * The delegate class that acts as a "Promise-like" for TraderCategoryTemplate.
+   * The delegate class that acts as a "Promise-like" for DefaultTraderCategory.
    * Why is this prefixed with `Prisma__`?
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__TraderCategoryTemplateClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__DefaultTraderCategoryClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    defaultShares<T extends TraderCategoryTemplate$defaultSharesArgs<ExtArgs> = {}>(args?: Subset<T, TraderCategoryTemplate$defaultSharesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TraderCategoryShareTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    shares<T extends DefaultTraderCategory$sharesArgs<ExtArgs> = {}>(args?: Subset<T, DefaultTraderCategory$sharesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DefaultTraderCategorySharePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -6252,497 +6252,497 @@ export namespace Prisma {
 
 
   /**
-   * Fields of the TraderCategoryTemplate model
+   * Fields of the DefaultTraderCategory model
    */
-  interface TraderCategoryTemplateFieldRefs {
-    readonly id: FieldRef<"TraderCategoryTemplate", 'Int'>
-    readonly name: FieldRef<"TraderCategoryTemplate", 'String'>
-    readonly notes: FieldRef<"TraderCategoryTemplate", 'String'>
-    readonly createdAt: FieldRef<"TraderCategoryTemplate", 'DateTime'>
-    readonly updatedAt: FieldRef<"TraderCategoryTemplate", 'DateTime'>
+  interface DefaultTraderCategoryFieldRefs {
+    readonly id: FieldRef<"DefaultTraderCategory", 'Int'>
+    readonly name: FieldRef<"DefaultTraderCategory", 'String'>
+    readonly notes: FieldRef<"DefaultTraderCategory", 'String'>
+    readonly createdAt: FieldRef<"DefaultTraderCategory", 'DateTime'>
+    readonly updatedAt: FieldRef<"DefaultTraderCategory", 'DateTime'>
   }
     
 
   // Custom InputTypes
   /**
-   * TraderCategoryTemplate findUnique
+   * DefaultTraderCategory findUnique
    */
-  export type TraderCategoryTemplateFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryTemplate
+     * Select specific fields to fetch from the DefaultTraderCategory
      */
-    select?: TraderCategoryTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategorySelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryTemplate
+     * Omit specific fields from the DefaultTraderCategory
      */
-    omit?: TraderCategoryTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryTemplateInclude<ExtArgs> | null
+    include?: DefaultTraderCategoryInclude<ExtArgs> | null
     /**
-     * Filter, which TraderCategoryTemplate to fetch.
+     * Filter, which DefaultTraderCategory to fetch.
      */
-    where: TraderCategoryTemplateWhereUniqueInput
+    where: DefaultTraderCategoryWhereUniqueInput
   }
 
   /**
-   * TraderCategoryTemplate findUniqueOrThrow
+   * DefaultTraderCategory findUniqueOrThrow
    */
-  export type TraderCategoryTemplateFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryTemplate
+     * Select specific fields to fetch from the DefaultTraderCategory
      */
-    select?: TraderCategoryTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategorySelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryTemplate
+     * Omit specific fields from the DefaultTraderCategory
      */
-    omit?: TraderCategoryTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryTemplateInclude<ExtArgs> | null
+    include?: DefaultTraderCategoryInclude<ExtArgs> | null
     /**
-     * Filter, which TraderCategoryTemplate to fetch.
+     * Filter, which DefaultTraderCategory to fetch.
      */
-    where: TraderCategoryTemplateWhereUniqueInput
+    where: DefaultTraderCategoryWhereUniqueInput
   }
 
   /**
-   * TraderCategoryTemplate findFirst
+   * DefaultTraderCategory findFirst
    */
-  export type TraderCategoryTemplateFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryTemplate
+     * Select specific fields to fetch from the DefaultTraderCategory
      */
-    select?: TraderCategoryTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategorySelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryTemplate
+     * Omit specific fields from the DefaultTraderCategory
      */
-    omit?: TraderCategoryTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryTemplateInclude<ExtArgs> | null
+    include?: DefaultTraderCategoryInclude<ExtArgs> | null
     /**
-     * Filter, which TraderCategoryTemplate to fetch.
+     * Filter, which DefaultTraderCategory to fetch.
      */
-    where?: TraderCategoryTemplateWhereInput
+    where?: DefaultTraderCategoryWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of TraderCategoryTemplates to fetch.
+     * Determine the order of DefaultTraderCategories to fetch.
      */
-    orderBy?: TraderCategoryTemplateOrderByWithRelationInput | TraderCategoryTemplateOrderByWithRelationInput[]
+    orderBy?: DefaultTraderCategoryOrderByWithRelationInput | DefaultTraderCategoryOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for TraderCategoryTemplates.
+     * Sets the position for searching for DefaultTraderCategories.
      */
-    cursor?: TraderCategoryTemplateWhereUniqueInput
+    cursor?: DefaultTraderCategoryWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` TraderCategoryTemplates from the position of the cursor.
+     * Take `±n` DefaultTraderCategories from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` TraderCategoryTemplates.
+     * Skip the first `n` DefaultTraderCategories.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of TraderCategoryTemplates.
+     * Filter by unique combinations of DefaultTraderCategories.
      */
-    distinct?: TraderCategoryTemplateScalarFieldEnum | TraderCategoryTemplateScalarFieldEnum[]
+    distinct?: DefaultTraderCategoryScalarFieldEnum | DefaultTraderCategoryScalarFieldEnum[]
   }
 
   /**
-   * TraderCategoryTemplate findFirstOrThrow
+   * DefaultTraderCategory findFirstOrThrow
    */
-  export type TraderCategoryTemplateFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryTemplate
+     * Select specific fields to fetch from the DefaultTraderCategory
      */
-    select?: TraderCategoryTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategorySelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryTemplate
+     * Omit specific fields from the DefaultTraderCategory
      */
-    omit?: TraderCategoryTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryTemplateInclude<ExtArgs> | null
+    include?: DefaultTraderCategoryInclude<ExtArgs> | null
     /**
-     * Filter, which TraderCategoryTemplate to fetch.
+     * Filter, which DefaultTraderCategory to fetch.
      */
-    where?: TraderCategoryTemplateWhereInput
+    where?: DefaultTraderCategoryWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of TraderCategoryTemplates to fetch.
+     * Determine the order of DefaultTraderCategories to fetch.
      */
-    orderBy?: TraderCategoryTemplateOrderByWithRelationInput | TraderCategoryTemplateOrderByWithRelationInput[]
+    orderBy?: DefaultTraderCategoryOrderByWithRelationInput | DefaultTraderCategoryOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for TraderCategoryTemplates.
+     * Sets the position for searching for DefaultTraderCategories.
      */
-    cursor?: TraderCategoryTemplateWhereUniqueInput
+    cursor?: DefaultTraderCategoryWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` TraderCategoryTemplates from the position of the cursor.
+     * Take `±n` DefaultTraderCategories from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` TraderCategoryTemplates.
+     * Skip the first `n` DefaultTraderCategories.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of TraderCategoryTemplates.
+     * Filter by unique combinations of DefaultTraderCategories.
      */
-    distinct?: TraderCategoryTemplateScalarFieldEnum | TraderCategoryTemplateScalarFieldEnum[]
+    distinct?: DefaultTraderCategoryScalarFieldEnum | DefaultTraderCategoryScalarFieldEnum[]
   }
 
   /**
-   * TraderCategoryTemplate findMany
+   * DefaultTraderCategory findMany
    */
-  export type TraderCategoryTemplateFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryTemplate
+     * Select specific fields to fetch from the DefaultTraderCategory
      */
-    select?: TraderCategoryTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategorySelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryTemplate
+     * Omit specific fields from the DefaultTraderCategory
      */
-    omit?: TraderCategoryTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryTemplateInclude<ExtArgs> | null
+    include?: DefaultTraderCategoryInclude<ExtArgs> | null
     /**
-     * Filter, which TraderCategoryTemplates to fetch.
+     * Filter, which DefaultTraderCategories to fetch.
      */
-    where?: TraderCategoryTemplateWhereInput
+    where?: DefaultTraderCategoryWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of TraderCategoryTemplates to fetch.
+     * Determine the order of DefaultTraderCategories to fetch.
      */
-    orderBy?: TraderCategoryTemplateOrderByWithRelationInput | TraderCategoryTemplateOrderByWithRelationInput[]
+    orderBy?: DefaultTraderCategoryOrderByWithRelationInput | DefaultTraderCategoryOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for listing TraderCategoryTemplates.
+     * Sets the position for listing DefaultTraderCategories.
      */
-    cursor?: TraderCategoryTemplateWhereUniqueInput
+    cursor?: DefaultTraderCategoryWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` TraderCategoryTemplates from the position of the cursor.
+     * Take `±n` DefaultTraderCategories from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` TraderCategoryTemplates.
+     * Skip the first `n` DefaultTraderCategories.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of TraderCategoryTemplates.
+     * Filter by unique combinations of DefaultTraderCategories.
      */
-    distinct?: TraderCategoryTemplateScalarFieldEnum | TraderCategoryTemplateScalarFieldEnum[]
+    distinct?: DefaultTraderCategoryScalarFieldEnum | DefaultTraderCategoryScalarFieldEnum[]
   }
 
   /**
-   * TraderCategoryTemplate create
+   * DefaultTraderCategory create
    */
-  export type TraderCategoryTemplateCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryTemplate
+     * Select specific fields to fetch from the DefaultTraderCategory
      */
-    select?: TraderCategoryTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategorySelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryTemplate
+     * Omit specific fields from the DefaultTraderCategory
      */
-    omit?: TraderCategoryTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryTemplateInclude<ExtArgs> | null
+    include?: DefaultTraderCategoryInclude<ExtArgs> | null
     /**
-     * The data needed to create a TraderCategoryTemplate.
+     * The data needed to create a DefaultTraderCategory.
      */
-    data: XOR<TraderCategoryTemplateCreateInput, TraderCategoryTemplateUncheckedCreateInput>
+    data: XOR<DefaultTraderCategoryCreateInput, DefaultTraderCategoryUncheckedCreateInput>
   }
 
   /**
-   * TraderCategoryTemplate createMany
+   * DefaultTraderCategory createMany
    */
-  export type TraderCategoryTemplateCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to create many TraderCategoryTemplates.
+     * The data used to create many DefaultTraderCategories.
      */
-    data: TraderCategoryTemplateCreateManyInput | TraderCategoryTemplateCreateManyInput[]
+    data: DefaultTraderCategoryCreateManyInput | DefaultTraderCategoryCreateManyInput[]
     skipDuplicates?: boolean
   }
 
   /**
-   * TraderCategoryTemplate createManyAndReturn
+   * DefaultTraderCategory createManyAndReturn
    */
-  export type TraderCategoryTemplateCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryTemplate
+     * Select specific fields to fetch from the DefaultTraderCategory
      */
-    select?: TraderCategoryTemplateSelectCreateManyAndReturn<ExtArgs> | null
+    select?: DefaultTraderCategorySelectCreateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryTemplate
+     * Omit specific fields from the DefaultTraderCategory
      */
-    omit?: TraderCategoryTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryOmit<ExtArgs> | null
     /**
-     * The data used to create many TraderCategoryTemplates.
+     * The data used to create many DefaultTraderCategories.
      */
-    data: TraderCategoryTemplateCreateManyInput | TraderCategoryTemplateCreateManyInput[]
+    data: DefaultTraderCategoryCreateManyInput | DefaultTraderCategoryCreateManyInput[]
     skipDuplicates?: boolean
   }
 
   /**
-   * TraderCategoryTemplate update
+   * DefaultTraderCategory update
    */
-  export type TraderCategoryTemplateUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryTemplate
+     * Select specific fields to fetch from the DefaultTraderCategory
      */
-    select?: TraderCategoryTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategorySelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryTemplate
+     * Omit specific fields from the DefaultTraderCategory
      */
-    omit?: TraderCategoryTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryTemplateInclude<ExtArgs> | null
+    include?: DefaultTraderCategoryInclude<ExtArgs> | null
     /**
-     * The data needed to update a TraderCategoryTemplate.
+     * The data needed to update a DefaultTraderCategory.
      */
-    data: XOR<TraderCategoryTemplateUpdateInput, TraderCategoryTemplateUncheckedUpdateInput>
+    data: XOR<DefaultTraderCategoryUpdateInput, DefaultTraderCategoryUncheckedUpdateInput>
     /**
-     * Choose, which TraderCategoryTemplate to update.
+     * Choose, which DefaultTraderCategory to update.
      */
-    where: TraderCategoryTemplateWhereUniqueInput
+    where: DefaultTraderCategoryWhereUniqueInput
   }
 
   /**
-   * TraderCategoryTemplate updateMany
+   * DefaultTraderCategory updateMany
    */
-  export type TraderCategoryTemplateUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to update TraderCategoryTemplates.
+     * The data used to update DefaultTraderCategories.
      */
-    data: XOR<TraderCategoryTemplateUpdateManyMutationInput, TraderCategoryTemplateUncheckedUpdateManyInput>
+    data: XOR<DefaultTraderCategoryUpdateManyMutationInput, DefaultTraderCategoryUncheckedUpdateManyInput>
     /**
-     * Filter which TraderCategoryTemplates to update
+     * Filter which DefaultTraderCategories to update
      */
-    where?: TraderCategoryTemplateWhereInput
+    where?: DefaultTraderCategoryWhereInput
     /**
-     * Limit how many TraderCategoryTemplates to update.
+     * Limit how many DefaultTraderCategories to update.
      */
     limit?: number
   }
 
   /**
-   * TraderCategoryTemplate updateManyAndReturn
+   * DefaultTraderCategory updateManyAndReturn
    */
-  export type TraderCategoryTemplateUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryTemplate
+     * Select specific fields to fetch from the DefaultTraderCategory
      */
-    select?: TraderCategoryTemplateSelectUpdateManyAndReturn<ExtArgs> | null
+    select?: DefaultTraderCategorySelectUpdateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryTemplate
+     * Omit specific fields from the DefaultTraderCategory
      */
-    omit?: TraderCategoryTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryOmit<ExtArgs> | null
     /**
-     * The data used to update TraderCategoryTemplates.
+     * The data used to update DefaultTraderCategories.
      */
-    data: XOR<TraderCategoryTemplateUpdateManyMutationInput, TraderCategoryTemplateUncheckedUpdateManyInput>
+    data: XOR<DefaultTraderCategoryUpdateManyMutationInput, DefaultTraderCategoryUncheckedUpdateManyInput>
     /**
-     * Filter which TraderCategoryTemplates to update
+     * Filter which DefaultTraderCategories to update
      */
-    where?: TraderCategoryTemplateWhereInput
+    where?: DefaultTraderCategoryWhereInput
     /**
-     * Limit how many TraderCategoryTemplates to update.
+     * Limit how many DefaultTraderCategories to update.
      */
     limit?: number
   }
 
   /**
-   * TraderCategoryTemplate upsert
+   * DefaultTraderCategory upsert
    */
-  export type TraderCategoryTemplateUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryTemplate
+     * Select specific fields to fetch from the DefaultTraderCategory
      */
-    select?: TraderCategoryTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategorySelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryTemplate
+     * Omit specific fields from the DefaultTraderCategory
      */
-    omit?: TraderCategoryTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryTemplateInclude<ExtArgs> | null
+    include?: DefaultTraderCategoryInclude<ExtArgs> | null
     /**
-     * The filter to search for the TraderCategoryTemplate to update in case it exists.
+     * The filter to search for the DefaultTraderCategory to update in case it exists.
      */
-    where: TraderCategoryTemplateWhereUniqueInput
+    where: DefaultTraderCategoryWhereUniqueInput
     /**
-     * In case the TraderCategoryTemplate found by the `where` argument doesn't exist, create a new TraderCategoryTemplate with this data.
+     * In case the DefaultTraderCategory found by the `where` argument doesn't exist, create a new DefaultTraderCategory with this data.
      */
-    create: XOR<TraderCategoryTemplateCreateInput, TraderCategoryTemplateUncheckedCreateInput>
+    create: XOR<DefaultTraderCategoryCreateInput, DefaultTraderCategoryUncheckedCreateInput>
     /**
-     * In case the TraderCategoryTemplate was found with the provided `where` argument, update it with this data.
+     * In case the DefaultTraderCategory was found with the provided `where` argument, update it with this data.
      */
-    update: XOR<TraderCategoryTemplateUpdateInput, TraderCategoryTemplateUncheckedUpdateInput>
+    update: XOR<DefaultTraderCategoryUpdateInput, DefaultTraderCategoryUncheckedUpdateInput>
   }
 
   /**
-   * TraderCategoryTemplate delete
+   * DefaultTraderCategory delete
    */
-  export type TraderCategoryTemplateDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryTemplate
+     * Select specific fields to fetch from the DefaultTraderCategory
      */
-    select?: TraderCategoryTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategorySelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryTemplate
+     * Omit specific fields from the DefaultTraderCategory
      */
-    omit?: TraderCategoryTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryTemplateInclude<ExtArgs> | null
+    include?: DefaultTraderCategoryInclude<ExtArgs> | null
     /**
-     * Filter which TraderCategoryTemplate to delete.
+     * Filter which DefaultTraderCategory to delete.
      */
-    where: TraderCategoryTemplateWhereUniqueInput
+    where: DefaultTraderCategoryWhereUniqueInput
   }
 
   /**
-   * TraderCategoryTemplate deleteMany
+   * DefaultTraderCategory deleteMany
    */
-  export type TraderCategoryTemplateDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which TraderCategoryTemplates to delete
+     * Filter which DefaultTraderCategories to delete
      */
-    where?: TraderCategoryTemplateWhereInput
+    where?: DefaultTraderCategoryWhereInput
     /**
-     * Limit how many TraderCategoryTemplates to delete.
+     * Limit how many DefaultTraderCategories to delete.
      */
     limit?: number
   }
 
   /**
-   * TraderCategoryTemplate.defaultShares
+   * DefaultTraderCategory.shares
    */
-  export type TraderCategoryTemplate$defaultSharesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategory$sharesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryShareTemplate
+     * Select specific fields to fetch from the DefaultTraderCategoryShare
      */
-    select?: TraderCategoryShareTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategoryShareSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryShareTemplate
+     * Omit specific fields from the DefaultTraderCategoryShare
      */
-    omit?: TraderCategoryShareTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryShareOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryShareTemplateInclude<ExtArgs> | null
-    where?: TraderCategoryShareTemplateWhereInput
-    orderBy?: TraderCategoryShareTemplateOrderByWithRelationInput | TraderCategoryShareTemplateOrderByWithRelationInput[]
-    cursor?: TraderCategoryShareTemplateWhereUniqueInput
+    include?: DefaultTraderCategoryShareInclude<ExtArgs> | null
+    where?: DefaultTraderCategoryShareWhereInput
+    orderBy?: DefaultTraderCategoryShareOrderByWithRelationInput | DefaultTraderCategoryShareOrderByWithRelationInput[]
+    cursor?: DefaultTraderCategoryShareWhereUniqueInput
     take?: number
     skip?: number
-    distinct?: TraderCategoryShareTemplateScalarFieldEnum | TraderCategoryShareTemplateScalarFieldEnum[]
+    distinct?: DefaultTraderCategoryShareScalarFieldEnum | DefaultTraderCategoryShareScalarFieldEnum[]
   }
 
   /**
-   * TraderCategoryTemplate without action
+   * DefaultTraderCategory without action
    */
-  export type TraderCategoryTemplateDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryTemplate
+     * Select specific fields to fetch from the DefaultTraderCategory
      */
-    select?: TraderCategoryTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategorySelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryTemplate
+     * Omit specific fields from the DefaultTraderCategory
      */
-    omit?: TraderCategoryTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryTemplateInclude<ExtArgs> | null
+    include?: DefaultTraderCategoryInclude<ExtArgs> | null
   }
 
 
   /**
-   * Model TraderCategoryShareTemplate
+   * Model DefaultTraderCategoryShare
    */
 
-  export type AggregateTraderCategoryShareTemplate = {
-    _count: TraderCategoryShareTemplateCountAggregateOutputType | null
-    _avg: TraderCategoryShareTemplateAvgAggregateOutputType | null
-    _sum: TraderCategoryShareTemplateSumAggregateOutputType | null
-    _min: TraderCategoryShareTemplateMinAggregateOutputType | null
-    _max: TraderCategoryShareTemplateMaxAggregateOutputType | null
+  export type AggregateDefaultTraderCategoryShare = {
+    _count: DefaultTraderCategoryShareCountAggregateOutputType | null
+    _avg: DefaultTraderCategoryShareAvgAggregateOutputType | null
+    _sum: DefaultTraderCategoryShareSumAggregateOutputType | null
+    _min: DefaultTraderCategoryShareMinAggregateOutputType | null
+    _max: DefaultTraderCategoryShareMaxAggregateOutputType | null
   }
 
-  export type TraderCategoryShareTemplateAvgAggregateOutputType = {
+  export type DefaultTraderCategoryShareAvgAggregateOutputType = {
     id: number | null
     traderId: number | null
-    traderCategoryTemplateId: number | null
+    defaultTraderCategoryId: number | null
     percent: Decimal | null
   }
 
-  export type TraderCategoryShareTemplateSumAggregateOutputType = {
+  export type DefaultTraderCategoryShareSumAggregateOutputType = {
     id: number | null
     traderId: number | null
-    traderCategoryTemplateId: number | null
+    defaultTraderCategoryId: number | null
     percent: Decimal | null
   }
 
-  export type TraderCategoryShareTemplateMinAggregateOutputType = {
+  export type DefaultTraderCategoryShareMinAggregateOutputType = {
     id: number | null
     traderId: number | null
-    traderCategoryTemplateId: number | null
+    defaultTraderCategoryId: number | null
     percent: Decimal | null
     createdAt: Date | null
     updatedAt: Date | null
   }
 
-  export type TraderCategoryShareTemplateMaxAggregateOutputType = {
+  export type DefaultTraderCategoryShareMaxAggregateOutputType = {
     id: number | null
     traderId: number | null
-    traderCategoryTemplateId: number | null
+    defaultTraderCategoryId: number | null
     percent: Decimal | null
     createdAt: Date | null
     updatedAt: Date | null
   }
 
-  export type TraderCategoryShareTemplateCountAggregateOutputType = {
+  export type DefaultTraderCategoryShareCountAggregateOutputType = {
     id: number
     traderId: number
-    traderCategoryTemplateId: number
+    defaultTraderCategoryId: number
     percent: number
     createdAt: number
     updatedAt: number
@@ -6750,361 +6750,361 @@ export namespace Prisma {
   }
 
 
-  export type TraderCategoryShareTemplateAvgAggregateInputType = {
+  export type DefaultTraderCategoryShareAvgAggregateInputType = {
     id?: true
     traderId?: true
-    traderCategoryTemplateId?: true
+    defaultTraderCategoryId?: true
     percent?: true
   }
 
-  export type TraderCategoryShareTemplateSumAggregateInputType = {
+  export type DefaultTraderCategoryShareSumAggregateInputType = {
     id?: true
     traderId?: true
-    traderCategoryTemplateId?: true
+    defaultTraderCategoryId?: true
     percent?: true
   }
 
-  export type TraderCategoryShareTemplateMinAggregateInputType = {
+  export type DefaultTraderCategoryShareMinAggregateInputType = {
     id?: true
     traderId?: true
-    traderCategoryTemplateId?: true
-    percent?: true
-    createdAt?: true
-    updatedAt?: true
-  }
-
-  export type TraderCategoryShareTemplateMaxAggregateInputType = {
-    id?: true
-    traderId?: true
-    traderCategoryTemplateId?: true
+    defaultTraderCategoryId?: true
     percent?: true
     createdAt?: true
     updatedAt?: true
   }
 
-  export type TraderCategoryShareTemplateCountAggregateInputType = {
+  export type DefaultTraderCategoryShareMaxAggregateInputType = {
     id?: true
     traderId?: true
-    traderCategoryTemplateId?: true
+    defaultTraderCategoryId?: true
+    percent?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type DefaultTraderCategoryShareCountAggregateInputType = {
+    id?: true
+    traderId?: true
+    defaultTraderCategoryId?: true
     percent?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
   }
 
-  export type TraderCategoryShareTemplateAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryShareAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which TraderCategoryShareTemplate to aggregate.
+     * Filter which DefaultTraderCategoryShare to aggregate.
      */
-    where?: TraderCategoryShareTemplateWhereInput
+    where?: DefaultTraderCategoryShareWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of TraderCategoryShareTemplates to fetch.
+     * Determine the order of DefaultTraderCategoryShares to fetch.
      */
-    orderBy?: TraderCategoryShareTemplateOrderByWithRelationInput | TraderCategoryShareTemplateOrderByWithRelationInput[]
+    orderBy?: DefaultTraderCategoryShareOrderByWithRelationInput | DefaultTraderCategoryShareOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
      * Sets the start position
      */
-    cursor?: TraderCategoryShareTemplateWhereUniqueInput
+    cursor?: DefaultTraderCategoryShareWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` TraderCategoryShareTemplates from the position of the cursor.
+     * Take `±n` DefaultTraderCategoryShares from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` TraderCategoryShareTemplates.
+     * Skip the first `n` DefaultTraderCategoryShares.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Count returned TraderCategoryShareTemplates
+     * Count returned DefaultTraderCategoryShares
     **/
-    _count?: true | TraderCategoryShareTemplateCountAggregateInputType
+    _count?: true | DefaultTraderCategoryShareCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to average
     **/
-    _avg?: TraderCategoryShareTemplateAvgAggregateInputType
+    _avg?: DefaultTraderCategoryShareAvgAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to sum
     **/
-    _sum?: TraderCategoryShareTemplateSumAggregateInputType
+    _sum?: DefaultTraderCategoryShareSumAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the minimum value
     **/
-    _min?: TraderCategoryShareTemplateMinAggregateInputType
+    _min?: DefaultTraderCategoryShareMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the maximum value
     **/
-    _max?: TraderCategoryShareTemplateMaxAggregateInputType
+    _max?: DefaultTraderCategoryShareMaxAggregateInputType
   }
 
-  export type GetTraderCategoryShareTemplateAggregateType<T extends TraderCategoryShareTemplateAggregateArgs> = {
-        [P in keyof T & keyof AggregateTraderCategoryShareTemplate]: P extends '_count' | 'count'
+  export type GetDefaultTraderCategoryShareAggregateType<T extends DefaultTraderCategoryShareAggregateArgs> = {
+        [P in keyof T & keyof AggregateDefaultTraderCategoryShare]: P extends '_count' | 'count'
       ? T[P] extends true
         ? number
-        : GetScalarType<T[P], AggregateTraderCategoryShareTemplate[P]>
-      : GetScalarType<T[P], AggregateTraderCategoryShareTemplate[P]>
+        : GetScalarType<T[P], AggregateDefaultTraderCategoryShare[P]>
+      : GetScalarType<T[P], AggregateDefaultTraderCategoryShare[P]>
   }
 
 
 
 
-  export type TraderCategoryShareTemplateGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: TraderCategoryShareTemplateWhereInput
-    orderBy?: TraderCategoryShareTemplateOrderByWithAggregationInput | TraderCategoryShareTemplateOrderByWithAggregationInput[]
-    by: TraderCategoryShareTemplateScalarFieldEnum[] | TraderCategoryShareTemplateScalarFieldEnum
-    having?: TraderCategoryShareTemplateScalarWhereWithAggregatesInput
+  export type DefaultTraderCategoryShareGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DefaultTraderCategoryShareWhereInput
+    orderBy?: DefaultTraderCategoryShareOrderByWithAggregationInput | DefaultTraderCategoryShareOrderByWithAggregationInput[]
+    by: DefaultTraderCategoryShareScalarFieldEnum[] | DefaultTraderCategoryShareScalarFieldEnum
+    having?: DefaultTraderCategoryShareScalarWhereWithAggregatesInput
     take?: number
     skip?: number
-    _count?: TraderCategoryShareTemplateCountAggregateInputType | true
-    _avg?: TraderCategoryShareTemplateAvgAggregateInputType
-    _sum?: TraderCategoryShareTemplateSumAggregateInputType
-    _min?: TraderCategoryShareTemplateMinAggregateInputType
-    _max?: TraderCategoryShareTemplateMaxAggregateInputType
+    _count?: DefaultTraderCategoryShareCountAggregateInputType | true
+    _avg?: DefaultTraderCategoryShareAvgAggregateInputType
+    _sum?: DefaultTraderCategoryShareSumAggregateInputType
+    _min?: DefaultTraderCategoryShareMinAggregateInputType
+    _max?: DefaultTraderCategoryShareMaxAggregateInputType
   }
 
-  export type TraderCategoryShareTemplateGroupByOutputType = {
+  export type DefaultTraderCategoryShareGroupByOutputType = {
     id: number
     traderId: number
-    traderCategoryTemplateId: number
+    defaultTraderCategoryId: number
     percent: Decimal
     createdAt: Date
     updatedAt: Date
-    _count: TraderCategoryShareTemplateCountAggregateOutputType | null
-    _avg: TraderCategoryShareTemplateAvgAggregateOutputType | null
-    _sum: TraderCategoryShareTemplateSumAggregateOutputType | null
-    _min: TraderCategoryShareTemplateMinAggregateOutputType | null
-    _max: TraderCategoryShareTemplateMaxAggregateOutputType | null
+    _count: DefaultTraderCategoryShareCountAggregateOutputType | null
+    _avg: DefaultTraderCategoryShareAvgAggregateOutputType | null
+    _sum: DefaultTraderCategoryShareSumAggregateOutputType | null
+    _min: DefaultTraderCategoryShareMinAggregateOutputType | null
+    _max: DefaultTraderCategoryShareMaxAggregateOutputType | null
   }
 
-  type GetTraderCategoryShareTemplateGroupByPayload<T extends TraderCategoryShareTemplateGroupByArgs> = Prisma.PrismaPromise<
+  type GetDefaultTraderCategoryShareGroupByPayload<T extends DefaultTraderCategoryShareGroupByArgs> = Prisma.PrismaPromise<
     Array<
-      PickEnumerable<TraderCategoryShareTemplateGroupByOutputType, T['by']> &
+      PickEnumerable<DefaultTraderCategoryShareGroupByOutputType, T['by']> &
         {
-          [P in ((keyof T) & (keyof TraderCategoryShareTemplateGroupByOutputType))]: P extends '_count'
+          [P in ((keyof T) & (keyof DefaultTraderCategoryShareGroupByOutputType))]: P extends '_count'
             ? T[P] extends boolean
               ? number
-              : GetScalarType<T[P], TraderCategoryShareTemplateGroupByOutputType[P]>
-            : GetScalarType<T[P], TraderCategoryShareTemplateGroupByOutputType[P]>
+              : GetScalarType<T[P], DefaultTraderCategoryShareGroupByOutputType[P]>
+            : GetScalarType<T[P], DefaultTraderCategoryShareGroupByOutputType[P]>
         }
       >
     >
 
 
-  export type TraderCategoryShareTemplateSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type DefaultTraderCategoryShareSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     traderId?: boolean
-    traderCategoryTemplateId?: boolean
+    defaultTraderCategoryId?: boolean
     percent?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     trader?: boolean | TraderDefaultArgs<ExtArgs>
-    traderCategoryTemplate?: boolean | TraderCategoryTemplateDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["traderCategoryShareTemplate"]>
+    defaultTraderCategory?: boolean | DefaultTraderCategoryDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["defaultTraderCategoryShare"]>
 
-  export type TraderCategoryShareTemplateSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type DefaultTraderCategoryShareSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     traderId?: boolean
-    traderCategoryTemplateId?: boolean
+    defaultTraderCategoryId?: boolean
     percent?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     trader?: boolean | TraderDefaultArgs<ExtArgs>
-    traderCategoryTemplate?: boolean | TraderCategoryTemplateDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["traderCategoryShareTemplate"]>
+    defaultTraderCategory?: boolean | DefaultTraderCategoryDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["defaultTraderCategoryShare"]>
 
-  export type TraderCategoryShareTemplateSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type DefaultTraderCategoryShareSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     traderId?: boolean
-    traderCategoryTemplateId?: boolean
+    defaultTraderCategoryId?: boolean
     percent?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     trader?: boolean | TraderDefaultArgs<ExtArgs>
-    traderCategoryTemplate?: boolean | TraderCategoryTemplateDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["traderCategoryShareTemplate"]>
+    defaultTraderCategory?: boolean | DefaultTraderCategoryDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["defaultTraderCategoryShare"]>
 
-  export type TraderCategoryShareTemplateSelectScalar = {
+  export type DefaultTraderCategoryShareSelectScalar = {
     id?: boolean
     traderId?: boolean
-    traderCategoryTemplateId?: boolean
+    defaultTraderCategoryId?: boolean
     percent?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type TraderCategoryShareTemplateOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "traderId" | "traderCategoryTemplateId" | "percent" | "createdAt" | "updatedAt", ExtArgs["result"]["traderCategoryShareTemplate"]>
-  export type TraderCategoryShareTemplateInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryShareOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "traderId" | "defaultTraderCategoryId" | "percent" | "createdAt" | "updatedAt", ExtArgs["result"]["defaultTraderCategoryShare"]>
+  export type DefaultTraderCategoryShareInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     trader?: boolean | TraderDefaultArgs<ExtArgs>
-    traderCategoryTemplate?: boolean | TraderCategoryTemplateDefaultArgs<ExtArgs>
+    defaultTraderCategory?: boolean | DefaultTraderCategoryDefaultArgs<ExtArgs>
   }
-  export type TraderCategoryShareTemplateIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryShareIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     trader?: boolean | TraderDefaultArgs<ExtArgs>
-    traderCategoryTemplate?: boolean | TraderCategoryTemplateDefaultArgs<ExtArgs>
+    defaultTraderCategory?: boolean | DefaultTraderCategoryDefaultArgs<ExtArgs>
   }
-  export type TraderCategoryShareTemplateIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryShareIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     trader?: boolean | TraderDefaultArgs<ExtArgs>
-    traderCategoryTemplate?: boolean | TraderCategoryTemplateDefaultArgs<ExtArgs>
+    defaultTraderCategory?: boolean | DefaultTraderCategoryDefaultArgs<ExtArgs>
   }
 
-  export type $TraderCategoryShareTemplatePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "TraderCategoryShareTemplate"
+  export type $DefaultTraderCategorySharePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "DefaultTraderCategoryShare"
     objects: {
       trader: Prisma.$TraderPayload<ExtArgs>
-      traderCategoryTemplate: Prisma.$TraderCategoryTemplatePayload<ExtArgs>
+      defaultTraderCategory: Prisma.$DefaultTraderCategoryPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
       traderId: number
-      traderCategoryTemplateId: number
+      defaultTraderCategoryId: number
       percent: Prisma.Decimal
       createdAt: Date
       updatedAt: Date
-    }, ExtArgs["result"]["traderCategoryShareTemplate"]>
+    }, ExtArgs["result"]["defaultTraderCategoryShare"]>
     composites: {}
   }
 
-  type TraderCategoryShareTemplateGetPayload<S extends boolean | null | undefined | TraderCategoryShareTemplateDefaultArgs> = $Result.GetResult<Prisma.$TraderCategoryShareTemplatePayload, S>
+  type DefaultTraderCategoryShareGetPayload<S extends boolean | null | undefined | DefaultTraderCategoryShareDefaultArgs> = $Result.GetResult<Prisma.$DefaultTraderCategorySharePayload, S>
 
-  type TraderCategoryShareTemplateCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<TraderCategoryShareTemplateFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: TraderCategoryShareTemplateCountAggregateInputType | true
+  type DefaultTraderCategoryShareCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<DefaultTraderCategoryShareFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: DefaultTraderCategoryShareCountAggregateInputType | true
     }
 
-  export interface TraderCategoryShareTemplateDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['TraderCategoryShareTemplate'], meta: { name: 'TraderCategoryShareTemplate' } }
+  export interface DefaultTraderCategoryShareDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['DefaultTraderCategoryShare'], meta: { name: 'DefaultTraderCategoryShare' } }
     /**
-     * Find zero or one TraderCategoryShareTemplate that matches the filter.
-     * @param {TraderCategoryShareTemplateFindUniqueArgs} args - Arguments to find a TraderCategoryShareTemplate
+     * Find zero or one DefaultTraderCategoryShare that matches the filter.
+     * @param {DefaultTraderCategoryShareFindUniqueArgs} args - Arguments to find a DefaultTraderCategoryShare
      * @example
-     * // Get one TraderCategoryShareTemplate
-     * const traderCategoryShareTemplate = await prisma.traderCategoryShareTemplate.findUnique({
+     * // Get one DefaultTraderCategoryShare
+     * const defaultTraderCategoryShare = await prisma.defaultTraderCategoryShare.findUnique({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUnique<T extends TraderCategoryShareTemplateFindUniqueArgs>(args: SelectSubset<T, TraderCategoryShareTemplateFindUniqueArgs<ExtArgs>>): Prisma__TraderCategoryShareTemplateClient<$Result.GetResult<Prisma.$TraderCategoryShareTemplatePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findUnique<T extends DefaultTraderCategoryShareFindUniqueArgs>(args: SelectSubset<T, DefaultTraderCategoryShareFindUniqueArgs<ExtArgs>>): Prisma__DefaultTraderCategoryShareClient<$Result.GetResult<Prisma.$DefaultTraderCategorySharePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find one TraderCategoryShareTemplate that matches the filter or throw an error with `error.code='P2025'`
+     * Find one DefaultTraderCategoryShare that matches the filter or throw an error with `error.code='P2025'`
      * if no matches were found.
-     * @param {TraderCategoryShareTemplateFindUniqueOrThrowArgs} args - Arguments to find a TraderCategoryShareTemplate
+     * @param {DefaultTraderCategoryShareFindUniqueOrThrowArgs} args - Arguments to find a DefaultTraderCategoryShare
      * @example
-     * // Get one TraderCategoryShareTemplate
-     * const traderCategoryShareTemplate = await prisma.traderCategoryShareTemplate.findUniqueOrThrow({
+     * // Get one DefaultTraderCategoryShare
+     * const defaultTraderCategoryShare = await prisma.defaultTraderCategoryShare.findUniqueOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUniqueOrThrow<T extends TraderCategoryShareTemplateFindUniqueOrThrowArgs>(args: SelectSubset<T, TraderCategoryShareTemplateFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TraderCategoryShareTemplateClient<$Result.GetResult<Prisma.$TraderCategoryShareTemplatePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findUniqueOrThrow<T extends DefaultTraderCategoryShareFindUniqueOrThrowArgs>(args: SelectSubset<T, DefaultTraderCategoryShareFindUniqueOrThrowArgs<ExtArgs>>): Prisma__DefaultTraderCategoryShareClient<$Result.GetResult<Prisma.$DefaultTraderCategorySharePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first TraderCategoryShareTemplate that matches the filter.
+     * Find the first DefaultTraderCategoryShare that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TraderCategoryShareTemplateFindFirstArgs} args - Arguments to find a TraderCategoryShareTemplate
+     * @param {DefaultTraderCategoryShareFindFirstArgs} args - Arguments to find a DefaultTraderCategoryShare
      * @example
-     * // Get one TraderCategoryShareTemplate
-     * const traderCategoryShareTemplate = await prisma.traderCategoryShareTemplate.findFirst({
+     * // Get one DefaultTraderCategoryShare
+     * const defaultTraderCategoryShare = await prisma.defaultTraderCategoryShare.findFirst({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirst<T extends TraderCategoryShareTemplateFindFirstArgs>(args?: SelectSubset<T, TraderCategoryShareTemplateFindFirstArgs<ExtArgs>>): Prisma__TraderCategoryShareTemplateClient<$Result.GetResult<Prisma.$TraderCategoryShareTemplatePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findFirst<T extends DefaultTraderCategoryShareFindFirstArgs>(args?: SelectSubset<T, DefaultTraderCategoryShareFindFirstArgs<ExtArgs>>): Prisma__DefaultTraderCategoryShareClient<$Result.GetResult<Prisma.$DefaultTraderCategorySharePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first TraderCategoryShareTemplate that matches the filter or
+     * Find the first DefaultTraderCategoryShare that matches the filter or
      * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TraderCategoryShareTemplateFindFirstOrThrowArgs} args - Arguments to find a TraderCategoryShareTemplate
+     * @param {DefaultTraderCategoryShareFindFirstOrThrowArgs} args - Arguments to find a DefaultTraderCategoryShare
      * @example
-     * // Get one TraderCategoryShareTemplate
-     * const traderCategoryShareTemplate = await prisma.traderCategoryShareTemplate.findFirstOrThrow({
+     * // Get one DefaultTraderCategoryShare
+     * const defaultTraderCategoryShare = await prisma.defaultTraderCategoryShare.findFirstOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirstOrThrow<T extends TraderCategoryShareTemplateFindFirstOrThrowArgs>(args?: SelectSubset<T, TraderCategoryShareTemplateFindFirstOrThrowArgs<ExtArgs>>): Prisma__TraderCategoryShareTemplateClient<$Result.GetResult<Prisma.$TraderCategoryShareTemplatePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findFirstOrThrow<T extends DefaultTraderCategoryShareFindFirstOrThrowArgs>(args?: SelectSubset<T, DefaultTraderCategoryShareFindFirstOrThrowArgs<ExtArgs>>): Prisma__DefaultTraderCategoryShareClient<$Result.GetResult<Prisma.$DefaultTraderCategorySharePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find zero or more TraderCategoryShareTemplates that matches the filter.
+     * Find zero or more DefaultTraderCategoryShares that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TraderCategoryShareTemplateFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @param {DefaultTraderCategoryShareFindManyArgs} args - Arguments to filter and select certain fields only.
      * @example
-     * // Get all TraderCategoryShareTemplates
-     * const traderCategoryShareTemplates = await prisma.traderCategoryShareTemplate.findMany()
+     * // Get all DefaultTraderCategoryShares
+     * const defaultTraderCategoryShares = await prisma.defaultTraderCategoryShare.findMany()
      * 
-     * // Get first 10 TraderCategoryShareTemplates
-     * const traderCategoryShareTemplates = await prisma.traderCategoryShareTemplate.findMany({ take: 10 })
+     * // Get first 10 DefaultTraderCategoryShares
+     * const defaultTraderCategoryShares = await prisma.defaultTraderCategoryShare.findMany({ take: 10 })
      * 
      * // Only select the `id`
-     * const traderCategoryShareTemplateWithIdOnly = await prisma.traderCategoryShareTemplate.findMany({ select: { id: true } })
+     * const defaultTraderCategoryShareWithIdOnly = await prisma.defaultTraderCategoryShare.findMany({ select: { id: true } })
      * 
      */
-    findMany<T extends TraderCategoryShareTemplateFindManyArgs>(args?: SelectSubset<T, TraderCategoryShareTemplateFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TraderCategoryShareTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+    findMany<T extends DefaultTraderCategoryShareFindManyArgs>(args?: SelectSubset<T, DefaultTraderCategoryShareFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DefaultTraderCategorySharePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
 
     /**
-     * Create a TraderCategoryShareTemplate.
-     * @param {TraderCategoryShareTemplateCreateArgs} args - Arguments to create a TraderCategoryShareTemplate.
+     * Create a DefaultTraderCategoryShare.
+     * @param {DefaultTraderCategoryShareCreateArgs} args - Arguments to create a DefaultTraderCategoryShare.
      * @example
-     * // Create one TraderCategoryShareTemplate
-     * const TraderCategoryShareTemplate = await prisma.traderCategoryShareTemplate.create({
+     * // Create one DefaultTraderCategoryShare
+     * const DefaultTraderCategoryShare = await prisma.defaultTraderCategoryShare.create({
      *   data: {
-     *     // ... data to create a TraderCategoryShareTemplate
+     *     // ... data to create a DefaultTraderCategoryShare
      *   }
      * })
      * 
      */
-    create<T extends TraderCategoryShareTemplateCreateArgs>(args: SelectSubset<T, TraderCategoryShareTemplateCreateArgs<ExtArgs>>): Prisma__TraderCategoryShareTemplateClient<$Result.GetResult<Prisma.$TraderCategoryShareTemplatePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    create<T extends DefaultTraderCategoryShareCreateArgs>(args: SelectSubset<T, DefaultTraderCategoryShareCreateArgs<ExtArgs>>): Prisma__DefaultTraderCategoryShareClient<$Result.GetResult<Prisma.$DefaultTraderCategorySharePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Create many TraderCategoryShareTemplates.
-     * @param {TraderCategoryShareTemplateCreateManyArgs} args - Arguments to create many TraderCategoryShareTemplates.
+     * Create many DefaultTraderCategoryShares.
+     * @param {DefaultTraderCategoryShareCreateManyArgs} args - Arguments to create many DefaultTraderCategoryShares.
      * @example
-     * // Create many TraderCategoryShareTemplates
-     * const traderCategoryShareTemplate = await prisma.traderCategoryShareTemplate.createMany({
+     * // Create many DefaultTraderCategoryShares
+     * const defaultTraderCategoryShare = await prisma.defaultTraderCategoryShare.createMany({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      *     
      */
-    createMany<T extends TraderCategoryShareTemplateCreateManyArgs>(args?: SelectSubset<T, TraderCategoryShareTemplateCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    createMany<T extends DefaultTraderCategoryShareCreateManyArgs>(args?: SelectSubset<T, DefaultTraderCategoryShareCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many TraderCategoryShareTemplates and returns the data saved in the database.
-     * @param {TraderCategoryShareTemplateCreateManyAndReturnArgs} args - Arguments to create many TraderCategoryShareTemplates.
+     * Create many DefaultTraderCategoryShares and returns the data saved in the database.
+     * @param {DefaultTraderCategoryShareCreateManyAndReturnArgs} args - Arguments to create many DefaultTraderCategoryShares.
      * @example
-     * // Create many TraderCategoryShareTemplates
-     * const traderCategoryShareTemplate = await prisma.traderCategoryShareTemplate.createManyAndReturn({
+     * // Create many DefaultTraderCategoryShares
+     * const defaultTraderCategoryShare = await prisma.defaultTraderCategoryShare.createManyAndReturn({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      * 
-     * // Create many TraderCategoryShareTemplates and only return the `id`
-     * const traderCategoryShareTemplateWithIdOnly = await prisma.traderCategoryShareTemplate.createManyAndReturn({
+     * // Create many DefaultTraderCategoryShares and only return the `id`
+     * const defaultTraderCategoryShareWithIdOnly = await prisma.defaultTraderCategoryShare.createManyAndReturn({
      *   select: { id: true },
      *   data: [
      *     // ... provide data here
@@ -7114,28 +7114,28 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends TraderCategoryShareTemplateCreateManyAndReturnArgs>(args?: SelectSubset<T, TraderCategoryShareTemplateCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TraderCategoryShareTemplatePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+    createManyAndReturn<T extends DefaultTraderCategoryShareCreateManyAndReturnArgs>(args?: SelectSubset<T, DefaultTraderCategoryShareCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DefaultTraderCategorySharePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Delete a TraderCategoryShareTemplate.
-     * @param {TraderCategoryShareTemplateDeleteArgs} args - Arguments to delete one TraderCategoryShareTemplate.
+     * Delete a DefaultTraderCategoryShare.
+     * @param {DefaultTraderCategoryShareDeleteArgs} args - Arguments to delete one DefaultTraderCategoryShare.
      * @example
-     * // Delete one TraderCategoryShareTemplate
-     * const TraderCategoryShareTemplate = await prisma.traderCategoryShareTemplate.delete({
+     * // Delete one DefaultTraderCategoryShare
+     * const DefaultTraderCategoryShare = await prisma.defaultTraderCategoryShare.delete({
      *   where: {
-     *     // ... filter to delete one TraderCategoryShareTemplate
+     *     // ... filter to delete one DefaultTraderCategoryShare
      *   }
      * })
      * 
      */
-    delete<T extends TraderCategoryShareTemplateDeleteArgs>(args: SelectSubset<T, TraderCategoryShareTemplateDeleteArgs<ExtArgs>>): Prisma__TraderCategoryShareTemplateClient<$Result.GetResult<Prisma.$TraderCategoryShareTemplatePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    delete<T extends DefaultTraderCategoryShareDeleteArgs>(args: SelectSubset<T, DefaultTraderCategoryShareDeleteArgs<ExtArgs>>): Prisma__DefaultTraderCategoryShareClient<$Result.GetResult<Prisma.$DefaultTraderCategorySharePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Update one TraderCategoryShareTemplate.
-     * @param {TraderCategoryShareTemplateUpdateArgs} args - Arguments to update one TraderCategoryShareTemplate.
+     * Update one DefaultTraderCategoryShare.
+     * @param {DefaultTraderCategoryShareUpdateArgs} args - Arguments to update one DefaultTraderCategoryShare.
      * @example
-     * // Update one TraderCategoryShareTemplate
-     * const traderCategoryShareTemplate = await prisma.traderCategoryShareTemplate.update({
+     * // Update one DefaultTraderCategoryShare
+     * const defaultTraderCategoryShare = await prisma.defaultTraderCategoryShare.update({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -7145,30 +7145,30 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends TraderCategoryShareTemplateUpdateArgs>(args: SelectSubset<T, TraderCategoryShareTemplateUpdateArgs<ExtArgs>>): Prisma__TraderCategoryShareTemplateClient<$Result.GetResult<Prisma.$TraderCategoryShareTemplatePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    update<T extends DefaultTraderCategoryShareUpdateArgs>(args: SelectSubset<T, DefaultTraderCategoryShareUpdateArgs<ExtArgs>>): Prisma__DefaultTraderCategoryShareClient<$Result.GetResult<Prisma.$DefaultTraderCategorySharePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Delete zero or more TraderCategoryShareTemplates.
-     * @param {TraderCategoryShareTemplateDeleteManyArgs} args - Arguments to filter TraderCategoryShareTemplates to delete.
+     * Delete zero or more DefaultTraderCategoryShares.
+     * @param {DefaultTraderCategoryShareDeleteManyArgs} args - Arguments to filter DefaultTraderCategoryShares to delete.
      * @example
-     * // Delete a few TraderCategoryShareTemplates
-     * const { count } = await prisma.traderCategoryShareTemplate.deleteMany({
+     * // Delete a few DefaultTraderCategoryShares
+     * const { count } = await prisma.defaultTraderCategoryShare.deleteMany({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      * 
      */
-    deleteMany<T extends TraderCategoryShareTemplateDeleteManyArgs>(args?: SelectSubset<T, TraderCategoryShareTemplateDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    deleteMany<T extends DefaultTraderCategoryShareDeleteManyArgs>(args?: SelectSubset<T, DefaultTraderCategoryShareDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more TraderCategoryShareTemplates.
+     * Update zero or more DefaultTraderCategoryShares.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TraderCategoryShareTemplateUpdateManyArgs} args - Arguments to update one or more rows.
+     * @param {DefaultTraderCategoryShareUpdateManyArgs} args - Arguments to update one or more rows.
      * @example
-     * // Update many TraderCategoryShareTemplates
-     * const traderCategoryShareTemplate = await prisma.traderCategoryShareTemplate.updateMany({
+     * // Update many DefaultTraderCategoryShares
+     * const defaultTraderCategoryShare = await prisma.defaultTraderCategoryShare.updateMany({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -7178,14 +7178,14 @@ export namespace Prisma {
      * })
      * 
      */
-    updateMany<T extends TraderCategoryShareTemplateUpdateManyArgs>(args: SelectSubset<T, TraderCategoryShareTemplateUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    updateMany<T extends DefaultTraderCategoryShareUpdateManyArgs>(args: SelectSubset<T, DefaultTraderCategoryShareUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more TraderCategoryShareTemplates and returns the data updated in the database.
-     * @param {TraderCategoryShareTemplateUpdateManyAndReturnArgs} args - Arguments to update many TraderCategoryShareTemplates.
+     * Update zero or more DefaultTraderCategoryShares and returns the data updated in the database.
+     * @param {DefaultTraderCategoryShareUpdateManyAndReturnArgs} args - Arguments to update many DefaultTraderCategoryShares.
      * @example
-     * // Update many TraderCategoryShareTemplates
-     * const traderCategoryShareTemplate = await prisma.traderCategoryShareTemplate.updateManyAndReturn({
+     * // Update many DefaultTraderCategoryShares
+     * const defaultTraderCategoryShare = await prisma.defaultTraderCategoryShare.updateManyAndReturn({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -7194,8 +7194,8 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Update zero or more TraderCategoryShareTemplates and only return the `id`
-     * const traderCategoryShareTemplateWithIdOnly = await prisma.traderCategoryShareTemplate.updateManyAndReturn({
+     * // Update zero or more DefaultTraderCategoryShares and only return the `id`
+     * const defaultTraderCategoryShareWithIdOnly = await prisma.defaultTraderCategoryShare.updateManyAndReturn({
      *   select: { id: true },
      *   where: {
      *     // ... provide filter here
@@ -7208,56 +7208,56 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    updateManyAndReturn<T extends TraderCategoryShareTemplateUpdateManyAndReturnArgs>(args: SelectSubset<T, TraderCategoryShareTemplateUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TraderCategoryShareTemplatePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+    updateManyAndReturn<T extends DefaultTraderCategoryShareUpdateManyAndReturnArgs>(args: SelectSubset<T, DefaultTraderCategoryShareUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DefaultTraderCategorySharePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Create or update one TraderCategoryShareTemplate.
-     * @param {TraderCategoryShareTemplateUpsertArgs} args - Arguments to update or create a TraderCategoryShareTemplate.
+     * Create or update one DefaultTraderCategoryShare.
+     * @param {DefaultTraderCategoryShareUpsertArgs} args - Arguments to update or create a DefaultTraderCategoryShare.
      * @example
-     * // Update or create a TraderCategoryShareTemplate
-     * const traderCategoryShareTemplate = await prisma.traderCategoryShareTemplate.upsert({
+     * // Update or create a DefaultTraderCategoryShare
+     * const defaultTraderCategoryShare = await prisma.defaultTraderCategoryShare.upsert({
      *   create: {
-     *     // ... data to create a TraderCategoryShareTemplate
+     *     // ... data to create a DefaultTraderCategoryShare
      *   },
      *   update: {
      *     // ... in case it already exists, update
      *   },
      *   where: {
-     *     // ... the filter for the TraderCategoryShareTemplate we want to update
+     *     // ... the filter for the DefaultTraderCategoryShare we want to update
      *   }
      * })
      */
-    upsert<T extends TraderCategoryShareTemplateUpsertArgs>(args: SelectSubset<T, TraderCategoryShareTemplateUpsertArgs<ExtArgs>>): Prisma__TraderCategoryShareTemplateClient<$Result.GetResult<Prisma.$TraderCategoryShareTemplatePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    upsert<T extends DefaultTraderCategoryShareUpsertArgs>(args: SelectSubset<T, DefaultTraderCategoryShareUpsertArgs<ExtArgs>>): Prisma__DefaultTraderCategoryShareClient<$Result.GetResult<Prisma.$DefaultTraderCategorySharePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
 
     /**
-     * Count the number of TraderCategoryShareTemplates.
+     * Count the number of DefaultTraderCategoryShares.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TraderCategoryShareTemplateCountArgs} args - Arguments to filter TraderCategoryShareTemplates to count.
+     * @param {DefaultTraderCategoryShareCountArgs} args - Arguments to filter DefaultTraderCategoryShares to count.
      * @example
-     * // Count the number of TraderCategoryShareTemplates
-     * const count = await prisma.traderCategoryShareTemplate.count({
+     * // Count the number of DefaultTraderCategoryShares
+     * const count = await prisma.defaultTraderCategoryShare.count({
      *   where: {
-     *     // ... the filter for the TraderCategoryShareTemplates we want to count
+     *     // ... the filter for the DefaultTraderCategoryShares we want to count
      *   }
      * })
     **/
-    count<T extends TraderCategoryShareTemplateCountArgs>(
-      args?: Subset<T, TraderCategoryShareTemplateCountArgs>,
+    count<T extends DefaultTraderCategoryShareCountArgs>(
+      args?: Subset<T, DefaultTraderCategoryShareCountArgs>,
     ): Prisma.PrismaPromise<
       T extends $Utils.Record<'select', any>
         ? T['select'] extends true
           ? number
-          : GetScalarType<T['select'], TraderCategoryShareTemplateCountAggregateOutputType>
+          : GetScalarType<T['select'], DefaultTraderCategoryShareCountAggregateOutputType>
         : number
     >
 
     /**
-     * Allows you to perform aggregations operations on a TraderCategoryShareTemplate.
+     * Allows you to perform aggregations operations on a DefaultTraderCategoryShare.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TraderCategoryShareTemplateAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @param {DefaultTraderCategoryShareAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
      * @example
      * // Ordered by age ascending
      * // Where email contains prisma.io
@@ -7277,13 +7277,13 @@ export namespace Prisma {
      *   take: 10,
      * })
     **/
-    aggregate<T extends TraderCategoryShareTemplateAggregateArgs>(args: Subset<T, TraderCategoryShareTemplateAggregateArgs>): Prisma.PrismaPromise<GetTraderCategoryShareTemplateAggregateType<T>>
+    aggregate<T extends DefaultTraderCategoryShareAggregateArgs>(args: Subset<T, DefaultTraderCategoryShareAggregateArgs>): Prisma.PrismaPromise<GetDefaultTraderCategoryShareAggregateType<T>>
 
     /**
-     * Group by TraderCategoryShareTemplate.
+     * Group by DefaultTraderCategoryShare.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {TraderCategoryShareTemplateGroupByArgs} args - Group by arguments.
+     * @param {DefaultTraderCategoryShareGroupByArgs} args - Group by arguments.
      * @example
      * // Group by city, order by createdAt, get count
      * const result = await prisma.user.groupBy({
@@ -7298,14 +7298,14 @@ export namespace Prisma {
      * 
     **/
     groupBy<
-      T extends TraderCategoryShareTemplateGroupByArgs,
+      T extends DefaultTraderCategoryShareGroupByArgs,
       HasSelectOrTake extends Or<
         Extends<'skip', Keys<T>>,
         Extends<'take', Keys<T>>
       >,
       OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: TraderCategoryShareTemplateGroupByArgs['orderBy'] }
-        : { orderBy?: TraderCategoryShareTemplateGroupByArgs['orderBy'] },
+        ? { orderBy: DefaultTraderCategoryShareGroupByArgs['orderBy'] }
+        : { orderBy?: DefaultTraderCategoryShareGroupByArgs['orderBy'] },
       OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
       ByFields extends MaybeTupleToUnion<T['by']>,
       ByValid extends Has<ByFields, OrderFields>,
@@ -7354,23 +7354,23 @@ export namespace Prisma {
             ? never
             : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
         }[OrderFields]
-    >(args: SubsetIntersection<T, TraderCategoryShareTemplateGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTraderCategoryShareTemplateGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+    >(args: SubsetIntersection<T, DefaultTraderCategoryShareGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDefaultTraderCategoryShareGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
   /**
-   * Fields of the TraderCategoryShareTemplate model
+   * Fields of the DefaultTraderCategoryShare model
    */
-  readonly fields: TraderCategoryShareTemplateFieldRefs;
+  readonly fields: DefaultTraderCategoryShareFieldRefs;
   }
 
   /**
-   * The delegate class that acts as a "Promise-like" for TraderCategoryShareTemplate.
+   * The delegate class that acts as a "Promise-like" for DefaultTraderCategoryShare.
    * Why is this prefixed with `Prisma__`?
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__TraderCategoryShareTemplateClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__DefaultTraderCategoryShareClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     trader<T extends TraderDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TraderDefaultArgs<ExtArgs>>): Prisma__TraderClient<$Result.GetResult<Prisma.$TraderPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    traderCategoryTemplate<T extends TraderCategoryTemplateDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TraderCategoryTemplateDefaultArgs<ExtArgs>>): Prisma__TraderCategoryTemplateClient<$Result.GetResult<Prisma.$TraderCategoryTemplatePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    defaultTraderCategory<T extends DefaultTraderCategoryDefaultArgs<ExtArgs> = {}>(args?: Subset<T, DefaultTraderCategoryDefaultArgs<ExtArgs>>): Prisma__DefaultTraderCategoryClient<$Result.GetResult<Prisma.$DefaultTraderCategoryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7397,431 +7397,431 @@ export namespace Prisma {
 
 
   /**
-   * Fields of the TraderCategoryShareTemplate model
+   * Fields of the DefaultTraderCategoryShare model
    */
-  interface TraderCategoryShareTemplateFieldRefs {
-    readonly id: FieldRef<"TraderCategoryShareTemplate", 'Int'>
-    readonly traderId: FieldRef<"TraderCategoryShareTemplate", 'Int'>
-    readonly traderCategoryTemplateId: FieldRef<"TraderCategoryShareTemplate", 'Int'>
-    readonly percent: FieldRef<"TraderCategoryShareTemplate", 'Decimal'>
-    readonly createdAt: FieldRef<"TraderCategoryShareTemplate", 'DateTime'>
-    readonly updatedAt: FieldRef<"TraderCategoryShareTemplate", 'DateTime'>
+  interface DefaultTraderCategoryShareFieldRefs {
+    readonly id: FieldRef<"DefaultTraderCategoryShare", 'Int'>
+    readonly traderId: FieldRef<"DefaultTraderCategoryShare", 'Int'>
+    readonly defaultTraderCategoryId: FieldRef<"DefaultTraderCategoryShare", 'Int'>
+    readonly percent: FieldRef<"DefaultTraderCategoryShare", 'Decimal'>
+    readonly createdAt: FieldRef<"DefaultTraderCategoryShare", 'DateTime'>
+    readonly updatedAt: FieldRef<"DefaultTraderCategoryShare", 'DateTime'>
   }
     
 
   // Custom InputTypes
   /**
-   * TraderCategoryShareTemplate findUnique
+   * DefaultTraderCategoryShare findUnique
    */
-  export type TraderCategoryShareTemplateFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryShareFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryShareTemplate
+     * Select specific fields to fetch from the DefaultTraderCategoryShare
      */
-    select?: TraderCategoryShareTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategoryShareSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryShareTemplate
+     * Omit specific fields from the DefaultTraderCategoryShare
      */
-    omit?: TraderCategoryShareTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryShareOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryShareTemplateInclude<ExtArgs> | null
+    include?: DefaultTraderCategoryShareInclude<ExtArgs> | null
     /**
-     * Filter, which TraderCategoryShareTemplate to fetch.
+     * Filter, which DefaultTraderCategoryShare to fetch.
      */
-    where: TraderCategoryShareTemplateWhereUniqueInput
+    where: DefaultTraderCategoryShareWhereUniqueInput
   }
 
   /**
-   * TraderCategoryShareTemplate findUniqueOrThrow
+   * DefaultTraderCategoryShare findUniqueOrThrow
    */
-  export type TraderCategoryShareTemplateFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryShareFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryShareTemplate
+     * Select specific fields to fetch from the DefaultTraderCategoryShare
      */
-    select?: TraderCategoryShareTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategoryShareSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryShareTemplate
+     * Omit specific fields from the DefaultTraderCategoryShare
      */
-    omit?: TraderCategoryShareTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryShareOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryShareTemplateInclude<ExtArgs> | null
+    include?: DefaultTraderCategoryShareInclude<ExtArgs> | null
     /**
-     * Filter, which TraderCategoryShareTemplate to fetch.
+     * Filter, which DefaultTraderCategoryShare to fetch.
      */
-    where: TraderCategoryShareTemplateWhereUniqueInput
+    where: DefaultTraderCategoryShareWhereUniqueInput
   }
 
   /**
-   * TraderCategoryShareTemplate findFirst
+   * DefaultTraderCategoryShare findFirst
    */
-  export type TraderCategoryShareTemplateFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryShareFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryShareTemplate
+     * Select specific fields to fetch from the DefaultTraderCategoryShare
      */
-    select?: TraderCategoryShareTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategoryShareSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryShareTemplate
+     * Omit specific fields from the DefaultTraderCategoryShare
      */
-    omit?: TraderCategoryShareTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryShareOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryShareTemplateInclude<ExtArgs> | null
+    include?: DefaultTraderCategoryShareInclude<ExtArgs> | null
     /**
-     * Filter, which TraderCategoryShareTemplate to fetch.
+     * Filter, which DefaultTraderCategoryShare to fetch.
      */
-    where?: TraderCategoryShareTemplateWhereInput
+    where?: DefaultTraderCategoryShareWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of TraderCategoryShareTemplates to fetch.
+     * Determine the order of DefaultTraderCategoryShares to fetch.
      */
-    orderBy?: TraderCategoryShareTemplateOrderByWithRelationInput | TraderCategoryShareTemplateOrderByWithRelationInput[]
+    orderBy?: DefaultTraderCategoryShareOrderByWithRelationInput | DefaultTraderCategoryShareOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for TraderCategoryShareTemplates.
+     * Sets the position for searching for DefaultTraderCategoryShares.
      */
-    cursor?: TraderCategoryShareTemplateWhereUniqueInput
+    cursor?: DefaultTraderCategoryShareWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` TraderCategoryShareTemplates from the position of the cursor.
+     * Take `±n` DefaultTraderCategoryShares from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` TraderCategoryShareTemplates.
+     * Skip the first `n` DefaultTraderCategoryShares.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of TraderCategoryShareTemplates.
+     * Filter by unique combinations of DefaultTraderCategoryShares.
      */
-    distinct?: TraderCategoryShareTemplateScalarFieldEnum | TraderCategoryShareTemplateScalarFieldEnum[]
+    distinct?: DefaultTraderCategoryShareScalarFieldEnum | DefaultTraderCategoryShareScalarFieldEnum[]
   }
 
   /**
-   * TraderCategoryShareTemplate findFirstOrThrow
+   * DefaultTraderCategoryShare findFirstOrThrow
    */
-  export type TraderCategoryShareTemplateFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryShareFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryShareTemplate
+     * Select specific fields to fetch from the DefaultTraderCategoryShare
      */
-    select?: TraderCategoryShareTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategoryShareSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryShareTemplate
+     * Omit specific fields from the DefaultTraderCategoryShare
      */
-    omit?: TraderCategoryShareTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryShareOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryShareTemplateInclude<ExtArgs> | null
+    include?: DefaultTraderCategoryShareInclude<ExtArgs> | null
     /**
-     * Filter, which TraderCategoryShareTemplate to fetch.
+     * Filter, which DefaultTraderCategoryShare to fetch.
      */
-    where?: TraderCategoryShareTemplateWhereInput
+    where?: DefaultTraderCategoryShareWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of TraderCategoryShareTemplates to fetch.
+     * Determine the order of DefaultTraderCategoryShares to fetch.
      */
-    orderBy?: TraderCategoryShareTemplateOrderByWithRelationInput | TraderCategoryShareTemplateOrderByWithRelationInput[]
+    orderBy?: DefaultTraderCategoryShareOrderByWithRelationInput | DefaultTraderCategoryShareOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for TraderCategoryShareTemplates.
+     * Sets the position for searching for DefaultTraderCategoryShares.
      */
-    cursor?: TraderCategoryShareTemplateWhereUniqueInput
+    cursor?: DefaultTraderCategoryShareWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` TraderCategoryShareTemplates from the position of the cursor.
+     * Take `±n` DefaultTraderCategoryShares from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` TraderCategoryShareTemplates.
+     * Skip the first `n` DefaultTraderCategoryShares.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of TraderCategoryShareTemplates.
+     * Filter by unique combinations of DefaultTraderCategoryShares.
      */
-    distinct?: TraderCategoryShareTemplateScalarFieldEnum | TraderCategoryShareTemplateScalarFieldEnum[]
+    distinct?: DefaultTraderCategoryShareScalarFieldEnum | DefaultTraderCategoryShareScalarFieldEnum[]
   }
 
   /**
-   * TraderCategoryShareTemplate findMany
+   * DefaultTraderCategoryShare findMany
    */
-  export type TraderCategoryShareTemplateFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryShareFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryShareTemplate
+     * Select specific fields to fetch from the DefaultTraderCategoryShare
      */
-    select?: TraderCategoryShareTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategoryShareSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryShareTemplate
+     * Omit specific fields from the DefaultTraderCategoryShare
      */
-    omit?: TraderCategoryShareTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryShareOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryShareTemplateInclude<ExtArgs> | null
+    include?: DefaultTraderCategoryShareInclude<ExtArgs> | null
     /**
-     * Filter, which TraderCategoryShareTemplates to fetch.
+     * Filter, which DefaultTraderCategoryShares to fetch.
      */
-    where?: TraderCategoryShareTemplateWhereInput
+    where?: DefaultTraderCategoryShareWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of TraderCategoryShareTemplates to fetch.
+     * Determine the order of DefaultTraderCategoryShares to fetch.
      */
-    orderBy?: TraderCategoryShareTemplateOrderByWithRelationInput | TraderCategoryShareTemplateOrderByWithRelationInput[]
+    orderBy?: DefaultTraderCategoryShareOrderByWithRelationInput | DefaultTraderCategoryShareOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for listing TraderCategoryShareTemplates.
+     * Sets the position for listing DefaultTraderCategoryShares.
      */
-    cursor?: TraderCategoryShareTemplateWhereUniqueInput
+    cursor?: DefaultTraderCategoryShareWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` TraderCategoryShareTemplates from the position of the cursor.
+     * Take `±n` DefaultTraderCategoryShares from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` TraderCategoryShareTemplates.
+     * Skip the first `n` DefaultTraderCategoryShares.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of TraderCategoryShareTemplates.
+     * Filter by unique combinations of DefaultTraderCategoryShares.
      */
-    distinct?: TraderCategoryShareTemplateScalarFieldEnum | TraderCategoryShareTemplateScalarFieldEnum[]
+    distinct?: DefaultTraderCategoryShareScalarFieldEnum | DefaultTraderCategoryShareScalarFieldEnum[]
   }
 
   /**
-   * TraderCategoryShareTemplate create
+   * DefaultTraderCategoryShare create
    */
-  export type TraderCategoryShareTemplateCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryShareCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryShareTemplate
+     * Select specific fields to fetch from the DefaultTraderCategoryShare
      */
-    select?: TraderCategoryShareTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategoryShareSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryShareTemplate
+     * Omit specific fields from the DefaultTraderCategoryShare
      */
-    omit?: TraderCategoryShareTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryShareOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryShareTemplateInclude<ExtArgs> | null
+    include?: DefaultTraderCategoryShareInclude<ExtArgs> | null
     /**
-     * The data needed to create a TraderCategoryShareTemplate.
+     * The data needed to create a DefaultTraderCategoryShare.
      */
-    data: XOR<TraderCategoryShareTemplateCreateInput, TraderCategoryShareTemplateUncheckedCreateInput>
+    data: XOR<DefaultTraderCategoryShareCreateInput, DefaultTraderCategoryShareUncheckedCreateInput>
   }
 
   /**
-   * TraderCategoryShareTemplate createMany
+   * DefaultTraderCategoryShare createMany
    */
-  export type TraderCategoryShareTemplateCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryShareCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to create many TraderCategoryShareTemplates.
+     * The data used to create many DefaultTraderCategoryShares.
      */
-    data: TraderCategoryShareTemplateCreateManyInput | TraderCategoryShareTemplateCreateManyInput[]
+    data: DefaultTraderCategoryShareCreateManyInput | DefaultTraderCategoryShareCreateManyInput[]
     skipDuplicates?: boolean
   }
 
   /**
-   * TraderCategoryShareTemplate createManyAndReturn
+   * DefaultTraderCategoryShare createManyAndReturn
    */
-  export type TraderCategoryShareTemplateCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryShareCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryShareTemplate
+     * Select specific fields to fetch from the DefaultTraderCategoryShare
      */
-    select?: TraderCategoryShareTemplateSelectCreateManyAndReturn<ExtArgs> | null
+    select?: DefaultTraderCategoryShareSelectCreateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryShareTemplate
+     * Omit specific fields from the DefaultTraderCategoryShare
      */
-    omit?: TraderCategoryShareTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryShareOmit<ExtArgs> | null
     /**
-     * The data used to create many TraderCategoryShareTemplates.
+     * The data used to create many DefaultTraderCategoryShares.
      */
-    data: TraderCategoryShareTemplateCreateManyInput | TraderCategoryShareTemplateCreateManyInput[]
+    data: DefaultTraderCategoryShareCreateManyInput | DefaultTraderCategoryShareCreateManyInput[]
     skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryShareTemplateIncludeCreateManyAndReturn<ExtArgs> | null
+    include?: DefaultTraderCategoryShareIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
-   * TraderCategoryShareTemplate update
+   * DefaultTraderCategoryShare update
    */
-  export type TraderCategoryShareTemplateUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryShareUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryShareTemplate
+     * Select specific fields to fetch from the DefaultTraderCategoryShare
      */
-    select?: TraderCategoryShareTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategoryShareSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryShareTemplate
+     * Omit specific fields from the DefaultTraderCategoryShare
      */
-    omit?: TraderCategoryShareTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryShareOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryShareTemplateInclude<ExtArgs> | null
+    include?: DefaultTraderCategoryShareInclude<ExtArgs> | null
     /**
-     * The data needed to update a TraderCategoryShareTemplate.
+     * The data needed to update a DefaultTraderCategoryShare.
      */
-    data: XOR<TraderCategoryShareTemplateUpdateInput, TraderCategoryShareTemplateUncheckedUpdateInput>
+    data: XOR<DefaultTraderCategoryShareUpdateInput, DefaultTraderCategoryShareUncheckedUpdateInput>
     /**
-     * Choose, which TraderCategoryShareTemplate to update.
+     * Choose, which DefaultTraderCategoryShare to update.
      */
-    where: TraderCategoryShareTemplateWhereUniqueInput
+    where: DefaultTraderCategoryShareWhereUniqueInput
   }
 
   /**
-   * TraderCategoryShareTemplate updateMany
+   * DefaultTraderCategoryShare updateMany
    */
-  export type TraderCategoryShareTemplateUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryShareUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to update TraderCategoryShareTemplates.
+     * The data used to update DefaultTraderCategoryShares.
      */
-    data: XOR<TraderCategoryShareTemplateUpdateManyMutationInput, TraderCategoryShareTemplateUncheckedUpdateManyInput>
+    data: XOR<DefaultTraderCategoryShareUpdateManyMutationInput, DefaultTraderCategoryShareUncheckedUpdateManyInput>
     /**
-     * Filter which TraderCategoryShareTemplates to update
+     * Filter which DefaultTraderCategoryShares to update
      */
-    where?: TraderCategoryShareTemplateWhereInput
+    where?: DefaultTraderCategoryShareWhereInput
     /**
-     * Limit how many TraderCategoryShareTemplates to update.
+     * Limit how many DefaultTraderCategoryShares to update.
      */
     limit?: number
   }
 
   /**
-   * TraderCategoryShareTemplate updateManyAndReturn
+   * DefaultTraderCategoryShare updateManyAndReturn
    */
-  export type TraderCategoryShareTemplateUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryShareUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryShareTemplate
+     * Select specific fields to fetch from the DefaultTraderCategoryShare
      */
-    select?: TraderCategoryShareTemplateSelectUpdateManyAndReturn<ExtArgs> | null
+    select?: DefaultTraderCategoryShareSelectUpdateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryShareTemplate
+     * Omit specific fields from the DefaultTraderCategoryShare
      */
-    omit?: TraderCategoryShareTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryShareOmit<ExtArgs> | null
     /**
-     * The data used to update TraderCategoryShareTemplates.
+     * The data used to update DefaultTraderCategoryShares.
      */
-    data: XOR<TraderCategoryShareTemplateUpdateManyMutationInput, TraderCategoryShareTemplateUncheckedUpdateManyInput>
+    data: XOR<DefaultTraderCategoryShareUpdateManyMutationInput, DefaultTraderCategoryShareUncheckedUpdateManyInput>
     /**
-     * Filter which TraderCategoryShareTemplates to update
+     * Filter which DefaultTraderCategoryShares to update
      */
-    where?: TraderCategoryShareTemplateWhereInput
+    where?: DefaultTraderCategoryShareWhereInput
     /**
-     * Limit how many TraderCategoryShareTemplates to update.
+     * Limit how many DefaultTraderCategoryShares to update.
      */
     limit?: number
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryShareTemplateIncludeUpdateManyAndReturn<ExtArgs> | null
+    include?: DefaultTraderCategoryShareIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
-   * TraderCategoryShareTemplate upsert
+   * DefaultTraderCategoryShare upsert
    */
-  export type TraderCategoryShareTemplateUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryShareUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryShareTemplate
+     * Select specific fields to fetch from the DefaultTraderCategoryShare
      */
-    select?: TraderCategoryShareTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategoryShareSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryShareTemplate
+     * Omit specific fields from the DefaultTraderCategoryShare
      */
-    omit?: TraderCategoryShareTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryShareOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryShareTemplateInclude<ExtArgs> | null
+    include?: DefaultTraderCategoryShareInclude<ExtArgs> | null
     /**
-     * The filter to search for the TraderCategoryShareTemplate to update in case it exists.
+     * The filter to search for the DefaultTraderCategoryShare to update in case it exists.
      */
-    where: TraderCategoryShareTemplateWhereUniqueInput
+    where: DefaultTraderCategoryShareWhereUniqueInput
     /**
-     * In case the TraderCategoryShareTemplate found by the `where` argument doesn't exist, create a new TraderCategoryShareTemplate with this data.
+     * In case the DefaultTraderCategoryShare found by the `where` argument doesn't exist, create a new DefaultTraderCategoryShare with this data.
      */
-    create: XOR<TraderCategoryShareTemplateCreateInput, TraderCategoryShareTemplateUncheckedCreateInput>
+    create: XOR<DefaultTraderCategoryShareCreateInput, DefaultTraderCategoryShareUncheckedCreateInput>
     /**
-     * In case the TraderCategoryShareTemplate was found with the provided `where` argument, update it with this data.
+     * In case the DefaultTraderCategoryShare was found with the provided `where` argument, update it with this data.
      */
-    update: XOR<TraderCategoryShareTemplateUpdateInput, TraderCategoryShareTemplateUncheckedUpdateInput>
+    update: XOR<DefaultTraderCategoryShareUpdateInput, DefaultTraderCategoryShareUncheckedUpdateInput>
   }
 
   /**
-   * TraderCategoryShareTemplate delete
+   * DefaultTraderCategoryShare delete
    */
-  export type TraderCategoryShareTemplateDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryShareDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryShareTemplate
+     * Select specific fields to fetch from the DefaultTraderCategoryShare
      */
-    select?: TraderCategoryShareTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategoryShareSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryShareTemplate
+     * Omit specific fields from the DefaultTraderCategoryShare
      */
-    omit?: TraderCategoryShareTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryShareOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryShareTemplateInclude<ExtArgs> | null
+    include?: DefaultTraderCategoryShareInclude<ExtArgs> | null
     /**
-     * Filter which TraderCategoryShareTemplate to delete.
+     * Filter which DefaultTraderCategoryShare to delete.
      */
-    where: TraderCategoryShareTemplateWhereUniqueInput
+    where: DefaultTraderCategoryShareWhereUniqueInput
   }
 
   /**
-   * TraderCategoryShareTemplate deleteMany
+   * DefaultTraderCategoryShare deleteMany
    */
-  export type TraderCategoryShareTemplateDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryShareDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which TraderCategoryShareTemplates to delete
+     * Filter which DefaultTraderCategoryShares to delete
      */
-    where?: TraderCategoryShareTemplateWhereInput
+    where?: DefaultTraderCategoryShareWhereInput
     /**
-     * Limit how many TraderCategoryShareTemplates to delete.
+     * Limit how many DefaultTraderCategoryShares to delete.
      */
     limit?: number
   }
 
   /**
-   * TraderCategoryShareTemplate without action
+   * DefaultTraderCategoryShare without action
    */
-  export type TraderCategoryShareTemplateDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type DefaultTraderCategoryShareDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryShareTemplate
+     * Select specific fields to fetch from the DefaultTraderCategoryShare
      */
-    select?: TraderCategoryShareTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategoryShareSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryShareTemplate
+     * Omit specific fields from the DefaultTraderCategoryShare
      */
-    omit?: TraderCategoryShareTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryShareOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryShareTemplateInclude<ExtArgs> | null
+    include?: DefaultTraderCategoryShareInclude<ExtArgs> | null
   }
 
 
@@ -10865,7 +10865,7 @@ export namespace Prisma {
   export type $TraderPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Trader"
     objects: {
-      defaultCategoryShares: Prisma.$TraderCategoryShareTemplatePayload<ExtArgs>[]
+      defaultCategoryShares: Prisma.$DefaultTraderCategorySharePayload<ExtArgs>[]
       traderCategoryShares: Prisma.$TraderCategorySharePayload<ExtArgs>[]
       classifications: Prisma.$ClassificationPayload<ExtArgs>[]
       traderStocks: Prisma.$TraderStockPayload<ExtArgs>[]
@@ -11274,7 +11274,7 @@ export namespace Prisma {
    */
   export interface Prisma__TraderClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    defaultCategoryShares<T extends Trader$defaultCategorySharesArgs<ExtArgs> = {}>(args?: Subset<T, Trader$defaultCategorySharesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TraderCategoryShareTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    defaultCategoryShares<T extends Trader$defaultCategorySharesArgs<ExtArgs> = {}>(args?: Subset<T, Trader$defaultCategorySharesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DefaultTraderCategorySharePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     traderCategoryShares<T extends Trader$traderCategorySharesArgs<ExtArgs> = {}>(args?: Subset<T, Trader$traderCategorySharesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TraderCategorySharePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     classifications<T extends Trader$classificationsArgs<ExtArgs> = {}>(args?: Subset<T, Trader$classificationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ClassificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     traderStocks<T extends Trader$traderStocksArgs<ExtArgs> = {}>(args?: Subset<T, Trader$traderStocksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TraderStockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -11713,23 +11713,23 @@ export namespace Prisma {
    */
   export type Trader$defaultCategorySharesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the TraderCategoryShareTemplate
+     * Select specific fields to fetch from the DefaultTraderCategoryShare
      */
-    select?: TraderCategoryShareTemplateSelect<ExtArgs> | null
+    select?: DefaultTraderCategoryShareSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the TraderCategoryShareTemplate
+     * Omit specific fields from the DefaultTraderCategoryShare
      */
-    omit?: TraderCategoryShareTemplateOmit<ExtArgs> | null
+    omit?: DefaultTraderCategoryShareOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: TraderCategoryShareTemplateInclude<ExtArgs> | null
-    where?: TraderCategoryShareTemplateWhereInput
-    orderBy?: TraderCategoryShareTemplateOrderByWithRelationInput | TraderCategoryShareTemplateOrderByWithRelationInput[]
-    cursor?: TraderCategoryShareTemplateWhereUniqueInput
+    include?: DefaultTraderCategoryShareInclude<ExtArgs> | null
+    where?: DefaultTraderCategoryShareWhereInput
+    orderBy?: DefaultTraderCategoryShareOrderByWithRelationInput | DefaultTraderCategoryShareOrderByWithRelationInput[]
+    cursor?: DefaultTraderCategoryShareWhereUniqueInput
     take?: number
     skip?: number
-    distinct?: TraderCategoryShareTemplateScalarFieldEnum | TraderCategoryShareTemplateScalarFieldEnum[]
+    distinct?: DefaultTraderCategoryShareScalarFieldEnum | DefaultTraderCategoryShareScalarFieldEnum[]
   }
 
   /**
@@ -27609,7 +27609,7 @@ export namespace Prisma {
   export type FieldScalarFieldEnum = (typeof FieldScalarFieldEnum)[keyof typeof FieldScalarFieldEnum]
 
 
-  export const TraderCategoryTemplateScalarFieldEnum: {
+  export const DefaultTraderCategoryScalarFieldEnum: {
     id: 'id',
     name: 'name',
     notes: 'notes',
@@ -27617,19 +27617,19 @@ export namespace Prisma {
     updatedAt: 'updatedAt'
   };
 
-  export type TraderCategoryTemplateScalarFieldEnum = (typeof TraderCategoryTemplateScalarFieldEnum)[keyof typeof TraderCategoryTemplateScalarFieldEnum]
+  export type DefaultTraderCategoryScalarFieldEnum = (typeof DefaultTraderCategoryScalarFieldEnum)[keyof typeof DefaultTraderCategoryScalarFieldEnum]
 
 
-  export const TraderCategoryShareTemplateScalarFieldEnum: {
+  export const DefaultTraderCategoryShareScalarFieldEnum: {
     id: 'id',
     traderId: 'traderId',
-    traderCategoryTemplateId: 'traderCategoryTemplateId',
+    defaultTraderCategoryId: 'defaultTraderCategoryId',
     percent: 'percent',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
 
-  export type TraderCategoryShareTemplateScalarFieldEnum = (typeof TraderCategoryShareTemplateScalarFieldEnum)[keyof typeof TraderCategoryShareTemplateScalarFieldEnum]
+  export type DefaultTraderCategoryShareScalarFieldEnum = (typeof DefaultTraderCategoryShareScalarFieldEnum)[keyof typeof DefaultTraderCategoryShareScalarFieldEnum]
 
 
   export const SeasonScalarFieldEnum: {
@@ -28312,127 +28312,127 @@ export namespace Prisma {
     slug?: StringWithAggregatesFilter<"Field"> | string
   }
 
-  export type TraderCategoryTemplateWhereInput = {
-    AND?: TraderCategoryTemplateWhereInput | TraderCategoryTemplateWhereInput[]
-    OR?: TraderCategoryTemplateWhereInput[]
-    NOT?: TraderCategoryTemplateWhereInput | TraderCategoryTemplateWhereInput[]
-    id?: IntFilter<"TraderCategoryTemplate"> | number
-    name?: StringFilter<"TraderCategoryTemplate"> | string
-    notes?: StringNullableFilter<"TraderCategoryTemplate"> | string | null
-    createdAt?: DateTimeFilter<"TraderCategoryTemplate"> | Date | string
-    updatedAt?: DateTimeFilter<"TraderCategoryTemplate"> | Date | string
-    defaultShares?: TraderCategoryShareTemplateListRelationFilter
+  export type DefaultTraderCategoryWhereInput = {
+    AND?: DefaultTraderCategoryWhereInput | DefaultTraderCategoryWhereInput[]
+    OR?: DefaultTraderCategoryWhereInput[]
+    NOT?: DefaultTraderCategoryWhereInput | DefaultTraderCategoryWhereInput[]
+    id?: IntFilter<"DefaultTraderCategory"> | number
+    name?: StringFilter<"DefaultTraderCategory"> | string
+    notes?: StringNullableFilter<"DefaultTraderCategory"> | string | null
+    createdAt?: DateTimeFilter<"DefaultTraderCategory"> | Date | string
+    updatedAt?: DateTimeFilter<"DefaultTraderCategory"> | Date | string
+    shares?: DefaultTraderCategoryShareListRelationFilter
   }
 
-  export type TraderCategoryTemplateOrderByWithRelationInput = {
+  export type DefaultTraderCategoryOrderByWithRelationInput = {
     id?: SortOrder
     name?: SortOrder
     notes?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    defaultShares?: TraderCategoryShareTemplateOrderByRelationAggregateInput
+    shares?: DefaultTraderCategoryShareOrderByRelationAggregateInput
   }
 
-  export type TraderCategoryTemplateWhereUniqueInput = Prisma.AtLeast<{
+  export type DefaultTraderCategoryWhereUniqueInput = Prisma.AtLeast<{
     id?: number
     name?: string
-    AND?: TraderCategoryTemplateWhereInput | TraderCategoryTemplateWhereInput[]
-    OR?: TraderCategoryTemplateWhereInput[]
-    NOT?: TraderCategoryTemplateWhereInput | TraderCategoryTemplateWhereInput[]
-    notes?: StringNullableFilter<"TraderCategoryTemplate"> | string | null
-    createdAt?: DateTimeFilter<"TraderCategoryTemplate"> | Date | string
-    updatedAt?: DateTimeFilter<"TraderCategoryTemplate"> | Date | string
-    defaultShares?: TraderCategoryShareTemplateListRelationFilter
+    AND?: DefaultTraderCategoryWhereInput | DefaultTraderCategoryWhereInput[]
+    OR?: DefaultTraderCategoryWhereInput[]
+    NOT?: DefaultTraderCategoryWhereInput | DefaultTraderCategoryWhereInput[]
+    notes?: StringNullableFilter<"DefaultTraderCategory"> | string | null
+    createdAt?: DateTimeFilter<"DefaultTraderCategory"> | Date | string
+    updatedAt?: DateTimeFilter<"DefaultTraderCategory"> | Date | string
+    shares?: DefaultTraderCategoryShareListRelationFilter
   }, "id" | "name">
 
-  export type TraderCategoryTemplateOrderByWithAggregationInput = {
+  export type DefaultTraderCategoryOrderByWithAggregationInput = {
     id?: SortOrder
     name?: SortOrder
     notes?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    _count?: TraderCategoryTemplateCountOrderByAggregateInput
-    _avg?: TraderCategoryTemplateAvgOrderByAggregateInput
-    _max?: TraderCategoryTemplateMaxOrderByAggregateInput
-    _min?: TraderCategoryTemplateMinOrderByAggregateInput
-    _sum?: TraderCategoryTemplateSumOrderByAggregateInput
+    _count?: DefaultTraderCategoryCountOrderByAggregateInput
+    _avg?: DefaultTraderCategoryAvgOrderByAggregateInput
+    _max?: DefaultTraderCategoryMaxOrderByAggregateInput
+    _min?: DefaultTraderCategoryMinOrderByAggregateInput
+    _sum?: DefaultTraderCategorySumOrderByAggregateInput
   }
 
-  export type TraderCategoryTemplateScalarWhereWithAggregatesInput = {
-    AND?: TraderCategoryTemplateScalarWhereWithAggregatesInput | TraderCategoryTemplateScalarWhereWithAggregatesInput[]
-    OR?: TraderCategoryTemplateScalarWhereWithAggregatesInput[]
-    NOT?: TraderCategoryTemplateScalarWhereWithAggregatesInput | TraderCategoryTemplateScalarWhereWithAggregatesInput[]
-    id?: IntWithAggregatesFilter<"TraderCategoryTemplate"> | number
-    name?: StringWithAggregatesFilter<"TraderCategoryTemplate"> | string
-    notes?: StringNullableWithAggregatesFilter<"TraderCategoryTemplate"> | string | null
-    createdAt?: DateTimeWithAggregatesFilter<"TraderCategoryTemplate"> | Date | string
-    updatedAt?: DateTimeWithAggregatesFilter<"TraderCategoryTemplate"> | Date | string
+  export type DefaultTraderCategoryScalarWhereWithAggregatesInput = {
+    AND?: DefaultTraderCategoryScalarWhereWithAggregatesInput | DefaultTraderCategoryScalarWhereWithAggregatesInput[]
+    OR?: DefaultTraderCategoryScalarWhereWithAggregatesInput[]
+    NOT?: DefaultTraderCategoryScalarWhereWithAggregatesInput | DefaultTraderCategoryScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"DefaultTraderCategory"> | number
+    name?: StringWithAggregatesFilter<"DefaultTraderCategory"> | string
+    notes?: StringNullableWithAggregatesFilter<"DefaultTraderCategory"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"DefaultTraderCategory"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"DefaultTraderCategory"> | Date | string
   }
 
-  export type TraderCategoryShareTemplateWhereInput = {
-    AND?: TraderCategoryShareTemplateWhereInput | TraderCategoryShareTemplateWhereInput[]
-    OR?: TraderCategoryShareTemplateWhereInput[]
-    NOT?: TraderCategoryShareTemplateWhereInput | TraderCategoryShareTemplateWhereInput[]
-    id?: IntFilter<"TraderCategoryShareTemplate"> | number
-    traderId?: IntFilter<"TraderCategoryShareTemplate"> | number
-    traderCategoryTemplateId?: IntFilter<"TraderCategoryShareTemplate"> | number
-    percent?: DecimalFilter<"TraderCategoryShareTemplate"> | Decimal | DecimalJsLike | number | string
-    createdAt?: DateTimeFilter<"TraderCategoryShareTemplate"> | Date | string
-    updatedAt?: DateTimeFilter<"TraderCategoryShareTemplate"> | Date | string
+  export type DefaultTraderCategoryShareWhereInput = {
+    AND?: DefaultTraderCategoryShareWhereInput | DefaultTraderCategoryShareWhereInput[]
+    OR?: DefaultTraderCategoryShareWhereInput[]
+    NOT?: DefaultTraderCategoryShareWhereInput | DefaultTraderCategoryShareWhereInput[]
+    id?: IntFilter<"DefaultTraderCategoryShare"> | number
+    traderId?: IntFilter<"DefaultTraderCategoryShare"> | number
+    defaultTraderCategoryId?: IntFilter<"DefaultTraderCategoryShare"> | number
+    percent?: DecimalFilter<"DefaultTraderCategoryShare"> | Decimal | DecimalJsLike | number | string
+    createdAt?: DateTimeFilter<"DefaultTraderCategoryShare"> | Date | string
+    updatedAt?: DateTimeFilter<"DefaultTraderCategoryShare"> | Date | string
     trader?: XOR<TraderScalarRelationFilter, TraderWhereInput>
-    traderCategoryTemplate?: XOR<TraderCategoryTemplateScalarRelationFilter, TraderCategoryTemplateWhereInput>
+    defaultTraderCategory?: XOR<DefaultTraderCategoryScalarRelationFilter, DefaultTraderCategoryWhereInput>
   }
 
-  export type TraderCategoryShareTemplateOrderByWithRelationInput = {
+  export type DefaultTraderCategoryShareOrderByWithRelationInput = {
     id?: SortOrder
     traderId?: SortOrder
-    traderCategoryTemplateId?: SortOrder
+    defaultTraderCategoryId?: SortOrder
     percent?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     trader?: TraderOrderByWithRelationInput
-    traderCategoryTemplate?: TraderCategoryTemplateOrderByWithRelationInput
+    defaultTraderCategory?: DefaultTraderCategoryOrderByWithRelationInput
   }
 
-  export type TraderCategoryShareTemplateWhereUniqueInput = Prisma.AtLeast<{
+  export type DefaultTraderCategoryShareWhereUniqueInput = Prisma.AtLeast<{
     id?: number
-    traderId_traderCategoryTemplateId?: TraderCategoryShareTemplateTraderIdTraderCategoryTemplateIdCompoundUniqueInput
-    AND?: TraderCategoryShareTemplateWhereInput | TraderCategoryShareTemplateWhereInput[]
-    OR?: TraderCategoryShareTemplateWhereInput[]
-    NOT?: TraderCategoryShareTemplateWhereInput | TraderCategoryShareTemplateWhereInput[]
-    traderId?: IntFilter<"TraderCategoryShareTemplate"> | number
-    traderCategoryTemplateId?: IntFilter<"TraderCategoryShareTemplate"> | number
-    percent?: DecimalFilter<"TraderCategoryShareTemplate"> | Decimal | DecimalJsLike | number | string
-    createdAt?: DateTimeFilter<"TraderCategoryShareTemplate"> | Date | string
-    updatedAt?: DateTimeFilter<"TraderCategoryShareTemplate"> | Date | string
+    traderId_defaultTraderCategoryId?: DefaultTraderCategoryShareTraderIdDefaultTraderCategoryIdCompoundUniqueInput
+    AND?: DefaultTraderCategoryShareWhereInput | DefaultTraderCategoryShareWhereInput[]
+    OR?: DefaultTraderCategoryShareWhereInput[]
+    NOT?: DefaultTraderCategoryShareWhereInput | DefaultTraderCategoryShareWhereInput[]
+    traderId?: IntFilter<"DefaultTraderCategoryShare"> | number
+    defaultTraderCategoryId?: IntFilter<"DefaultTraderCategoryShare"> | number
+    percent?: DecimalFilter<"DefaultTraderCategoryShare"> | Decimal | DecimalJsLike | number | string
+    createdAt?: DateTimeFilter<"DefaultTraderCategoryShare"> | Date | string
+    updatedAt?: DateTimeFilter<"DefaultTraderCategoryShare"> | Date | string
     trader?: XOR<TraderScalarRelationFilter, TraderWhereInput>
-    traderCategoryTemplate?: XOR<TraderCategoryTemplateScalarRelationFilter, TraderCategoryTemplateWhereInput>
-  }, "id" | "traderId_traderCategoryTemplateId">
+    defaultTraderCategory?: XOR<DefaultTraderCategoryScalarRelationFilter, DefaultTraderCategoryWhereInput>
+  }, "id" | "traderId_defaultTraderCategoryId">
 
-  export type TraderCategoryShareTemplateOrderByWithAggregationInput = {
+  export type DefaultTraderCategoryShareOrderByWithAggregationInput = {
     id?: SortOrder
     traderId?: SortOrder
-    traderCategoryTemplateId?: SortOrder
+    defaultTraderCategoryId?: SortOrder
     percent?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    _count?: TraderCategoryShareTemplateCountOrderByAggregateInput
-    _avg?: TraderCategoryShareTemplateAvgOrderByAggregateInput
-    _max?: TraderCategoryShareTemplateMaxOrderByAggregateInput
-    _min?: TraderCategoryShareTemplateMinOrderByAggregateInput
-    _sum?: TraderCategoryShareTemplateSumOrderByAggregateInput
+    _count?: DefaultTraderCategoryShareCountOrderByAggregateInput
+    _avg?: DefaultTraderCategoryShareAvgOrderByAggregateInput
+    _max?: DefaultTraderCategoryShareMaxOrderByAggregateInput
+    _min?: DefaultTraderCategoryShareMinOrderByAggregateInput
+    _sum?: DefaultTraderCategoryShareSumOrderByAggregateInput
   }
 
-  export type TraderCategoryShareTemplateScalarWhereWithAggregatesInput = {
-    AND?: TraderCategoryShareTemplateScalarWhereWithAggregatesInput | TraderCategoryShareTemplateScalarWhereWithAggregatesInput[]
-    OR?: TraderCategoryShareTemplateScalarWhereWithAggregatesInput[]
-    NOT?: TraderCategoryShareTemplateScalarWhereWithAggregatesInput | TraderCategoryShareTemplateScalarWhereWithAggregatesInput[]
-    id?: IntWithAggregatesFilter<"TraderCategoryShareTemplate"> | number
-    traderId?: IntWithAggregatesFilter<"TraderCategoryShareTemplate"> | number
-    traderCategoryTemplateId?: IntWithAggregatesFilter<"TraderCategoryShareTemplate"> | number
-    percent?: DecimalWithAggregatesFilter<"TraderCategoryShareTemplate"> | Decimal | DecimalJsLike | number | string
-    createdAt?: DateTimeWithAggregatesFilter<"TraderCategoryShareTemplate"> | Date | string
-    updatedAt?: DateTimeWithAggregatesFilter<"TraderCategoryShareTemplate"> | Date | string
+  export type DefaultTraderCategoryShareScalarWhereWithAggregatesInput = {
+    AND?: DefaultTraderCategoryShareScalarWhereWithAggregatesInput | DefaultTraderCategoryShareScalarWhereWithAggregatesInput[]
+    OR?: DefaultTraderCategoryShareScalarWhereWithAggregatesInput[]
+    NOT?: DefaultTraderCategoryShareScalarWhereWithAggregatesInput | DefaultTraderCategoryShareScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"DefaultTraderCategoryShare"> | number
+    traderId?: IntWithAggregatesFilter<"DefaultTraderCategoryShare"> | number
+    defaultTraderCategoryId?: IntWithAggregatesFilter<"DefaultTraderCategoryShare"> | number
+    percent?: DecimalWithAggregatesFilter<"DefaultTraderCategoryShare"> | Decimal | DecimalJsLike | number | string
+    createdAt?: DateTimeWithAggregatesFilter<"DefaultTraderCategoryShare"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"DefaultTraderCategoryShare"> | Date | string
   }
 
   export type SeasonWhereInput = {
@@ -28640,7 +28640,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Trader"> | Date | string
     updatedAt?: DateTimeFilter<"Trader"> | Date | string
     slug?: StringFilter<"Trader"> | string
-    defaultCategoryShares?: TraderCategoryShareTemplateListRelationFilter
+    defaultCategoryShares?: DefaultTraderCategoryShareListRelationFilter
     traderCategoryShares?: TraderCategoryShareListRelationFilter
     classifications?: ClassificationListRelationFilter
     traderStocks?: TraderStockListRelationFilter
@@ -28656,7 +28656,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     slug?: SortOrder
-    defaultCategoryShares?: TraderCategoryShareTemplateOrderByRelationAggregateInput
+    defaultCategoryShares?: DefaultTraderCategoryShareOrderByRelationAggregateInput
     traderCategoryShares?: TraderCategoryShareOrderByRelationAggregateInput
     classifications?: ClassificationOrderByRelationAggregateInput
     traderStocks?: TraderStockOrderByRelationAggregateInput
@@ -28675,7 +28675,7 @@ export namespace Prisma {
     paymentPercent?: DecimalFilter<"Trader"> | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFilter<"Trader"> | Date | string
     updatedAt?: DateTimeFilter<"Trader"> | Date | string
-    defaultCategoryShares?: TraderCategoryShareTemplateListRelationFilter
+    defaultCategoryShares?: DefaultTraderCategoryShareListRelationFilter
     traderCategoryShares?: TraderCategoryShareListRelationFilter
     classifications?: ClassificationListRelationFilter
     traderStocks?: TraderStockListRelationFilter
@@ -30149,41 +30149,41 @@ export namespace Prisma {
     slug?: StringFieldUpdateOperationsInput | string
   }
 
-  export type TraderCategoryTemplateCreateInput = {
+  export type DefaultTraderCategoryCreateInput = {
     name: string
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    defaultShares?: TraderCategoryShareTemplateCreateNestedManyWithoutTraderCategoryTemplateInput
+    shares?: DefaultTraderCategoryShareCreateNestedManyWithoutDefaultTraderCategoryInput
   }
 
-  export type TraderCategoryTemplateUncheckedCreateInput = {
+  export type DefaultTraderCategoryUncheckedCreateInput = {
     id?: number
     name: string
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    defaultShares?: TraderCategoryShareTemplateUncheckedCreateNestedManyWithoutTraderCategoryTemplateInput
+    shares?: DefaultTraderCategoryShareUncheckedCreateNestedManyWithoutDefaultTraderCategoryInput
   }
 
-  export type TraderCategoryTemplateUpdateInput = {
+  export type DefaultTraderCategoryUpdateInput = {
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    defaultShares?: TraderCategoryShareTemplateUpdateManyWithoutTraderCategoryTemplateNestedInput
+    shares?: DefaultTraderCategoryShareUpdateManyWithoutDefaultTraderCategoryNestedInput
   }
 
-  export type TraderCategoryTemplateUncheckedUpdateInput = {
+  export type DefaultTraderCategoryUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    defaultShares?: TraderCategoryShareTemplateUncheckedUpdateManyWithoutTraderCategoryTemplateNestedInput
+    shares?: DefaultTraderCategoryShareUncheckedUpdateManyWithoutDefaultTraderCategoryNestedInput
   }
 
-  export type TraderCategoryTemplateCreateManyInput = {
+  export type DefaultTraderCategoryCreateManyInput = {
     id?: number
     name: string
     notes?: string | null
@@ -30191,14 +30191,14 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
-  export type TraderCategoryTemplateUpdateManyMutationInput = {
+  export type DefaultTraderCategoryUpdateManyMutationInput = {
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type TraderCategoryTemplateUncheckedUpdateManyInput = {
+  export type DefaultTraderCategoryUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -30206,59 +30206,59 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type TraderCategoryShareTemplateCreateInput = {
+  export type DefaultTraderCategoryShareCreateInput = {
     percent: Decimal | DecimalJsLike | number | string
     createdAt?: Date | string
     updatedAt?: Date | string
     trader: TraderCreateNestedOneWithoutDefaultCategorySharesInput
-    traderCategoryTemplate: TraderCategoryTemplateCreateNestedOneWithoutDefaultSharesInput
+    defaultTraderCategory: DefaultTraderCategoryCreateNestedOneWithoutSharesInput
   }
 
-  export type TraderCategoryShareTemplateUncheckedCreateInput = {
+  export type DefaultTraderCategoryShareUncheckedCreateInput = {
     id?: number
     traderId: number
-    traderCategoryTemplateId: number
+    defaultTraderCategoryId: number
     percent: Decimal | DecimalJsLike | number | string
     createdAt?: Date | string
     updatedAt?: Date | string
   }
 
-  export type TraderCategoryShareTemplateUpdateInput = {
+  export type DefaultTraderCategoryShareUpdateInput = {
     percent?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     trader?: TraderUpdateOneRequiredWithoutDefaultCategorySharesNestedInput
-    traderCategoryTemplate?: TraderCategoryTemplateUpdateOneRequiredWithoutDefaultSharesNestedInput
+    defaultTraderCategory?: DefaultTraderCategoryUpdateOneRequiredWithoutSharesNestedInput
   }
 
-  export type TraderCategoryShareTemplateUncheckedUpdateInput = {
+  export type DefaultTraderCategoryShareUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
     traderId?: IntFieldUpdateOperationsInput | number
-    traderCategoryTemplateId?: IntFieldUpdateOperationsInput | number
+    defaultTraderCategoryId?: IntFieldUpdateOperationsInput | number
     percent?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type TraderCategoryShareTemplateCreateManyInput = {
+  export type DefaultTraderCategoryShareCreateManyInput = {
     id?: number
     traderId: number
-    traderCategoryTemplateId: number
+    defaultTraderCategoryId: number
     percent: Decimal | DecimalJsLike | number | string
     createdAt?: Date | string
     updatedAt?: Date | string
   }
 
-  export type TraderCategoryShareTemplateUpdateManyMutationInput = {
+  export type DefaultTraderCategoryShareUpdateManyMutationInput = {
     percent?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type TraderCategoryShareTemplateUncheckedUpdateManyInput = {
+  export type DefaultTraderCategoryShareUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
     traderId?: IntFieldUpdateOperationsInput | number
-    traderCategoryTemplateId?: IntFieldUpdateOperationsInput | number
+    defaultTraderCategoryId?: IntFieldUpdateOperationsInput | number
     percent?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -30494,7 +30494,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     slug: string
-    defaultCategoryShares?: TraderCategoryShareTemplateCreateNestedManyWithoutTraderInput
+    defaultCategoryShares?: DefaultTraderCategoryShareCreateNestedManyWithoutTraderInput
     traderCategoryShares?: TraderCategoryShareCreateNestedManyWithoutTraderInput
     classifications?: ClassificationCreateNestedManyWithoutTraderInput
     traderStocks?: TraderStockCreateNestedManyWithoutTraderInput
@@ -30510,7 +30510,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     slug: string
-    defaultCategoryShares?: TraderCategoryShareTemplateUncheckedCreateNestedManyWithoutTraderInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUncheckedCreateNestedManyWithoutTraderInput
     traderCategoryShares?: TraderCategoryShareUncheckedCreateNestedManyWithoutTraderInput
     classifications?: ClassificationUncheckedCreateNestedManyWithoutTraderInput
     traderStocks?: TraderStockUncheckedCreateNestedManyWithoutTraderInput
@@ -30525,7 +30525,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     slug?: StringFieldUpdateOperationsInput | string
-    defaultCategoryShares?: TraderCategoryShareTemplateUpdateManyWithoutTraderNestedInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUpdateManyWithoutTraderNestedInput
     traderCategoryShares?: TraderCategoryShareUpdateManyWithoutTraderNestedInput
     classifications?: ClassificationUpdateManyWithoutTraderNestedInput
     traderStocks?: TraderStockUpdateManyWithoutTraderNestedInput
@@ -30541,7 +30541,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     slug?: StringFieldUpdateOperationsInput | string
-    defaultCategoryShares?: TraderCategoryShareTemplateUncheckedUpdateManyWithoutTraderNestedInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUncheckedUpdateManyWithoutTraderNestedInput
     traderCategoryShares?: TraderCategoryShareUncheckedUpdateManyWithoutTraderNestedInput
     classifications?: ClassificationUncheckedUpdateManyWithoutTraderNestedInput
     traderStocks?: TraderStockUncheckedUpdateManyWithoutTraderNestedInput
@@ -32157,17 +32157,17 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
-  export type TraderCategoryShareTemplateListRelationFilter = {
-    every?: TraderCategoryShareTemplateWhereInput
-    some?: TraderCategoryShareTemplateWhereInput
-    none?: TraderCategoryShareTemplateWhereInput
+  export type DefaultTraderCategoryShareListRelationFilter = {
+    every?: DefaultTraderCategoryShareWhereInput
+    some?: DefaultTraderCategoryShareWhereInput
+    none?: DefaultTraderCategoryShareWhereInput
   }
 
-  export type TraderCategoryShareTemplateOrderByRelationAggregateInput = {
+  export type DefaultTraderCategoryShareOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
-  export type TraderCategoryTemplateCountOrderByAggregateInput = {
+  export type DefaultTraderCategoryCountOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
     notes?: SortOrder
@@ -32175,19 +32175,11 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
-  export type TraderCategoryTemplateAvgOrderByAggregateInput = {
+  export type DefaultTraderCategoryAvgOrderByAggregateInput = {
     id?: SortOrder
   }
 
-  export type TraderCategoryTemplateMaxOrderByAggregateInput = {
-    id?: SortOrder
-    name?: SortOrder
-    notes?: SortOrder
-    createdAt?: SortOrder
-    updatedAt?: SortOrder
-  }
-
-  export type TraderCategoryTemplateMinOrderByAggregateInput = {
+  export type DefaultTraderCategoryMaxOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
     notes?: SortOrder
@@ -32195,7 +32187,15 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
-  export type TraderCategoryTemplateSumOrderByAggregateInput = {
+  export type DefaultTraderCategoryMinOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    notes?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DefaultTraderCategorySumOrderByAggregateInput = {
     id?: SortOrder
   }
 
@@ -32233,54 +32233,54 @@ export namespace Prisma {
     isNot?: TraderWhereInput
   }
 
-  export type TraderCategoryTemplateScalarRelationFilter = {
-    is?: TraderCategoryTemplateWhereInput
-    isNot?: TraderCategoryTemplateWhereInput
+  export type DefaultTraderCategoryScalarRelationFilter = {
+    is?: DefaultTraderCategoryWhereInput
+    isNot?: DefaultTraderCategoryWhereInput
   }
 
-  export type TraderCategoryShareTemplateTraderIdTraderCategoryTemplateIdCompoundUniqueInput = {
+  export type DefaultTraderCategoryShareTraderIdDefaultTraderCategoryIdCompoundUniqueInput = {
     traderId: number
-    traderCategoryTemplateId: number
+    defaultTraderCategoryId: number
   }
 
-  export type TraderCategoryShareTemplateCountOrderByAggregateInput = {
+  export type DefaultTraderCategoryShareCountOrderByAggregateInput = {
     id?: SortOrder
     traderId?: SortOrder
-    traderCategoryTemplateId?: SortOrder
+    defaultTraderCategoryId?: SortOrder
     percent?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
 
-  export type TraderCategoryShareTemplateAvgOrderByAggregateInput = {
+  export type DefaultTraderCategoryShareAvgOrderByAggregateInput = {
     id?: SortOrder
     traderId?: SortOrder
-    traderCategoryTemplateId?: SortOrder
+    defaultTraderCategoryId?: SortOrder
     percent?: SortOrder
   }
 
-  export type TraderCategoryShareTemplateMaxOrderByAggregateInput = {
+  export type DefaultTraderCategoryShareMaxOrderByAggregateInput = {
     id?: SortOrder
     traderId?: SortOrder
-    traderCategoryTemplateId?: SortOrder
-    percent?: SortOrder
-    createdAt?: SortOrder
-    updatedAt?: SortOrder
-  }
-
-  export type TraderCategoryShareTemplateMinOrderByAggregateInput = {
-    id?: SortOrder
-    traderId?: SortOrder
-    traderCategoryTemplateId?: SortOrder
+    defaultTraderCategoryId?: SortOrder
     percent?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
 
-  export type TraderCategoryShareTemplateSumOrderByAggregateInput = {
+  export type DefaultTraderCategoryShareMinOrderByAggregateInput = {
     id?: SortOrder
     traderId?: SortOrder
-    traderCategoryTemplateId?: SortOrder
+    defaultTraderCategoryId?: SortOrder
+    percent?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DefaultTraderCategoryShareSumOrderByAggregateInput = {
+    id?: SortOrder
+    traderId?: SortOrder
+    defaultTraderCategoryId?: SortOrder
     percent?: SortOrder
   }
 
@@ -33860,50 +33860,50 @@ export namespace Prisma {
     deleteMany?: FieldHarvestScalarWhereInput | FieldHarvestScalarWhereInput[]
   }
 
-  export type TraderCategoryShareTemplateCreateNestedManyWithoutTraderCategoryTemplateInput = {
-    create?: XOR<TraderCategoryShareTemplateCreateWithoutTraderCategoryTemplateInput, TraderCategoryShareTemplateUncheckedCreateWithoutTraderCategoryTemplateInput> | TraderCategoryShareTemplateCreateWithoutTraderCategoryTemplateInput[] | TraderCategoryShareTemplateUncheckedCreateWithoutTraderCategoryTemplateInput[]
-    connectOrCreate?: TraderCategoryShareTemplateCreateOrConnectWithoutTraderCategoryTemplateInput | TraderCategoryShareTemplateCreateOrConnectWithoutTraderCategoryTemplateInput[]
-    createMany?: TraderCategoryShareTemplateCreateManyTraderCategoryTemplateInputEnvelope
-    connect?: TraderCategoryShareTemplateWhereUniqueInput | TraderCategoryShareTemplateWhereUniqueInput[]
+  export type DefaultTraderCategoryShareCreateNestedManyWithoutDefaultTraderCategoryInput = {
+    create?: XOR<DefaultTraderCategoryShareCreateWithoutDefaultTraderCategoryInput, DefaultTraderCategoryShareUncheckedCreateWithoutDefaultTraderCategoryInput> | DefaultTraderCategoryShareCreateWithoutDefaultTraderCategoryInput[] | DefaultTraderCategoryShareUncheckedCreateWithoutDefaultTraderCategoryInput[]
+    connectOrCreate?: DefaultTraderCategoryShareCreateOrConnectWithoutDefaultTraderCategoryInput | DefaultTraderCategoryShareCreateOrConnectWithoutDefaultTraderCategoryInput[]
+    createMany?: DefaultTraderCategoryShareCreateManyDefaultTraderCategoryInputEnvelope
+    connect?: DefaultTraderCategoryShareWhereUniqueInput | DefaultTraderCategoryShareWhereUniqueInput[]
   }
 
-  export type TraderCategoryShareTemplateUncheckedCreateNestedManyWithoutTraderCategoryTemplateInput = {
-    create?: XOR<TraderCategoryShareTemplateCreateWithoutTraderCategoryTemplateInput, TraderCategoryShareTemplateUncheckedCreateWithoutTraderCategoryTemplateInput> | TraderCategoryShareTemplateCreateWithoutTraderCategoryTemplateInput[] | TraderCategoryShareTemplateUncheckedCreateWithoutTraderCategoryTemplateInput[]
-    connectOrCreate?: TraderCategoryShareTemplateCreateOrConnectWithoutTraderCategoryTemplateInput | TraderCategoryShareTemplateCreateOrConnectWithoutTraderCategoryTemplateInput[]
-    createMany?: TraderCategoryShareTemplateCreateManyTraderCategoryTemplateInputEnvelope
-    connect?: TraderCategoryShareTemplateWhereUniqueInput | TraderCategoryShareTemplateWhereUniqueInput[]
+  export type DefaultTraderCategoryShareUncheckedCreateNestedManyWithoutDefaultTraderCategoryInput = {
+    create?: XOR<DefaultTraderCategoryShareCreateWithoutDefaultTraderCategoryInput, DefaultTraderCategoryShareUncheckedCreateWithoutDefaultTraderCategoryInput> | DefaultTraderCategoryShareCreateWithoutDefaultTraderCategoryInput[] | DefaultTraderCategoryShareUncheckedCreateWithoutDefaultTraderCategoryInput[]
+    connectOrCreate?: DefaultTraderCategoryShareCreateOrConnectWithoutDefaultTraderCategoryInput | DefaultTraderCategoryShareCreateOrConnectWithoutDefaultTraderCategoryInput[]
+    createMany?: DefaultTraderCategoryShareCreateManyDefaultTraderCategoryInputEnvelope
+    connect?: DefaultTraderCategoryShareWhereUniqueInput | DefaultTraderCategoryShareWhereUniqueInput[]
   }
 
   export type NullableStringFieldUpdateOperationsInput = {
     set?: string | null
   }
 
-  export type TraderCategoryShareTemplateUpdateManyWithoutTraderCategoryTemplateNestedInput = {
-    create?: XOR<TraderCategoryShareTemplateCreateWithoutTraderCategoryTemplateInput, TraderCategoryShareTemplateUncheckedCreateWithoutTraderCategoryTemplateInput> | TraderCategoryShareTemplateCreateWithoutTraderCategoryTemplateInput[] | TraderCategoryShareTemplateUncheckedCreateWithoutTraderCategoryTemplateInput[]
-    connectOrCreate?: TraderCategoryShareTemplateCreateOrConnectWithoutTraderCategoryTemplateInput | TraderCategoryShareTemplateCreateOrConnectWithoutTraderCategoryTemplateInput[]
-    upsert?: TraderCategoryShareTemplateUpsertWithWhereUniqueWithoutTraderCategoryTemplateInput | TraderCategoryShareTemplateUpsertWithWhereUniqueWithoutTraderCategoryTemplateInput[]
-    createMany?: TraderCategoryShareTemplateCreateManyTraderCategoryTemplateInputEnvelope
-    set?: TraderCategoryShareTemplateWhereUniqueInput | TraderCategoryShareTemplateWhereUniqueInput[]
-    disconnect?: TraderCategoryShareTemplateWhereUniqueInput | TraderCategoryShareTemplateWhereUniqueInput[]
-    delete?: TraderCategoryShareTemplateWhereUniqueInput | TraderCategoryShareTemplateWhereUniqueInput[]
-    connect?: TraderCategoryShareTemplateWhereUniqueInput | TraderCategoryShareTemplateWhereUniqueInput[]
-    update?: TraderCategoryShareTemplateUpdateWithWhereUniqueWithoutTraderCategoryTemplateInput | TraderCategoryShareTemplateUpdateWithWhereUniqueWithoutTraderCategoryTemplateInput[]
-    updateMany?: TraderCategoryShareTemplateUpdateManyWithWhereWithoutTraderCategoryTemplateInput | TraderCategoryShareTemplateUpdateManyWithWhereWithoutTraderCategoryTemplateInput[]
-    deleteMany?: TraderCategoryShareTemplateScalarWhereInput | TraderCategoryShareTemplateScalarWhereInput[]
+  export type DefaultTraderCategoryShareUpdateManyWithoutDefaultTraderCategoryNestedInput = {
+    create?: XOR<DefaultTraderCategoryShareCreateWithoutDefaultTraderCategoryInput, DefaultTraderCategoryShareUncheckedCreateWithoutDefaultTraderCategoryInput> | DefaultTraderCategoryShareCreateWithoutDefaultTraderCategoryInput[] | DefaultTraderCategoryShareUncheckedCreateWithoutDefaultTraderCategoryInput[]
+    connectOrCreate?: DefaultTraderCategoryShareCreateOrConnectWithoutDefaultTraderCategoryInput | DefaultTraderCategoryShareCreateOrConnectWithoutDefaultTraderCategoryInput[]
+    upsert?: DefaultTraderCategoryShareUpsertWithWhereUniqueWithoutDefaultTraderCategoryInput | DefaultTraderCategoryShareUpsertWithWhereUniqueWithoutDefaultTraderCategoryInput[]
+    createMany?: DefaultTraderCategoryShareCreateManyDefaultTraderCategoryInputEnvelope
+    set?: DefaultTraderCategoryShareWhereUniqueInput | DefaultTraderCategoryShareWhereUniqueInput[]
+    disconnect?: DefaultTraderCategoryShareWhereUniqueInput | DefaultTraderCategoryShareWhereUniqueInput[]
+    delete?: DefaultTraderCategoryShareWhereUniqueInput | DefaultTraderCategoryShareWhereUniqueInput[]
+    connect?: DefaultTraderCategoryShareWhereUniqueInput | DefaultTraderCategoryShareWhereUniqueInput[]
+    update?: DefaultTraderCategoryShareUpdateWithWhereUniqueWithoutDefaultTraderCategoryInput | DefaultTraderCategoryShareUpdateWithWhereUniqueWithoutDefaultTraderCategoryInput[]
+    updateMany?: DefaultTraderCategoryShareUpdateManyWithWhereWithoutDefaultTraderCategoryInput | DefaultTraderCategoryShareUpdateManyWithWhereWithoutDefaultTraderCategoryInput[]
+    deleteMany?: DefaultTraderCategoryShareScalarWhereInput | DefaultTraderCategoryShareScalarWhereInput[]
   }
 
-  export type TraderCategoryShareTemplateUncheckedUpdateManyWithoutTraderCategoryTemplateNestedInput = {
-    create?: XOR<TraderCategoryShareTemplateCreateWithoutTraderCategoryTemplateInput, TraderCategoryShareTemplateUncheckedCreateWithoutTraderCategoryTemplateInput> | TraderCategoryShareTemplateCreateWithoutTraderCategoryTemplateInput[] | TraderCategoryShareTemplateUncheckedCreateWithoutTraderCategoryTemplateInput[]
-    connectOrCreate?: TraderCategoryShareTemplateCreateOrConnectWithoutTraderCategoryTemplateInput | TraderCategoryShareTemplateCreateOrConnectWithoutTraderCategoryTemplateInput[]
-    upsert?: TraderCategoryShareTemplateUpsertWithWhereUniqueWithoutTraderCategoryTemplateInput | TraderCategoryShareTemplateUpsertWithWhereUniqueWithoutTraderCategoryTemplateInput[]
-    createMany?: TraderCategoryShareTemplateCreateManyTraderCategoryTemplateInputEnvelope
-    set?: TraderCategoryShareTemplateWhereUniqueInput | TraderCategoryShareTemplateWhereUniqueInput[]
-    disconnect?: TraderCategoryShareTemplateWhereUniqueInput | TraderCategoryShareTemplateWhereUniqueInput[]
-    delete?: TraderCategoryShareTemplateWhereUniqueInput | TraderCategoryShareTemplateWhereUniqueInput[]
-    connect?: TraderCategoryShareTemplateWhereUniqueInput | TraderCategoryShareTemplateWhereUniqueInput[]
-    update?: TraderCategoryShareTemplateUpdateWithWhereUniqueWithoutTraderCategoryTemplateInput | TraderCategoryShareTemplateUpdateWithWhereUniqueWithoutTraderCategoryTemplateInput[]
-    updateMany?: TraderCategoryShareTemplateUpdateManyWithWhereWithoutTraderCategoryTemplateInput | TraderCategoryShareTemplateUpdateManyWithWhereWithoutTraderCategoryTemplateInput[]
-    deleteMany?: TraderCategoryShareTemplateScalarWhereInput | TraderCategoryShareTemplateScalarWhereInput[]
+  export type DefaultTraderCategoryShareUncheckedUpdateManyWithoutDefaultTraderCategoryNestedInput = {
+    create?: XOR<DefaultTraderCategoryShareCreateWithoutDefaultTraderCategoryInput, DefaultTraderCategoryShareUncheckedCreateWithoutDefaultTraderCategoryInput> | DefaultTraderCategoryShareCreateWithoutDefaultTraderCategoryInput[] | DefaultTraderCategoryShareUncheckedCreateWithoutDefaultTraderCategoryInput[]
+    connectOrCreate?: DefaultTraderCategoryShareCreateOrConnectWithoutDefaultTraderCategoryInput | DefaultTraderCategoryShareCreateOrConnectWithoutDefaultTraderCategoryInput[]
+    upsert?: DefaultTraderCategoryShareUpsertWithWhereUniqueWithoutDefaultTraderCategoryInput | DefaultTraderCategoryShareUpsertWithWhereUniqueWithoutDefaultTraderCategoryInput[]
+    createMany?: DefaultTraderCategoryShareCreateManyDefaultTraderCategoryInputEnvelope
+    set?: DefaultTraderCategoryShareWhereUniqueInput | DefaultTraderCategoryShareWhereUniqueInput[]
+    disconnect?: DefaultTraderCategoryShareWhereUniqueInput | DefaultTraderCategoryShareWhereUniqueInput[]
+    delete?: DefaultTraderCategoryShareWhereUniqueInput | DefaultTraderCategoryShareWhereUniqueInput[]
+    connect?: DefaultTraderCategoryShareWhereUniqueInput | DefaultTraderCategoryShareWhereUniqueInput[]
+    update?: DefaultTraderCategoryShareUpdateWithWhereUniqueWithoutDefaultTraderCategoryInput | DefaultTraderCategoryShareUpdateWithWhereUniqueWithoutDefaultTraderCategoryInput[]
+    updateMany?: DefaultTraderCategoryShareUpdateManyWithWhereWithoutDefaultTraderCategoryInput | DefaultTraderCategoryShareUpdateManyWithWhereWithoutDefaultTraderCategoryInput[]
+    deleteMany?: DefaultTraderCategoryShareScalarWhereInput | DefaultTraderCategoryShareScalarWhereInput[]
   }
 
   export type TraderCreateNestedOneWithoutDefaultCategorySharesInput = {
@@ -33912,10 +33912,10 @@ export namespace Prisma {
     connect?: TraderWhereUniqueInput
   }
 
-  export type TraderCategoryTemplateCreateNestedOneWithoutDefaultSharesInput = {
-    create?: XOR<TraderCategoryTemplateCreateWithoutDefaultSharesInput, TraderCategoryTemplateUncheckedCreateWithoutDefaultSharesInput>
-    connectOrCreate?: TraderCategoryTemplateCreateOrConnectWithoutDefaultSharesInput
-    connect?: TraderCategoryTemplateWhereUniqueInput
+  export type DefaultTraderCategoryCreateNestedOneWithoutSharesInput = {
+    create?: XOR<DefaultTraderCategoryCreateWithoutSharesInput, DefaultTraderCategoryUncheckedCreateWithoutSharesInput>
+    connectOrCreate?: DefaultTraderCategoryCreateOrConnectWithoutSharesInput
+    connect?: DefaultTraderCategoryWhereUniqueInput
   }
 
   export type DecimalFieldUpdateOperationsInput = {
@@ -33934,12 +33934,12 @@ export namespace Prisma {
     update?: XOR<XOR<TraderUpdateToOneWithWhereWithoutDefaultCategorySharesInput, TraderUpdateWithoutDefaultCategorySharesInput>, TraderUncheckedUpdateWithoutDefaultCategorySharesInput>
   }
 
-  export type TraderCategoryTemplateUpdateOneRequiredWithoutDefaultSharesNestedInput = {
-    create?: XOR<TraderCategoryTemplateCreateWithoutDefaultSharesInput, TraderCategoryTemplateUncheckedCreateWithoutDefaultSharesInput>
-    connectOrCreate?: TraderCategoryTemplateCreateOrConnectWithoutDefaultSharesInput
-    upsert?: TraderCategoryTemplateUpsertWithoutDefaultSharesInput
-    connect?: TraderCategoryTemplateWhereUniqueInput
-    update?: XOR<XOR<TraderCategoryTemplateUpdateToOneWithWhereWithoutDefaultSharesInput, TraderCategoryTemplateUpdateWithoutDefaultSharesInput>, TraderCategoryTemplateUncheckedUpdateWithoutDefaultSharesInput>
+  export type DefaultTraderCategoryUpdateOneRequiredWithoutSharesNestedInput = {
+    create?: XOR<DefaultTraderCategoryCreateWithoutSharesInput, DefaultTraderCategoryUncheckedCreateWithoutSharesInput>
+    connectOrCreate?: DefaultTraderCategoryCreateOrConnectWithoutSharesInput
+    upsert?: DefaultTraderCategoryUpsertWithoutSharesInput
+    connect?: DefaultTraderCategoryWhereUniqueInput
+    update?: XOR<XOR<DefaultTraderCategoryUpdateToOneWithWhereWithoutSharesInput, DefaultTraderCategoryUpdateWithoutSharesInput>, DefaultTraderCategoryUncheckedUpdateWithoutSharesInput>
   }
 
   export type SystemConfigCreateNestedManyWithoutSeasonInput = {
@@ -34748,11 +34748,11 @@ export namespace Prisma {
     deleteMany?: MessageScalarWhereInput | MessageScalarWhereInput[]
   }
 
-  export type TraderCategoryShareTemplateCreateNestedManyWithoutTraderInput = {
-    create?: XOR<TraderCategoryShareTemplateCreateWithoutTraderInput, TraderCategoryShareTemplateUncheckedCreateWithoutTraderInput> | TraderCategoryShareTemplateCreateWithoutTraderInput[] | TraderCategoryShareTemplateUncheckedCreateWithoutTraderInput[]
-    connectOrCreate?: TraderCategoryShareTemplateCreateOrConnectWithoutTraderInput | TraderCategoryShareTemplateCreateOrConnectWithoutTraderInput[]
-    createMany?: TraderCategoryShareTemplateCreateManyTraderInputEnvelope
-    connect?: TraderCategoryShareTemplateWhereUniqueInput | TraderCategoryShareTemplateWhereUniqueInput[]
+  export type DefaultTraderCategoryShareCreateNestedManyWithoutTraderInput = {
+    create?: XOR<DefaultTraderCategoryShareCreateWithoutTraderInput, DefaultTraderCategoryShareUncheckedCreateWithoutTraderInput> | DefaultTraderCategoryShareCreateWithoutTraderInput[] | DefaultTraderCategoryShareUncheckedCreateWithoutTraderInput[]
+    connectOrCreate?: DefaultTraderCategoryShareCreateOrConnectWithoutTraderInput | DefaultTraderCategoryShareCreateOrConnectWithoutTraderInput[]
+    createMany?: DefaultTraderCategoryShareCreateManyTraderInputEnvelope
+    connect?: DefaultTraderCategoryShareWhereUniqueInput | DefaultTraderCategoryShareWhereUniqueInput[]
   }
 
   export type TraderCategoryShareCreateNestedManyWithoutTraderInput = {
@@ -34797,11 +34797,11 @@ export namespace Prisma {
     connect?: ShipmentItemWhereUniqueInput | ShipmentItemWhereUniqueInput[]
   }
 
-  export type TraderCategoryShareTemplateUncheckedCreateNestedManyWithoutTraderInput = {
-    create?: XOR<TraderCategoryShareTemplateCreateWithoutTraderInput, TraderCategoryShareTemplateUncheckedCreateWithoutTraderInput> | TraderCategoryShareTemplateCreateWithoutTraderInput[] | TraderCategoryShareTemplateUncheckedCreateWithoutTraderInput[]
-    connectOrCreate?: TraderCategoryShareTemplateCreateOrConnectWithoutTraderInput | TraderCategoryShareTemplateCreateOrConnectWithoutTraderInput[]
-    createMany?: TraderCategoryShareTemplateCreateManyTraderInputEnvelope
-    connect?: TraderCategoryShareTemplateWhereUniqueInput | TraderCategoryShareTemplateWhereUniqueInput[]
+  export type DefaultTraderCategoryShareUncheckedCreateNestedManyWithoutTraderInput = {
+    create?: XOR<DefaultTraderCategoryShareCreateWithoutTraderInput, DefaultTraderCategoryShareUncheckedCreateWithoutTraderInput> | DefaultTraderCategoryShareCreateWithoutTraderInput[] | DefaultTraderCategoryShareUncheckedCreateWithoutTraderInput[]
+    connectOrCreate?: DefaultTraderCategoryShareCreateOrConnectWithoutTraderInput | DefaultTraderCategoryShareCreateOrConnectWithoutTraderInput[]
+    createMany?: DefaultTraderCategoryShareCreateManyTraderInputEnvelope
+    connect?: DefaultTraderCategoryShareWhereUniqueInput | DefaultTraderCategoryShareWhereUniqueInput[]
   }
 
   export type TraderCategoryShareUncheckedCreateNestedManyWithoutTraderInput = {
@@ -34846,18 +34846,18 @@ export namespace Prisma {
     connect?: ShipmentItemWhereUniqueInput | ShipmentItemWhereUniqueInput[]
   }
 
-  export type TraderCategoryShareTemplateUpdateManyWithoutTraderNestedInput = {
-    create?: XOR<TraderCategoryShareTemplateCreateWithoutTraderInput, TraderCategoryShareTemplateUncheckedCreateWithoutTraderInput> | TraderCategoryShareTemplateCreateWithoutTraderInput[] | TraderCategoryShareTemplateUncheckedCreateWithoutTraderInput[]
-    connectOrCreate?: TraderCategoryShareTemplateCreateOrConnectWithoutTraderInput | TraderCategoryShareTemplateCreateOrConnectWithoutTraderInput[]
-    upsert?: TraderCategoryShareTemplateUpsertWithWhereUniqueWithoutTraderInput | TraderCategoryShareTemplateUpsertWithWhereUniqueWithoutTraderInput[]
-    createMany?: TraderCategoryShareTemplateCreateManyTraderInputEnvelope
-    set?: TraderCategoryShareTemplateWhereUniqueInput | TraderCategoryShareTemplateWhereUniqueInput[]
-    disconnect?: TraderCategoryShareTemplateWhereUniqueInput | TraderCategoryShareTemplateWhereUniqueInput[]
-    delete?: TraderCategoryShareTemplateWhereUniqueInput | TraderCategoryShareTemplateWhereUniqueInput[]
-    connect?: TraderCategoryShareTemplateWhereUniqueInput | TraderCategoryShareTemplateWhereUniqueInput[]
-    update?: TraderCategoryShareTemplateUpdateWithWhereUniqueWithoutTraderInput | TraderCategoryShareTemplateUpdateWithWhereUniqueWithoutTraderInput[]
-    updateMany?: TraderCategoryShareTemplateUpdateManyWithWhereWithoutTraderInput | TraderCategoryShareTemplateUpdateManyWithWhereWithoutTraderInput[]
-    deleteMany?: TraderCategoryShareTemplateScalarWhereInput | TraderCategoryShareTemplateScalarWhereInput[]
+  export type DefaultTraderCategoryShareUpdateManyWithoutTraderNestedInput = {
+    create?: XOR<DefaultTraderCategoryShareCreateWithoutTraderInput, DefaultTraderCategoryShareUncheckedCreateWithoutTraderInput> | DefaultTraderCategoryShareCreateWithoutTraderInput[] | DefaultTraderCategoryShareUncheckedCreateWithoutTraderInput[]
+    connectOrCreate?: DefaultTraderCategoryShareCreateOrConnectWithoutTraderInput | DefaultTraderCategoryShareCreateOrConnectWithoutTraderInput[]
+    upsert?: DefaultTraderCategoryShareUpsertWithWhereUniqueWithoutTraderInput | DefaultTraderCategoryShareUpsertWithWhereUniqueWithoutTraderInput[]
+    createMany?: DefaultTraderCategoryShareCreateManyTraderInputEnvelope
+    set?: DefaultTraderCategoryShareWhereUniqueInput | DefaultTraderCategoryShareWhereUniqueInput[]
+    disconnect?: DefaultTraderCategoryShareWhereUniqueInput | DefaultTraderCategoryShareWhereUniqueInput[]
+    delete?: DefaultTraderCategoryShareWhereUniqueInput | DefaultTraderCategoryShareWhereUniqueInput[]
+    connect?: DefaultTraderCategoryShareWhereUniqueInput | DefaultTraderCategoryShareWhereUniqueInput[]
+    update?: DefaultTraderCategoryShareUpdateWithWhereUniqueWithoutTraderInput | DefaultTraderCategoryShareUpdateWithWhereUniqueWithoutTraderInput[]
+    updateMany?: DefaultTraderCategoryShareUpdateManyWithWhereWithoutTraderInput | DefaultTraderCategoryShareUpdateManyWithWhereWithoutTraderInput[]
+    deleteMany?: DefaultTraderCategoryShareScalarWhereInput | DefaultTraderCategoryShareScalarWhereInput[]
   }
 
   export type TraderCategoryShareUpdateManyWithoutTraderNestedInput = {
@@ -34944,18 +34944,18 @@ export namespace Prisma {
     deleteMany?: ShipmentItemScalarWhereInput | ShipmentItemScalarWhereInput[]
   }
 
-  export type TraderCategoryShareTemplateUncheckedUpdateManyWithoutTraderNestedInput = {
-    create?: XOR<TraderCategoryShareTemplateCreateWithoutTraderInput, TraderCategoryShareTemplateUncheckedCreateWithoutTraderInput> | TraderCategoryShareTemplateCreateWithoutTraderInput[] | TraderCategoryShareTemplateUncheckedCreateWithoutTraderInput[]
-    connectOrCreate?: TraderCategoryShareTemplateCreateOrConnectWithoutTraderInput | TraderCategoryShareTemplateCreateOrConnectWithoutTraderInput[]
-    upsert?: TraderCategoryShareTemplateUpsertWithWhereUniqueWithoutTraderInput | TraderCategoryShareTemplateUpsertWithWhereUniqueWithoutTraderInput[]
-    createMany?: TraderCategoryShareTemplateCreateManyTraderInputEnvelope
-    set?: TraderCategoryShareTemplateWhereUniqueInput | TraderCategoryShareTemplateWhereUniqueInput[]
-    disconnect?: TraderCategoryShareTemplateWhereUniqueInput | TraderCategoryShareTemplateWhereUniqueInput[]
-    delete?: TraderCategoryShareTemplateWhereUniqueInput | TraderCategoryShareTemplateWhereUniqueInput[]
-    connect?: TraderCategoryShareTemplateWhereUniqueInput | TraderCategoryShareTemplateWhereUniqueInput[]
-    update?: TraderCategoryShareTemplateUpdateWithWhereUniqueWithoutTraderInput | TraderCategoryShareTemplateUpdateWithWhereUniqueWithoutTraderInput[]
-    updateMany?: TraderCategoryShareTemplateUpdateManyWithWhereWithoutTraderInput | TraderCategoryShareTemplateUpdateManyWithWhereWithoutTraderInput[]
-    deleteMany?: TraderCategoryShareTemplateScalarWhereInput | TraderCategoryShareTemplateScalarWhereInput[]
+  export type DefaultTraderCategoryShareUncheckedUpdateManyWithoutTraderNestedInput = {
+    create?: XOR<DefaultTraderCategoryShareCreateWithoutTraderInput, DefaultTraderCategoryShareUncheckedCreateWithoutTraderInput> | DefaultTraderCategoryShareCreateWithoutTraderInput[] | DefaultTraderCategoryShareUncheckedCreateWithoutTraderInput[]
+    connectOrCreate?: DefaultTraderCategoryShareCreateOrConnectWithoutTraderInput | DefaultTraderCategoryShareCreateOrConnectWithoutTraderInput[]
+    upsert?: DefaultTraderCategoryShareUpsertWithWhereUniqueWithoutTraderInput | DefaultTraderCategoryShareUpsertWithWhereUniqueWithoutTraderInput[]
+    createMany?: DefaultTraderCategoryShareCreateManyTraderInputEnvelope
+    set?: DefaultTraderCategoryShareWhereUniqueInput | DefaultTraderCategoryShareWhereUniqueInput[]
+    disconnect?: DefaultTraderCategoryShareWhereUniqueInput | DefaultTraderCategoryShareWhereUniqueInput[]
+    delete?: DefaultTraderCategoryShareWhereUniqueInput | DefaultTraderCategoryShareWhereUniqueInput[]
+    connect?: DefaultTraderCategoryShareWhereUniqueInput | DefaultTraderCategoryShareWhereUniqueInput[]
+    update?: DefaultTraderCategoryShareUpdateWithWhereUniqueWithoutTraderInput | DefaultTraderCategoryShareUpdateWithWhereUniqueWithoutTraderInput[]
+    updateMany?: DefaultTraderCategoryShareUpdateManyWithWhereWithoutTraderInput | DefaultTraderCategoryShareUpdateManyWithWhereWithoutTraderInput[]
+    deleteMany?: DefaultTraderCategoryShareScalarWhereInput | DefaultTraderCategoryShareScalarWhereInput[]
   }
 
   export type TraderCategoryShareUncheckedUpdateManyWithoutTraderNestedInput = {
@@ -37152,14 +37152,14 @@ export namespace Prisma {
     isDeleted?: BoolFilter<"FieldHarvest"> | boolean
   }
 
-  export type TraderCategoryShareTemplateCreateWithoutTraderCategoryTemplateInput = {
+  export type DefaultTraderCategoryShareCreateWithoutDefaultTraderCategoryInput = {
     percent: Decimal | DecimalJsLike | number | string
     createdAt?: Date | string
     updatedAt?: Date | string
     trader: TraderCreateNestedOneWithoutDefaultCategorySharesInput
   }
 
-  export type TraderCategoryShareTemplateUncheckedCreateWithoutTraderCategoryTemplateInput = {
+  export type DefaultTraderCategoryShareUncheckedCreateWithoutDefaultTraderCategoryInput = {
     id?: number
     traderId: number
     percent: Decimal | DecimalJsLike | number | string
@@ -37167,42 +37167,42 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
-  export type TraderCategoryShareTemplateCreateOrConnectWithoutTraderCategoryTemplateInput = {
-    where: TraderCategoryShareTemplateWhereUniqueInput
-    create: XOR<TraderCategoryShareTemplateCreateWithoutTraderCategoryTemplateInput, TraderCategoryShareTemplateUncheckedCreateWithoutTraderCategoryTemplateInput>
+  export type DefaultTraderCategoryShareCreateOrConnectWithoutDefaultTraderCategoryInput = {
+    where: DefaultTraderCategoryShareWhereUniqueInput
+    create: XOR<DefaultTraderCategoryShareCreateWithoutDefaultTraderCategoryInput, DefaultTraderCategoryShareUncheckedCreateWithoutDefaultTraderCategoryInput>
   }
 
-  export type TraderCategoryShareTemplateCreateManyTraderCategoryTemplateInputEnvelope = {
-    data: TraderCategoryShareTemplateCreateManyTraderCategoryTemplateInput | TraderCategoryShareTemplateCreateManyTraderCategoryTemplateInput[]
+  export type DefaultTraderCategoryShareCreateManyDefaultTraderCategoryInputEnvelope = {
+    data: DefaultTraderCategoryShareCreateManyDefaultTraderCategoryInput | DefaultTraderCategoryShareCreateManyDefaultTraderCategoryInput[]
     skipDuplicates?: boolean
   }
 
-  export type TraderCategoryShareTemplateUpsertWithWhereUniqueWithoutTraderCategoryTemplateInput = {
-    where: TraderCategoryShareTemplateWhereUniqueInput
-    update: XOR<TraderCategoryShareTemplateUpdateWithoutTraderCategoryTemplateInput, TraderCategoryShareTemplateUncheckedUpdateWithoutTraderCategoryTemplateInput>
-    create: XOR<TraderCategoryShareTemplateCreateWithoutTraderCategoryTemplateInput, TraderCategoryShareTemplateUncheckedCreateWithoutTraderCategoryTemplateInput>
+  export type DefaultTraderCategoryShareUpsertWithWhereUniqueWithoutDefaultTraderCategoryInput = {
+    where: DefaultTraderCategoryShareWhereUniqueInput
+    update: XOR<DefaultTraderCategoryShareUpdateWithoutDefaultTraderCategoryInput, DefaultTraderCategoryShareUncheckedUpdateWithoutDefaultTraderCategoryInput>
+    create: XOR<DefaultTraderCategoryShareCreateWithoutDefaultTraderCategoryInput, DefaultTraderCategoryShareUncheckedCreateWithoutDefaultTraderCategoryInput>
   }
 
-  export type TraderCategoryShareTemplateUpdateWithWhereUniqueWithoutTraderCategoryTemplateInput = {
-    where: TraderCategoryShareTemplateWhereUniqueInput
-    data: XOR<TraderCategoryShareTemplateUpdateWithoutTraderCategoryTemplateInput, TraderCategoryShareTemplateUncheckedUpdateWithoutTraderCategoryTemplateInput>
+  export type DefaultTraderCategoryShareUpdateWithWhereUniqueWithoutDefaultTraderCategoryInput = {
+    where: DefaultTraderCategoryShareWhereUniqueInput
+    data: XOR<DefaultTraderCategoryShareUpdateWithoutDefaultTraderCategoryInput, DefaultTraderCategoryShareUncheckedUpdateWithoutDefaultTraderCategoryInput>
   }
 
-  export type TraderCategoryShareTemplateUpdateManyWithWhereWithoutTraderCategoryTemplateInput = {
-    where: TraderCategoryShareTemplateScalarWhereInput
-    data: XOR<TraderCategoryShareTemplateUpdateManyMutationInput, TraderCategoryShareTemplateUncheckedUpdateManyWithoutTraderCategoryTemplateInput>
+  export type DefaultTraderCategoryShareUpdateManyWithWhereWithoutDefaultTraderCategoryInput = {
+    where: DefaultTraderCategoryShareScalarWhereInput
+    data: XOR<DefaultTraderCategoryShareUpdateManyMutationInput, DefaultTraderCategoryShareUncheckedUpdateManyWithoutDefaultTraderCategoryInput>
   }
 
-  export type TraderCategoryShareTemplateScalarWhereInput = {
-    AND?: TraderCategoryShareTemplateScalarWhereInput | TraderCategoryShareTemplateScalarWhereInput[]
-    OR?: TraderCategoryShareTemplateScalarWhereInput[]
-    NOT?: TraderCategoryShareTemplateScalarWhereInput | TraderCategoryShareTemplateScalarWhereInput[]
-    id?: IntFilter<"TraderCategoryShareTemplate"> | number
-    traderId?: IntFilter<"TraderCategoryShareTemplate"> | number
-    traderCategoryTemplateId?: IntFilter<"TraderCategoryShareTemplate"> | number
-    percent?: DecimalFilter<"TraderCategoryShareTemplate"> | Decimal | DecimalJsLike | number | string
-    createdAt?: DateTimeFilter<"TraderCategoryShareTemplate"> | Date | string
-    updatedAt?: DateTimeFilter<"TraderCategoryShareTemplate"> | Date | string
+  export type DefaultTraderCategoryShareScalarWhereInput = {
+    AND?: DefaultTraderCategoryShareScalarWhereInput | DefaultTraderCategoryShareScalarWhereInput[]
+    OR?: DefaultTraderCategoryShareScalarWhereInput[]
+    NOT?: DefaultTraderCategoryShareScalarWhereInput | DefaultTraderCategoryShareScalarWhereInput[]
+    id?: IntFilter<"DefaultTraderCategoryShare"> | number
+    traderId?: IntFilter<"DefaultTraderCategoryShare"> | number
+    defaultTraderCategoryId?: IntFilter<"DefaultTraderCategoryShare"> | number
+    percent?: DecimalFilter<"DefaultTraderCategoryShare"> | Decimal | DecimalJsLike | number | string
+    createdAt?: DateTimeFilter<"DefaultTraderCategoryShare"> | Date | string
+    updatedAt?: DateTimeFilter<"DefaultTraderCategoryShare"> | Date | string
   }
 
   export type TraderCreateWithoutDefaultCategorySharesInput = {
@@ -37239,14 +37239,14 @@ export namespace Prisma {
     create: XOR<TraderCreateWithoutDefaultCategorySharesInput, TraderUncheckedCreateWithoutDefaultCategorySharesInput>
   }
 
-  export type TraderCategoryTemplateCreateWithoutDefaultSharesInput = {
+  export type DefaultTraderCategoryCreateWithoutSharesInput = {
     name: string
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
 
-  export type TraderCategoryTemplateUncheckedCreateWithoutDefaultSharesInput = {
+  export type DefaultTraderCategoryUncheckedCreateWithoutSharesInput = {
     id?: number
     name: string
     notes?: string | null
@@ -37254,9 +37254,9 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
-  export type TraderCategoryTemplateCreateOrConnectWithoutDefaultSharesInput = {
-    where: TraderCategoryTemplateWhereUniqueInput
-    create: XOR<TraderCategoryTemplateCreateWithoutDefaultSharesInput, TraderCategoryTemplateUncheckedCreateWithoutDefaultSharesInput>
+  export type DefaultTraderCategoryCreateOrConnectWithoutSharesInput = {
+    where: DefaultTraderCategoryWhereUniqueInput
+    create: XOR<DefaultTraderCategoryCreateWithoutSharesInput, DefaultTraderCategoryUncheckedCreateWithoutSharesInput>
   }
 
   export type TraderUpsertWithoutDefaultCategorySharesInput = {
@@ -37299,25 +37299,25 @@ export namespace Prisma {
     shipmentItem?: ShipmentItemUncheckedUpdateManyWithoutTraderNestedInput
   }
 
-  export type TraderCategoryTemplateUpsertWithoutDefaultSharesInput = {
-    update: XOR<TraderCategoryTemplateUpdateWithoutDefaultSharesInput, TraderCategoryTemplateUncheckedUpdateWithoutDefaultSharesInput>
-    create: XOR<TraderCategoryTemplateCreateWithoutDefaultSharesInput, TraderCategoryTemplateUncheckedCreateWithoutDefaultSharesInput>
-    where?: TraderCategoryTemplateWhereInput
+  export type DefaultTraderCategoryUpsertWithoutSharesInput = {
+    update: XOR<DefaultTraderCategoryUpdateWithoutSharesInput, DefaultTraderCategoryUncheckedUpdateWithoutSharesInput>
+    create: XOR<DefaultTraderCategoryCreateWithoutSharesInput, DefaultTraderCategoryUncheckedCreateWithoutSharesInput>
+    where?: DefaultTraderCategoryWhereInput
   }
 
-  export type TraderCategoryTemplateUpdateToOneWithWhereWithoutDefaultSharesInput = {
-    where?: TraderCategoryTemplateWhereInput
-    data: XOR<TraderCategoryTemplateUpdateWithoutDefaultSharesInput, TraderCategoryTemplateUncheckedUpdateWithoutDefaultSharesInput>
+  export type DefaultTraderCategoryUpdateToOneWithWhereWithoutSharesInput = {
+    where?: DefaultTraderCategoryWhereInput
+    data: XOR<DefaultTraderCategoryUpdateWithoutSharesInput, DefaultTraderCategoryUncheckedUpdateWithoutSharesInput>
   }
 
-  export type TraderCategoryTemplateUpdateWithoutDefaultSharesInput = {
+  export type DefaultTraderCategoryUpdateWithoutSharesInput = {
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type TraderCategoryTemplateUncheckedUpdateWithoutDefaultSharesInput = {
+  export type DefaultTraderCategoryUncheckedUpdateWithoutSharesInput = {
     id?: IntFieldUpdateOperationsInput | number
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38664,28 +38664,28 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Message"> | Date | string
   }
 
-  export type TraderCategoryShareTemplateCreateWithoutTraderInput = {
+  export type DefaultTraderCategoryShareCreateWithoutTraderInput = {
     percent: Decimal | DecimalJsLike | number | string
     createdAt?: Date | string
     updatedAt?: Date | string
-    traderCategoryTemplate: TraderCategoryTemplateCreateNestedOneWithoutDefaultSharesInput
+    defaultTraderCategory: DefaultTraderCategoryCreateNestedOneWithoutSharesInput
   }
 
-  export type TraderCategoryShareTemplateUncheckedCreateWithoutTraderInput = {
+  export type DefaultTraderCategoryShareUncheckedCreateWithoutTraderInput = {
     id?: number
-    traderCategoryTemplateId: number
+    defaultTraderCategoryId: number
     percent: Decimal | DecimalJsLike | number | string
     createdAt?: Date | string
     updatedAt?: Date | string
   }
 
-  export type TraderCategoryShareTemplateCreateOrConnectWithoutTraderInput = {
-    where: TraderCategoryShareTemplateWhereUniqueInput
-    create: XOR<TraderCategoryShareTemplateCreateWithoutTraderInput, TraderCategoryShareTemplateUncheckedCreateWithoutTraderInput>
+  export type DefaultTraderCategoryShareCreateOrConnectWithoutTraderInput = {
+    where: DefaultTraderCategoryShareWhereUniqueInput
+    create: XOR<DefaultTraderCategoryShareCreateWithoutTraderInput, DefaultTraderCategoryShareUncheckedCreateWithoutTraderInput>
   }
 
-  export type TraderCategoryShareTemplateCreateManyTraderInputEnvelope = {
-    data: TraderCategoryShareTemplateCreateManyTraderInput | TraderCategoryShareTemplateCreateManyTraderInput[]
+  export type DefaultTraderCategoryShareCreateManyTraderInputEnvelope = {
+    data: DefaultTraderCategoryShareCreateManyTraderInput | DefaultTraderCategoryShareCreateManyTraderInput[]
     skipDuplicates?: boolean
   }
 
@@ -38955,20 +38955,20 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type TraderCategoryShareTemplateUpsertWithWhereUniqueWithoutTraderInput = {
-    where: TraderCategoryShareTemplateWhereUniqueInput
-    update: XOR<TraderCategoryShareTemplateUpdateWithoutTraderInput, TraderCategoryShareTemplateUncheckedUpdateWithoutTraderInput>
-    create: XOR<TraderCategoryShareTemplateCreateWithoutTraderInput, TraderCategoryShareTemplateUncheckedCreateWithoutTraderInput>
+  export type DefaultTraderCategoryShareUpsertWithWhereUniqueWithoutTraderInput = {
+    where: DefaultTraderCategoryShareWhereUniqueInput
+    update: XOR<DefaultTraderCategoryShareUpdateWithoutTraderInput, DefaultTraderCategoryShareUncheckedUpdateWithoutTraderInput>
+    create: XOR<DefaultTraderCategoryShareCreateWithoutTraderInput, DefaultTraderCategoryShareUncheckedCreateWithoutTraderInput>
   }
 
-  export type TraderCategoryShareTemplateUpdateWithWhereUniqueWithoutTraderInput = {
-    where: TraderCategoryShareTemplateWhereUniqueInput
-    data: XOR<TraderCategoryShareTemplateUpdateWithoutTraderInput, TraderCategoryShareTemplateUncheckedUpdateWithoutTraderInput>
+  export type DefaultTraderCategoryShareUpdateWithWhereUniqueWithoutTraderInput = {
+    where: DefaultTraderCategoryShareWhereUniqueInput
+    data: XOR<DefaultTraderCategoryShareUpdateWithoutTraderInput, DefaultTraderCategoryShareUncheckedUpdateWithoutTraderInput>
   }
 
-  export type TraderCategoryShareTemplateUpdateManyWithWhereWithoutTraderInput = {
-    where: TraderCategoryShareTemplateScalarWhereInput
-    data: XOR<TraderCategoryShareTemplateUpdateManyMutationInput, TraderCategoryShareTemplateUncheckedUpdateManyWithoutTraderInput>
+  export type DefaultTraderCategoryShareUpdateManyWithWhereWithoutTraderInput = {
+    where: DefaultTraderCategoryShareScalarWhereInput
+    data: XOR<DefaultTraderCategoryShareUpdateManyMutationInput, DefaultTraderCategoryShareUncheckedUpdateManyWithoutTraderInput>
   }
 
   export type TraderCategoryShareUpsertWithWhereUniqueWithoutTraderInput = {
@@ -40099,7 +40099,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     slug: string
-    defaultCategoryShares?: TraderCategoryShareTemplateCreateNestedManyWithoutTraderInput
+    defaultCategoryShares?: DefaultTraderCategoryShareCreateNestedManyWithoutTraderInput
     classifications?: ClassificationCreateNestedManyWithoutTraderInput
     traderStocks?: TraderStockCreateNestedManyWithoutTraderInput
     customerAllocations?: CustomerAllocationCreateNestedManyWithoutTraderSourceNameInput
@@ -40114,7 +40114,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     slug: string
-    defaultCategoryShares?: TraderCategoryShareTemplateUncheckedCreateNestedManyWithoutTraderInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUncheckedCreateNestedManyWithoutTraderInput
     classifications?: ClassificationUncheckedCreateNestedManyWithoutTraderInput
     traderStocks?: TraderStockUncheckedCreateNestedManyWithoutTraderInput
     customerAllocations?: CustomerAllocationUncheckedCreateNestedManyWithoutTraderSourceNameInput
@@ -40220,7 +40220,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     slug?: StringFieldUpdateOperationsInput | string
-    defaultCategoryShares?: TraderCategoryShareTemplateUpdateManyWithoutTraderNestedInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUpdateManyWithoutTraderNestedInput
     classifications?: ClassificationUpdateManyWithoutTraderNestedInput
     traderStocks?: TraderStockUpdateManyWithoutTraderNestedInput
     customerAllocations?: CustomerAllocationUpdateManyWithoutTraderSourceNameNestedInput
@@ -40235,7 +40235,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     slug?: StringFieldUpdateOperationsInput | string
-    defaultCategoryShares?: TraderCategoryShareTemplateUncheckedUpdateManyWithoutTraderNestedInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUncheckedUpdateManyWithoutTraderNestedInput
     classifications?: ClassificationUncheckedUpdateManyWithoutTraderNestedInput
     traderStocks?: TraderStockUncheckedUpdateManyWithoutTraderNestedInput
     customerAllocations?: CustomerAllocationUncheckedUpdateManyWithoutTraderSourceNameNestedInput
@@ -40714,7 +40714,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     slug: string
-    defaultCategoryShares?: TraderCategoryShareTemplateCreateNestedManyWithoutTraderInput
+    defaultCategoryShares?: DefaultTraderCategoryShareCreateNestedManyWithoutTraderInput
     traderCategoryShares?: TraderCategoryShareCreateNestedManyWithoutTraderInput
     traderStocks?: TraderStockCreateNestedManyWithoutTraderInput
     customerAllocations?: CustomerAllocationCreateNestedManyWithoutTraderSourceNameInput
@@ -40729,7 +40729,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     slug: string
-    defaultCategoryShares?: TraderCategoryShareTemplateUncheckedCreateNestedManyWithoutTraderInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUncheckedCreateNestedManyWithoutTraderInput
     traderCategoryShares?: TraderCategoryShareUncheckedCreateNestedManyWithoutTraderInput
     traderStocks?: TraderStockUncheckedCreateNestedManyWithoutTraderInput
     customerAllocations?: CustomerAllocationUncheckedCreateNestedManyWithoutTraderSourceNameInput
@@ -41007,7 +41007,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     slug?: StringFieldUpdateOperationsInput | string
-    defaultCategoryShares?: TraderCategoryShareTemplateUpdateManyWithoutTraderNestedInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUpdateManyWithoutTraderNestedInput
     traderCategoryShares?: TraderCategoryShareUpdateManyWithoutTraderNestedInput
     traderStocks?: TraderStockUpdateManyWithoutTraderNestedInput
     customerAllocations?: CustomerAllocationUpdateManyWithoutTraderSourceNameNestedInput
@@ -41022,7 +41022,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     slug?: StringFieldUpdateOperationsInput | string
-    defaultCategoryShares?: TraderCategoryShareTemplateUncheckedUpdateManyWithoutTraderNestedInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUncheckedUpdateManyWithoutTraderNestedInput
     traderCategoryShares?: TraderCategoryShareUncheckedUpdateManyWithoutTraderNestedInput
     traderStocks?: TraderStockUncheckedUpdateManyWithoutTraderNestedInput
     customerAllocations?: CustomerAllocationUncheckedUpdateManyWithoutTraderSourceNameNestedInput
@@ -41188,7 +41188,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     slug: string
-    defaultCategoryShares?: TraderCategoryShareTemplateCreateNestedManyWithoutTraderInput
+    defaultCategoryShares?: DefaultTraderCategoryShareCreateNestedManyWithoutTraderInput
     traderCategoryShares?: TraderCategoryShareCreateNestedManyWithoutTraderInput
     classifications?: ClassificationCreateNestedManyWithoutTraderInput
     customerAllocations?: CustomerAllocationCreateNestedManyWithoutTraderSourceNameInput
@@ -41203,7 +41203,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     slug: string
-    defaultCategoryShares?: TraderCategoryShareTemplateUncheckedCreateNestedManyWithoutTraderInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUncheckedCreateNestedManyWithoutTraderInput
     traderCategoryShares?: TraderCategoryShareUncheckedCreateNestedManyWithoutTraderInput
     classifications?: ClassificationUncheckedCreateNestedManyWithoutTraderInput
     customerAllocations?: CustomerAllocationUncheckedCreateNestedManyWithoutTraderSourceNameInput
@@ -41353,7 +41353,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     slug?: StringFieldUpdateOperationsInput | string
-    defaultCategoryShares?: TraderCategoryShareTemplateUpdateManyWithoutTraderNestedInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUpdateManyWithoutTraderNestedInput
     traderCategoryShares?: TraderCategoryShareUpdateManyWithoutTraderNestedInput
     classifications?: ClassificationUpdateManyWithoutTraderNestedInput
     customerAllocations?: CustomerAllocationUpdateManyWithoutTraderSourceNameNestedInput
@@ -41368,7 +41368,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     slug?: StringFieldUpdateOperationsInput | string
-    defaultCategoryShares?: TraderCategoryShareTemplateUncheckedUpdateManyWithoutTraderNestedInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUncheckedUpdateManyWithoutTraderNestedInput
     traderCategoryShares?: TraderCategoryShareUncheckedUpdateManyWithoutTraderNestedInput
     classifications?: ClassificationUncheckedUpdateManyWithoutTraderNestedInput
     customerAllocations?: CustomerAllocationUncheckedUpdateManyWithoutTraderSourceNameNestedInput
@@ -41572,7 +41572,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     slug: string
-    defaultCategoryShares?: TraderCategoryShareTemplateCreateNestedManyWithoutTraderInput
+    defaultCategoryShares?: DefaultTraderCategoryShareCreateNestedManyWithoutTraderInput
     traderCategoryShares?: TraderCategoryShareCreateNestedManyWithoutTraderInput
     classifications?: ClassificationCreateNestedManyWithoutTraderInput
     traderStocks?: TraderStockCreateNestedManyWithoutTraderInput
@@ -41587,7 +41587,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     slug: string
-    defaultCategoryShares?: TraderCategoryShareTemplateUncheckedCreateNestedManyWithoutTraderInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUncheckedCreateNestedManyWithoutTraderInput
     traderCategoryShares?: TraderCategoryShareUncheckedCreateNestedManyWithoutTraderInput
     classifications?: ClassificationUncheckedCreateNestedManyWithoutTraderInput
     traderStocks?: TraderStockUncheckedCreateNestedManyWithoutTraderInput
@@ -41785,7 +41785,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     slug?: StringFieldUpdateOperationsInput | string
-    defaultCategoryShares?: TraderCategoryShareTemplateUpdateManyWithoutTraderNestedInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUpdateManyWithoutTraderNestedInput
     traderCategoryShares?: TraderCategoryShareUpdateManyWithoutTraderNestedInput
     classifications?: ClassificationUpdateManyWithoutTraderNestedInput
     traderStocks?: TraderStockUpdateManyWithoutTraderNestedInput
@@ -41800,7 +41800,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     slug?: StringFieldUpdateOperationsInput | string
-    defaultCategoryShares?: TraderCategoryShareTemplateUncheckedUpdateManyWithoutTraderNestedInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUncheckedUpdateManyWithoutTraderNestedInput
     traderCategoryShares?: TraderCategoryShareUncheckedUpdateManyWithoutTraderNestedInput
     classifications?: ClassificationUncheckedUpdateManyWithoutTraderNestedInput
     traderStocks?: TraderStockUncheckedUpdateManyWithoutTraderNestedInput
@@ -42299,7 +42299,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     slug: string
-    defaultCategoryShares?: TraderCategoryShareTemplateCreateNestedManyWithoutTraderInput
+    defaultCategoryShares?: DefaultTraderCategoryShareCreateNestedManyWithoutTraderInput
     traderCategoryShares?: TraderCategoryShareCreateNestedManyWithoutTraderInput
     classifications?: ClassificationCreateNestedManyWithoutTraderInput
     traderStocks?: TraderStockCreateNestedManyWithoutTraderInput
@@ -42314,7 +42314,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     slug: string
-    defaultCategoryShares?: TraderCategoryShareTemplateUncheckedCreateNestedManyWithoutTraderInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUncheckedCreateNestedManyWithoutTraderInput
     traderCategoryShares?: TraderCategoryShareUncheckedCreateNestedManyWithoutTraderInput
     classifications?: ClassificationUncheckedCreateNestedManyWithoutTraderInput
     traderStocks?: TraderStockUncheckedCreateNestedManyWithoutTraderInput
@@ -42527,7 +42527,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     slug?: StringFieldUpdateOperationsInput | string
-    defaultCategoryShares?: TraderCategoryShareTemplateUpdateManyWithoutTraderNestedInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUpdateManyWithoutTraderNestedInput
     traderCategoryShares?: TraderCategoryShareUpdateManyWithoutTraderNestedInput
     classifications?: ClassificationUpdateManyWithoutTraderNestedInput
     traderStocks?: TraderStockUpdateManyWithoutTraderNestedInput
@@ -42542,7 +42542,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     slug?: StringFieldUpdateOperationsInput | string
-    defaultCategoryShares?: TraderCategoryShareTemplateUncheckedUpdateManyWithoutTraderNestedInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUncheckedUpdateManyWithoutTraderNestedInput
     traderCategoryShares?: TraderCategoryShareUncheckedUpdateManyWithoutTraderNestedInput
     classifications?: ClassificationUncheckedUpdateManyWithoutTraderNestedInput
     traderStocks?: TraderStockUncheckedUpdateManyWithoutTraderNestedInput
@@ -42824,7 +42824,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     slug: string
-    defaultCategoryShares?: TraderCategoryShareTemplateCreateNestedManyWithoutTraderInput
+    defaultCategoryShares?: DefaultTraderCategoryShareCreateNestedManyWithoutTraderInput
     traderCategoryShares?: TraderCategoryShareCreateNestedManyWithoutTraderInput
     classifications?: ClassificationCreateNestedManyWithoutTraderInput
     traderStocks?: TraderStockCreateNestedManyWithoutTraderInput
@@ -42839,7 +42839,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     slug: string
-    defaultCategoryShares?: TraderCategoryShareTemplateUncheckedCreateNestedManyWithoutTraderInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUncheckedCreateNestedManyWithoutTraderInput
     traderCategoryShares?: TraderCategoryShareUncheckedCreateNestedManyWithoutTraderInput
     classifications?: ClassificationUncheckedCreateNestedManyWithoutTraderInput
     traderStocks?: TraderStockUncheckedCreateNestedManyWithoutTraderInput
@@ -43154,7 +43154,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     slug?: StringFieldUpdateOperationsInput | string
-    defaultCategoryShares?: TraderCategoryShareTemplateUpdateManyWithoutTraderNestedInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUpdateManyWithoutTraderNestedInput
     traderCategoryShares?: TraderCategoryShareUpdateManyWithoutTraderNestedInput
     classifications?: ClassificationUpdateManyWithoutTraderNestedInput
     traderStocks?: TraderStockUpdateManyWithoutTraderNestedInput
@@ -43169,7 +43169,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     slug?: StringFieldUpdateOperationsInput | string
-    defaultCategoryShares?: TraderCategoryShareTemplateUncheckedUpdateManyWithoutTraderNestedInput
+    defaultCategoryShares?: DefaultTraderCategoryShareUncheckedUpdateManyWithoutTraderNestedInput
     traderCategoryShares?: TraderCategoryShareUncheckedUpdateManyWithoutTraderNestedInput
     classifications?: ClassificationUncheckedUpdateManyWithoutTraderNestedInput
     traderStocks?: TraderStockUncheckedUpdateManyWithoutTraderNestedInput
@@ -43563,7 +43563,7 @@ export namespace Prisma {
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
   }
 
-  export type TraderCategoryShareTemplateCreateManyTraderCategoryTemplateInput = {
+  export type DefaultTraderCategoryShareCreateManyDefaultTraderCategoryInput = {
     id?: number
     traderId: number
     percent: Decimal | DecimalJsLike | number | string
@@ -43571,14 +43571,14 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
-  export type TraderCategoryShareTemplateUpdateWithoutTraderCategoryTemplateInput = {
+  export type DefaultTraderCategoryShareUpdateWithoutDefaultTraderCategoryInput = {
     percent?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     trader?: TraderUpdateOneRequiredWithoutDefaultCategorySharesNestedInput
   }
 
-  export type TraderCategoryShareTemplateUncheckedUpdateWithoutTraderCategoryTemplateInput = {
+  export type DefaultTraderCategoryShareUncheckedUpdateWithoutDefaultTraderCategoryInput = {
     id?: IntFieldUpdateOperationsInput | number
     traderId?: IntFieldUpdateOperationsInput | number
     percent?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -43586,7 +43586,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type TraderCategoryShareTemplateUncheckedUpdateManyWithoutTraderCategoryTemplateInput = {
+  export type DefaultTraderCategoryShareUncheckedUpdateManyWithoutDefaultTraderCategoryInput = {
     id?: IntFieldUpdateOperationsInput | number
     traderId?: IntFieldUpdateOperationsInput | number
     percent?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -44865,9 +44865,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type TraderCategoryShareTemplateCreateManyTraderInput = {
+  export type DefaultTraderCategoryShareCreateManyTraderInput = {
     id?: number
-    traderCategoryTemplateId: number
+    defaultTraderCategoryId: number
     percent: Decimal | DecimalJsLike | number | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -44978,24 +44978,24 @@ export namespace Prisma {
     isDeleted?: boolean
   }
 
-  export type TraderCategoryShareTemplateUpdateWithoutTraderInput = {
+  export type DefaultTraderCategoryShareUpdateWithoutTraderInput = {
     percent?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    traderCategoryTemplate?: TraderCategoryTemplateUpdateOneRequiredWithoutDefaultSharesNestedInput
+    defaultTraderCategory?: DefaultTraderCategoryUpdateOneRequiredWithoutSharesNestedInput
   }
 
-  export type TraderCategoryShareTemplateUncheckedUpdateWithoutTraderInput = {
+  export type DefaultTraderCategoryShareUncheckedUpdateWithoutTraderInput = {
     id?: IntFieldUpdateOperationsInput | number
-    traderCategoryTemplateId?: IntFieldUpdateOperationsInput | number
+    defaultTraderCategoryId?: IntFieldUpdateOperationsInput | number
     percent?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type TraderCategoryShareTemplateUncheckedUpdateManyWithoutTraderInput = {
+  export type DefaultTraderCategoryShareUncheckedUpdateManyWithoutTraderInput = {
     id?: IntFieldUpdateOperationsInput | number
-    traderCategoryTemplateId?: IntFieldUpdateOperationsInput | number
+    defaultTraderCategoryId?: IntFieldUpdateOperationsInput | number
     percent?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

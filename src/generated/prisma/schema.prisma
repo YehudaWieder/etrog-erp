@@ -43,38 +43,38 @@ model Field {
 }
 
 // -----------------------------------------------------------------------------
-// 2.5 Trader Category Templates (Global Defaults)
+// 3. Default Trader Categories (Global Defaults)
 // -----------------------------------------------------------------------------
-model TraderCategoryTemplate {
+model DefaultTraderCategory {
   id    Int     @id @default(autoincrement())
   name  String  @unique
   notes String?
 
-  defaultShares TraderCategoryShareTemplate[]
+  shares DefaultTraderCategoryShare[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model TraderCategoryShareTemplate {
+model DefaultTraderCategoryShare {
   id Int @id @default(autoincrement())
 
   traderId Int
   trader   Trader @relation(fields: [traderId], references: [id], onDelete: Cascade)
 
-  traderCategoryTemplateId Int
-  traderCategoryTemplate   TraderCategoryTemplate @relation(fields: [traderCategoryTemplateId], references: [id], onDelete: Cascade)
+  defaultTraderCategoryId Int
+  defaultTraderCategory   DefaultTraderCategory @relation(fields: [defaultTraderCategoryId], references: [id], onDelete: Cascade)
 
   percent Decimal
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([traderId, traderCategoryTemplateId])
+  @@unique([traderId, defaultTraderCategoryId])
 }
 
 // -----------------------------------------------------------------------------
-// 3. Season Management (The Time-Tenant)
+// 4. Season Management (The Time-Tenant)
 // -----------------------------------------------------------------------------
 model Season {
   id       Int     @id @default(autoincrement())
@@ -101,7 +101,7 @@ model Season {
 }
 
 // -----------------------------------------------------------------------------
-// 4. User Management
+// 5. User Management
 // -----------------------------------------------------------------------------
 model User {
   id           Int     @id @default(autoincrement())
@@ -129,7 +129,7 @@ model User {
 }
 
 // -----------------------------------------------------------------------------
-// 5. Traders
+// 6. Traders
 // -----------------------------------------------------------------------------
 model Trader {
   id   Int    @id @default(autoincrement())
@@ -143,7 +143,7 @@ model Trader {
   slug String @unique // URL-friendly slug
 
   // Relations
-  defaultCategoryShares TraderCategoryShareTemplate[]
+  defaultCategoryShares DefaultTraderCategoryShare[]
   traderCategoryShares  TraderCategoryShare[]
   classifications       Classification[]
   traderStocks          TraderStock[]
@@ -153,7 +153,7 @@ model Trader {
 }
 
 // -----------------------------------------------------------------------------
-// 6. Customer
+// 7. Customer
 // -----------------------------------------------------------------------------
 model Customer {
   id           Int     @id @default(autoincrement())
@@ -177,7 +177,7 @@ model Customer {
 }
 
 // -----------------------------------------------------------------------------
-// 7. Traders categories
+// 8. Traders categories
 // -----------------------------------------------------------------------------
 model TradersCategories {
   id       Int     @id @default(autoincrement())
@@ -198,7 +198,7 @@ model TradersCategories {
 }
 
 // -----------------------------------------------------------------------------
-// 8. Customer categories and prices
+// 9. Customer categories and prices
 // -----------------------------------------------------------------------------
 model CustomerCategories {
   id       Int    @id @default(autoincrement())
@@ -224,7 +224,7 @@ model CustomerCategories {
 }
 
 // -----------------------------------------------------------------------------
-// 9. Trader Category Share (%)
+// 10. Trader Category Share (%)
 // -----------------------------------------------------------------------------
 model TraderCategoryShare {
   id Int @id @default(autoincrement())
@@ -247,7 +247,7 @@ model TraderCategoryShare {
 }
 
 // -----------------------------------------------------------------------------
-// 10. Field Operations
+// 11. Field Operations
 // -----------------------------------------------------------------------------
 model FieldHarvest {
   id Int @id @default(autoincrement())
@@ -297,7 +297,7 @@ model FieldHarvest {
 }
 
 // -----------------------------------------------------------------------------
-// 11. Grading & Classification
+// 12. Grading & Classification
 // -----------------------------------------------------------------------------
 model Classification {
   id Int @id @default(autoincrement())
@@ -346,7 +346,7 @@ model Classification {
 }
 
 // -----------------------------------------------------------------------------
-// 12. Trader Inventory & Buffer Management
+// 13. Trader Inventory & Buffer Management
 // -----------------------------------------------------------------------------
 model TraderStock {
   id Int @id @default(autoincrement())
@@ -391,7 +391,7 @@ model TraderStock {
 }
 
 // -----------------------------------------------------------------------------
-// 13. Customer Allocations (Sales)
+// 14. Customer Allocations (Sales)
 // -----------------------------------------------------------------------------
 model CustomerAllocation {
   id Int @id @default(autoincrement())
@@ -440,7 +440,7 @@ model CustomerAllocation {
 }
 
 // -----------------------------------------------------------------------------
-// 14. Shipment
+// 15. Shipment
 // -----------------------------------------------------------------------------
 model Shipment {
   id Int @id @default(autoincrement())
@@ -479,7 +479,7 @@ model Shipment {
 }
 
 // -----------------------------------------------------------------------------
-// 15. Box - Container
+// 16. Box - Container
 // -----------------------------------------------------------------------------
 model Box {
   id         Int      @id @default(autoincrement())
@@ -527,7 +527,7 @@ model Box {
 }
 
 // -----------------------------------------------------------------------------
-// 16. Items - Products
+// 17. Items - Products
 // -----------------------------------------------------------------------------
 model ShipmentItem {
   id         Int      @id @default(autoincrement())
@@ -580,7 +580,7 @@ model ShipmentItem {
 }
 
 // -----------------------------------------------------------------------------
-// 17. Internal Messaging System
+// 18. Internal Messaging System
 // -----------------------------------------------------------------------------
 model Message {
   id Int @id @default(autoincrement())

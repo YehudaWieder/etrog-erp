@@ -137,7 +137,7 @@ exports.Prisma.FieldScalarFieldEnum = {
   slug: 'slug'
 };
 
-exports.Prisma.TraderCategoryTemplateScalarFieldEnum = {
+exports.Prisma.DefaultTraderCategoryScalarFieldEnum = {
   id: 'id',
   name: 'name',
   notes: 'notes',
@@ -145,10 +145,10 @@ exports.Prisma.TraderCategoryTemplateScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.TraderCategoryShareTemplateScalarFieldEnum = {
+exports.Prisma.DefaultTraderCategoryShareScalarFieldEnum = {
   id: 'id',
   traderId: 'traderId',
-  traderCategoryTemplateId: 'traderCategoryTemplateId',
+  defaultTraderCategoryId: 'defaultTraderCategoryId',
   percent: 'percent',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -487,8 +487,8 @@ exports.Priority = exports.$Enums.Priority = {
 exports.Prisma.ModelName = {
   SystemConfig: 'SystemConfig',
   Field: 'Field',
-  TraderCategoryTemplate: 'TraderCategoryTemplate',
-  TraderCategoryShareTemplate: 'TraderCategoryShareTemplate',
+  DefaultTraderCategory: 'DefaultTraderCategory',
+  DefaultTraderCategoryShare: 'DefaultTraderCategoryShare',
   Season: 'Season',
   User: 'User',
   Trader: 'Trader',

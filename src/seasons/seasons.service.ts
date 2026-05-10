@@ -2,10 +2,14 @@
 
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { SeedService } from '../system-config/services/seed/seed.service';
 
 @Injectable()
 export class SeasonsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private seedService: SeedService,
+  ) {}
 
   async previewSeasonCreation(yearName: number) {
     const existingSeason = await this.prisma.season.findUnique({
@@ -13,15 +17,15 @@ export class SeasonsService {
       select: { id: true, yearName: true, slug: true, isActive: true },
     });
 
-    const templates = await this.prisma.traderCategoryTemplate.findMany({
+    const templates = await this.prisma.defaultTraderCategory.findMany({
       select: { id: true },
     });
 
-    const templateShares = await this.prisma.traderCategoryShareTemplate.findMany({
+    const templateShares = await this.prisma.defaultTraderCategoryShare.findMany({
       select: {
         id: true,
         traderId: true,
-        traderCategoryTemplateId: true,
+        defaultTraderCategoryId: true,
       },
     });
 
@@ -30,8 +34,8 @@ export class SeasonsService {
       yearName,
       existingSeason,
       defaults: {
-        traderCategoryTemplates: templates.length,
-        traderCategoryShareTemplates: templateShares.length,
+        defaultTraderCategories: templates.length,
+        defaultTraderCategoryShares: templateShares.length,
       },
       projectedForNewSeason: {
         traderCategoriesToCreate: templates.length,
@@ -49,10 +53,12 @@ export class SeasonsService {
     if (existing) throw new ConflictException(`Season ${yearName} already exists`);
 
     return this.prisma.$transaction(async (tx) => {
+      // Deactivate all other seasons
       await tx.season.updateMany({
         data: { isActive: false },
       });
 
+      // Create new season
       const season = await tx.season.create({
         data: {
           yearName,
@@ -61,43 +67,8 @@ export class SeasonsService {
         },
       });
 
-      const templates = await tx.traderCategoryTemplate.findMany({
-        orderBy: { name: 'asc' },
-      });
-
-      const templateToSeasonCategoryId = new Map<number, number>();
-
-      for (const template of templates) {
-        const createdCategory = await tx.tradersCategories.create({
-          data: {
-            seasonId: season.id,
-            name: template.name,
-            notes: template.notes,
-          },
-        });
-
-        templateToSeasonCategoryId.set(template.id, createdCategory.id);
-      }
-
-      const shareTemplates = await tx.traderCategoryShareTemplate.findMany({
-        orderBy: [{ traderCategoryTemplateId: 'asc' }, { traderId: 'asc' }],
-      });
-
-      for (const templateShare of shareTemplates) {
-        const seasonCategoryId = templateToSeasonCategoryId.get(templateShare.traderCategoryTemplateId);
-        if (!seasonCategoryId) {
-          continue;
-        }
-
-        await tx.traderCategoryShare.create({
-          data: {
-            seasonId: season.id,
-            traderId: templateShare.traderId,
-            traderCategoryId: seasonCategoryId,
-            percent: templateShare.percent,
-          },
-        });
-      }
+      // Bootstrap default trader categories and shares
+      await this.seedService.bootstrapDefaultsForSeason(season.id, tx);
 
       return season;
     });
