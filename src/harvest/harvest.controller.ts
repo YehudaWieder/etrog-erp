@@ -157,18 +157,18 @@ export class HarvestController {
   @ApiBody({
     type: HarvestBulkCreateDto,
     examples: {
-      sampleTraderAndGeneral: {
-        summary: 'Bulk harvest with real trader categories (יאנעווע / חב\'\'ד / בומבעס)',
+      sampleAllAssignmentTypes: {
+        summary: 'Single bulk object with all 3 assignment types: TRADER + GENERAL + CUSTOMER',
         value: {
           dateGregorian: '2026-10-15T06:00:00.000Z',
           dateHebrew: 'כ"ג תשרי תשפ"ז',
           fieldId: 2,
           updatedById: 1,
-          totalHarvested: 1500,
-          totalRejected: 80,
+          totalHarvested: 2000,
+          totalRejected: 100,
           ownerHarvested: 0,
           ownerRejected: 0,
-          notes: 'קטיף בוקר - חלוקה לסוחר ספציפי וכללי',
+          notes: 'קטיף בוקר - דוגמה מאוחדת לכל 3 סוגי המיון',
           isPartialClassification: true,
           classifications: [
             {
@@ -188,36 +188,13 @@ export class HarvestController {
               quantity: 800,
               notes: 'יאנעווע - חלוקה לפי אחוזי סוחרים',
             },
-          ],
-        },
-      },
-      sampleCustomerCategory: {
-        summary: 'Bulk harvest with customer category (name+grade combo)',
-        value: {
-          dateGregorian: '2026-10-16T06:10:00.000Z',
-          dateHebrew: 'כ"ד תשרי תשפ"ז',
-          fieldId: 2,
-          updatedById: 1,
-          totalHarvested: 500,
-          totalRejected: 20,
-          notes: 'הקצאה ישירה ללקוח לפי customerCategoryId',
-          isPartialClassification: true,
-          classifications: [
             {
               assignmentType: 'CUSTOMER',
               customerId: 1,
-              customerCategoryId: 2,
+              customerCategoryId: 3,
               pitamStatus: 'WITH_PITAM',
-              quantity: 300,
-              notes: 'חבד קלר + דרגה א (categoryId=2)',
-            },
-            {
-              assignmentType: 'CUSTOMER',
-              customerId: 2,
-              customerCategoryId: 5,
-              pitamStatus: 'WITHOUT_PITAM',
-              quantity: 180,
-              notes: 'יאנעווע המפיץ + דרגה ב (categoryId=5)',
+              quantity: 480,
+              notes: 'חבד קלר + דרגה א - (categoryId=3)',
             },
           ],
         },
