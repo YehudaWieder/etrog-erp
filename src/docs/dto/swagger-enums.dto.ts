@@ -475,6 +475,9 @@ export class CustomerCategorySwaggerDto {
 }
 
 export class PricingConfigSwaggerDto {
+  @ApiProperty({ description: 'Season ID to update pricing for.', example: 1 })
+  seasonId!: number;
+
   @ApiProperty({ enum: Currency, enumName: 'Currency', description: 'Pricing currency.' })
   currency!: Currency;
 
@@ -499,6 +502,9 @@ export class SystemConfigCreateSwaggerDto {
 }
 
 export class SystemConfigUpdateSwaggerDto {
+  @ApiProperty({ description: 'Season ID to update configuration for.', example: 1 })
+  seasonId!: number;
+
   @ApiPropertyOptional({
     enum: Currency,
     enumName: 'Currency',

@@ -57,29 +57,39 @@ export class SystemConfigController {
     }, { requirePricingOnCreate: true });
   }
 
-  @Patch(':seasonId/pricing')
+  @Patch('pricing')
   @ApiOperation({ summary: 'Update only the pricing settings (currency and unit price) for a season\'s configuration' })
-  @ApiParam({ name: 'seasonId', type: Number, description: 'The ID of the season.' })
-  @ApiBody({ type: PricingConfigSwaggerDto })
+  @ApiBody({ 
+    type: PricingConfigSwaggerDto,
+    examples: {
+      sample: {
+        summary: 'Update pricing for a season',
+        value: {
+          seasonId: 1,
+          currency: 'USD',
+          unitPrice: 10.5,
+        },
+      },
+    },
+  })
   @ApiResponse({ status: 200, description: 'Pricing updated successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid currency or unit price.' })
   @ApiResponse({ status: 404, description: 'Configuration not found for the given season.' })
   updatePricing(
-    @Param('seasonId') seasonId: string,
-    @Body() body: { currency: Currency; unitPrice: number },
+    @Body() body: PricingConfigSwaggerDto,
   ) {
-    return this.systemConfigService.updatePricing(Number(seasonId), body.currency, body.unitPrice);
+    return this.systemConfigService.updatePricing(body.seasonId, body.currency, body.unitPrice);
   }
 
-  @Patch(':seasonId')
+  @Patch()
   @ApiOperation({ summary: 'Update general system configuration fields for a season' })
-  @ApiParam({ name: 'seasonId', type: Number, description: 'The ID of the season.' })
   @ApiBody({
     type: SystemConfigUpdateSwaggerDto,
     examples: {
       full: {
         summary: 'Update both currency and unit price',
         value: {
+          seasonId: 1,
           currency: 'USD',
           unitPrice: 10.25,
         },
@@ -87,6 +97,7 @@ export class SystemConfigController {
       partial: {
         summary: 'Update only currency',
         value: {
+          seasonId: 1,
           currency: 'EUR',
         },
       },
@@ -95,7 +106,7 @@ export class SystemConfigController {
   @ApiResponse({ status: 200, description: 'Configuration updated successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Configuration not found for the given season.' })
-  updateConfig(@Param('seasonId') seasonId: string, @Body() body: any) {
-    return this.systemConfigService.updateConfig(Number(seasonId), body);
+  updateConfig(@Body() body: SystemConfigUpdateSwaggerDto) {
+    return this.systemConfigService.updateConfig(body.seasonId, body);
   }
 }
