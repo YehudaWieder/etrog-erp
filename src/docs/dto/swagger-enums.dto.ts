@@ -55,6 +55,25 @@ export class UserUpdateSwaggerDto {
   isActive?: boolean;
 }
 
+export class TraderCreateSwaggerDto {
+  @ApiProperty({ description: 'Unique trader name.', example: 'Trader Cohen' })
+  name!: string;
+
+  @ApiPropertyOptional({ description: 'Optional payment percentage for the trader.', example: 12.5 })
+  paymentPercent?: number;
+}
+
+export class TraderUpdateSwaggerDto {
+  @ApiProperty({ description: 'Trader ID to update.', example: 1 })
+  id!: number;
+
+  @ApiPropertyOptional({ description: 'Updated unique trader name.', example: 'Trader Levi' })
+  name?: string;
+
+  @ApiPropertyOptional({ description: 'Updated payment percentage for the trader.', example: 15 })
+  paymentPercent?: number;
+}
+
 export class MessageSwaggerDto {
   @ApiProperty({ description: 'Sender user ID.' })
   senderId!: number;

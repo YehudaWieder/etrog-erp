@@ -7,6 +7,7 @@ import { Prisma, Role } from '@prisma/client';
 import { Roles } from 'src/authorization/decorators/roles.decorator';
 import { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+import { TraderCreateSwaggerDto, TraderUpdateSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Partners')
 @ApiBearerAuth('access-token')
@@ -19,16 +20,14 @@ export class TradersController {
   @Post()
   @ApiOperation({ summary: 'Register a new trader. Unique constraint: [name].' })
   @ApiBody({
-    schema: {
-      type: 'object',
-      required: ['name'],
-      properties: {
-        name: { type: 'string', description: 'The unique name of the trader.', example: 'Trader Cohen' },
-        paymentPercent: { type: 'number', description: 'Optional payment percentage for the trader.', nullable: true, example: 12.5 },
-      },
-      example: {
-        name: 'Trader Cohen',
-        paymentPercent: 12.5,
+    type: TraderCreateSwaggerDto,
+    examples: {
+      sample: {
+        summary: 'Create a new trader',
+        value: {
+          name: 'Trader Cohen',
+          paymentPercent: 12.5,
+        },
       },
     },
   })
@@ -59,19 +58,18 @@ export class TradersController {
     return this.tradersService.findOneByActor(isNaN(id) ? idOrSlug : id, req.user as AuthenticatedUser);
   }
 
-  @Patch(':id')
+  @Patch()
   @ApiOperation({ summary: 'Update trader details (name, payment percentage) by ID' })
-  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the trader to update.' })
   @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        name: { type: 'string', example: 'Trader Levi' },
-        paymentPercent: { type: 'number', example: 15 },
-      },
-      example: {
-        name: 'Trader Levi',
-        paymentPercent: 15,
+    type: TraderUpdateSwaggerDto,
+    examples: {
+      sample: {
+        summary: 'Update a trader by ID',
+        value: {
+          id: 1,
+          name: 'Trader Levi',
+          paymentPercent: 15,
+        },
       },
     },
   })
@@ -80,10 +78,10 @@ export class TradersController {
   @ApiResponse({ status: 404, description: 'Trader not found.' })
   @Roles(Role.OWNER, Role.MANAGER)
   update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateData: Partial<Prisma.TraderUpdateInput>,
+    @Body() updateData: TraderUpdateSwaggerDto,
   ) {
-    return this.tradersService.update(id, updateData);
+    const { id, ...data } = updateData;
+    return this.tradersService.update(id, data as Partial<Prisma.TraderUpdateInput>);
   }
 
   @Delete(':id')
