@@ -517,13 +517,17 @@ export class ClassificationBulkItemDto {
     enum: AssignmentType,
     enumName: 'AssignmentType',
     description: 'Ownership target of the classification: GENERAL distributes by trader shares, TRADER belongs to one trader, CUSTOMER belongs to one customer.',
+    example: AssignmentType.CUSTOMER,
   })
   assignmentType!: AssignmentType;
 
   @ApiPropertyOptional({ description: 'Trader ID if assignmentType is TRADER' })
   traderId?: number;
 
-  @ApiPropertyOptional({ description: 'Customer ID if assignmentType is CUSTOMER' })
+  @ApiPropertyOptional({
+    description: 'Customer ID if assignmentType is CUSTOMER',
+    example: 1,
+  })
   customerId?: number;
 
   @ApiPropertyOptional({ description: 'Trader category ID. Required for GENERAL and TRADER inventory classifications' })
@@ -543,13 +547,23 @@ export class ClassificationBulkItemDto {
   })
   grade?: Grade;
 
-  @ApiProperty({ enum: PitamStatus, enumName: 'PitamStatus' })
+  @ApiProperty({
+    enum: PitamStatus,
+    enumName: 'PitamStatus',
+    example: PitamStatus.WITH_PITAM,
+  })
   pitamStatus!: PitamStatus;
 
-  @ApiProperty({ description: 'Quantity of items in this classification' })
+  @ApiProperty({
+    description: 'Quantity of items in this classification',
+    example: 120,
+  })
   quantity!: number;
 
-  @ApiPropertyOptional({ description: 'Optional notes' })
+  @ApiPropertyOptional({
+    description: 'Optional notes',
+    example: 'מיון ללקוח CUSTOMER: חבד קלר + דרגה א - (categoryId=3)',
+  })
   notes?: string;
 }
 
