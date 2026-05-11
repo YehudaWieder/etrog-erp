@@ -7,6 +7,7 @@ import { Prisma, Role } from '@prisma/client';
 import { Roles } from 'src/authorization/decorators/roles.decorator';
 import { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+import { CustomerUpdateSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Partners')
 @ApiBearerAuth('access-token')
@@ -58,21 +59,19 @@ export class CustomersController {
     return this.customersService.findOneByActor(isNaN(id) ? idOrSlug : id, req.user as AuthenticatedUser);
   }
 
-  @Patch(':id')
+  @Patch()
   @ApiOperation({ summary: 'Update customer details by ID' })
-  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the customer to update.' })
   @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        customerName: { type: 'string', example: 'Global Fruits GmbH' },
-        email: { type: 'string', format: 'email', example: 'logistics@globalfruits.eu' },
-        phone: { type: 'string', example: '0527654321' },
-      },
-      example: {
-        customerName: 'Global Fruits GmbH',
-        email: 'logistics@globalfruits.eu',
-        phone: '0527654321',
+    type: CustomerUpdateSwaggerDto,
+    examples: {
+      sample: {
+        summary: 'Update a customer by ID',
+        value: {
+          id: 1,
+          customerName: 'Global Fruits GmbH',
+          email: 'logistics@globalfruits.eu',
+          phone: '0527654321',
+        },
       },
     },
   })
@@ -81,10 +80,10 @@ export class CustomersController {
   @ApiResponse({ status: 404, description: 'Customer not found.' })
   @Roles(Role.OWNER, Role.MANAGER)
   update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateData: Partial<Prisma.CustomerUpdateInput>,
+    @Body() updateData: CustomerUpdateSwaggerDto,
   ) {
-    return this.customersService.update(id, updateData);
+    const { id, ...data } = updateData;
+    return this.customersService.update(id, data as Partial<Prisma.CustomerUpdateInput>);
   }
 
   @Delete(':id')
