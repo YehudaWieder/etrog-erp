@@ -108,7 +108,7 @@ export class TraderCatShareService {
       data.traderId,
     );
 
-    return this.prisma.traderCategoryShare.upsert({
+    const share = await this.prisma.traderCategoryShare.upsert({
       where: {
         traderId_traderCategoryId_seasonId: {
           traderId: data.traderId,
@@ -125,7 +125,23 @@ export class TraderCatShareService {
         traderCategoryId: data.traderCategoryId,
         percent: data.percent,
       },
+      include: {
+        trader: { select: { id: true, name: true } },
+        traderCategory: { select: { id: true, name: true } },
+      },
     });
+
+    return {
+      id: share.id,
+      seasonId: share.seasonId,
+      traderId: share.traderId,
+      traderName: share.trader.name,
+      traderCategoryId: share.traderCategoryId,
+      traderCategoryName: share.traderCategory.name,
+      percent: Number(share.percent),
+      createdAt: share.createdAt,
+      updatedAt: share.updatedAt,
+    };
   }
 
   // Find shares for a specific season with names included
