@@ -517,6 +517,19 @@ export class SystemConfigUpdateSwaggerDto {
   unitPrice?: number;
 }
 
+export class FieldCreateSwaggerDto {
+  @ApiProperty({ description: 'Unique field name.', example: 'Block A' })
+  name!: string;
+}
+
+export class FieldUpdateSwaggerDto {
+  @ApiProperty({ description: 'Field ID to update.', example: 1 })
+  id!: number;
+
+  @ApiProperty({ description: 'New unique field name.', example: 'Block A North' })
+  name!: string;
+}
+
 // Bulk Harvest Form DTOs
 export class ClassificationBulkItemDto {
   @ApiProperty({

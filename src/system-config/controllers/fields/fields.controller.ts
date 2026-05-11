@@ -1,6 +1,6 @@
 // src/system-config/controllers/fields/fields.controller.ts
 
-import { Controller, Get, Post, Delete, Patch, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Patch, Body, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { FieldService } from 'src/system-config/services/fields/fields.service';
@@ -8,6 +8,7 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/authorization/guards/roles.guard';
 import { ActiveGuard } from 'src/authorization/guards/active.guard';
 import { Roles } from 'src/authorization/decorators/roles.decorator';
+import { FieldCreateSwaggerDto, FieldUpdateSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('System Configuration')
 @ApiBearerAuth('access-token')
@@ -30,45 +31,49 @@ export class FieldController {
   @Post()
   @ApiOperation({ summary: 'Register a new harvest field. Unique constraint: [name].' })
   @ApiBody({
-    schema: {
-      type: 'object',
-      required: ['name'],
-      properties: {
-        name: { type: 'string', description: 'The unique name of the field.' },
+    type: FieldCreateSwaggerDto,
+    examples: {
+      sample: {
+        summary: 'Create a new field',
+        value: {
+          name: 'Block A',
+        },
       },
     },
   })
   @ApiResponse({ status: 201, description: 'Field created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate field name.' })
-  addField(@Body() body: { name: string }) {
+  addField(@Body() body: FieldCreateSwaggerDto) {
     return this.fieldService.addField(body.name);
   }
 
-  @Delete(':name')
-  @ApiOperation({ summary: 'Remove a harvest field by its name' })
-  @ApiParam({ name: 'name', type: String, description: 'The name of the field to remove.' })
+  @Delete(':id')
+  @ApiOperation({ summary: 'Remove a harvest field by its ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the field to remove.' })
   @ApiResponse({ status: 200, description: 'Field removed successfully.' })
   @ApiResponse({ status: 404, description: 'Field not found.' })
-  removeField(@Param('name') name: string) {
-    return this.fieldService.removeField(name);
+  removeField(@Param('id', ParseIntPipe) id: number) {
+    return this.fieldService.removeField(id);
   }
 
   @Patch()
-  @ApiOperation({ summary: 'Rename an existing harvest field' })
+  @ApiOperation({ summary: 'Rename an existing harvest field by ID' })
   @ApiBody({
-    schema: {
-      type: 'object',
-      required: ['oldName', 'newName'],
-      properties: {
-        oldName: { type: 'string', description: 'The current name of the field.' },
-        newName: { type: 'string', description: 'The new name for the field.' },
+    type: FieldUpdateSwaggerDto,
+    examples: {
+      sample: {
+        summary: 'Rename a field by ID',
+        value: {
+          id: 1,
+          name: 'Block A North',
+        },
       },
     },
   })
   @ApiResponse({ status: 200, description: 'Field renamed successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate new field name.' })
-  @ApiResponse({ status: 404, description: 'Field with the given name not found.' })
-  updateField(@Body() body: { oldName: string; newName: string }) {
-    return this.fieldService.updateFieldName(body.oldName, body.newName);
+  @ApiResponse({ status: 404, description: 'Field with the given ID not found.' })
+  updateField(@Body() body: FieldUpdateSwaggerDto) {
+    return this.fieldService.updateFieldName(body.id, body.name);
   }
 }

@@ -29,18 +29,21 @@ export class FieldService {
   }
 
   // Remove field
-  async removeField(name: string) {
-    return this.prisma.field.deleteMany({
-      where: { name },
+  async removeField(id: number) {
+    return this.prisma.field.delete({
+      where: { id },
     });
   }
 
   // Update field name
-  async updateFieldName(oldName: string, newName: string) {
+  async updateFieldName(id: number, newName: string) {
     try {
       return await this.prisma.field.update({
-        where: { name: oldName },
-        data: { name: newName },
+        where: { id },
+        data: {
+          name: newName,
+          slug: newName.toLowerCase().replace(/\s+/g, '-'),
+        },
       });
     } catch (error) {
       throw new BadRequestException('Field update failed');
