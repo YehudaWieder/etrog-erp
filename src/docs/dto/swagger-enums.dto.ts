@@ -855,6 +855,16 @@ export class DefaultTraderCategoryApprovalResponseSwaggerDto {
   updatedAt!: Date;
 }
 
+export class SeasonYearNameSwaggerDto {
+  @ApiProperty({ description: 'Four-digit season year.', example: 2027 })
+  yearName!: number;
+}
+
+export class SeasonIdSwaggerDto {
+  @ApiProperty({ description: 'Season ID.', example: 1 })
+  id!: number;
+}
+
 export class SeasonPreviewDefaultTraderShareSwaggerDto {
   @ApiProperty({ description: 'Trader ID.' })
   traderId!: number;

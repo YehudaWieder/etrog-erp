@@ -1,11 +1,11 @@
 // src/seasons/seasons.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { SeasonsService } from './seasons.service';
 import { Roles } from 'src/authorization/decorators/roles.decorator';
-import { SeasonPreviewResponseSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+import { SeasonIdSwaggerDto, SeasonPreviewResponseSwaggerDto, SeasonYearNameSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Seasons')
 @ApiBearerAuth('access-token')
@@ -20,11 +20,13 @@ export class SeasonsController {
   @HttpCode(200)
   @ApiOperation({ summary: 'Preview creation of a new season including full default category/share bootstrap data.' })
   @ApiBody({
-    schema: {
-      type: 'object',
-      required: ['yearName'],
-      properties: {
-        yearName: { type: 'integer', example: 2027, description: 'The four-digit year for the season.' },
+    type: SeasonYearNameSwaggerDto,
+    examples: {
+      sample: {
+        summary: 'Preview a new season',
+        value: {
+          yearName: 2027,
+        },
       },
     },
   })
@@ -33,25 +35,27 @@ export class SeasonsController {
     description: 'Preview data returned successfully.',
     type: SeasonPreviewResponseSwaggerDto,
   })
-  previewCreate(@Body('yearName', ParseIntPipe) yearName: number) {
-    return this.seasonsService.previewSeasonCreation(yearName);
+  previewCreate(@Body() body: SeasonYearNameSwaggerDto) {
+    return this.seasonsService.previewSeasonCreation(body.yearName);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new harvest season. Unique constraint: [yearName].' })
   @ApiBody({
-    schema: {
-      type: 'object',
-      required: ['yearName'],
-      properties: {
-        yearName: { type: 'integer', example: 2026, description: 'The four-digit year for the season.' },
+    type: SeasonYearNameSwaggerDto,
+    examples: {
+      sample: {
+        summary: 'Create a new season',
+        value: {
+          yearName: 2026,
+        },
       },
     },
   })
   @ApiResponse({ status: 201, description: 'Season created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate year name.' })
-  create(@Body('yearName', ParseIntPipe) yearName: number) {
-    return this.seasonsService.createSeason(yearName);
+  create(@Body() body: SeasonYearNameSwaggerDto) {
+    return this.seasonsService.createSeason(body.yearName);
   }
 
   @Get()
@@ -82,13 +86,23 @@ export class SeasonsController {
     return this.seasonsService.findOne(isNaN(id) ? idOrSlug : id);
   }
 
-  @Patch(':id/set-active')
+  @Patch('set-active')
   @ApiOperation({ summary: 'Set a season as the currently active season (deactivates all others)' })
-  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the season to activate.' })
+  @ApiBody({
+    type: SeasonIdSwaggerDto,
+    examples: {
+      sample: {
+        summary: 'Activate a season by ID',
+        value: {
+          id: 1,
+        },
+      },
+    },
+  })
   @ApiResponse({ status: 200, description: 'Season set as active successfully.' })
   @ApiResponse({ status: 404, description: 'Season not found.' })
-  setActive(@Param('id', ParseIntPipe) id: number) {
-    return this.seasonsService.setActiveSeason(id);
+  setActive(@Body() body: SeasonIdSwaggerDto) {
+    return this.seasonsService.setActiveSeason(body.id);
   }
 
   @Delete(':id')
