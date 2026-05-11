@@ -281,13 +281,12 @@ Users must also have `isActive = true` to use the system.
   - **404**: Trader not found
 
 ##### 4. Update Trader
-- **Endpoint**: `PATCH /traders/:id`
+- **Endpoint**: `PATCH /traders`
 - **Access**: MANAGER/OWNER
-- **Parameters**:
-  - `id` (number): Trader ID
 - **Request Body**:
   ```json
   {
+    "id": 1,
     "name": "Trader Levi Updated",
     "paymentPercent": 18
   }
@@ -367,13 +366,12 @@ Users must also have `isActive = true` to use the system.
   - **404**: Customer not found
 
 ##### 4. Update Customer
-- **Endpoint**: `PATCH /customers/:id`
+- **Endpoint**: `PATCH /customers`
 - **Access**: MANAGER/OWNER
-- **Parameters**:
-  - `id` (number): Customer ID
 - **Request Body**:
   ```json
   {
+    "id": 5,
     "customerName": "Global Fruits GmbH",
     "email": "logistics@globalfruits.eu",
     "phone": "0527654321"
@@ -579,15 +577,12 @@ Users must also have `isActive = true` to use the system.
   - **404**: Customer category not found
 
 ##### 6. Update Customer Category
-- **Endpoint**: `PATCH /customer-categories/:id`
+- **Endpoint**: `PATCH /customer-categories`
 - **Access**: MANAGER/OWNER
-- **Parameters**:
-  - `id` (number): Category ID
 - **Request Body**:
   ```json
   {
-    "seasonId": 1,
-    "customerId": 5,
+    "id": 11,
     "name": "Yanover Updated",
     "grade": "א",
     "price": 135.5,
@@ -672,13 +667,12 @@ Users must also have `isActive = true` to use the system.
   - **404**: Share record not found
 
 ##### 5. Update Trader Share
-- **Endpoint**: `PATCH /trader-shares/:id`
+- **Endpoint**: `PATCH /trader-shares`
 - **Access**: MANAGER/OWNER
-- **Parameters**:
-  - `id` (number): Share ID
 - **Request Body**:
   ```json
   {
+    "id": 8,
     "percent": 42
   }
   ```
@@ -778,13 +772,12 @@ Users must also have `isActive = true` to use the system.
   - **404**: No harvest found for the given field and date
 
 ##### 5. Update Harvest
-- **Endpoint**: `PATCH /harvests/:id`
+- **Endpoint**: `PATCH /harvests`
 - **Access**: Authenticated users
-- **Parameters**:
-  - `id` (number): Harvest ID
 - **Request Body**:
   ```json
   {
+    "id": 1,
     "totalHarvested": 1630,
     "totalRejected": 90,
     "notes": "Updated after quality review"
@@ -925,6 +918,59 @@ Users must also have `isActive = true` to use the system.
   ```
 - **Response** (201): Transaction confirmation with split details
 
+##### 4. Update Internal Transfer
+- **Endpoint**: `PATCH /inventory/internal-transfer`
+- **Access**: Authenticated users
+- **Description**: Update internal transfer in TX while preserving minus/plus integrity
+- **Request Body**:
+  ```json
+  {
+    "id": 1,
+    "type": "INTERNAL_TRANSFER",
+    "date": "2026-10-10T09:30:00.000Z",
+    "dateHebrew": "יז תשרי תשפז",
+    "quantity": 90,
+    "fromOwnerType": "TRADER",
+    "fromTraderId": 4,
+    "fromTraderCategoryId": 3,
+    "fromGrade": "א",
+    "fromPitamStatus": "WITH_PITAM",
+    "toOwnerType": "CUSTOMER",
+    "toCustomerId": 5,
+    "toCustomerCategoryId": 11,
+    "toPitamStatus": "WITHOUT_PITAM",
+    "notes": "Updated allocation quantity"
+  }
+  ```
+- **Response** (200): Transaction confirmation
+- **Error Responses**:
+  - **400**: Invalid payload
+  - **404**: Internal transfer not found
+
+##### 5. Update Customer General Transfer
+- **Endpoint**: `PATCH /inventory/customer-general-transfer`
+- **Access**: Authenticated users
+- **Description**: Update customer general transfer in one TX: rollback linked trader movements and rebuild by current modulo+shares rules
+- **Request Body**:
+  ```json
+  {
+    "id": 1,
+    "date": "2026-10-10T09:00:00.000Z",
+    "dateHebrew": "יז תשרי תשפז",
+    "quantity": 95,
+    "pitamStatus": "WITH_PITAM",
+    "grade": "א",
+    "traderCategoryId": 3,
+    "customerId": 5,
+    "customerCategoryId": 11,
+    "notes": "Updated allocation after customer confirmation"
+  }
+  ```
+- **Response** (200): Updated allocation
+- **Error Responses**:
+  - **404**: Customer general transfer not found
+  - **400**: Invalid input data
+
 #### Trader Stock
 
 ##### 1. Record Stock Movement
@@ -1050,6 +1096,23 @@ Users must also have `isActive = true` to use the system.
   - `customerId` (number, required): Customer ID
 - **Response** (200): Ledger with all transactions
 
+##### 5. Update Customer Allocation
+- **Endpoint**: `PATCH /customer-allocations`
+- **Access**: Authenticated users
+- **Description**: Update an existing customer allocation record by ID
+- **Request Body**:
+  ```json
+  {
+    "id": 1,
+    "quantity": 95,
+    "notes": "Quantity increased after customer confirmation"
+  }
+  ```
+- **Response** (200): Updated allocation
+- **Error Responses**:
+  - **404**: Allocation not found
+  - **400**: Invalid input data
+
 ---
 
 ### Logistics
@@ -1117,14 +1180,12 @@ Users must also have `isActive = true` to use the system.
   - **404**: Shipment not found
 
 ##### 5. Update Shipment
-- **Endpoint**: `PATCH /shipments/:id`
+- **Endpoint**: `PATCH /shipments`
 - **Access**: Authenticated users
-- **Parameters**:
-  - `id` (number): Shipment ID
 - **Request Body**:
   ```json
   {
-    "updatedById": 2,
+    "id": 42,
     "status": "SHIPPED",
     "shippedAt": "2026-10-12T13:20:00.000Z",
     "notes": "Left warehouse gate at 13:20"
@@ -1135,7 +1196,20 @@ Users must also have `isActive = true` to use the system.
   - **404**: Shipment not found
   - **400**: Invalid input data
 
-##### 6. Delete Shipment
+##### 6. Recalculate Shipment Totals
+- **Endpoint**: `PATCH /shipments/recalculate`
+- **Access**: Authenticated users
+- **Request Body**:
+  ```json
+  {
+    "id": 42
+  }
+  ```
+- **Response** (200): Updated shipment with recalculated totals
+- **Error Responses**:
+  - **404**: Shipment not found
+
+##### 7. Delete Shipment
 - **Endpoint**: `DELETE /shipments/:id`
 - **Access**: Authenticated users
 - **Parameters**:
@@ -1200,16 +1274,16 @@ Users must also have `isActive = true` to use the system.
   - **404**: Box not found
 
 ##### 4. Update Box
-- **Endpoint**: `PATCH /boxes/:id`
+- **Endpoint**: `PATCH /boxes`
 - **Access**: Authenticated users
-- **Parameters**:
-  - `id` (number): Box ID
 - **Request Body**:
   ```json
   {
-    "updatedById": 1,
+    "id": 101,
     "status": "CLOSED",
-    "notes": "Sealed and ready for dispatch"
+    "notes": "Sealed and ready for dispatch",
+    "ownershipType": "CUSTOMER",
+    "customerId": 7
   }
   ```
 - **Response** (200): Updated box
@@ -1218,10 +1292,14 @@ Users must also have `isActive = true` to use the system.
   - **400**: Invalid input data
 
 ##### 5. Recalculate Box Total
-- **Endpoint**: `PATCH /boxes/:id/recalculate`
+- **Endpoint**: `PATCH /boxes/recalculate`
 - **Access**: Authenticated users
-- **Parameters**:
-  - `id` (number): Box ID
+- **Request Body**:
+  ```json
+  {
+    "id": 101
+  }
+  ```
 - **Description**: Recalculate and update the total quantity based on items
 - **Response** (200): Updated box
 - **Error Responses**:
@@ -1290,13 +1368,12 @@ Users must also have `isActive = true` to use the system.
   - **404**: Box not found
 
 ##### 3. Update Shipment Item
-- **Endpoint**: `PATCH /shipment-items/:id`
+- **Endpoint**: `PATCH /shipment-items`
 - **Access**: Authenticated users
-- **Parameters**:
-  - `id` (number): Item ID
 - **Request Body**:
   ```json
   {
+    "id": 120,
     "quantity": 34,
     "notes": "Adjusted after final packing review"
   }
@@ -1384,10 +1461,14 @@ Users must also have `isActive = true` to use the system.
   ```
 
 #### 6. Mark Message as Read
-- **Endpoint**: `PATCH /messages/:id/read`
+- **Endpoint**: `PATCH /messages/read`
 - **Access**: Authenticated users
-- **Parameters**:
-  - `id` (number): Message ID
+- **Request Body**:
+  ```json
+  {
+    "id": 1
+  }
+  ```
 - **Response** (200): Updated message with readByIds
 - **Error Responses**:
   - **404**: Message not found
