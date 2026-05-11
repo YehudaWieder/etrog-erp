@@ -1,10 +1,11 @@
 // src/seasons/seasons.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { SeasonsService } from './seasons.service';
 import { Roles } from 'src/authorization/decorators/roles.decorator';
+import { SeasonPreviewResponseSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Seasons')
 @ApiBearerAuth('access-token')
@@ -16,7 +17,8 @@ export class SeasonsController {
   constructor(private readonly seasonsService: SeasonsService) {}
 
   @Post('preview')
-  @ApiOperation({ summary: 'Preview creation of a new season including default category/share bootstrap counts.' })
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Preview creation of a new season including full default category/share bootstrap data.' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -26,7 +28,11 @@ export class SeasonsController {
       },
     },
   })
-  @ApiResponse({ status: 200, description: 'Preview data returned successfully.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Preview data returned successfully.',
+    type: SeasonPreviewResponseSwaggerDto,
+  })
   previewCreate(@Body('yearName', ParseIntPipe) yearName: number) {
     return this.seasonsService.previewSeasonCreation(yearName);
   }

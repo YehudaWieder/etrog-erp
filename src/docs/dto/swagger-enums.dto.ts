@@ -787,3 +787,67 @@ export class DefaultTraderCategoryApprovalResponseSwaggerDto {
   @ApiProperty({ description: 'Category last update timestamp.' })
   updatedAt!: Date;
 }
+
+export class SeasonPreviewDefaultTraderShareSwaggerDto {
+  @ApiProperty({ description: 'Trader ID.' })
+  traderId!: number;
+
+  @ApiProperty({ description: 'Trader name.' })
+  traderName!: string;
+
+  @ApiProperty({ description: 'Share percentage for this trader in the category.' })
+  percent!: number;
+}
+
+export class SeasonPreviewDefaultTraderCategorySwaggerDto {
+  @ApiProperty({ description: 'Default trader category ID.' })
+  id!: number;
+
+  @ApiProperty({ description: 'Default trader category name.' })
+  name!: string;
+
+  @ApiPropertyOptional({ description: 'Default trader category notes.' })
+  notes?: string;
+
+  @ApiProperty({ type: [SeasonPreviewDefaultTraderShareSwaggerDto], description: 'All trader shares for this category.' })
+  shares!: SeasonPreviewDefaultTraderShareSwaggerDto[];
+
+  @ApiProperty({ description: 'Total percentage allocation for the category.' })
+  totalPercent!: number;
+}
+
+export class SeasonPreviewResponseSwaggerDto {
+  @ApiProperty({ description: 'Whether the new season can be created.' })
+  canCreate!: boolean;
+
+  @ApiProperty({ description: 'The requested season year.' })
+  yearName!: number;
+
+  @ApiPropertyOptional({ description: 'Existing season with the same year, if any.' })
+  existingSeason?: {
+    id: number;
+    yearName: number;
+    slug: string;
+    isActive: boolean;
+  } | null;
+
+  @ApiProperty({
+    type: Object,
+    description: 'Current default data counts and detailed category allocations.',
+  })
+  defaults!: {
+    defaultTraderCategories: number;
+    defaultTraderCategoryShares: number;
+    categories: SeasonPreviewDefaultTraderCategorySwaggerDto[];
+  };
+
+  @ApiProperty({
+    type: Object,
+    description: 'Projected data to be created for the new season.',
+  })
+  projectedForNewSeason!: {
+    traderCategoriesToCreate: number;
+    traderSharesToCreate: number;
+    categories: SeasonPreviewDefaultTraderCategorySwaggerDto[];
+  };
+}

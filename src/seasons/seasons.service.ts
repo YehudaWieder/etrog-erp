@@ -11,6 +11,29 @@ export class SeasonsService {
     private seedService: SeedService,
   ) {}
 
+  private mapDefaultTraderCategoryPreview(category: any) {
+    let totalPercent = 0;
+
+    const shares = (category.shares || []).map((share) => {
+      const percent = Number(share.percent);
+      totalPercent += percent;
+
+      return {
+        traderId: share.traderId,
+        traderName: share.trader.name,
+        percent,
+      };
+    });
+
+    return {
+      id: category.id,
+      name: category.name,
+      notes: category.notes,
+      shares,
+      totalPercent: Number(totalPercent.toFixed(2)),
+    };
+  }
+
   async previewSeasonCreation(yearName: number) {
     const existingSeason = await this.prisma.season.findUnique({
       where: { yearName },
@@ -18,16 +41,23 @@ export class SeasonsService {
     });
 
     const templates = await this.prisma.defaultTraderCategory.findMany({
-      select: { id: true },
-    });
-
-    const templateShares = await this.prisma.defaultTraderCategoryShare.findMany({
-      select: {
-        id: true,
-        traderId: true,
-        defaultTraderCategoryId: true,
+      orderBy: { name: 'asc' },
+      include: {
+        shares: {
+          orderBy: { traderId: 'asc' },
+          include: {
+            trader: {
+              select: { id: true, name: true },
+            },
+          },
+        },
       },
     });
+
+    const templateShares = templates.flatMap((category) => category.shares);
+    const previewCategories = templates.map((category) =>
+      this.mapDefaultTraderCategoryPreview(category),
+    );
 
     return {
       canCreate: !existingSeason,
@@ -36,10 +66,12 @@ export class SeasonsService {
       defaults: {
         defaultTraderCategories: templates.length,
         defaultTraderCategoryShares: templateShares.length,
+        categories: previewCategories,
       },
       projectedForNewSeason: {
         traderCategoriesToCreate: templates.length,
         traderSharesToCreate: templateShares.length,
+        categories: previewCategories,
       },
     };
   }
