@@ -769,6 +769,9 @@ export class CreateDefaultTraderCategorySwaggerDto {
 }
 
 export class UpdateDefaultTraderCategorySwaggerDto {
+  @ApiProperty({ description: 'Default trader category ID.', example: 1 })
+  id!: number;
+
   @ApiPropertyOptional({ description: 'Updated category name.', example: 'Yanover Premium' })
   name?: string;
 

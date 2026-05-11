@@ -81,7 +81,6 @@ export class DefaultTraderCategoryController {
   }
 
   @ApiOperation({ summary: 'Update a default trader category. Roles: OWNER, MANAGER.' })
-  @ApiParam({ name: 'id', type: Number, description: 'Default trader category ID.' })
   @ApiBody({ type: UpdateDefaultTraderCategorySwaggerDto })
   @ApiResponse({
     status: 200,
@@ -90,12 +89,9 @@ export class DefaultTraderCategoryController {
   })
   @ApiResponse({ status: 404, description: 'Default trader category not found.' })
   @Roles(Role.OWNER, Role.MANAGER)
-  @Patch(':id')
-  async updateDefaultCategory(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateDefaultTraderCategorySwaggerDto,
-  ) {
-    return this.defaultTraderCategoryService.update(id, dto);
+  @Patch()
+  async updateDefaultCategory(@Body() dto: UpdateDefaultTraderCategorySwaggerDto) {
+    return this.defaultTraderCategoryService.update(dto.id, dto);
   }
 
   @ApiOperation({ summary: 'Delete a default trader category and its default shares. Roles: OWNER, MANAGER.' })
