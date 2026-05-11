@@ -638,11 +638,10 @@ export class CreateHarvestClassificationDto extends ClassificationBulkItemDto {
   updatedById!: number;
 
   @ApiProperty({
-    enum: ['PARTIAL', 'FINAL'],
-    description: 'Validation mode for harvest-classification consistency after create.',
-    example: 'PARTIAL',
+    description: 'Whether this harvest classification is in partial mode (allows incomplete classification).',
+    example: true,
   })
-  validationMode!: 'PARTIAL' | 'FINAL';
+  isPartialClassification!: boolean;
 
   @ApiPropertyOptional({
     type: HarvestInlineUpdateDto,
@@ -656,11 +655,10 @@ export class UpdateHarvestClassificationDto extends UpdateClassificationDto {
   updatedById!: number;
 
   @ApiProperty({
-    enum: ['PARTIAL', 'FINAL'],
-    description: 'Validation mode for harvest-classification consistency after update.',
-    example: 'FINAL',
+    description: 'Whether this harvest classification is in partial mode (allows incomplete classification).',
+    example: false,
   })
-  validationMode!: 'PARTIAL' | 'FINAL';
+  isPartialClassification!: boolean;
 
   @ApiPropertyOptional({
     type: HarvestInlineUpdateDto,
@@ -671,11 +669,10 @@ export class UpdateHarvestClassificationDto extends UpdateClassificationDto {
 
 export class DeleteHarvestClassificationDto {
   @ApiProperty({
-    enum: ['PARTIAL', 'FINAL'],
-    description: 'Validation mode for harvest-classification consistency after delete.',
-    example: 'PARTIAL',
+    description: 'Whether this harvest classification is in partial mode (allows incomplete classification).',
+    example: true,
   })
-  validationMode!: 'PARTIAL' | 'FINAL';
+  isPartialClassification!: boolean;
 
   @ApiPropertyOptional({
     type: HarvestInlineUpdateDto,

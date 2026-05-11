@@ -227,7 +227,7 @@ export class HarvestController {
           pitamStatus: 'WITH_PITAM',
           quantity: 120,
           notes: 'חבד קלר + דרגה א - (categoryId=3)',
-          validationMode: 'PARTIAL',
+          isPartialClassification: true,
           harvestUpdate: {
             totalHarvested: 1520,
             totalRejected: 80,
@@ -245,7 +245,7 @@ export class HarvestController {
           pitamStatus: 'WITHOUT_PITAM',
           quantity: 200,
           notes: 'חב\'\'ד - קטיף ערב',
-          validationMode: 'PARTIAL',
+          isPartialClassification: true,
         },
       },
     },
@@ -274,7 +274,7 @@ export class HarvestController {
         value: {
           quantity: 140,
           notes: 'עודכן אחרי תיקון מיון',
-          validationMode: 'PARTIAL',
+          isPartialClassification: true,
           harvestUpdate: {
             notes: 'עודכן במקביל לרשומת המיון',
           },
@@ -289,7 +289,7 @@ export class HarvestController {
           pitamStatus: 'WITH_PITAM',
           quantity: 90,
           notes: 'חזוא איידלמן + דרגה ב (categoryId=8)',
-          validationMode: 'PARTIAL',
+          isPartialClassification: true,
         },
       },
     },
@@ -317,7 +317,7 @@ export class HarvestController {
       sample: {
         summary: 'Delete classification while preserving PARTIAL mode',
         value: {
-          validationMode: 'PARTIAL',
+          isPartialClassification: true,
           harvestUpdate: {
             notes: 'מחיקת רשומה כפולה',
           },

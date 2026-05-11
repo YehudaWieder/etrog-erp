@@ -494,7 +494,7 @@ export class HarvestBulkService {
   private async syncHarvestClassificationProgress(
     tx: any,
     harvestId: number,
-    validationMode: 'PARTIAL' | 'FINAL',
+    isPartialClassification: boolean,
   ) {
     const harvest = await tx.fieldHarvest.findUnique({
       where: { id: harvestId },
@@ -523,7 +523,7 @@ export class HarvestBulkService {
       );
     }
 
-    if (validationMode === 'FINAL' && classifiedTotal !== totalAfterRejected) {
+    if (!isPartialClassification && classifiedTotal !== totalAfterRejected) {
       throw new BadRequestException(
         `Total classifications quantity (${classifiedTotal}) must equal net harvested quantity (${totalAfterRejected}) in FINAL mode`,
       );
@@ -533,7 +533,7 @@ export class HarvestBulkService {
       where: { id: harvestId },
       data: {
         classifiedTotal,
-        isPartialClassification: validationMode === 'PARTIAL',
+        isPartialClassification,
       },
     });
   }
@@ -600,7 +600,7 @@ export class HarvestBulkService {
         updatedById: createPayload.updatedById,
       });
 
-      await this.syncHarvestClassificationProgress(tx, harvestId, createPayload.validationMode);
+      await this.syncHarvestClassificationProgress(tx, harvestId, createPayload.isPartialClassification);
 
       return classification;
     });
@@ -739,7 +739,7 @@ export class HarvestBulkService {
           data: { notes: updatePayload.notes, updatedById: updatePayload.updatedById },
         });
 
-        await this.syncHarvestClassificationProgress(tx, harvestId, updatePayload.validationMode);
+        await this.syncHarvestClassificationProgress(tx, harvestId, updatePayload.isPartialClassification);
 
         return updated;
       });
@@ -748,7 +748,7 @@ export class HarvestBulkService {
     if (hasNoClassificationChanges) {
       return this.prisma.$transaction(async (tx) => {
         await this.applyHarvestInlineUpdate(tx, harvestId, updatePayload.harvestUpdate);
-        await this.syncHarvestClassificationProgress(tx, harvestId, updatePayload.validationMode);
+        await this.syncHarvestClassificationProgress(tx, harvestId, updatePayload.isPartialClassification);
 
         return tx.classification.findUnique({ where: { id: classificationId } });
       });
@@ -824,7 +824,7 @@ export class HarvestBulkService {
         updatedById: updatePayload.updatedById,
       });
 
-      await this.syncHarvestClassificationProgress(tx, harvestId, updatePayload.validationMode);
+      await this.syncHarvestClassificationProgress(tx, harvestId, updatePayload.isPartialClassification);
 
       return updatedClassification;
     });
@@ -871,7 +871,7 @@ export class HarvestBulkService {
         where: { id: classificationId },
       });
 
-      await this.syncHarvestClassificationProgress(tx, harvestId, deletePayload.validationMode);
+      await this.syncHarvestClassificationProgress(tx, harvestId, deletePayload.isPartialClassification);
 
       return deleted;
     });
