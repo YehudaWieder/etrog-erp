@@ -1,6 +1,6 @@
 // src/categories/services/traders-cat-share/traders-cat-share.service.ts
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma, Role } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
@@ -12,6 +12,64 @@ export class TraderCatShareService {
     private prisma: PrismaService,
     private seasonsService: SeasonsService,
   ) {}
+
+  private async validateCategoryTotalPercent(
+    seasonId: number,
+    traderCategoryId: number,
+    newPercent: number,
+    excludeTraderId?: number,
+  ) {
+    const shares = await this.prisma.traderCategoryShare.findMany({
+      where: {
+        seasonId,
+        traderCategoryId,
+      },
+      select: {
+        traderId: true,
+        percent: true,
+      },
+    });
+
+    let total = newPercent;
+    for (const share of shares) {
+      if (excludeTraderId && share.traderId === excludeTraderId) {
+        continue;
+      }
+      total += Number(share.percent);
+    }
+
+    if (total > 100) {
+      throw new BadRequestException(
+        `Total share percent cannot exceed 100% for category ${traderCategoryId}. Current total would be ${total.toFixed(2)}%.`,
+      );
+    }
+  }
+
+  private extractPercentValue(
+    percentInput: Prisma.TraderCategoryShareUpdateInput['percent'],
+  ): number | undefined {
+    if (percentInput === undefined) {
+      return undefined;
+    }
+
+    if (
+      typeof percentInput === 'object' &&
+      percentInput !== null &&
+      'set' in percentInput
+    ) {
+      const value = Number(percentInput.set);
+      if (Number.isNaN(value)) {
+        throw new BadRequestException('Invalid percent value');
+      }
+      return value;
+    }
+
+    const value = Number(percentInput as number | string);
+    if (Number.isNaN(value)) {
+      throw new BadRequestException('Invalid percent value');
+    }
+    return value;
+  }
 
   private isManagerOrAbove(actor: AuthenticatedUser) {
     return actor.role === Role.MANAGER || actor.role === Role.OWNER;
@@ -42,6 +100,13 @@ export class TraderCatShareService {
     percent: number;
   }) {
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
+
+    await this.validateCategoryTotalPercent(
+      seasonId,
+      data.traderCategoryId,
+      data.percent,
+      data.traderId,
+    );
 
     return this.prisma.traderCategoryShare.upsert({
       where: {
@@ -163,6 +228,30 @@ export class TraderCatShareService {
 
   // Standard Update
   async update(id: number, data: Prisma.TraderCategoryShareUpdateInput) {
+    const currentShare = await this.prisma.traderCategoryShare.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        seasonId: true,
+        traderId: true,
+        traderCategoryId: true,
+      },
+    });
+
+    if (!currentShare) {
+      throw new NotFoundException(`Share record #${id} not found`);
+    }
+
+    const nextPercent = this.extractPercentValue(data.percent);
+    if (nextPercent !== undefined) {
+      await this.validateCategoryTotalPercent(
+        currentShare.seasonId,
+        currentShare.traderCategoryId,
+        nextPercent,
+        currentShare.traderId,
+      );
+    }
+
     return this.prisma.traderCategoryShare.update({
       where: { id },
       data,

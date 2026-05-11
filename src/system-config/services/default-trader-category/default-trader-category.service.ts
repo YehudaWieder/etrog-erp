@@ -15,6 +15,34 @@ import {
 export class DefaultTraderCategoryService {
   constructor(private prisma: PrismaService) {}
 
+  private async validateCategoryTotalPercent(
+    categoryId: number,
+    newPercent: number,
+    excludeTraderId?: number,
+  ) {
+    const shares = await this.prisma.defaultTraderCategoryShare.findMany({
+      where: { defaultTraderCategoryId: categoryId },
+      select: {
+        traderId: true,
+        percent: true,
+      },
+    });
+
+    let total = newPercent;
+    for (const share of shares) {
+      if (excludeTraderId && share.traderId === excludeTraderId) {
+        continue;
+      }
+      total += Number(share.percent);
+    }
+
+    if (total > 100) {
+      throw new BadRequestException(
+        `Total share percent cannot exceed 100% for category ${categoryId}. Current total would be ${total.toFixed(2)}%.`,
+      );
+    }
+  }
+
   /**
    * Create a new default trader category
    */
@@ -203,6 +231,8 @@ export class DefaultTraderCategoryService {
       );
     }
 
+    await this.validateCategoryTotalPercent(categoryId, dto.percent);
+
     return this.prisma.defaultTraderCategoryShare.create({
       data: {
         traderId: dto.traderId,
@@ -248,6 +278,8 @@ export class DefaultTraderCategoryService {
         `Share not found for trader ${traderId} in category ${categoryId}`,
       );
     }
+
+    await this.validateCategoryTotalPercent(categoryId, percent, traderId);
 
     return this.prisma.defaultTraderCategoryShare.update({
       where: {
