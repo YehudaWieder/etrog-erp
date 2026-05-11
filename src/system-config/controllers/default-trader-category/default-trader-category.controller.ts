@@ -114,7 +114,7 @@ export class DefaultTraderCategoryController {
   async addTraderShare(
     @Body() dto: CreateDefaultTraderCategoryShareSwaggerDto,
   ) {
-    return this.defaultTraderCategoryService.addShare(dto.categoryId, dto);
+    return this.defaultTraderCategoryService.addShare(dto.defaultTraderCategoryId, dto);
   }
 
   @ApiOperation({ summary: 'Update trader share percent in a default category. Roles: OWNER, MANAGER.' })
@@ -127,7 +127,7 @@ export class DefaultTraderCategoryController {
     @Body() dto: UpdateDefaultTraderCategoryShareSwaggerDto,
   ) {
     return this.defaultTraderCategoryService.updateShare(
-      dto.categoryId,
+      dto.defaultTraderCategoryId,
       dto.traderId,
       dto.percent,
     );

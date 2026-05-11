@@ -225,15 +225,15 @@ export class DefaultTraderCategoryService {
   /**
    * Add a trader share to a default category
    */
-  async addShare(categoryId: number, dto: CreateDefaultTraderCategoryShareSwaggerDto) {
+  async addShare(defaultTraderCategoryId: number, dto: CreateDefaultTraderCategoryShareSwaggerDto) {
     // Verify category exists
     const category = await this.prisma.defaultTraderCategory.findUnique({
-      where: { id: categoryId },
+      where: { id: defaultTraderCategoryId },
     });
 
     if (!category) {
       throw new NotFoundException(
-        `Default trader category with ID ${categoryId} not found`,
+        `Default trader category with ID ${defaultTraderCategoryId} not found`,
       );
     }
 
@@ -251,7 +251,7 @@ export class DefaultTraderCategoryService {
       where: {
         traderId_defaultTraderCategoryId: {
           traderId: dto.traderId,
-          defaultTraderCategoryId: categoryId,
+          defaultTraderCategoryId,
         },
       },
     });
@@ -262,12 +262,12 @@ export class DefaultTraderCategoryService {
       );
     }
 
-    await this.validateCategoryTotalPercent(categoryId, dto.percent);
+    await this.validateCategoryTotalPercent(defaultTraderCategoryId, dto.percent);
 
     return this.prisma.defaultTraderCategoryShare.create({
       data: {
         traderId: dto.traderId,
-        defaultTraderCategoryId: categoryId,
+        defaultTraderCategoryId,
         percent: dto.percent,
       },
       include: {
@@ -285,7 +285,7 @@ export class DefaultTraderCategoryService {
    * Update a trader share percentage
    */
   async updateShare(
-    categoryId: number,
+    defaultTraderCategoryId: number,
     traderId: number,
     percent: number,
   ) {
@@ -293,7 +293,7 @@ export class DefaultTraderCategoryService {
       where: {
         traderId_defaultTraderCategoryId: {
           traderId,
-          defaultTraderCategoryId: categoryId,
+          defaultTraderCategoryId,
         },
       },
       include: {
@@ -306,17 +306,17 @@ export class DefaultTraderCategoryService {
 
     if (!share) {
       throw new NotFoundException(
-        `Share not found for trader ${traderId} in category ${categoryId}`,
+        `Share not found for trader ${traderId} in category ${defaultTraderCategoryId}`,
       );
     }
 
-    await this.validateCategoryTotalPercent(categoryId, percent, traderId);
+    await this.validateCategoryTotalPercent(defaultTraderCategoryId, percent, traderId);
 
     return this.prisma.defaultTraderCategoryShare.update({
       where: {
         traderId_defaultTraderCategoryId: {
           traderId,
-          defaultTraderCategoryId: categoryId,
+          defaultTraderCategoryId,
         },
       },
       data: {
@@ -336,19 +336,19 @@ export class DefaultTraderCategoryService {
   /**
    * Remove a trader share
    */
-  async removeShare(categoryId: number, traderId: number) {
+  async removeShare(defaultTraderCategoryId: number, traderId: number) {
     const share = await this.prisma.defaultTraderCategoryShare.findUnique({
       where: {
         traderId_defaultTraderCategoryId: {
           traderId,
-          defaultTraderCategoryId: categoryId,
+          defaultTraderCategoryId,
         },
       },
     });
 
     if (!share) {
       throw new NotFoundException(
-        `Share not found for trader ${traderId} in category ${categoryId}`,
+        `Share not found for trader ${traderId} in category ${defaultTraderCategoryId}`,
       );
     }
 
@@ -356,7 +356,7 @@ export class DefaultTraderCategoryService {
       where: {
         traderId_defaultTraderCategoryId: {
           traderId,
-          defaultTraderCategoryId: categoryId,
+          defaultTraderCategoryId,
         },
       },
     });

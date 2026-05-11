@@ -781,7 +781,7 @@ export class UpdateDefaultTraderCategorySwaggerDto {
 
 export class CreateDefaultTraderCategoryShareSwaggerDto {
   @ApiProperty({ description: 'Default trader category ID', example: 1 })
-  categoryId!: number;
+  defaultTraderCategoryId!: number;
 
   @ApiProperty({ description: 'Trader ID to associate with this category share.', example: 1 })
   traderId!: number;
@@ -797,7 +797,7 @@ export class CreateDefaultTraderCategoryShareSwaggerDto {
 
 export class UpdateDefaultTraderCategoryShareSwaggerDto {
   @ApiProperty({ description: 'Default trader category ID', example: 1 })
-  categoryId!: number;
+  defaultTraderCategoryId!: number;
 
   @ApiProperty({ description: 'Trader ID whose share is being updated', example: 1 })
   traderId!: number;
