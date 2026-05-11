@@ -6,7 +6,7 @@ import { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { ItemService } from '../../services/item/item.service';
 import { Prisma } from '@prisma/client';
-import { ShipmentItemSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+import { ShipmentItemSwaggerDto, ShipmentItemUpdateSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Logistics')
 @ApiBearerAuth('access-token')
@@ -52,15 +52,15 @@ export class ItemController {
     return this.itemService.findByBox(boxId);
   }
 
-  @Patch(':id')
+  @Patch()
   @ApiOperation({ summary: 'Update a shipment item and recalculate totals for the associated box and shipment' })
-  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the shipment item to update.' })
   @ApiBody({
-    type: ShipmentItemSwaggerDto,
+    type: ShipmentItemUpdateSwaggerDto,
     examples: {
       sample: {
         summary: 'Sample shipment item update payload',
         value: {
+          id: 1,
           quantity: 34,
           notes: 'Adjusted after final packing review',
         },
@@ -71,12 +71,12 @@ export class ItemController {
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Shipment item not found.' })
   update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateData: Prisma.ShipmentItemUncheckedUpdateInput,
+    @Body() updateData: ShipmentItemUpdateSwaggerDto,
     @Req() req: Request,
   ) {
+    const { id, ...data } = updateData;
     const actor = req.user as AuthenticatedUser;
-    return this.itemService.update(id, updateData, actor.id);
+    return this.itemService.update(id, data as Prisma.ShipmentItemUncheckedUpdateInput, actor.id);
   }
 
   @Delete(':id')

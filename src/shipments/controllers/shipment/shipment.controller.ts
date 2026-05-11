@@ -80,15 +80,15 @@ export class ShipmentController {
     return this.shipmentService.findOne(id);
   }
 
-  @Patch(':id')
+  @Patch()
   @ApiOperation({ summary: 'Update shipment details by ID. Editable fields: status, shippedAt, notes.' })
-  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the shipment to update.' })
   @ApiBody({
     type: UpdateShipmentSwaggerDto,
     examples: {
       sample: {
         summary: 'Sample shipment update payload',
         value: {
+          id: 42,
           status: 'SHIPPED',
           shippedAt: '2026-10-12T13:20:00.000Z',
           notes: 'Left warehouse gate at 13:20',
@@ -100,21 +100,29 @@ export class ShipmentController {
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Shipment not found.' })
   update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateData: ShipmentUpdateBody,
+    @Body() updateData: UpdateShipmentSwaggerDto,
     @Req() req: Request,
   ) {
+    const { id, ...data } = updateData;
     const actor = req.user as AuthenticatedUser;
-    return this.shipmentService.update(id, updateData, actor.id);
+    return this.shipmentService.update(id, data as ShipmentUpdateBody, actor.id);
   }
 
-  @Patch(':id/recalculate')
+  @Patch('recalculate')
   @ApiOperation({ summary: 'Recalculate and update the total boxes and total quantity for a shipment' })
-  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the shipment to recalculate.' })
+  @ApiBody({
+    type: UpdateShipmentSwaggerDto,
+    examples: {
+      sample: {
+        summary: 'Recalculate payload',
+        value: { id: 42 },
+      },
+    },
+  })
   @ApiResponse({ status: 200, description: 'Shipment totals recalculated successfully.' })
   @ApiResponse({ status: 404, description: 'Shipment not found.' })
-  recalculate(@Param('id', ParseIntPipe) id: number) {
-    return this.shipmentService.updateTotals(id);
+  recalculate(@Body() data: UpdateShipmentSwaggerDto) {
+    return this.shipmentService.updateTotals(data.id);
   }
 
   @Delete(':id')

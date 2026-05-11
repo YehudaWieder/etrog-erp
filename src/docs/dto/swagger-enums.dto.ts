@@ -369,11 +369,8 @@ export class CreateShipmentSwaggerDto {
 }
 
 export class UpdateShipmentSwaggerDto {
-  @ApiPropertyOptional({
-    description: 'User ID who updates the shipment record.',
-    example: 2,
-  })
-  updatedById?: number;
+  @ApiProperty({ description: 'Shipment ID to update.', example: 42 })
+  id!: number;
 
   @ApiPropertyOptional({
     enum: ShipmentStatus,
@@ -472,8 +469,8 @@ export class CreateBoxSwaggerDto {
 }
 
 export class UpdateBoxSwaggerDto {
-  @ApiPropertyOptional({ description: 'User ID who updates the record.', example: 2 })
-  updatedById?: number;
+  @ApiProperty({ description: 'Box ID to update.', example: 101 })
+  id!: number;
 
   @ApiPropertyOptional({ enum: BoxType, enumName: 'BoxType', description: 'Updated physical box type.', example: 'LARGE' })
   boxType?: BoxType;
@@ -544,6 +541,17 @@ export class BoxResponseSwaggerDto {
 
   @ApiProperty({ description: 'Last update date-time.', example: '2026-10-12T13:20:00.000Z' })
   updatedAt!: Date | string;
+}
+
+export class ShipmentItemUpdateSwaggerDto {
+  @ApiProperty({ description: 'Shipment item ID to update.', example: 1 })
+  id!: number;
+
+  @ApiPropertyOptional({ description: 'Updated quantity.', example: 34 })
+  quantity?: number;
+
+  @ApiPropertyOptional({ description: 'Updated notes.', example: 'Adjusted after final packing review' })
+  notes?: string | null;
 }
 
 export class ShipmentItemSwaggerDto {

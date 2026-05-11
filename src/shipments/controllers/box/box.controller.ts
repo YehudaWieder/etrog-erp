@@ -87,15 +87,15 @@ export class BoxController {
     return this.boxService.findOne(id);
   }
 
-  @Patch(':id')
+  @Patch()
   @ApiOperation({ summary: 'Update box details by ID. Editable fields: boxType, status, notes, ownershipType, traderId, customerId.' })
-  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the box to update.' })
   @ApiBody({
     type: UpdateBoxSwaggerDto,
     examples: {
       closeBox: {
         summary: 'Close a box',
         value: {
+          id: 101,
           status: 'CLOSED',
           notes: 'Sealed and ready for dispatch',
         },
@@ -103,6 +103,7 @@ export class BoxController {
       assignToCustomer: {
         summary: 'Reassign ownership to a customer',
         value: {
+          id: 101,
           ownershipType: 'CUSTOMER',
           customerId: 7,
           traderId: null,
@@ -114,21 +115,29 @@ export class BoxController {
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Box not found.' })
   update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateData: BoxUpdateBody,
+    @Body() updateData: UpdateBoxSwaggerDto,
     @Req() req: Request,
   ) {
+    const { id, ...data } = updateData;
     const actor = req.user as AuthenticatedUser;
-    return this.boxService.update(id, updateData, actor.id);
+    return this.boxService.update(id, data as BoxUpdateBody, actor.id);
   }
 
-  @Patch(':id/recalculate')
+  @Patch('recalculate')
   @ApiOperation({ summary: 'Recalculate and update the total quantity for a box based on its items' })
-  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the box to recalculate.' })
+  @ApiBody({
+    type: UpdateBoxSwaggerDto,
+    examples: {
+      sample: {
+        summary: 'Recalculate payload',
+        value: { id: 101 },
+      },
+    },
+  })
   @ApiResponse({ status: 200, description: 'Box total recalculated successfully.' })
   @ApiResponse({ status: 404, description: 'Box not found.' })
-  recalculate(@Param('id', ParseIntPipe) id: number) {
-    return this.boxService.updateBoxTotal(id);
+  recalculate(@Body() data: UpdateBoxSwaggerDto) {
+    return this.boxService.updateBoxTotal(data.id);
   }
 
   @Delete(':id')
