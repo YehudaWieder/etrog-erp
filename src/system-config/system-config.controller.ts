@@ -12,7 +12,7 @@ import {
 } from '../docs/dto/swagger-enums.dto';
 
 @ApiTags('System Configuration')
-@Controller('system-config')
+@Controller('default-trader-categories')
 @UseGuards(JwtAuthGuard)
 @Roles(Role.OWNER, Role.MANAGER)
 export class ConfigController {
@@ -26,36 +26,36 @@ export class ConfigController {
 
   /**
    * Get all default trader categories with their shares
-   * GET /system-config/default-trader-categories
+   * GET /default-trader-categories
    */
-  @Get('default-trader-categories')
+  @Get()
   async getDefaultCategories() {
     return this.defaultTraderCategoryService.findAll();
   }
 
   /**
    * Get a specific default trader category
-   * GET /system-config/default-trader-categories/:id
+   * GET /default-trader-categories/:id
    */
-  @Get('default-trader-categories/:id')
+  @Get(':id')
   async getDefaultCategory(@Param('id', ParseIntPipe) id: number) {
     return this.defaultTraderCategoryService.findOne(id);
   }
 
   /**
    * Create a new default trader category
-   * POST /system-config/default-trader-categories
+   * POST /default-trader-categories
    */
-  @Post('default-trader-categories')
+  @Post()
   async createDefaultCategory(@Body() dto: CreateDefaultTraderCategorySwaggerDto) {
     return this.defaultTraderCategoryService.create(dto);
   }
 
   /**
    * Update a default trader category
-   * PATCH /system-config/default-trader-categories/:id
+   * PATCH /default-trader-categories/:id
    */
-  @Patch('default-trader-categories/:id')
+  @Patch(':id')
   async updateDefaultCategory(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateDefaultTraderCategorySwaggerDto,
@@ -65,9 +65,9 @@ export class ConfigController {
 
   /**
    * Delete a default trader category and its shares
-   * DELETE /system-config/default-trader-categories/:id
+   * DELETE /default-trader-categories/:id
    */
-  @Delete('default-trader-categories/:id')
+  @Delete(':id')
   async deleteDefaultCategory(@Param('id', ParseIntPipe) id: number) {
     return this.defaultTraderCategoryService.remove(id);
   }
@@ -78,9 +78,9 @@ export class ConfigController {
 
   /**
    * Add a trader share to a default category
-   * POST /system-config/default-trader-categories/:categoryId/shares
+   * POST /default-trader-categories/:categoryId/shares
    */
-  @Post('default-trader-categories/:categoryId/shares')
+  @Post(':categoryId/shares')
   async addTraderShare(
     @Param('categoryId', ParseIntPipe) categoryId: number,
     @Body() dto: CreateDefaultTraderCategoryShareSwaggerDto,
@@ -90,9 +90,9 @@ export class ConfigController {
 
   /**
    * Update a trader share percentage
-   * PATCH /system-config/default-trader-categories/:categoryId/shares/:traderId
+   * PATCH /default-trader-categories/:categoryId/shares/:traderId
    */
-  @Patch('default-trader-categories/:categoryId/shares/:traderId')
+  @Patch(':categoryId/shares/:traderId')
   async updateTraderShare(
     @Param('categoryId', ParseIntPipe) categoryId: number,
     @Param('traderId', ParseIntPipe) traderId: number,
@@ -107,9 +107,9 @@ export class ConfigController {
 
   /**
    * Remove a trader share from a default category
-   * DELETE /system-config/default-trader-categories/:categoryId/shares/:traderId
+   * DELETE /default-trader-categories/:categoryId/shares/:traderId
    */
-  @Delete('default-trader-categories/:categoryId/shares/:traderId')
+  @Delete(':categoryId/shares/:traderId')
   async removeTraderShare(
     @Param('categoryId', ParseIntPipe) categoryId: number,
     @Param('traderId', ParseIntPipe) traderId: number,
