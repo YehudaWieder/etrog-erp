@@ -119,8 +119,55 @@ export class SeasonsService {
 
   // Delete season (Only if no related data exists - Prisma will enforce this via foreign keys)
   async remove(id: number) {
-    return this.prisma.season.delete({
+    // Check if season exists
+    const season = await this.prisma.season.findUnique({
       where: { id },
+      include: {
+        TradersCategories: {
+          select: { id: true, isDefault: true },
+        },
+      },
+    });
+
+    if (!season) throw new NotFoundException('Season not found');
+
+    // Check if there are manually added categories (isDefault: false)
+    const manualCategories = season.TradersCategories.filter(
+      (cat) => !cat.isDefault,
+    );
+    if (manualCategories.length > 0) {
+      throw new ConflictException(
+        'Cannot delete season with manually added categories. ' +
+          'Please remove manual categories first or delete the season with only default categories.',
+      );
+    }
+
+    // Delete all default categories and their shares, then the season
+    return this.prisma.$transaction(async (tx) => {
+      // Get all trader category IDs for this season
+      const categories = await tx.tradersCategories.findMany({
+        where: { seasonId: id },
+        select: { id: true },
+      });
+
+      const categoryIds = categories.map((cat) => cat.id);
+
+      // Delete all shares for these categories
+      if (categoryIds.length > 0) {
+        await tx.traderCategoryShare.deleteMany({
+          where: { traderCategoryId: { in: categoryIds } },
+        });
+
+        // Delete all categories
+        await tx.tradersCategories.deleteMany({
+          where: { seasonId: id },
+        });
+      }
+
+      // Finally delete the season
+      return tx.season.delete({
+        where: { id },
+      });
     });
   }
 }

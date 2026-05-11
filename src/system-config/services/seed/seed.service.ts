@@ -35,6 +35,7 @@ export class SeedService {
           seasonId,
           name: defaultCategory.name,
           notes: defaultCategory.notes,
+          isDefault: true, // Mark as created from seed bootstrap
         },
       });
       defaultToCategoryId.set(defaultCategory.id, created.id);

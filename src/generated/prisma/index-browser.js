@@ -200,6 +200,7 @@ exports.Prisma.TradersCategoriesScalarFieldEnum = {
   name: 'name',
   notes: 'notes',
   seasonId: 'seasonId',
+  isDefault: 'isDefault',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

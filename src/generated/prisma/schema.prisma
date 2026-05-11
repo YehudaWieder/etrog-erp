@@ -186,6 +186,8 @@ model TradersCategories {
   seasonId Int
   season   Season  @relation(fields: [seasonId], references: [id])
 
+  isDefault Boolean @default(false) // true = created by SeedService bootstrap, false = manually added
+
   traderCategoryShares TraderCategoryShare[]
   classifications      Classification[]
   traderStocks         TraderStock[]

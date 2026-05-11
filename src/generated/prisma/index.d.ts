@@ -13169,6 +13169,7 @@ export namespace Prisma {
     name: string | null
     notes: string | null
     seasonId: number | null
+    isDefault: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -13178,6 +13179,7 @@ export namespace Prisma {
     name: string | null
     notes: string | null
     seasonId: number | null
+    isDefault: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -13187,6 +13189,7 @@ export namespace Prisma {
     name: number
     notes: number
     seasonId: number
+    isDefault: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -13208,6 +13211,7 @@ export namespace Prisma {
     name?: true
     notes?: true
     seasonId?: true
+    isDefault?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -13217,6 +13221,7 @@ export namespace Prisma {
     name?: true
     notes?: true
     seasonId?: true
+    isDefault?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -13226,6 +13231,7 @@ export namespace Prisma {
     name?: true
     notes?: true
     seasonId?: true
+    isDefault?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -13322,6 +13328,7 @@ export namespace Prisma {
     name: string
     notes: string | null
     seasonId: number
+    isDefault: boolean
     createdAt: Date
     updatedAt: Date
     _count: TradersCategoriesCountAggregateOutputType | null
@@ -13350,6 +13357,7 @@ export namespace Prisma {
     name?: boolean
     notes?: boolean
     seasonId?: boolean
+    isDefault?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     season?: boolean | SeasonDefaultArgs<ExtArgs>
@@ -13365,6 +13373,7 @@ export namespace Prisma {
     name?: boolean
     notes?: boolean
     seasonId?: boolean
+    isDefault?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     season?: boolean | SeasonDefaultArgs<ExtArgs>
@@ -13375,6 +13384,7 @@ export namespace Prisma {
     name?: boolean
     notes?: boolean
     seasonId?: boolean
+    isDefault?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     season?: boolean | SeasonDefaultArgs<ExtArgs>
@@ -13385,11 +13395,12 @@ export namespace Prisma {
     name?: boolean
     notes?: boolean
     seasonId?: boolean
+    isDefault?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type TradersCategoriesOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "notes" | "seasonId" | "createdAt" | "updatedAt", ExtArgs["result"]["tradersCategories"]>
+  export type TradersCategoriesOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "notes" | "seasonId" | "isDefault" | "createdAt" | "updatedAt", ExtArgs["result"]["tradersCategories"]>
   export type TradersCategoriesInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     season?: boolean | SeasonDefaultArgs<ExtArgs>
     traderCategoryShares?: boolean | TradersCategories$traderCategorySharesArgs<ExtArgs>
@@ -13419,6 +13430,7 @@ export namespace Prisma {
       name: string
       notes: string | null
       seasonId: number
+      isDefault: boolean
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["tradersCategories"]>
@@ -13853,6 +13865,7 @@ export namespace Prisma {
     readonly name: FieldRef<"TradersCategories", 'String'>
     readonly notes: FieldRef<"TradersCategories", 'String'>
     readonly seasonId: FieldRef<"TradersCategories", 'Int'>
+    readonly isDefault: FieldRef<"TradersCategories", 'Boolean'>
     readonly createdAt: FieldRef<"TradersCategories", 'DateTime'>
     readonly updatedAt: FieldRef<"TradersCategories", 'DateTime'>
   }
@@ -27690,6 +27703,7 @@ export namespace Prisma {
     name: 'name',
     notes: 'notes',
     seasonId: 'seasonId',
+    isDefault: 'isDefault',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -28797,6 +28811,7 @@ export namespace Prisma {
     name?: StringFilter<"TradersCategories"> | string
     notes?: StringNullableFilter<"TradersCategories"> | string | null
     seasonId?: IntFilter<"TradersCategories"> | number
+    isDefault?: BoolFilter<"TradersCategories"> | boolean
     createdAt?: DateTimeFilter<"TradersCategories"> | Date | string
     updatedAt?: DateTimeFilter<"TradersCategories"> | Date | string
     season?: XOR<SeasonScalarRelationFilter, SeasonWhereInput>
@@ -28811,6 +28826,7 @@ export namespace Prisma {
     name?: SortOrder
     notes?: SortOrderInput | SortOrder
     seasonId?: SortOrder
+    isDefault?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     season?: SeasonOrderByWithRelationInput
@@ -28829,6 +28845,7 @@ export namespace Prisma {
     name?: StringFilter<"TradersCategories"> | string
     notes?: StringNullableFilter<"TradersCategories"> | string | null
     seasonId?: IntFilter<"TradersCategories"> | number
+    isDefault?: BoolFilter<"TradersCategories"> | boolean
     createdAt?: DateTimeFilter<"TradersCategories"> | Date | string
     updatedAt?: DateTimeFilter<"TradersCategories"> | Date | string
     season?: XOR<SeasonScalarRelationFilter, SeasonWhereInput>
@@ -28843,6 +28860,7 @@ export namespace Prisma {
     name?: SortOrder
     notes?: SortOrderInput | SortOrder
     seasonId?: SortOrder
+    isDefault?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: TradersCategoriesCountOrderByAggregateInput
@@ -28860,6 +28878,7 @@ export namespace Prisma {
     name?: StringWithAggregatesFilter<"TradersCategories"> | string
     notes?: StringNullableWithAggregatesFilter<"TradersCategories"> | string | null
     seasonId?: IntWithAggregatesFilter<"TradersCategories"> | number
+    isDefault?: BoolWithAggregatesFilter<"TradersCategories"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"TradersCategories"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"TradersCategories"> | Date | string
   }
@@ -30666,6 +30685,7 @@ export namespace Prisma {
   export type TradersCategoriesCreateInput = {
     name: string
     notes?: string | null
+    isDefault?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     season: SeasonCreateNestedOneWithoutTradersCategoriesInput
@@ -30680,6 +30700,7 @@ export namespace Prisma {
     name: string
     notes?: string | null
     seasonId: number
+    isDefault?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     traderCategoryShares?: TraderCategoryShareUncheckedCreateNestedManyWithoutTraderCategoryInput
@@ -30691,6 +30712,7 @@ export namespace Prisma {
   export type TradersCategoriesUpdateInput = {
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     season?: SeasonUpdateOneRequiredWithoutTradersCategoriesNestedInput
@@ -30705,6 +30727,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     seasonId?: IntFieldUpdateOperationsInput | number
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     traderCategoryShares?: TraderCategoryShareUncheckedUpdateManyWithoutTraderCategoryNestedInput
@@ -30718,6 +30741,7 @@ export namespace Prisma {
     name: string
     notes?: string | null
     seasonId: number
+    isDefault?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -30725,6 +30749,7 @@ export namespace Prisma {
   export type TradersCategoriesUpdateManyMutationInput = {
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -30734,6 +30759,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     seasonId?: IntFieldUpdateOperationsInput | number
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -32609,6 +32635,7 @@ export namespace Prisma {
     name?: SortOrder
     notes?: SortOrder
     seasonId?: SortOrder
+    isDefault?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -32623,6 +32650,7 @@ export namespace Prisma {
     name?: SortOrder
     notes?: SortOrder
     seasonId?: SortOrder
+    isDefault?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -32632,6 +32660,7 @@ export namespace Prisma {
     name?: SortOrder
     notes?: SortOrder
     seasonId?: SortOrder
+    isDefault?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -37353,6 +37382,7 @@ export namespace Prisma {
   export type TradersCategoriesCreateWithoutSeasonInput = {
     name: string
     notes?: string | null
+    isDefault?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     traderCategoryShares?: TraderCategoryShareCreateNestedManyWithoutTraderCategoryInput
@@ -37365,6 +37395,7 @@ export namespace Prisma {
     id?: number
     name: string
     notes?: string | null
+    isDefault?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     traderCategoryShares?: TraderCategoryShareUncheckedCreateNestedManyWithoutTraderCategoryInput
@@ -37838,6 +37869,7 @@ export namespace Prisma {
     name?: StringFilter<"TradersCategories"> | string
     notes?: StringNullableFilter<"TradersCategories"> | string | null
     seasonId?: IntFilter<"TradersCategories"> | number
+    isDefault?: BoolFilter<"TradersCategories"> | boolean
     createdAt?: DateTimeFilter<"TradersCategories"> | Date | string
     updatedAt?: DateTimeFilter<"TradersCategories"> | Date | string
   }
@@ -40130,6 +40162,7 @@ export namespace Prisma {
   export type TradersCategoriesCreateWithoutTraderCategorySharesInput = {
     name: string
     notes?: string | null
+    isDefault?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     season: SeasonCreateNestedOneWithoutTradersCategoriesInput
@@ -40143,6 +40176,7 @@ export namespace Prisma {
     name: string
     notes?: string | null
     seasonId: number
+    isDefault?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     classifications?: ClassificationUncheckedCreateNestedManyWithoutTraderCategoryInput
@@ -40257,6 +40291,7 @@ export namespace Prisma {
   export type TradersCategoriesUpdateWithoutTraderCategorySharesInput = {
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     season?: SeasonUpdateOneRequiredWithoutTradersCategoriesNestedInput
@@ -40270,6 +40305,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     seasonId?: IntFieldUpdateOperationsInput | number
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     classifications?: ClassificationUncheckedUpdateManyWithoutTraderCategoryNestedInput
@@ -40777,6 +40813,7 @@ export namespace Prisma {
   export type TradersCategoriesCreateWithoutClassificationsInput = {
     name: string
     notes?: string | null
+    isDefault?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     season: SeasonCreateNestedOneWithoutTradersCategoriesInput
@@ -40790,6 +40827,7 @@ export namespace Prisma {
     name: string
     notes?: string | null
     seasonId: number
+    isDefault?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     traderCategoryShares?: TraderCategoryShareUncheckedCreateNestedManyWithoutTraderCategoryInput
@@ -41082,6 +41120,7 @@ export namespace Prisma {
   export type TradersCategoriesUpdateWithoutClassificationsInput = {
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     season?: SeasonUpdateOneRequiredWithoutTradersCategoriesNestedInput
@@ -41095,6 +41134,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     seasonId?: IntFieldUpdateOperationsInput | number
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     traderCategoryShares?: TraderCategoryShareUncheckedUpdateManyWithoutTraderCategoryNestedInput
@@ -41219,6 +41259,7 @@ export namespace Prisma {
   export type TradersCategoriesCreateWithoutTraderStocksInput = {
     name: string
     notes?: string | null
+    isDefault?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     season: SeasonCreateNestedOneWithoutTradersCategoriesInput
@@ -41232,6 +41273,7 @@ export namespace Prisma {
     name: string
     notes?: string | null
     seasonId: number
+    isDefault?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     traderCategoryShares?: TraderCategoryShareUncheckedCreateNestedManyWithoutTraderCategoryInput
@@ -41390,6 +41432,7 @@ export namespace Prisma {
   export type TradersCategoriesUpdateWithoutTraderStocksInput = {
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     season?: SeasonUpdateOneRequiredWithoutTradersCategoriesNestedInput
@@ -41403,6 +41446,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     seasonId?: IntFieldUpdateOperationsInput | number
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     traderCategoryShares?: TraderCategoryShareUncheckedUpdateManyWithoutTraderCategoryNestedInput
@@ -42761,6 +42805,7 @@ export namespace Prisma {
   export type TradersCategoriesCreateWithoutShipmentItemsInput = {
     name: string
     notes?: string | null
+    isDefault?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     season: SeasonCreateNestedOneWithoutTradersCategoriesInput
@@ -42774,6 +42819,7 @@ export namespace Prisma {
     name: string
     notes?: string | null
     seasonId: number
+    isDefault?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     traderCategoryShares?: TraderCategoryShareUncheckedCreateNestedManyWithoutTraderCategoryInput
@@ -43079,6 +43125,7 @@ export namespace Prisma {
   export type TradersCategoriesUpdateWithoutShipmentItemsInput = {
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     season?: SeasonUpdateOneRequiredWithoutTradersCategoriesNestedInput
@@ -43092,6 +43139,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     seasonId?: IntFieldUpdateOperationsInput | number
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     traderCategoryShares?: TraderCategoryShareUncheckedUpdateManyWithoutTraderCategoryNestedInput
@@ -43606,6 +43654,7 @@ export namespace Prisma {
     id?: number
     name: string
     notes?: string | null
+    isDefault?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -43790,6 +43839,7 @@ export namespace Prisma {
   export type TradersCategoriesUpdateWithoutSeasonInput = {
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     traderCategoryShares?: TraderCategoryShareUpdateManyWithoutTraderCategoryNestedInput
@@ -43802,6 +43852,7 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     traderCategoryShares?: TraderCategoryShareUncheckedUpdateManyWithoutTraderCategoryNestedInput
@@ -43814,6 +43865,7 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     name?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
