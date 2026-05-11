@@ -544,6 +544,29 @@ export class CustomerCategorySwaggerDto {
   currency!: Currency;
 }
 
+export class CustomerCategoryUpdateSwaggerDto {
+  @ApiProperty({ description: 'Customer category ID to update.', example: 1 })
+  id!: number;
+
+  @ApiPropertyOptional({ description: 'Season ID.', example: 2 })
+  seasonId?: number;
+
+  @ApiPropertyOptional({ description: 'Customer ID.', example: 15 })
+  customerId?: number;
+
+  @ApiPropertyOptional({ description: 'Category name.', example: 'Yanover' })
+  name?: string;
+
+  @ApiPropertyOptional({ enum: Grade, enumName: 'Grade', description: 'Etrog grade.', example: Grade.א })
+  grade?: Grade;
+
+  @ApiPropertyOptional({ description: 'Configured price.', example: 125.5 })
+  price?: number;
+
+  @ApiPropertyOptional({ enum: Currency, enumName: 'Currency', description: 'Pricing currency.', example: Currency.ILS })
+  currency?: Currency;
+}
+
 export class PricingConfigSwaggerDto {
   @ApiProperty({ description: 'Season ID to update pricing for.', example: 1 })
   seasonId!: number;
