@@ -8,7 +8,6 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/authorization/guards/roles.guard';
 import { ActiveGuard } from 'src/authorization/guards/active.guard';
 import { Roles } from 'src/authorization/decorators/roles.decorator';
-import { Public } from 'src/auth/decorators/public.decorator';
 
 @ApiTags('System Configuration')
 @ApiBearerAuth('access-token')
@@ -21,7 +20,7 @@ export class FieldController {
   constructor(private readonly fieldService: FieldService) {}
 
   @Get()
-  @Roles()
+  @Roles(Role.OWNER, Role.MANAGER, Role.WORKER)
   @ApiOperation({ summary: 'Retrieve a list of all registered harvest fields' })
   @ApiResponse({ status: 200, description: 'List of fields returned successfully.' })
   getAllFields() {
