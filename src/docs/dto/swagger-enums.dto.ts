@@ -69,6 +69,17 @@ export class CustomerUpdateSwaggerDto {
   phone?: string | null;
 }
 
+export class TradersCategoryUpdateSwaggerDto {
+  @ApiProperty({ description: 'Trader category ID to update.', example: 1 })
+  id!: number;
+
+  @ApiPropertyOptional({ description: 'Updated category name.', example: 'Yanover Premium Updated' })
+  name?: string;
+
+  @ApiPropertyOptional({ description: 'Updated notes.', example: 'Adjusted classification notes' })
+  notes?: string;
+}
+
 export class TraderCreateSwaggerDto {
   @ApiProperty({ description: 'Unique trader name.', example: 'Trader Cohen' })
   name!: string;

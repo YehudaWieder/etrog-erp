@@ -7,6 +7,7 @@ import { Prisma, Role } from '@prisma/client';
 import { Roles } from 'src/authorization/decorators/roles.decorator';
 import type { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+import { TradersCategoryUpdateSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Categories')
 @ApiBearerAuth('access-token')
@@ -77,19 +78,18 @@ export class TradersCatController {
     return this.tradersCatService.findOne(id, req.user as AuthenticatedUser);
   }
 
-  @Patch(':id')
+  @Patch()
   @ApiOperation({ summary: 'Update a trader category by ID' })
-  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the trader category to update.' })
   @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        name: { type: 'string', example: 'Yanover Premium Updated' },
-        notes: { type: 'string', example: 'Adjusted classification notes' },
-      },
-      example: {
-        name: 'Yanover Premium Updated',
-        notes: 'Adjusted classification notes',
+    type: TradersCategoryUpdateSwaggerDto,
+    examples: {
+      sample: {
+        summary: 'Update a trader category by ID',
+        value: {
+          id: 1,
+          name: 'Yanover Premium Updated',
+          notes: 'Adjusted classification notes',
+        },
       },
     },
   })
@@ -97,10 +97,10 @@ export class TradersCatController {
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Trader category not found.' })
   update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateData: Prisma.TradersCategoriesUpdateInput,
+    @Body() updateData: TradersCategoryUpdateSwaggerDto,
   ) {
-    return this.tradersCatService.update(id, updateData);
+    const { id, ...data } = updateData;
+    return this.tradersCatService.update(id, data as Partial<Prisma.TradersCategoriesUpdateInput>);
   }
 
   @Delete(':id')
