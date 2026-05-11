@@ -465,6 +465,8 @@ export class InventoryService {
 
 	async getCombinedSummary(query: CombinedInventorySummaryQuery) {
 		const seasonId = query.seasonId ?? (await this.seasonsService.findActiveSeason()).id;
+		await this.seasonsService.assertSeasonExists(seasonId);
+
 		const ownerScope = query.ownerScope ?? 'ALL';
 		const movementScope = query.movementScope ?? 'ALL';
 

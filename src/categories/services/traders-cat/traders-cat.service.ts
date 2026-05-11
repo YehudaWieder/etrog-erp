@@ -52,6 +52,8 @@ export class TradersCatService {
 
   // Find all categories for a specific season
   async findAllBySeason(seasonId: number, actor: AuthenticatedUser) {
+    await this.seasonsService.assertSeasonExists(seasonId);
+
     if (this.isManagerOrAbove(actor)) {
       return this.prisma.tradersCategories.findMany({
         where: { seasonId },
@@ -95,6 +97,8 @@ export class TradersCatService {
 
   // Find one category by name and season
   async findByName(name: string, seasonId: number, actor: AuthenticatedUser) {
+    await this.seasonsService.assertSeasonExists(seasonId);
+
     const managerOrAbove = this.isManagerOrAbove(actor);
 
     const category = managerOrAbove

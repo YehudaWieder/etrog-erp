@@ -132,6 +132,17 @@ export class SeasonsService {
     return season;
   }
 
+  async assertSeasonExists(seasonId: number) {
+    const season = await this.prisma.season.findUnique({
+      where: { id: seasonId },
+      select: { id: true },
+    });
+
+    if (!season) {
+      throw new NotFoundException(`Season with ID ${seasonId} not found`);
+    }
+  }
+
   // Set as active and deactivate all others
   async setActiveSeason(id: number) {
     return this.prisma.$transaction(async (tx) => {

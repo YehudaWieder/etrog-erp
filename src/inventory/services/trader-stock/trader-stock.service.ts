@@ -84,6 +84,8 @@ export class TraderStockService {
 
     // Get all movements for a specific trader and category in a season
     async getMovementHistory(seasonId: number, traderId: number, traderCategoryId: number) {
+        await this.seasonsService.assertSeasonExists(seasonId);
+
         return this.prisma.traderStock.findMany({
         where: {
             seasonId,
@@ -121,6 +123,8 @@ export class TraderStockService {
 
     // Get full ledger for transparency
     async getLedger(seasonId: number, traderId: number) {
+        await this.seasonsService.assertSeasonExists(seasonId);
+
         return this.prisma.traderStock.findMany({
         where: { seasonId, traderId, isDeleted: false },
         include: {
@@ -147,6 +151,8 @@ export class TraderStockService {
 
     async getInventorySummary(query: InventorySummaryQuery) {
         const seasonId = query.seasonId ?? (await this.seasonsService.findActiveSeason()).id;
+        await this.seasonsService.assertSeasonExists(seasonId);
+
         const ownerScope = query.ownerScope ?? 'ALL';
         const shipmentScope = query.shipmentScope ?? 'ALL';
         const sortBy = query.sortBy ?? 'category';

@@ -58,7 +58,9 @@ export class CustomerCatService {
     price?: number;
     currency?: Currency;
   }, actor: AuthenticatedUser) {
-    const { id: seasonId } = await this.seasonsService.findActiveSeason();
+    const seasonId = data.seasonId;
+    await this.seasonsService.assertSeasonExists(seasonId);
+
     const managerOrAbove = this.isManagerOrAbove(actor);
     const currency = await this.resolveCurrency(seasonId, data.currency);
 
@@ -110,6 +112,8 @@ export class CustomerCatService {
 
   // Get all price categories for a specific customer in a season
   async findByCustomer(customerId: number, seasonId: number, actor: AuthenticatedUser) {
+    await this.seasonsService.assertSeasonExists(seasonId);
+
     const managerOrAbove = this.isManagerOrAbove(actor);
 
     if (managerOrAbove) {
@@ -136,6 +140,8 @@ export class CustomerCatService {
 
   // Get all prices for a specific season (for overview)
   async findAllBySeason(seasonId: number, actor: AuthenticatedUser) {
+    await this.seasonsService.assertSeasonExists(seasonId);
+
     const managerOrAbove = this.isManagerOrAbove(actor);
 
     if (managerOrAbove) {
@@ -188,6 +194,8 @@ export class CustomerCatService {
   }
 
   async findByCustomerAndNameGrade(customerId: number, seasonId: number, name: string, grade: any, actor: AuthenticatedUser) {
+    await this.seasonsService.assertSeasonExists(seasonId);
+
     const managerOrAbove = this.isManagerOrAbove(actor);
 
     const record = await this.prisma.customerCategories.findUnique({

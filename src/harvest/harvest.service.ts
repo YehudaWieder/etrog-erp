@@ -38,6 +38,8 @@ export class HarvestService {
 
   // Get all reports for a season (excluding soft-deleted)
   async findAllBySeason(seasonId: number) {
+    await this.seasonsService.assertSeasonExists(seasonId);
+
     return this.prisma.fieldHarvest.findMany({
       where: { seasonId, isDeleted: false },
       include: {

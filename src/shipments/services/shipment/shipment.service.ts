@@ -150,6 +150,8 @@ export class ShipmentService {
 
   // Find by the new unique constraint (Season + Number)
   async findByNumber(seasonId: number, shipmentNumber: number) {
+    await this.seasonsService.assertSeasonExists(seasonId);
+
     const shipment = await this.prisma.shipment.findUnique({
       where: {
         seasonId_shipmentNumber: { seasonId, shipmentNumber },
@@ -166,6 +168,8 @@ export class ShipmentService {
 
   // Get all shipments for a season
   async findAllBySeason(seasonId: number) {
+    await this.seasonsService.assertSeasonExists(seasonId);
+
     return this.prisma.shipment.findMany({
       where: { seasonId, isDeleted: false },
       include: {

@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { SeasonsService } from 'src/seasons/seasons.service';
 
 @Injectable()
 export class ClassificationService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private seasonsService: SeasonsService,
+  ) {}
 
   // Mutations are centralized under Harvest workflow.
   async create(data: Prisma.ClassificationUncheckedCreateInput) {
@@ -30,6 +34,8 @@ export class ClassificationService {
 
   // Get all classifications for a season
   async findAllBySeason(seasonId: number) {
+    await this.seasonsService.assertSeasonExists(seasonId);
+
     return this.prisma.classification.findMany({
       where: { seasonId, isDeleted: false },
       orderBy: { createdAt: 'desc' },

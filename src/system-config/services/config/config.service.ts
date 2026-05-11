@@ -8,6 +8,17 @@ import { Currency, Prisma } from '@prisma/client';
 export class SystemConfigService {
   constructor(private prisma: PrismaService) {}
 
+  private async assertSeasonExists(seasonId: number) {
+    const season = await this.prisma.season.findUnique({
+      where: { id: seasonId },
+      select: { id: true },
+    });
+
+    if (!season) {
+      throw new NotFoundException(`Season with ID ${seasonId} not found.`);
+    }
+  }
+
   private hasCompletePricingDefinition(data?: { currency?: Currency; unitPrice?: number }) {
     return data?.currency !== undefined && data?.unitPrice !== undefined;
   }
@@ -19,6 +30,8 @@ export class SystemConfigService {
     data?: { currency?: Currency; unitPrice?: number },
     options?: { requirePricingOnCreate?: boolean },
   ) {
+    await this.assertSeasonExists(seasonId);
+
     const updateData: Prisma.SystemConfigUpdateInput = {};
     const createData: Prisma.SystemConfigUncheckedCreateInput = {
       seasonId,
@@ -60,6 +73,8 @@ export class SystemConfigService {
 
   // Get config
   async getConfig(seasonId: number) {
+    await this.assertSeasonExists(seasonId);
+
     const config = await this.prisma.systemConfig.findFirst({
       where: { seasonId },
     });

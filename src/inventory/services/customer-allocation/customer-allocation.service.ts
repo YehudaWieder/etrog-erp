@@ -98,6 +98,8 @@ export class CustomerAllocationService {
 
   // Find all allocations for a specific customer in a season
   async findAllByCustomer(customerId: number, seasonId: number) {
+    await this.seasonsService.assertSeasonExists(seasonId);
+
     return this.prisma.customerAllocation.findMany({
       where: { customerId, seasonId, isDeleted: false },
       include: {
@@ -111,6 +113,8 @@ export class CustomerAllocationService {
 
    // Get full ledger for transparency
   async getLedger(seasonId: number, customerId: number) {
+    await this.seasonsService.assertSeasonExists(seasonId);
+
     return this.prisma.customerAllocation.findMany({
     where: { seasonId, customerId, isDeleted: false },
     include: {
@@ -138,6 +142,8 @@ export class CustomerAllocationService {
 
   async getInventorySummary(query: CustomerInventorySummaryQuery): Promise<CustomerInventorySummaryResult> {
     const seasonId = query.seasonId ?? (await this.seasonsService.findActiveSeason()).id;
+    await this.seasonsService.assertSeasonExists(seasonId);
+
     const shipmentScope = query.shipmentScope ?? 'ALL';
     const sortBy = query.sortBy ?? 'customer';
     const sortOrder = query.sortOrder ?? 'asc';

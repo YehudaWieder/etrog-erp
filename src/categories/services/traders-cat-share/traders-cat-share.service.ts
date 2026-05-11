@@ -146,6 +146,8 @@ export class TraderCatShareService {
 
   // Find shares for a specific season with names included
   async findAllBySeason(seasonId: number, actor: AuthenticatedUser) {
+    await this.seasonsService.assertSeasonExists(seasonId);
+
     if (this.isManagerOrAbove(actor)) {
       return this.prisma.traderCategoryShare.findMany({
         where: { seasonId },
@@ -207,6 +209,8 @@ export class TraderCatShareService {
 
   // Find a share by trader, category, and season
   async findByTraderAndCategory(traderId: number, traderCategoryId: number, seasonId: number, actor: AuthenticatedUser) {
+    await this.seasonsService.assertSeasonExists(seasonId);
+
     const managerOrAbove = this.isManagerOrAbove(actor);
 
     if (managerOrAbove) {
