@@ -230,6 +230,47 @@ export class TraderStockSwaggerDto {
   updatedById!: number;
 }
 
+export class TraderStockUpdateSwaggerDto {
+  @ApiProperty({ description: 'Trader stock movement ID to update.', example: 1 })
+  id!: number;
+
+  @ApiPropertyOptional({ description: 'Movement date-time in ISO format.', example: '2026-10-11T07:30:00.000Z' })
+  date?: Date | string;
+
+  @ApiPropertyOptional({ description: 'Trader ID. Keep empty for Modulo stock.', example: 3 })
+  traderId?: number;
+
+  @ApiPropertyOptional({ description: 'Trader category ID.', example: 2 })
+  traderCategoryId?: number;
+
+  @ApiPropertyOptional({ enum: Grade, enumName: 'Grade', description: 'Etrog grade.', example: Grade.ב })
+  grade?: Grade;
+
+  @ApiPropertyOptional({ enum: PitamStatus, enumName: 'PitamStatus', description: 'Pitam status.', example: PitamStatus.WITH_PITAM })
+  pitamStatus?: PitamStatus;
+
+  @ApiPropertyOptional({ description: 'Movement quantity.', example: 10 })
+  quantity?: number;
+
+  @ApiPropertyOptional({ description: 'Whether movement belongs to Modulo pool.', example: false })
+  isModulo?: boolean;
+
+  @ApiPropertyOptional({ enum: MovementType, enumName: 'MovementType', description: 'Inventory movement type.', example: MovementType.ADJUSTMENT })
+  type?: MovementType;
+
+  @ApiPropertyOptional({ description: 'Reference entity ID (classification, shipment item, or allocation).', example: 55 })
+  MovementReferenceId?: number;
+
+  @ApiPropertyOptional({ description: 'Shipment ID if movement is linked to shipment.', example: 8 })
+  shipmentId?: number;
+
+  @ApiPropertyOptional({ description: 'Box ID if movement is linked to box.', example: 12 })
+  boxId?: number;
+
+  @ApiPropertyOptional({ description: 'Optional notes.', example: 'Updated after recount' })
+  notes?: string;
+}
+
 export class CustomerAllocationSwaggerDto {
   @ApiProperty({ description: 'Season ID.' })
   seasonId!: number;

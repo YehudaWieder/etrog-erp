@@ -6,7 +6,7 @@ import { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { InventoryOwnerScope, InventoryShipmentScope, InventorySortBy, TraderStockService } from '../../services/trader-stock/trader-stock.service';
 import { Prisma, Grade, PitamStatus } from '@prisma/client';
-import { TraderStockSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+import { TraderStockSwaggerDto, TraderStockUpdateSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('access-token')
@@ -196,15 +196,15 @@ export class TraderStockController {
     return this.stockService.createAdjustment(data, actor.id);
   }
 
-  @Patch('adjustments/:id')
+  @Patch('adjustments')
   @ApiOperation({ summary: 'Update trader WASTE/ADJUSTMENT/SELF_PICKUP movement.' })
-  @ApiParam({ name: 'id', type: Number })
   @ApiBody({
-    type: TraderStockSwaggerDto,
+    type: TraderStockUpdateSwaggerDto,
     examples: {
       update: {
         summary: 'Update trader adjustment payload',
         value: {
+          id: 1,
           quantity: 10,
           notes: 'Updated after recount',
         },
@@ -214,12 +214,12 @@ export class TraderStockController {
   @ApiResponse({ status: 200, description: 'Trader adjustment movement updated successfully.' })
   @ApiResponse({ status: 404, description: 'Trader adjustment movement not found.' })
   updateAdjustment(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() data: Prisma.TraderStockUncheckedUpdateInput,
+    @Body() data: TraderStockUpdateSwaggerDto,
     @Req() req: Request,
   ) {
     const actor = req.user as AuthenticatedUser;
-    return this.stockService.updateAdjustment(id, data, actor.id);
+    const { id, ...updateData } = data;
+    return this.stockService.updateAdjustment(id, updateData as Prisma.TraderStockUncheckedUpdateInput, actor.id);
   }
 
   @Delete('adjustments/:id')
