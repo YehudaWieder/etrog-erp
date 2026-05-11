@@ -213,6 +213,9 @@ export class DefaultTraderCategoryService {
         trader: {
           select: { id: true, name: true },
         },
+        category: {
+          select: { id: true, name: true },
+        },
       },
     });
   }
