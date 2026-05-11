@@ -99,6 +99,11 @@ export class TraderUpdateSwaggerDto {
   paymentPercent?: number;
 }
 
+export class MessageMarkAsReadSwaggerDto {
+  @ApiProperty({ description: 'Message ID to mark as read.', example: 1 })
+  id!: number;
+}
+
 export class MessageSwaggerDto {
   @ApiProperty({ description: 'Sender user ID.' })
   senderId!: number;

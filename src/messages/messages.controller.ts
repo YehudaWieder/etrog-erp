@@ -4,7 +4,7 @@ import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, ParseB
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { MessagesService } from './messages.service';
 import { Prisma, Priority } from '@prisma/client';
-import { MessageSwaggerDto, MessageFilterDto } from 'src/docs/dto/swagger-enums.dto';
+import { MessageSwaggerDto, MessageFilterDto, MessageMarkAsReadSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 import { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 
@@ -75,16 +75,24 @@ export class MessagesController {
     return this.messagesService.getUnreadCount((req.user as AuthenticatedUser).id);
   }
 
-  @Patch(':id/read')
+  @Patch('read')
   @ApiOperation({ summary: 'Mark a specific message as read by the authenticated user' })
-  @ApiParam({ name: 'id', type: Number, description: 'The ID of the message to mark as read.' })
+  @ApiBody({
+    type: MessageMarkAsReadSwaggerDto,
+    examples: {
+      sample: {
+        summary: 'Mark message as read payload',
+        value: { id: 1 },
+      },
+    },
+  })
   @ApiResponse({ status: 200, description: 'Message marked as read successfully.' })
   @ApiResponse({ status: 404, description: 'Message not found.' })
   markAsRead(
-    @Param('id', ParseIntPipe) id: number,
+    @Body() data: MessageMarkAsReadSwaggerDto,
     @Req() req: Request,
   ) {
-    return this.messagesService.markAsRead(id, (req.user as AuthenticatedUser).id);
+    return this.messagesService.markAsRead(data.id, (req.user as AuthenticatedUser).id);
   }
   
   @Get('filter')
