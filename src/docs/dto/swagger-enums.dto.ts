@@ -848,6 +848,5 @@ export class SeasonPreviewResponseSwaggerDto {
   projectedForNewSeason!: {
     traderCategoriesToCreate: number;
     traderSharesToCreate: number;
-    categories: SeasonPreviewDefaultTraderCategorySwaggerDto[];
   };
 }

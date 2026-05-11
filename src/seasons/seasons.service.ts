@@ -71,7 +71,6 @@ export class SeasonsService {
       projectedForNewSeason: {
         traderCategoriesToCreate: templates.length,
         traderSharesToCreate: templateShares.length,
-        categories: previewCategories,
       },
     };
   }
