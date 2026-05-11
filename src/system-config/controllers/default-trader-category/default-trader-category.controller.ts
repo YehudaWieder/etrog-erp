@@ -34,7 +34,7 @@ import { DefaultTraderCategoryService } from 'src/system-config/services/default
 @ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
 @UseGuards(JwtAuthGuard, RolesGuard, ActiveGuard)
 @Roles(Role.OWNER, Role.MANAGER)
-@Controller(['default-trader-categories', 'system-config/default-trader-categories'])
+@Controller('default-trader-categories')
 export class DefaultTraderCategoryController {
   constructor(
     private readonly defaultTraderCategoryService: DefaultTraderCategoryService,
