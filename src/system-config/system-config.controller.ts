@@ -5,11 +5,11 @@ import { Roles } from '../authorization/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { DefaultTraderCategoryService } from './services/default-trader-category/default-trader-category.service';
 import {
-  CreateDefaultTraderCategoryDto,
-  UpdateDefaultTraderCategoryDto,
-  CreateDefaultTraderCategoryShareDto,
-  UpdateDefaultTraderCategoryShareDto,
-} from './services/default-trader-category/dto';
+  CreateDefaultTraderCategorySwaggerDto,
+  UpdateDefaultTraderCategorySwaggerDto,
+  CreateDefaultTraderCategoryShareSwaggerDto,
+  UpdateDefaultTraderCategoryShareSwaggerDto,
+} from '../docs/dto/swagger-enums.dto';
 
 @ApiTags('System Configuration')
 @Controller('system-config')
@@ -47,7 +47,7 @@ export class ConfigController {
    * POST /system-config/default-trader-categories
    */
   @Post('default-trader-categories')
-  async createDefaultCategory(@Body() dto: CreateDefaultTraderCategoryDto) {
+  async createDefaultCategory(@Body() dto: CreateDefaultTraderCategorySwaggerDto) {
     return this.defaultTraderCategoryService.create(dto);
   }
 
@@ -58,7 +58,7 @@ export class ConfigController {
   @Patch('default-trader-categories/:id')
   async updateDefaultCategory(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateDefaultTraderCategoryDto,
+    @Body() dto: UpdateDefaultTraderCategorySwaggerDto,
   ) {
     return this.defaultTraderCategoryService.update(id, dto);
   }
@@ -83,7 +83,7 @@ export class ConfigController {
   @Post('default-trader-categories/:categoryId/shares')
   async addTraderShare(
     @Param('categoryId', ParseIntPipe) categoryId: number,
-    @Body() dto: CreateDefaultTraderCategoryShareDto,
+    @Body() dto: CreateDefaultTraderCategoryShareSwaggerDto,
   ) {
     return this.defaultTraderCategoryService.addShare(categoryId, dto);
   }
@@ -96,7 +96,7 @@ export class ConfigController {
   async updateTraderShare(
     @Param('categoryId', ParseIntPipe) categoryId: number,
     @Param('traderId', ParseIntPipe) traderId: number,
-    @Body() dto: UpdateDefaultTraderCategoryShareDto,
+    @Body() dto: UpdateDefaultTraderCategoryShareSwaggerDto,
   ) {
     return this.defaultTraderCategoryService.updateShare(
       categoryId,

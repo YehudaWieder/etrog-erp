@@ -703,3 +703,43 @@ export class HarvestBulkCreateDto {
   })
   classifications!: ClassificationBulkItemDto[];
 }
+
+// Default Trader Category DTOs
+export class CreateDefaultTraderCategorySwaggerDto {
+  @ApiProperty({ description: 'Default trader category name.', example: 'Yanover' })
+  name!: string;
+
+  @ApiPropertyOptional({ description: 'Optional notes for the category.', example: 'Premium quality etrog' })
+  notes?: string;
+}
+
+export class UpdateDefaultTraderCategorySwaggerDto {
+  @ApiPropertyOptional({ description: 'Updated category name.', example: 'Yanover Premium' })
+  name?: string;
+
+  @ApiPropertyOptional({ description: 'Updated notes.', example: 'Updated notes' })
+  notes?: string;
+}
+
+export class CreateDefaultTraderCategoryShareSwaggerDto {
+  @ApiProperty({ description: 'Trader ID to associate with this category share.', example: 1 })
+  traderId!: number;
+
+  @ApiProperty({
+    description: 'Percentage share for this trader in the category (0-100).',
+    example: 50,
+    minimum: 0,
+    maximum: 100,
+  })
+  percent!: number;
+}
+
+export class UpdateDefaultTraderCategoryShareSwaggerDto {
+  @ApiProperty({
+    description: 'Updated percentage share for this trader in the category (0-100).',
+    example: 60,
+    minimum: 0,
+    maximum: 100,
+  })
+  percent!: number;
+}

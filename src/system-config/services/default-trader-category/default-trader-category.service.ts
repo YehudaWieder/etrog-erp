@@ -6,10 +6,10 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import {
-  CreateDefaultTraderCategoryDto,
-  UpdateDefaultTraderCategoryDto,
-  CreateDefaultTraderCategoryShareDto,
-} from './dto';
+  CreateDefaultTraderCategorySwaggerDto,
+  UpdateDefaultTraderCategorySwaggerDto,
+  CreateDefaultTraderCategoryShareSwaggerDto,
+} from '../../../docs/dto/swagger-enums.dto';
 
 @Injectable()
 export class DefaultTraderCategoryService {
@@ -18,7 +18,7 @@ export class DefaultTraderCategoryService {
   /**
    * Create a new default trader category
    */
-  async create(dto: CreateDefaultTraderCategoryDto) {
+  async create(dto: CreateDefaultTraderCategorySwaggerDto) {
     // Check if category already exists
     const existing = await this.prisma.defaultTraderCategory.findUnique({
       where: { name: dto.name },
@@ -87,7 +87,7 @@ export class DefaultTraderCategoryService {
   /**
    * Update a default trader category
    */
-  async update(id: number, dto: UpdateDefaultTraderCategoryDto) {
+  async update(id: number, dto: UpdateDefaultTraderCategorySwaggerDto) {
     const category = await this.prisma.defaultTraderCategory.findUnique({
       where: { id },
     });
@@ -166,7 +166,7 @@ export class DefaultTraderCategoryService {
   /**
    * Add a trader share to a default category
    */
-  async addShare(categoryId: number, dto: CreateDefaultTraderCategoryShareDto) {
+  async addShare(categoryId: number, dto: CreateDefaultTraderCategoryShareSwaggerDto) {
     // Verify category exists
     const category = await this.prisma.defaultTraderCategory.findUnique({
       where: { id: categoryId },
