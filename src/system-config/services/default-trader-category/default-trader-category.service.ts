@@ -213,7 +213,7 @@ export class DefaultTraderCategoryService {
         trader: {
           select: { id: true, name: true },
         },
-        category: {
+        defaultTraderCategory: {
           select: { id: true, name: true },
         },
       },
@@ -237,6 +237,9 @@ export class DefaultTraderCategoryService {
       },
       include: {
         trader: true,
+        defaultTraderCategory: {
+          select: { id: true, name: true },
+        },
       },
     });
 
@@ -258,6 +261,9 @@ export class DefaultTraderCategoryService {
       },
       include: {
         trader: {
+          select: { id: true, name: true },
+        },
+        defaultTraderCategory: {
           select: { id: true, name: true },
         },
       },
