@@ -34,15 +34,15 @@ export class CustomerCatController {
     return this.customerCatService.setPrice(data, req.user as AuthenticatedUser);
   }
 
-  @Get('customer/:customerId')
+  @Get('by-customer')
   @Roles()
   @ApiOperation({ summary: 'Retrieve all category prices for a specific customer within a season' })
-  @ApiParam({ name: 'customerId', type: Number, description: 'The ID of the customer.' })
+  @ApiQuery({ name: 'customerId', type: Number, description: 'The ID of the customer.' })
   @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season.' })
   @ApiResponse({ status: 200, description: 'List of customer categories returned successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid or missing seasonId query parameter.' })
   findByCustomer(
-    @Param('customerId', ParseIntPipe) customerId: number,
+    @Query('customerId', ParseIntPipe) customerId: number,
     @Query('seasonId', ParseIntPipe) seasonId: number,
     @Req() req: Request,
   ) {
@@ -68,13 +68,13 @@ export class CustomerCatController {
     return this.customerCatService.findByCustomerAndNameGrade(customerId, seasonId, name, grade, req.user as AuthenticatedUser);
   }
 
-  @Get('season/:seasonId')
+  @Get()
   @Roles()
   @ApiOperation({ summary: 'Retrieve all customer categories across all customers for a specific season' })
-  @ApiParam({ name: 'seasonId', type: Number, description: 'The ID of the season.' })
+  @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season.' })
   @ApiResponse({ status: 200, description: 'List of all customer categories for the season returned.' })
   @ApiResponse({ status: 400, description: 'Invalid season ID.' })
-  findAllBySeason(@Param('seasonId', ParseIntPipe) seasonId: number, @Req() req: Request) {
+  findAllBySeason(@Query('seasonId', ParseIntPipe) seasonId: number, @Req() req: Request) {
     return this.customerCatService.findAllBySeason(seasonId, req.user as AuthenticatedUser);
   }
 
@@ -91,6 +91,31 @@ export class CustomerCatController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update a customer category record by ID' })
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the customer category to update.' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', example: 'Yanover' },
+        grade: {
+          type: 'string',
+          enum: Object.values(Grade),
+          example: Object.values(Grade)[0],
+        },
+        price: { type: 'number', example: 125.5 },
+        currency: {
+          type: 'string',
+          enum: Object.values(Currency),
+          example: Currency.ILS,
+        },
+      },
+      example: {
+        name: 'Yanover',
+        grade: Object.values(Grade)[0],
+        price: 125.5,
+        currency: Currency.ILS,
+      },
+    },
+  })
   @ApiResponse({ status: 200, description: 'Customer category updated successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Customer category not found.' })
