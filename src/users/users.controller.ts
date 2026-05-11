@@ -2,7 +2,7 @@ import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Req } 
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Request } from 'express';
-import { UserSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+import { UserSwaggerDto, UserUpdateSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { UsersService } from './users.service';
@@ -12,16 +12,6 @@ type CreateUserRequestBody = {
 	email: string;
 	phone?: string;
 	password: string;
-};
-
-type UpdateUserRequestBody = {
-	name?: string;
-	email?: string;
-	phone?: string | null;
-	currentPassword?: string;
-	newPassword?: string;
-	role?: Role;
-	isActive?: boolean;
 };
 
 @ApiTags('Users')
@@ -74,28 +64,22 @@ export class UsersController {
 		return this.usersService.findOneByActor(identifier, req.user as AuthenticatedUser);
 	}
 
-	@Patch(':id')
+	@Patch()
 	@ApiOperation({ summary: 'Update a user\'s details by ID' })
-	@ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the user to update.' })
 	@ApiBody({
-		schema: {
-			type: 'object',
-			properties: {
-				name: { type: 'string', example: 'warehouse_manager' },
-				email: { type: 'string', format: 'email', example: 'manager@etrog-erp.com' },
-				phone: { type: 'string', example: '0541112233' },
-				currentPassword: { type: 'string', example: 'OldPassword123!' },
-				newPassword: { type: 'string', example: 'NewPassword123!' },
-				role: { type: 'string', enum: ['OWNER', 'MANAGER', 'WORKER'], example: 'MANAGER' },
-				isActive: { type: 'boolean', example: true },
-			},
-			example: {
-				name: 'warehouse_manager',
-				email: 'manager@etrog-erp.com',
-				currentPassword: 'OldPassword123!',
-				newPassword: 'NewPassword123!',
-				role: 'MANAGER',
-				isActive: true,
+		type: UserUpdateSwaggerDto,
+		examples: {
+			sample: {
+				summary: 'Update a user by ID',
+				value: {
+					id: 1,
+					name: 'warehouse_manager',
+					email: 'manager@etrog-erp.com',
+					currentPassword: 'OldPassword123!',
+					newPassword: 'NewPassword123!',
+					role: 'MANAGER',
+					isActive: true,
+				},
 			},
 		},
 	})
@@ -103,11 +87,10 @@ export class UsersController {
 	@ApiResponse({ status: 400, description: 'Invalid update data.' })
 	@ApiResponse({ status: 404, description: 'User not found.' })
 	update(
-		@Param('id', ParseIntPipe) id: number,
-		@Body() updateData: UpdateUserRequestBody,
+		@Body() updateData: UserUpdateSwaggerDto,
 		@Req() req: Request,
 	) {
-		return this.usersService.updateUserByActor(id, updateData, req.user as AuthenticatedUser);
+		return this.usersService.updateUserByActor(updateData.id, updateData, req.user as AuthenticatedUser);
 	}
 
 	@Delete(':id')

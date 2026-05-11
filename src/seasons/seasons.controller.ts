@@ -1,6 +1,6 @@
 // src/seasons/seasons.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { SeasonsService } from './seasons.service';

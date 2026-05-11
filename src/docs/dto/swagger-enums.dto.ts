@@ -29,6 +29,32 @@ export class UserSwaggerDto {
   password!: string;
 }
 
+export class UserUpdateSwaggerDto {
+  @ApiProperty({ description: 'User ID to update.', example: 1 })
+  id!: number;
+
+  @ApiPropertyOptional({ description: 'Updated display name.', example: 'warehouse_manager' })
+  name?: string;
+
+  @ApiPropertyOptional({ description: 'Updated email address.', example: 'manager@etrog-erp.com' })
+  email?: string;
+
+  @ApiPropertyOptional({ description: 'Updated phone number.', example: '0541112233' })
+  phone?: string | null;
+
+  @ApiPropertyOptional({ description: 'Current password, required when changing password.', example: 'OldPassword123!' })
+  currentPassword?: string;
+
+  @ApiPropertyOptional({ description: 'New password to set.', example: 'NewPassword123!' })
+  newPassword?: string;
+
+  @ApiPropertyOptional({ enum: Role, enumName: 'Role', description: 'Administrative role update.', example: 'MANAGER' })
+  role?: Role;
+
+  @ApiPropertyOptional({ description: 'Whether the user is active.', example: true })
+  isActive?: boolean;
+}
+
 export class MessageSwaggerDto {
   @ApiProperty({ description: 'Sender user ID.' })
   senderId!: number;
