@@ -95,6 +95,8 @@ export class CustomerCatController {
     schema: {
       type: 'object',
       properties: {
+        seasonId: { type: 'number', example: 2 },
+        customerId: { type: 'number', example: 15 },
         name: { type: 'string', example: 'Yanover' },
         grade: {
           type: 'string',
@@ -109,6 +111,8 @@ export class CustomerCatController {
         },
       },
       example: {
+        seasonId: 2,
+        customerId: 15,
         name: 'Yanover',
         grade: Object.values(Grade)[0],
         price: 125.5,
