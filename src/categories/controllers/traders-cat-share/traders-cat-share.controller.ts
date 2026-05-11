@@ -7,6 +7,7 @@ import { Prisma, Role } from '@prisma/client';
 import { Roles } from 'src/authorization/decorators/roles.decorator';
 import type { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+import { TraderCategoryShareCreateSwaggerDto, TraderCategoryShareUpdateSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Categories')
 @ApiBearerAuth('access-token')
@@ -20,24 +21,21 @@ export class TraderCatShareController {
   @Post()
   @ApiOperation({ summary: 'Set or upsert a trader\'s percentage share in the active season. Unique constraint: [traderId, traderCategoryId, seasonId].' })
   @ApiBody({
-    schema: {
-      type: 'object',
-      required: ['traderId', 'traderCategoryId', 'percent'],
-      properties: {
-        traderId: { type: 'integer', example: 3 },
-        traderCategoryId: { type: 'integer', example: 2 },
-        percent: { type: 'number', example: 35.5 },
-      },
-      example: {
-        traderId: 3,
-        traderCategoryId: 2,
-        percent: 35.5,
+    type: TraderCategoryShareCreateSwaggerDto,
+    examples: {
+      sample: {
+        summary: 'Upsert a share for the active season',
+        value: {
+          traderId: 3,
+          traderCategoryId: 2,
+          percent: 35.5,
+        },
       },
     },
   })
   @ApiResponse({ status: 201, description: 'Trader category share created or updated successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input data.' })
-  setShare(@Body() data: { traderId: number; traderCategoryId: number; percent: number }) {
+  setShare(@Body() data: TraderCategoryShareCreateSwaggerDto) {
     return this.shareService.setShare(data);
   }
 
@@ -78,17 +76,17 @@ export class TraderCatShareController {
     return this.shareService.findOne(id, req.user as AuthenticatedUser);
   }
 
-  @Patch(':id')
+  @Patch()
   @ApiOperation({ summary: 'Update a trader category share record by ID' })
-  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the share record to update.' })
   @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        percent: { type: 'number', example: 42 },
-      },
-      example: {
-        percent: 42,
+    type: TraderCategoryShareUpdateSwaggerDto,
+    examples: {
+      sample: {
+        summary: 'Update a share record by ID',
+        value: {
+          id: 1,
+          percent: 42,
+        },
       },
     },
   })
@@ -96,10 +94,10 @@ export class TraderCatShareController {
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Share record not found.' })
   update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateData: Prisma.TraderCategoryShareUpdateInput,
+    @Body() updateData: TraderCategoryShareUpdateSwaggerDto,
   ) {
-    return this.shareService.update(id, updateData);
+    const { id, ...data } = updateData;
+    return this.shareService.update(id, data as Prisma.TraderCategoryShareUpdateInput);
   }
 
   @Delete(':id')

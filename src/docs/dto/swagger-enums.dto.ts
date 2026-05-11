@@ -567,6 +567,25 @@ export class CustomerCategoryUpdateSwaggerDto {
   currency?: Currency;
 }
 
+export class TraderCategoryShareCreateSwaggerDto {
+  @ApiProperty({ description: 'Trader ID.', example: 3 })
+  traderId!: number;
+
+  @ApiProperty({ description: 'Trader category ID.', example: 2 })
+  traderCategoryId!: number;
+
+  @ApiProperty({ description: 'Percentage share.', example: 35.5 })
+  percent!: number;
+}
+
+export class TraderCategoryShareUpdateSwaggerDto {
+  @ApiProperty({ description: 'Trader category share ID to update.', example: 1 })
+  id!: number;
+
+  @ApiPropertyOptional({ description: 'Updated percentage share.', example: 42 })
+  percent?: number;
+}
+
 export class PricingConfigSwaggerDto {
   @ApiProperty({ description: 'Season ID to update pricing for.', example: 1 })
   seasonId!: number;
