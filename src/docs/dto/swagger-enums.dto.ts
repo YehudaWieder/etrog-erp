@@ -743,3 +743,47 @@ export class UpdateDefaultTraderCategoryShareSwaggerDto {
   })
   percent!: number;
 }
+
+// Default Trader Category Response DTOs (for approval/display)
+export class TraderShareDetailDto {
+  @ApiProperty({ description: 'Trader ID.' })
+  traderId!: number;
+
+  @ApiProperty({ description: 'Trader name.' })
+  traderName!: string;
+
+  @ApiProperty({
+    description: 'Percentage share for this trader in the category.',
+    example: 50,
+  })
+  percent!: number;
+}
+
+export class DefaultTraderCategoryApprovalResponseSwaggerDto {
+  @ApiProperty({ description: 'Default trader category ID.' })
+  id!: number;
+
+  @ApiProperty({ description: 'Default trader category name.' })
+  name!: string;
+
+  @ApiPropertyOptional({ description: 'Category notes.' })
+  notes?: string;
+
+  @ApiProperty({
+    type: [TraderShareDetailDto],
+    description: 'All trader shares for this category.',
+  })
+  shares!: TraderShareDetailDto[];
+
+  @ApiProperty({
+    description: 'Total percentage allocation across all traders (should be <= 100%).',
+    example: 100,
+  })
+  totalPercent!: number;
+
+  @ApiProperty({ description: 'Category creation timestamp.' })
+  createdAt!: Date;
+
+  @ApiProperty({ description: 'Category last update timestamp.' })
+  updatedAt!: Date;
+}

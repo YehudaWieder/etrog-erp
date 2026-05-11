@@ -44,6 +44,32 @@ export class DefaultTraderCategoryService {
   }
 
   /**
+   * Transform raw Prisma data to approval response format with computed totals
+   */
+  private transformToApprovalResponse(category: any) {
+    let totalPercent = 0;
+    const shares = (category.shares || []).map((share) => {
+      const percent = Number(share.percent);
+      totalPercent += percent;
+      return {
+        traderId: share.traderId,
+        traderName: share.trader.name,
+        percent,
+      };
+    });
+
+    return {
+      id: category.id,
+      name: category.name,
+      notes: category.notes,
+      shares,
+      totalPercent: Number(totalPercent.toFixed(2)),
+      createdAt: category.createdAt,
+      updatedAt: category.updatedAt,
+    };
+  }
+
+  /**
    * Create a new default trader category
    */
   async create(dto: CreateDefaultTraderCategorySwaggerDto) {
@@ -70,7 +96,7 @@ export class DefaultTraderCategoryService {
    * Get all default trader categories with their shares
    */
   async findAll() {
-    return this.prisma.defaultTraderCategory.findMany({
+    const categories = await this.prisma.defaultTraderCategory.findMany({
       orderBy: { name: 'asc' },
       include: {
         shares: {
@@ -83,6 +109,8 @@ export class DefaultTraderCategoryService {
         },
       },
     });
+
+    return categories.map((cat) => this.transformToApprovalResponse(cat));
   }
 
   /**
@@ -109,7 +137,7 @@ export class DefaultTraderCategoryService {
       );
     }
 
-    return category;
+    return this.transformToApprovalResponse(category);
   }
 
   /**
@@ -139,7 +167,7 @@ export class DefaultTraderCategoryService {
       }
     }
 
-    return this.prisma.defaultTraderCategory.update({
+    const updated = await this.prisma.defaultTraderCategory.update({
       where: { id },
       data: {
         name: dto.name,
@@ -147,6 +175,7 @@ export class DefaultTraderCategoryService {
       },
       include: {
         shares: {
+          orderBy: { traderId: 'asc' },
           include: {
             trader: {
               select: { id: true, name: true },
@@ -155,6 +184,8 @@ export class DefaultTraderCategoryService {
         },
       },
     });
+
+    return this.transformToApprovalResponse(updated);
   }
 
   /**

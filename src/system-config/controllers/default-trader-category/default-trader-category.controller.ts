@@ -29,6 +29,7 @@ import {
   CreateDefaultTraderCategorySwaggerDto,
   UpdateDefaultTraderCategoryShareSwaggerDto,
   UpdateDefaultTraderCategorySwaggerDto,
+  DefaultTraderCategoryApprovalResponseSwaggerDto,
 } from 'src/docs/dto/swagger-enums.dto';
 import { DefaultTraderCategoryService } from 'src/system-config/services/default-trader-category/default-trader-category.service';
 
@@ -43,17 +44,25 @@ export class DefaultTraderCategoryController {
     private readonly defaultTraderCategoryService: DefaultTraderCategoryService,
   ) {}
 
-  @ApiOperation({ summary: 'Get all default trader categories with their shares. Roles: OWNER, MANAGER, WORKER.' })
-  @ApiResponse({ status: 200, description: 'Default trader categories returned successfully.' })
+  @ApiOperation({ summary: 'Get all default trader categories with their shares for approval display. Roles: OWNER, MANAGER, WORKER.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Default trader categories with complete share breakdown returned successfully.',
+    type: [DefaultTraderCategoryApprovalResponseSwaggerDto],
+  })
   @Roles(Role.OWNER, Role.MANAGER, Role.WORKER)
   @Get()
   async getDefaultCategories() {
     return this.defaultTraderCategoryService.findAll();
   }
 
-  @ApiOperation({ summary: 'Get one default trader category by ID. Roles: OWNER, MANAGER, WORKER.' })
+  @ApiOperation({ summary: 'Get one default trader category by ID with all trader shares and total. Roles: OWNER, MANAGER, WORKER.' })
   @ApiParam({ name: 'id', type: Number, description: 'Default trader category ID.' })
-  @ApiResponse({ status: 200, description: 'Default trader category returned successfully.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Default trader category with complete share breakdown returned successfully.',
+    type: DefaultTraderCategoryApprovalResponseSwaggerDto,
+  })
   @ApiResponse({ status: 404, description: 'Default trader category not found.' })
   @Roles(Role.OWNER, Role.MANAGER, Role.WORKER)
   @Get(':id')
@@ -74,7 +83,11 @@ export class DefaultTraderCategoryController {
   @ApiOperation({ summary: 'Update a default trader category. Roles: OWNER, MANAGER.' })
   @ApiParam({ name: 'id', type: Number, description: 'Default trader category ID.' })
   @ApiBody({ type: UpdateDefaultTraderCategorySwaggerDto })
-  @ApiResponse({ status: 200, description: 'Default trader category updated successfully.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Default trader category updated successfully.',
+    type: DefaultTraderCategoryApprovalResponseSwaggerDto,
+  })
   @ApiResponse({ status: 404, description: 'Default trader category not found.' })
   @Roles(Role.OWNER, Role.MANAGER)
   @Patch(':id')
