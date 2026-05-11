@@ -7,10 +7,17 @@ import { FieldController } from './controllers/fields/fields.controller';
 import { ConfigService } from './system-config.service';
 import { ConfigController } from './system-config.controller';
 import { SeedService } from './services/seed/seed.service';
+import { DefaultTraderCategoryService } from './services/default-trader-category/default-trader-category.service';
 
 @Module({
   controllers: [SystemConfigController, FieldController, ConfigController],
-  providers: [SystemConfigService, ConfigService, FieldService, SeedService],
-  exports: [SeedService],
+  providers: [
+    SystemConfigService,
+    ConfigService,
+    FieldService,
+    SeedService,
+    DefaultTraderCategoryService,
+  ],
+  exports: [SeedService, DefaultTraderCategoryService],
 })
 export class SystemConfigModule {}
