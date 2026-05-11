@@ -1,20 +1,20 @@
 // src/shipments/controllers/shipment/shipment.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
+import { Request } from 'express';
+import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { ShipmentService } from '../../services/shipment/shipment.service';
 import { ShipmentStatus } from '@prisma/client';
 import { CreateShipmentSwaggerDto, ShipmentResponseSwaggerDto, UpdateShipmentSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
 type ShipmentCreateBody = {
-  updatedById: number;
   notes?: string;
   status?: ShipmentStatus;
   shippedAt?: string | Date;
 };
 
 type ShipmentUpdateBody = {
-  updatedById?: number;
   notes?: string | null;
   status?: ShipmentStatus;
   shippedAt?: string | Date;
@@ -36,7 +36,6 @@ export class ShipmentController {
       sample: {
         summary: 'Sample shipment create payload',
         value: {
-          updatedById: 1,
           status: 'PREPARING',
           notes: 'Shipment for EU distribution center',
         },
@@ -45,8 +44,9 @@ export class ShipmentController {
   })
   @ApiResponse({ status: 201, description: 'Shipment created successfully.', type: ShipmentResponseSwaggerDto })
   @ApiResponse({ status: 400, description: 'Invalid input data.' })
-  create(@Body() data: ShipmentCreateBody) {
-    return this.shipmentService.create(data);
+  create(@Body() data: ShipmentCreateBody, @Req() req: Request) {
+    const user = req.user as AuthenticatedUser;
+    return this.shipmentService.create({ ...data, updatedById: user.id });
   }
 
   @Get()
@@ -81,7 +81,7 @@ export class ShipmentController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update shipment details by ID. Editable fields: updatedById, status, shippedAt, notes.' })
+  @ApiOperation({ summary: 'Update shipment details by ID. Editable fields: status, shippedAt, notes.' })
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the shipment to update.' })
   @ApiBody({
     type: UpdateShipmentSwaggerDto,
@@ -89,7 +89,6 @@ export class ShipmentController {
       sample: {
         summary: 'Sample shipment update payload',
         value: {
-          updatedById: 2,
           status: 'SHIPPED',
           shippedAt: '2026-10-12T13:20:00.000Z',
           notes: 'Left warehouse gate at 13:20',
@@ -103,8 +102,10 @@ export class ShipmentController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateData: ShipmentUpdateBody,
+    @Req() req: Request,
   ) {
-    return this.shipmentService.update(id, updateData);
+    const user = req.user as AuthenticatedUser;
+    return this.shipmentService.update(id, { ...updateData, updatedById: user.id });
   }
 
   @Patch(':id/recalculate')

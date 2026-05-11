@@ -1,7 +1,9 @@
 // src/harvest/harvest.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
+import { Request } from 'express';
+import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { HarvestService } from './harvest.service';
 import { HarvestBulkService } from './harvest-bulk.service';
 import { Prisma } from '@prisma/client';
@@ -29,29 +31,29 @@ export class HarvestController {
   @ApiBody({
     schema: {
       type: 'object',
-      required: ['seasonId', 'dateGregorian', 'dateHebrew', 'fieldId', 'updatedById'],
+      required: ['dateGregorian', 'dateHebrew', 'fieldId'],
       properties: {
-        seasonId: { type: 'integer', example: 1 },
         dateGregorian: { type: 'string', format: 'date-time', example: '2026-10-05T06:00:00.000Z' },
         dateHebrew: { type: 'string', example: 'י"ב תשרי תשפ"ז' },
         fieldId: { type: 'integer', example: 2 },
-        updatedById: { type: 'integer', example: 1 },
         totalHarvested: { type: 'integer', example: 1500 },
+        totalRejected: { type: 'integer', example: 0 },
+        notes: { type: 'string', example: 'Field 2 harvest' },
       },
       example: {
-        seasonId: 1,
         dateGregorian: '2026-10-05T06:00:00.000Z',
         dateHebrew: 'י"ב תשרי תשפ"ז',
         fieldId: 2,
-        updatedById: 1,
         totalHarvested: 1500,
+        notes: 'Field 2 harvest',
       },
     },
   })
   @ApiResponse({ status: 201, description: 'Harvest record created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input data.' })
-  create(@Body() data: Prisma.FieldHarvestUncheckedCreateInput) {
-    return this.harvestService.create(data);
+  create(@Body() data: Prisma.FieldHarvestUncheckedCreateInput, @Req() req: Request) {
+    const user = req.user as AuthenticatedUser;
+    return this.harvestService.create({ ...data, updatedById: user.id });
   }
 
   @Get()
@@ -163,7 +165,6 @@ export class HarvestController {
           dateGregorian: '2026-10-15T06:00:00.000Z',
           dateHebrew: 'כ"ג תשרי תשפ"ז',
           fieldId: 2,
-          updatedById: 1,
           totalHarvested: 2000,
           totalRejected: 100,
           ownerHarvested: 0,
@@ -204,8 +205,9 @@ export class HarvestController {
   @ApiResponse({ status: 201, description: 'Harvest and classifications created with auto-allocations.' })
   @ApiResponse({ status: 400, description: 'Duplicate classifications or validation error.' })
   @ApiResponse({ status: 409, description: 'Harvest for this field and date already exists.' })
-  async createBulk(@Body() bulkDto: HarvestBulkCreateDto) {
-    return this.harvestBulkService.createHarvestWithClassifications(bulkDto);
+  async createBulk(@Body() bulkDto: HarvestBulkCreateDto, @Req() req: Request) {
+    const user = req.user as AuthenticatedUser;
+    return this.harvestBulkService.createHarvestWithClassifications({ ...bulkDto, updatedById: user.id });
   }
 
   @Post(':harvestId/classifications')
@@ -223,13 +225,11 @@ export class HarvestController {
           pitamStatus: 'WITH_PITAM',
           quantity: 120,
           notes: 'חבד קלר + דרגה א - (categoryId=3)',
-          updatedById: 1,
           validationMode: 'PARTIAL',
           harvestUpdate: {
             totalHarvested: 1520,
             totalRejected: 80,
             notes: 'תיקון קל אחרי מיון',
-            updatedById: 1,
           },
         },
       },
@@ -243,7 +243,6 @@ export class HarvestController {
           pitamStatus: 'WITHOUT_PITAM',
           quantity: 200,
           notes: 'חב\'\'ד - קטיף ערב',
-          updatedById: 1,
           validationMode: 'PARTIAL',
         },
       },
@@ -255,8 +254,10 @@ export class HarvestController {
   async createClassification(
     @Param('harvestId', ParseIntPipe) harvestId: number,
     @Body() createDto: CreateHarvestClassificationDto,
+    @Req() req: Request,
   ) {
-    return this.harvestBulkService.createClassification(harvestId, createDto);
+    const user = req.user as AuthenticatedUser;
+    return this.harvestBulkService.createClassification(harvestId, { ...createDto, updatedById: user.id });
   }
 
   @Patch(':harvestId/classifications/:classificationId')
@@ -288,7 +289,6 @@ export class HarvestController {
           pitamStatus: 'WITH_PITAM',
           quantity: 90,
           notes: 'חזוא איידלמן + דרגה ב (categoryId=8)',
-          updatedById: 1,
           validationMode: 'PARTIAL',
         },
       },
@@ -301,8 +301,10 @@ export class HarvestController {
     @Param('harvestId', ParseIntPipe) harvestId: number,
     @Param('classificationId', ParseIntPipe) classificationId: number,
     @Body() updateDto: UpdateHarvestClassificationDto,
+    @Req() req: Request,
   ) {
-    return this.harvestBulkService.updateClassification(harvestId, classificationId, updateDto);
+    const user = req.user as AuthenticatedUser;
+    return this.harvestBulkService.updateClassification(harvestId, classificationId, { ...updateDto, updatedById: user.id });
   }
 
   @Delete(':harvestId/classifications/:classificationId')
@@ -318,7 +320,6 @@ export class HarvestController {
           validationMode: 'PARTIAL',
           harvestUpdate: {
             notes: 'מחיקת רשומה כפולה',
-            updatedById: 1,
           },
         },
       },
@@ -331,7 +332,9 @@ export class HarvestController {
     @Param('harvestId', ParseIntPipe) harvestId: number,
     @Param('classificationId', ParseIntPipe) classificationId: number,
     @Body() body: DeleteHarvestClassificationDto,
+    @Req() req: Request,
   ) {
-    return this.harvestBulkService.deleteClassification(harvestId, classificationId, body);
+    const user = req.user as AuthenticatedUser;
+    return this.harvestBulkService.deleteClassification(harvestId, classificationId, { ...body, updatedById: user.id });
   }
 }

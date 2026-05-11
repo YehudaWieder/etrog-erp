@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, Req } from '@nestjs/common';
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -10,6 +10,8 @@ import {
 	ApiTags,
 	ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { Request } from 'express';
+import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import {
 	CombinedInventorySummaryQuery,
 	CombinedMovementScope,
@@ -91,7 +93,6 @@ export class InventoryController {
 					toCustomerId: 5,
 					toCustomerCategoryId: 11,
 					toPitamStatus: 'WITHOUT_PITAM',
-					updatedById: 1,
 					notes: 'Reserved for customer order #A120',
 				},
 			},
@@ -107,7 +108,6 @@ export class InventoryController {
 					fromOwnerType: 'MODULO',
 					toOwnerType: 'TRADER',
 					toTraderId: 9,
-					updatedById: 1,
 					notes: 'Assign modulo stock to trader',
 				},
 			},
@@ -124,7 +124,6 @@ export class InventoryController {
 					fromTraderId: 7,
 					toOwnerType: 'TRADER',
 					toTraderId: 10,
-					updatedById: 1,
 					notes: 'Ownership reallocation',
 				},
 			},
@@ -132,8 +131,9 @@ export class InventoryController {
 	})
 	@ApiResponse({ status: 201, description: 'Internal transfer created successfully.' })
 	@ApiResponse({ status: 400, description: 'Invalid payload or unsupported owner flow.' })
-	create(@Body() data: InternalTransferRequest) {
-		return this.inventoryService.createInternalTransfer(data);
+	create(@Body() data: InternalTransferRequest, @Req() req: Request) {
+		const user = req.user as AuthenticatedUser;
+		return this.inventoryService.createInternalTransfer({ ...data, updatedById: user.id });
 	}
 
 	@Post('customer-general-transfer')
@@ -157,7 +157,6 @@ export class InventoryController {
 					traderCategoryId: 3,
 					customerId: 5,
 					customerCategoryId: 11,
-					updatedById: 1,
 					notes: 'Reserved for customer order #A120',
 				},
 			},
@@ -165,8 +164,9 @@ export class InventoryController {
 	})
 	@ApiResponse({ status: 201, description: 'Customer general transfer created successfully.' })
 	@ApiResponse({ status: 400, description: 'Invalid payload, missing shares, or insufficient stock.' })
-	createCustomerAllocationFromGeneral(@Body() data: CustomerGeneralAllocationRequest) {
-		return this.inventoryService.createCustomerAllocationFromGeneral(data);
+	createCustomerAllocationFromGeneral(@Body() data: CustomerGeneralAllocationRequest, @Req() req: Request) {
+		const user = req.user as AuthenticatedUser;
+		return this.inventoryService.createCustomerAllocationFromGeneral({ ...data, updatedById: user.id });
 	}
 
 	@Patch('customer-general-transfer/:customerAllocationId')

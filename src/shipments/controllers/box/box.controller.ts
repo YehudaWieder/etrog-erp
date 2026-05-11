@@ -1,7 +1,9 @@
 // src/shipments/controllers/box/box.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { Request } from 'express';
+import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { BoxService } from '../../services/box/box.service';
 import { BoxOwnership, BoxStatus, BoxType } from '@prisma/client';
 import { CreateBoxSwaggerDto, UpdateBoxSwaggerDto, BoxResponseSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
@@ -10,7 +12,6 @@ type BoxCreateBody = {
   shipmentId: number;
   boxNumber: number;
   boxType: BoxType;
-  updatedById: number;
   status?: BoxStatus;
   notes?: string;
   ownershipType?: BoxOwnership;
@@ -19,7 +20,6 @@ type BoxCreateBody = {
 };
 
 type BoxUpdateBody = {
-  updatedById?: number;
   boxType?: BoxType;
   status?: BoxStatus;
   notes?: string | null;
@@ -47,7 +47,6 @@ export class BoxController {
           shipmentId: 15,
           boxNumber: 3,
           boxType: 'MEDIUM',
-          updatedById: 1,
           ownershipType: 'TRADER',
           traderId: 3,
           notes: 'Dedicated box for trader 3',
@@ -59,15 +58,15 @@ export class BoxController {
           shipmentId: 15,
           boxNumber: 4,
           boxType: 'SMALL',
-          updatedById: 1,
         },
       },
     },
   })
   @ApiResponse({ status: 201, description: 'Box created successfully.', type: BoxResponseSwaggerDto })
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate box number in this shipment.' })
-  create(@Body() data: BoxCreateBody) {
-    return this.boxService.create(data);
+  create(@Body() data: BoxCreateBody, @Req() req: Request) {
+    const user = req.user as AuthenticatedUser;
+    return this.boxService.create({ ...data, updatedById: user.id });
   }
 
   @Get('shipment/:shipmentId')
@@ -89,7 +88,7 @@ export class BoxController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update box details by ID. Editable fields: updatedById, boxType, status, notes, ownershipType, traderId, customerId.' })
+  @ApiOperation({ summary: 'Update box details by ID. Editable fields: boxType, status, notes, ownershipType, traderId, customerId.' })
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the box to update.' })
   @ApiBody({
     type: UpdateBoxSwaggerDto,
@@ -97,7 +96,6 @@ export class BoxController {
       closeBox: {
         summary: 'Close a box',
         value: {
-          updatedById: 1,
           status: 'CLOSED',
           notes: 'Sealed and ready for dispatch',
         },
@@ -105,7 +103,6 @@ export class BoxController {
       assignToCustomer: {
         summary: 'Reassign ownership to a customer',
         value: {
-          updatedById: 1,
           ownershipType: 'CUSTOMER',
           customerId: 7,
           traderId: null,
@@ -119,8 +116,10 @@ export class BoxController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateData: BoxUpdateBody,
+    @Req() req: Request,
   ) {
-    return this.boxService.update(id, updateData);
+    const user = req.user as AuthenticatedUser;
+    return this.boxService.update(id, { ...updateData, updatedById: user.id });
   }
 
   @Patch(':id/recalculate')

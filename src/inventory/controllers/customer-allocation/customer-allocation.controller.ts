@@ -1,7 +1,9 @@
 // src/inventory/controllers/customer-allocation/customer-allocation.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
+import { Request } from 'express';
+import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import {
   CustomerAllocationService,
   CustomerInventoryShipmentScope,
@@ -35,7 +37,6 @@ export class CustomerAllocationController {
           quantity: 80,
           type: 'HARVEST_IN',
           takenFrom: 'GENERAL',
-          updatedById: 1,
           notes: 'Reserved for customer order #A120',
         },
       },
@@ -43,8 +44,9 @@ export class CustomerAllocationController {
   })
   @ApiResponse({ status: 201, description: 'Customer allocation created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input data.' })
-  create(@Body() data: Prisma.CustomerAllocationUncheckedCreateInput) {
-    return this.allocationService.create(data);
+  create(@Body() data: Prisma.CustomerAllocationUncheckedCreateInput, @Req() req: Request) {
+    const user = req.user as AuthenticatedUser;
+    return this.allocationService.create({ ...data, updatedById: user.id });
   }
 
   @Get('balance')

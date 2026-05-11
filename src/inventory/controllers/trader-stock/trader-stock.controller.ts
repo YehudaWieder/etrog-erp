@@ -1,7 +1,9 @@
 // src/inventory/controllers/trader-stock/trader-stock.controller.ts
 
-import { Controller, Get, Post, Delete, Body, Param, ParseIntPipe, Query, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, ParseIntPipe, Query, Patch, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
+import { Request } from 'express';
+import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { InventoryOwnerScope, InventoryShipmentScope, InventorySortBy, TraderStockService } from '../../services/trader-stock/trader-stock.service';
 import { Prisma, Grade, PitamStatus } from '@prisma/client';
 import { TraderStockSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
@@ -30,7 +32,6 @@ export class TraderStockController {
           pitamStatus: 'WITH_PITAM',
           quantity: 200,
           type: 'HARVEST_IN',
-          updatedById: 1,
           notes: 'Inbound from sorting line',
         },
       },
@@ -38,8 +39,9 @@ export class TraderStockController {
   })
   @ApiResponse({ status: 201, description: 'Stock movement recorded successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid movement data.' })
-  create(@Body() data: Prisma.TraderStockUncheckedCreateInput) {
-    return this.stockService.createMovement(data);
+  create(@Body() data: Prisma.TraderStockUncheckedCreateInput, @Req() req: Request) {
+    const user = req.user as AuthenticatedUser;
+    return this.stockService.createMovement({ ...data, updatedById: user.id });
   }
 
   @Get('balance')

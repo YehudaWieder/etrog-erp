@@ -1,7 +1,9 @@
 // src/shipments/controllers/item/item.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { Request } from 'express';
+import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { ItemService } from '../../services/item/item.service';
 import { Prisma } from '@prisma/client';
 import { ShipmentItemSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
@@ -29,7 +31,6 @@ export class ItemController {
           quantity: 30,
           ownershipType: 'TRADER',
           traderId: 3,
-          updatedById: 1,
           notes: 'Top quality batch',
         },
       },
@@ -37,8 +38,9 @@ export class ItemController {
   })
   @ApiResponse({ status: 201, description: 'Shipment item created successfully.', type: ShipmentItemSwaggerDto })
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate item for this box combination.' })
-  create(@Body() data: Prisma.ShipmentItemUncheckedCreateInput) {
-    return this.itemService.create(data);
+  create(@Body() data: Prisma.ShipmentItemUncheckedCreateInput, @Req() req: Request) {
+    const user = req.user as AuthenticatedUser;
+    return this.itemService.create({ ...data, updatedById: user.id });
   }
 
   @Get('box/:boxId')
@@ -71,8 +73,10 @@ export class ItemController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateData: Prisma.ShipmentItemUncheckedUpdateInput,
+    @Req() req: Request,
   ) {
-    return this.itemService.update(id, updateData);
+    const user = req.user as AuthenticatedUser;
+    return this.itemService.update(id, { ...updateData, updatedById: user.id });
   }
 
   @Delete(':id')
