@@ -78,6 +78,28 @@ export class HarvestBulkService {
     }
   }
 
+  private validateAssignmentIdsForGeneral(classItem: {
+    assignmentType: AssignmentType;
+    traderId?: number | null;
+    customerId?: number | null;
+  }) {
+    if (classItem.assignmentType !== AssignmentType.GENERAL) {
+      return;
+    }
+
+    if (classItem.traderId !== undefined && classItem.traderId !== null) {
+      throw new BadRequestException(
+        'traderId cannot be provided when assignmentType is GENERAL',
+      );
+    }
+
+    if (classItem.customerId !== undefined && classItem.customerId !== null) {
+      throw new BadRequestException(
+        'customerId cannot be provided when assignmentType is GENERAL',
+      );
+    }
+  }
+
   private async getTraderCategoryShares(tx: any, seasonId: number, traderCategoryId: number) {
     return tx.traderCategoryShare.findMany({
       where: {
@@ -376,6 +398,7 @@ export class HarvestBulkService {
     },
   ) {
     const classItem = params.classificationItem;
+    this.validateAssignmentIdsForGeneral(classItem);
 
     // Create Classification
     const classSlug = `harvest-${params.harvestId}-tcat-${classItem.traderCategoryId ?? 0}-ccat-${classItem.customerCategoryId ?? 0}-g-${classItem.grade ?? 'NA'}-pitam-${classItem.pitamStatus}-a-${classItem.assignmentType}`;
@@ -519,6 +542,8 @@ export class HarvestBulkService {
     harvestId: number,
     createDto: CreateHarvestClassificationDto,
   ) {
+    this.validateAssignmentIdsForGeneral(createDto);
+
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
 
     return this.prisma.$transaction(async (tx) => {
@@ -735,15 +760,34 @@ export class HarvestBulkService {
 
       await this.applyHarvestInlineUpdate(tx, harvestId, updateDto.harvestUpdate);
 
+      const nextAssignmentType =
+        updateDto.assignmentType ?? oldClassification.assignmentType;
+
+      this.validateAssignmentIdsForGeneral({
+        assignmentType: nextAssignmentType,
+        traderId: updateDto.traderId,
+        customerId: updateDto.customerId,
+      });
+
+      const nextTraderId =
+        nextAssignmentType === AssignmentType.GENERAL
+          ? null
+          : (updateDto.traderId ?? oldClassification.traderId);
+
+      const nextCustomerId =
+        nextAssignmentType === AssignmentType.GENERAL
+          ? null
+          : (updateDto.customerId ?? oldClassification.customerId);
+
       const newQuantity = updateDto.quantity ?? oldClassification.quantity;
 
       // Update classification with new values
       const updatedClassification = await tx.classification.update({
         where: { id: classificationId },
         data: {
-          assignmentType: updateDto.assignmentType ?? oldClassification.assignmentType,
-          traderId: updateDto.traderId ?? oldClassification.traderId,
-          customerId: updateDto.customerId ?? oldClassification.customerId,
+          assignmentType: nextAssignmentType,
+          traderId: nextTraderId,
+          customerId: nextCustomerId,
           traderCategoryId: updateDto.traderCategoryId ?? oldClassification.traderCategoryId,
           customerCategoryId: updateDto.customerCategoryId ?? oldClassification.customerCategoryId,
           grade: updateDto.grade ?? oldClassification.grade,
