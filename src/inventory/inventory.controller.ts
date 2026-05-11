@@ -169,18 +169,18 @@ export class InventoryController {
 		return this.inventoryService.createCustomerAllocationFromGeneral(data, actor.id);
 	}
 
-	@Patch('customer-general-transfer/:customerAllocationId')
+	@Patch('customer-general-transfer')
 	@ApiOperation({
 		summary:
 			'Update customer general transfer in one TX: rollback linked trader movements and rebuild by current modulo+shares rules.',
 	})
-	@ApiParam({ name: 'customerAllocationId', type: Number })
 	@ApiBody({
 		type: CustomerGeneralAllocationRequest,
 		examples: {
 			default: {
 				summary: 'Update customer allocation from general inventory',
 				value: {
+					id: 1,
 					date: '2026-10-10T09:00:00.000Z',
 					dateHebrew: 'יז תשרי תשפז',
 					quantity: 95,
@@ -197,12 +197,12 @@ export class InventoryController {
 	@ApiResponse({ status: 200, description: 'Customer general transfer updated successfully.' })
 	@ApiResponse({ status: 404, description: 'Customer general transfer not found.' })
 	updateCustomerAllocationFromGeneral(
-		@Param('customerAllocationId', ParseIntPipe) customerAllocationId: number,
 		@Body() data: CustomerGeneralAllocationRequest,
 		@Req() req: Request,
 	) {
+		const { id, ...updateData } = data;
 		const actor = req.user as AuthenticatedUser;
-		return this.inventoryService.updateCustomerAllocationFromGeneral(customerAllocationId, data, actor.id);
+		return this.inventoryService.updateCustomerAllocationFromGeneral(id, updateData as CustomerGeneralAllocationRequest, actor.id);
 	}
 
 	@Delete('customer-general-transfer/:customerAllocationId')
@@ -219,16 +219,16 @@ export class InventoryController {
 		return this.inventoryService.removeCustomerAllocationFromGeneral(customerAllocationId);
 	}
 
-	@Patch('internal-transfer/:operationId')
+	@Patch('internal-transfer')
 	@ApiOperation({ summary: 'Update internal transfer in TX while preserving minus/plus integrity.' })
-	@ApiParam({ name: 'operationId', type: Number })
 	@ApiBody({
 		type: InternalTransferRequest,
-		description: 'Same payload contract as create endpoint.',
+		description: 'Same payload contract as create endpoint with required id field.',
 		examples: {
 			updateExample: {
 				summary: 'Patch existing trader->customer transfer with side-specific fields',
 				value: {
+					id: 1,
 					type: 'INTERNAL_TRANSFER',
 					date: '2026-10-10T09:30:00.000Z',
 					dateHebrew: 'יז תשרי תשפז',
@@ -250,12 +250,12 @@ export class InventoryController {
 	@ApiResponse({ status: 200, description: 'Internal transfer updated successfully.' })
 	@ApiResponse({ status: 404, description: 'Internal transfer not found.' })
 	update(
-		@Param('operationId', ParseIntPipe) operationId: number,
 		@Body() data: InternalTransferRequest,
 		@Req() req: Request,
 	) {
+		const { id, ...updateData } = data;
 		const actor = req.user as AuthenticatedUser;
-		return this.inventoryService.updateInternalTransfer(operationId, data, actor.id);
+		return this.inventoryService.updateInternalTransfer(id, updateData as InternalTransferRequest, actor.id);
 	}
 
 	@Delete('internal-transfer/:operationId')

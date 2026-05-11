@@ -11,6 +11,8 @@ export enum InventoryOwnerType {
 }
 
 export class InternalTransferRequest {
+	id!: number; // ID of the internal transfer operation to update
+
 	type!: MovementType;
 	date!: string;
 	dateHebrew?: string;
@@ -37,6 +39,8 @@ export class InternalTransferRequest {
 }
 
 export class CustomerGeneralAllocationRequest {
+	id!: number; // ID of the customer allocation to update
+
 	date!: string;
 	dateHebrew!: string;
 	quantity!: number;
