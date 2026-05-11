@@ -40,8 +40,8 @@ export class TraderStockController {
   @ApiResponse({ status: 201, description: 'Stock movement recorded successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid movement data.' })
   create(@Body() data: Prisma.TraderStockUncheckedCreateInput, @Req() req: Request) {
-    const user = req.user as AuthenticatedUser;
-    return this.stockService.createMovement({ ...data, updatedById: user.id });
+    const actor = req.user as AuthenticatedUser;
+    return this.stockService.createMovement(data, actor.id);
   }
 
   @Get('balance')
@@ -170,7 +170,6 @@ export class TraderStockController {
           quantity: 12,
           isModulo: false,
           type: 'WASTE',
-          updatedById: 1,
           notes: 'Damaged in storage',
         },
       },
@@ -185,7 +184,6 @@ export class TraderStockController {
           quantity: 25,
           isModulo: false,
           type: 'SELF_PICKUP',
-          updatedById: 1,
           notes: 'Trader collected directly',
         },
       },
@@ -193,8 +191,9 @@ export class TraderStockController {
   })
   @ApiResponse({ status: 201, description: 'Trader adjustment movement created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid adjustment payload.' })
-  createAdjustment(@Body() data: Prisma.TraderStockUncheckedCreateInput) {
-    return this.stockService.createAdjustment(data);
+  createAdjustment(@Body() data: Prisma.TraderStockUncheckedCreateInput, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.stockService.createAdjustment(data, actor.id);
   }
 
   @Patch('adjustments/:id')
@@ -208,7 +207,6 @@ export class TraderStockController {
         value: {
           quantity: 10,
           notes: 'Updated after recount',
-          updatedById: 1,
         },
       },
     },
@@ -218,8 +216,10 @@ export class TraderStockController {
   updateAdjustment(
     @Param('id', ParseIntPipe) id: number,
     @Body() data: Prisma.TraderStockUncheckedUpdateInput,
+    @Req() req: Request,
   ) {
-    return this.stockService.updateAdjustment(id, data);
+    const actor = req.user as AuthenticatedUser;
+    return this.stockService.updateAdjustment(id, data, actor.id);
   }
 
   @Delete('adjustments/:id')

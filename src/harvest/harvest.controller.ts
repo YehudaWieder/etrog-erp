@@ -52,8 +52,8 @@ export class HarvestController {
   @ApiResponse({ status: 201, description: 'Harvest record created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input data.' })
   create(@Body() data: Prisma.FieldHarvestUncheckedCreateInput, @Req() req: Request) {
-    const user = req.user as AuthenticatedUser;
-    return this.harvestService.create({ ...data, updatedById: user.id });
+    const actor = req.user as AuthenticatedUser;
+    return this.harvestService.create(data, actor.id);
   }
 
   @Get()
@@ -111,8 +111,10 @@ export class HarvestController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateData: Prisma.FieldHarvestUncheckedUpdateInput,
+    @Req() req: Request,
   ) {
-    return this.harvestService.update(id, updateData);
+    const actor = req.user as AuthenticatedUser;
+    return this.harvestService.update(id, updateData, actor.id);
   }
 
   @Patch(':id/partial-classification')
@@ -206,8 +208,8 @@ export class HarvestController {
   @ApiResponse({ status: 400, description: 'Duplicate classifications or validation error.' })
   @ApiResponse({ status: 409, description: 'Harvest for this field and date already exists.' })
   async createBulk(@Body() bulkDto: HarvestBulkCreateDto, @Req() req: Request) {
-    const user = req.user as AuthenticatedUser;
-    return this.harvestBulkService.createHarvestWithClassifications({ ...bulkDto, updatedById: user.id });
+    const actor = req.user as AuthenticatedUser;
+    return this.harvestBulkService.createHarvestWithClassifications(bulkDto, actor.id);
   }
 
   @Post(':harvestId/classifications')
@@ -256,8 +258,8 @@ export class HarvestController {
     @Body() createDto: CreateHarvestClassificationDto,
     @Req() req: Request,
   ) {
-    const user = req.user as AuthenticatedUser;
-    return this.harvestBulkService.createClassification(harvestId, { ...createDto, updatedById: user.id });
+    const actor = req.user as AuthenticatedUser;
+    return this.harvestBulkService.createClassification(harvestId, createDto, actor.id);
   }
 
   @Patch(':harvestId/classifications/:classificationId')
@@ -272,11 +274,9 @@ export class HarvestController {
         value: {
           quantity: 140,
           notes: 'עודכן אחרי תיקון מיון',
-          updatedById: 1,
           validationMode: 'PARTIAL',
           harvestUpdate: {
             notes: 'עודכן במקביל לרשומת המיון',
-            updatedById: 1,
           },
         },
       },
@@ -303,8 +303,8 @@ export class HarvestController {
     @Body() updateDto: UpdateHarvestClassificationDto,
     @Req() req: Request,
   ) {
-    const user = req.user as AuthenticatedUser;
-    return this.harvestBulkService.updateClassification(harvestId, classificationId, { ...updateDto, updatedById: user.id });
+    const actor = req.user as AuthenticatedUser;
+    return this.harvestBulkService.updateClassification(harvestId, classificationId, updateDto, actor.id);
   }
 
   @Delete(':harvestId/classifications/:classificationId')
@@ -334,7 +334,7 @@ export class HarvestController {
     @Body() body: DeleteHarvestClassificationDto,
     @Req() req: Request,
   ) {
-    const user = req.user as AuthenticatedUser;
-    return this.harvestBulkService.deleteClassification(harvestId, classificationId, { ...body, updatedById: user.id });
+    const actor = req.user as AuthenticatedUser;
+    return this.harvestBulkService.deleteClassification(harvestId, classificationId, body, actor.id);
   }
 }

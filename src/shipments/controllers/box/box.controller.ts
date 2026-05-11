@@ -65,8 +65,8 @@ export class BoxController {
   @ApiResponse({ status: 201, description: 'Box created successfully.', type: BoxResponseSwaggerDto })
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate box number in this shipment.' })
   create(@Body() data: BoxCreateBody, @Req() req: Request) {
-    const user = req.user as AuthenticatedUser;
-    return this.boxService.create({ ...data, updatedById: user.id });
+    const actor = req.user as AuthenticatedUser;
+    return this.boxService.create(data, actor.id);
   }
 
   @Get('shipment/:shipmentId')
@@ -118,8 +118,8 @@ export class BoxController {
     @Body() updateData: BoxUpdateBody,
     @Req() req: Request,
   ) {
-    const user = req.user as AuthenticatedUser;
-    return this.boxService.update(id, { ...updateData, updatedById: user.id });
+    const actor = req.user as AuthenticatedUser;
+    return this.boxService.update(id, updateData, actor.id);
   }
 
   @Patch(':id/recalculate')

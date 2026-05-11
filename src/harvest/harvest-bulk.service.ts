@@ -541,8 +541,14 @@ export class HarvestBulkService {
   async createClassification(
     harvestId: number,
     createDto: CreateHarvestClassificationDto,
+    actorId: number,
   ) {
-    this.validateAssignmentIdsForGeneral(createDto);
+    const createPayload = {
+      ...createDto,
+      updatedById: actorId,
+    };
+
+    this.validateAssignmentIdsForGeneral(createPayload);
 
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
 
@@ -556,9 +562,9 @@ export class HarvestBulkService {
         throw new NotFoundException(`Harvest ${harvestId} not found`);
       }
 
-      await this.applyHarvestInlineUpdate(tx, harvestId, createDto.harvestUpdate);
+      await this.applyHarvestInlineUpdate(tx, harvestId, createPayload.harvestUpdate);
 
-      const classSlug = `harvest-${harvestId}-tcat-${createDto.traderCategoryId ?? 0}-ccat-${createDto.customerCategoryId ?? 0}-g-${createDto.grade ?? 'NA'}-pitam-${createDto.pitamStatus}-a-${createDto.assignmentType}`;
+      const classSlug = `harvest-${harvestId}-tcat-${createPayload.traderCategoryId ?? 0}-ccat-${createPayload.customerCategoryId ?? 0}-g-${createPayload.grade ?? 'NA'}-pitam-${createPayload.pitamStatus}-a-${createPayload.assignmentType}`;
 
       const existing = await tx.classification.findUnique({
         where: { slug: classSlug },
@@ -572,16 +578,16 @@ export class HarvestBulkService {
         data: {
           seasonId,
           fieldHarvestId: harvestId,
-          updatedById: createDto.updatedById,
-          assignmentType: createDto.assignmentType,
-          traderId: createDto.traderId,
-          customerId: createDto.customerId,
-          traderCategoryId: createDto.traderCategoryId,
-          customerCategoryId: createDto.customerCategoryId,
-          grade: createDto.grade,
-          pitamStatus: createDto.pitamStatus,
-          quantity: createDto.quantity,
-          notes: createDto.notes,
+          updatedById: createPayload.updatedById,
+          assignmentType: createPayload.assignmentType,
+          traderId: createPayload.traderId,
+          customerId: createPayload.customerId,
+          traderCategoryId: createPayload.traderCategoryId,
+          customerCategoryId: createPayload.customerCategoryId,
+          grade: createPayload.grade,
+          pitamStatus: createPayload.pitamStatus,
+          quantity: createPayload.quantity,
+          notes: createPayload.notes,
           slug: classSlug,
         } as any,
       });
@@ -591,10 +597,10 @@ export class HarvestBulkService {
         classificationId: classification.id,
         classificationItem: this.mapToClassificationBulkItem(classification),
         harvestDate: harvest.dateGregorian,
-        updatedById: createDto.updatedById,
+        updatedById: createPayload.updatedById,
       });
 
-      await this.syncHarvestClassificationProgress(tx, harvestId, createDto.validationMode);
+      await this.syncHarvestClassificationProgress(tx, harvestId, createPayload.validationMode);
 
       return classification;
     });
@@ -604,10 +610,15 @@ export class HarvestBulkService {
    * Bulk create: FieldHarvest + Classifications + CustomerAllocations/TraderStocks
    * All in a single transaction.
    */
-  async createHarvestWithClassifications(bulkDto: HarvestBulkCreateDto) {
+  async createHarvestWithClassifications(bulkDto: HarvestBulkCreateDto, actorId: number) {
+    const bulkPayload = {
+      ...bulkDto,
+      updatedById: actorId,
+    };
+
     // 1. Validate no duplicate classifications
-    this.validateNoDuplicateClassifications(bulkDto.classifications);
-    this.validateClassificationsTotalMatchesHarvested(bulkDto);
+    this.validateNoDuplicateClassifications(bulkPayload.classifications);
+    this.validateClassificationsTotalMatchesHarvested(bulkPayload);
 
     // 2. Get active season
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
@@ -615,40 +626,40 @@ export class HarvestBulkService {
     // 3. Execute entire flow in transaction
     return this.prisma.$transaction(async (tx) => {
       // 3a. Create FieldHarvest
-      const dateStr = new Date(bulkDto.dateGregorian).toISOString().split('T')[0];
-      const slug = `${dateStr}-f${bulkDto.fieldId}-s${seasonId}`;
+      const dateStr = new Date(bulkPayload.dateGregorian).toISOString().split('T')[0];
+      const slug = `${dateStr}-f${bulkPayload.fieldId}-s${seasonId}`;
 
       const existingHarvest = await tx.fieldHarvest.findUnique({ where: { slug } });
       if (existingHarvest) {
         throw new ConflictException('A report for this field and date already exists');
       }
 
-      const classifiedTotal = bulkDto.classifications.reduce(
+      const classifiedTotal = bulkPayload.classifications.reduce(
         (sum, item) => sum + (item.quantity || 0),
         0,
       );
 
       const rates = calculateHarvestFields({
-        totalHarvested: bulkDto.totalHarvested,
-        totalRejected: bulkDto.totalRejected,
-        ownerHarvested: bulkDto.ownerHarvested,
-        ownerRejected: bulkDto.ownerRejected,
+        totalHarvested: bulkPayload.totalHarvested,
+        totalRejected: bulkPayload.totalRejected,
+        ownerHarvested: bulkPayload.ownerHarvested,
+        ownerRejected: bulkPayload.ownerRejected,
         classifiedTotal,
-        isPartialClassification: bulkDto.isPartialClassification,
+        isPartialClassification: bulkPayload.isPartialClassification,
       });
 
       const harvest = await tx.fieldHarvest.create({
         data: {
           seasonId,
-          dateGregorian: new Date(bulkDto.dateGregorian),
-          dateHebrew: bulkDto.dateHebrew,
-          fieldId: bulkDto.fieldId,
-          updatedById: bulkDto.updatedById,
-          totalHarvested: bulkDto.totalHarvested || 0,
-          totalRejected: bulkDto.totalRejected || 0,
-          ownerHarvested: bulkDto.ownerHarvested || 0,
-          ownerRejected: bulkDto.ownerRejected || 0,
-          notes: bulkDto.notes,
+          dateGregorian: new Date(bulkPayload.dateGregorian),
+          dateHebrew: bulkPayload.dateHebrew,
+          fieldId: bulkPayload.fieldId,
+          updatedById: bulkPayload.updatedById,
+          totalHarvested: bulkPayload.totalHarvested || 0,
+          totalRejected: bulkPayload.totalRejected || 0,
+          ownerHarvested: bulkPayload.ownerHarvested || 0,
+          ownerRejected: bulkPayload.ownerRejected || 0,
+          notes: bulkPayload.notes,
           slug,
           ...rates,
         },
@@ -656,14 +667,14 @@ export class HarvestBulkService {
 
       // 3b. Process each classification
       const classifications: any[] = [];
-      for (const classItem of bulkDto.classifications) {
+      for (const classItem of bulkPayload.classifications) {
         const classification = await this.createClassificationAndAllocate(tx, {
           seasonId,
           harvestId: harvest.id,
           classificationItem: classItem,
-          harvestDate: new Date(bulkDto.dateGregorian),
-          harvestDateHebrew: bulkDto.dateHebrew,
-          updatedById: bulkDto.updatedById,
+          harvestDate: new Date(bulkPayload.dateGregorian),
+          harvestDateHebrew: bulkPayload.dateHebrew,
+          updatedById: bulkPayload.updatedById,
         });
 
         classifications.push(classification);
@@ -684,7 +695,13 @@ export class HarvestBulkService {
     harvestId: number,
     classificationId: number,
     updateDto: UpdateHarvestClassificationDto,
+    actorId: number,
   ) {
+    const updatePayload = {
+      ...updateDto,
+      updatedById: actorId,
+    };
+
     // Get the old classification
     const oldClassification = await this.prisma.classification.findUnique({
       where: { id: classificationId },
@@ -701,28 +718,28 @@ export class HarvestBulkService {
     }
 
     const hasClassificationStructuralChanges =
-      updateDto.assignmentType !== undefined ||
-      updateDto.traderId !== undefined ||
-      updateDto.customerId !== undefined ||
-      updateDto.traderCategoryId !== undefined ||
-      updateDto.customerCategoryId !== undefined ||
-      updateDto.grade !== undefined ||
-      updateDto.pitamStatus !== undefined ||
-      updateDto.quantity !== undefined;
+      updatePayload.assignmentType !== undefined ||
+      updatePayload.traderId !== undefined ||
+      updatePayload.customerId !== undefined ||
+      updatePayload.traderCategoryId !== undefined ||
+      updatePayload.customerCategoryId !== undefined ||
+      updatePayload.grade !== undefined ||
+      updatePayload.pitamStatus !== undefined ||
+      updatePayload.quantity !== undefined;
 
-    const isOnlyNotesUpdate = !hasClassificationStructuralChanges && updateDto.notes !== undefined;
-    const hasNoClassificationChanges = !hasClassificationStructuralChanges && updateDto.notes === undefined;
+    const isOnlyNotesUpdate = !hasClassificationStructuralChanges && updatePayload.notes !== undefined;
+    const hasNoClassificationChanges = !hasClassificationStructuralChanges && updatePayload.notes === undefined;
 
     if (isOnlyNotesUpdate) {
       return this.prisma.$transaction(async (tx) => {
-        await this.applyHarvestInlineUpdate(tx, harvestId, updateDto.harvestUpdate);
+        await this.applyHarvestInlineUpdate(tx, harvestId, updatePayload.harvestUpdate);
 
         const updated = await tx.classification.update({
           where: { id: classificationId },
-          data: { notes: updateDto.notes },
+          data: { notes: updatePayload.notes, updatedById: updatePayload.updatedById },
         });
 
-        await this.syncHarvestClassificationProgress(tx, harvestId, updateDto.validationMode);
+        await this.syncHarvestClassificationProgress(tx, harvestId, updatePayload.validationMode);
 
         return updated;
       });
@@ -730,8 +747,8 @@ export class HarvestBulkService {
 
     if (hasNoClassificationChanges) {
       return this.prisma.$transaction(async (tx) => {
-        await this.applyHarvestInlineUpdate(tx, harvestId, updateDto.harvestUpdate);
-        await this.syncHarvestClassificationProgress(tx, harvestId, updateDto.validationMode);
+        await this.applyHarvestInlineUpdate(tx, harvestId, updatePayload.harvestUpdate);
+        await this.syncHarvestClassificationProgress(tx, harvestId, updatePayload.validationMode);
 
         return tx.classification.findUnique({ where: { id: classificationId } });
       });
@@ -758,28 +775,28 @@ export class HarvestBulkService {
         throw new NotFoundException(`Harvest ${harvestId} not found`);
       }
 
-      await this.applyHarvestInlineUpdate(tx, harvestId, updateDto.harvestUpdate);
+      await this.applyHarvestInlineUpdate(tx, harvestId, updatePayload.harvestUpdate);
 
       const nextAssignmentType =
-        updateDto.assignmentType ?? oldClassification.assignmentType;
+        updatePayload.assignmentType ?? oldClassification.assignmentType;
 
       this.validateAssignmentIdsForGeneral({
         assignmentType: nextAssignmentType,
-        traderId: updateDto.traderId,
-        customerId: updateDto.customerId,
+        traderId: updatePayload.traderId,
+        customerId: updatePayload.customerId,
       });
 
       const nextTraderId =
         nextAssignmentType === AssignmentType.GENERAL
           ? null
-          : (updateDto.traderId ?? oldClassification.traderId);
+          : (updatePayload.traderId ?? oldClassification.traderId);
 
       const nextCustomerId =
         nextAssignmentType === AssignmentType.GENERAL
           ? null
-          : (updateDto.customerId ?? oldClassification.customerId);
+          : (updatePayload.customerId ?? oldClassification.customerId);
 
-      const newQuantity = updateDto.quantity ?? oldClassification.quantity;
+      const newQuantity = updatePayload.quantity ?? oldClassification.quantity;
 
       // Update classification with new values
       const updatedClassification = await tx.classification.update({
@@ -788,12 +805,13 @@ export class HarvestBulkService {
           assignmentType: nextAssignmentType,
           traderId: nextTraderId,
           customerId: nextCustomerId,
-          traderCategoryId: updateDto.traderCategoryId ?? oldClassification.traderCategoryId,
-          customerCategoryId: updateDto.customerCategoryId ?? oldClassification.customerCategoryId,
-          grade: updateDto.grade ?? oldClassification.grade,
-          pitamStatus: updateDto.pitamStatus ?? oldClassification.pitamStatus,
+          traderCategoryId: updatePayload.traderCategoryId ?? oldClassification.traderCategoryId,
+          customerCategoryId: updatePayload.customerCategoryId ?? oldClassification.customerCategoryId,
+          grade: updatePayload.grade ?? oldClassification.grade,
+          pitamStatus: updatePayload.pitamStatus ?? oldClassification.pitamStatus,
           quantity: newQuantity,
-          notes: updateDto.notes ?? oldClassification.notes,
+          notes: updatePayload.notes ?? oldClassification.notes,
+          updatedById: updatePayload.updatedById,
         },
       });
 
@@ -803,10 +821,10 @@ export class HarvestBulkService {
         classificationId: classificationId,
         classificationItem: this.mapToClassificationBulkItem(updatedClassification),
         harvestDate: harvest.dateGregorian,
-        updatedById: updateDto.updatedById,
+        updatedById: updatePayload.updatedById,
       });
 
-      await this.syncHarvestClassificationProgress(tx, harvestId, updateDto.validationMode);
+      await this.syncHarvestClassificationProgress(tx, harvestId, updatePayload.validationMode);
 
       return updatedClassification;
     });
@@ -816,7 +834,13 @@ export class HarvestBulkService {
     harvestId: number,
     classificationId: number,
     deleteDto: DeleteHarvestClassificationDto,
+    actorId: number,
   ) {
+    const deletePayload = {
+      ...deleteDto,
+      updatedById: actorId,
+    };
+
     return this.prisma.$transaction(async (tx) => {
       const classification = await tx.classification.findUnique({
         where: { id: classificationId },
@@ -833,7 +857,7 @@ export class HarvestBulkService {
         );
       }
 
-      await this.applyHarvestInlineUpdate(tx, harvestId, deleteDto.harvestUpdate);
+      await this.applyHarvestInlineUpdate(tx, harvestId, deletePayload.harvestUpdate);
 
       await tx.customerAllocation.deleteMany({
         where: { MovementReferenceId: classificationId },
@@ -847,7 +871,7 @@ export class HarvestBulkService {
         where: { id: classificationId },
       });
 
-      await this.syncHarvestClassificationProgress(tx, harvestId, deleteDto.validationMode);
+      await this.syncHarvestClassificationProgress(tx, harvestId, deletePayload.validationMode);
 
       return deleted;
     });

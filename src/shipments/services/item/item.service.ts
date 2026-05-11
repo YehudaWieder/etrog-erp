@@ -560,21 +560,26 @@ export class ItemService {
 
   // Creates a shipment item and triggers totals recalculation for Box and Shipment.
   // Uses a transaction to ensure all updates succeed or fail together.
-  async create(data: Prisma.ShipmentItemUncheckedCreateInput) {
-    this.validateCreateInput(data);
+  async create(data: Prisma.ShipmentItemUncheckedCreateInput, actorId: number) {
+    const createPayload = {
+      ...data,
+      updatedById: actorId,
+    };
 
-    const itemOwnership = data.ownershipType as ItemOwnership;
+    this.validateCreateInput(createPayload);
+
+    const itemOwnership = createPayload.ownershipType as ItemOwnership;
 
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
 
     return this.prisma.$transaction(async (tx) => {
       const box = await tx.box.findFirst({
-        where: { id: data.boxId, seasonId, isDeleted: false },
+        where: { id: createPayload.boxId, seasonId, isDeleted: false },
         select: { id: true, shipmentId: true, ownershipType: true, traderId: true, customerId: true },
       });
 
       if (!box) {
-        throw new NotFoundException(`Box ${data.boxId} not found in active season`);
+        throw new NotFoundException(`Box ${createPayload.boxId} not found in active season`);
       }
 
       this.ensureAllowedBoxOwnership(box.ownershipType);
@@ -583,35 +588,35 @@ export class ItemService {
         boxTraderId: box.traderId,
         boxCustomerId: box.customerId,
         itemOwnership,
-        itemTraderId: data.traderId ?? null,
-        itemCustomerId: data.customerId ?? null,
+        itemTraderId: createPayload.traderId ?? null,
+        itemCustomerId: createPayload.customerId ?? null,
       });
 
       await this.ensureEnoughAvailableStock(tx, {
         seasonId,
         boxOwnership: box.ownershipType,
         itemOwnership,
-        itemTraderId: data.traderId ?? null,
-        itemCustomerId: data.customerId ?? null,
-        traderCategoryId: data.traderCategoryId ?? null,
-        customerCategoryId: data.customerCategoryId ?? null,
-        grade: data.grade ?? null,
-        pitamStatus: data.pitamStatus,
-        quantity: data.quantity,
+        itemTraderId: createPayload.traderId ?? null,
+        itemCustomerId: createPayload.customerId ?? null,
+        traderCategoryId: createPayload.traderCategoryId ?? null,
+        customerCategoryId: createPayload.customerCategoryId ?? null,
+        grade: createPayload.grade ?? null,
+        pitamStatus: createPayload.pitamStatus,
+        quantity: createPayload.quantity,
       });
 
       // 1. Check for duplicate based on the complex unique constraint
       const existing = await tx.shipmentItem.findFirst({
         where: {
           seasonId,
-          boxId: data.boxId,
-          traderCategoryId: data.traderCategoryId,
-          customerCategoryId: data.customerCategoryId,
-          grade: data.grade,
-          pitamStatus: data.pitamStatus,
-          ownershipType: data.ownershipType,
-          traderId: data.traderId,
-          customerId: data.customerId,
+          boxId: createPayload.boxId,
+          traderCategoryId: createPayload.traderCategoryId,
+          customerCategoryId: createPayload.customerCategoryId,
+          grade: createPayload.grade,
+          pitamStatus: createPayload.pitamStatus,
+          ownershipType: createPayload.ownershipType,
+          traderId: createPayload.traderId,
+          customerId: createPayload.customerId,
           isDeleted: false,
         },
       });
@@ -623,7 +628,7 @@ export class ItemService {
       // 2. Create the shipment item
       const newItem = await tx.shipmentItem.create({
         data: {
-          ...data,
+          ...createPayload,
           seasonId,
           shipmentId: box.shipmentId,
         },
@@ -665,8 +670,13 @@ export class ItemService {
   }
 
   // Updates an item and ensures totals are recalculated for the associated Box and Shipment.
-  async update(id: number, data: Prisma.ShipmentItemUncheckedUpdateInput) {
-    this.validateUpdateInput(data);
+  async update(id: number, data: Prisma.ShipmentItemUncheckedUpdateInput, actorId: number) {
+    const updatePayload = {
+      ...data,
+      updatedById: actorId,
+    };
+
+    this.validateUpdateInput(updatePayload);
 
     return this.prisma.$transaction(async (tx) => {
       const currentItem = await tx.shipmentItem.findFirst({
@@ -692,16 +702,16 @@ export class ItemService {
         throw new NotFoundException(`Shipment item #${id} not found`);
       }
 
-      const nextBoxId = Number(data.boxId ?? currentItem.boxId);
-      const nextQuantity = Number(data.quantity ?? currentItem.quantity);
-      const nextPitamStatus = (data.pitamStatus ?? currentItem.pitamStatus) as PitamStatus;
-      const nextTraderId = (data.traderId ?? currentItem.traderId) as number | null;
-      const nextCustomerId = (data.customerId ?? currentItem.customerId) as number | null;
-      const nextTraderCategoryId = (data.traderCategoryId ?? currentItem.traderCategoryId) as number | null;
-      const nextCustomerCategoryId = (data.customerCategoryId ?? currentItem.customerCategoryId) as number | null;
-      const nextGrade = (data.grade ?? currentItem.grade) as Grade | null;
-      const nextOwnershipType = (data.ownershipType ?? currentItem.ownershipType) as ItemOwnership;
-      const nextUpdatedById = Number(data.updatedById ?? currentItem.updatedById);
+      const nextBoxId = Number(updatePayload.boxId ?? currentItem.boxId);
+      const nextQuantity = Number(updatePayload.quantity ?? currentItem.quantity);
+      const nextPitamStatus = (updatePayload.pitamStatus ?? currentItem.pitamStatus) as PitamStatus;
+      const nextTraderId = (updatePayload.traderId ?? currentItem.traderId) as number | null;
+      const nextCustomerId = (updatePayload.customerId ?? currentItem.customerId) as number | null;
+      const nextTraderCategoryId = (updatePayload.traderCategoryId ?? currentItem.traderCategoryId) as number | null;
+      const nextCustomerCategoryId = (updatePayload.customerCategoryId ?? currentItem.customerCategoryId) as number | null;
+      const nextGrade = (updatePayload.grade ?? currentItem.grade) as Grade | null;
+      const nextOwnershipType = (updatePayload.ownershipType ?? currentItem.ownershipType) as ItemOwnership;
+      const nextUpdatedById = Number(updatePayload.updatedById ?? currentItem.updatedById);
 
       let nextShipmentId = currentItem.shipmentId;
       let targetBox = await tx.box.findFirst({
@@ -709,7 +719,7 @@ export class ItemService {
         select: { id: true, shipmentId: true, ownershipType: true, traderId: true, customerId: true },
       });
 
-      if (data.boxId) {
+      if (updatePayload.boxId) {
         if (!targetBox) {
           throw new NotFoundException(`Box ${nextBoxId} not found in active season`);
         }
@@ -749,7 +759,7 @@ export class ItemService {
       const updatedItem = await tx.shipmentItem.update({
         where: { id },
         data: {
-          ...data,
+          ...updatePayload,
           shipmentId: nextShipmentId,
         },
       });

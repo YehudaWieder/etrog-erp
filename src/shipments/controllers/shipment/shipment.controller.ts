@@ -45,8 +45,8 @@ export class ShipmentController {
   @ApiResponse({ status: 201, description: 'Shipment created successfully.', type: ShipmentResponseSwaggerDto })
   @ApiResponse({ status: 400, description: 'Invalid input data.' })
   create(@Body() data: ShipmentCreateBody, @Req() req: Request) {
-    const user = req.user as AuthenticatedUser;
-    return this.shipmentService.create({ ...data, updatedById: user.id });
+    const actor = req.user as AuthenticatedUser;
+    return this.shipmentService.create(data, actor.id);
   }
 
   @Get()
@@ -104,8 +104,8 @@ export class ShipmentController {
     @Body() updateData: ShipmentUpdateBody,
     @Req() req: Request,
   ) {
-    const user = req.user as AuthenticatedUser;
-    return this.shipmentService.update(id, { ...updateData, updatedById: user.id });
+    const actor = req.user as AuthenticatedUser;
+    return this.shipmentService.update(id, updateData, actor.id);
   }
 
   @Patch(':id/recalculate')

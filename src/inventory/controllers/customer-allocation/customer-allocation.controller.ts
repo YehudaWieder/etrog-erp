@@ -45,8 +45,8 @@ export class CustomerAllocationController {
   @ApiResponse({ status: 201, description: 'Customer allocation created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input data.' })
   create(@Body() data: Prisma.CustomerAllocationUncheckedCreateInput, @Req() req: Request) {
-    const user = req.user as AuthenticatedUser;
-    return this.allocationService.create({ ...data, updatedById: user.id });
+    const actor = req.user as AuthenticatedUser;
+    return this.allocationService.create(data, actor.id);
   }
 
   @Get('balance')
@@ -180,7 +180,6 @@ export class CustomerAllocationController {
           quantity: 7,
           type: 'WASTE',
           takenFrom: 'GENERAL',
-          updatedById: 1,
           notes: 'Packaging damage',
         },
       },
@@ -195,7 +194,6 @@ export class CustomerAllocationController {
           quantity: 5,
           type: 'ADJUSTMENT',
           takenFrom: 'GENERAL',
-          updatedById: 1,
           notes: 'Audit correction',
         },
       },
@@ -203,8 +201,9 @@ export class CustomerAllocationController {
   })
   @ApiResponse({ status: 201, description: 'Customer adjustment movement created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid adjustment payload.' })
-  createAdjustment(@Body() data: Prisma.CustomerAllocationUncheckedCreateInput) {
-    return this.allocationService.createAdjustment(data);
+  createAdjustment(@Body() data: Prisma.CustomerAllocationUncheckedCreateInput, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.allocationService.createAdjustment(data, actor.id);
   }
 
   @Patch('adjustments/:id')
@@ -218,7 +217,6 @@ export class CustomerAllocationController {
         value: {
           quantity: 9,
           notes: 'Updated after recount',
-          updatedById: 1,
         },
       },
     },
@@ -228,8 +226,10 @@ export class CustomerAllocationController {
   updateAdjustment(
     @Param('id', ParseIntPipe) id: number,
     @Body() data: Prisma.CustomerAllocationUncheckedUpdateInput,
+    @Req() req: Request,
   ) {
-    return this.allocationService.updateAdjustment(id, data);
+    const actor = req.user as AuthenticatedUser;
+    return this.allocationService.updateAdjustment(id, data, actor.id);
   }
 
   @Delete('adjustments/:id')

@@ -66,17 +66,22 @@ export class TraderStockService {
     ) {}
 
     // Create a new stock movement
-    async createMovement(data: Prisma.TraderStockUncheckedCreateInput) {
+    async createMovement(data: Prisma.TraderStockUncheckedCreateInput, actorId: number) {
+        const createPayload: Prisma.TraderStockUncheckedCreateInput = {
+            ...data,
+            updatedById: actorId,
+        };
+
         const { id: seasonId } = await this.seasonsService.findActiveSeason();
 
         await this.assertNegativeTraderMovementHasStock(this.prisma, {
-            ...data,
+            ...createPayload,
             seasonId,
         });
 
         return this.prisma.traderStock.create({
             data: {
-                ...data,
+                ...createPayload,
                 seasonId,
             },
         });
@@ -240,23 +245,28 @@ export class TraderStockService {
         return { rows: sorted, totals };
     }
 
-    async createAdjustment(data: Prisma.TraderStockUncheckedCreateInput) {
-        this.validateAdjustmentType(data.type);
+    async createAdjustment(data: Prisma.TraderStockUncheckedCreateInput, actorId: number) {
+        const createPayload: Prisma.TraderStockUncheckedCreateInput = {
+            ...data,
+            updatedById: actorId,
+        };
+
+        this.validateAdjustmentType(createPayload.type);
         const { id: seasonId } = await this.seasonsService.findActiveSeason();
-        const movementType = data.type as MovementType;
-        const quantity = this.requireQuantity(data.quantity);
+        const movementType = createPayload.type as MovementType;
+        const quantity = this.requireQuantity(createPayload.quantity);
         const normalizedQuantity = this.normalizeAdjustmentQuantity(movementType, quantity);
 
         return this.prisma.$transaction(async (tx) => {
             await this.assertNegativeTraderMovementHasStock(tx, {
-                ...data,
+                ...createPayload,
                 seasonId,
                 quantity: normalizedQuantity,
             });
 
             return tx.traderStock.create({
                 data: {
-                    ...data,
+                    ...createPayload,
                     seasonId,
                     quantity: normalizedQuantity,
                     shipmentId: null,
@@ -266,7 +276,12 @@ export class TraderStockService {
         });
     }
 
-    async updateAdjustment(id: number, data: Prisma.TraderStockUncheckedUpdateInput) {
+    async updateAdjustment(id: number, data: Prisma.TraderStockUncheckedUpdateInput, actorId: number) {
+        const updatePayload: Prisma.TraderStockUncheckedUpdateInput = {
+            ...data,
+            updatedById: actorId,
+        };
+
         return this.prisma.$transaction(async (tx) => {
             const existing = await tx.traderStock.findFirst({
                 where: {
@@ -280,33 +295,33 @@ export class TraderStockService {
                 throw new NotFoundException(`Trader adjustment ${id} not found`);
             }
 
-            const nextType = (data.type ?? existing.type) as MovementType;
+            const nextType = (updatePayload.type ?? existing.type) as MovementType;
             this.validateAdjustmentType(nextType);
 
             const nextQuantityRaw =
-                data.quantity === undefined ? existing.quantity : Number(data.quantity);
+                updatePayload.quantity === undefined ? existing.quantity : Number(updatePayload.quantity);
             const nextQuantity =
-                data.quantity === undefined
+                updatePayload.quantity === undefined
                     ? existing.quantity
                     : this.normalizeAdjustmentQuantity(nextType, nextQuantityRaw);
 
             await this.assertNegativeTraderMovementHasStock(tx, {
                 seasonId: existing.seasonId,
-                traderId: (data.traderId ?? existing.traderId) as number | null,
-                traderCategoryId: Number(data.traderCategoryId ?? existing.traderCategoryId),
-                grade: (data.grade ?? existing.grade) as Grade,
-                pitamStatus: (data.pitamStatus ?? existing.pitamStatus) as PitamStatus,
-                isModulo: Boolean(data.isModulo ?? existing.isModulo),
+                traderId: (updatePayload.traderId ?? existing.traderId) as number | null,
+                traderCategoryId: Number(updatePayload.traderCategoryId ?? existing.traderCategoryId),
+                grade: (updatePayload.grade ?? existing.grade) as Grade,
+                pitamStatus: (updatePayload.pitamStatus ?? existing.pitamStatus) as PitamStatus,
+                isModulo: Boolean(updatePayload.isModulo ?? existing.isModulo),
                 quantity: nextQuantity,
             }, Math.abs(existing.quantity));
 
             return tx.traderStock.update({
                 where: { id },
                 data: {
-                    ...data,
+                    ...updatePayload,
                     shipmentId: null,
                     boxId: null,
-                    quantity: data.quantity === undefined ? undefined : nextQuantity,
+                    quantity: updatePayload.quantity === undefined ? undefined : nextQuantity,
                 },
             });
         });

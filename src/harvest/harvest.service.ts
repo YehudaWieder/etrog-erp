@@ -14,7 +14,7 @@ export class HarvestService {
   ) {}
 
   // Create a new harvest report
-  async create(data: Prisma.FieldHarvestUncheckedCreateInput) {
+  async create(data: Prisma.FieldHarvestUncheckedCreateInput, actorId: number) {
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
 
     // Generate unique slug: date-field-season
@@ -29,6 +29,7 @@ export class HarvestService {
     return this.prisma.fieldHarvest.create({
       data: {
         ...data,
+        updatedById: actorId,
         seasonId,
         slug,
         ...rates,
@@ -79,7 +80,7 @@ export class HarvestService {
   }
 
   // Update report
-  async update(id: number, data: Prisma.FieldHarvestUncheckedUpdateInput) {
+  async update(id: number, data: Prisma.FieldHarvestUncheckedUpdateInput, actorId: number) {
     const current = await this.findOne(id);
     
     // Merge current and new data for rate calculation
@@ -97,6 +98,7 @@ export class HarvestService {
       where: { id },
       data: {
         ...data,
+        updatedById: actorId,
         ...rates,
       },
     });

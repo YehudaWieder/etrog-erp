@@ -7,14 +7,12 @@ import { SeasonsService } from 'src/seasons/seasons.service';
 import { ShipmentsService } from '../../shipments.service';
 
 type CreateShipmentInput = {
-  updatedById: number;
   status?: ShipmentStatus;
   shippedAt?: Date | string;
   notes?: string;
 };
 
 type UpdateShipmentInput = {
-  updatedById?: number;
   status?: ShipmentStatus;
   shippedAt?: Date | string;
   notes?: string | null;
@@ -67,11 +65,9 @@ export class ShipmentService {
   private validateCreateInput(data: CreateShipmentInput) {
     this.assertOnlyAllowedFields(
       data as Record<string, unknown>,
-      ['updatedById', 'status', 'shippedAt', 'notes'],
-      'Only updatedById, status, shippedAt, and notes are allowed. seasonId, shipmentNumber, totals, slug, and isDeleted are managed by the server',
+      ['status', 'shippedAt', 'notes'],
+      'Only status, shippedAt, and notes are allowed. seasonId, shipmentNumber, totals, slug, isDeleted, and updatedById are managed by the server',
     );
-
-    this.assertPositiveInt(data.updatedById, 'updatedById');
 
     if (data.status !== undefined && !Object.values(ShipmentStatus).includes(data.status as ShipmentStatus)) {
       throw new BadRequestException('status is invalid');
@@ -91,13 +87,9 @@ export class ShipmentService {
 
     this.assertOnlyAllowedFields(
       data as Record<string, unknown>,
-      ['updatedById', 'status', 'shippedAt', 'notes'],
-      'Only updatedById, status, shippedAt, and notes can be updated here',
+      ['status', 'shippedAt', 'notes'],
+      'Only status, shippedAt, and notes can be updated here. updatedById is managed by the server',
     );
-
-    if (data.updatedById !== undefined) {
-      this.assertPositiveInt(data.updatedById, 'updatedById');
-    }
 
     if (data.status !== undefined && !Object.values(ShipmentStatus).includes(data.status as ShipmentStatus)) {
       throw new BadRequestException('status is invalid');
@@ -111,7 +103,7 @@ export class ShipmentService {
   }
 
   // Create a new shipment shell
-  async create(data: CreateShipmentInput) {
+  async create(data: CreateShipmentInput, actorId: number) {
     this.validateCreateInput(data);
 
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
@@ -133,7 +125,7 @@ export class ShipmentService {
         status: normalizedStatus,
         shippedAt: normalizedShippedAt,
         notes: data.notes,
-        updatedById: data.updatedById,
+        updatedById: actorId,
         totalBoxes: 0,
         totalQuantity: 0,
         slug: temporarySlug,
@@ -204,7 +196,7 @@ export class ShipmentService {
   }
 
   // Update shipment status or details
-  async update(id: number, data: UpdateShipmentInput) {
+  async update(id: number, data: UpdateShipmentInput, actorId: number) {
     this.validateUpdateInput(data);
 
     const existing = await this.prisma.shipment.findFirst({
@@ -233,6 +225,7 @@ export class ShipmentService {
       where: { id },
       data: {
         ...updatableData,
+        updatedById: actorId,
         status: effectiveStatus,
         shippedAt: nextShippedAt,
       },

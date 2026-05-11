@@ -10,7 +10,6 @@ type CreateBoxInput = {
   shipmentId: number;
   boxNumber: number;
   boxType: BoxType;
-  updatedById: number;
   status?: BoxStatus;
   notes?: string;
   ownershipType?: BoxOwnership;
@@ -19,7 +18,6 @@ type CreateBoxInput = {
 };
 
 type UpdateBoxInput = {
-  updatedById?: number;
   boxType?: BoxType;
   status?: BoxStatus;
   notes?: string | null;
@@ -82,14 +80,12 @@ export class BoxService {
   private validateCreateInput(data: CreateBoxInput) {
     this.assertOnlyAllowedFields(
       data as Record<string, unknown>,
-      ['shipmentId', 'boxNumber', 'boxType', 'updatedById', 'status', 'notes', 'ownershipType', 'traderId', 'customerId'],
-      'Only shipmentId, boxNumber, boxType, updatedById, status, notes, ownershipType, traderId, customerId are allowed on create. seasonId and totalQuantity are managed by the server',
+      ['shipmentId', 'boxNumber', 'boxType', 'status', 'notes', 'ownershipType', 'traderId', 'customerId'],
+      'Only shipmentId, boxNumber, boxType, status, notes, ownershipType, traderId, customerId are allowed on create. seasonId, totalQuantity, and updatedById are managed by the server',
     );
 
     this.assertPositiveInt(data.shipmentId, 'shipmentId');
     this.assertPositiveInt(data.boxNumber, 'boxNumber');
-    this.assertPositiveInt(data.updatedById, 'updatedById');
-
     if (!Object.values(BoxType).includes(data.boxType as BoxType)) {
       throw new BadRequestException('boxType is invalid');
     }
@@ -112,13 +108,9 @@ export class BoxService {
 
     this.assertOnlyAllowedFields(
       data as Record<string, unknown>,
-      ['updatedById', 'boxType', 'status', 'notes', 'ownershipType', 'traderId', 'customerId'],
-      'Only updatedById, boxType, status, notes, ownershipType, traderId, customerId can be updated here',
+      ['boxType', 'status', 'notes', 'ownershipType', 'traderId', 'customerId'],
+      'Only boxType, status, notes, ownershipType, traderId, customerId can be updated here. updatedById is managed by the server',
     );
-
-    if (data.updatedById !== undefined) {
-      this.assertPositiveInt(data.updatedById, 'updatedById');
-    }
 
     if (data.boxType !== undefined && !Object.values(BoxType).includes(data.boxType as BoxType)) {
       throw new BadRequestException('boxType is invalid');
@@ -136,7 +128,7 @@ export class BoxService {
   }
 
   // Create a new box within a shipment
-  async create(data: CreateBoxInput) {
+  async create(data: CreateBoxInput, actorId: number) {
     this.validateCreateInput(data);
 
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
@@ -169,6 +161,7 @@ export class BoxService {
       const box = await tx.box.create({
         data: {
           ...data,
+          updatedById: actorId,
           seasonId,
           totalQuantity: 0,
         },
@@ -208,12 +201,15 @@ export class BoxService {
   }
 
   // Update box details (status, type, etc.)
-  async update(id: number, data: UpdateBoxInput) {
+  async update(id: number, data: UpdateBoxInput, actorId: number) {
     this.validateUpdateInput(data);
 
     return this.prisma.box.update({
       where: { id },
-      data,
+      data: {
+        ...data,
+        updatedById: actorId,
+      },
     });
   }
 

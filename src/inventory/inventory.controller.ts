@@ -132,8 +132,8 @@ export class InventoryController {
 	@ApiResponse({ status: 201, description: 'Internal transfer created successfully.' })
 	@ApiResponse({ status: 400, description: 'Invalid payload or unsupported owner flow.' })
 	create(@Body() data: InternalTransferRequest, @Req() req: Request) {
-		const user = req.user as AuthenticatedUser;
-		return this.inventoryService.createInternalTransfer({ ...data, updatedById: user.id });
+		const actor = req.user as AuthenticatedUser;
+		return this.inventoryService.createInternalTransfer(data, actor.id);
 	}
 
 	@Post('customer-general-transfer')
@@ -165,8 +165,8 @@ export class InventoryController {
 	@ApiResponse({ status: 201, description: 'Customer general transfer created successfully.' })
 	@ApiResponse({ status: 400, description: 'Invalid payload, missing shares, or insufficient stock.' })
 	createCustomerAllocationFromGeneral(@Body() data: CustomerGeneralAllocationRequest, @Req() req: Request) {
-		const user = req.user as AuthenticatedUser;
-		return this.inventoryService.createCustomerAllocationFromGeneral({ ...data, updatedById: user.id });
+		const actor = req.user as AuthenticatedUser;
+		return this.inventoryService.createCustomerAllocationFromGeneral(data, actor.id);
 	}
 
 	@Patch('customer-general-transfer/:customerAllocationId')
@@ -189,7 +189,6 @@ export class InventoryController {
 					traderCategoryId: 3,
 					customerId: 5,
 					customerCategoryId: 11,
-					updatedById: 1,
 					notes: 'Updated allocation after customer confirmation',
 				},
 			},
@@ -200,8 +199,10 @@ export class InventoryController {
 	updateCustomerAllocationFromGeneral(
 		@Param('customerAllocationId', ParseIntPipe) customerAllocationId: number,
 		@Body() data: CustomerGeneralAllocationRequest,
+		@Req() req: Request,
 	) {
-		return this.inventoryService.updateCustomerAllocationFromGeneral(customerAllocationId, data);
+		const actor = req.user as AuthenticatedUser;
+		return this.inventoryService.updateCustomerAllocationFromGeneral(customerAllocationId, data, actor.id);
 	}
 
 	@Delete('customer-general-transfer/:customerAllocationId')
@@ -241,7 +242,6 @@ export class InventoryController {
 					toCustomerId: 5,
 					toCustomerCategoryId: 11,
 					toPitamStatus: 'WITHOUT_PITAM',
-					updatedById: 1,
 					notes: 'Updated allocation quantity',
 				},
 			},
@@ -252,8 +252,10 @@ export class InventoryController {
 	update(
 		@Param('operationId', ParseIntPipe) operationId: number,
 		@Body() data: InternalTransferRequest,
+		@Req() req: Request,
 	) {
-		return this.inventoryService.updateInternalTransfer(operationId, data);
+		const actor = req.user as AuthenticatedUser;
+		return this.inventoryService.updateInternalTransfer(operationId, data, actor.id);
 	}
 
 	@Delete('internal-transfer/:operationId')

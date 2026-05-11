@@ -33,7 +33,6 @@ export class InternalTransferRequest {
 	toOwnerType!: InventoryOwnerType;
 	toTraderId?: number;
 	toCustomerId?: number;
-	updatedById!: number;
 	notes?: string;
 }
 
@@ -46,7 +45,6 @@ export class CustomerGeneralAllocationRequest {
 	traderCategoryId!: number;
 	customerId!: number;
 	customerCategoryId!: number;
-	updatedById!: number;
 	notes?: string;
 }
 
@@ -97,16 +95,16 @@ export class InventoryService {
 		private readonly inventoryAvailabilityService: InventoryAvailabilityService,
 	) {}
 
-	async createInternalTransfer(data: InternalTransferRequest) {
+	async createInternalTransfer(data: InternalTransferRequest, actorId: number) {
 		this.validateTransferDto(data);
 		const { id: seasonId } = await this.seasonsService.findActiveSeason();
 
 		return this.prisma.$transaction(async (tx) => {
-			return this.createTransferPairTx(tx, seasonId, data);
+			return this.createTransferPairTx(tx, seasonId, data, actorId);
 		});
 	}
 
-	async createCustomerAllocationFromGeneral(data: CustomerGeneralAllocationRequest) {
+	async createCustomerAllocationFromGeneral(data: CustomerGeneralAllocationRequest, actorId: number) {
 		this.validateCustomerGeneralAllocationDto(data);
 		const { id: seasonId } = await this.seasonsService.findActiveSeason();
 
@@ -124,7 +122,7 @@ export class InventoryService {
 					type: MovementType.INTERNAL_TRANSFER,
 					takenFrom: SourceType.GENERAL,
 					traderId: null,
-					updatedById: data.updatedById,
+					updatedById: actorId,
 					notes: data.notes,
 				},
 			});
@@ -140,6 +138,7 @@ export class InventoryService {
 				tx,
 				seasonId,
 				data,
+				actorId,
 				movementReferenceId,
 				requestQuantity,
 			);
@@ -153,7 +152,7 @@ export class InventoryService {
 		});
 	}
 
-	async updateCustomerAllocationFromGeneral(customerAllocationId: number, data: CustomerGeneralAllocationRequest) {
+	async updateCustomerAllocationFromGeneral(customerAllocationId: number, data: CustomerGeneralAllocationRequest, actorId: number) {
 		this.validateCustomerGeneralAllocationDto(data);
 		const { id: seasonId } = await this.seasonsService.findActiveSeason();
 
@@ -184,7 +183,7 @@ export class InventoryService {
 					type: MovementType.INTERNAL_TRANSFER,
 					takenFrom: SourceType.GENERAL,
 					traderId: null,
-					updatedById: data.updatedById,
+					updatedById: actorId,
 					notes: data.notes,
 					MovementReferenceId: movementReferenceId,
 					isDeleted: false,
@@ -195,6 +194,7 @@ export class InventoryService {
 				tx,
 				seasonId,
 				data,
+				actorId,
 				movementReferenceId,
 				requestQuantity,
 			);
@@ -245,6 +245,7 @@ export class InventoryService {
 		tx: Prisma.TransactionClient,
 		seasonId: number,
 		data: CustomerGeneralAllocationRequest,
+		actorId: number,
 		movementReferenceId: number,
 		requestQuantity: number,
 	) {
@@ -277,7 +278,7 @@ export class InventoryService {
 					MovementReferenceId: movementReferenceId,
 					shipmentId: null,
 					boxId: null,
-					updatedById: data.updatedById,
+					updatedById: actorId,
 					notes: data.notes,
 				},
 			});
@@ -354,7 +355,7 @@ export class InventoryService {
 						MovementReferenceId: movementReferenceId,
 						shipmentId: null,
 						boxId: null,
-						updatedById: data.updatedById,
+						updatedById: actorId,
 						notes: data.notes,
 					},
 				});
@@ -378,7 +379,7 @@ export class InventoryService {
 						MovementReferenceId: movementReferenceId,
 						shipmentId: null,
 						boxId: null,
-						updatedById: data.updatedById,
+						updatedById: actorId,
 						notes: data.notes,
 					},
 				});
@@ -412,7 +413,7 @@ export class InventoryService {
 		return row;
 	}
 
-	async updateInternalTransfer(operationId: number, data: InternalTransferRequest) {
+	async updateInternalTransfer(operationId: number, data: InternalTransferRequest, actorId: number) {
 		this.validateTransferDto(data);
 
 		return this.prisma.$transaction(async (tx) => {
@@ -424,10 +425,10 @@ export class InventoryService {
 
 			if (expectedTables !== existingTables) {
 				await this.softDeletePairTx(tx, pair.negative.record.id, pair.positive.record.id);
-				return this.createTransferPairTx(tx, seasonId, data);
+				return this.createTransferPairTx(tx, seasonId, data, actorId);
 			}
 
-			const rebuilt = this.buildTransferPayloads(seasonId, data);
+			const rebuilt = this.buildTransferPayloads(seasonId, data, actorId);
 			await this.assertNegativeLedgerHasEnoughStockTx(tx, rebuilt.negative, pair.negative);
 
 			const updatedNegative = await this.updateByLedgerTx(
@@ -650,10 +651,6 @@ export class InventoryService {
 			throw new BadRequestException('date is required');
 		}
 
-		if (!data.updatedById) {
-			throw new BadRequestException('updatedById is required');
-		}
-
 		if (data.fromOwnerType === InventoryOwnerType.MODULO && data.fromTraderId) {
 			throw new BadRequestException('fromTraderId must be empty when fromOwnerType is MODULO');
 		}
@@ -730,10 +727,6 @@ export class InventoryService {
 
 		if (!data.pitamStatus) {
 			throw new BadRequestException('pitamStatus is required');
-		}
-
-		if (!data.updatedById) {
-			throw new BadRequestException('updatedById is required');
 		}
 	}
 
@@ -850,12 +843,12 @@ export class InventoryService {
 		}
 	}
 
-	private buildTransferPayloads(seasonId: number, data: InternalTransferRequest) {
+	private buildTransferPayloads(seasonId: number, data: InternalTransferRequest, actorId: number) {
 		const absoluteQuantity = Math.abs(data.quantity);
 
 		return {
-			negative: this.buildLedgerCreateData(data, seasonId, -absoluteQuantity, 'from'),
-			positive: this.buildLedgerCreateData(data, seasonId, absoluteQuantity, 'to'),
+			negative: this.buildLedgerCreateData(data, seasonId, -absoluteQuantity, 'from', actorId),
+			positive: this.buildLedgerCreateData(data, seasonId, absoluteQuantity, 'to', actorId),
 		};
 	}
 
@@ -864,6 +857,7 @@ export class InventoryService {
 		seasonId: number,
 		signedQuantity: number,
 		side: 'from' | 'to',
+		actorId: number,
 	) {
 		const ownerType = side === 'from' ? data.fromOwnerType : data.toOwnerType;
 		const sideSpec = this.resolveTransferSideSpec(data, side);
@@ -884,7 +878,7 @@ export class InventoryService {
 					shipmentId: null,
 					boxId: null,
 					notes: data.notes,
-					updatedById: data.updatedById,
+					updatedById: actorId,
 				},
 			};
 		}
@@ -905,7 +899,7 @@ export class InventoryService {
 				shipmentId: null,
 				boxId: null,
 				notes: data.notes,
-				updatedById: data.updatedById,
+				updatedById: actorId,
 			},
 		};
 	}
@@ -972,8 +966,8 @@ export class InventoryService {
 		};
 	}
 
-	private async createTransferPairTx(tx: Prisma.TransactionClient, seasonId: number, data: InternalTransferRequest) {
-		const built = this.buildTransferPayloads(seasonId, data);
+	private async createTransferPairTx(tx: Prisma.TransactionClient, seasonId: number, data: InternalTransferRequest, actorId: number) {
+		const built = this.buildTransferPayloads(seasonId, data, actorId);
 		await this.assertNegativeLedgerHasEnoughStockTx(tx, built.negative);
 
 		const negative = await this.createByLedgerTx(tx, built.negative);

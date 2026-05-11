@@ -39,8 +39,8 @@ export class ItemController {
   @ApiResponse({ status: 201, description: 'Shipment item created successfully.', type: ShipmentItemSwaggerDto })
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate item for this box combination.' })
   create(@Body() data: Prisma.ShipmentItemUncheckedCreateInput, @Req() req: Request) {
-    const user = req.user as AuthenticatedUser;
-    return this.itemService.create({ ...data, updatedById: user.id });
+    const actor = req.user as AuthenticatedUser;
+    return this.itemService.create(data, actor.id);
   }
 
   @Get('box/:boxId')
@@ -75,8 +75,8 @@ export class ItemController {
     @Body() updateData: Prisma.ShipmentItemUncheckedUpdateInput,
     @Req() req: Request,
   ) {
-    const user = req.user as AuthenticatedUser;
-    return this.itemService.update(id, { ...updateData, updatedById: user.id });
+    const actor = req.user as AuthenticatedUser;
+    return this.itemService.update(id, updateData, actor.id);
   }
 
   @Delete(':id')

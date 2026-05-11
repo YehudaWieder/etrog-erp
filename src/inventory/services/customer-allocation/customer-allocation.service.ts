@@ -60,17 +60,22 @@ export class CustomerAllocationService {
   ) {}
 
   // Create a new allocation record
-  async create(data: Prisma.CustomerAllocationUncheckedCreateInput) {
+  async create(data: Prisma.CustomerAllocationUncheckedCreateInput, actorId: number) {
+    const createPayload: Prisma.CustomerAllocationUncheckedCreateInput = {
+      ...data,
+      updatedById: actorId,
+    };
+
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
 
     await this.assertNegativeCustomerMovementHasStock(this.prisma, {
-      ...data,
+      ...createPayload,
       seasonId,
     });
 
     return this.prisma.customerAllocation.create({
       data: {
-        ...data,
+        ...createPayload,
         seasonId,
       },
     });
@@ -224,23 +229,28 @@ export class CustomerAllocationService {
     };
   }
 
-  async createAdjustment(data: Prisma.CustomerAllocationUncheckedCreateInput) {
-    this.validateAdjustmentType(data.type);
+  async createAdjustment(data: Prisma.CustomerAllocationUncheckedCreateInput, actorId: number) {
+    const createPayload: Prisma.CustomerAllocationUncheckedCreateInput = {
+      ...data,
+      updatedById: actorId,
+    };
+
+    this.validateAdjustmentType(createPayload.type);
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
-    const movementType = data.type as MovementType;
-    const quantity = this.requireQuantity(data.quantity);
+    const movementType = createPayload.type as MovementType;
+    const quantity = this.requireQuantity(createPayload.quantity);
     const normalizedQuantity = this.normalizeAdjustmentQuantity(movementType, quantity);
 
     return this.prisma.$transaction(async (tx) => {
       await this.assertNegativeCustomerMovementHasStock(tx, {
-        ...data,
+        ...createPayload,
         seasonId,
         quantity: normalizedQuantity,
       });
 
       return tx.customerAllocation.create({
         data: {
-          ...data,
+          ...createPayload,
           seasonId,
           quantity: normalizedQuantity,
           shipmentId: null,
@@ -250,7 +260,12 @@ export class CustomerAllocationService {
     });
   }
 
-  async updateAdjustment(id: number, data: Prisma.CustomerAllocationUncheckedUpdateInput) {
+  async updateAdjustment(id: number, data: Prisma.CustomerAllocationUncheckedUpdateInput, actorId: number) {
+    const updatePayload: Prisma.CustomerAllocationUncheckedUpdateInput = {
+      ...data,
+      updatedById: actorId,
+    };
+
     return this.prisma.$transaction(async (tx) => {
       const existing = await tx.customerAllocation.findFirst({
         where: {
@@ -264,31 +279,31 @@ export class CustomerAllocationService {
         throw new NotFoundException(`Customer adjustment ${id} not found`);
       }
 
-      const nextType = (data.type ?? existing.type) as MovementType;
+      const nextType = (updatePayload.type ?? existing.type) as MovementType;
       this.validateAdjustmentType(nextType);
 
       const nextQuantityRaw =
-        data.quantity === undefined ? existing.quantity : Number(data.quantity);
+        updatePayload.quantity === undefined ? existing.quantity : Number(updatePayload.quantity);
       const nextQuantity =
-        data.quantity === undefined
+        updatePayload.quantity === undefined
           ? existing.quantity
           : this.normalizeAdjustmentQuantity(nextType, nextQuantityRaw);
 
       await this.assertNegativeCustomerMovementHasStock(tx, {
         seasonId: existing.seasonId,
-        customerId: Number(data.customerId ?? existing.customerId),
-        customerCategoryId: Number(data.customerCategoryId ?? existing.customerCategoryId),
-        pitamStatus: (data.pitamStatus ?? existing.pitamStatus) as PitamStatus,
+        customerId: Number(updatePayload.customerId ?? existing.customerId),
+        customerCategoryId: Number(updatePayload.customerCategoryId ?? existing.customerCategoryId),
+        pitamStatus: (updatePayload.pitamStatus ?? existing.pitamStatus) as PitamStatus,
         quantity: nextQuantity,
       }, Math.abs(existing.quantity));
 
       return tx.customerAllocation.update({
         where: { id },
         data: {
-          ...data,
+          ...updatePayload,
           shipmentId: null,
           boxId: null,
-          quantity: data.quantity === undefined ? undefined : nextQuantity,
+          quantity: updatePayload.quantity === undefined ? undefined : nextQuantity,
         },
       });
     });
