@@ -529,10 +529,18 @@ export class ClassificationBulkItemDto {
   @ApiPropertyOptional({ description: 'Trader category ID. Required for GENERAL and TRADER inventory classifications' })
   traderCategoryId?: number;
 
-  @ApiPropertyOptional({ description: 'Customer category ID' })
+  @ApiPropertyOptional({
+    description:
+      'Customer category ID (already represents the pair of category name + grade). For CUSTOMER assignment use this field and do not send grade separately.',
+    example: 2,
+  })
   customerCategoryId?: number;
 
-  @ApiPropertyOptional({ enum: Grade, enumName: 'Grade' })
+  @ApiPropertyOptional({
+    enum: Grade,
+    enumName: 'Grade',
+    description: 'Used for GENERAL/TRADER inventory classifications. For CUSTOMER assignment, grade comes from customerCategoryId and should be omitted.',
+  })
   grade?: Grade;
 
   @ApiProperty({ enum: PitamStatus, enumName: 'PitamStatus' })
@@ -558,10 +566,18 @@ export class UpdateClassificationDto {
   @ApiPropertyOptional({ description: 'Update trader category ID' })
   traderCategoryId?: number;
 
-  @ApiPropertyOptional({ description: 'Update customer category ID' })
+  @ApiPropertyOptional({
+    description:
+      'Update customer category ID (name + grade pair). For CUSTOMER assignment prefer updating this field instead of grade.',
+    example: 5,
+  })
   customerCategoryId?: number;
 
-  @ApiPropertyOptional({ enum: Grade, enumName: 'Grade', description: 'Update etrog grade' })
+  @ApiPropertyOptional({
+    enum: Grade,
+    enumName: 'Grade',
+    description: 'Update grade for GENERAL/TRADER assignments. For CUSTOMER assignment, grade is derived from customerCategoryId.',
+  })
   grade?: Grade;
 
   @ApiPropertyOptional({ enum: PitamStatus, enumName: 'PitamStatus', description: 'Update pitam status' })

@@ -157,32 +157,67 @@ export class HarvestController {
   @ApiBody({
     type: HarvestBulkCreateDto,
     examples: {
-      sample: {
-        summary: 'Bulk create harvest with classifications',
+      sampleTraderAndGeneral: {
+        summary: 'Bulk harvest with real trader categories (יאנעווע / חב\'\'ד / בומבעס)',
         value: {
-          harvest: {
-            dateGregorian: '2026-10-15T06:00:00.000Z',
-            dateHebrew: 'כב תשרי תשפז',
-            fieldId: 2,
-            updatedById: 1,
-            totalHarvested: 1500,
-            totalRejected: 80,
-          },
+          dateGregorian: '2026-10-15T06:00:00.000Z',
+          dateHebrew: 'כ"ג תשרי תשפ"ז',
+          fieldId: 2,
+          updatedById: 1,
+          totalHarvested: 1500,
+          totalRejected: 80,
+          ownerHarvested: 0,
+          ownerRejected: 0,
+          notes: 'קטיף בוקר - חלוקה לסוחר ספציפי וכללי',
+          isPartialClassification: true,
           classifications: [
             {
               assignmentType: 'TRADER',
               traderId: 3,
-              traderCategoryId: 2,
+              traderCategoryId: 7,
               grade: 'א',
               pitamStatus: 'WITH_PITAM',
-              quantity: 700,
+              quantity: 620,
+              notes: 'בומבעס - אתרוגים גדולים מאוד וידר-בייטש',
             },
             {
               assignmentType: 'GENERAL',
-              traderCategoryId: 2,
+              traderCategoryId: 4,
               grade: 'ב',
               pitamStatus: 'WITHOUT_PITAM',
-              quantity: 720,
+              quantity: 800,
+              notes: 'יאנעווע - חלוקה לפי אחוזי סוחרים',
+            },
+          ],
+        },
+      },
+      sampleCustomerCategory: {
+        summary: 'Bulk harvest with customer category (name+grade combo)',
+        value: {
+          dateGregorian: '2026-10-16T06:10:00.000Z',
+          dateHebrew: 'כ"ד תשרי תשפ"ז',
+          fieldId: 2,
+          updatedById: 1,
+          totalHarvested: 500,
+          totalRejected: 20,
+          notes: 'הקצאה ישירה ללקוח לפי customerCategoryId',
+          isPartialClassification: true,
+          classifications: [
+            {
+              assignmentType: 'CUSTOMER',
+              customerId: 1,
+              customerCategoryId: 2,
+              pitamStatus: 'WITH_PITAM',
+              quantity: 300,
+              notes: 'חבד קלר + דרגה א (categoryId=2)',
+            },
+            {
+              assignmentType: 'CUSTOMER',
+              customerId: 2,
+              customerCategoryId: 5,
+              pitamStatus: 'WITHOUT_PITAM',
+              quantity: 180,
+              notes: 'יאנעווע המפיץ + דרגה ב (categoryId=5)',
             },
           ],
         },
@@ -202,20 +237,37 @@ export class HarvestController {
   @ApiBody({
     type: CreateHarvestClassificationDto,
     examples: {
-      sample: {
-        summary: 'Create harvest classification payload',
+      customerCategoryRealSample: {
+        summary: 'Create CUSTOMER classification using customerCategoryId (name+grade)',
         value: {
-          classification: {
-            assignmentType: 'CUSTOMER',
-            customerId: 5,
-            customerCategoryId: 11,
-            pitamStatus: 'WITH_PITAM',
-            quantity: 120,
-            notes: 'Allocation for premium customer',
-          },
+          assignmentType: 'CUSTOMER',
+          customerId: 1,
+          customerCategoryId: 3,
+          pitamStatus: 'WITH_PITAM',
+          quantity: 120,
+          notes: 'חבד קלר + דרגה א - (categoryId=3)',
+          updatedById: 1,
+          validationMode: 'PARTIAL',
           harvestUpdate: {
-            isPartialClassification: true,
+            totalHarvested: 1520,
+            totalRejected: 80,
+            notes: 'תיקון קל אחרי מיון',
+            updatedById: 1,
           },
+        },
+      },
+      traderCategoryRealSample: {
+        summary: 'Create TRADER classification using trader category',
+        value: {
+          assignmentType: 'TRADER',
+          traderId: 4,
+          traderCategoryId: 6,
+          grade: 'ב',
+          pitamStatus: 'WITHOUT_PITAM',
+          quantity: 200,
+          notes: 'חב\'\'ד - קטיף ערב',
+          updatedById: 1,
+          validationMode: 'PARTIAL',
         },
       },
     },
@@ -237,16 +289,30 @@ export class HarvestController {
   @ApiBody({
     type: UpdateHarvestClassificationDto,
     examples: {
-      sample: {
-        summary: 'Update classification payload',
+      sampleQuantityFix: {
+        summary: 'Update classification quantity/notes with real-world values',
         value: {
-          classificationUpdate: {
-            quantity: 140,
-            notes: 'Updated after sort correction',
-          },
+          quantity: 140,
+          notes: 'עודכן אחרי תיקון מיון',
+          updatedById: 1,
+          validationMode: 'PARTIAL',
           harvestUpdate: {
-            isPartialClassification: true,
+            notes: 'עודכן במקביל לרשומת המיון',
+            updatedById: 1,
           },
+        },
+      },
+      sampleMoveToDifferentCustomerCategory: {
+        summary: 'Move classification to another customer category (name+grade combo)',
+        value: {
+          assignmentType: 'CUSTOMER',
+          customerId: 3,
+          customerCategoryId: 8,
+          pitamStatus: 'WITH_PITAM',
+          quantity: 90,
+          notes: 'חזוא איידלמן + דרגה ב (categoryId=8)',
+          updatedById: 1,
+          validationMode: 'PARTIAL',
         },
       },
     },
@@ -270,10 +336,12 @@ export class HarvestController {
     type: DeleteHarvestClassificationDto,
     examples: {
       sample: {
-        summary: 'Delete classification payload',
+        summary: 'Delete classification while preserving PARTIAL mode',
         value: {
+          validationMode: 'PARTIAL',
           harvestUpdate: {
-            isPartialClassification: true,
+            notes: 'מחיקת רשומה כפולה',
+            updatedById: 1,
           },
         },
       },
