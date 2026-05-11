@@ -13,6 +13,7 @@ import {
   UpdateHarvestClassificationDto,
   DeleteHarvestClassificationDto,
   UpdateHarvestPartialClassificationDto,
+  FieldHarvestUpdateSwaggerDto,
 } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Operations')
@@ -87,21 +88,19 @@ export class HarvestController {
     return this.harvestService.findByFieldNameAndDate(fieldName, date);
   }
 
-  @Patch(':id')
+  @Patch()
   @ApiOperation({ summary: 'Update an existing harvest record' })
-  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the harvest record to update.' })
   @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        totalHarvested: { type: 'integer', example: 1630 },
-        totalRejected: { type: 'integer', example: 90 },
-        notes: { type: 'string', example: 'Updated after quality review' },
-      },
-      example: {
-        totalHarvested: 1630,
-        totalRejected: 90,
-        notes: 'Updated after quality review',
+    type: FieldHarvestUpdateSwaggerDto,
+    examples: {
+      sample: {
+        summary: 'Update harvest totals and notes',
+        value: {
+          id: 1,
+          totalHarvested: 1630,
+          totalRejected: 90,
+          notes: 'Updated after quality review',
+        },
       },
     },
   })
@@ -109,29 +108,30 @@ export class HarvestController {
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Harvest record not found.' })
   update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateData: Prisma.FieldHarvestUncheckedUpdateInput,
+    @Body() updateData: FieldHarvestUpdateSwaggerDto,
     @Req() req: Request,
   ) {
     const actor = req.user as AuthenticatedUser;
-    return this.harvestService.update(id, updateData, actor.id);
+    const { id, ...data } = updateData;
+    return this.harvestService.update(id, data as Prisma.FieldHarvestUncheckedUpdateInput, actor.id);
   }
 
-  @Patch(':id/partial-classification')
+  @Patch('partial-classification')
   @ApiOperation({ summary: 'Update harvest partial/final classification mode with immediate classifiedTotal validation' })
-  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the harvest record.' })
   @ApiBody({
     type: UpdateHarvestPartialClassificationDto,
     examples: {
       partial: {
         summary: 'Keep harvest in partial mode',
         value: {
+          id: 1,
           isPartialClassification: true,
         },
       },
       final: {
         summary: 'Close harvest in final mode',
         value: {
+          id: 1,
           isPartialClassification: false,
         },
       },
@@ -141,10 +141,9 @@ export class HarvestController {
   @ApiResponse({ status: 400, description: 'Cannot switch to FINAL mode while classifiedTotal does not match net harvested.' })
   @ApiResponse({ status: 404, description: 'Harvest record not found.' })
   updatePartialClassificationMode(
-    @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateHarvestPartialClassificationDto,
   ) {
-    return this.harvestService.updatePartialClassificationMode(id, body.isPartialClassification);
+    return this.harvestService.updatePartialClassificationMode(body.id, body.isPartialClassification);
   }
 
   @Delete(':id')

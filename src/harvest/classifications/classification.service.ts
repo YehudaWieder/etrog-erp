@@ -14,7 +14,7 @@ export class ClassificationService {
   async create(data: Prisma.ClassificationUncheckedCreateInput) {
     void data;
     throw new BadRequestException(
-      'Classification create is centralized under harvest workflow. Use POST /harvests/:harvestId/classifications with validationMode.',
+      'Classification create is centralized under harvest workflow. Use POST /harvests/classifications with body-based harvestId and isPartialClassification.',
     );
   }
 
@@ -54,7 +54,7 @@ export class ClassificationService {
     void id;
     void data;
     throw new BadRequestException(
-      'Classification update is centralized under harvest workflow. Use PATCH /harvests/:harvestId/classifications/:classificationId with validationMode.',
+      'Classification update is centralized under harvest workflow. Use PATCH /harvests/classifications with body-based harvestId, classificationId, and isPartialClassification.',
     );
   }
 
@@ -62,7 +62,7 @@ export class ClassificationService {
   async remove(id: number) {
     void id;
     throw new BadRequestException(
-      'Classification delete is centralized under harvest workflow. Use DELETE /harvests/:harvestId/classifications/:classificationId with validationMode.',
+      'Classification delete is centralized under harvest workflow. Use DELETE /harvests/classifications with body-based harvestId, classificationId, and isPartialClassification.',
     );
   }
 }

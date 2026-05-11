@@ -642,6 +642,26 @@ export class FieldUpdateSwaggerDto {
   name!: string;
 }
 
+export class FieldHarvestUpdateSwaggerDto {
+  @ApiProperty({ description: 'Field harvest ID to update.', example: 1 })
+  id!: number;
+
+  @ApiPropertyOptional({ description: 'Updated harvested total.', example: 1630 })
+  totalHarvested?: number;
+
+  @ApiPropertyOptional({ description: 'Updated rejected total.', example: 90 })
+  totalRejected?: number;
+
+  @ApiPropertyOptional({ description: 'Updated owner harvested total.', example: 1200 })
+  ownerHarvested?: number;
+
+  @ApiPropertyOptional({ description: 'Updated owner rejected total.', example: 50 })
+  ownerRejected?: number;
+
+  @ApiPropertyOptional({ description: 'Updated harvest notes.', example: 'Updated after quality review' })
+  notes?: string;
+}
+
 // Bulk Harvest Form DTOs
 export class ClassificationBulkItemDto {
   @ApiProperty({
@@ -737,11 +757,10 @@ export class UpdateClassificationDto {
 
 export class ClassificationMutationMetaDto {
   @ApiProperty({
-    enum: ['PARTIAL', 'FINAL'],
-    description: 'Validation mode for harvest-classification consistency. PARTIAL allows gap, FINAL requires full match.',
-    example: 'PARTIAL',
+    description: 'Whether the harvest is in partial classification mode. True allows a gap; false requires full match.',
+    example: true,
   })
-  validationMode!: 'PARTIAL' | 'FINAL';
+  isPartialClassification!: boolean;
 }
 
 export class HarvestInlineUpdateDto {
@@ -822,6 +841,9 @@ export class DeleteHarvestClassificationDto {
 }
 
 export class UpdateHarvestPartialClassificationDto {
+  @ApiProperty({ description: 'Field harvest ID to update.', example: 1 })
+  id!: number;
+
   @ApiProperty({
     description: 'Whether this harvest is currently in partial classification mode.',
     example: true,
