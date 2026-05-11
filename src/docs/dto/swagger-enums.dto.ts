@@ -271,6 +271,28 @@ export class TraderStockUpdateSwaggerDto {
   notes?: string;
 }
 
+export class CustomerAllocationUpdateSwaggerDto {
+  @ApiProperty({ description: 'Customer allocation ID to update.', example: 1 })
+  id!: number;
+
+  @ApiPropertyOptional({ description: 'Updated allocation quantity.', example: 95 })
+  quantity?: number;
+
+  @ApiPropertyOptional({ description: 'Updated allocation notes.', example: 'Quantity increased after customer confirmation' })
+  notes?: string;
+}
+
+export class CustomerAllocationUpdateAdjustmentSwaggerDto {
+  @ApiProperty({ description: 'Customer allocation adjustment ID to update.', example: 1 })
+  id!: number;
+
+  @ApiPropertyOptional({ description: 'Updated adjustment quantity.', example: 9 })
+  quantity?: number;
+
+  @ApiPropertyOptional({ description: 'Updated adjustment notes.', example: 'Updated after recount' })
+  notes?: string;
+}
+
 export class CustomerAllocationSwaggerDto {
   @ApiProperty({ description: 'Season ID.' })
   seasonId!: number;

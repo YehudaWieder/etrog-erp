@@ -10,7 +10,7 @@ import {
   CustomerInventorySortBy,
 } from '../../services/customer-allocation/customer-allocation.service';
 import { Prisma, PitamStatus } from 'src/generated/prisma';
-import { CustomerAllocationSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+import { CustomerAllocationSwaggerDto, CustomerAllocationUpdateSwaggerDto, CustomerAllocationUpdateAdjustmentSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('access-token')
@@ -130,15 +130,15 @@ export class CustomerAllocationController {
     });
   }
 
-  @Patch(':id')
+  @Patch()
   @ApiOperation({ summary: 'Update an existing customer allocation record by ID' })
-  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the allocation to update.' })
   @ApiBody({
-    type: CustomerAllocationSwaggerDto,
+    type: CustomerAllocationUpdateSwaggerDto,
     examples: {
       sample: {
         summary: 'Sample customer allocation update payload',
         value: {
+          id: 1,
           quantity: 95,
           notes: 'Quantity increased after customer confirmation',
         },
@@ -149,10 +149,10 @@ export class CustomerAllocationController {
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Allocation not found.' })
   update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateData: Prisma.CustomerAllocationUncheckedUpdateInput,
+    @Body() updateData: CustomerAllocationUpdateSwaggerDto,
   ) {
-    return this.allocationService.update(id, updateData);
+    const { id, ...data } = updateData;
+    return this.allocationService.update(id, data as Prisma.CustomerAllocationUncheckedUpdateInput);
   }
 
   @Delete(':id')
@@ -206,15 +206,15 @@ export class CustomerAllocationController {
     return this.allocationService.createAdjustment(data, actor.id);
   }
 
-  @Patch('adjustments/:id')
+  @Patch('adjustments')
   @ApiOperation({ summary: 'Update customer WASTE/ADJUSTMENT/SELF_PICKUP movement.' })
-  @ApiParam({ name: 'id', type: Number })
   @ApiBody({
-    type: CustomerAllocationSwaggerDto,
+    type: CustomerAllocationUpdateAdjustmentSwaggerDto,
     examples: {
       update: {
         summary: 'Update customer adjustment payload',
         value: {
+          id: 1,
           quantity: 9,
           notes: 'Updated after recount',
         },
@@ -224,12 +224,12 @@ export class CustomerAllocationController {
   @ApiResponse({ status: 200, description: 'Customer adjustment movement updated successfully.' })
   @ApiResponse({ status: 404, description: 'Customer adjustment movement not found.' })
   updateAdjustment(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() data: Prisma.CustomerAllocationUncheckedUpdateInput,
+    @Body() data: CustomerAllocationUpdateAdjustmentSwaggerDto,
     @Req() req: Request,
   ) {
     const actor = req.user as AuthenticatedUser;
-    return this.allocationService.updateAdjustment(id, data, actor.id);
+    const { id, ...updateData } = data;
+    return this.allocationService.updateAdjustment(id, updateData as Prisma.CustomerAllocationUncheckedUpdateInput, actor.id);
   }
 
   @Delete('adjustments/:id')
