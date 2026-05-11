@@ -212,15 +212,15 @@ export class HarvestController {
     return this.harvestBulkService.createHarvestWithClassifications(bulkDto, actor.id);
   }
 
-  @Post(':harvestId/classifications')
+  @Post('classifications')
   @ApiOperation({ summary: 'Create a classification through harvest workflow with explicit PARTIAL/FINAL validation mode' })
-  @ApiParam({ name: 'harvestId', type: Number, description: 'The numeric ID of the harvest record.' })
   @ApiBody({
     type: CreateHarvestClassificationDto,
     examples: {
       customerCategoryRealSample: {
         summary: 'Create CUSTOMER classification using customerCategoryId (name+grade)',
         value: {
+          harvestId: 1,
           assignmentType: 'CUSTOMER',
           customerId: 1,
           customerCategoryId: 3,
@@ -238,6 +238,7 @@ export class HarvestController {
       traderCategoryRealSample: {
         summary: 'Create TRADER classification using trader category',
         value: {
+          harvestId: 1,
           assignmentType: 'TRADER',
           traderId: 4,
           traderCategoryId: 6,
@@ -254,24 +255,23 @@ export class HarvestController {
   @ApiResponse({ status: 400, description: 'Validation error for classification consistency or allocation data.' })
   @ApiResponse({ status: 404, description: 'Harvest not found.' })
   async createClassification(
-    @Param('harvestId', ParseIntPipe) harvestId: number,
     @Body() createDto: CreateHarvestClassificationDto,
     @Req() req: Request,
   ) {
     const actor = req.user as AuthenticatedUser;
-    return this.harvestBulkService.createClassification(harvestId, createDto, actor.id);
+    return this.harvestBulkService.createClassification(createDto.harvestId, createDto, actor.id);
   }
 
-  @Patch(':harvestId/classifications/:classificationId')
+  @Patch('classifications')
   @ApiOperation({ summary: 'Update a classification through harvest workflow with explicit PARTIAL/FINAL validation mode' })
-  @ApiParam({ name: 'harvestId', type: Number, description: 'The numeric ID of the harvest record.' })
-  @ApiParam({ name: 'classificationId', type: Number, description: 'The numeric ID of the classification to update.' })
   @ApiBody({
     type: UpdateHarvestClassificationDto,
     examples: {
       sampleQuantityFix: {
         summary: 'Update classification quantity/notes with real-world values',
         value: {
+          harvestId: 1,
+          classificationId: 5,
           quantity: 140,
           notes: 'עודכן אחרי תיקון מיון',
           isPartialClassification: true,
@@ -283,6 +283,8 @@ export class HarvestController {
       sampleMoveToDifferentCustomerCategory: {
         summary: 'Move classification to another customer category (name+grade combo)',
         value: {
+          harvestId: 1,
+          classificationId: 5,
           assignmentType: 'CUSTOMER',
           customerId: 3,
           customerCategoryId: 8,
@@ -298,25 +300,23 @@ export class HarvestController {
   @ApiResponse({ status: 400, description: 'Validation error or invalid update data.' })
   @ApiResponse({ status: 404, description: 'Classification or harvest not found.' })
   async updateClassification(
-    @Param('harvestId', ParseIntPipe) harvestId: number,
-    @Param('classificationId', ParseIntPipe) classificationId: number,
     @Body() updateDto: UpdateHarvestClassificationDto,
     @Req() req: Request,
   ) {
     const actor = req.user as AuthenticatedUser;
-    return this.harvestBulkService.updateClassification(harvestId, classificationId, updateDto, actor.id);
+    return this.harvestBulkService.updateClassification(updateDto.harvestId, updateDto.classificationId, updateDto, actor.id);
   }
 
-  @Delete(':harvestId/classifications/:classificationId')
+  @Delete('classifications')
   @ApiOperation({ summary: 'Delete a classification through harvest workflow with explicit PARTIAL/FINAL validation mode' })
-  @ApiParam({ name: 'harvestId', type: Number, description: 'The numeric ID of the harvest record.' })
-  @ApiParam({ name: 'classificationId', type: Number, description: 'The numeric ID of the classification to delete.' })
   @ApiBody({
     type: DeleteHarvestClassificationDto,
     examples: {
       sample: {
         summary: 'Delete classification while preserving PARTIAL mode',
         value: {
+          harvestId: 1,
+          classificationId: 5,
           isPartialClassification: true,
           harvestUpdate: {
             notes: 'מחיקת רשומה כפולה',
@@ -329,12 +329,10 @@ export class HarvestController {
   @ApiResponse({ status: 400, description: 'Validation error for FINAL mode or invalid classification linkage.' })
   @ApiResponse({ status: 404, description: 'Classification or harvest not found.' })
   async deleteClassification(
-    @Param('harvestId', ParseIntPipe) harvestId: number,
-    @Param('classificationId', ParseIntPipe) classificationId: number,
     @Body() body: DeleteHarvestClassificationDto,
     @Req() req: Request,
   ) {
     const actor = req.user as AuthenticatedUser;
-    return this.harvestBulkService.deleteClassification(harvestId, classificationId, body, actor.id);
+    return this.harvestBulkService.deleteClassification(body.harvestId, body.classificationId, body, actor.id);
   }
 }

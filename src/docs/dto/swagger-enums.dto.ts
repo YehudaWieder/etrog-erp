@@ -634,8 +634,8 @@ export class HarvestInlineUpdateDto {
 }
 
 export class CreateHarvestClassificationDto extends ClassificationBulkItemDto {
-  @ApiProperty({ description: 'User ID performing the action', example: 1 })
-  updatedById!: number;
+  @ApiProperty({ description: 'The ID of the harvest record this classification belongs to', example: 1 })
+  harvestId!: number;
 
   @ApiProperty({
     description: 'Whether this harvest classification is in partial mode (allows incomplete classification).',
@@ -651,8 +651,11 @@ export class CreateHarvestClassificationDto extends ClassificationBulkItemDto {
 }
 
 export class UpdateHarvestClassificationDto extends UpdateClassificationDto {
-  @ApiProperty({ description: 'User ID performing the action', example: 1 })
-  updatedById!: number;
+  @ApiProperty({ description: 'The ID of the harvest record this classification belongs to', example: 1 })
+  harvestId!: number;
+
+  @ApiProperty({ description: 'The ID of the classification to update', example: 1 })
+  classificationId!: number;
 
   @ApiProperty({
     description: 'Whether this harvest classification is in partial mode (allows incomplete classification).',
@@ -668,6 +671,12 @@ export class UpdateHarvestClassificationDto extends UpdateClassificationDto {
 }
 
 export class DeleteHarvestClassificationDto {
+  @ApiProperty({ description: 'The ID of the harvest record this classification belongs to', example: 1 })
+  harvestId!: number;
+
+  @ApiProperty({ description: 'The ID of the classification to delete', example: 1 })
+  classificationId!: number;
+
   @ApiProperty({
     description: 'Whether this harvest classification is in partial mode (allows incomplete classification).',
     example: true,
@@ -749,6 +758,9 @@ export class UpdateDefaultTraderCategorySwaggerDto {
 }
 
 export class CreateDefaultTraderCategoryShareSwaggerDto {
+  @ApiProperty({ description: 'Default trader category ID', example: 1 })
+  categoryId!: number;
+
   @ApiProperty({ description: 'Trader ID to associate with this category share.', example: 1 })
   traderId!: number;
 
@@ -762,6 +774,12 @@ export class CreateDefaultTraderCategoryShareSwaggerDto {
 }
 
 export class UpdateDefaultTraderCategoryShareSwaggerDto {
+  @ApiProperty({ description: 'Default trader category ID', example: 1 })
+  categoryId!: number;
+
+  @ApiProperty({ description: 'Trader ID whose share is being updated', example: 1 })
+  traderId!: number;
+
   @ApiProperty({
     description: 'Updated percentage share for this trader in the category (0-100).',
     example: 60,

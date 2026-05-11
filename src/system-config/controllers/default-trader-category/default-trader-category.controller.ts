@@ -109,36 +109,30 @@ export class DefaultTraderCategoryController {
   }
 
   @ApiOperation({ summary: 'Add a trader share to a default trader category. Roles: OWNER, MANAGER.' })
-  @ApiParam({ name: 'categoryId', type: Number, description: 'Default trader category ID.' })
   @ApiBody({ type: CreateDefaultTraderCategoryShareSwaggerDto })
   @ApiResponse({ status: 201, description: 'Default share created successfully.' })
   @ApiResponse({ status: 404, description: 'Category or trader not found.' })
   @ApiResponse({ status: 409, description: 'Share already exists for this trader in this category.' })
   @Roles(Role.OWNER, Role.MANAGER)
-  @Post(':categoryId/shares')
+  @Post('shares')
   async addTraderShare(
-    @Param('categoryId', ParseIntPipe) categoryId: number,
     @Body() dto: CreateDefaultTraderCategoryShareSwaggerDto,
   ) {
-    return this.defaultTraderCategoryService.addShare(categoryId, dto);
+    return this.defaultTraderCategoryService.addShare(dto.categoryId, dto);
   }
 
   @ApiOperation({ summary: 'Update trader share percent in a default category. Roles: OWNER, MANAGER.' })
-  @ApiParam({ name: 'categoryId', type: Number, description: 'Default trader category ID.' })
-  @ApiParam({ name: 'traderId', type: Number, description: 'Trader ID.' })
   @ApiBody({ type: UpdateDefaultTraderCategoryShareSwaggerDto })
   @ApiResponse({ status: 200, description: 'Default share updated successfully.' })
   @ApiResponse({ status: 404, description: 'Share not found.' })
   @Roles(Role.OWNER, Role.MANAGER)
-  @Patch(':categoryId/shares/:traderId')
+  @Patch('shares')
   async updateTraderShare(
-    @Param('categoryId', ParseIntPipe) categoryId: number,
-    @Param('traderId', ParseIntPipe) traderId: number,
     @Body() dto: UpdateDefaultTraderCategoryShareSwaggerDto,
   ) {
     return this.defaultTraderCategoryService.updateShare(
-      categoryId,
-      traderId,
+      dto.categoryId,
+      dto.traderId,
       dto.percent,
     );
   }
