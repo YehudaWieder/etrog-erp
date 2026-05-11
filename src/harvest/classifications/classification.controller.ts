@@ -36,4 +36,13 @@ export class ClassificationController {
   findAll(@Query('seasonId', ParseIntPipe) seasonId: number) {
     return this.classificationService.findAllBySeason(seasonId);
   }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Retrieve a single classification record by ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the classification record.' })
+  @ApiResponse({ status: 200, description: 'Classification record returned successfully.' })
+  @ApiResponse({ status: 404, description: 'Classification record not found.' })
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.classificationService.findOne(id);
+  }
 }
