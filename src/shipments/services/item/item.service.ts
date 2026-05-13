@@ -44,12 +44,20 @@ export class ItemService {
       throw new BadRequestException('customerId is required when ownershipType=CUSTOMER');
     }
 
-    if (ownershipType !== ItemOwnership.TRADER && traderId !== undefined && traderId !== null) {
-      throw new BadRequestException('traderId must be empty unless ownershipType=TRADER');
+    if (ownershipType === ItemOwnership.UNASSIGNED && (traderId !== undefined && traderId !== null)) {
+      throw new BadRequestException('traderId must be empty when ownershipType=UNASSIGNED');
     }
 
-    if (ownershipType !== ItemOwnership.CUSTOMER && customerId !== undefined && customerId !== null) {
-      throw new BadRequestException('customerId must be empty unless ownershipType=CUSTOMER');
+    if (ownershipType === ItemOwnership.UNASSIGNED && (customerId !== undefined && customerId !== null)) {
+      throw new BadRequestException('customerId must be empty when ownershipType=UNASSIGNED');
+    }
+
+    if (ownershipType !== ItemOwnership.TRADER && ownershipType !== ItemOwnership.CUSTOM && traderId !== undefined && traderId !== null) {
+      throw new BadRequestException('traderId must be empty unless ownershipType=TRADER or ownershipType=CUSTOM');
+    }
+
+    if (ownershipType !== ItemOwnership.CUSTOMER && ownershipType !== ItemOwnership.CUSTOM && customerId !== undefined && customerId !== null) {
+      throw new BadRequestException('customerId must be empty unless ownershipType=CUSTOMER or ownershipType=CUSTOM');
     }
   }
 
@@ -78,11 +86,9 @@ export class ItemService {
       throw new BadRequestException('notes must be a string');
     }
 
-    if (data.ownershipType === undefined) {
-      throw new BadRequestException('ownershipType is required');
+    if (data.ownershipType !== undefined) {
+      this.validateOwnership(data.ownershipType, data.traderId, data.customerId);
     }
-
-    this.validateOwnership(data.ownershipType, data.traderId, data.customerId);
   }
 
   private validateUpdateInput(data: Prisma.ShipmentItemUncheckedUpdateInput) {
@@ -122,7 +128,101 @@ export class ItemService {
       throw new BadRequestException('notes must be a string');
     }
 
-    this.validateOwnership(data.ownershipType, data.traderId, data.customerId);
+    // Ownership consistency is validated after loading the target box and resolving effective ownership.
+  }
+
+  private normalizeItemOwnershipForBox(params: {
+    boxOwnership: BoxOwnership;
+    boxTraderId: number | null;
+    boxCustomerId: number | null;
+    itemOwnership?: ItemOwnership | null;
+    itemTraderId?: number | null;
+    itemCustomerId?: number | null;
+  }) {
+    const {
+      boxOwnership,
+      boxTraderId,
+      boxCustomerId,
+      itemOwnership,
+      itemTraderId,
+      itemCustomerId,
+    } = params;
+
+    if (boxOwnership === BoxOwnership.TRADER) {
+      if (itemOwnership !== undefined && itemOwnership !== null && itemOwnership !== ItemOwnership.TRADER) {
+        throw new BadRequestException('TRADER box accepts only TRADER items');
+      }
+
+      if (!boxTraderId) {
+        throw new BadRequestException('TRADER box must have traderId configured');
+      }
+
+      if (itemTraderId !== undefined && itemTraderId !== null && itemTraderId !== boxTraderId) {
+        throw new BadRequestException('Only items from the box trader can be packed into this TRADER box');
+      }
+
+      return {
+        ownershipType: ItemOwnership.TRADER,
+        traderId: boxTraderId,
+        customerId: null,
+      };
+    }
+
+    if (boxOwnership === BoxOwnership.CUSTOMER) {
+      if (itemOwnership !== undefined && itemOwnership !== null && itemOwnership !== ItemOwnership.CUSTOMER) {
+        throw new BadRequestException('CUSTOMER box accepts only CUSTOMER items');
+      }
+
+      if (!boxCustomerId) {
+        throw new BadRequestException('CUSTOMER box must have customerId configured');
+      }
+
+      if (itemCustomerId !== undefined && itemCustomerId !== null && itemCustomerId !== boxCustomerId) {
+        throw new BadRequestException('Only items from the box customer can be packed into this CUSTOMER box');
+      }
+
+      return {
+        ownershipType: ItemOwnership.CUSTOMER,
+        traderId: null,
+        customerId: boxCustomerId,
+      };
+    }
+
+    if (boxOwnership === BoxOwnership.SHARED) {
+      if (itemOwnership === undefined || itemOwnership === null) {
+        throw new BadRequestException('SHARED box requires item ownershipType per item');
+      }
+
+      if (itemOwnership === ItemOwnership.CUSTOM) {
+        throw new BadRequestException('SHARED box supports only TRADER, CUSTOMER, or UNASSIGNED item ownership');
+      }
+
+      return {
+        ownershipType: itemOwnership,
+        traderId: itemTraderId ?? null,
+        customerId: itemCustomerId ?? null,
+      };
+    }
+
+    if (boxOwnership === BoxOwnership.UNASSIGNED) {
+      const effectiveOwnership = itemOwnership ?? ItemOwnership.UNASSIGNED;
+      if (effectiveOwnership !== ItemOwnership.UNASSIGNED) {
+        throw new BadRequestException('UNASSIGNED box accepts only UNASSIGNED items');
+      }
+
+      return {
+        ownershipType: ItemOwnership.UNASSIGNED,
+        traderId: null,
+        customerId: null,
+      };
+    }
+
+    // CUSTOM box: fully manual mode.
+    return {
+      ownershipType: itemOwnership ?? ItemOwnership.CUSTOM,
+      traderId: itemTraderId ?? null,
+      customerId: itemCustomerId ?? null,
+    };
   }
 
   private async getTraderAvailabilityForDistribution(
@@ -263,63 +363,6 @@ export class ItemService {
       .filter((row) => row.quantity > 0);
   }
 
-  private ensureAllowedBoxOwnership(boxOwnership: BoxOwnership) {
-    if (boxOwnership === BoxOwnership.CUSTOM) {
-      throw new BadRequestException(
-        `Box ownership ${boxOwnership} is not supported yet for item packing.`,
-      );
-    }
-  }
-
-  private assertItemFitsBoxOwnership(params: {
-    boxOwnership: BoxOwnership;
-    boxTraderId: number | null;
-    boxCustomerId: number | null;
-    itemOwnership: ItemOwnership;
-    itemTraderId: number | null;
-    itemCustomerId: number | null;
-  }) {
-    const {
-      boxOwnership,
-      boxTraderId,
-      boxCustomerId,
-      itemOwnership,
-      itemTraderId,
-      itemCustomerId,
-    } = params;
-
-    if (boxOwnership === BoxOwnership.TRADER) {
-      if (itemOwnership !== ItemOwnership.TRADER || itemTraderId !== boxTraderId) {
-        throw new BadRequestException('Only items from the box trader can be packed into a TRADER box');
-      }
-      return;
-    }
-
-    if (boxOwnership === BoxOwnership.CUSTOMER) {
-      if (itemOwnership !== ItemOwnership.CUSTOMER || itemCustomerId !== boxCustomerId) {
-        throw new BadRequestException('Only items from the box customer can be packed into a CUSTOMER box');
-      }
-      return;
-    }
-
-    if (boxOwnership === BoxOwnership.SHARED) {
-      if (
-        itemOwnership !== ItemOwnership.TRADER
-        && itemOwnership !== ItemOwnership.CUSTOMER
-        && itemOwnership !== ItemOwnership.UNASSIGNED
-      ) {
-        throw new BadRequestException('In SHARED box, item ownership must be TRADER, CUSTOMER, or UNASSIGNED');
-      }
-      return;
-    }
-
-    if (boxOwnership === BoxOwnership.UNASSIGNED) {
-      if (itemOwnership !== ItemOwnership.UNASSIGNED) {
-        throw new BadRequestException('In UNASSIGNED box, item ownership must be UNASSIGNED');
-      }
-    }
-  }
-
   private async ensureEnoughAvailableStock(
     tx: Prisma.TransactionClient,
     params: {
@@ -335,6 +378,10 @@ export class ItemService {
       quantity: number;
     },
   ) {
+    if (params.boxOwnership === BoxOwnership.CUSTOM || params.itemOwnership === ItemOwnership.CUSTOM) {
+      return;
+    }
+
     if (params.itemOwnership === ItemOwnership.TRADER) {
       if (!params.itemTraderId || !params.traderCategoryId || !params.grade) {
         throw new BadRequestException('Trader-packed items require traderId, traderCategoryId and grade');
@@ -442,6 +489,10 @@ export class ItemService {
       updatedById: number;
     },
   ) {
+    if (params.boxOwnership === BoxOwnership.CUSTOM || params.itemOwnership === ItemOwnership.CUSTOM) {
+      return;
+    }
+
     if (params.itemOwnership === ItemOwnership.TRADER) {
       if (!params.traderId || !params.traderCategoryId || !params.grade) {
         throw new BadRequestException('Trader packed movement requires traderId, traderCategoryId and grade');
@@ -568,8 +619,6 @@ export class ItemService {
 
     this.validateCreateInput(createPayload);
 
-    const itemOwnership = createPayload.ownershipType as ItemOwnership;
-
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
 
     return this.prisma.$transaction(async (tx) => {
@@ -582,22 +631,27 @@ export class ItemService {
         throw new NotFoundException(`Box ${createPayload.boxId} not found in active season`);
       }
 
-      this.ensureAllowedBoxOwnership(box.ownershipType);
-      this.assertItemFitsBoxOwnership({
+      const normalizedOwnership = this.normalizeItemOwnershipForBox({
         boxOwnership: box.ownershipType,
         boxTraderId: box.traderId,
         boxCustomerId: box.customerId,
-        itemOwnership,
+        itemOwnership: createPayload.ownershipType as ItemOwnership | undefined,
         itemTraderId: createPayload.traderId ?? null,
         itemCustomerId: createPayload.customerId ?? null,
       });
 
+      this.validateOwnership(
+        normalizedOwnership.ownershipType,
+        normalizedOwnership.traderId,
+        normalizedOwnership.customerId,
+      );
+
       await this.ensureEnoughAvailableStock(tx, {
         seasonId,
         boxOwnership: box.ownershipType,
-        itemOwnership,
-        itemTraderId: createPayload.traderId ?? null,
-        itemCustomerId: createPayload.customerId ?? null,
+        itemOwnership: normalizedOwnership.ownershipType,
+        itemTraderId: normalizedOwnership.traderId,
+        itemCustomerId: normalizedOwnership.customerId,
         traderCategoryId: createPayload.traderCategoryId ?? null,
         customerCategoryId: createPayload.customerCategoryId ?? null,
         grade: createPayload.grade ?? null,
@@ -614,9 +668,9 @@ export class ItemService {
           customerCategoryId: createPayload.customerCategoryId,
           grade: createPayload.grade,
           pitamStatus: createPayload.pitamStatus,
-          ownershipType: createPayload.ownershipType,
-          traderId: createPayload.traderId,
-          customerId: createPayload.customerId,
+          ownershipType: normalizedOwnership.ownershipType,
+          traderId: normalizedOwnership.traderId,
+          customerId: normalizedOwnership.customerId,
           isDeleted: false,
         },
       });
@@ -629,6 +683,9 @@ export class ItemService {
       const newItem = await tx.shipmentItem.create({
         data: {
           ...createPayload,
+          ownershipType: normalizedOwnership.ownershipType,
+          traderId: normalizedOwnership.traderId,
+          customerId: normalizedOwnership.customerId,
           seasonId,
           shipmentId: box.shipmentId,
         },
@@ -705,12 +762,15 @@ export class ItemService {
       const nextBoxId = Number(updatePayload.boxId ?? currentItem.boxId);
       const nextQuantity = Number(updatePayload.quantity ?? currentItem.quantity);
       const nextPitamStatus = (updatePayload.pitamStatus ?? currentItem.pitamStatus) as PitamStatus;
-      const nextTraderId = (updatePayload.traderId ?? currentItem.traderId) as number | null;
-      const nextCustomerId = (updatePayload.customerId ?? currentItem.customerId) as number | null;
+      const hasTraderId = Object.prototype.hasOwnProperty.call(updatePayload, 'traderId');
+      const hasCustomerId = Object.prototype.hasOwnProperty.call(updatePayload, 'customerId');
+      const hasOwnershipType = Object.prototype.hasOwnProperty.call(updatePayload, 'ownershipType');
+      const nextTraderId = (hasTraderId ? updatePayload.traderId : currentItem.traderId) as number | null;
+      const nextCustomerId = (hasCustomerId ? updatePayload.customerId : currentItem.customerId) as number | null;
       const nextTraderCategoryId = (updatePayload.traderCategoryId ?? currentItem.traderCategoryId) as number | null;
       const nextCustomerCategoryId = (updatePayload.customerCategoryId ?? currentItem.customerCategoryId) as number | null;
       const nextGrade = (updatePayload.grade ?? currentItem.grade) as Grade | null;
-      const nextOwnershipType = (updatePayload.ownershipType ?? currentItem.ownershipType) as ItemOwnership;
+      const nextOwnershipType = (hasOwnershipType ? updatePayload.ownershipType : currentItem.ownershipType) as ItemOwnership;
       const nextUpdatedById = Number(updatePayload.updatedById ?? currentItem.updatedById);
 
       let nextShipmentId = currentItem.shipmentId;
@@ -731,8 +791,7 @@ export class ItemService {
         throw new NotFoundException(`Box ${nextBoxId} not found in active season`);
       }
 
-      this.ensureAllowedBoxOwnership(targetBox.ownershipType);
-      this.assertItemFitsBoxOwnership({
+      const normalizedOwnership = this.normalizeItemOwnershipForBox({
         boxOwnership: targetBox.ownershipType,
         boxTraderId: targetBox.traderId,
         boxCustomerId: targetBox.customerId,
@@ -741,14 +800,20 @@ export class ItemService {
         itemCustomerId: nextCustomerId,
       });
 
+      this.validateOwnership(
+        normalizedOwnership.ownershipType,
+        normalizedOwnership.traderId,
+        normalizedOwnership.customerId,
+      );
+
       await this.deletePackedMovementsByItemId(tx, currentItem.id);
 
       await this.ensureEnoughAvailableStock(tx, {
         seasonId: currentItem.seasonId,
         boxOwnership: targetBox.ownershipType,
-        itemOwnership: nextOwnershipType,
-        itemTraderId: nextTraderId,
-        itemCustomerId: nextCustomerId,
+        itemOwnership: normalizedOwnership.ownershipType,
+        itemTraderId: normalizedOwnership.traderId,
+        itemCustomerId: normalizedOwnership.customerId,
         traderCategoryId: nextTraderCategoryId,
         customerCategoryId: nextCustomerCategoryId,
         grade: nextGrade,
@@ -760,6 +825,9 @@ export class ItemService {
         where: { id },
         data: {
           ...updatePayload,
+          ownershipType: normalizedOwnership.ownershipType,
+          traderId: normalizedOwnership.traderId,
+          customerId: normalizedOwnership.customerId,
           shipmentId: nextShipmentId,
         },
       });

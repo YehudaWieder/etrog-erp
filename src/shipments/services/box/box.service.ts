@@ -68,12 +68,12 @@ export class BoxService {
       throw new BadRequestException('customerId is required when ownershipType=CUSTOMER');
     }
 
-    if (ownershipType !== BoxOwnership.TRADER && traderId !== undefined && traderId !== null) {
-      throw new BadRequestException('traderId must be empty unless ownershipType=TRADER');
+    if (ownershipType !== BoxOwnership.TRADER && ownershipType !== BoxOwnership.CUSTOM && traderId !== undefined && traderId !== null) {
+      throw new BadRequestException('traderId must be empty unless ownershipType=TRADER or ownershipType=CUSTOM');
     }
 
-    if (ownershipType !== BoxOwnership.CUSTOMER && customerId !== undefined && customerId !== null) {
-      throw new BadRequestException('customerId must be empty unless ownershipType=CUSTOMER');
+    if (ownershipType !== BoxOwnership.CUSTOMER && ownershipType !== BoxOwnership.CUSTOM && customerId !== undefined && customerId !== null) {
+      throw new BadRequestException('customerId must be empty unless ownershipType=CUSTOMER or ownershipType=CUSTOM');
     }
   }
 
