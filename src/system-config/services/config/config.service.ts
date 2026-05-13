@@ -87,10 +87,6 @@ export class SystemConfigService {
       createData.largeBoxCapacity = data.largeBoxCapacity;
     }
 
-    if (data?.customBoxCapacity !== undefined) {
-      updateData.customBoxCapacity = data.customBoxCapacity;
-      createData.customBoxCapacity = data.customBoxCapacity;
-    }
 
     const existingConfig = await this.prisma.systemConfig.findFirst({
       where: { seasonId },
@@ -161,7 +157,6 @@ export class SystemConfigService {
       smallBoxCapacity: data.smallBoxCapacity as number | undefined,
       mediumBoxCapacity: data.mediumBoxCapacity as number | undefined,
       largeBoxCapacity: data.largeBoxCapacity as number | undefined,
-      customBoxCapacity: data.customBoxCapacity as number | undefined,
     });
 
     const config = await this.getConfig(seasonId);
