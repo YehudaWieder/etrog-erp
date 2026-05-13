@@ -92,7 +92,7 @@ export class InventoryController {
 					toOwnerType: 'CUSTOMER',
 					toCustomerId: 5,
 					toCustomerCategoryId: 11,
-					toPitamStatus: 'WITHOUT_PITAM',
+					   // toPitamStatus: 'WITHOUT_PITAM', // לא רלוונטי יותר
 					notes: 'Reserved for customer order #A120',
 				},
 			},
@@ -241,7 +241,7 @@ export class InventoryController {
 					toOwnerType: 'CUSTOMER',
 					toCustomerId: 5,
 					toCustomerCategoryId: 11,
-					toPitamStatus: 'WITHOUT_PITAM',
+					   // toPitamStatus: 'WITHOUT_PITAM', // לא רלוונטי יותר
 					notes: 'Updated allocation quantity',
 				},
 			},

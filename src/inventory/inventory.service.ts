@@ -22,7 +22,7 @@ export class InternalTransferRequest {
 	traderCategoryId?: number;
 	customerCategoryId?: number;
 	fromPitamStatus?: PitamStatus;
-	toPitamStatus?: PitamStatus;
+
 	fromTraderCategoryId?: number;
 	fromGrade?: Grade;
 	fromCustomerCategoryId?: number;
@@ -924,14 +924,18 @@ export class InventoryService {
 
 	private resolveTransferSideSpec(data: InternalTransferRequest, side: 'from' | 'to'): TransferSideSpec {
 		const ownerType = side === 'from' ? data.fromOwnerType : data.toOwnerType;
-		const pitamStatus =
-			side === 'from'
-				? (data.fromPitamStatus ?? data.pitamStatus)
-				: (data.toPitamStatus ?? data.pitamStatus);
 
-		if (!pitamStatus) {
-			throw new BadRequestException(`${side}PitamStatus is required`);
-		}
+		       // Always use the source pitamStatus, and do not allow changing it
+		       const pitamStatus = (data.fromPitamStatus ?? data.pitamStatus);
+		       if (!pitamStatus) {
+			       throw new BadRequestException(`${side}PitamStatus is required`);
+		       }
+		       if (side === 'to') {
+			       // לא לאפשר שינוי סטטוס פיטם ביעד
+			       if ((data.fromPitamStatus ?? data.pitamStatus) !== (data.pitamStatus)) {
+				       throw new BadRequestException('Cannot change pitamStatus during transfer');
+			       }
+		       }
 
 		if (ownerType === InventoryOwnerType.TRADER || ownerType === InventoryOwnerType.MODULO) {
 			const traderCategoryId =
