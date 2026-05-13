@@ -223,6 +223,28 @@ export class ShipmentService {
       (updatableData.shippedAt as Date | string | null | undefined) ?? existing.shippedAt,
     );
 
+    // If marking as SHIPPED, update all boxes to SHIPPED in the same transaction
+    if (effectiveStatus === ShipmentStatus.SHIPPED) {
+      return this.prisma.$transaction(async (tx) => {
+        // Update all boxes in this shipment to SHIPPED
+        await tx.box.updateMany({
+          where: { shipmentId: id, status: { not: 'SHIPPED' }, isDeleted: false },
+          data: { status: 'SHIPPED' },
+        });
+        // Update the shipment itself
+        return tx.shipment.update({
+          where: { id },
+          data: {
+            ...updatableData,
+            updatedById: actorId,
+            status: effectiveStatus,
+            shippedAt: nextShippedAt,
+          },
+        });
+      });
+    }
+
+    // Otherwise, just update the shipment
     return this.prisma.shipment.update({
       where: { id },
       data: {
