@@ -197,6 +197,16 @@ export class ItemService {
         throw new BadRequestException('SHARED box supports only TRADER, CUSTOMER, or UNASSIGNED item ownership');
       }
 
+      // If assigning to a TRADER, ensure the trader has a share in this category for the season
+      if (itemOwnership === ItemOwnership.TRADER) {
+        // This check will be enforced in buildUnassignedTraderDeductions, but we add a fast fail here for clarity
+        if (!itemTraderId) {
+          throw new BadRequestException('Trader ID is required for TRADER item in SHARED box');
+        }
+        // This method is sync, but we can only check in the transactional context. So, we will add a runtime check in buildUnassignedTraderDeductions.
+        // If you want to enforce it earlier, you must refactor to make this method async and pass tx/context.
+      }
+
       return {
         ownershipType: itemOwnership,
         traderId: itemTraderId ?? null,
@@ -252,6 +262,7 @@ export class ItemService {
       quantity: number;
     },
   ): Promise<Array<{ traderId: number; quantity: number }>> {
+
     const traders = await this.getTraderAvailabilityForDistribution(tx, {
       seasonId: params.seasonId,
       traderCategoryId: params.traderCategoryId,
@@ -259,18 +270,21 @@ export class ItemService {
       pitamStatus: params.pitamStatus,
     });
 
-    if (traders.length === 0) {
-      throw new BadRequestException('No trader stock available for unassigned packing distribution');
-    }
-
+    // Enforce: Only traders with a share in this category for this season can receive items
     const shares = await tx.traderCategoryShare.findMany({
       where: {
         seasonId: params.seasonId,
         traderCategoryId: params.traderCategoryId,
-        traderId: { in: traders.map((t) => t.traderId) },
       },
       select: { traderId: true, percent: true },
     });
+
+    const allowedTraderIds = new Set(shares.map((s) => s.traderId));
+    for (const trader of traders) {
+      if (!allowedTraderIds.has(trader.traderId)) {
+        throw new BadRequestException(`Trader ${trader.traderId} does not have a share in category ${params.traderCategoryId} for this season`);
+      }
+    }
 
     const shareMap = new Map<number, number>();
     for (const share of shares) {
