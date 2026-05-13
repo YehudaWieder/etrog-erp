@@ -1,15 +1,3 @@
-       // בדיקה: אם מדובר בהעברה ללקוח, יש לוודא שהקטגוריה שייכת ללקוח
-       if (side === 'to' && ownerType === InventoryOwnerType.CUSTOMER && data.toCustomerId && data.toCustomerCategoryId) {
-	       const category = await this.prisma.customerCategory.findFirst({
-		       where: {
-			       id: data.toCustomerCategoryId,
-			       customerId: data.toCustomerId,
-		       },
-	       });
-	       if (!category) {
-		       throw new BadRequestException('Customer category does not belong to the specified customer');
-	       }
-       }
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { MovementType, PitamStatus, Grade, Prisma, SourceType } from 'src/generated/prisma';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -435,6 +423,7 @@ export class InventoryService {
 		return this.prisma.$transaction(async (tx) => {
 			const pair = await this.getTransferPairTx(tx, operationId);
 			const { id: seasonId } = await this.seasonsService.findActiveSeason();
+			await this.assertTransferCustomerCategoryOwnershipTx(tx, data);
 
 			const expectedTables = this.getExpectedTables(data);
 			const existingTables = [pair.negative.table, pair.positive.table].sort().join('|');
@@ -981,6 +970,7 @@ export class InventoryService {
 	}
 
 	private async createTransferPairTx(tx: Prisma.TransactionClient, seasonId: number, data: InternalTransferRequest, actorId: number) {
+		await this.assertTransferCustomerCategoryOwnershipTx(tx, data);
 		const built = this.buildTransferPayloads(seasonId, data, actorId);
 		await this.assertNegativeLedgerHasEnoughStockTx(tx, built.negative);
 
@@ -1010,6 +1000,44 @@ export class InventoryService {
 			negative,
 			positive,
 		};
+	}
+
+	private async assertTransferCustomerCategoryOwnershipTx(
+		tx: Prisma.TransactionClient,
+		data: InternalTransferRequest,
+	) {
+		const checks: Array<{ side: 'from' | 'to'; customerId: number; customerCategoryId: number }> = [];
+
+		if (data.fromOwnerType === InventoryOwnerType.CUSTOMER) {
+			const fromSpec = this.resolveTransferSideSpec(data, 'from');
+			checks.push({
+				side: 'from',
+				customerId: data.fromCustomerId!,
+				customerCategoryId: fromSpec.customerCategoryId!,
+			});
+		}
+
+		if (data.toOwnerType === InventoryOwnerType.CUSTOMER) {
+			const toSpec = this.resolveTransferSideSpec(data, 'to');
+			checks.push({
+				side: 'to',
+				customerId: data.toCustomerId!,
+				customerCategoryId: toSpec.customerCategoryId!,
+			});
+		}
+
+		for (const check of checks) {
+			const category = await tx.customerCategories.findUnique({
+				where: { id: check.customerCategoryId },
+				select: { id: true, customerId: true },
+			});
+
+			if (!category || category.customerId !== check.customerId) {
+				throw new BadRequestException(
+					`${check.side}CustomerCategoryId does not belong to ${check.side}CustomerId`,
+				);
+			}
+		}
 	}
 
 	private async getTransferPairTx(tx: Prisma.TransactionClient, operationId: number) {
