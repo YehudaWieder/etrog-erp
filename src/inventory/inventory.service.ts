@@ -1,3 +1,15 @@
+       // בדיקה: אם מדובר בהעברה ללקוח, יש לוודא שהקטגוריה שייכת ללקוח
+       if (side === 'to' && ownerType === InventoryOwnerType.CUSTOMER && data.toCustomerId && data.toCustomerCategoryId) {
+	       const category = await this.prisma.customerCategory.findFirst({
+		       where: {
+			       id: data.toCustomerCategoryId,
+			       customerId: data.toCustomerId,
+		       },
+	       });
+	       if (!category) {
+		       throw new BadRequestException('Customer category does not belong to the specified customer');
+	       }
+       }
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { MovementType, PitamStatus, Grade, Prisma, SourceType } from 'src/generated/prisma';
 import { PrismaService } from 'src/prisma/prisma.service';
