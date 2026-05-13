@@ -3375,12 +3375,20 @@ export namespace Prisma {
     id: number | null
     seasonId: number | null
     unitPrice: Decimal | null
+    smallBoxCapacity: number | null
+    mediumBoxCapacity: number | null
+    largeBoxCapacity: number | null
+    customBoxCapacity: number | null
   }
 
   export type SystemConfigSumAggregateOutputType = {
     id: number | null
     seasonId: number | null
     unitPrice: Decimal | null
+    smallBoxCapacity: number | null
+    mediumBoxCapacity: number | null
+    largeBoxCapacity: number | null
+    customBoxCapacity: number | null
   }
 
   export type SystemConfigMinAggregateOutputType = {
@@ -3388,6 +3396,10 @@ export namespace Prisma {
     seasonId: number | null
     currency: $Enums.Currency | null
     unitPrice: Decimal | null
+    smallBoxCapacity: number | null
+    mediumBoxCapacity: number | null
+    largeBoxCapacity: number | null
+    customBoxCapacity: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -3397,6 +3409,10 @@ export namespace Prisma {
     seasonId: number | null
     currency: $Enums.Currency | null
     unitPrice: Decimal | null
+    smallBoxCapacity: number | null
+    mediumBoxCapacity: number | null
+    largeBoxCapacity: number | null
+    customBoxCapacity: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -3406,6 +3422,10 @@ export namespace Prisma {
     seasonId: number
     currency: number
     unitPrice: number
+    smallBoxCapacity: number
+    mediumBoxCapacity: number
+    largeBoxCapacity: number
+    customBoxCapacity: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -3416,12 +3436,20 @@ export namespace Prisma {
     id?: true
     seasonId?: true
     unitPrice?: true
+    smallBoxCapacity?: true
+    mediumBoxCapacity?: true
+    largeBoxCapacity?: true
+    customBoxCapacity?: true
   }
 
   export type SystemConfigSumAggregateInputType = {
     id?: true
     seasonId?: true
     unitPrice?: true
+    smallBoxCapacity?: true
+    mediumBoxCapacity?: true
+    largeBoxCapacity?: true
+    customBoxCapacity?: true
   }
 
   export type SystemConfigMinAggregateInputType = {
@@ -3429,6 +3457,10 @@ export namespace Prisma {
     seasonId?: true
     currency?: true
     unitPrice?: true
+    smallBoxCapacity?: true
+    mediumBoxCapacity?: true
+    largeBoxCapacity?: true
+    customBoxCapacity?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -3438,6 +3470,10 @@ export namespace Prisma {
     seasonId?: true
     currency?: true
     unitPrice?: true
+    smallBoxCapacity?: true
+    mediumBoxCapacity?: true
+    largeBoxCapacity?: true
+    customBoxCapacity?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -3447,6 +3483,10 @@ export namespace Prisma {
     seasonId?: true
     currency?: true
     unitPrice?: true
+    smallBoxCapacity?: true
+    mediumBoxCapacity?: true
+    largeBoxCapacity?: true
+    customBoxCapacity?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -3543,6 +3583,10 @@ export namespace Prisma {
     seasonId: number
     currency: $Enums.Currency | null
     unitPrice: Decimal | null
+    smallBoxCapacity: number
+    mediumBoxCapacity: number
+    largeBoxCapacity: number
+    customBoxCapacity: number
     createdAt: Date
     updatedAt: Date
     _count: SystemConfigCountAggregateOutputType | null
@@ -3571,6 +3615,10 @@ export namespace Prisma {
     seasonId?: boolean
     currency?: boolean
     unitPrice?: boolean
+    smallBoxCapacity?: boolean
+    mediumBoxCapacity?: boolean
+    largeBoxCapacity?: boolean
+    customBoxCapacity?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     season?: boolean | SeasonDefaultArgs<ExtArgs>
@@ -3581,6 +3629,10 @@ export namespace Prisma {
     seasonId?: boolean
     currency?: boolean
     unitPrice?: boolean
+    smallBoxCapacity?: boolean
+    mediumBoxCapacity?: boolean
+    largeBoxCapacity?: boolean
+    customBoxCapacity?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     season?: boolean | SeasonDefaultArgs<ExtArgs>
@@ -3591,6 +3643,10 @@ export namespace Prisma {
     seasonId?: boolean
     currency?: boolean
     unitPrice?: boolean
+    smallBoxCapacity?: boolean
+    mediumBoxCapacity?: boolean
+    largeBoxCapacity?: boolean
+    customBoxCapacity?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     season?: boolean | SeasonDefaultArgs<ExtArgs>
@@ -3601,11 +3657,15 @@ export namespace Prisma {
     seasonId?: boolean
     currency?: boolean
     unitPrice?: boolean
+    smallBoxCapacity?: boolean
+    mediumBoxCapacity?: boolean
+    largeBoxCapacity?: boolean
+    customBoxCapacity?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type SystemConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "seasonId" | "currency" | "unitPrice" | "createdAt" | "updatedAt", ExtArgs["result"]["systemConfig"]>
+  export type SystemConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "seasonId" | "currency" | "unitPrice" | "smallBoxCapacity" | "mediumBoxCapacity" | "largeBoxCapacity" | "customBoxCapacity" | "createdAt" | "updatedAt", ExtArgs["result"]["systemConfig"]>
   export type SystemConfigInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     season?: boolean | SeasonDefaultArgs<ExtArgs>
   }
@@ -3626,6 +3686,10 @@ export namespace Prisma {
       seasonId: number
       currency: $Enums.Currency | null
       unitPrice: Prisma.Decimal | null
+      smallBoxCapacity: number
+      mediumBoxCapacity: number
+      largeBoxCapacity: number
+      customBoxCapacity: number
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["systemConfig"]>
@@ -4056,6 +4120,10 @@ export namespace Prisma {
     readonly seasonId: FieldRef<"SystemConfig", 'Int'>
     readonly currency: FieldRef<"SystemConfig", 'Currency'>
     readonly unitPrice: FieldRef<"SystemConfig", 'Decimal'>
+    readonly smallBoxCapacity: FieldRef<"SystemConfig", 'Int'>
+    readonly mediumBoxCapacity: FieldRef<"SystemConfig", 'Int'>
+    readonly largeBoxCapacity: FieldRef<"SystemConfig", 'Int'>
+    readonly customBoxCapacity: FieldRef<"SystemConfig", 'Int'>
     readonly createdAt: FieldRef<"SystemConfig", 'DateTime'>
     readonly updatedAt: FieldRef<"SystemConfig", 'DateTime'>
   }
@@ -27604,6 +27672,10 @@ export namespace Prisma {
     seasonId: 'seasonId',
     currency: 'currency',
     unitPrice: 'unitPrice',
+    smallBoxCapacity: 'smallBoxCapacity',
+    mediumBoxCapacity: 'mediumBoxCapacity',
+    largeBoxCapacity: 'largeBoxCapacity',
+    customBoxCapacity: 'customBoxCapacity',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -28215,6 +28287,10 @@ export namespace Prisma {
     seasonId?: IntFilter<"SystemConfig"> | number
     currency?: EnumCurrencyNullableFilter<"SystemConfig"> | $Enums.Currency | null
     unitPrice?: DecimalNullableFilter<"SystemConfig"> | Decimal | DecimalJsLike | number | string | null
+    smallBoxCapacity?: IntFilter<"SystemConfig"> | number
+    mediumBoxCapacity?: IntFilter<"SystemConfig"> | number
+    largeBoxCapacity?: IntFilter<"SystemConfig"> | number
+    customBoxCapacity?: IntFilter<"SystemConfig"> | number
     createdAt?: DateTimeFilter<"SystemConfig"> | Date | string
     updatedAt?: DateTimeFilter<"SystemConfig"> | Date | string
     season?: XOR<SeasonScalarRelationFilter, SeasonWhereInput>
@@ -28225,6 +28301,10 @@ export namespace Prisma {
     seasonId?: SortOrder
     currency?: SortOrderInput | SortOrder
     unitPrice?: SortOrderInput | SortOrder
+    smallBoxCapacity?: SortOrder
+    mediumBoxCapacity?: SortOrder
+    largeBoxCapacity?: SortOrder
+    customBoxCapacity?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     season?: SeasonOrderByWithRelationInput
@@ -28238,6 +28318,10 @@ export namespace Prisma {
     seasonId?: IntFilter<"SystemConfig"> | number
     currency?: EnumCurrencyNullableFilter<"SystemConfig"> | $Enums.Currency | null
     unitPrice?: DecimalNullableFilter<"SystemConfig"> | Decimal | DecimalJsLike | number | string | null
+    smallBoxCapacity?: IntFilter<"SystemConfig"> | number
+    mediumBoxCapacity?: IntFilter<"SystemConfig"> | number
+    largeBoxCapacity?: IntFilter<"SystemConfig"> | number
+    customBoxCapacity?: IntFilter<"SystemConfig"> | number
     createdAt?: DateTimeFilter<"SystemConfig"> | Date | string
     updatedAt?: DateTimeFilter<"SystemConfig"> | Date | string
     season?: XOR<SeasonScalarRelationFilter, SeasonWhereInput>
@@ -28248,6 +28332,10 @@ export namespace Prisma {
     seasonId?: SortOrder
     currency?: SortOrderInput | SortOrder
     unitPrice?: SortOrderInput | SortOrder
+    smallBoxCapacity?: SortOrder
+    mediumBoxCapacity?: SortOrder
+    largeBoxCapacity?: SortOrder
+    customBoxCapacity?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: SystemConfigCountOrderByAggregateInput
@@ -28265,6 +28353,10 @@ export namespace Prisma {
     seasonId?: IntWithAggregatesFilter<"SystemConfig"> | number
     currency?: EnumCurrencyNullableWithAggregatesFilter<"SystemConfig"> | $Enums.Currency | null
     unitPrice?: DecimalNullableWithAggregatesFilter<"SystemConfig"> | Decimal | DecimalJsLike | number | string | null
+    smallBoxCapacity?: IntWithAggregatesFilter<"SystemConfig"> | number
+    mediumBoxCapacity?: IntWithAggregatesFilter<"SystemConfig"> | number
+    largeBoxCapacity?: IntWithAggregatesFilter<"SystemConfig"> | number
+    customBoxCapacity?: IntWithAggregatesFilter<"SystemConfig"> | number
     createdAt?: DateTimeWithAggregatesFilter<"SystemConfig"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"SystemConfig"> | Date | string
   }
@@ -30055,6 +30147,10 @@ export namespace Prisma {
   export type SystemConfigCreateInput = {
     currency?: $Enums.Currency | null
     unitPrice?: Decimal | DecimalJsLike | number | string | null
+    smallBoxCapacity?: number
+    mediumBoxCapacity?: number
+    largeBoxCapacity?: number
+    customBoxCapacity?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     season: SeasonCreateNestedOneWithoutSystemConfigsInput
@@ -30065,6 +30161,10 @@ export namespace Prisma {
     seasonId: number
     currency?: $Enums.Currency | null
     unitPrice?: Decimal | DecimalJsLike | number | string | null
+    smallBoxCapacity?: number
+    mediumBoxCapacity?: number
+    largeBoxCapacity?: number
+    customBoxCapacity?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -30072,6 +30172,10 @@ export namespace Prisma {
   export type SystemConfigUpdateInput = {
     currency?: NullableEnumCurrencyFieldUpdateOperationsInput | $Enums.Currency | null
     unitPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    smallBoxCapacity?: IntFieldUpdateOperationsInput | number
+    mediumBoxCapacity?: IntFieldUpdateOperationsInput | number
+    largeBoxCapacity?: IntFieldUpdateOperationsInput | number
+    customBoxCapacity?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     season?: SeasonUpdateOneRequiredWithoutSystemConfigsNestedInput
@@ -30082,6 +30186,10 @@ export namespace Prisma {
     seasonId?: IntFieldUpdateOperationsInput | number
     currency?: NullableEnumCurrencyFieldUpdateOperationsInput | $Enums.Currency | null
     unitPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    smallBoxCapacity?: IntFieldUpdateOperationsInput | number
+    mediumBoxCapacity?: IntFieldUpdateOperationsInput | number
+    largeBoxCapacity?: IntFieldUpdateOperationsInput | number
+    customBoxCapacity?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -30091,6 +30199,10 @@ export namespace Prisma {
     seasonId: number
     currency?: $Enums.Currency | null
     unitPrice?: Decimal | DecimalJsLike | number | string | null
+    smallBoxCapacity?: number
+    mediumBoxCapacity?: number
+    largeBoxCapacity?: number
+    customBoxCapacity?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -30098,6 +30210,10 @@ export namespace Prisma {
   export type SystemConfigUpdateManyMutationInput = {
     currency?: NullableEnumCurrencyFieldUpdateOperationsInput | $Enums.Currency | null
     unitPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    smallBoxCapacity?: IntFieldUpdateOperationsInput | number
+    mediumBoxCapacity?: IntFieldUpdateOperationsInput | number
+    largeBoxCapacity?: IntFieldUpdateOperationsInput | number
+    customBoxCapacity?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -30107,6 +30223,10 @@ export namespace Prisma {
     seasonId?: IntFieldUpdateOperationsInput | number
     currency?: NullableEnumCurrencyFieldUpdateOperationsInput | $Enums.Currency | null
     unitPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    smallBoxCapacity?: IntFieldUpdateOperationsInput | number
+    mediumBoxCapacity?: IntFieldUpdateOperationsInput | number
+    largeBoxCapacity?: IntFieldUpdateOperationsInput | number
+    customBoxCapacity?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -32003,6 +32123,10 @@ export namespace Prisma {
     seasonId?: SortOrder
     currency?: SortOrder
     unitPrice?: SortOrder
+    smallBoxCapacity?: SortOrder
+    mediumBoxCapacity?: SortOrder
+    largeBoxCapacity?: SortOrder
+    customBoxCapacity?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -32011,6 +32135,10 @@ export namespace Prisma {
     id?: SortOrder
     seasonId?: SortOrder
     unitPrice?: SortOrder
+    smallBoxCapacity?: SortOrder
+    mediumBoxCapacity?: SortOrder
+    largeBoxCapacity?: SortOrder
+    customBoxCapacity?: SortOrder
   }
 
   export type SystemConfigMaxOrderByAggregateInput = {
@@ -32018,6 +32146,10 @@ export namespace Prisma {
     seasonId?: SortOrder
     currency?: SortOrder
     unitPrice?: SortOrder
+    smallBoxCapacity?: SortOrder
+    mediumBoxCapacity?: SortOrder
+    largeBoxCapacity?: SortOrder
+    customBoxCapacity?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -32027,6 +32159,10 @@ export namespace Prisma {
     seasonId?: SortOrder
     currency?: SortOrder
     unitPrice?: SortOrder
+    smallBoxCapacity?: SortOrder
+    mediumBoxCapacity?: SortOrder
+    largeBoxCapacity?: SortOrder
+    customBoxCapacity?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -32035,6 +32171,10 @@ export namespace Prisma {
     id?: SortOrder
     seasonId?: SortOrder
     unitPrice?: SortOrder
+    smallBoxCapacity?: SortOrder
+    mediumBoxCapacity?: SortOrder
+    largeBoxCapacity?: SortOrder
+    customBoxCapacity?: SortOrder
   }
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -33823,6 +33963,14 @@ export namespace Prisma {
     divide?: Decimal | DecimalJsLike | number | string
   }
 
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type DateTimeFieldUpdateOperationsInput = {
     set?: Date | string
   }
@@ -33833,14 +33981,6 @@ export namespace Prisma {
     upsert?: SeasonUpsertWithoutSystemConfigsInput
     connect?: SeasonWhereUniqueInput
     update?: XOR<XOR<SeasonUpdateToOneWithWhereWithoutSystemConfigsInput, SeasonUpdateWithoutSystemConfigsInput>, SeasonUncheckedUpdateWithoutSystemConfigsInput>
-  }
-
-  export type IntFieldUpdateOperationsInput = {
-    set?: number
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
   }
 
   export type FieldHarvestCreateNestedManyWithoutFieldInput = {
@@ -37357,6 +37497,10 @@ export namespace Prisma {
   export type SystemConfigCreateWithoutSeasonInput = {
     currency?: $Enums.Currency | null
     unitPrice?: Decimal | DecimalJsLike | number | string | null
+    smallBoxCapacity?: number
+    mediumBoxCapacity?: number
+    largeBoxCapacity?: number
+    customBoxCapacity?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -37365,6 +37509,10 @@ export namespace Prisma {
     id?: number
     currency?: $Enums.Currency | null
     unitPrice?: Decimal | DecimalJsLike | number | string | null
+    smallBoxCapacity?: number
+    mediumBoxCapacity?: number
+    largeBoxCapacity?: number
+    customBoxCapacity?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -37841,6 +37989,10 @@ export namespace Prisma {
     seasonId?: IntFilter<"SystemConfig"> | number
     currency?: EnumCurrencyNullableFilter<"SystemConfig"> | $Enums.Currency | null
     unitPrice?: DecimalNullableFilter<"SystemConfig"> | Decimal | DecimalJsLike | number | string | null
+    smallBoxCapacity?: IntFilter<"SystemConfig"> | number
+    mediumBoxCapacity?: IntFilter<"SystemConfig"> | number
+    largeBoxCapacity?: IntFilter<"SystemConfig"> | number
+    customBoxCapacity?: IntFilter<"SystemConfig"> | number
     createdAt?: DateTimeFilter<"SystemConfig"> | Date | string
     updatedAt?: DateTimeFilter<"SystemConfig"> | Date | string
   }
@@ -43646,6 +43798,10 @@ export namespace Prisma {
     id?: number
     currency?: $Enums.Currency | null
     unitPrice?: Decimal | DecimalJsLike | number | string | null
+    smallBoxCapacity?: number
+    mediumBoxCapacity?: number
+    largeBoxCapacity?: number
+    customBoxCapacity?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -43816,6 +43972,10 @@ export namespace Prisma {
   export type SystemConfigUpdateWithoutSeasonInput = {
     currency?: NullableEnumCurrencyFieldUpdateOperationsInput | $Enums.Currency | null
     unitPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    smallBoxCapacity?: IntFieldUpdateOperationsInput | number
+    mediumBoxCapacity?: IntFieldUpdateOperationsInput | number
+    largeBoxCapacity?: IntFieldUpdateOperationsInput | number
+    customBoxCapacity?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -43824,6 +43984,10 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     currency?: NullableEnumCurrencyFieldUpdateOperationsInput | $Enums.Currency | null
     unitPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    smallBoxCapacity?: IntFieldUpdateOperationsInput | number
+    mediumBoxCapacity?: IntFieldUpdateOperationsInput | number
+    largeBoxCapacity?: IntFieldUpdateOperationsInput | number
+    customBoxCapacity?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -43832,6 +43996,10 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     currency?: NullableEnumCurrencyFieldUpdateOperationsInput | $Enums.Currency | null
     unitPrice?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    smallBoxCapacity?: IntFieldUpdateOperationsInput | number
+    mediumBoxCapacity?: IntFieldUpdateOperationsInput | number
+    largeBoxCapacity?: IntFieldUpdateOperationsInput | number
+    customBoxCapacity?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

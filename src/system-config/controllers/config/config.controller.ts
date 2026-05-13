@@ -44,16 +44,32 @@ export class SystemConfigController {
           seasonId: 1,
           currency: 'ILS',
           unitPrice: 8.5,
+          smallBoxCapacity: 20,
+          mediumBoxCapacity: 30,
+          largeBoxCapacity: 40,
+          customBoxCapacity: 30,
         },
       },
     },
   })
   @ApiResponse({ status: 201, description: 'System configuration created or retrieved successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input. Creating a new config requires both pricing fields (currency and unitPrice).' })
-  createConfig(@Body() body: { seasonId: number; currency: Currency; unitPrice: number }) {
+  createConfig(@Body() body: {
+    seasonId: number;
+    currency: Currency;
+    unitPrice: number;
+    smallBoxCapacity?: number;
+    mediumBoxCapacity?: number;
+    largeBoxCapacity?: number;
+    customBoxCapacity?: number;
+  }) {
     return this.systemConfigService.getOrCreateConfig(body.seasonId, {
       currency: body.currency,
       unitPrice: body.unitPrice,
+      smallBoxCapacity: body.smallBoxCapacity,
+      mediumBoxCapacity: body.mediumBoxCapacity,
+      largeBoxCapacity: body.largeBoxCapacity,
+      customBoxCapacity: body.customBoxCapacity,
     }, { requirePricingOnCreate: true });
   }
 
@@ -92,6 +108,7 @@ export class SystemConfigController {
           seasonId: 1,
           currency: 'USD',
           unitPrice: 10.25,
+          mediumBoxCapacity: 30,
         },
       },
       partial: {
@@ -107,6 +124,7 @@ export class SystemConfigController {
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Configuration not found for the given season.' })
   updateConfig(@Body() body: SystemConfigUpdateSwaggerDto) {
-    return this.systemConfigService.updateConfig(body.seasonId, body);
+    const { seasonId, ...data } = body;
+    return this.systemConfigService.updateConfig(seasonId, data);
   }
 }

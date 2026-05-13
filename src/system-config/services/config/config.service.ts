@@ -2,11 +2,35 @@
 
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Currency, Prisma } from '@prisma/client';
+import { Currency, Prisma } from 'src/generated/prisma';
+
+type SystemConfigPayload = {
+  currency?: Currency;
+  unitPrice?: number;
+  smallBoxCapacity?: number;
+  mediumBoxCapacity?: number;
+  largeBoxCapacity?: number;
+  customBoxCapacity?: number;
+};
 
 @Injectable()
 export class SystemConfigService {
   constructor(private prisma: PrismaService) {}
+
+  private assertPositiveCapacity(value: unknown, field: string) {
+    if (value === undefined || value === null) return;
+
+    if (!Number.isInteger(value) || Number(value) <= 0) {
+      throw new BadRequestException(`${field} must be a positive integer.`);
+    }
+  }
+
+  private validateCapacities(data?: SystemConfigPayload) {
+    this.assertPositiveCapacity(data?.smallBoxCapacity, 'smallBoxCapacity');
+    this.assertPositiveCapacity(data?.mediumBoxCapacity, 'mediumBoxCapacity');
+    this.assertPositiveCapacity(data?.largeBoxCapacity, 'largeBoxCapacity');
+    this.assertPositiveCapacity(data?.customBoxCapacity, 'customBoxCapacity');
+  }
 
   private async assertSeasonExists(seasonId: number) {
     const season = await this.prisma.season.findUnique({
@@ -19,7 +43,7 @@ export class SystemConfigService {
     }
   }
 
-  private hasCompletePricingDefinition(data?: { currency?: Currency; unitPrice?: number }) {
+  private hasCompletePricingDefinition(data?: SystemConfigPayload) {
     return data?.currency !== undefined && data?.unitPrice !== undefined;
   }
 
@@ -27,10 +51,11 @@ export class SystemConfigService {
   // When creating a new config, both pricing fields must be provided.
   async getOrCreateConfig(
     seasonId: number,
-    data?: { currency?: Currency; unitPrice?: number },
+    data?: SystemConfigPayload,
     options?: { requirePricingOnCreate?: boolean },
   ) {
     await this.assertSeasonExists(seasonId);
+    this.validateCapacities(data);
 
     const updateData: Prisma.SystemConfigUpdateInput = {};
     const createData: Prisma.SystemConfigUncheckedCreateInput = {
@@ -45,6 +70,26 @@ export class SystemConfigService {
     if (data?.unitPrice !== undefined) {
       updateData.unitPrice = data.unitPrice;
       createData.unitPrice = data.unitPrice;
+    }
+
+    if (data?.smallBoxCapacity !== undefined) {
+      updateData.smallBoxCapacity = data.smallBoxCapacity;
+      createData.smallBoxCapacity = data.smallBoxCapacity;
+    }
+
+    if (data?.mediumBoxCapacity !== undefined) {
+      updateData.mediumBoxCapacity = data.mediumBoxCapacity;
+      createData.mediumBoxCapacity = data.mediumBoxCapacity;
+    }
+
+    if (data?.largeBoxCapacity !== undefined) {
+      updateData.largeBoxCapacity = data.largeBoxCapacity;
+      createData.largeBoxCapacity = data.largeBoxCapacity;
+    }
+
+    if (data?.customBoxCapacity !== undefined) {
+      updateData.customBoxCapacity = data.customBoxCapacity;
+      createData.customBoxCapacity = data.customBoxCapacity;
     }
 
     const existingConfig = await this.prisma.systemConfig.findFirst({
@@ -111,6 +156,13 @@ export class SystemConfigService {
     if (!data || Object.keys(data).length === 0) {
       throw new BadRequestException('At least one configuration field must be provided for update.');
     }
+
+    this.validateCapacities({
+      smallBoxCapacity: data.smallBoxCapacity as number | undefined,
+      mediumBoxCapacity: data.mediumBoxCapacity as number | undefined,
+      largeBoxCapacity: data.largeBoxCapacity as number | undefined,
+      customBoxCapacity: data.customBoxCapacity as number | undefined,
+    });
 
     const config = await this.getConfig(seasonId);
 

@@ -673,6 +673,18 @@ export class SystemConfigCreateSwaggerDto {
 
   @ApiProperty({ description: 'Initial unit price value (required for new configuration).', example: 8.5 })
   unitPrice!: number;
+
+  @ApiPropertyOptional({ description: 'Default capacity for SMALL boxes.', example: 20 })
+  smallBoxCapacity?: number;
+
+  @ApiPropertyOptional({ description: 'Default capacity for MEDIUM boxes.', example: 30 })
+  mediumBoxCapacity?: number;
+
+  @ApiPropertyOptional({ description: 'Default capacity for LARGE boxes.', example: 40 })
+  largeBoxCapacity?: number;
+
+  @ApiPropertyOptional({ description: 'Default capacity for CUSTOM boxes.', example: 30 })
+  customBoxCapacity?: number;
 }
 
 export class SystemConfigUpdateSwaggerDto {
@@ -689,6 +701,18 @@ export class SystemConfigUpdateSwaggerDto {
 
   @ApiPropertyOptional({ description: 'Updated unit price value.', example: 10.25 })
   unitPrice?: number;
+
+  @ApiPropertyOptional({ description: 'Updated default capacity for SMALL boxes.', example: 20 })
+  smallBoxCapacity?: number;
+
+  @ApiPropertyOptional({ description: 'Updated default capacity for MEDIUM boxes.', example: 30 })
+  mediumBoxCapacity?: number;
+
+  @ApiPropertyOptional({ description: 'Updated default capacity for LARGE boxes.', example: 40 })
+  largeBoxCapacity?: number;
+
+  @ApiPropertyOptional({ description: 'Updated default capacity for CUSTOM boxes.', example: 30 })
+  customBoxCapacity?: number;
 }
 
 export class FieldCreateSwaggerDto {

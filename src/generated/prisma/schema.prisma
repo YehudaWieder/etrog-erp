@@ -18,8 +18,12 @@ model SystemConfig {
   seasonId Int
   season   Season @relation(fields: [seasonId], references: [id])
 
-  currency  Currency?
-  unitPrice Decimal?
+  currency          Currency?
+  unitPrice         Decimal?
+  smallBoxCapacity  Int       @default(20)
+  mediumBoxCapacity Int       @default(30)
+  largeBoxCapacity  Int       @default(40)
+  customBoxCapacity Int       @default(30)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -56,6 +60,9 @@ model DefaultTraderCategory {
   updatedAt DateTime @updatedAt
 }
 
+// -----------------------------------------------------------------------------
+// 4. Default Trader Category Shares
+// -----------------------------------------------------------------------------
 model DefaultTraderCategoryShare {
   id Int @id @default(autoincrement())
 
@@ -74,7 +81,7 @@ model DefaultTraderCategoryShare {
 }
 
 // -----------------------------------------------------------------------------
-// 4. Season Management (The Time-Tenant)
+// 5. Season Management (The Time-Tenant)
 // -----------------------------------------------------------------------------
 model Season {
   id       Int     @id @default(autoincrement())
@@ -101,7 +108,7 @@ model Season {
 }
 
 // -----------------------------------------------------------------------------
-// 5. User Management
+// 6. User Management
 // -----------------------------------------------------------------------------
 model User {
   id           Int     @id @default(autoincrement())
@@ -129,7 +136,7 @@ model User {
 }
 
 // -----------------------------------------------------------------------------
-// 6. Traders
+// 7. Traders
 // -----------------------------------------------------------------------------
 model Trader {
   id   Int    @id @default(autoincrement())
@@ -153,7 +160,7 @@ model Trader {
 }
 
 // -----------------------------------------------------------------------------
-// 7. Customer
+// 8. Customer
 // -----------------------------------------------------------------------------
 model Customer {
   id           Int     @id @default(autoincrement())
@@ -177,7 +184,7 @@ model Customer {
 }
 
 // -----------------------------------------------------------------------------
-// 8. Traders categories
+// 9. Traders categories
 // -----------------------------------------------------------------------------
 model TradersCategories {
   id       Int     @id @default(autoincrement())
@@ -200,7 +207,7 @@ model TradersCategories {
 }
 
 // -----------------------------------------------------------------------------
-// 9. Customer categories and prices
+// 10. Customer categories and prices
 // -----------------------------------------------------------------------------
 model CustomerCategories {
   id       Int    @id @default(autoincrement())
@@ -226,7 +233,7 @@ model CustomerCategories {
 }
 
 // -----------------------------------------------------------------------------
-// 10. Trader Category Share (%)
+// 11. Trader Category Share (%)
 // -----------------------------------------------------------------------------
 model TraderCategoryShare {
   id Int @id @default(autoincrement())
@@ -249,7 +256,7 @@ model TraderCategoryShare {
 }
 
 // -----------------------------------------------------------------------------
-// 11. Field Operations
+// 12. Field Operations
 // -----------------------------------------------------------------------------
 model FieldHarvest {
   id Int @id @default(autoincrement())
@@ -299,7 +306,7 @@ model FieldHarvest {
 }
 
 // -----------------------------------------------------------------------------
-// 12. Grading & Classification
+// 13. Grading & Classification
 // -----------------------------------------------------------------------------
 model Classification {
   id Int @id @default(autoincrement())
@@ -348,7 +355,7 @@ model Classification {
 }
 
 // -----------------------------------------------------------------------------
-// 13. Trader Inventory & Buffer Management
+// 14. Trader Inventory & Buffer Management
 // -----------------------------------------------------------------------------
 model TraderStock {
   id Int @id @default(autoincrement())
@@ -393,7 +400,7 @@ model TraderStock {
 }
 
 // -----------------------------------------------------------------------------
-// 14. Customer Allocations (Sales)
+// 15. Customer Allocations (Sales)
 // -----------------------------------------------------------------------------
 model CustomerAllocation {
   id Int @id @default(autoincrement())
@@ -442,7 +449,7 @@ model CustomerAllocation {
 }
 
 // -----------------------------------------------------------------------------
-// 15. Shipment
+// 16. Shipment
 // -----------------------------------------------------------------------------
 model Shipment {
   id Int @id @default(autoincrement())
@@ -481,7 +488,7 @@ model Shipment {
 }
 
 // -----------------------------------------------------------------------------
-// 16. Box - Container
+// 17. Box - Container
 // -----------------------------------------------------------------------------
 model Box {
   id         Int      @id @default(autoincrement())
@@ -529,7 +536,7 @@ model Box {
 }
 
 // -----------------------------------------------------------------------------
-// 17. Items - Products
+// 18. Items - Products
 // -----------------------------------------------------------------------------
 model ShipmentItem {
   id         Int      @id @default(autoincrement())
@@ -582,7 +589,7 @@ model ShipmentItem {
 }
 
 // -----------------------------------------------------------------------------
-// 18. Internal Messaging System
+// 19. Internal Messaging System
 // -----------------------------------------------------------------------------
 model Message {
   id Int @id @default(autoincrement())

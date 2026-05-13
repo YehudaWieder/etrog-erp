@@ -125,6 +125,10 @@ exports.Prisma.SystemConfigScalarFieldEnum = {
   seasonId: 'seasonId',
   currency: 'currency',
   unitPrice: 'unitPrice',
+  smallBoxCapacity: 'smallBoxCapacity',
+  mediumBoxCapacity: 'mediumBoxCapacity',
+  largeBoxCapacity: 'largeBoxCapacity',
+  customBoxCapacity: 'customBoxCapacity',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
