@@ -610,7 +610,7 @@ export class ItemService {
     return this.prisma.$transaction(async (tx) => {
       const box = await tx.box.findFirst({
         where: { id: createPayload.boxId, seasonId, isDeleted: false },
-        select: { id: true, shipmentId: true, ownershipType: true, traderId: true, customerId: true, status: true },
+        select: { id: true, shipmentId: true, ownershipType: true, traderId: true, customerId: true, status: true, boxType: true, totalQuantity: true },
       });
 
       if (!box) {
@@ -620,6 +620,28 @@ export class ItemService {
       // Prevent adding items to boxes that are not OPEN
       if (box.status !== 'OPEN') {
         throw new BadRequestException('Cannot add items to a box that is not OPEN');
+      }
+
+      // Enforce box capacity (skip for CUSTOM box type)
+      if (box.boxType !== 'CUSTOM') {
+        const systemConfig = await tx.systemConfig.findFirst({ where: { seasonId } });
+
+        const capacityMap: Record<string, number | null | undefined> = {
+          SMALL: systemConfig?.smallBoxCapacity,
+          MEDIUM: systemConfig?.mediumBoxCapacity,
+          LARGE: systemConfig?.largeBoxCapacity,
+        };
+
+        const capacity = capacityMap[box.boxType];
+
+        if (capacity != null) {
+          const currentTotal = box.totalQuantity ?? 0;
+          if (currentTotal + Number(createPayload.quantity) > capacity) {
+            throw new BadRequestException(
+              `Box capacity exceeded: box can hold ${capacity} items, currently has ${currentTotal}, adding ${createPayload.quantity} would exceed the limit`,
+            );
+          }
+        }
       }
 
       const normalizedOwnership = this.normalizeItemOwnershipForBox({
