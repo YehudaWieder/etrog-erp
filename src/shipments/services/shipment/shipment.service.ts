@@ -7,8 +7,7 @@ import { SeasonsService } from 'src/seasons/seasons.service';
 import { ShipmentsService } from '../../shipments.service';
 
 type CreateShipmentInput = {
-  status?: ShipmentStatus;
-  shippedAt?: Date | string;
+  shipmentNumber: number;
   notes?: string;
 };
 
@@ -65,15 +64,11 @@ export class ShipmentService {
   private validateCreateInput(data: CreateShipmentInput) {
     this.assertOnlyAllowedFields(
       data as Record<string, unknown>,
-      ['status', 'shippedAt', 'notes'],
-      'Only status, shippedAt, and notes are allowed. seasonId, shipmentNumber, totals, slug, isDeleted, and updatedById are managed by the server',
+      ['shipmentNumber', 'notes'],
+      'Only shipmentNumber and notes are allowed. seasonId, totals, slug, isDeleted, and updatedById are managed by the server',
     );
 
-    if (data.status !== undefined && !Object.values(ShipmentStatus).includes(data.status as ShipmentStatus)) {
-      throw new BadRequestException('status is invalid');
-    }
-
-    this.assertValidDate(data.shippedAt, 'shippedAt');
+    this.assertPositiveInt(data.shipmentNumber, 'shipmentNumber');
 
     if (data.notes !== undefined && typeof data.notes !== 'string') {
       throw new BadRequestException('notes must be a string');
@@ -107,23 +102,30 @@ export class ShipmentService {
     this.validateCreateInput(data);
 
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
+
+    const existing = await this.prisma.shipment.findFirst({
+      where: {
+        seasonId,
+        shipmentNumber: data.shipmentNumber,
+      },
+      select: { id: true },
+    });
+
+    if (existing) {
+      throw new BadRequestException(`Shipment number ${data.shipmentNumber} already exists in the active season`);
+    }
+
     const year = new Date().getFullYear();
     const randomSuffix = Math.random().toString(36).slice(2, 8);
     const temporarySlug = `shipment-tmp-${Date.now()}-${randomSuffix}`;
-
-    const requestedStatus = data.status as ShipmentStatus | undefined;
-    const normalizedStatus = requestedStatus ?? (data.shippedAt ? ShipmentStatus.SHIPPED : ShipmentStatus.PREPARING);
-    const normalizedShippedAt = this.resolveShippedAt(
-      normalizedStatus,
-      data.shippedAt as Date | string | null | undefined,
-    );
 
     // create shipment first to get the auto-incremented shipmentNumber for slug generation
     const shipment = await this.prisma.shipment.create({
       data: {
         seasonId,
-        status: normalizedStatus,
-        shippedAt: normalizedShippedAt,
+        shipmentNumber: data.shipmentNumber,
+        status: ShipmentStatus.PREPARING,
+        shippedAt: null,
         notes: data.notes,
         updatedById: actorId,
         totalBoxes: 0,

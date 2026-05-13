@@ -5,18 +5,16 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedRespo
 import { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { ShipmentService } from '../../services/shipment/shipment.service';
-import { ShipmentStatus } from '@prisma/client';
 import { CreateShipmentSwaggerDto, ShipmentResponseSwaggerDto, UpdateShipmentSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 
 type ShipmentCreateBody = {
+  shipmentNumber: number;
   notes?: string;
-  status?: ShipmentStatus;
-  shippedAt?: string | Date;
 };
 
 type ShipmentUpdateBody = {
   notes?: string | null;
-  status?: ShipmentStatus;
+  status?: import('@prisma/client').ShipmentStatus;
   shippedAt?: string | Date;
 };
 
@@ -36,7 +34,7 @@ export class ShipmentController {
       sample: {
         summary: 'Sample shipment create payload',
         value: {
-          status: 'PREPARING',
+          shipmentNumber: 109,
           notes: 'Shipment for EU distribution center',
         },
       },

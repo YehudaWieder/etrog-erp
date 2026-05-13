@@ -347,24 +347,10 @@ export class CustomerAllocationSwaggerDto {
 
 export class CreateShipmentSwaggerDto {
   @ApiProperty({
-    description: 'User ID who creates/updates the shipment record.',
-    example: 1,
+    description: 'Shipment number in the active season.',
+    example: 109,
   })
-  updatedById!: number;
-
-  @ApiPropertyOptional({
-    enum: ShipmentStatus,
-    enumName: 'ShipmentStatus',
-    description: 'Optional initial shipment status. Defaults to PREPARING when omitted.',
-    example: ShipmentStatus.PREPARING,
-  })
-  status?: ShipmentStatus;
-
-  @ApiPropertyOptional({
-    description: 'Optional ship date-time in ISO format. If provided, status is normalized to SHIPPED.',
-    example: '2026-10-12T13:20:00.000Z',
-  })
-  shippedAt?: Date | string;
+  shipmentNumber!: number;
 
   @ApiPropertyOptional({
     description: 'Optional shipment notes.',
