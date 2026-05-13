@@ -142,18 +142,17 @@ export class BoxService {
       throw new NotFoundException(`Shipment ${data.shipmentId} not found in active season`);
     }
 
-    // Check if boxNumber already exists in this shipment.
-    // We validate by shipmentId+boxNumber directly to avoid relying on season context.
+    // Check if boxNumber already exists in the active season.
     const existing = await this.prisma.box.findFirst({
       where: {
-        shipmentId: data.shipmentId,
+        seasonId,
         boxNumber: data.boxNumber,
       },
       select: { id: true },
     });
 
     if (existing) {
-      throw new ConflictException(`Box #${data.boxNumber} already exists in shipment ${data.shipmentId}`);
+      throw new ConflictException(`Box #${data.boxNumber} already exists in the active season`);
     }
 
     return this.prisma.$transaction(async (tx) => {
@@ -170,7 +169,7 @@ export class BoxService {
       } catch (error) {
         const code = (error as { code?: string })?.code;
         if (code === 'P2002') {
-          throw new ConflictException(`Box #${data.boxNumber} already exists in shipment ${data.shipmentId}`);
+          throw new ConflictException(`Box #${data.boxNumber} already exists in the active season`);
         }
         throw error;
       }

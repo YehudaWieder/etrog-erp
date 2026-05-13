@@ -523,7 +523,7 @@ model Box {
 
   isDeleted Boolean @default(false)
 
-  @@unique([seasonId, shipmentId, boxNumber])
+  @@unique([seasonId, boxNumber])
   @@index([seasonId])
   @@index([shipmentId])
   @@index([traderId])
