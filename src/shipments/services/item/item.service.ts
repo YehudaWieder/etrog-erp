@@ -263,14 +263,14 @@ export class ItemService {
     },
   ): Promise<Array<{ traderId: number; quantity: number }>> {
 
-    const traders = await this.getTraderAvailabilityForDistribution(tx, {
+    const allTraders = await this.getTraderAvailabilityForDistribution(tx, {
       seasonId: params.seasonId,
       traderCategoryId: params.traderCategoryId,
       grade: params.grade,
       pitamStatus: params.pitamStatus,
     });
 
-    // Enforce: Only traders with a share in this category for this season can receive items
+    // Only distribute among traders who have a defined share in this category for this season
     const shares = await tx.traderCategoryShare.findMany({
       where: {
         seasonId: params.seasonId,
@@ -279,16 +279,16 @@ export class ItemService {
       select: { traderId: true, percent: true },
     });
 
-    const allowedTraderIds = new Set(shares.map((s) => s.traderId));
-    for (const trader of traders) {
-      if (!allowedTraderIds.has(trader.traderId)) {
-        throw new BadRequestException(`Trader ${trader.traderId} does not have a share in category ${params.traderCategoryId} for this season`);
-      }
-    }
-
     const shareMap = new Map<number, number>();
     for (const share of shares) {
       shareMap.set(share.traderId, Number(share.percent));
+    }
+
+    // Filter to only traders with a defined share (ignore traders who have stock but no share)
+    const traders = allTraders.filter((t) => shareMap.has(t.traderId));
+
+    if (traders.length === 0) {
+      throw new BadRequestException('No traders with a defined share and available stock found for this category');
     }
 
     const allocated = new Map<number, number>();
