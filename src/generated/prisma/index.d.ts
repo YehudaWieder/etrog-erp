@@ -3378,7 +3378,6 @@ export namespace Prisma {
     smallBoxCapacity: number | null
     mediumBoxCapacity: number | null
     largeBoxCapacity: number | null
-    customBoxCapacity: number | null
   }
 
   export type SystemConfigSumAggregateOutputType = {
@@ -3388,7 +3387,6 @@ export namespace Prisma {
     smallBoxCapacity: number | null
     mediumBoxCapacity: number | null
     largeBoxCapacity: number | null
-    customBoxCapacity: number | null
   }
 
   export type SystemConfigMinAggregateOutputType = {
@@ -3399,7 +3397,6 @@ export namespace Prisma {
     smallBoxCapacity: number | null
     mediumBoxCapacity: number | null
     largeBoxCapacity: number | null
-    customBoxCapacity: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -3412,7 +3409,6 @@ export namespace Prisma {
     smallBoxCapacity: number | null
     mediumBoxCapacity: number | null
     largeBoxCapacity: number | null
-    customBoxCapacity: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -3425,7 +3421,6 @@ export namespace Prisma {
     smallBoxCapacity: number
     mediumBoxCapacity: number
     largeBoxCapacity: number
-    customBoxCapacity: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -3439,7 +3434,6 @@ export namespace Prisma {
     smallBoxCapacity?: true
     mediumBoxCapacity?: true
     largeBoxCapacity?: true
-    customBoxCapacity?: true
   }
 
   export type SystemConfigSumAggregateInputType = {
@@ -3449,7 +3443,6 @@ export namespace Prisma {
     smallBoxCapacity?: true
     mediumBoxCapacity?: true
     largeBoxCapacity?: true
-    customBoxCapacity?: true
   }
 
   export type SystemConfigMinAggregateInputType = {
@@ -3460,7 +3453,6 @@ export namespace Prisma {
     smallBoxCapacity?: true
     mediumBoxCapacity?: true
     largeBoxCapacity?: true
-    customBoxCapacity?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -3473,7 +3465,6 @@ export namespace Prisma {
     smallBoxCapacity?: true
     mediumBoxCapacity?: true
     largeBoxCapacity?: true
-    customBoxCapacity?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -3486,7 +3477,6 @@ export namespace Prisma {
     smallBoxCapacity?: true
     mediumBoxCapacity?: true
     largeBoxCapacity?: true
-    customBoxCapacity?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -3586,7 +3576,6 @@ export namespace Prisma {
     smallBoxCapacity: number
     mediumBoxCapacity: number
     largeBoxCapacity: number
-    customBoxCapacity: number
     createdAt: Date
     updatedAt: Date
     _count: SystemConfigCountAggregateOutputType | null
@@ -3618,7 +3607,6 @@ export namespace Prisma {
     smallBoxCapacity?: boolean
     mediumBoxCapacity?: boolean
     largeBoxCapacity?: boolean
-    customBoxCapacity?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     season?: boolean | SeasonDefaultArgs<ExtArgs>
@@ -3632,7 +3620,6 @@ export namespace Prisma {
     smallBoxCapacity?: boolean
     mediumBoxCapacity?: boolean
     largeBoxCapacity?: boolean
-    customBoxCapacity?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     season?: boolean | SeasonDefaultArgs<ExtArgs>
@@ -3646,7 +3633,6 @@ export namespace Prisma {
     smallBoxCapacity?: boolean
     mediumBoxCapacity?: boolean
     largeBoxCapacity?: boolean
-    customBoxCapacity?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     season?: boolean | SeasonDefaultArgs<ExtArgs>
@@ -3660,12 +3646,11 @@ export namespace Prisma {
     smallBoxCapacity?: boolean
     mediumBoxCapacity?: boolean
     largeBoxCapacity?: boolean
-    customBoxCapacity?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type SystemConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "seasonId" | "currency" | "unitPrice" | "smallBoxCapacity" | "mediumBoxCapacity" | "largeBoxCapacity" | "customBoxCapacity" | "createdAt" | "updatedAt", ExtArgs["result"]["systemConfig"]>
+  export type SystemConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "seasonId" | "currency" | "unitPrice" | "smallBoxCapacity" | "mediumBoxCapacity" | "largeBoxCapacity" | "createdAt" | "updatedAt", ExtArgs["result"]["systemConfig"]>
   export type SystemConfigInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     season?: boolean | SeasonDefaultArgs<ExtArgs>
   }
@@ -3689,7 +3674,6 @@ export namespace Prisma {
       smallBoxCapacity: number
       mediumBoxCapacity: number
       largeBoxCapacity: number
-      customBoxCapacity: number
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["systemConfig"]>
@@ -4123,7 +4107,6 @@ export namespace Prisma {
     readonly smallBoxCapacity: FieldRef<"SystemConfig", 'Int'>
     readonly mediumBoxCapacity: FieldRef<"SystemConfig", 'Int'>
     readonly largeBoxCapacity: FieldRef<"SystemConfig", 'Int'>
-    readonly customBoxCapacity: FieldRef<"SystemConfig", 'Int'>
     readonly createdAt: FieldRef<"SystemConfig", 'DateTime'>
     readonly updatedAt: FieldRef<"SystemConfig", 'DateTime'>
   }
@@ -27675,7 +27658,6 @@ export namespace Prisma {
     smallBoxCapacity: 'smallBoxCapacity',
     mediumBoxCapacity: 'mediumBoxCapacity',
     largeBoxCapacity: 'largeBoxCapacity',
-    customBoxCapacity: 'customBoxCapacity',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -28290,7 +28272,6 @@ export namespace Prisma {
     smallBoxCapacity?: IntFilter<"SystemConfig"> | number
     mediumBoxCapacity?: IntFilter<"SystemConfig"> | number
     largeBoxCapacity?: IntFilter<"SystemConfig"> | number
-    customBoxCapacity?: IntFilter<"SystemConfig"> | number
     createdAt?: DateTimeFilter<"SystemConfig"> | Date | string
     updatedAt?: DateTimeFilter<"SystemConfig"> | Date | string
     season?: XOR<SeasonScalarRelationFilter, SeasonWhereInput>
@@ -28304,7 +28285,6 @@ export namespace Prisma {
     smallBoxCapacity?: SortOrder
     mediumBoxCapacity?: SortOrder
     largeBoxCapacity?: SortOrder
-    customBoxCapacity?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     season?: SeasonOrderByWithRelationInput
@@ -28321,7 +28301,6 @@ export namespace Prisma {
     smallBoxCapacity?: IntFilter<"SystemConfig"> | number
     mediumBoxCapacity?: IntFilter<"SystemConfig"> | number
     largeBoxCapacity?: IntFilter<"SystemConfig"> | number
-    customBoxCapacity?: IntFilter<"SystemConfig"> | number
     createdAt?: DateTimeFilter<"SystemConfig"> | Date | string
     updatedAt?: DateTimeFilter<"SystemConfig"> | Date | string
     season?: XOR<SeasonScalarRelationFilter, SeasonWhereInput>
@@ -28335,7 +28314,6 @@ export namespace Prisma {
     smallBoxCapacity?: SortOrder
     mediumBoxCapacity?: SortOrder
     largeBoxCapacity?: SortOrder
-    customBoxCapacity?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: SystemConfigCountOrderByAggregateInput
@@ -28356,7 +28334,6 @@ export namespace Prisma {
     smallBoxCapacity?: IntWithAggregatesFilter<"SystemConfig"> | number
     mediumBoxCapacity?: IntWithAggregatesFilter<"SystemConfig"> | number
     largeBoxCapacity?: IntWithAggregatesFilter<"SystemConfig"> | number
-    customBoxCapacity?: IntWithAggregatesFilter<"SystemConfig"> | number
     createdAt?: DateTimeWithAggregatesFilter<"SystemConfig"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"SystemConfig"> | Date | string
   }
@@ -29852,7 +29829,7 @@ export namespace Prisma {
 
   export type BoxWhereUniqueInput = Prisma.AtLeast<{
     id?: number
-    seasonId_shipmentId_boxNumber?: BoxSeasonIdShipmentIdBoxNumberCompoundUniqueInput
+    seasonId_boxNumber?: BoxSeasonIdBoxNumberCompoundUniqueInput
     AND?: BoxWhereInput | BoxWhereInput[]
     OR?: BoxWhereInput[]
     NOT?: BoxWhereInput | BoxWhereInput[]
@@ -29876,7 +29853,7 @@ export namespace Prisma {
     trader?: XOR<TraderNullableScalarRelationFilter, TraderWhereInput> | null
     customer?: XOR<CustomerNullableScalarRelationFilter, CustomerWhereInput> | null
     updatedBy?: XOR<UserScalarRelationFilter, UserWhereInput>
-  }, "id" | "seasonId_shipmentId_boxNumber">
+  }, "id" | "seasonId_boxNumber">
 
   export type BoxOrderByWithAggregationInput = {
     id?: SortOrder
@@ -30150,7 +30127,6 @@ export namespace Prisma {
     smallBoxCapacity?: number
     mediumBoxCapacity?: number
     largeBoxCapacity?: number
-    customBoxCapacity?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     season: SeasonCreateNestedOneWithoutSystemConfigsInput
@@ -30164,7 +30140,6 @@ export namespace Prisma {
     smallBoxCapacity?: number
     mediumBoxCapacity?: number
     largeBoxCapacity?: number
-    customBoxCapacity?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -30175,7 +30150,6 @@ export namespace Prisma {
     smallBoxCapacity?: IntFieldUpdateOperationsInput | number
     mediumBoxCapacity?: IntFieldUpdateOperationsInput | number
     largeBoxCapacity?: IntFieldUpdateOperationsInput | number
-    customBoxCapacity?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     season?: SeasonUpdateOneRequiredWithoutSystemConfigsNestedInput
@@ -30189,7 +30163,6 @@ export namespace Prisma {
     smallBoxCapacity?: IntFieldUpdateOperationsInput | number
     mediumBoxCapacity?: IntFieldUpdateOperationsInput | number
     largeBoxCapacity?: IntFieldUpdateOperationsInput | number
-    customBoxCapacity?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -30202,7 +30175,6 @@ export namespace Prisma {
     smallBoxCapacity?: number
     mediumBoxCapacity?: number
     largeBoxCapacity?: number
-    customBoxCapacity?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -30213,7 +30185,6 @@ export namespace Prisma {
     smallBoxCapacity?: IntFieldUpdateOperationsInput | number
     mediumBoxCapacity?: IntFieldUpdateOperationsInput | number
     largeBoxCapacity?: IntFieldUpdateOperationsInput | number
-    customBoxCapacity?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -30226,7 +30197,6 @@ export namespace Prisma {
     smallBoxCapacity?: IntFieldUpdateOperationsInput | number
     mediumBoxCapacity?: IntFieldUpdateOperationsInput | number
     largeBoxCapacity?: IntFieldUpdateOperationsInput | number
-    customBoxCapacity?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -32126,7 +32096,6 @@ export namespace Prisma {
     smallBoxCapacity?: SortOrder
     mediumBoxCapacity?: SortOrder
     largeBoxCapacity?: SortOrder
-    customBoxCapacity?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -32138,7 +32107,6 @@ export namespace Prisma {
     smallBoxCapacity?: SortOrder
     mediumBoxCapacity?: SortOrder
     largeBoxCapacity?: SortOrder
-    customBoxCapacity?: SortOrder
   }
 
   export type SystemConfigMaxOrderByAggregateInput = {
@@ -32149,7 +32117,6 @@ export namespace Prisma {
     smallBoxCapacity?: SortOrder
     mediumBoxCapacity?: SortOrder
     largeBoxCapacity?: SortOrder
-    customBoxCapacity?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -32162,7 +32129,6 @@ export namespace Prisma {
     smallBoxCapacity?: SortOrder
     mediumBoxCapacity?: SortOrder
     largeBoxCapacity?: SortOrder
-    customBoxCapacity?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -32174,7 +32140,6 @@ export namespace Prisma {
     smallBoxCapacity?: SortOrder
     mediumBoxCapacity?: SortOrder
     largeBoxCapacity?: SortOrder
-    customBoxCapacity?: SortOrder
   }
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -33635,9 +33600,8 @@ export namespace Prisma {
     isNot?: ShipmentWhereInput
   }
 
-  export type BoxSeasonIdShipmentIdBoxNumberCompoundUniqueInput = {
+  export type BoxSeasonIdBoxNumberCompoundUniqueInput = {
     seasonId: number
-    shipmentId: number
     boxNumber: number
   }
 
@@ -37500,7 +37464,6 @@ export namespace Prisma {
     smallBoxCapacity?: number
     mediumBoxCapacity?: number
     largeBoxCapacity?: number
-    customBoxCapacity?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -37512,7 +37475,6 @@ export namespace Prisma {
     smallBoxCapacity?: number
     mediumBoxCapacity?: number
     largeBoxCapacity?: number
-    customBoxCapacity?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -37992,7 +37954,6 @@ export namespace Prisma {
     smallBoxCapacity?: IntFilter<"SystemConfig"> | number
     mediumBoxCapacity?: IntFilter<"SystemConfig"> | number
     largeBoxCapacity?: IntFilter<"SystemConfig"> | number
-    customBoxCapacity?: IntFilter<"SystemConfig"> | number
     createdAt?: DateTimeFilter<"SystemConfig"> | Date | string
     updatedAt?: DateTimeFilter<"SystemConfig"> | Date | string
   }
@@ -43801,7 +43762,6 @@ export namespace Prisma {
     smallBoxCapacity?: number
     mediumBoxCapacity?: number
     largeBoxCapacity?: number
-    customBoxCapacity?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -43975,7 +43935,6 @@ export namespace Prisma {
     smallBoxCapacity?: IntFieldUpdateOperationsInput | number
     mediumBoxCapacity?: IntFieldUpdateOperationsInput | number
     largeBoxCapacity?: IntFieldUpdateOperationsInput | number
-    customBoxCapacity?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -43987,7 +43946,6 @@ export namespace Prisma {
     smallBoxCapacity?: IntFieldUpdateOperationsInput | number
     mediumBoxCapacity?: IntFieldUpdateOperationsInput | number
     largeBoxCapacity?: IntFieldUpdateOperationsInput | number
-    customBoxCapacity?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -43999,7 +43957,6 @@ export namespace Prisma {
     smallBoxCapacity?: IntFieldUpdateOperationsInput | number
     mediumBoxCapacity?: IntFieldUpdateOperationsInput | number
     largeBoxCapacity?: IntFieldUpdateOperationsInput | number
-    customBoxCapacity?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

@@ -128,7 +128,6 @@ exports.Prisma.SystemConfigScalarFieldEnum = {
   smallBoxCapacity: 'smallBoxCapacity',
   mediumBoxCapacity: 'mediumBoxCapacity',
   largeBoxCapacity: 'largeBoxCapacity',
-  customBoxCapacity: 'customBoxCapacity',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

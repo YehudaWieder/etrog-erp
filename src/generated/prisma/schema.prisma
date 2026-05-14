@@ -20,10 +20,9 @@ model SystemConfig {
 
   currency          Currency?
   unitPrice         Decimal?
-  smallBoxCapacity  Int       @default(20)
+  smallBoxCapacity  Int       @default(50)
   mediumBoxCapacity Int       @default(30)
-  largeBoxCapacity  Int       @default(40)
-  customBoxCapacity Int       @default(30)
+  largeBoxCapacity  Int       @default(24)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -524,7 +523,7 @@ model Box {
 
   isDeleted Boolean @default(false)
 
-  @@unique([seasonId, shipmentId, boxNumber])
+  @@unique([seasonId, boxNumber])
   @@index([seasonId])
   @@index([shipmentId])
   @@index([traderId])
