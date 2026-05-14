@@ -298,9 +298,20 @@ export class ItemService {
 
   private calculateMinimalGrossByShares(deficit: number, sharePercents: string[]) {
     const deficitBig = BigInt(deficit);
-    const hundred = 100n;
+    const step = this.calculateShareStep(sharePercents);
 
+    const gross = ((deficitBig + step - 1n) / step) * step;
+    if (gross > BigInt(Number.MAX_SAFE_INTEGER)) {
+      throw new BadRequestException('Calculated gross quantity is too large');
+    }
+
+    return Number(gross);
+  }
+
+  private calculateShareStep(sharePercents: string[]) {
+    const hundred = 100n;
     let step = 1n;
+
     for (const percentText of sharePercents) {
       const fraction = this.decimalToFraction(percentText);
       if (fraction.numerator <= 0n) {
@@ -312,9 +323,16 @@ export class ItemService {
       step = this.lcm(step, unitStep);
     }
 
-    const gross = ((deficitBig + step - 1n) / step) * step;
+    return step;
+  }
+
+  private calculateLargestExactShareGross(total: number, sharePercents: string[]) {
+    const step = this.calculateShareStep(sharePercents);
+    const totalBig = BigInt(total);
+    const gross = (totalBig / step) * step;
+
     if (gross > BigInt(Number.MAX_SAFE_INTEGER)) {
-      throw new BadRequestException('Calculated gross quantity is too large');
+      throw new BadRequestException('Calculated share quantity is too large');
     }
 
     return Number(gross);
@@ -373,29 +391,41 @@ export class ItemService {
     if (positiveShares.length === 0) {
       throw new BadRequestException('All configured trader shares are zero or negative for this category');
     }
+    const totalPercent = positiveShares.reduce((sum, share) => sum + share.percent, 0);
+    const canUseExactShareGross = Math.abs(totalPercent - 100) <= 1e-9;
 
+    // --- Allocation: integer-only by exact ratio blocks; remainder goes to modulo ---
+    let baseAllocations: Array<{ traderId: number; percent: number; quantity: number }>;
+    let remainder: number;
 
+    if (canUseExactShareGross) {
+      const grossForTraders = this.calculateLargestExactShareGross(
+        params.quantity,
+        positiveShares.map((share) => share.percentText),
+      );
 
-    // --- Allocation: only integer part to traders, all remainder to modulo ---
-    // 1. Calculate base allocation (Math.floor)
-    let baseAllocations = positiveShares.map((share) => ({
-      traderId: share.traderId,
-      percent: share.percent,
-      quantity: Math.floor((params.quantity * share.percent) / 100),
-    }));
+      baseAllocations = positiveShares.map((share) => ({
+        traderId: share.traderId,
+        percent: share.percent,
+        quantity: this.calculateExactShareQuantity(grossForTraders, share.percentText),
+      }));
 
-    let traderBaseTotal = baseAllocations.reduce((sum, a) => sum + a.quantity, 0);
-    let remainder = params.quantity - traderBaseTotal;
+      remainder = params.quantity - grossForTraders;
+    } else {
+      // Fallback for misconfigured shares that do not sum to 100.
+      baseAllocations = positiveShares.map((share) => ({
+        traderId: share.traderId,
+        percent: share.percent,
+        quantity: Math.floor((params.quantity * share.percent) / 100),
+      }));
+
+      const traderBaseTotal = baseAllocations.reduce((sum, a) => sum + a.quantity, 0);
+      remainder = params.quantity - traderBaseTotal;
+    }
 
     // 2. No distribution of remainder to traders, all goes to modulo
     const traderDeductions = baseAllocations.filter(a => a.quantity > 0).map(a => ({ traderId: a.traderId, quantity: a.quantity }));
     const moduloPackedDeduction = remainder; // All remainder goes to modulo
-
-    return {
-      traderDeductions,
-      moduloPackedDeduction,
-      traderToModuloAssignments: [],
-    };
 
     const moduloAvailable = await this.inventoryAvailabilityService.getTraderUnshippedBalance(tx, {
       seasonId: params.seasonId,
@@ -432,9 +462,6 @@ export class ItemService {
       remainingAvailabilityByTrader.set(deduction.traderId, Math.max(0, current - deduction.quantity));
     }
 
-    const totalPercent = positiveShares.reduce((sum, share) => sum + share.percent, 0);
-    const canUseExactShareGross = Math.abs(totalPercent - 100) <= 1e-9;
-
     if (canUseExactShareGross) {
       const grossFromTraders = this.calculateMinimalGrossByShares(
         deficitAfterModulo,
@@ -462,7 +489,8 @@ export class ItemService {
       }
     }
 
-    const fallbackOrder = [...positiveShares].sort((left, right) => {
+    // Fund any modulo deficit from trader stocks, prioritizing higher percent first.
+    const fundingOrder = [...positiveShares].sort((left, right) => {
       if (right.percent !== left.percent) {
         return right.percent - left.percent;
       }
@@ -475,7 +503,7 @@ export class ItemService {
     while (remainingDeficit > 0) {
       let assignedInRound = false;
 
-      for (const share of fallbackOrder) {
+      for (const share of fundingOrder) {
         if (remainingDeficit <= 0) {
           break;
         }
@@ -782,7 +810,7 @@ export class ItemService {
       }
 
       if (params.boxOwnership === BoxOwnership.UNASSIGNED) {
-        const { traderDeductions } = await this.buildUnassignedTraderDeductions(tx, {
+        const { traderDeductions, moduloPackedDeduction, traderToModuloAssignments } = await this.buildUnassignedTraderDeductions(tx, {
           seasonId: params.seasonId,
           traderCategoryId: params.traderCategoryId,
           grade: params.grade,
@@ -807,6 +835,71 @@ export class ItemService {
               shipmentId: params.shipmentId,
               boxId: params.boxId,
               notes: `Packed by share allocation for shipment item #${params.itemId} [packing-movement]`,
+              updatedById: params.updatedById,
+            },
+          });
+        }
+
+        // If modulo doesn't have enough for remainder, fund it from traders first.
+        for (const assignment of traderToModuloAssignments) {
+          await tx.traderStock.create({
+            data: {
+              seasonId: params.seasonId,
+              date: new Date(),
+              traderId: assignment.traderId,
+              traderCategoryId: params.traderCategoryId,
+              grade: params.grade,
+              pitamStatus: params.pitamStatus,
+              quantity: -Math.abs(assignment.quantity),
+              isModulo: false,
+              type: MovementType.ASSIGNED,
+              MovementReferenceId: params.itemId,
+              shipmentId: params.shipmentId,
+              boxId: params.boxId,
+              notes: `Assigned to modulo for shipment item #${params.itemId} [packing-movement]`,
+              updatedById: params.updatedById,
+            },
+          });
+        }
+
+        const totalModuloFunding = traderToModuloAssignments.reduce((sum, assignment) => sum + assignment.quantity, 0);
+        if (totalModuloFunding > 0) {
+          await tx.traderStock.create({
+            data: {
+              seasonId: params.seasonId,
+              date: new Date(),
+              traderId: null,
+              traderCategoryId: params.traderCategoryId,
+              grade: params.grade,
+              pitamStatus: params.pitamStatus,
+              quantity: totalModuloFunding,
+              isModulo: true,
+              type: MovementType.ASSIGNED,
+              MovementReferenceId: params.itemId,
+              shipmentId: params.shipmentId,
+              boxId: params.boxId,
+              notes: `Funded modulo for shipment item #${params.itemId} [packing-movement]`,
+              updatedById: params.updatedById,
+            },
+          });
+        }
+
+        if (moduloPackedDeduction > 0) {
+          await tx.traderStock.create({
+            data: {
+              seasonId: params.seasonId,
+              date: new Date(),
+              traderId: null,
+              traderCategoryId: params.traderCategoryId,
+              grade: params.grade,
+              pitamStatus: params.pitamStatus,
+              quantity: -Math.abs(moduloPackedDeduction),
+              isModulo: true,
+              type: MovementType.PACKED_SHIPPED,
+              MovementReferenceId: params.itemId,
+              shipmentId: params.shipmentId,
+              boxId: params.boxId,
+              notes: `Packed from modulo remainder for shipment item #${params.itemId} [packing-movement]`,
               updatedById: params.updatedById,
             },
           });
