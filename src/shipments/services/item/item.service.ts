@@ -252,6 +252,92 @@ export class ItemService {
     });
   }
 
+  private decimalToFraction(value: string) {
+    const normalized = value.trim();
+    if (!/^\d+(\.\d+)?$/.test(normalized)) {
+      throw new BadRequestException(`Invalid share percent value: ${value}`);
+    }
+
+    const parts = normalized.split('.');
+    if (parts.length === 1) {
+      return { numerator: BigInt(parts[0]), denominator: 1n };
+    }
+
+    const whole = parts[0];
+    const frac = parts[1];
+    const denominator = 10n ** BigInt(frac.length);
+    const numerator = BigInt(whole + frac);
+    const divisor = this.gcd(numerator, denominator);
+
+    return {
+      numerator: numerator / divisor,
+      denominator: denominator / divisor,
+    };
+  }
+
+  private gcd(a: bigint, b: bigint): bigint {
+    let left = a < 0n ? -a : a;
+    let right = b < 0n ? -b : b;
+
+    while (right !== 0n) {
+      const temp = left % right;
+      left = right;
+      right = temp;
+    }
+
+    return left;
+  }
+
+  private lcm(a: bigint, b: bigint): bigint {
+    if (a === 0n || b === 0n) {
+      return 0n;
+    }
+
+    return (a / this.gcd(a, b)) * b;
+  }
+
+  private calculateMinimalGrossByShares(deficit: number, sharePercents: string[]) {
+    const deficitBig = BigInt(deficit);
+    const hundred = 100n;
+
+    let step = 1n;
+    for (const percentText of sharePercents) {
+      const fraction = this.decimalToFraction(percentText);
+      if (fraction.numerator <= 0n) {
+        throw new BadRequestException('All trader shares must be positive numbers');
+      }
+
+      const denominator = hundred * fraction.denominator;
+      const unitStep = denominator / this.gcd(fraction.numerator, denominator);
+      step = this.lcm(step, unitStep);
+    }
+
+    const gross = ((deficitBig + step - 1n) / step) * step;
+    if (gross > BigInt(Number.MAX_SAFE_INTEGER)) {
+      throw new BadRequestException('Calculated gross quantity is too large');
+    }
+
+    return Number(gross);
+  }
+
+  private calculateExactShareQuantity(total: number, percentText: string) {
+    const totalBig = BigInt(total);
+    const fraction = this.decimalToFraction(percentText);
+    const numerator = totalBig * fraction.numerator;
+    const denominator = 100n * fraction.denominator;
+
+    if (numerator % denominator !== 0n) {
+      throw new BadRequestException('Share distribution produced non-integer quantity');
+    }
+
+    const value = numerator / denominator;
+    if (value > BigInt(Number.MAX_SAFE_INTEGER)) {
+      throw new BadRequestException('Calculated share quantity is too large');
+    }
+
+    return Number(value);
+  }
+
   private async buildUnassignedTraderDeductions(
     tx: Prisma.TransactionClient,
     params: {
@@ -261,7 +347,11 @@ export class ItemService {
       pitamStatus: PitamStatus;
       quantity: number;
     },
-  ): Promise<{ traderDeductions: Array<{ traderId: number; quantity: number }>; moduloDeduction: number }> {
+  ): Promise<{
+    traderDeductions: Array<{ traderId: number; quantity: number }>;
+    moduloPackedDeduction: number;
+    traderToModuloAssignments: Array<{ traderId: number; quantity: number }>;
+  }> {
 
     const shares = await tx.traderCategoryShare.findMany({
       where: {
@@ -269,31 +359,159 @@ export class ItemService {
         traderCategoryId: params.traderCategoryId,
       },
       select: { traderId: true, percent: true },
+      orderBy: { traderId: 'asc' },
     });
 
     if (shares.length === 0) {
       throw new BadRequestException('No trader shares defined for this category in the current season');
     }
 
-    // Each trader gets floor(quantity * percent / 100) from their own stock.
-    // The remainder (due to flooring) comes from modulo.
-    const traderDeductions: Array<{ traderId: number; quantity: number }> = [];
-    let traderTotal = 0;
+    const positiveShares = shares
+      .map((share) => ({ traderId: share.traderId, percent: Number(share.percent), percentText: share.percent.toString() }))
+      .filter((share) => share.percent > 0);
 
-    for (const share of shares) {
-      const percent = Number(share.percent);
-      if (percent <= 0) continue;
-
-      const planned = Math.floor((params.quantity * percent) / 100);
-      if (planned <= 0) continue;
-
-      traderDeductions.push({ traderId: share.traderId, quantity: planned });
-      traderTotal += planned;
+    if (positiveShares.length === 0) {
+      throw new BadRequestException('All configured trader shares are zero or negative for this category');
     }
 
-    const moduloDeduction = params.quantity - traderTotal;
 
-    return { traderDeductions, moduloDeduction };
+
+    // --- Allocation: only integer part to traders, all remainder to modulo ---
+    // 1. Calculate base allocation (Math.floor)
+    let baseAllocations = positiveShares.map((share) => ({
+      traderId: share.traderId,
+      percent: share.percent,
+      quantity: Math.floor((params.quantity * share.percent) / 100),
+    }));
+
+    let traderBaseTotal = baseAllocations.reduce((sum, a) => sum + a.quantity, 0);
+    let remainder = params.quantity - traderBaseTotal;
+
+    // 2. No distribution of remainder to traders, all goes to modulo
+    const traderDeductions = baseAllocations.filter(a => a.quantity > 0).map(a => ({ traderId: a.traderId, quantity: a.quantity }));
+    const moduloPackedDeduction = remainder; // All remainder goes to modulo
+
+    return {
+      traderDeductions,
+      moduloPackedDeduction,
+      traderToModuloAssignments: [],
+    };
+
+    const moduloAvailable = await this.inventoryAvailabilityService.getTraderUnshippedBalance(tx, {
+      seasonId: params.seasonId,
+      traderId: null,
+      traderCategoryId: params.traderCategoryId,
+      grade: params.grade,
+      pitamStatus: params.pitamStatus,
+      isModulo: true,
+    });
+
+    const deficitAfterModulo = Math.max(0, moduloPackedDeduction - moduloAvailable);
+    if (deficitAfterModulo <= 0) {
+      return {
+        traderDeductions,
+        moduloPackedDeduction,
+        traderToModuloAssignments: [],
+      };
+    }
+
+    const availabilityRows = await this.getTraderAvailabilityForDistribution(tx, {
+      seasonId: params.seasonId,
+      traderCategoryId: params.traderCategoryId,
+      grade: params.grade,
+      pitamStatus: params.pitamStatus,
+    });
+
+    const remainingAvailabilityByTrader = new Map<number, number>();
+    for (const row of availabilityRows) {
+      remainingAvailabilityByTrader.set(row.traderId, row.available);
+    }
+
+    for (const deduction of traderDeductions) {
+      const current = remainingAvailabilityByTrader.get(deduction.traderId) ?? 0;
+      remainingAvailabilityByTrader.set(deduction.traderId, Math.max(0, current - deduction.quantity));
+    }
+
+    const totalPercent = positiveShares.reduce((sum, share) => sum + share.percent, 0);
+    const canUseExactShareGross = Math.abs(totalPercent - 100) <= 1e-9;
+
+    if (canUseExactShareGross) {
+      const grossFromTraders = this.calculateMinimalGrossByShares(
+        deficitAfterModulo,
+        positiveShares.map((share) => share.percentText),
+      );
+
+      const proportionalAssignments = positiveShares
+        .map((share) => ({
+          traderId: share.traderId,
+          quantity: this.calculateExactShareQuantity(grossFromTraders, share.percentText),
+        }))
+        .filter((allocation) => allocation.quantity > 0);
+
+      const hasEnoughForAll = proportionalAssignments.every((allocation) => {
+        const available = remainingAvailabilityByTrader.get(allocation.traderId) ?? 0;
+        return available >= allocation.quantity;
+      });
+
+      if (hasEnoughForAll) {
+        return {
+          traderDeductions,
+          moduloPackedDeduction,
+          traderToModuloAssignments: proportionalAssignments,
+        };
+      }
+    }
+
+    const fallbackOrder = [...positiveShares].sort((left, right) => {
+      if (right.percent !== left.percent) {
+        return right.percent - left.percent;
+      }
+      return left.traderId - right.traderId;
+    });
+
+    const roundRobinAssignments = new Map<number, number>();
+    let remainingDeficit = deficitAfterModulo;
+
+    while (remainingDeficit > 0) {
+      let assignedInRound = false;
+
+      for (const share of fallbackOrder) {
+        if (remainingDeficit <= 0) {
+          break;
+        }
+
+        const alreadyAssigned = roundRobinAssignments.get(share.traderId) ?? 0;
+        const available = remainingAvailabilityByTrader.get(share.traderId) ?? 0;
+        if (available - alreadyAssigned <= 0) {
+          continue;
+        }
+
+        roundRobinAssignments.set(share.traderId, alreadyAssigned + 1);
+        remainingDeficit -= 1;
+        assignedInRound = true;
+      }
+
+      if (!assignedInRound) {
+        break;
+      }
+    }
+
+    if (remainingDeficit > 0) {
+      throw new BadRequestException(
+        `Packing UNASSIGNED item: insufficient unshipped trader stock to cover modulo remainder. Required=${deficitAfterModulo}, available=${deficitAfterModulo - remainingDeficit}`,
+      );
+    }
+
+    const traderToModuloAssignments = Array.from(roundRobinAssignments.entries())
+      .map(([traderId, quantity]) => ({ traderId, quantity }))
+      .filter((allocation) => allocation.quantity > 0)
+      .sort((left, right) => left.traderId - right.traderId);
+
+    return {
+      traderDeductions,
+      moduloPackedDeduction,
+      traderToModuloAssignments,
+    };
   }
 
   private async ensureEnoughAvailableStock(
@@ -372,7 +590,7 @@ export class ItemService {
       }
 
       if (params.boxOwnership === BoxOwnership.UNASSIGNED) {
-        const { traderDeductions, moduloDeduction } = await this.buildUnassignedTraderDeductions(tx, {
+        const { traderDeductions, moduloPackedDeduction, traderToModuloAssignments } = await this.buildUnassignedTraderDeductions(tx, {
           seasonId: params.seasonId,
           traderCategoryId: params.traderCategoryId,
           grade: params.grade,
@@ -380,8 +598,14 @@ export class ItemService {
           quantity: params.quantity,
         });
 
-        // Check each trader has enough individual stock
+        const assignmentByTrader = new Map<number, number>();
+        for (const assignment of traderToModuloAssignments) {
+          assignmentByTrader.set(assignment.traderId, (assignmentByTrader.get(assignment.traderId) ?? 0) + assignment.quantity);
+        }
+
+        // Check each trader has enough stock for base packed deduction and any trader->modulo assignment.
         for (const deduction of traderDeductions) {
+          const assignment = assignmentByTrader.get(deduction.traderId) ?? 0;
           await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
             seasonId: params.seasonId,
             traderId: deduction.traderId,
@@ -389,13 +613,30 @@ export class ItemService {
             grade: params.grade,
             pitamStatus: params.pitamStatus,
             isModulo: false,
-            requiredQuantity: deduction.quantity,
+            requiredQuantity: deduction.quantity + assignment,
             contextLabel: `Packing UNASSIGNED item (trader share portion)`,
           });
         }
 
-        // Check modulo has enough stock for the remainder
-        if (moduloDeduction > 0) {
+        for (const assignment of traderToModuloAssignments) {
+          if (traderDeductions.some((deduction) => deduction.traderId === assignment.traderId)) {
+            continue;
+          }
+
+          await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
+            seasonId: params.seasonId,
+            traderId: assignment.traderId,
+            traderCategoryId: params.traderCategoryId,
+            grade: params.grade,
+            pitamStatus: params.pitamStatus,
+            isModulo: false,
+            requiredQuantity: assignment.quantity,
+            contextLabel: `Packing UNASSIGNED item (trader round-robin funding)`,
+          });
+        }
+
+        if (moduloPackedDeduction > 0) {
+          const moduloCredit = traderToModuloAssignments.reduce((sum, assignment) => sum + assignment.quantity, 0);
           await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
             seasonId: params.seasonId,
             traderId: null,
@@ -403,7 +644,8 @@ export class ItemService {
             grade: params.grade,
             pitamStatus: params.pitamStatus,
             isModulo: true,
-            requiredQuantity: moduloDeduction,
+            requiredQuantity: moduloPackedDeduction,
+            creditQuantity: moduloCredit,
             contextLabel: 'Packing UNASSIGNED item (modulo remainder)',
           });
         }
@@ -416,17 +658,21 @@ export class ItemService {
   }
 
   private async deletePackedMovementsByItemId(tx: Prisma.TransactionClient, itemId: number) {
+    // Only delete movements with the unique shipment item marker in notes
+    const noteMarker = `shipment item #${itemId}`;
     await Promise.all([
       tx.traderStock.deleteMany({
         where: {
           MovementReferenceId: itemId,
-          type: MovementType.PACKED_SHIPPED,
+          type: { in: [MovementType.PACKED_SHIPPED, MovementType.ASSIGNED] },
+          notes: { contains: noteMarker },
         },
       }),
       tx.customerAllocation.deleteMany({
         where: {
           MovementReferenceId: itemId,
           type: MovementType.PACKED_SHIPPED,
+          notes: { contains: noteMarker },
         },
       }),
     ]);
@@ -474,7 +720,7 @@ export class ItemService {
           MovementReferenceId: params.itemId,
           shipmentId: params.shipmentId,
           boxId: params.boxId,
-          notes: `Packed from shipment item #${params.itemId}`,
+          notes: `Packed from shipment item #${params.itemId} [packing-movement]`,
           updatedById: params.updatedById,
         },
       });
@@ -501,7 +747,7 @@ export class ItemService {
           MovementReferenceId: params.itemId,
           shipmentId: params.shipmentId,
           boxId: params.boxId,
-          notes: `Packed from shipment item #${params.itemId}`,
+          notes: `Packed from shipment item #${params.itemId} [packing-movement]`,
           updatedById: params.updatedById,
         },
       });
@@ -528,7 +774,7 @@ export class ItemService {
             MovementReferenceId: params.itemId,
             shipmentId: params.shipmentId,
             boxId: params.boxId,
-            notes: `Packed from modulo for shipment item #${params.itemId}`,
+            notes: `Packed from modulo for shipment item #${params.itemId} [packing-movement]`,
             updatedById: params.updatedById,
           },
         });
@@ -536,7 +782,7 @@ export class ItemService {
       }
 
       if (params.boxOwnership === BoxOwnership.UNASSIGNED) {
-        const { traderDeductions, moduloDeduction } = await this.buildUnassignedTraderDeductions(tx, {
+        const { traderDeductions } = await this.buildUnassignedTraderDeductions(tx, {
           seasonId: params.seasonId,
           traderCategoryId: params.traderCategoryId,
           grade: params.grade,
@@ -560,34 +806,11 @@ export class ItemService {
               MovementReferenceId: params.itemId,
               shipmentId: params.shipmentId,
               boxId: params.boxId,
-              notes: `Packed by share allocation for shipment item #${params.itemId}`,
+              notes: `Packed by share allocation for shipment item #${params.itemId} [packing-movement]`,
               updatedById: params.updatedById,
             },
           });
         }
-
-        // Deduct remainder from modulo pool
-        if (moduloDeduction > 0) {
-          await tx.traderStock.create({
-            data: {
-              seasonId: params.seasonId,
-              date: new Date(),
-              traderId: null,
-              traderCategoryId: params.traderCategoryId,
-              grade: params.grade,
-              pitamStatus: params.pitamStatus,
-              quantity: -Math.abs(moduloDeduction),
-              isModulo: true,
-              type: MovementType.PACKED_SHIPPED,
-              MovementReferenceId: params.itemId,
-              shipmentId: params.shipmentId,
-              boxId: params.boxId,
-              notes: `Packed from modulo remainder for shipment item #${params.itemId}`,
-              updatedById: params.updatedById,
-            },
-          });
-        }
-
         return;
       }
     }
