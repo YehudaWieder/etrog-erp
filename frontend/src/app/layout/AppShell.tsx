@@ -43,27 +43,51 @@ export function AppShell({
 
   return (
     <div className="app-shell" data-direction={resolvedDirection}>
-      <Sidebar
-        brandName={brandName}
-        sections={sidebarSections}
-        activeItemId={activeSidebarItemId}
-        onNavigate={onSidebarClick}
-        footerSlot={sidebarFooterSlot}
-      />
-
-      <div className="app-shell__main">
-        <TopBar
-          links={topNav}
-          activeId={activeTopNavId}
-          onNavigate={onTopNavClick}
-          rightSlot={topBarRightSlot}
-        />
-
-        <main className="app-shell__content">
-          {pageTitle ? <h1 className="app-shell__page-title">{pageTitle}</h1> : null}
-          {children}
-        </main>
-      </div>
+      {resolvedDirection === 'rtl' ? (
+        <>
+          <Sidebar
+            brandName={brandName}
+            sections={sidebarSections}
+            activeItemId={activeSidebarItemId}
+            onNavigate={onSidebarClick}
+            footerSlot={sidebarFooterSlot}
+          />
+          <div className="app-shell__main">
+            <TopBar
+              links={topNav}
+              activeId={activeTopNavId}
+              onNavigate={onTopNavClick}
+              rightSlot={topBarRightSlot}
+            />
+            <main className="app-shell__content">
+              {pageTitle ? <h1 className="app-shell__page-title">{pageTitle}</h1> : null}
+              {children}
+            </main>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="app-shell__main">
+            <TopBar
+              links={topNav}
+              activeId={activeTopNavId}
+              onNavigate={onTopNavClick}
+              rightSlot={topBarRightSlot}
+            />
+            <main className="app-shell__content">
+              {pageTitle ? <h1 className="app-shell__page-title">{pageTitle}</h1> : null}
+              {children}
+            </main>
+          </div>
+          <Sidebar
+            brandName={brandName}
+            sections={sidebarSections}
+            activeItemId={activeSidebarItemId}
+            onNavigate={onSidebarClick}
+            footerSlot={sidebarFooterSlot}
+          />
+        </>
+      )}
     </div>
   );
 }

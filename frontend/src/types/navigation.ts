@@ -8,5 +8,6 @@ export type NavItem = {
 export type SidebarSection = {
   id: string;
   title: string;
+  href?: string;
   items: NavItem[];
 };

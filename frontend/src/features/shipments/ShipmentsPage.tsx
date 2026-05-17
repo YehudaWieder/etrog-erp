@@ -3,45 +3,13 @@ import { FaBell, FaCalendarDays, FaCircleUser } from 'react-icons/fa6';
 import { FaPlus } from 'react-icons/fa6';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from '../../app/layout/AppShell';
-import { SHIPMENTS_SIDEBAR, SHIPMENTS_TOP_NAV } from './shipments-navigation';
+import { SettingsIcon } from '../../components/ui/SettingsIcon';
+import { SHIPMENTS_I18N } from './i18n';
 import type { NavItem } from '../../types/navigation';
 
 const DEFAULT_SIDEBAR_ITEM_ID = 'packaging';
 
-const sidebarTextById: Record<string, { title: string; description: string }> = {
-  packaging: {
-    title: 'אין משלוחים באריזה להצגה',
-    description: 'לחץ על "משלוח חדש" כדי להתחיל להוסיף משלוחים.',
-  },
-  completed: {
-    title: 'אין משלוחים שהושלמו להצגה',
-    description: 'כשתסיים אריזה ומשלוח, הרשומות יופיעו כאן.',
-  },
-  'not-sent-boxes': {
-    title: 'אין קרטונים שלא נשלחו',
-    description: 'ניתן לפתוח קרטון חדש ולהתחיל שיבוץ פריטים.',
-  },
-  'sent-boxes': {
-    title: 'אין קרטונים שנשלחו',
-    description: 'כאן יוצגו קרטונים שכבר יצאו למשלוח.',
-  },
-  'closed-boxes': {
-    title: 'אין קרטונים סגורים',
-    description: 'סגור קרטונים פעילים כדי לראות אותם כאן.',
-  },
-  'open-boxes': {
-    title: 'אין קרטונים פתוחים',
-    description: 'פתח קרטון חדש כדי להתחיל לארוז.',
-  },
-  'sent-items': {
-    title: 'אין פריטים שנשלחו',
-    description: 'כאן יופיעו כל הפריטים שנשלחו ללקוחות.',
-  },
-  'pending-items': {
-    title: 'אין פריטים שממתינים למשלוח',
-    description: 'כשיוזנו פריטים חדשים הם יופיעו כאן.',
-  },
-};
+// Removed sidebarTextById. All text now comes from i18n object.
 
 export function ShipmentsPage() {
   const navigate = useNavigate();
@@ -50,6 +18,16 @@ export function ShipmentsPage() {
   const [alertsCount, setAlertsCount] = useState(3);
   const [lastActionText, setLastActionText] = useState<string>('');
 
+  // Detect language from localStorage or default to 'he'
+  const lang = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem('app.language');
+      if (stored && (stored === 'en' || stored === 'he')) return stored;
+    }
+    return 'he';
+  }, []);
+  const t = SHIPMENTS_I18N[lang];
+
   const activeSidebarId = useMemo(() => {
     const pathParts = location.pathname.split('/').filter(Boolean);
     const subRoute = pathParts[1];
@@ -57,13 +35,9 @@ export function ShipmentsPage() {
   }, [location.pathname]);
 
   const content = useMemo(() => {
-    return (
-      sidebarTextById[activeSidebarId] || {
-        title: 'אין נתונים להצגה',
-        description: 'בחר פריט מהתפריט הצידי כדי לראות מידע רלוונטי.',
-      }
-    );
-  }, [activeSidebarId]);
+    const state = t.emptyState as Record<string, { title: string; description: string }>;
+    return state[activeSidebarId] || state.default;
+  }, [activeSidebarId, t]);
 
   const handleTopNavClick = (item: NavItem) => {
     setActiveTopId(item.id);
@@ -74,70 +48,81 @@ export function ShipmentsPage() {
   };
 
   const handleCreateAction = (label: string) => {
-    setLastActionText(`נבחרה פעולה: ${label}`);
+    setLastActionText(lang === 'he' ? `נבחרה פעולה: ${label}` : `Action selected: ${label}`);
   };
 
   return (
     <AppShell
-      direction="rtl"
+      direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
-      pageTitle="כל המשלוחים"
-      topNav={SHIPMENTS_TOP_NAV}
+      pageTitle={t.pageTitle}
+      topNav={t.topNav}
       activeTopNavId={activeTopId}
-      sidebarSections={SHIPMENTS_SIDEBAR}
+      sidebarSections={t.sidebar}
       activeSidebarItemId={activeSidebarId}
       onTopNavClick={handleTopNavClick}
       onSidebarClick={handleSidebarClick}
       topBarRightSlot={
         <div className="nav-icons">
-          <button className="nav-icon-btn" type="button" aria-label="לוח שנה">
+          <button className="nav-icon-btn" type="button" aria-label={lang === 'he' ? 'לוח שנה' : 'Calendar'}>
             <FaCalendarDays />
           </button>
           <button
             className="nav-icon-btn"
             type="button"
-            aria-label="התראות"
+            aria-label={lang === 'he' ? 'התראות' : 'Alerts'}
             onClick={() => setAlertsCount((value) => (value > 0 ? value - 1 : 0))}
           >
             <FaBell />
             <span className="badge">{alertsCount}</span>
           </button>
-          <button className="nav-icon-btn" type="button" aria-label="פרופיל משתמש">
+          <button className="nav-icon-btn" type="button" aria-label={lang === 'he' ? 'פרופיל משתמש' : 'User profile'}>
             <FaCircleUser />
           </button>
         </div>
       }
       sidebarFooterSlot={
         <button type="button" className="app-shell__sidebar-item">
-          הגדרות
+          {lang === 'he' ? (
+            <>
+              {t.settings}
+              <SettingsIcon style={{ marginInlineStart: 8 }} />
+            </>
+          ) : (
+            <>
+              <SettingsIcon style={{ marginInlineEnd: 8 }} />
+              {t.settings}
+            </>
+          )}
         </button>
       }
+      sidebarPosition={lang === 'he' ? 'right' : 'left'}
     >
       <div className="app-shell__content-header">
         <div className="action-buttons">
           <button
             className="btn btn-primary"
             type="button"
-            onClick={() => handleCreateAction('פריט חדש')}
+            onClick={() => handleCreateAction(t.addItem)}
           >
             <FaPlus />
-            <span>פריט חדש</span>
+            <span>{t.addItem}</span>
           </button>
           <button
             className="btn btn-primary"
             type="button"
-            onClick={() => handleCreateAction('קרטון חדש')}
+            onClick={() => handleCreateAction(t.addBox)}
           >
             <FaPlus />
-            <span>קרטון חדש</span>
+            <span>{t.addBox}</span>
           </button>
           <button
             className="btn btn-primary"
             type="button"
-            onClick={() => handleCreateAction('משלוח חדש')}
+            onClick={() => handleCreateAction(t.addShipment)}
           >
             <FaPlus />
-            <span>משלוח חדש</span>
+            <span>{t.addShipment}</span>
           </button>
         </div>
       </div>

@@ -92,6 +92,21 @@ select {
   color: var(--color-text-accent);
 }
 
+.app-shell__sidebar-title--button {
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: start;
+  cursor: pointer;
+  transition: background var(--easing-standard), color var(--easing-standard);
+}
+
+.app-shell__sidebar-title--button:hover,
+.app-shell__sidebar-title--button:focus {
+  background: var(--color-bg-hover);
+  color: var(--color-primary);
+}
+
 .app-shell__sidebar-item {
   width: 100%;
   border: 0;

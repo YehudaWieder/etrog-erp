@@ -22,7 +22,13 @@ export function Sidebar({
       <div className="app-shell__sidebar-scroll">
         {sections.map((section) => (
           <section key={section.id} className="app-shell__sidebar-section">
-            <strong className="app-shell__sidebar-title">{section.title}</strong>
+            <button
+              type="button"
+              className="app-shell__sidebar-title app-shell__sidebar-title--button"
+              onClick={() => section.href && onNavigate?.({ id: section.id, label: section.title, href: section.href })}
+            >
+              {section.title}
+            </button>
             <div>
               {section.items.map((item) => {
                 const isActive = item.id === activeItemId;
