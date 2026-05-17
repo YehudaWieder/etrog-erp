@@ -1,0 +1,1 @@
+{"root":["./src/main.tsx","./src/app/layout/appshell.tsx","./src/app/routes/shipmentsroute.tsx","./src/components/navigation/sidebar.tsx","./src/components/navigation/topbar.tsx","./src/features/shipments/shipmentspage.tsx","./src/features/shipments/shipments-navigation.ts","./src/types/navigation.ts","./src/utils/locale.ts"],"version":"5.9.3"}
