@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HomeIcon } from '../../components/ui/HomeIcon';
+import { ProfileMenu } from '../../components/navigation/ProfileMenu';
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -11,6 +12,9 @@ export function RegisterPage() {
     password: '',
   });
   const [error, setError] = useState('');
+
+  const handleLogin = () => navigate('/login');
+  const handleRegister = () => navigate('/shipments');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -38,6 +42,16 @@ export function RegisterPage() {
         <div className="auth-topbar-brand">
           <HomeIcon style={{ fontSize: 22, marginInlineEnd: 6 }} />
           <span>Wieders etrogs</span>
+        </div>
+        <div className="auth-topbar-right">
+          <ProfileMenu
+            isAuthenticated={false}
+            onLogin={handleLogin}
+            onRegister={handleRegister}
+            onLogout={() => {}}
+            onProfile={() => {}}
+            userName=""
+          />
         </div>
       </header>
 
