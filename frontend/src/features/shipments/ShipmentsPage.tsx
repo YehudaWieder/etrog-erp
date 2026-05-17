@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { FaBell, FaCalendarDays, FaCircleUser } from 'react-icons/fa6';
+import { FaBell, FaCalendarDays } from 'react-icons/fa6';
 import { FaPlus } from 'react-icons/fa6';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from '../../app/layout/AppShell';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import { SHIPMENTS_I18N } from './i18n';
+import { ProfileMenu } from '../../components/navigation/ProfileMenu';
 import type { NavItem } from '../../types/navigation';
 
 const DEFAULT_SIDEBAR_ITEM_ID = 'packaging';
@@ -17,6 +18,15 @@ export function ShipmentsPage() {
   const [activeTopId, setActiveTopId] = useState('shipments');
   const [alertsCount, setAlertsCount] = useState(3);
   const [lastActionText, setLastActionText] = useState<string>('');
+
+  // MOCK: Replace with real auth state from context/store
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userName] = useState('הפרופיל שלי');
+
+  const handleLogin = () => setIsAuthenticated(true);
+  const handleRegister = () => alert('הרשמה');
+  const handleLogout = () => setIsAuthenticated(false);
+  const handleProfile = () => alert('פרופיל');
 
   // Detect language from localStorage or default to 'he'
   const lang = useMemo(() => {
@@ -76,9 +86,14 @@ export function ShipmentsPage() {
             <FaBell />
             <span className="badge">{alertsCount}</span>
           </button>
-          <button className="nav-icon-btn" type="button" aria-label={lang === 'he' ? 'פרופיל משתמש' : 'User profile'}>
-            <FaCircleUser />
-          </button>
+          <ProfileMenu
+            isAuthenticated={isAuthenticated}
+            onLogin={handleLogin}
+            onRegister={handleRegister}
+            onLogout={handleLogout}
+            onProfile={handleProfile}
+            userName={userName}
+          />
         </div>
       }
       sidebarFooterSlot={
