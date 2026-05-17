@@ -3,7 +3,6 @@ import type { NavItem, SidebarSection } from '../../types/navigation';
 import { Sidebar } from '../../components/navigation/Sidebar';
 import { TopBar } from '../../components/navigation/TopBar';
 import { HomeIcon } from '../../components/ui/HomeIcon';
-import '../../styles/globals.css';
 import { directionFromLanguage, getPreferredLanguage } from '../../utils/locale';
 
 type AppShellProps = {
