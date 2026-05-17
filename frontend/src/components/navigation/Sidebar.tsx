@@ -1,5 +1,6 @@
 import type { NavItem, SidebarSection } from '../../types/navigation';
 import * as FAIcons from 'react-icons/fa6';
+import { HomeIcon } from '../ui/HomeIcon';
 
 const iconMap: Record<string, keyof typeof FAIcons> = {
   'fa-truck': 'FaTruck',
@@ -32,8 +33,10 @@ export function Sidebar({
 }: SidebarProps) {
   return (
     <aside className="app-shell__sidebar" aria-label="Page sidebar">
-      <div className="app-shell__brand">{brandName}</div>
-
+      <div className="app-shell__brand" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <HomeIcon style={{ fontSize: 22, marginInlineEnd: 6 }} />
+        {brandName}
+      </div>
       <div className="app-shell__sidebar-scroll">
         {sections.map((section) => (
           <section key={section.id} className="app-shell__sidebar-section">
