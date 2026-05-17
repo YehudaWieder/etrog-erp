@@ -1,6 +1,8 @@
 import type { NavItem, SidebarSection } from '../../types/navigation';
+
 import { Sidebar } from '../../components/navigation/Sidebar';
 import { TopBar } from '../../components/navigation/TopBar';
+import { HomeIcon } from '../../components/ui/HomeIcon';
 import '../../styles/globals.css';
 import { directionFromLanguage, getPreferredLanguage } from '../../utils/locale';
 
@@ -73,6 +75,12 @@ export function AppShell({
               activeId={activeTopNavId}
               onNavigate={onTopNavClick}
               rightSlot={topBarRightSlot}
+              leftSlot={
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <HomeIcon style={{ fontSize: 22, marginInlineEnd: 6 }} />
+                  {brandName}
+                </span>
+              }
             />
             <main className="app-shell__content">
               {pageTitle ? <h1 className="app-shell__page-title">{pageTitle}</h1> : null}

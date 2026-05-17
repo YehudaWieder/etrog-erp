@@ -5,6 +5,7 @@ type TopBarProps = {
   activeId?: string;
   onNavigate?: (item: NavItem) => void;
   rightSlot?: React.ReactNode;
+  leftSlot?: React.ReactNode;
 };
 
 export function TopBar({
@@ -12,9 +13,11 @@ export function TopBar({
   activeId,
   onNavigate,
   rightSlot,
+  leftSlot,
 }: TopBarProps) {
   return (
     <header className="app-shell__topbar">
+      {leftSlot && <div className="app-shell__topbar-left">{leftSlot}</div>}
       <nav className="app-shell__topbar-links" aria-label="Primary navigation">
         {links.map((item) => {
           const isActive = item.id === activeId;
