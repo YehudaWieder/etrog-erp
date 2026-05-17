@@ -187,16 +187,20 @@ select {
 }
 
 .app-shell__topbar-link.is-active {
-  color: var(--color-text-accent);
+  color: var(--color-primary);
+  background: rgba(59, 108, 37, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
 }
 
 .app-shell__topbar-link.is-active::after {
   content: '';
   position: absolute;
-  inset-inline: 0;
-  bottom: 0;
+  inset-inline: 8px;
+  bottom: 6px;
+  width: 4px;
   height: 4px;
-  border-radius: 2px 2px 0 0;
+  border-radius: 1px;
   background: var(--color-primary);
 }
 
@@ -223,8 +227,8 @@ select {
 }
 
 .nav-icon-btn:hover {
-  color: var(--color-text-accent);
-  background: var(--color-bg-hover);
+  color: var(--color-primary);
+  background: rgba(59, 108, 37, 0.08);
 }
 
 .nav-icon-btn .badge {
@@ -242,6 +246,22 @@ select {
   padding: 0 var(--space-1);
   color: #fff;
   background: var(--color-primary);
+}
+
+.app-shell__sidebar-settings {
+  background: linear-gradient(135deg, rgba(59, 108, 37, 0.1), rgba(59, 108, 37, 0.05));
+  border: 1.5px solid rgba(59, 108, 37, 0.2);
+  color: var(--color-primary);
+  font-weight: 600;
+  margin: var(--space-3) var(--space-3) 0;
+  border-radius: var(--radius-sm);
+}
+
+.app-shell__sidebar-settings:hover {
+  background: linear-gradient(135deg, rgba(59, 108, 37, 0.15), rgba(59, 108, 37, 0.1));
+  border-color: rgba(59, 108, 37, 0.4);
+  color: var(--color-primary-strong);
+  box-shadow: 0 2px 8px rgba(59, 108, 37, 0.15);
 }
 
 .app-shell__content {

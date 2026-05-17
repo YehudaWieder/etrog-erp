@@ -82,7 +82,7 @@ export function ShipmentsPage() {
         </div>
       }
       sidebarFooterSlot={
-        <button type="button" className="app-shell__sidebar-item">
+        <button type="button" className="app-shell__sidebar-item app-shell__sidebar-settings">
           {lang === 'he' ? (
             <>
               {t.settings}
