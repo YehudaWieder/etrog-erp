@@ -1,7 +1,11 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { HomeIcon } from '../../components/ui/HomeIcon';
+import { FaCalendarDays, FaBell } from 'react-icons/fa6';
+import { TopBar } from '../../components/navigation/TopBar';
 import { ProfileMenu } from '../../components/navigation/ProfileMenu';
+import { HomeIcon } from '../../components/ui/HomeIcon';
+import { SHIPMENTS_I18N } from '../shipments/i18n';
+import type { NavItem } from '../../types/navigation';
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -12,9 +16,22 @@ export function RegisterPage() {
     password: '',
   });
   const [error, setError] = useState('');
+  const [activeTopId, setActiveTopId] = useState('shipments');
+
+  const lang = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem('app.language');
+      if (stored && (stored === 'en' || stored === 'he')) return stored;
+    }
+    return 'he';
+  }, []);
+  const t = SHIPMENTS_I18N[lang];
 
   const handleLogin = () => navigate('/login');
   const handleRegister = () => navigate('/shipments');
+  const handleTopNavClick = (item: NavItem) => {
+    setActiveTopId(item.id);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -37,23 +54,36 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="auth-page">
-      <header className="auth-topbar">
-        <div className="auth-topbar-brand">
-          <HomeIcon style={{ fontSize: 22, marginInlineEnd: 6 }} />
-          <span>Wieders etrogs</span>
-        </div>
-        <div className="auth-topbar-right">
-          <ProfileMenu
-            isAuthenticated={false}
-            onLogin={handleLogin}
-            onRegister={handleRegister}
-            onLogout={() => {}}
-            onProfile={() => {}}
-            userName=""
-          />
-        </div>
-      </header>
+    <div className="auth-page" dir={lang === 'he' ? 'rtl' : 'ltr'}>
+      <TopBar
+        links={t.topNav}
+        activeId={activeTopId}
+        onNavigate={handleTopNavClick}
+        leftSlot={
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <HomeIcon style={{ fontSize: 22, marginInlineEnd: 6 }} />
+            Wieders etrogs
+          </span>
+        }
+        rightSlot={
+          <div className="nav-icons">
+            <button className="nav-icon-btn" type="button" aria-label={lang === 'he' ? 'לוח שנה' : 'Calendar'}>
+              <FaCalendarDays />
+            </button>
+            <button className="nav-icon-btn" type="button" aria-label={lang === 'he' ? 'התראות' : 'Alerts'}>
+              <FaBell />
+            </button>
+            <ProfileMenu
+              isAuthenticated={false}
+              onLogin={handleLogin}
+              onRegister={handleRegister}
+              onLogout={() => {}}
+              onProfile={() => {}}
+              userName=""
+            />
+          </div>
+        }
+      />
 
       <div className="login-container">
         <div className="login-card">
