@@ -96,7 +96,6 @@ export function ShipmentsPage() {
           )}
         </button>
       }
-      sidebarPosition={lang === 'he' ? 'right' : 'left'}
     >
       <div className="app-shell__content-header">
         <div className="action-buttons">

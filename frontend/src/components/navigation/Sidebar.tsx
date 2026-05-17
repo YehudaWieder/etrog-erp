@@ -1,4 +1,19 @@
 import type { NavItem, SidebarSection } from '../../types/navigation';
+import * as FAIcons from 'react-icons/fa6';
+
+const iconMap: Record<string, keyof typeof FAIcons> = {
+  'fa-truck': 'FaTruck',
+  'fa-box-open': 'FaBoxOpen',
+  'fa-circle-check': 'FaCircleCheck',
+  'fa-boxes-stacked': 'FaBoxesStacked',
+  'fa-file-circle-xmark': 'FaFileCircleXmark',
+  'fa-truck-ramp-box': 'FaTruckRampBox',
+  'fa-box': 'FaBox',
+  'fa-door-open': 'FaDoorOpen',
+  'fa-lemon': 'FaLemon',
+  'fa-paper-plane': 'FaPaperPlane',
+  'fa-clock': 'FaClock',
+};
 
 type SidebarProps = {
   brandName?: string;
@@ -27,7 +42,17 @@ export function Sidebar({
               className="app-shell__sidebar-title app-shell__sidebar-title--button"
               onClick={() => section.href && onNavigate?.({ id: section.id, label: section.title, href: section.href })}
             >
-              {section.title}
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {section.icon && (
+                  <>
+                    {(() => {
+                      const Icon = FAIcons[iconMap[section.icon]];
+                      return Icon ? <Icon style={{ color: '#3B6C25' }} /> : null;
+                    })()}
+                  </>
+                )}
+                {section.title}
+              </span>
             </button>
             <div>
               {section.items.map((item) => {
@@ -40,7 +65,17 @@ export function Sidebar({
                     onClick={() => onNavigate?.(item)}
                     aria-current={isActive ? 'page' : undefined}
                   >
-                    <span>{item.label}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {item.icon && (
+                        <>
+                          {(() => {
+                            const Icon = FAIcons[iconMap[item.icon]];
+                            return Icon ? <Icon style={{ color: '#3B6C25' }} /> : null;
+                          })()}
+                        </>
+                      )}
+                      {item.label}
+                    </span>
                     {typeof item.badge === 'number' ? (
                       <span className="app-shell__badge">{item.badge}</span>
                     ) : null}

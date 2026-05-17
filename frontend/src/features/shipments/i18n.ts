@@ -1,41 +1,44 @@
 export const SHIPMENTS_I18N = {
   he: {
     topNav: [
-      { id: 'harvest', label: 'קטיף ומיון' },
-      { id: 'shipments', label: 'משלוחים' },
-      { id: 'partners', label: 'סוחרים' },
-      { id: 'customers', label: 'לקוחות' },
-      { id: 'workers', label: 'עובדים' },
-      { id: 'payments', label: 'הוצאות ותשלומים' },
+      { id: 'harvest', label: 'קטיף ומיון', icon: 'fa-leaf' },
+      { id: 'shipments', label: 'משלוחים', icon: 'fa-truck' },
+      { id: 'partners', label: 'סוחרים', icon: 'fa-handshake' },
+      { id: 'customers', label: 'לקוחות', icon: 'fa-users' },
+      { id: 'workers', label: 'עובדים', icon: 'fa-person' },
+      { id: 'payments', label: 'הוצאות ותשלומים', icon: 'fa-money-bill' },
     ],
     sidebar: [
       {
         id: 'all-shipments',
         title: 'כל המשלוחים',
         href: '/shipments/all-shipments',
+        icon: 'fa-truck',
         items: [
-          { id: 'packaging', label: 'משלוחים באריזה', badge: 2, href: '/shipments/packaging' },
-          { id: 'completed', label: 'משלוחים שהושלמו', href: '/shipments/completed' },
+          { id: 'packaging', label: 'משלוחים באריזה', badge: 2, href: '/shipments/packaging', icon: 'fa-box-open' },
+          { id: 'completed', label: 'משלוחים שהושלמו', href: '/shipments/completed', icon: 'fa-circle-check' },
         ],
       },
       {
         id: 'all-boxes',
         title: 'כל הקרטונים',
         href: '/shipments/all-boxes',
+        icon: 'fa-boxes-stacked',
         items: [
-          { id: 'not-sent-boxes', label: 'קרטונים שלא נשלחו', href: '/shipments/not-sent-boxes' },
-          { id: 'sent-boxes', label: 'קרטונים שנשלחו', href: '/shipments/sent-boxes' },
-          { id: 'closed-boxes', label: 'קרטונים סגורים', href: '/shipments/closed-boxes' },
-          { id: 'open-boxes', label: 'קרטונים פתוחים', href: '/shipments/open-boxes' },
+          { id: 'not-sent-boxes', label: 'קרטונים שלא נשלחו', href: '/shipments/not-sent-boxes', icon: 'fa-file-circle-xmark' },
+          { id: 'sent-boxes', label: 'קרטונים שנשלחו', href: '/shipments/sent-boxes', icon: 'fa-truck-ramp-box' },
+          { id: 'closed-boxes', label: 'קרטונים סגורים', href: '/shipments/closed-boxes', icon: 'fa-box' },
+          { id: 'open-boxes', label: 'קרטונים פתוחים', href: '/shipments/open-boxes', icon: 'fa-door-open' },
         ],
       },
       {
         id: 'shipment-items',
         title: 'כל פריטי המשלוחים',
         href: '/shipments/shipment-items',
+        icon: 'fa-lemon',
         items: [
-          { id: 'sent-items', label: 'פריטים שנשלחו', href: '/shipments/sent-items' },
-          { id: 'pending-items', label: 'פריטים שלא נשלחו', href: '/shipments/pending-items' },
+          { id: 'sent-items', label: 'פריטים שנשלחו', href: '/shipments/sent-items', icon: 'fa-paper-plane' },
+          { id: 'pending-items', label: 'פריטים שלא נשלחו', href: '/shipments/pending-items', icon: 'fa-clock' },
         ],
       },
     ],
