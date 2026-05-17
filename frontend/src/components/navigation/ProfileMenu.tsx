@@ -49,6 +49,12 @@ export function ProfileMenu({
     navigate('/register');
   };
 
+  const handleLogout = () => {
+    onLogout();
+    setOpen(false);
+    navigate('/login');
+  };
+
   return (
     <div className="profile-menu" ref={ref}>
       <button
@@ -71,7 +77,7 @@ export function ProfileMenu({
                   </button>
                 </li>
                 <li>
-                  <button type="button" onClick={onLogout}>
+                  <button type="button" onClick={handleLogout}>
                     <FaArrowRightFromBracket className="profile-menu__icon" />
                     <span>התנתקות</span>
                   </button>
