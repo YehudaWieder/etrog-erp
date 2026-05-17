@@ -10,6 +10,7 @@
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "target": "ES2023",
+    "ignoreDeprecations": "6.0",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
@@ -23,5 +24,6 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
-  }
+  },
+  "exclude": ["frontend", "dist", "node_modules"]
 }
