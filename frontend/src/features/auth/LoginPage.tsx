@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { HomeIcon } from '../../components/ui/HomeIcon';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -23,51 +24,60 @@ export function LoginPage() {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <div className="login-header">
-          <h1 className="login-title">התחברות</h1>
-          <p className="login-subtitle">Wieders etrogs</p>
+    <div className="auth-page">
+      <header className="auth-topbar">
+        <div className="auth-topbar-brand">
+          <HomeIcon style={{ fontSize: 22, marginInlineEnd: 6 }} />
+          <span>Wieders etrogs</span>
         </div>
+      </header>
 
-        {error && <div className="login-error">{error}</div>}
-
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-group">
-            <label htmlFor="email" className="form-label">אימייל</label>
-            <input
-              id="email"
-              type="email"
-              className="form-input"
-              placeholder="הזן את הימייל שלך"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+      <div className="login-container">
+        <div className="login-card">
+          <div className="login-header">
+            <h1 className="login-title">התחברות</h1>
+            <p className="login-subtitle">Wieders etrogs</p>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password" className="form-label">סיסמא</label>
-            <input
-              id="password"
-              type="password"
-              className="form-input"
-              placeholder="הזן את הסיסמא שלך"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+          {error && <div className="login-error">{error}</div>}
+
+          <form onSubmit={handleSubmit} className="login-form">
+            <div className="form-group">
+              <label htmlFor="email" className="form-label">אימייל</label>
+              <input
+                id="email"
+                type="email"
+                className="form-input"
+                placeholder="הזן את הימייל שלך"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password" className="form-label">סיסמא</label>
+              <input
+                id="password"
+                type="password"
+                className="form-input"
+                placeholder="הזן את הסיסמא שלך"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <button type="submit" className="btn btn-login">
+              התחברות
+            </button>
+          </form>
+
+          <div className="login-footer">
+            <p className="login-footer-text">
+              אין לך חשבון? <a href="/register" className="login-link">הרשם כאן</a>
+            </p>
           </div>
-
-          <button type="submit" className="btn btn-primary login-btn">
-            התחברות
-          </button>
-        </form>
-
-        <div className="login-footer">
-          <p className="login-footer-text">
-            אין לך חשבון? <a href="#" className="login-link">הרשם כאן</a>
-          </p>
         </div>
       </div>
     </div>
