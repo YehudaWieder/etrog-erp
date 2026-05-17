@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaCircleUser, FaUser, FaArrowRightFromBracket, FaArrowRightToBracket, FaUserPlus } from 'react-icons/fa6';
 
 export type ProfileMenuProps = {
@@ -18,6 +19,7 @@ export function ProfileMenu({
   onProfile,
   userName,
 }: ProfileMenuProps) {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -34,6 +36,18 @@ export function ProfileMenu({
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open]);
+
+  const handleLogin = () => {
+    onLogin();
+    setOpen(false);
+    navigate('/login');
+  };
+
+  const handleRegister = () => {
+    onRegister();
+    setOpen(false);
+    navigate('/register');
+  };
 
   return (
     <div className="profile-menu" ref={ref}>
@@ -66,13 +80,13 @@ export function ProfileMenu({
             ) : (
               <>
                 <li>
-                  <button type="button" onClick={onLogin}>
+                  <button type="button" onClick={handleLogin}>
                     <FaArrowRightToBracket className="profile-menu__icon" />
                     <span>התחברות</span>
                   </button>
                 </li>
                 <li>
-                  <button type="button" onClick={onRegister}>
+                  <button type="button" onClick={handleRegister}>
                     <FaUserPlus className="profile-menu__icon" />
                     <span>הרשמה</span>
                   </button>
