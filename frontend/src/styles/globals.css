@@ -165,6 +165,16 @@ select {
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--space-7);
+ }
+
+.app-shell__topbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text-accent);
+  margin-inline-end: var(--space-7);
 }
 
 .app-shell__topbar-links {
@@ -187,17 +197,20 @@ select {
 }
 
 .app-shell__topbar-link.is-active {
-  color: var(--color-primary);
+  color: #3B6C25;
+  background: var(--color-primary-soft);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 2px 7px rgba(59, 108, 37, 0.08);
+  padding: 8px 16px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 .app-shell__topbar-link.is-active::after {
-  content: '';
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0;
-  height: 3px;
-  border-radius: 1.5px 1.5px 0 0;
-  background: var(--color-primary);
+  display: none;
 }
 
 .nav-icons {
@@ -297,7 +310,7 @@ select {
 
 .btn-primary {
   background: var(--color-primary);
-  color: #ffffff;
+  color: #3B6C25;
   box-shadow: 0 2px 7px rgba(0, 0, 0, 0.08);
 }
 
