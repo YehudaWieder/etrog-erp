@@ -297,13 +297,14 @@ select {
 }
 
 .btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   border: none;
   border-radius: var(--radius-sm);
   padding: 10px 14px;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
   font-weight: 600;
   transition: transform var(--easing-standard), box-shadow var(--easing-standard), background var(--easing-standard);
 }
@@ -326,6 +327,14 @@ select {
   background: transparent;
   color: var(--color-text-main);
   border: 1px solid var(--color-border);
+}
+
+.btn-icon {
+  font-size: 1.2rem;
+}
+
+.btn-text {
+  text-align: center;
 }
 
 .shipments-empty-state {
@@ -479,31 +488,34 @@ select {
 }
 
 .login-card {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
+  background: var(--color-primary-soft);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 24px var(--color-shadow);
+  padding: var(--space-6);
+  box-shadow: 0 4px 6px var(--color-shadow);
   width: 100%;
   max-width: 400px;
-  padding: var(--space-7);
 }
 
 .login-header {
-  margin-bottom: var(--space-7);
+  margin: -var(--space-7) -var(--space-7) var(--space-7) -var(--space-7);
+  padding: var(--space-7);
+  background: none;
+  box-shadow: none;
   text-align: center;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
 .login-title {
   margin: 0 0 var(--space-2);
   font-size: 2rem;
-  font-weight: 700;
-  color: var(--color-text-accent);
+  font-weight: bold;
+  color: var(--color-text-main);
 }
 
 .login-subtitle {
   margin: 0;
   font-size: 1rem;
-  color: var(--color-text-muted);
+  color: rgba(45, 90, 39, 0.75);
 }
 
 .login-error {
@@ -557,9 +569,10 @@ select {
 
 .btn-login {
   width: 100%;
-  padding: var(--space-3) var(--space-4);
-  font-size: 1rem;
-  font-weight: 600;
+  align-self: stretch;
+  padding: var(--space-3) var(--space-2);
+  font-size: 0.95rem;
+  gap: var(--space-1);
   background: var(--color-text-accent);
   color: #ffffff;
   box-shadow: 0 2px 7px rgba(45, 90, 39, 0.15);
@@ -568,6 +581,12 @@ select {
 .btn-login:hover {
   background: #1f4520;
   transform: translateY(-1px);
+}
+
+.btn-arrow {
+  color: #ffffff;
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .login-footer {
@@ -592,4 +611,9 @@ select {
 .login-link:hover {
   color: #1f4520;
   text-decoration: underline;
+}
+
+.rtl-placeholder::placeholder {
+  text-align: right;
+  direction: rtl;
 }
