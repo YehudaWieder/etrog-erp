@@ -6,6 +6,14 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Enable CORS – allow the Vite dev server and any configured frontend origin
+  const allowedOrigin = process.env.FRONTEND_ORIGIN ?? 'http://localhost:5173';
+  app.enableCors({
+    origin: [allowedOrigin],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    credentials: true,
+  });
+
   // Configure Swagger/OpenAPI documentation with metadata and security schemes
   const config = new DocumentBuilder()
     .setTitle('Etrog ERP API')
