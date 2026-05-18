@@ -5,6 +5,7 @@ import { AppTopBar } from '../../components/navigation/AppTopBar';
 import { SHIPMENTS_I18N } from '../shipments/i18n';
 import type { NavItem } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, login, logout } from '../../services/authService';
+import { ApiError } from '../../services/apiClient';
 import { AUTH_I18N } from './i18n';
 
 export function LoginPage() {
@@ -27,6 +28,14 @@ export function LoginPage() {
   }, []);
   const t = SHIPMENTS_I18N[lang];
   const a = AUTH_I18N[lang];
+  const authMessages = {
+    requiredFields: a.requiredFields,
+    loginFailed: a.loginFailed,
+    connecting: a.loginConnecting,
+    networkError: a.networkError,
+    notFound: lang === 'he' ? 'נתיב ההתחברות לא נמצא בשרת.' : 'The login endpoint was not found on the server.',
+    submitLabel: a.loginSubmit,
+  };
 
   const handleLogin = () => navigate('/shipments');
   const handleRegister = () => navigate('/register');
@@ -49,7 +58,7 @@ export function LoginPage() {
     }
 
     if (!formData.email || !formData.password) {
-      setError(a.requiredFields);
+      setError(authMessages.requiredFields);
       return;
     }
 
@@ -59,11 +68,13 @@ export function LoginPage() {
       await login({ email: formData.email, password: formData.password });
       navigate('/shipments');
     } catch (submitError) {
-      const msg = submitError instanceof Error ? submitError.message : '';
-      if (msg === 'Failed to fetch') {
-        setError(a.networkError);
+      if (submitError instanceof ApiError && submitError.status === 404) {
+        setError(authMessages.notFound);
+      } else if (submitError instanceof Error && submitError.message === 'Failed to fetch') {
+        setError(authMessages.networkError);
       } else {
-        setError(msg || a.loginFailed);
+        const msg = submitError instanceof Error ? submitError.message : '';
+        setError(msg || authMessages.loginFailed);
       }
     } finally {
       setIsSubmitting(false);
@@ -95,7 +106,7 @@ export function LoginPage() {
         error={error}
         fields={fields}
         values={formData}
-        submitLabel={isSubmitting ? a.loginConnecting : a.loginSubmit}
+        submitLabel={isSubmitting ? authMessages.connecting : authMessages.submitLabel}
         footerText={a.loginFooterText}
         footerLinkLabel={a.loginFooterLinkLabel}
         footerLinkTo="/register"

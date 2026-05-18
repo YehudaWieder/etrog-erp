@@ -1,6 +1,5 @@
-// In dev, Vite proxies /auth → http://localhost:3000, so use relative URLs.
-// In production set VITE_API_BASE_URL to the backend origin.
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '');
+// Default to the NestJS backend. Override with VITE_API_BASE_URL when needed.
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000').replace(/\/+$/, '');
 
 export const AUTH_TOKEN_STORAGE_KEY = 'auth.accessToken';
 export const AUTH_USER_STORAGE_KEY = 'auth.user';
@@ -12,6 +11,16 @@ export type StoredAuthUser = {
   role: string;
   isActive: boolean;
 };
+
+export class ApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
 
 export function getAuthToken(): string | null {
   if (typeof window === 'undefined') {
@@ -108,7 +117,7 @@ export async function apiClient<T>(path: string, init: RequestInit = {}): Promis
         : undefined;
     const serverMessage = Array.isArray(rawMessage) ? rawMessage.join(', ') : rawMessage;
 
-    throw new Error(serverMessage || `Request failed with status ${response.status}`);
+    throw new ApiError(serverMessage || `Request failed with status ${response.status}`, response.status);
   }
 
   return data as T;
