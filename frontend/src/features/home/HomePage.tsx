@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { AppShell } from '../../app/layout/AppShell';
 import { SHIPMENTS_I18N } from '../shipments/i18n';
 import type { NavItem } from '../../types/navigation';
+import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
 
 export function HomePage() {
   const navigate = useNavigate();
   const [activeTopId, setActiveTopId] = useState('shipments');
-  const [isAuthenticated] = useState(false);
-  const [userName] = useState('');
+  const currentUser = getCurrentUser();
 
   const lang = useMemo(() => {
     if (typeof window !== 'undefined') {
@@ -39,12 +39,15 @@ export function HomePage() {
       topBarOptions={{
         alertsCount: 0,
         onAlertsClick: () => {},
-        isAuthenticated,
+        isAuthenticated: isAuthenticated(),
         onLogin: () => navigate('/login'),
         onRegister: () => navigate('/register'),
-        onLogout: () => {},
+        onLogout: async () => {
+          await logout();
+          navigate('/login');
+        },
         onProfile: () => {},
-        userName,
+        userName: currentUser?.name || '',
       }}
       hideSidebar={true}
     >

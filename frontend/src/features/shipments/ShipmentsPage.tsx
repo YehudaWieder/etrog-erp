@@ -5,6 +5,7 @@ import { AppShell } from '../../app/layout/AppShell';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import { SHIPMENTS_I18N } from './i18n';
 import type { NavItem } from '../../types/navigation';
+import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
 
 const DEFAULT_SIDEBAR_ITEM_ID = 'packaging';
 
@@ -16,14 +17,14 @@ export function ShipmentsPage() {
   const [activeTopId, setActiveTopId] = useState('shipments');
   const [alertsCount, setAlertsCount] = useState(3);
   const [lastActionText, setLastActionText] = useState<string>('');
+  const currentUser = getCurrentUser();
 
-  // MOCK: Replace with real auth state from context/store
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userName] = useState('הפרופיל שלי');
-
-  const handleLogin = () => setIsAuthenticated(true);
+  const handleLogin = () => navigate('/login');
   const handleRegister = () => alert('הרשמה');
-  const handleLogout = () => setIsAuthenticated(false);
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
   const handleProfile = () => alert('פרופיל');
 
   // Detect language from localStorage or default to 'he'
@@ -75,12 +76,12 @@ export function ShipmentsPage() {
       topBarOptions={{
         alertsCount,
         onAlertsClick: () => setAlertsCount((value) => (value > 0 ? value - 1 : 0)),
-        isAuthenticated,
+        isAuthenticated: isAuthenticated(),
         onLogin: handleLogin,
         onRegister: handleRegister,
         onLogout: handleLogout,
         onProfile: handleProfile,
-        userName,
+        userName: currentUser?.name || 'הפרופיל שלי',
       }}
       sidebarFooterSlot={
         <button type="button" className="app-shell__sidebar-item app-shell__sidebar-settings">

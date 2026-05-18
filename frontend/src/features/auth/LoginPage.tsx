@@ -4,6 +4,8 @@ import { AuthForm } from '../../components/forms/AuthForm';
 import { AppTopBar } from '../../components/navigation/AppTopBar';
 import { SHIPMENTS_I18N } from '../shipments/i18n';
 import type { NavItem } from '../../types/navigation';
+import { getCurrentUser, isAuthenticated, login, logout } from '../../services/authService';
+import { AUTH_I18N } from './i18n';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -12,7 +14,9 @@ export function LoginPage() {
     password: '',
   });
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTopId, setActiveTopId] = useState('shipments');
+  const currentUser = getCurrentUser();
 
   const lang = useMemo(() => {
     if (typeof window !== 'undefined') {
@@ -22,9 +26,13 @@ export function LoginPage() {
     return 'he';
   }, []);
   const t = SHIPMENTS_I18N[lang];
+  const a = AUTH_I18N[lang];
 
   const handleLogin = () => navigate('/shipments');
   const handleRegister = () => navigate('/register');
+  const handleLogout = async () => {
+    await logout();
+  };
   const handleTopNavClick = (item: NavItem) => {
     setActiveTopId(item.id);
   };
@@ -33,24 +41,38 @@ export function LoginPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.email || !formData.password) {
-      setError('נא למלא את כל השדות');
+
+    if (isSubmitting) {
       return;
     }
 
-    // TODO: אימות אמיתי מול השרת
-    console.log('Login attempt:', formData);
-    setError('');
-    // ניווט חזרה לעמוד הראשי אחרי התחברות מוצלחת
-    navigate('/shipments');
+    if (!formData.email || !formData.password) {
+      setError(a.requiredFields);
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setError('');
+      await login({ email: formData.email, password: formData.password });
+      navigate('/shipments');
+    } catch (submitError) {
+      const msg = submitError instanceof Error ? submitError.message : '';
+      if (msg === 'Failed to fetch') {
+        setError(a.networkError);
+      } else {
+        setError(msg || a.loginFailed);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const fields = [
-    { id: 'email', name: 'email', label: 'אימייל', type: 'email', placeholder: 'הזן את הימייל שלך' },
-    { id: 'password', name: 'password', label: 'סיסמא', type: 'password', placeholder: 'הזן את הסיסמא שלך' },
+    { id: 'email', name: 'email', label: a.emailLabel, type: 'email', placeholder: a.emailPlaceholder },
+    { id: 'password', name: 'password', label: a.passwordLabel, type: 'password', placeholder: a.passwordPlaceholder },
   ];
 
   return (
@@ -61,21 +83,21 @@ export function LoginPage() {
         onNavigate={handleTopNavClick}
         onBrandClick={() => navigate('/home')}
         lang={lang}
-        isAuthenticated={false}
+        isAuthenticated={isAuthenticated()}
         onLogin={handleLogin}
         onRegister={handleRegister}
-        onLogout={() => {}}
+        onLogout={handleLogout}
         onProfile={() => {}}
-        userName=""
+        userName={currentUser?.name || ''}
       />
       <AuthForm
-        title="התחברות"
+        title={a.loginTitle}
         error={error}
         fields={fields}
         values={formData}
-        submitLabel="התחברות"
-        footerText="אין לך חשבון?"
-        footerLinkLabel="הרשם כאן"
+        submitLabel={isSubmitting ? a.loginConnecting : a.loginSubmit}
+        footerText={a.loginFooterText}
+        footerLinkLabel={a.loginFooterLinkLabel}
         footerLinkTo="/register"
         onChange={handleChange}
         onSubmit={handleSubmit}
