@@ -1,4 +1,19 @@
 import { Link } from 'react-router-dom';
+import * as FAIcons from 'react-icons/fa6';
+
+const iconMap: Record<string, keyof typeof FAIcons> = {
+  'fa-truck': 'FaTruck',
+  'fa-box-open': 'FaBoxOpen',
+  'fa-circle-check': 'FaCircleCheck',
+  'fa-boxes-stacked': 'FaBoxesStacked',
+  'fa-file-circle-xmark': 'FaFileCircleXmark',
+  'fa-truck-ramp-box': 'FaTruckRampBox',
+  'fa-box': 'FaBox',
+  'fa-door-open': 'FaDoorOpen',
+  'fa-lemon': 'FaLemon',
+  'fa-paper-plane': 'FaPaperPlane',
+  'fa-clock': 'FaClock',
+};
 
 export type AuthFormField = {
   id: string;
@@ -55,7 +70,7 @@ export function AuthForm({
                 id={field.id}
                 type={field.type}
                 name={field.name}
-                className="form-input"
+                className={`form-input ${field.type === 'tel' ? 'rtl-placeholder' : ''}`}
                 placeholder={field.placeholder}
                 value={values[field.name] ?? ''}
                 onChange={(event) => onChange(field.name, event.target.value)}
@@ -65,7 +80,8 @@ export function AuthForm({
           ))}
 
           <button type="submit" className="btn btn-login">
-            {submitLabel}
+            <span className="btn-text">{submitLabel}</span>
+            <span className="btn-arrow" aria-hidden="true">←</span>
           </button>
         </form>
 
