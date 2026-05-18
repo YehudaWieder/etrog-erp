@@ -1,13 +1,16 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from '../../app/layout/AppShell';
-import { SHIPMENTS_I18N } from '../shipments/i18n';
 import type { NavItem } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
+import { PROFILE_I18N } from './i18n';
 
-export function HomePage() {
+const DEFAULT_PROFILE_ITEM_ID = 'my-profile';
+
+export function ProfilePage() {
   const navigate = useNavigate();
-  const [activeTopId, setActiveTopId] = useState('shipments');
+  const location = useLocation();
+  const [alertsCount, setAlertsCount] = useState(0);
   const currentUser = getCurrentUser();
 
   const lang = useMemo(() => {
@@ -17,11 +20,24 @@ export function HomePage() {
     }
     return 'he';
   }, []);
-  const t = SHIPMENTS_I18N[lang];
+  const t = PROFILE_I18N[lang];
+
+  const activeSidebarId = useMemo(() => {
+    const pathParts = location.pathname.split('/').filter(Boolean);
+    const subRoute = pathParts[1];
+    return subRoute || DEFAULT_PROFILE_ITEM_ID;
+  }, [location.pathname]);
+
+  const content = useMemo(() => {
+    return t.emptyState[activeSidebarId] || t.emptyState.default;
+  }, [activeSidebarId, t.emptyState]);
 
   const handleTopNavClick = (item: NavItem) => {
-    setActiveTopId(item.id);
     navigate(`/${item.id}`);
+  };
+
+  const handleSidebarClick = (item: NavItem) => {
+    navigate(item.href || `/profile/${item.id}`);
   };
 
   return (
@@ -30,15 +46,14 @@ export function HomePage() {
       brandName="Wieders etrogs"
       pageTitle={t.pageTitle}
       topNav={t.topNav}
-      activeTopNavId={activeTopId}
       sidebarSections={t.sidebar}
-      activeSidebarItemId="packaging"
+      activeSidebarItemId={activeSidebarId}
       onTopNavClick={handleTopNavClick}
-      onSidebarClick={() => {}}
+      onSidebarClick={handleSidebarClick}
       onBrandClick={() => navigate('/home')}
       topBarOptions={{
-        alertsCount: 0,
-        onAlertsClick: () => {},
+        alertsCount,
+        onAlertsClick: () => setAlertsCount((value) => (value > 0 ? value - 1 : 0)),
         isAuthenticated: isAuthenticated(),
         onLogin: () => navigate('/login'),
         onRegister: () => navigate('/register'),
@@ -47,13 +62,12 @@ export function HomePage() {
           navigate('/login');
         },
         onProfile: () => navigate('/profile'),
-        userName: currentUser?.name || '',
+        userName: currentUser?.name || (lang === 'he' ? 'הפרופיל שלי' : 'My Profile'),
       }}
-      hideSidebar={true}
     >
-      <section className="home-welcome">
-        <h2>{lang === 'he' ? 'ברוכים הבאים' : 'Welcome'}</h2>
-        <p>{lang === 'he' ? 'בחר פעולה מהסרגל העליון' : 'Select an action from the top bar'}</p>
+      <section className="shipments-empty-state">
+        <h2 className="shipments-empty-title">{content.title}</h2>
+        <p className="shipments-empty-desc">{content.description}</p>
       </section>
     </AppShell>
   );

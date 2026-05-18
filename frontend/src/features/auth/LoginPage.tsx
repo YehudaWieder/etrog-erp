@@ -98,7 +98,7 @@ export function LoginPage() {
         onLogin={handleLogin}
         onRegister={handleRegister}
         onLogout={handleLogout}
-        onProfile={() => {}}
+        onProfile={() => navigate('/profile')}
         userName={currentUser?.name || ''}
       />
       <AuthForm

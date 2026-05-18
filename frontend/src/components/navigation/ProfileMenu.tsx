@@ -55,6 +55,11 @@ export function ProfileMenu({
     navigate('/login');
   };
 
+  const handleProfile = () => {
+    onProfile();
+    setOpen(false);
+  };
+
   return (
     <div className="profile-menu" ref={ref}>
       <button
@@ -71,7 +76,7 @@ export function ProfileMenu({
             {isAuthenticated ? (
               <>
                 <li>
-                  <button type="button" onClick={onProfile}>
+                  <button type="button" onClick={handleProfile}>
                     <FaUser className="profile-menu__icon" />
                     <span>{userName ? userName : 'הפרופיל שלי'}</span>
                   </button>

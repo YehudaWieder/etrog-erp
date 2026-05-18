@@ -25,7 +25,7 @@ export function ShipmentsPage() {
     await logout();
     navigate('/login');
   };
-  const handleProfile = () => alert('פרופיל');
+  const handleProfile = () => navigate('/profile');
 
   // Detect language from localStorage or default to 'he'
   const lang = useMemo(() => {
