@@ -10,6 +10,24 @@ type ProfileI18n = {
   sidebar: SidebarSection[];
   pageTitle: string;
   emptyState: Record<string, EmptyStateContent>;
+  profileCard: {
+    title: string;
+    description: string;
+    loading: string;
+    fallbackError: string;
+    fields: {
+      id: string;
+      name: string;
+      email: string;
+      phone: string;
+      role: string;
+      status: string;
+      slug: string;
+    };
+    active: string;
+    inactive: string;
+    emptyValue: string;
+  };
 };
 
 export const PROFILE_I18N: Record<'he' | 'en', ProfileI18n> = {
@@ -27,21 +45,41 @@ export const PROFILE_I18N: Record<'he' | 'en', ProfileI18n> = {
         id: 'my-profile',
         title: 'הפרופיל שלי',
         href: '/profile/my-profile',
+        icon: 'fa-id-card',
         items: [
-          { id: 'edit-my-profile', label: 'עריכת פרופיל שלי', href: '/profile/edit-my-profile' },
+          { id: 'edit-my-profile', label: 'עריכת פרופיל שלי', href: '/profile/edit-my-profile', icon: 'fa-user-pen' },
         ],
       },
       {
         id: 'all-profiles',
         title: 'כל הפרופילים',
         href: '/profile/all-profiles',
+        icon: 'fa-users',
         items: [
-          { id: 'active-profiles', label: 'פרופילים פעילים', href: '/profile/active-profiles' },
-          { id: 'inactive-profiles', label: 'פרופילים לא פעילים', href: '/profile/inactive-profiles' },
+          { id: 'active-profiles', label: 'פרופילים פעילים', href: '/profile/active-profiles', icon: 'fa-user-check' },
+          { id: 'inactive-profiles', label: 'פרופילים לא פעילים', href: '/profile/inactive-profiles', icon: 'fa-user-slash' },
         ],
       },
     ],
     pageTitle: 'הפרופיל שלי',
+    profileCard: {
+      title: 'פרטי המשתמש שלי',
+      description: 'הנתונים נטענים מהשרת עבור המשתמש המחובר כעת.',
+      loading: 'טוען את פרטי המשתמש...',
+      fallbackError: 'לא הצלחנו לטעון פרטים מעודכנים מהשרת. מוצגים הנתונים האחרונים שנשמרו.',
+      fields: {
+        id: 'מזהה משתמש',
+        name: 'שם',
+        email: 'אימייל',
+        phone: 'טלפון',
+        role: 'תפקיד',
+        status: 'סטטוס',
+        slug: 'Slug',
+      },
+      active: 'פעיל',
+      inactive: 'לא פעיל',
+      emptyValue: 'אין נתון',
+    },
     emptyState: {
       'my-profile': {
         title: 'פרטי הפרופיל שלי יוצגו כאן',
@@ -83,21 +121,41 @@ export const PROFILE_I18N: Record<'he' | 'en', ProfileI18n> = {
         id: 'my-profile',
         title: 'My Profile',
         href: '/profile/my-profile',
+        icon: 'fa-id-card',
         items: [
-          { id: 'edit-my-profile', label: 'Edit My Profile', href: '/profile/edit-my-profile' },
+          { id: 'edit-my-profile', label: 'Edit My Profile', href: '/profile/edit-my-profile', icon: 'fa-user-pen' },
         ],
       },
       {
         id: 'all-profiles',
         title: 'All Profiles',
         href: '/profile/all-profiles',
+        icon: 'fa-users',
         items: [
-          { id: 'active-profiles', label: 'Active Profiles', href: '/profile/active-profiles' },
-          { id: 'inactive-profiles', label: 'Inactive Profiles', href: '/profile/inactive-profiles' },
+          { id: 'active-profiles', label: 'Active Profiles', href: '/profile/active-profiles', icon: 'fa-user-check' },
+          { id: 'inactive-profiles', label: 'Inactive Profiles', href: '/profile/inactive-profiles', icon: 'fa-user-slash' },
         ],
       },
     ],
     pageTitle: 'My Profile',
+    profileCard: {
+      title: 'My User Details',
+      description: 'These values are loaded from the server for the currently authenticated user.',
+      loading: 'Loading user details...',
+      fallbackError: 'Unable to load the latest details from the server. Showing the most recently saved data.',
+      fields: {
+        id: 'User ID',
+        name: 'Name',
+        email: 'Email',
+        phone: 'Phone',
+        role: 'Role',
+        status: 'Status',
+        slug: 'Slug',
+      },
+      active: 'Active',
+      inactive: 'Inactive',
+      emptyValue: 'No data',
+    },
     emptyState: {
       'my-profile': {
         title: 'My profile details will appear here',

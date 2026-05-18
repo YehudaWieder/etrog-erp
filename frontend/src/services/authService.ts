@@ -19,6 +19,13 @@ type LoginResponse = {
   user: StoredAuthUser;
 };
 
+export type AuthProfile = StoredAuthUser & {
+  phone?: string | null;
+  slug?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
   const result = await apiClient<LoginResponse>('/auth/login', {
     method: 'POST',
@@ -41,6 +48,10 @@ export async function logout(): Promise<void> {
 
 export function getCurrentUser(): StoredAuthUser | null {
   return getStoredAuthUser();
+}
+
+export async function getMyProfile(): Promise<AuthProfile> {
+  return apiClient<AuthProfile>('/auth/me');
 }
 
 export { isAuthenticated };

@@ -13,6 +13,11 @@ const iconMap: Record<string, keyof typeof FAIcons> = {
   'fa-lemon': 'FaLemon',
   'fa-paper-plane': 'FaPaperPlane',
   'fa-clock': 'FaClock',
+  'fa-id-card': 'FaIdCard',
+  'fa-user-pen': 'FaUserPen',
+  'fa-users': 'FaUsers',
+  'fa-user-check': 'FaUserCheck',
+  'fa-user-slash': 'FaUserSlash',
 };
 
 type SidebarProps = {
