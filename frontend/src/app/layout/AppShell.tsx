@@ -1,9 +1,14 @@
 import type { NavItem, SidebarSection } from '../../types/navigation';
 
 import { Sidebar } from '../../components/navigation/Sidebar';
-import { TopBar } from '../../components/navigation/TopBar';
-import { HomeIcon } from '../../components/ui/HomeIcon';
+import { AppTopBar } from '../../components/navigation/AppTopBar';
+import type { ProfileMenuProps } from '../../components/navigation/ProfileMenu';
 import { directionFromLanguage, getPreferredLanguage } from '../../utils/locale';
+
+type TopBarOptions = ProfileMenuProps & {
+  alertsCount?: number;
+  onAlertsClick?: () => void;
+};
 
 type AppShellProps = {
   direction?: 'rtl' | 'ltr';
@@ -15,8 +20,10 @@ type AppShellProps = {
   activeSidebarItemId?: string;
   onTopNavClick?: (item: NavItem) => void;
   onSidebarClick?: (item: NavItem) => void;
-  topBarRightSlot?: React.ReactNode;
+  onBrandClick?: () => void;
+  topBarOptions: TopBarOptions;
   sidebarFooterSlot?: React.ReactNode;
+  hideSidebar?: boolean;
   children: React.ReactNode;
 };
 
@@ -30,12 +37,15 @@ export function AppShell({
   activeSidebarItemId,
   onTopNavClick,
   onSidebarClick,
-  topBarRightSlot,
+  onBrandClick,
+  topBarOptions,
   sidebarFooterSlot,
+  hideSidebar = false,
   children,
 }: AppShellProps): JSX.Element {
   const preferredLanguage = getPreferredLanguage('he');
   const resolvedDirection = direction ?? directionFromLanguage(preferredLanguage);
+  const topBarLanguage: 'he' | 'en' = preferredLanguage.toLowerCase().startsWith('en') ? 'en' : 'he';
 
   if (typeof document !== 'undefined') {
     document.documentElement.lang = preferredLanguage;
@@ -44,57 +54,38 @@ export function AppShell({
 
   return (
     <div className="app-shell" data-direction={resolvedDirection}>
-      {resolvedDirection === 'rtl' ? (
-        <>
+      <AppTopBar
+        links={topNav}
+        activeId={activeTopNavId}
+        onNavigate={onTopNavClick}
+        brandName={brandName}
+        lang={topBarLanguage}
+        onBrandClick={onBrandClick}
+        alertsCount={topBarOptions.alertsCount}
+        onAlertsClick={topBarOptions.onAlertsClick}
+        isAuthenticated={topBarOptions.isAuthenticated}
+        onLogin={topBarOptions.onLogin}
+        onRegister={topBarOptions.onRegister}
+        onLogout={topBarOptions.onLogout}
+        onProfile={topBarOptions.onProfile}
+        userName={topBarOptions.userName}
+      />
+      <div className="app-shell__body">
+        {!hideSidebar && (
           <Sidebar
-            brandName={brandName}
             sections={sidebarSections}
             activeItemId={activeSidebarItemId}
             onNavigate={onSidebarClick}
             footerSlot={sidebarFooterSlot}
           />
-          <div className="app-shell__main">
-            <TopBar
-              links={topNav}
-              activeId={activeTopNavId}
-              onNavigate={onTopNavClick}
-              rightSlot={topBarRightSlot}
-            />
-            <main className="app-shell__content">
-              {pageTitle ? <h1 className="app-shell__page-title">{pageTitle}</h1> : null}
-              {children}
-            </main>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="app-shell__main">
-            <TopBar
-              links={topNav}
-              activeId={activeTopNavId}
-              onNavigate={onTopNavClick}
-              rightSlot={topBarRightSlot}
-              leftSlot={
-                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <HomeIcon style={{ fontSize: 22, marginInlineEnd: 6 }} />
-                  {brandName}
-                </span>
-              }
-            />
-            <main className="app-shell__content">
-              {pageTitle ? <h1 className="app-shell__page-title">{pageTitle}</h1> : null}
-              {children}
-            </main>
-          </div>
-          <Sidebar
-            brandName={brandName}
-            sections={sidebarSections}
-            activeItemId={activeSidebarItemId}
-            onNavigate={onSidebarClick}
-            footerSlot={sidebarFooterSlot}
-          />
-        </>
-      )}
+        )}
+        <div className="app-shell__main">
+          <main className="app-shell__content">
+            {pageTitle ? <h1 className="app-shell__page-title">{pageTitle}</h1> : null}
+            {children}
+          </main>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,0 +1,80 @@
+import { Link } from 'react-router-dom';
+
+export type AuthFormField = {
+  id: string;
+  name: string;
+  label: string;
+  type: string;
+  placeholder: string;
+};
+
+type AuthFormProps = {
+  title: string;
+  subtitle?: string;
+  error?: string;
+  fields: AuthFormField[];
+  values: Record<string, string>;
+  submitLabel: string;
+  footerText: string;
+  footerLinkLabel: string;
+  footerLinkTo: string;
+  onChange: (name: string, value: string) => void;
+  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+};
+
+export function AuthForm({
+  title,
+  subtitle = 'Wieders etrogs',
+  error,
+  fields,
+  values,
+  submitLabel,
+  footerText,
+  footerLinkLabel,
+  footerLinkTo,
+  onChange,
+  onSubmit,
+}: AuthFormProps) {
+  return (
+    <div className="login-container">
+      <div className="login-card">
+        <div className="login-header">
+          <h1 className="login-title">{title}</h1>
+          <p className="login-subtitle">{subtitle}</p>
+        </div>
+
+        {error ? <div className="login-error">{error}</div> : null}
+
+        <form onSubmit={onSubmit} className="login-form">
+          {fields.map((field) => (
+            <div className="form-group" key={field.id}>
+              <label htmlFor={field.id} className="form-label">
+                {field.label}
+              </label>
+              <input
+                id={field.id}
+                type={field.type}
+                name={field.name}
+                className="form-input"
+                placeholder={field.placeholder}
+                value={values[field.name] ?? ''}
+                onChange={(event) => onChange(field.name, event.target.value)}
+                required
+              />
+            </div>
+          ))}
+
+          <button type="submit" className="btn btn-login">
+            {submitLabel}
+          </button>
+        </form>
+
+        <div className="login-footer">
+          <p className="login-footer-text">
+            {footerText} <Link to={footerLinkTo} className="login-link">{footerLinkLabel}</Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

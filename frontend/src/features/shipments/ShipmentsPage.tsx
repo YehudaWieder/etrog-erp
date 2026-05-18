@@ -1,11 +1,9 @@
 import { useMemo, useState } from 'react';
-import { FaBell, FaCalendarDays } from 'react-icons/fa6';
 import { FaPlus } from 'react-icons/fa6';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from '../../app/layout/AppShell';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import { SHIPMENTS_I18N } from './i18n';
-import { ProfileMenu } from '../../components/navigation/ProfileMenu';
 import type { NavItem } from '../../types/navigation';
 
 const DEFAULT_SIDEBAR_ITEM_ID = 'packaging';
@@ -51,6 +49,7 @@ export function ShipmentsPage() {
 
   const handleTopNavClick = (item: NavItem) => {
     setActiveTopId(item.id);
+    navigate(`/${item.id}`);
   };
 
   const handleSidebarClick = (item: NavItem) => {
@@ -72,30 +71,17 @@ export function ShipmentsPage() {
       activeSidebarItemId={activeSidebarId}
       onTopNavClick={handleTopNavClick}
       onSidebarClick={handleSidebarClick}
-      topBarRightSlot={
-        <div className="nav-icons">
-          <button className="nav-icon-btn" type="button" aria-label={lang === 'he' ? 'לוח שנה' : 'Calendar'}>
-            <FaCalendarDays />
-          </button>
-          <button
-            className="nav-icon-btn"
-            type="button"
-            aria-label={lang === 'he' ? 'התראות' : 'Alerts'}
-            onClick={() => setAlertsCount((value) => (value > 0 ? value - 1 : 0))}
-          >
-            <FaBell />
-            <span className="badge">{alertsCount}</span>
-          </button>
-          <ProfileMenu
-            isAuthenticated={isAuthenticated}
-            onLogin={handleLogin}
-            onRegister={handleRegister}
-            onLogout={handleLogout}
-            onProfile={handleProfile}
-            userName={userName}
-          />
-        </div>
-      }
+      onBrandClick={() => navigate('/home')}
+      topBarOptions={{
+        alertsCount,
+        onAlertsClick: () => setAlertsCount((value) => (value > 0 ? value - 1 : 0)),
+        isAuthenticated,
+        onLogin: handleLogin,
+        onRegister: handleRegister,
+        onLogout: handleLogout,
+        onProfile: handleProfile,
+        userName,
+      }}
       sidebarFooterSlot={
         <button type="button" className="app-shell__sidebar-item app-shell__sidebar-settings">
           {lang === 'he' ? (
