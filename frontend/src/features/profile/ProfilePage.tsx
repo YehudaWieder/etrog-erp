@@ -35,6 +35,25 @@ export function ProfilePage() {
     return t.emptyState[activeSidebarId] || t.emptyState.default;
   }, [activeSidebarId, t.emptyState]);
 
+  const locale = lang === 'he' ? 'he-IL' : 'en-US';
+
+  const formatDate = (value?: string) => {
+    if (!value) {
+      return t.profileCard.emptyValue;
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return t.profileCard.emptyValue;
+    }
+
+    return new Intl.DateTimeFormat(locale, {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(parsed);
+  };
+
   useEffect(() => {
     let isMounted = true;
 
@@ -87,8 +106,32 @@ export function ProfilePage() {
       { label: t.profileCard.fields.role, value: profile.role },
       { label: t.profileCard.fields.status, value: profile.isActive ? t.profileCard.active : t.profileCard.inactive },
       { label: t.profileCard.fields.slug, value: profile.slug || t.profileCard.emptyValue },
+      { label: t.profileCard.fields.createdAt, value: formatDate(profile.createdAt) },
+      { label: t.profileCard.fields.updatedAt, value: formatDate(profile.updatedAt) },
     ];
-  }, [profile, t.profileCard]);
+  }, [profile, t.profileCard, locale]);
+
+  const fullName = profile?.name || t.profileCard.avatarFallback;
+  const profileStatus = profile?.isActive ? t.profileCard.active : t.profileCard.inactive;
+  const profileInitials = fullName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0))
+    .join('')
+    .toUpperCase();
+
+  const personalRows = profileRows.filter((row) =>
+    [t.profileCard.fields.name, t.profileCard.fields.email, t.profileCard.fields.phone].includes(row.label),
+  );
+
+  const accountRows = profileRows.filter((row) =>
+    [t.profileCard.fields.id, t.profileCard.fields.role, t.profileCard.fields.status, t.profileCard.fields.slug].includes(row.label),
+  );
+
+  const systemRows = profileRows.filter((row) =>
+    [t.profileCard.fields.createdAt, t.profileCard.fields.updatedAt].includes(row.label),
+  );
 
   const handleTopNavClick = (item: NavItem) => {
     navigate(`/${item.id}`);
@@ -124,22 +167,60 @@ export function ProfilePage() {
       }}
     >
       {activeSidebarId === 'my-profile' ? (
-        <section className="profile-card">
-          <div className="profile-card__header">
-            <h2 className="profile-card__title">{t.profileCard.title}</h2>
-            <p className="profile-card__description">{t.profileCard.description}</p>
+        <section className="profile-hub">
+          <div className="profile-hub__hero">
+            <div className="profile-hub__avatar" aria-hidden="true">
+              {profileInitials || 'U'}
+            </div>
+            <div className="profile-hub__hero-content">
+              <h2 className="profile-hub__name">{fullName}</h2>
+              <p className="profile-hub__subtitle">{profile?.role || t.profileCard.emptyValue}</p>
+              <p className="profile-hub__description">{t.profileCard.description}</p>
+            </div>
+            <div className="profile-hub__status" data-active={profile?.isActive ? 'true' : 'false'}>
+              {profileStatus}
+            </div>
           </div>
 
-          {profileError ? <p className="profile-card__notice">{profileError}</p> : null}
-          {isLoadingProfile ? <p className="profile-card__loading">{t.profileCard.loading}</p> : null}
+          {profileError ? <p className="profile-hub__notice">{profileError}</p> : null}
+          {isLoadingProfile ? <p className="profile-hub__loading">{t.profileCard.loading}</p> : null}
 
-          <div className="profile-card__grid">
-            {profileRows.map((row) => (
-              <div key={row.label} className="profile-card__item">
-                <span className="profile-card__label">{row.label}</span>
-                <strong className="profile-card__value">{row.value}</strong>
+          <div className="profile-hub__grid">
+            <article className="profile-panel">
+              <h3 className="profile-panel__title">{t.profileCard.personalSectionTitle}</h3>
+              <div className="profile-panel__list">
+                {personalRows.map((row) => (
+                  <div key={row.label} className="profile-detail-row">
+                    <span className="profile-detail-row__label">{row.label}</span>
+                    <strong className="profile-detail-row__value">{row.value}</strong>
+                  </div>
+                ))}
               </div>
-            ))}
+            </article>
+
+            <article className="profile-panel">
+              <h3 className="profile-panel__title">{t.profileCard.accountSectionTitle}</h3>
+              <div className="profile-panel__list">
+                {accountRows.map((row) => (
+                  <div key={row.label} className="profile-detail-row">
+                    <span className="profile-detail-row__label">{row.label}</span>
+                    <strong className="profile-detail-row__value">{row.value}</strong>
+                  </div>
+                ))}
+              </div>
+            </article>
+
+            <article className="profile-panel profile-panel--system">
+              <h3 className="profile-panel__title">{t.profileCard.systemSectionTitle}</h3>
+              <div className="profile-panel__list">
+                {systemRows.map((row) => (
+                  <div key={row.label} className="profile-detail-row">
+                    <span className="profile-detail-row__label">{row.label}</span>
+                    <strong className="profile-detail-row__value">{row.value}</strong>
+                  </div>
+                ))}
+              </div>
+            </article>
           </div>
         </section>
       ) : (

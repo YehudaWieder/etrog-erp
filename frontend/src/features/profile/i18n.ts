@@ -13,6 +13,10 @@ type ProfileI18n = {
   profileCard: {
     title: string;
     description: string;
+    personalSectionTitle: string;
+    accountSectionTitle: string;
+    systemSectionTitle: string;
+    avatarFallback: string;
     loading: string;
     fallbackError: string;
     fields: {
@@ -23,6 +27,8 @@ type ProfileI18n = {
       role: string;
       status: string;
       slug: string;
+      createdAt: string;
+      updatedAt: string;
     };
     active: string;
     inactive: string;
@@ -65,6 +71,10 @@ export const PROFILE_I18N: Record<'he' | 'en', ProfileI18n> = {
     profileCard: {
       title: 'פרטי המשתמש שלי',
       description: 'הנתונים נטענים מהשרת עבור המשתמש המחובר כעת.',
+      personalSectionTitle: 'פרטים אישיים',
+      accountSectionTitle: 'פרטי חשבון',
+      systemSectionTitle: 'פרטי מערכת',
+      avatarFallback: 'משתמש',
       loading: 'טוען את פרטי המשתמש...',
       fallbackError: 'לא הצלחנו לטעון פרטים מעודכנים מהשרת. מוצגים הנתונים האחרונים שנשמרו.',
       fields: {
@@ -75,6 +85,8 @@ export const PROFILE_I18N: Record<'he' | 'en', ProfileI18n> = {
         role: 'תפקיד',
         status: 'סטטוס',
         slug: 'Slug',
+        createdAt: 'נוצר בתאריך',
+        updatedAt: 'עודכן בתאריך',
       },
       active: 'פעיל',
       inactive: 'לא פעיל',
@@ -141,6 +153,10 @@ export const PROFILE_I18N: Record<'he' | 'en', ProfileI18n> = {
     profileCard: {
       title: 'My User Details',
       description: 'These values are loaded from the server for the currently authenticated user.',
+      personalSectionTitle: 'Personal Details',
+      accountSectionTitle: 'Account Details',
+      systemSectionTitle: 'System Details',
+      avatarFallback: 'User',
       loading: 'Loading user details...',
       fallbackError: 'Unable to load the latest details from the server. Showing the most recently saved data.',
       fields: {
@@ -151,6 +167,8 @@ export const PROFILE_I18N: Record<'he' | 'en', ProfileI18n> = {
         role: 'Role',
         status: 'Status',
         slug: 'Slug',
+        createdAt: 'Created At',
+        updatedAt: 'Updated At',
       },
       active: 'Active',
       inactive: 'Inactive',
