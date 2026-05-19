@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthForm } from '../../components/forms/AuthForm';
 import { AppTopBar } from '../../components/navigation/AppTopBar';
 import { SHIPMENTS_I18N } from '../shipments/i18n';
@@ -10,6 +10,7 @@ import { AUTH_I18N } from './i18n';
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -28,6 +29,10 @@ export function LoginPage() {
   }, []);
   const t = SHIPMENTS_I18N[lang];
   const a = AUTH_I18N[lang];
+  const successNotice = (() => {
+    const state = location.state as { notice?: string } | null;
+    return state?.notice || '';
+  })();
   const authMessages = {
     requiredFields: a.requiredFields,
     loginFailed: a.loginFailed,
@@ -103,6 +108,7 @@ export function LoginPage() {
       />
       <AuthForm
         title={a.loginTitle}
+        notice={successNotice}
         error={error}
         fields={fields}
         values={formData}

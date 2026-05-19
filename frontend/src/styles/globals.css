@@ -1232,6 +1232,16 @@ select {
   font-size: 0.9rem;
 }
 
+.login-notice {
+  background: #e7f5eb;
+  border: 1px solid #b9e2c7;
+  color: #1f5a32;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-5);
+  font-size: 0.9rem;
+}
+
 .login-form {
   display: flex;
   flex-direction: column;

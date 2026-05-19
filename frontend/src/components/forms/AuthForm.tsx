@@ -30,6 +30,7 @@ export type AuthFormField = {
 type AuthFormProps = {
   title: string;
   subtitle?: string;
+  notice?: string;
   error?: string;
   fields: AuthFormField[];
   values: Record<string, string>;
@@ -44,6 +45,7 @@ type AuthFormProps = {
 export function AuthForm({
   title,
   subtitle = 'Wieders etrogs',
+  notice,
   error,
   fields,
   values,
@@ -62,6 +64,7 @@ export function AuthForm({
           <p className="login-subtitle">{subtitle}</p>
         </div>
 
+        {notice ? <div className="login-notice">{notice}</div> : null}
         {error ? <div className="login-error">{error}</div> : null}
 
         <form onSubmit={onSubmit} className="login-form">
