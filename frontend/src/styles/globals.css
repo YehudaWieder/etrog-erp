@@ -770,6 +770,12 @@ select {
   border-radius: 14px;
   padding: var(--space-4);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+}
+
+.profile-mini-card.is-selected {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(255, 202, 43, 0.3), 0 10px 24px rgba(0, 0, 0, 0.05);
 }
 
 .profile-mini-card__header {
@@ -792,6 +798,13 @@ select {
   color: var(--color-text-accent);
   background: var(--color-primary-soft);
   border: 1px solid var(--color-primary);
+}
+
+.profile-mini-card__avatar.is-selected {
+  background: var(--color-text-accent);
+  color: #fff;
+  border-color: var(--color-text-accent);
+  font-size: 1.25rem;
 }
 
 .profile-mini-card__identity {

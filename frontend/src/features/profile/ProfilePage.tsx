@@ -21,6 +21,7 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 
 const DEFAULT_PROFILE_ITEM_ID = 'my-profile';
 const PROFILE_LIST_VIEW_IDS = new Set(['all-profiles', 'active-profiles', 'inactive-profiles']);
+const MANAGER_ROLES = new Set(['manager', 'owner', 'admin']);
 
 function normalizeIsActive(value: unknown): boolean | undefined {
   if (typeof value === 'boolean') {
@@ -72,6 +73,8 @@ export function ProfilePage() {
   const [profilesList, setProfilesList] = useState<AuthUserListItem[]>([]);
   const [isLoadingProfilesList, setIsLoadingProfilesList] = useState(false);
   const [profilesListError, setProfilesListError] = useState('');
+  const [selectedManagedProfileId, setSelectedManagedProfileId] = useState<number | null>(null);
+  const [showManagerDeleteDialog, setShowManagerDeleteDialog] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -96,6 +99,7 @@ export function ProfilePage() {
   }, [location.pathname]);
 
   const isProfilesListView = PROFILE_LIST_VIEW_IDS.has(activeSidebarId);
+  const canManageProfiles = MANAGER_ROLES.has((currentUser?.role || '').toLowerCase());
 
   const pageTitle = useMemo(() => {
     for (const section of t.sidebar) {
@@ -230,6 +234,17 @@ export function ProfilePage() {
 
     return profilesList;
   }, [activeSidebarId, profilesList]);
+
+  useEffect(() => {
+    if (!selectedManagedProfileId) {
+      return;
+    }
+
+    const stillVisible = filteredProfilesList.some((item) => item.id === selectedManagedProfileId);
+    if (!stillVisible) {
+      setSelectedManagedProfileId(null);
+    }
+  }, [filteredProfilesList, selectedManagedProfileId]);
 
   const profilesCounts = useMemo(() => {
     const total = profilesList.length;
@@ -445,6 +460,25 @@ export function ProfilePage() {
     navigate(item.href || `/profile/${item.id}`);
   };
 
+  const handleDeleteManagedProfile = async () => {
+    if (!selectedManagedProfileId) {
+      return;
+    }
+
+    setIsDeletingProfile(true);
+    setEditError('');
+
+    try {
+      await deleteMyProfile(selectedManagedProfileId);
+      setProfilesList((prev) => prev.filter((item) => item.id !== selectedManagedProfileId));
+      setSelectedManagedProfileId(null);
+    } catch {
+      setEditError(lang === 'he' ? 'לא ניתן למחוק את הפרופיל שנבחר.' : 'Could not delete the selected profile.');
+    } finally {
+      setIsDeletingProfile(false);
+    }
+  };
+
   return (
     <AppShell
       direction={lang === 'he' ? 'rtl' : 'ltr'}
@@ -509,6 +543,32 @@ export function ProfilePage() {
             >
               <FaTrashCan />
               <span>{isDeletingProfile ? t.editProfile.actions.deleting : t.editProfile.actions.delete}</span>
+            </button>
+          </div>
+        )}
+        {isProfilesListView && canManageProfiles && (
+          <div className="action-buttons">
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={() => {
+                if (selectedManagedProfileId) {
+                  navigate(`/profile/manage-profile/${selectedManagedProfileId}`);
+                }
+              }}
+              disabled={!selectedManagedProfileId || isLoadingProfilesList || isDeletingProfile}
+            >
+              <FaFloppyDisk />
+              <span>{lang === 'he' ? 'עדכון פרופיל נבחר' : 'Update Selected Profile'}</span>
+            </button>
+            <button
+              className="btn btn-danger"
+              type="button"
+              onClick={() => setShowManagerDeleteDialog(true)}
+              disabled={!selectedManagedProfileId || isLoadingProfilesList || isDeletingProfile}
+            >
+              <FaTrashCan />
+              <span>{lang === 'he' ? 'מחיקת פרופיל נבחר' : 'Delete Selected Profile'}</span>
             </button>
           </div>
         )}
@@ -684,10 +744,21 @@ export function ProfilePage() {
                   .toUpperCase();
 
                 return (
-                  <article key={item.id} className="profile-mini-card">
+                  <article
+                    key={item.id}
+                    className={`profile-mini-card${item.id === selectedManagedProfileId ? ' is-selected' : ''}`}
+                    onClick={() => {
+                      if (canManageProfiles) {
+                        setSelectedManagedProfileId(item.id);
+                      }
+                    }}
+                  >
                     <div className="profile-mini-card__header">
-                      <div className="profile-mini-card__avatar" aria-hidden="true">
-                        {initials || 'U'}
+                      <div
+                        className={`profile-mini-card__avatar${item.id === selectedManagedProfileId ? ' is-selected' : ''}`}
+                        aria-hidden="true"
+                      >
+                        {item.id === selectedManagedProfileId ? '✓' : initials || 'U'}
                       </div>
                       <div className="profile-mini-card__identity">
                         <h3 className="profile-mini-card__name">{item.name}</h3>
@@ -737,6 +808,19 @@ export function ProfilePage() {
               })}
             </div>
           ) : null}
+
+          <ConfirmDialog
+            open={showManagerDeleteDialog}
+            title={lang === 'he' ? 'מחיקת פרופיל' : 'Delete Profile'}
+            message={lang === 'he' ? 'האם למחוק את הפרופיל שנבחר? פעולה זו אינה הפיכה.' : 'Delete the selected profile? This action cannot be undone.'}
+            confirmLabel={lang === 'he' ? 'מחיקה' : 'Delete'}
+            cancelLabel={lang === 'he' ? 'ביטול' : 'Cancel'}
+            onConfirm={() => {
+              setShowManagerDeleteDialog(false);
+              handleDeleteManagedProfile();
+            }}
+            onCancel={() => setShowManagerDeleteDialog(false)}
+          />
         </section>
       ) : (
         <section className="shipments-empty-state">

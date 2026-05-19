@@ -7,6 +7,7 @@ import { ShipmentsRoute } from './app/routes/ShipmentsRoute';
 import { LoginRoute } from './app/routes/LoginRoute';
 import { RegisterRoute } from './app/routes/RegisterRoute';
 import { ProfileRoute } from './app/routes/ProfileRoute';
+import { ManagerProfileEditRoute } from './app/routes/ManagerProfileEditRoute';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -15,6 +16,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/login" element={<LoginRoute />} />
         <Route path="/register" element={<RegisterRoute />} />
         <Route path="/home" element={<HomeRoute />} />
+        <Route path="/profile/manage-profile/:id" element={<ManagerProfileEditRoute />} />
         <Route path="/profile/*" element={<ProfileRoute />} />
         <Route path="/shipments/*" element={<ShipmentsRoute />} />
         <Route path="*" element={<Navigate to="/home" replace />} />

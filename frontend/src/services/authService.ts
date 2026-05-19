@@ -48,6 +48,12 @@ export type AuthUserListItem = {
   updatedAt?: string;
 };
 
+export type UpdateManagedProfilePayload = {
+  id: number;
+  role?: string;
+  isActive?: boolean;
+};
+
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
   const result = await apiClient<LoginResponse>('/auth/login', {
     method: 'POST',
@@ -100,6 +106,17 @@ export async function deleteMyProfile(id: number): Promise<void> {
 
 export async function getAllProfiles(): Promise<AuthUserListItem[]> {
   return apiClient<AuthUserListItem[]>('/users');
+}
+
+export async function getProfileById(id: number): Promise<AuthProfile> {
+  return apiClient<AuthProfile>(`/users/${id}`);
+}
+
+export async function updateManagedProfile(payload: UpdateManagedProfilePayload): Promise<AuthProfile> {
+  return apiClient<AuthProfile>('/users', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
 }
 
 export { isAuthenticated };
