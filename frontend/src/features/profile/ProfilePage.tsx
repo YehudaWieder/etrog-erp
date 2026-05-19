@@ -22,6 +22,33 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 const DEFAULT_PROFILE_ITEM_ID = 'my-profile';
 const PROFILE_LIST_VIEW_IDS = new Set(['all-profiles', 'active-profiles', 'inactive-profiles']);
 
+function normalizeIsActive(value: unknown): boolean | undefined {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'true' || normalized === '1') {
+      return true;
+    }
+    if (normalized === 'false' || normalized === '0') {
+      return false;
+    }
+  }
+
+  if (typeof value === 'number') {
+    if (value === 1) {
+      return true;
+    }
+    if (value === 0) {
+      return false;
+    }
+  }
+
+  return undefined;
+}
+
 export function ProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -165,7 +192,12 @@ export function ProfilePage() {
           return;
         }
 
-        setProfilesList(result);
+        const normalized = result.map((item) => ({
+          ...item,
+          isActive: normalizeIsActive((item as { isActive?: unknown }).isActive),
+        }));
+
+        setProfilesList(normalized);
       })
       .catch(() => {
         if (!isMounted) {
@@ -585,8 +617,6 @@ export function ProfilePage() {
         </section>
       ) : isProfilesListView ? (
         <section className="profiles-list-hub">
-          <p className="profiles-list-hub__hint">{t.profilesList.restrictedInfoHint}</p>
-
           {isLoadingProfilesList ? <p className="profile-hub__loading">{t.profilesList.loading}</p> : null}
           {profilesListError ? <p className="profile-hub__notice">{profilesListError}</p> : null}
 
@@ -642,12 +672,6 @@ export function ProfilePage() {
                         <div className="profile-detail-row">
                           <span className="profile-detail-row__label">{t.profileCard.fields.role}</span>
                           <strong className="profile-detail-row__value">{item.role}</strong>
-                        </div>
-                      ) : null}
-                      {item.slug ? (
-                        <div className="profile-detail-row">
-                          <span className="profile-detail-row__label">{t.profileCard.fields.slug}</span>
-                          <strong className="profile-detail-row__value">{item.slug}</strong>
                         </div>
                       ) : null}
                       {item.createdAt ? (
