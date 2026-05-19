@@ -175,7 +175,7 @@ export class UsersService {
 		}
 
 		if (this.isPrivileged(actor.role)) {
-			return this.updateByManagement(id, data);
+			return this.updateByManagement(id, data, actor);
 		}
 
 		throw new ForbiddenException('You can only update your own profile.');
@@ -224,7 +224,7 @@ export class UsersService {
 		});
 	}
 
-	private async updateByManagement(id: number, data: UpdateUserByActorInput) {
+	private async updateByManagement(id: number, data: UpdateUserByActorInput, actor: AuthenticatedUser) {
 		const { role, isActive } = data;
 
 		const hasUnexpectedFields =
@@ -242,12 +242,59 @@ export class UsersService {
 			throw new BadRequestException('At least one of role or isActive must be provided.');
 		}
 
-		return this.prisma.user.update({
-			where: { id },
-			data: {
-				...(role !== undefined ? { role } : {}),
-				...(isActive !== undefined ? { isActive } : {}),
-			},
+		return this.prisma.$transaction(async (tx) => {
+			const currentUser = await tx.user.findUnique({
+				where: { id },
+				select: {
+					id: true,
+					role: true,
+					isActive: true,
+				},
+			});
+
+			if (!currentUser) {
+				throw new NotFoundException('User not found');
+			}
+
+			const nextRole = role ?? currentUser.role;
+			const nextIsActive = isActive ?? currentUser.isActive;
+
+			const roleChanged = nextRole !== currentUser.role;
+			const statusChanged = nextIsActive !== currentUser.isActive;
+
+			if (!roleChanged && !statusChanged) {
+				return currentUser;
+			}
+
+			const updatedUser = await tx.user.update({
+				where: { id },
+				data: {
+					...(role !== undefined ? { role } : {}),
+					...(isActive !== undefined ? { isActive } : {}),
+				},
+			});
+
+			const changes: string[] = [];
+			if (roleChanged) {
+				changes.push(`תפקיד: ${currentUser.role} -> ${nextRole}`);
+			}
+			if (statusChanged) {
+				const currentStatus = currentUser.isActive ? 'פעיל' : 'לא פעיל';
+				const nextStatus = nextIsActive ? 'פעיל' : 'לא פעיל';
+				changes.push(`סטטוס: ${currentStatus} -> ${nextStatus}`);
+			}
+
+			await tx.message.create({
+				data: {
+					senderId: actor.id,
+					recipientIds: [updatedUser.id],
+					subject: 'עדכון פרטי משתמש',
+					content: `בוצע עדכון בפרופיל שלך על ידי מנהל מערכת.\n${changes.join('\n')}`,
+					priority: Priority.NORMAL,
+				},
+			});
+
+			return updatedUser;
 		});
 	}
 
