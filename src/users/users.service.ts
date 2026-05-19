@@ -125,10 +125,11 @@ export class UsersService {
 		}
 
 		return this.prisma.user.findMany({
-			select: { 
-                id: true,
-                name: true 
-            },
+			select: {
+				id: true,
+				name: true,
+				isActive: true,
+			},
 			orderBy: { name: 'asc' },
 		});
 	}
