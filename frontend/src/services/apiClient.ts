@@ -69,6 +69,25 @@ export function clearAuthSession(): void {
   window.localStorage.removeItem(AUTH_USER_STORAGE_KEY);
 }
 
+export function patchStoredAuthUser(patch: Partial<StoredAuthUser>): StoredAuthUser | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const existing = getStoredAuthUser();
+  if (!existing) {
+    return null;
+  }
+
+  const updated: StoredAuthUser = {
+    ...existing,
+    ...patch,
+  };
+
+  window.localStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(updated));
+  return updated;
+}
+
 function buildUrl(path: string): string {
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;

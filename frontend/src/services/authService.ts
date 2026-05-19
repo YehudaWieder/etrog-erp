@@ -3,6 +3,7 @@ import {
   clearAuthSession,
   getStoredAuthUser,
   isAuthenticated,
+  patchStoredAuthUser,
   persistAuthSession,
   type StoredAuthUser,
 } from './apiClient';
@@ -24,6 +25,15 @@ export type AuthProfile = StoredAuthUser & {
   slug?: string | null;
   createdAt?: string;
   updatedAt?: string;
+};
+
+export type UpdateMyProfilePayload = {
+  id: number;
+  name?: string;
+  email?: string;
+  phone?: string | null;
+  currentPassword?: string;
+  newPassword?: string;
 };
 
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
@@ -52,6 +62,28 @@ export function getCurrentUser(): StoredAuthUser | null {
 
 export async function getMyProfile(): Promise<AuthProfile> {
   return apiClient<AuthProfile>('/auth/me');
+}
+
+export async function updateMyProfile(payload: UpdateMyProfilePayload): Promise<AuthProfile> {
+  const updated = await apiClient<AuthProfile>('/users', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+
+  patchStoredAuthUser({
+    name: updated.name,
+    email: updated.email,
+    role: updated.role,
+    isActive: updated.isActive,
+  });
+
+  return updated;
+}
+
+export async function deleteMyProfile(id: number): Promise<void> {
+  await apiClient(`/users/${id}`, {
+    method: 'DELETE',
+  });
 }
 
 export { isAuthenticated };
