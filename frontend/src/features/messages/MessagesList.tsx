@@ -175,13 +175,13 @@ export function MessagesList({ filter, userId, lang, onCountsChange }: MessagesL
                 {thread.length > 1 ? <FaReply /> : isUnread ? <FaEnvelope /> : <FaEnvelopeOpen />}
               </div>
               <div className="messages-list__content">
+                <span className={`messages-priority messages-priority--${toPriority(lastMessage.priority).toLowerCase()}`}>
+                  {labels.priority[toPriority(lastMessage.priority)]}
+                </span>
                 <div className="messages-list__meta">
                   <span>{lastMessage.sender.name}</span>
                   <span>{new Date(lastMessage.createdAt).toLocaleString()}</span>
                 </div>
-                <span className={`messages-priority messages-priority--${toPriority(lastMessage.priority).toLowerCase()}`}>
-                  {labels.priority[toPriority(lastMessage.priority)]}
-                </span>
                 <div className="messages-list__subject">{lastMessage.subject}</div>
                 <div className="messages-list__preview">
                   {lastMessage.content.slice(0, 90)}
@@ -215,13 +215,13 @@ export function MessagesList({ filter, userId, lang, onCountsChange }: MessagesL
                     key={msg.id}
                     className={`messages-thread__item${isOutgoing ? ' messages-thread__item--outgoing' : ''}`}
                   >
+                    <span className={`messages-priority messages-priority--${toPriority(msg.priority).toLowerCase()}`}>
+                      {labels.priority[toPriority(msg.priority)]}
+                    </span>
                     <div className="messages-thread__meta">
                       <strong>{msg.sender.name}</strong>
                       <div className="messages-thread__meta-right">
                         <span>{new Date(msg.createdAt).toLocaleString()}</span>
-                        <span className={`messages-priority messages-priority--${toPriority(msg.priority).toLowerCase()}`}>
-                          {labels.priority[toPriority(msg.priority)]}
-                        </span>
                       </div>
                     </div>
                     <p className="messages-thread__text">{msg.content}</p>

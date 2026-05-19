@@ -551,6 +551,7 @@ select {
   font-weight: 700;
   line-height: 1.2;
   border: 1px solid transparent;
+  margin-bottom: 6px;
 }
 
 .messages-priority--low {
