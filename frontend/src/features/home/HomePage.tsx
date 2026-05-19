@@ -45,7 +45,7 @@ export function HomePage() {
       onBrandClick={() => navigate('/home')}
       topBarOptions={{
         alertsCount: 0,
-        onAlertsClick: () => {},
+        onAlertsClick: () => navigate('/messages'),
         isAuthenticated: isAuthenticated(),
         onLogin: () => navigate('/login'),
         onRegister: () => navigate('/register'),

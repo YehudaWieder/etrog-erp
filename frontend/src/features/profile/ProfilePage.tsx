@@ -468,7 +468,7 @@ export function ProfilePage() {
       onBrandClick={() => navigate('/home')}
       topBarOptions={{
         alertsCount,
-        onAlertsClick: () => setAlertsCount((value) => (value > 0 ? value - 1 : 0)),
+        onAlertsClick: () => navigate('/messages'),
         isAuthenticated: isAuthenticated(),
         onLogin: () => navigate('/login'),
         onRegister: () => navigate('/register'),
