@@ -1,4 +1,4 @@
-import { FaBell, FaCalendarDays } from 'react-icons/fa6';
+import { FaEnvelope, FaCalendarDays } from 'react-icons/fa6';
 
 import type { NavItem } from '../../types/navigation';
 import { HomeIcon } from '../ui/HomeIcon';
@@ -67,11 +67,11 @@ export function AppTopBar({
           <button
             className="nav-icon-btn"
             type="button"
-            aria-label={lang === 'he' ? 'התראות' : 'Alerts'}
+            aria-label={lang === 'he' ? 'הודעות' : 'Messages'}
             onClick={onAlertsClick}
           >
-            <FaBell />
-            {typeof alertsCount === 'number' ? <span className="badge">{alertsCount}</span> : null}
+            <FaEnvelope />
+            {typeof alertsCount === 'number' && alertsCount > 0 ? <span className="badge">{alertsCount}</span> : null}
           </button>
           <ProfileMenu
             isAuthenticated={isAuthenticated}

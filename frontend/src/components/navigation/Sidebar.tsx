@@ -18,6 +18,9 @@ const iconMap: Record<string, keyof typeof FAIcons> = {
   'fa-users': 'FaUsers',
   'fa-user-check': 'FaUserCheck',
   'fa-user-slash': 'FaUserSlash',
+  'fa-envelope': 'FaEnvelope',
+  'fa-inbox': 'FaInbox',
+  'fa-envelope-open-text': 'FaEnvelopeOpenText',
 };
 
 type SidebarProps = {
