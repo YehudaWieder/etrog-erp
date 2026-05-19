@@ -541,6 +541,42 @@ select {
   font-weight: 600;
 }
 
+.messages-priority {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  padding: 2px 10px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.2;
+  border: 1px solid transparent;
+}
+
+.messages-priority--low {
+  background: #eef5ff;
+  border-color: #cfe0f8;
+  color: #2f537f;
+}
+
+.messages-priority--normal {
+  background: #edf6e9;
+  border-color: #d3e8cb;
+  color: #2f5a2b;
+}
+
+.messages-priority--high {
+  background: #fff4dd;
+  border-color: #f4ddb0;
+  color: #7c5414;
+}
+
+.messages-priority--urgent {
+  background: #ffe8e8;
+  border-color: #f3b7c2;
+  color: #8f2435;
+}
+
 .messages-thread {
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
@@ -594,6 +630,12 @@ select {
   gap: var(--space-2);
   color: var(--color-text-muted);
   font-size: 0.85rem;
+}
+
+.messages-thread__meta-right {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .messages-thread__text {

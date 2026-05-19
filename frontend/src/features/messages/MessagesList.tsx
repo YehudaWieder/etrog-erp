@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { fetchAllMessages, Message } from '../../services/messagesApi';
 import { FaReply, FaEnvelopeOpen, FaEnvelope } from 'react-icons/fa6';
 
+type MessagePriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+
 type SidebarFilter = 'all-messages' | 'incoming-messages' | 'outgoing-messages' | 'unread-messages';
 
 type MailboxCounts = Record<SidebarFilter, number>;
@@ -139,6 +141,12 @@ export function MessagesList({ filter, userId, lang, onCountsChange }: MessagesL
     openThread: lang === 'he' ? 'בחר שרשור כדי לצפות בהודעות' : 'Select a thread to view messages',
     threadMessages: lang === 'he' ? 'הודעות בשרשור' : 'Messages in thread',
     threadCount: lang === 'he' ? 'הודעות בשרשור' : 'messages in thread',
+    priority: {
+      LOW: lang === 'he' ? 'נמוכה' : 'Low',
+      NORMAL: lang === 'he' ? 'רגילה' : 'Normal',
+      HIGH: lang === 'he' ? 'גבוהה' : 'High',
+      URGENT: lang === 'he' ? 'דחופה' : 'Urgent',
+    } as Record<MessagePriority, string>,
   };
 
   if (loading) return <div>{labels.loading}</div>;
@@ -171,6 +179,9 @@ export function MessagesList({ filter, userId, lang, onCountsChange }: MessagesL
                   <span>{lastMessage.sender.name}</span>
                   <span>{new Date(lastMessage.createdAt).toLocaleString()}</span>
                 </div>
+                <span className={`messages-priority messages-priority--${toPriority(lastMessage.priority).toLowerCase()}`}>
+                  {labels.priority[toPriority(lastMessage.priority)]}
+                </span>
                 <div className="messages-list__subject">{lastMessage.subject}</div>
                 <div className="messages-list__preview">
                   {lastMessage.content.slice(0, 90)}
@@ -206,7 +217,12 @@ export function MessagesList({ filter, userId, lang, onCountsChange }: MessagesL
                   >
                     <div className="messages-thread__meta">
                       <strong>{msg.sender.name}</strong>
-                      <span>{new Date(msg.createdAt).toLocaleString()}</span>
+                      <div className="messages-thread__meta-right">
+                        <span>{new Date(msg.createdAt).toLocaleString()}</span>
+                        <span className={`messages-priority messages-priority--${toPriority(msg.priority).toLowerCase()}`}>
+                          {labels.priority[toPriority(msg.priority)]}
+                        </span>
+                      </div>
                     </div>
                     <p className="messages-thread__text">{msg.content}</p>
                   </article>
@@ -220,6 +236,13 @@ export function MessagesList({ filter, userId, lang, onCountsChange }: MessagesL
       </section>
     </div>
   );
+}
+
+function toPriority(value: string): MessagePriority {
+  if (value === 'LOW' || value === 'NORMAL' || value === 'HIGH' || value === 'URGENT') {
+    return value;
+  }
+  return 'NORMAL';
 }
 
 function findThreadRootId(msg: Message, byId: Map<number, Message>): number {
