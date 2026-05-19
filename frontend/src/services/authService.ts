@@ -36,6 +36,18 @@ export type UpdateMyProfilePayload = {
   newPassword?: string;
 };
 
+export type AuthUserListItem = {
+  id: number;
+  name: string;
+  email?: string;
+  phone?: string | null;
+  role?: string;
+  isActive?: boolean;
+  slug?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
   const result = await apiClient<LoginResponse>('/auth/login', {
     method: 'POST',
@@ -84,6 +96,10 @@ export async function deleteMyProfile(id: number): Promise<void> {
   await apiClient(`/users/${id}`, {
     method: 'DELETE',
   });
+}
+
+export async function getAllProfiles(): Promise<AuthUserListItem[]> {
+  return apiClient<AuthUserListItem[]>('/users');
 }
 
 export { isAuthenticated };

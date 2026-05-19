@@ -6,18 +6,21 @@ import type { NavItem } from '../../types/navigation';
 import { ApiError } from '../../services/apiClient';
 import {
   deleteMyProfile,
+  getAllProfiles,
   getCurrentUser,
   getMyProfile,
   isAuthenticated,
   logout,
   updateMyProfile,
   type AuthProfile,
+  type AuthUserListItem,
 } from '../../services/authService';
 import { PROFILE_I18N } from './i18n';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 
 const DEFAULT_PROFILE_ITEM_ID = 'my-profile';
+const PROFILE_LIST_VIEW_IDS = new Set(['all-profiles', 'active-profiles', 'inactive-profiles']);
 
 export function ProfilePage() {
   const navigate = useNavigate();
@@ -39,6 +42,9 @@ export function ProfilePage() {
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isDeletingProfile, setIsDeletingProfile] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [profilesList, setProfilesList] = useState<AuthUserListItem[]>([]);
+  const [isLoadingProfilesList, setIsLoadingProfilesList] = useState(false);
+  const [profilesListError, setProfilesListError] = useState('');
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -61,6 +67,8 @@ export function ProfilePage() {
     const subRoute = pathParts[1];
     return subRoute || DEFAULT_PROFILE_ITEM_ID;
   }, [location.pathname]);
+
+  const isProfilesListView = PROFILE_LIST_VIEW_IDS.has(activeSidebarId);
 
   const pageTitle = useMemo(() => {
     for (const section of t.sidebar) {
@@ -138,6 +146,58 @@ export function ProfilePage() {
       isMounted = false;
     };
   }, [t.profileCard.fallbackError]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!isProfilesListView || !isAuthenticated()) {
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    setIsLoadingProfilesList(true);
+    setProfilesListError('');
+
+    void getAllProfiles()
+      .then((result) => {
+        if (!isMounted) {
+          return;
+        }
+
+        setProfilesList(result);
+      })
+      .catch(() => {
+        if (!isMounted) {
+          return;
+        }
+
+        setProfilesListError(t.profilesList.error);
+      })
+      .finally(() => {
+        if (!isMounted) {
+          return;
+        }
+
+        setIsLoadingProfilesList(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isProfilesListView, t.profilesList.error]);
+
+  const filteredProfilesList = useMemo(() => {
+    if (activeSidebarId === 'active-profiles') {
+      return profilesList.filter((item) => item.isActive === true);
+    }
+
+    if (activeSidebarId === 'inactive-profiles') {
+      return profilesList.filter((item) => item.isActive === false);
+    }
+
+    return profilesList;
+  }, [activeSidebarId, profilesList]);
 
   const profileRows = useMemo(() => {
     if (!profile) {
@@ -522,6 +582,92 @@ export function ProfilePage() {
             }}
             onCancel={() => setShowDeleteDialog(false)}
           />
+        </section>
+      ) : isProfilesListView ? (
+        <section className="profiles-list-hub">
+          <p className="profiles-list-hub__hint">{t.profilesList.restrictedInfoHint}</p>
+
+          {isLoadingProfilesList ? <p className="profile-hub__loading">{t.profilesList.loading}</p> : null}
+          {profilesListError ? <p className="profile-hub__notice">{profilesListError}</p> : null}
+
+          {!isLoadingProfilesList && !profilesListError && filteredProfilesList.length === 0 ? (
+            <div className="shipments-empty-state">
+              <h2 className="shipments-empty-title">{content.title}</h2>
+              <p className="shipments-empty-desc">{t.profilesList.empty}</p>
+            </div>
+          ) : null}
+
+          {!isLoadingProfilesList && !profilesListError && filteredProfilesList.length > 0 ? (
+            <div className="profiles-list-grid">
+              {filteredProfilesList.map((item) => {
+                const initials = item.name
+                  .split(/\s+/)
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .map((part) => part.charAt(0))
+                  .join('')
+                  .toUpperCase();
+
+                return (
+                  <article key={item.id} className="profile-mini-card">
+                    <div className="profile-mini-card__header">
+                      <div className="profile-mini-card__avatar" aria-hidden="true">
+                        {initials || 'U'}
+                      </div>
+                      <div className="profile-mini-card__identity">
+                        <h3 className="profile-mini-card__name">{item.name}</h3>
+                        <p className="profile-mini-card__id">{`${t.profileCard.fields.id}: ${item.id}`}</p>
+                      </div>
+                      {typeof item.isActive === 'boolean' ? (
+                        <span className="profile-hub__status" data-active={item.isActive ? 'true' : 'false'}>
+                          {item.isActive ? t.profileCard.active : t.profileCard.inactive}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <div className="profile-mini-card__rows">
+                      {item.email ? (
+                        <div className="profile-detail-row">
+                          <span className="profile-detail-row__label">{t.profileCard.fields.email}</span>
+                          <strong className="profile-detail-row__value">{item.email}</strong>
+                        </div>
+                      ) : null}
+                      {item.phone ? (
+                        <div className="profile-detail-row">
+                          <span className="profile-detail-row__label">{t.profileCard.fields.phone}</span>
+                          <strong className="profile-detail-row__value">{item.phone}</strong>
+                        </div>
+                      ) : null}
+                      {item.role ? (
+                        <div className="profile-detail-row">
+                          <span className="profile-detail-row__label">{t.profileCard.fields.role}</span>
+                          <strong className="profile-detail-row__value">{item.role}</strong>
+                        </div>
+                      ) : null}
+                      {item.slug ? (
+                        <div className="profile-detail-row">
+                          <span className="profile-detail-row__label">{t.profileCard.fields.slug}</span>
+                          <strong className="profile-detail-row__value">{item.slug}</strong>
+                        </div>
+                      ) : null}
+                      {item.createdAt ? (
+                        <div className="profile-detail-row">
+                          <span className="profile-detail-row__label">{t.profileCard.fields.createdAt}</span>
+                          <strong className="profile-detail-row__value">{formatDate(item.createdAt)}</strong>
+                        </div>
+                      ) : null}
+                      {item.updatedAt ? (
+                        <div className="profile-detail-row">
+                          <span className="profile-detail-row__label">{t.profileCard.fields.updatedAt}</span>
+                          <strong className="profile-detail-row__value">{formatDate(item.updatedAt)}</strong>
+                        </div>
+                      ) : null}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : null}
         </section>
       ) : (
         <section className="shipments-empty-state">

@@ -70,6 +70,12 @@ type ProfileI18n = {
     inactive: string;
     emptyValue: string;
   };
+  profilesList: {
+    loading: string;
+    empty: string;
+    error: string;
+    restrictedInfoHint: string;
+  };
 };
 
 export const PROFILE_I18N: Record<'he' | 'en', ProfileI18n> = {
@@ -163,6 +169,12 @@ export const PROFILE_I18N: Record<'he' | 'en', ProfileI18n> = {
       active: 'פעיל',
       inactive: 'לא פעיל',
       emptyValue: 'אין נתון',
+    },
+    profilesList: {
+      loading: 'טוען רשימת פרופילים...',
+      empty: 'לא נמצאו פרופילים להצגה לפי הסינון הנוכחי.',
+      error: 'לא ניתן היה לטעון את רשימת הפרופילים.',
+      restrictedInfoHint: 'השדות המוצגים נקבעים לפי רמת ההרשאה שלך בשרת.',
     },
     emptyState: {
       'my-profile': {
@@ -281,6 +293,12 @@ export const PROFILE_I18N: Record<'he' | 'en', ProfileI18n> = {
       active: 'Active',
       inactive: 'Inactive',
       emptyValue: 'No data',
+    },
+    profilesList: {
+      loading: 'Loading profiles list...',
+      empty: 'No profiles found for the selected filter.',
+      error: 'Could not load profiles list.',
+      restrictedInfoHint: 'Displayed fields are determined by your server-side permission level.',
     },
     emptyState: {
       'my-profile': {
