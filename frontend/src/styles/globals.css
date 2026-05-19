@@ -1,4 +1,62 @@
 @import './design-tokens.css';
+/* Modal styles for ConfirmDialog */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-dialog {
+  position: relative;
+  background: #fff;
+  border-radius: var(--radius-md, 12px);
+  box-shadow: 0 4px 32px rgba(0,0,0,0.18);
+  padding: 2.5rem 2rem 2rem 2rem;
+  min-width: 320px;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow: hidden;
+}
+
+.modal-dialog::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 202, 43, 0.18); /* semi-transparent yellow overlay */
+  pointer-events: none;
+  z-index: 0;
+}
+
+.modal-dialog > * {
+  position: relative;
+  z-index: 1;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: var(--color-text-main);
+}
+
+.modal-message {
+  font-size: 1rem;
+  color: var(--color-text-main);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
 
 * {
   box-sizing: border-box;
@@ -329,10 +387,31 @@ select {
   background: var(--color-primary-strong);
 }
 
-.btn-secondary {
-  background: transparent;
-  color: var(--color-text-main);
-  border: 1px solid var(--color-border);
+
+.btn-success {
+  background: var(--color-text-accent);
+  color: #fff;
+  border: 1px solid var(--color-text-accent);
+  box-shadow: 0 2px 7px rgba(45, 90, 39, 0.15);
+  transition: background var(--easing-standard), color var(--easing-standard), border var(--easing-standard), box-shadow var(--easing-standard);
+}
+
+.btn-success:hover,
+.btn-success:focus {
+  background: #1f4520;
+  color: #fff;
+  border: 1px solid #1f4520;
+  transform: translateY(-1px);
+}
+
+.btn-danger {
+  background: #ffe8e8;
+  color: #8f2435;
+  border: 1px solid #f3b7c2;
+}
+
+.btn-danger:hover {
+  background: #ffd9df;
 }
 
 .btn-icon {
@@ -590,6 +669,75 @@ select {
   overflow-wrap: anywhere;
 }
 
+.profile-editor {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 249, 250, 0.96) 100%);
+  border: 1px solid rgba(234, 234, 234, 0.9);
+  border-radius: 18px;
+  padding: var(--space-6);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.06);
+}
+
+.profile-editor__header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.profile-editor__title {
+  margin: 0;
+  color: #132342;
+}
+
+.profile-editor__description {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-muted);
+}
+
+.profile-editor__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.profile-editor__hint {
+  margin: var(--space-3) 0 0;
+  color: #27525b;
+  font-size: 0.95rem;
+}
+
+.profile-editor__hint--muted {
+  color: var(--color-text-muted);
+}
+
+.profile-editor__message,
+.profile-editor__error {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.profile-editor__message {
+  background: #e8f5ee;
+  border: 1px solid #b7dfc7;
+  color: #1f5a32;
+}
+
+.profile-editor__error {
+  background: #fff0f3;
+  border: 1px solid #f3c4cd;
+  color: #8f2435;
+}
+
+.profile-editor__form-grid {
+  margin-top: var(--space-5);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap: var(--space-4);
+}
+
 /* ===== ProfileMenu Dropdown ===== */
 .profile-menu {
   position: relative;
@@ -711,6 +859,10 @@ select {
 
   .profile-panel--system {
     grid-column: auto;
+  }
+
+  .profile-editor__form-grid {
+    grid-template-columns: 1fr;
   }
 }
 
