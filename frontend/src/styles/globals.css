@@ -150,11 +150,19 @@ select {
 
 .app-shell__sidebar-title--button {
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
   background: none;
   border: none;
   text-align: start;
   cursor: pointer;
   transition: background var(--easing-standard), color var(--easing-standard);
+}
+
+.app-shell__sidebar-title--button > span {
+  min-width: 0;
 }
 
 .app-shell__sidebar-title--button:hover,
