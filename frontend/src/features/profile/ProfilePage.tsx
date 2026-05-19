@@ -732,7 +732,7 @@ export function ProfilePage() {
                     className={`profile-mini-card${item.id === selectedManagedProfileId ? ' is-selected' : ''}`}
                     onClick={() => {
                       if (canManageProfiles) {
-                        setSelectedManagedProfileId(item.id);
+                        setSelectedManagedProfileId((prev) => (prev === item.id ? null : item.id));
                       }
                     }}
                   >

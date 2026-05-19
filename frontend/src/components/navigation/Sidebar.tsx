@@ -39,12 +39,16 @@ export function Sidebar({
   return (
     <aside className="app-shell__sidebar" aria-label="Page sidebar">
       <div className="app-shell__sidebar-scroll">
-        {sections.map((section) => (
+        {sections.map((section) => {
+          const isSectionActive = section.id === activeItemId;
+
+          return (
           <section key={section.id} className="app-shell__sidebar-section">
             <button
               type="button"
-              className="app-shell__sidebar-title app-shell__sidebar-title--button"
+              className={`app-shell__sidebar-title app-shell__sidebar-title--button${isSectionActive ? ' is-active' : ''}`}
               onClick={() => section.href && onNavigate?.({ id: section.id, label: section.title, href: section.href })}
+              aria-current={isSectionActive ? 'page' : undefined}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 {section.icon && (
@@ -91,7 +95,8 @@ export function Sidebar({
               })}
             </div>
           </section>
-        ))}
+          );
+        })}
       </div>
 
       {footerSlot}
