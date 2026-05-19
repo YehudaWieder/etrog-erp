@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { deleteMessage, fetchAllMessages, Message } from '../../services/messagesApi';
 import { FaReply, FaEnvelopeOpen, FaEnvelope, FaShareFromSquare, FaTrashCan } from 'react-icons/fa6';
+import { getAllProfiles } from '../../services/authService';
 
 type MessagePriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
 
@@ -18,6 +19,7 @@ type MessagesListProps = {
 
 export function MessagesList({ filter, userId, lang, onCountsChange, onActionFeedback }: MessagesListProps) {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [userNamesById, setUserNamesById] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRootId, setSelectedRootId] = useState<number | null>(null);
@@ -29,6 +31,21 @@ export function MessagesList({ filter, userId, lang, onCountsChange, onActionFee
       .then(setMessages)
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    getAllProfiles()
+      .then((profiles) => {
+        const map: Record<number, string> = {};
+        for (const profile of profiles) {
+          map[profile.id] = profile.name;
+        }
+        setUserNamesById(map);
+      })
+      .catch(() => {
+        // Keep graceful fallback when names directory cannot be loaded.
+        setUserNamesById({});
+      });
   }, []);
 
   const byId = useMemo(() => {
@@ -198,6 +215,12 @@ export function MessagesList({ filter, userId, lang, onCountsChange, onActionFee
             userId !== undefined &&
             lastMessage.recipientIds.includes(userId) &&
             !lastMessage.readByIds.includes(userId);
+          const isOutgoing = userId !== undefined && lastMessage.senderId === userId;
+          const metaMain = buildMessageMetaMain(lastMessage, {
+            lang,
+            userId,
+            userNamesById,
+          });
 
           return (
             <button
@@ -216,7 +239,7 @@ export function MessagesList({ filter, userId, lang, onCountsChange, onActionFee
                   {labels.priority[toPriority(lastMessage.priority)]}
                 </span>
                 <div className="messages-list__meta">
-                  <span>{lastMessage.sender.name}</span>
+                  <span title={metaMain.tooltip}>{metaMain.text}</span>
                   <span>{new Date(lastMessage.createdAt).toLocaleString()}</span>
                 </div>
                 <div className="messages-list__subject">{lastMessage.subject}</div>
@@ -247,6 +270,7 @@ export function MessagesList({ filter, userId, lang, onCountsChange, onActionFee
             <div className="messages-thread__items">
               {selectedThreadMessages.map((msg) => {
                 const isOutgoing = userId !== undefined && msg.senderId === userId;
+                const metaMain = buildMessageMetaMain(msg, { lang, userId, userNamesById });
                 return (
                   <article
                     key={msg.id}
@@ -256,7 +280,7 @@ export function MessagesList({ filter, userId, lang, onCountsChange, onActionFee
                       {labels.priority[toPriority(msg.priority)]}
                     </span>
                     <div className="messages-thread__meta">
-                      <strong>{msg.sender.name}</strong>
+                      <strong title={metaMain.tooltip}>{metaMain.text}</strong>
                       <div className="messages-thread__meta-right">
                         <span>{new Date(msg.createdAt).toLocaleString()}</span>
                       </div>
@@ -305,6 +329,44 @@ export function MessagesList({ filter, userId, lang, onCountsChange, onActionFee
       </section>
     </div>
   );
+}
+
+function buildMessageMetaMain(
+  message: Message,
+  options: { lang: 'he' | 'en'; userId?: number; userNamesById: Record<number, string> },
+): { text: string; tooltip?: string } {
+  const { lang, userId, userNamesById } = options;
+  const isOutgoing = userId !== undefined && message.senderId === userId;
+
+  if (!isOutgoing) {
+    return {
+      text: lang === 'he' ? `מאת: ${message.sender.name}` : `From: ${message.sender.name}`,
+    };
+  }
+
+  const recipientNames = message.recipientIds.map((id) => userNamesById[id] || `#${id}`);
+  if (recipientNames.length === 0) {
+    return { text: lang === 'he' ? 'אל: -' : 'To: -' };
+  }
+
+  if (recipientNames.length === 1) {
+    return {
+      text: lang === 'he' ? `אל: ${recipientNames[0]}` : `To: ${recipientNames[0]}`,
+      tooltip: recipientNames[0],
+    };
+  }
+
+  const firstName = recipientNames[0];
+  const additionalCount = recipientNames.length - 1;
+  const shortText =
+    lang === 'he'
+      ? `אל: ${firstName} +${additionalCount}`
+      : `To: ${firstName} +${additionalCount}`;
+
+  return {
+    text: shortText,
+    tooltip: recipientNames.join(', '),
+  };
 }
 
 function toPriority(value: string): MessagePriority {
