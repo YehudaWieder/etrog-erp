@@ -94,6 +94,8 @@ select {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   background: var(--color-bg-main);
 }
 
@@ -109,6 +111,9 @@ select {
   display: flex;
   flex: 1;
   min-height: calc(100vh - var(--layout-topbar-height));
+  height: calc(100dvh - var(--layout-topbar-height));
+  min-height: 0;
+  overflow: hidden;
 }
 
 .app-shell[data-direction='rtl'] .app-shell__body {
@@ -123,7 +128,8 @@ select {
   width: var(--layout-sidebar-width);
   background: var(--color-bg-surface);
   border-inline-end: 1px solid var(--color-border);
-  min-height: calc(100vh - var(--layout-topbar-height));
+  height: calc(100vh - var(--layout-topbar-height));
+  max-height: calc(100dvh - var(--layout-topbar-height));
   position: sticky;
   top: var(--layout-topbar-height);
   display: flex;
@@ -215,6 +221,8 @@ select {
   flex: 1 1 0%;
   min-width: 0;
   width: 100%;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .app-shell__topbar {
@@ -1173,10 +1181,21 @@ select {
 }
 
 @media (max-width: 1024px) {
+  .app-shell {
+    height: auto;
+    overflow: visible;
+  }
+
   .app-shell__body,
   .app-shell[data-direction='rtl'] .app-shell__body,
   .app-shell[data-direction='ltr'] .app-shell__body {
     flex-direction: column;
+    height: auto;
+    overflow: visible;
+  }
+
+  .app-shell__main {
+    overflow: visible;
   }
 
   .app-shell__sidebar {
