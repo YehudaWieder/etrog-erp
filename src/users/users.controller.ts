@@ -99,6 +99,7 @@ export class UsersController {
 	@ApiResponse({ status: 200, description: 'User removed successfully.' })
 	@ApiResponse({ status: 404, description: 'User not found.' })
 	@ApiResponse({ status: 403, description: 'You can only remove your own user unless you are manager/owner.' })
+	@ApiResponse({ status: 409, description: 'Cannot delete user because dependent records still exist.' })
 	remove(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
 		return this.usersService.removeByActor(id, req.user as AuthenticatedUser);
 	}

@@ -280,17 +280,25 @@ export class UsersService {
 			throw new ForbiddenException('You can only remove your own user.');
 		}
 
-		return this.prisma.$transaction(async (tx) => {
-			// First, delete all messages sent by this user (cascade will be handled by DB)
-			await tx.message.deleteMany({
-				where: { senderId: id },
-			});
+		try {
+			return this.prisma.$transaction(async (tx) => {
+				// First, delete all messages sent by this user (cascade will be handled by DB)
+				await tx.message.deleteMany({
+					where: { senderId: id },
+				});
 
-			// Then delete the user
-			return tx.user.delete({
-				where: { id },
+				// Then delete the user
+				return tx.user.delete({
+					where: { id },
+				});
 			});
-		});
+		} catch (error) {
+			if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+				throw new ConflictException('Cannot delete user because related records exist in the system.');
+			}
+
+			throw error;
+		}
 	}
 
 	private isPrivileged(role: Role) {
