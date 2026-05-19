@@ -30,7 +30,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(255, 202, 43, 0.18); /* semi-transparent yellow overlay */
+  background: rgba(255, 202, 43, 0.02); /* semi-transparent yellow overlay */
   pointer-events: none;
   z-index: 0;
 }
@@ -309,7 +309,7 @@ select {
 
 .nav-icon-btn:hover {
   color: var(--color-primary);
-  background: rgba(255, 202, 43, 0.08);
+  background: rgba(255, 202, 43, 0.015);
 }
 
 .nav-icon-btn .badge {
@@ -799,7 +799,7 @@ select {
   color: var(--color-text-accent);
   background: var(--color-primary-soft);
   border: 1px solid var(--color-primary);
-  box-shadow: 0 10px 20px rgba(255, 202, 43, 0.28);
+  box-shadow: 0 10px 20px rgba(255, 202, 43, 0.04);
 }
 
 .profile-hub__hero-content {
@@ -1030,7 +1030,7 @@ select {
 
 .profile-mini-card.is-selected {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(255, 202, 43, 0.3), 0 10px 24px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 0 0 3px rgba(255, 202, 43, 0.04), 0 10px 24px rgba(0, 0, 0, 0.05);
 }
 
 .profile-mini-card__header {

@@ -1,5 +1,6 @@
-import { FaEnvelope, FaCalendarDays } from 'react-icons/fa6';
 
+import { useEffect, useState } from 'react';
+import { FaEnvelope, FaCalendarDays } from 'react-icons/fa6';
 import type { NavItem } from '../../types/navigation';
 import { HomeIcon } from '../ui/HomeIcon';
 import { ProfileMenu, type ProfileMenuProps } from './ProfileMenu';
@@ -11,7 +12,7 @@ type AppTopBarProps = {
   onNavigate?: (item: NavItem) => void;
   brandName?: string;
   lang: 'he' | 'en';
-  alertsCount?: number;
+  alertsCount?: number; // deprecated, will be ignored
   onAlertsClick?: () => void;
   onBrandClick?: () => void;
 } & ProfileMenuProps;
@@ -22,7 +23,6 @@ export function AppTopBar({
   onNavigate,
   brandName = 'Wieders etrogs',
   lang,
-  alertsCount,
   onAlertsClick,
   onBrandClick,
   isAuthenticated,
@@ -32,6 +32,20 @@ export function AppTopBar({
   onProfile,
   userName,
 }: AppTopBarProps) {
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('../../services/messagesApi').then(({ fetchUnreadCount }) => {
+      fetchUnreadCount().then((res) => {
+        if (isMounted) setUnreadCount(res.count);
+      }).catch(() => {
+        if (isMounted) setUnreadCount(0);
+      });
+    });
+    return () => { isMounted = false; };
+  }, []);
+
   return (
     <TopBar
       links={links}
@@ -71,7 +85,7 @@ export function AppTopBar({
             onClick={onAlertsClick}
           >
             <FaEnvelope />
-            {typeof alertsCount === 'number' && alertsCount > 0 ? <span className="badge">{alertsCount}</span> : null}
+            {unreadCount > 0 ? <span className="badge">{unreadCount}</span> : null}
           </button>
           <ProfileMenu
             isAuthenticated={isAuthenticated}

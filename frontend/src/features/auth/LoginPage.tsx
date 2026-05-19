@@ -17,7 +17,6 @@ export function LoginPage() {
   });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeTopId, setActiveTopId] = useState('shipments');
   const currentUser = getCurrentUser();
 
   const lang = useMemo(() => {
@@ -47,10 +46,6 @@ export function LoginPage() {
   const handleLogout = async () => {
     await logout();
   };
-  const handleTopNavClick = (item: NavItem) => {
-    setActiveTopId(item.id);
-  };
-
   const handleChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -95,8 +90,7 @@ export function LoginPage() {
     <div className="auth-page" dir={lang === 'he' ? 'rtl' : 'ltr'}>
       <AppTopBar
         links={t.topNav}
-        activeId={activeTopId}
-        onNavigate={handleTopNavClick}
+        activeId={undefined}
         onBrandClick={() => navigate('/home')}
         lang={lang}
         isAuthenticated={isAuthenticated()}
