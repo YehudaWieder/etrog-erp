@@ -50,6 +50,21 @@ export function ShipmentsPage() {
     return subRoute || DEFAULT_SIDEBAR_ITEM_ID;
   }, [location.pathname]);
 
+  const pageTitle = useMemo(() => {
+    for (const section of t.sidebar) {
+      if (section.id === activeSidebarId) {
+        return section.title;
+      }
+
+      const activeItem = section.items.find((item) => item.id === activeSidebarId);
+      if (activeItem) {
+        return activeItem.label;
+      }
+    }
+
+    return t.pageTitle;
+  }, [activeSidebarId, t.sidebar, t.pageTitle]);
+
   const content = useMemo(() => {
     const state = t.emptyState as Record<string, { title: string; description: string }>;
     return state[activeSidebarId] || state.default;
@@ -72,7 +87,7 @@ export function ShipmentsPage() {
     <AppShell
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
-      pageTitle={t.pageTitle}
+      pageTitle={pageTitle}
       topNav={t.topNav}
       activeTopNavId={activeTopId}
       sidebarSections={t.sidebar}

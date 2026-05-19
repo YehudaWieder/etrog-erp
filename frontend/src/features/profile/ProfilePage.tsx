@@ -62,6 +62,21 @@ export function ProfilePage() {
     return subRoute || DEFAULT_PROFILE_ITEM_ID;
   }, [location.pathname]);
 
+  const pageTitle = useMemo(() => {
+    for (const section of t.sidebar) {
+      if (section.id === activeSidebarId) {
+        return section.title;
+      }
+
+      const activeItem = section.items.find((item) => item.id === activeSidebarId);
+      if (activeItem) {
+        return activeItem.label;
+      }
+    }
+
+    return t.pageTitle;
+  }, [activeSidebarId, t.sidebar, t.pageTitle]);
+
   const content = useMemo(() => {
     return t.emptyState[activeSidebarId] || t.emptyState.default;
   }, [activeSidebarId, t.emptyState]);
@@ -297,7 +312,7 @@ export function ProfilePage() {
     <AppShell
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
-      pageTitle={t.pageTitle}
+      pageTitle={pageTitle}
       topNav={t.topNav}
       sidebarSections={t.sidebar}
       activeSidebarItemId={activeSidebarId}
