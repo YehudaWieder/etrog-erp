@@ -54,6 +54,9 @@ export function Sidebar({
                 )}
                 {section.title}
               </span>
+              {typeof section.badge === 'number' ? (
+                <span className="app-shell__badge">{section.badge}</span>
+              ) : null}
             </button>
             <div>
               {section.items.map((item) => {

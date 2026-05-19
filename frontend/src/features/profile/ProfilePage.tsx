@@ -231,6 +231,51 @@ export function ProfilePage() {
     return profilesList;
   }, [activeSidebarId, profilesList]);
 
+  const profilesCounts = useMemo(() => {
+    const total = profilesList.length;
+    const active = profilesList.filter((item) => item.isActive === true).length;
+    const inactive = profilesList.filter((item) => item.isActive === false).length;
+
+    return {
+      total,
+      active,
+      inactive,
+      current: filteredProfilesList.length,
+    };
+  }, [filteredProfilesList.length, profilesList]);
+
+  const sidebarSectionsWithCounts = useMemo(() => {
+    return t.sidebar.map((section) => {
+      if (section.id !== 'all-profiles') {
+        return section;
+      }
+
+      return {
+        ...section,
+        badge: profilesCounts.total,
+        items: section.items.map((item) => {
+          if (item.id === 'active-profiles') {
+            return { ...item, badge: profilesCounts.active };
+          }
+
+          if (item.id === 'inactive-profiles') {
+            return { ...item, badge: profilesCounts.inactive };
+          }
+
+          return item;
+        }),
+      };
+    });
+  }, [profilesCounts.active, profilesCounts.inactive, profilesCounts.total, t.sidebar]);
+
+  const pageTitleWithCount = useMemo(() => {
+    if (!isProfilesListView) {
+      return pageTitle;
+    }
+
+    return `${pageTitle} (${profilesCounts.current})`;
+  }, [isProfilesListView, pageTitle, profilesCounts.current]);
+
   const profileRows = useMemo(() => {
     if (!profile) {
       return [];
@@ -404,9 +449,9 @@ export function ProfilePage() {
     <AppShell
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
-      pageTitle={pageTitle}
+      pageTitle={pageTitleWithCount}
       topNav={t.topNav}
-      sidebarSections={t.sidebar}
+      sidebarSections={sidebarSectionsWithCounts}
       activeSidebarItemId={activeSidebarId}
       onTopNavClick={handleTopNavClick}
       onSidebarClick={handleSidebarClick}
