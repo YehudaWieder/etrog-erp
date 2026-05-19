@@ -9,7 +9,43 @@ type ProfileI18n = {
   topNav: NavItem[];
   sidebar: SidebarSection[];
   pageTitle: string;
+  settings: string;
   emptyState: Record<string, EmptyStateContent>;
+  editProfile: {
+    title: string;
+    description: string;
+    permissionsHint: string;
+    cannotEditRoleStatus: string;
+    fields: {
+      name: string;
+      email: string;
+      phone: string;
+      currentPassword: string;
+      newPassword: string;
+    };
+    placeholders: {
+      name: string;
+      email: string;
+      phone: string;
+      currentPassword: string;
+      newPassword: string;
+    };
+    actions: {
+      update: string;
+      deleting: string;
+      delete: string;
+      updating: string;
+    };
+    messages: {
+      noChanges: string;
+      updateSuccess: string;
+      updateFailed: string;
+      passwordNeedsCurrent: string;
+      deleteConfirm: string;
+      cannotDeleteWithDependencies: string;
+      deleteFailed: string;
+    };
+  };
   profileCard: {
     title: string;
     description: string;
@@ -68,6 +104,42 @@ export const PROFILE_I18N: Record<'he' | 'en', ProfileI18n> = {
       },
     ],
     pageTitle: 'הפרופיל שלי',
+    settings: 'הגדרות',
+    editProfile: {
+      title: 'עריכת פרופיל',
+      description: 'ניתן לערוך כל שדה בנפרד. בעדכון נשלחים לשרת רק הערכים שהשתנו.',
+      permissionsHint: 'הרשאות העריכה נאכפות בשרת לפי רמת המשתמש.',
+      cannotEditRoleStatus: 'תפקיד וסטטוס מנוהלים לפי כללי מערכת ולכן אינם ניתנים לעריכה עצמית.',
+      fields: {
+        name: 'שם',
+        email: 'אימייל',
+        phone: 'טלפון',
+        currentPassword: 'סיסמה נוכחית',
+        newPassword: 'סיסמה חדשה',
+      },
+      placeholders: {
+        name: 'הזן שם משתמש',
+        email: 'הזן כתובת אימייל',
+        phone: 'הזן טלפון (אופציונלי)',
+        currentPassword: 'נדרש רק אם משנים סיסמה',
+        newPassword: 'לפחות 8 תווים עם אותיות ומספרים',
+      },
+      actions: {
+        update: 'עדכון',
+        updating: 'מעדכן...',
+        delete: 'מחיקה',
+        deleting: 'מוחק...',
+      },
+      messages: {
+        noChanges: 'לא זוהו שינויים לעדכון.',
+        updateSuccess: 'הפרופיל עודכן בהצלחה.',
+        updateFailed: 'לא ניתן היה לעדכן את הפרופיל. נסה שוב או פנה למנהל.',
+        passwordNeedsCurrent: 'כדי לשנות סיסמה יש להזין גם סיסמה נוכחית.',
+        deleteConfirm: 'האם למחוק את המשתמש? פעולה זו אינה הפיכה.',
+        cannotDeleteWithDependencies: 'לא ניתן למחוק משתמש עם רשומות תלויות במערכת.',
+        deleteFailed: 'לא ניתן היה למחוק את המשתמש. נסה שוב או פנה למנהל.',
+      },
+    },
     profileCard: {
       title: 'פרטי המשתמש שלי',
       description: 'הנתונים נטענים מהשרת עבור המשתמש המחובר כעת.',
@@ -150,6 +222,42 @@ export const PROFILE_I18N: Record<'he' | 'en', ProfileI18n> = {
       },
     ],
     pageTitle: 'My Profile',
+    settings: 'Settings',
+    editProfile: {
+      title: 'Edit Profile',
+      description: 'You can edit each field separately. Update sends only changed values to the server.',
+      permissionsHint: 'Edit permissions are enforced by the server according to user role.',
+      cannotEditRoleStatus: 'Role and status are managed by system policy and cannot be self-edited.',
+      fields: {
+        name: 'Name',
+        email: 'Email',
+        phone: 'Phone',
+        currentPassword: 'Current Password',
+        newPassword: 'New Password',
+      },
+      placeholders: {
+        name: 'Enter display name',
+        email: 'Enter email address',
+        phone: 'Enter phone (optional)',
+        currentPassword: 'Required only for password change',
+        newPassword: 'At least 8 chars with letters and numbers',
+      },
+      actions: {
+        update: 'Update',
+        updating: 'Updating...',
+        delete: 'Delete',
+        deleting: 'Deleting...',
+      },
+      messages: {
+        noChanges: 'No changes detected to update.',
+        updateSuccess: 'Profile updated successfully.',
+        updateFailed: 'Could not update profile. Please try again or contact admin.',
+        passwordNeedsCurrent: 'Current password is required to change password.',
+        deleteConfirm: 'Delete this user? This action cannot be undone.',
+        cannotDeleteWithDependencies: 'Cannot delete a user that still has related records in the system.',
+        deleteFailed: 'Could not delete user. Please try again or contact admin.',
+      },
+    },
     profileCard: {
       title: 'My User Details',
       description: 'These values are loaded from the server for the currently authenticated user.',
