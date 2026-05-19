@@ -12,7 +12,7 @@ type AppTopBarProps = {
   onNavigate?: (item: NavItem) => void;
   brandName?: string;
   lang: 'he' | 'en';
-  alertsCount?: number; // deprecated, will be ignored
+  alertsCount?: number;
   onAlertsClick?: () => void;
   onBrandClick?: () => void;
 } & ProfileMenuProps;
@@ -23,6 +23,7 @@ export function AppTopBar({
   onNavigate,
   brandName = 'Wieders etrogs',
   lang,
+  alertsCount,
   onAlertsClick,
   onBrandClick,
   isAuthenticated,
@@ -32,19 +33,25 @@ export function AppTopBar({
   onProfile,
   userName,
 }: AppTopBarProps) {
-  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [fetchedUnreadCount, setFetchedUnreadCount] = useState<number>(0);
+
+  const unreadCount = typeof alertsCount === 'number' ? alertsCount : fetchedUnreadCount;
 
   useEffect(() => {
+    if (typeof alertsCount === 'number') {
+      return;
+    }
+
     let isMounted = true;
     import('../../services/messagesApi').then(({ fetchUnreadCount }) => {
       fetchUnreadCount().then((res) => {
-        if (isMounted) setUnreadCount(res.count);
+        if (isMounted) setFetchedUnreadCount(res.count);
       }).catch(() => {
-        if (isMounted) setUnreadCount(0);
+        if (isMounted) setFetchedUnreadCount(0);
       });
     });
     return () => { isMounted = false; };
-  }, []);
+  }, [alertsCount]);
 
   return (
     <TopBar

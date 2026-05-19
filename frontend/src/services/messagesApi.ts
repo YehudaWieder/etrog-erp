@@ -27,7 +27,13 @@ export async function fetchOutboxMessages(): Promise<Message[]> {
 }
 
 export async function fetchUnreadCount(): Promise<{ count: number }> {
-  return apiClient<{ count: number }>('/messages/unread-count');
+  const response = await apiClient<number | { count?: number }>('/messages/unread-count');
+
+  if (typeof response === 'number') {
+    return { count: response };
+  }
+
+  return { count: typeof response?.count === 'number' ? response.count : 0 };
 }
 
 export async function fetchThread(messageId: number): Promise<Message[]> {
