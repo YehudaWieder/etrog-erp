@@ -1,9 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { FaFloppyDisk, FaTrashCan } from 'react-icons/fa6';
 import { AppShell } from '../../app/layout/AppShell';
 import type { NavItem } from '../../types/navigation';
-import { getCurrentUser, getMyProfile, isAuthenticated, logout, type AuthProfile } from '../../services/authService';
+import { ApiError } from '../../services/apiClient';
+import {
+  deleteMyProfile,
+  getCurrentUser,
+  getMyProfile,
+  isAuthenticated,
+  logout,
+  updateMyProfile,
+  type AuthProfile,
+} from '../../services/authService';
 import { PROFILE_I18N } from './i18n';
+import { SettingsIcon } from '../../components/ui/SettingsIcon';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 
 const DEFAULT_PROFILE_ITEM_ID = 'my-profile';
 
@@ -15,6 +27,18 @@ export function ProfilePage() {
   const [profile, setProfile] = useState<AuthProfile | null>(currentUser);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [profileError, setProfileError] = useState('');
+  const [editForm, setEditForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    currentPassword: '',
+    newPassword: '',
+  });
+  const [editMessage, setEditMessage] = useState('');
+  const [editError, setEditError] = useState('');
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [isDeletingProfile, setIsDeletingProfile] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const lang = useMemo(() => {
     if (typeof window !== 'undefined') {
@@ -133,6 +157,127 @@ export function ProfilePage() {
     [t.profileCard.fields.createdAt, t.profileCard.fields.updatedAt].includes(row.label),
   );
 
+  useEffect(() => {
+    if (!profile) {
+      return;
+    }
+
+    setEditForm((prev) => ({
+      ...prev,
+      name: profile.name || '',
+      email: profile.email || '',
+      phone: profile.phone || '',
+      currentPassword: '',
+      newPassword: '',
+    }));
+  }, [profile]);
+
+  const handleEditFieldChange = (field: keyof typeof editForm, value: string) => {
+    setEditForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+
+    if (editMessage) {
+      setEditMessage('');
+    }
+    if (editError) {
+      setEditError('');
+    }
+  };
+
+  // Admin cannot edit their own role/status
+  const isSelfAdmin = profile?.role === 'admin' && currentUser?.id === profile?.id;
+
+  const handleUpdateProfile = async () => {
+    if (!profile) {
+      return;
+    }
+
+    const trimmedName = editForm.name.trim();
+    const trimmedEmail = editForm.email.trim();
+    const trimmedPhone = editForm.phone.trim();
+
+    const payload: {
+      id: number;
+      name?: string;
+      email?: string;
+      phone?: string | null;
+      currentPassword?: string;
+      newPassword?: string;
+    } = { id: profile.id };
+
+    if (trimmedName !== profile.name) {
+      payload.name = trimmedName;
+    }
+
+    if (trimmedEmail !== profile.email) {
+      payload.email = trimmedEmail;
+    }
+
+    const originalPhone = profile.phone || '';
+    if (trimmedPhone !== originalPhone) {
+      payload.phone = trimmedPhone.length === 0 ? null : trimmedPhone;
+    }
+
+    if (editForm.newPassword.trim().length > 0) {
+      if (!editForm.currentPassword.trim()) {
+        setEditError(t.editProfile.messages.passwordNeedsCurrent);
+        return;
+      }
+
+      payload.currentPassword = editForm.currentPassword;
+      payload.newPassword = editForm.newPassword;
+    }
+
+    const hasChanges = Object.keys(payload).length > 1;
+    if (!hasChanges) {
+      setEditMessage(t.editProfile.messages.noChanges);
+      return;
+    }
+
+    setIsUpdatingProfile(true);
+    setEditError('');
+    setEditMessage('');
+
+    try {
+      const updated = await updateMyProfile(payload);
+      setProfile(updated);
+      setEditForm((prev) => ({
+        ...prev,
+        currentPassword: '',
+        newPassword: '',
+      }));
+      setEditMessage(t.editProfile.messages.updateSuccess);
+    } catch (error) {
+      // Generalize error messages
+      if (error instanceof ApiError) {
+        setEditError(t.editProfile.messages.updateFailed || t.profileCard.fallbackError);
+      } else {
+        setEditError(t.profileCard.fallbackError);
+      }
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  };
+
+  const handleDeleteProfile = async () => {
+    if (!profile) return;
+    setIsDeletingProfile(true);
+    setEditError('');
+    setEditMessage('');
+    try {
+      await deleteMyProfile(profile.id);
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      // Generalize error messages
+      setEditError(t.editProfile.messages.deleteFailed || t.editProfile.messages.cannotDeleteWithDependencies);
+    } finally {
+      setIsDeletingProfile(false);
+    }
+  };
+
   const handleTopNavClick = (item: NavItem) => {
     navigate(`/${item.id}`);
   };
@@ -165,7 +310,50 @@ export function ProfilePage() {
         onProfile: () => navigate('/profile'),
         userName: currentUser?.name || (lang === 'he' ? 'הפרופיל שלי' : 'My Profile'),
       }}
+      sidebarFooterSlot={
+        <button
+          type="button"
+          className="app-shell__sidebar-item app-shell__sidebar-settings"
+          onClick={() => navigate('/settings')}
+        >
+          {lang === 'he' ? (
+            <>
+              {t.settings}
+              <SettingsIcon style={{ marginInlineStart: 8 }} />
+            </>
+          ) : (
+            <>
+              <SettingsIcon style={{ marginInlineEnd: 8 }} />
+              {t.settings}
+            </>
+          )}
+        </button>
+      }
     >
+      <div className="app-shell__content-header">
+        {activeSidebarId === 'edit-my-profile' && (
+          <div className="action-buttons">
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={handleUpdateProfile}
+              disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
+            >
+              <FaFloppyDisk />
+              <span>{isUpdatingProfile ? t.editProfile.actions.updating : t.editProfile.actions.update}</span>
+            </button>
+            <button
+              className="btn btn-danger"
+              type="button"
+              onClick={() => setShowDeleteDialog(true)}
+              disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
+            >
+              <FaTrashCan />
+              <span>{isDeletingProfile ? t.editProfile.actions.deleting : t.editProfile.actions.delete}</span>
+            </button>
+          </div>
+        )}
+      </div>
       {activeSidebarId === 'my-profile' ? (
         <section className="profile-hub">
           <div className="profile-hub__hero">
@@ -222,6 +410,96 @@ export function ProfilePage() {
               </div>
             </article>
           </div>
+        </section>
+      ) : activeSidebarId === 'edit-my-profile' ? (
+        <section className="profile-editor">
+          <header className="profile-editor__header">
+            <div>
+              <h2 className="profile-editor__title">{t.editProfile.title}</h2>
+              <p className="profile-editor__description">{t.editProfile.description}</p>
+            </div>
+          </header>
+
+          <p className="profile-editor__hint">{t.editProfile.permissionsHint}</p>
+          {isSelfAdmin && (
+            <p className="profile-editor__hint profile-editor__hint--muted">{t.editProfile.cannotEditRoleStatus}</p>
+          )}
+
+          {editMessage ? <p className="profile-editor__message">{editMessage}</p> : null}
+          {editError ? <p className="profile-editor__error">{editError}</p> : null}
+
+          <div className="profile-editor__form-grid">
+            <label className="form-group">
+              <span className="form-label">{t.editProfile.fields.name}</span>
+              <input
+                className="form-input"
+                value={editForm.name}
+                onChange={(event) => handleEditFieldChange('name', event.target.value)}
+                placeholder={t.editProfile.placeholders.name}
+                disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
+              />
+            </label>
+
+            <label className="form-group">
+              <span className="form-label">{t.editProfile.fields.email}</span>
+              <input
+                className="form-input"
+                type="email"
+                value={editForm.email}
+                onChange={(event) => handleEditFieldChange('email', event.target.value)}
+                placeholder={t.editProfile.placeholders.email}
+                disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
+              />
+            </label>
+
+            <label className="form-group">
+              <span className="form-label">{t.editProfile.fields.phone}</span>
+              <input
+                className="form-input"
+                value={editForm.phone}
+                onChange={(event) => handleEditFieldChange('phone', event.target.value)}
+                placeholder={t.editProfile.placeholders.phone}
+                disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
+              />
+            </label>
+
+            <label className="form-group">
+              <span className="form-label">{t.editProfile.fields.currentPassword}</span>
+              <input
+                className="form-input"
+                type="password"
+                value={editForm.currentPassword}
+                onChange={(event) => handleEditFieldChange('currentPassword', event.target.value)}
+                placeholder={t.editProfile.placeholders.currentPassword}
+                disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
+              />
+            </label>
+
+            <label className="form-group">
+              <span className="form-label">{t.editProfile.fields.newPassword}</span>
+              <input
+                className="form-input"
+                type="password"
+                value={editForm.newPassword}
+                onChange={(event) => handleEditFieldChange('newPassword', event.target.value)}
+                placeholder={t.editProfile.placeholders.newPassword}
+                disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
+              />
+            </label>
+          </div>
+
+          <ConfirmDialog
+            open={showDeleteDialog}
+            title={t.editProfile.actions.delete}
+            message={t.editProfile.messages.deleteConfirm}
+            confirmLabel={t.editProfile.actions.delete}
+            cancelLabel={lang === 'he' ? 'ביטול' : 'Cancel'}
+            onConfirm={() => {
+              setShowDeleteDialog(false);
+              handleDeleteProfile();
+            }}
+            onCancel={() => setShowDeleteDialog(false)}
+          />
         </section>
       ) : (
         <section className="shipments-empty-state">
