@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { FaPaperPlane, FaTrashCan } from 'react-icons/fa6';
+import { FaPaperPlane } from 'react-icons/fa6';
 import { MessagesList } from './MessagesList';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from '../../app/layout/AppShell';
@@ -53,8 +53,9 @@ export function MessagesPage() {
   }, [activeSidebarId]);
 
   const pageTitle = useMemo(() => {
-    const section = t.sidebar.find((s) => s.id === normalizedFilter);
-    const label = section?.title || t.pageTitle;
+    const topSection = t.sidebar.find((s) => s.id === 'all-messages');
+    const activeItem = topSection?.items.find((item) => item.id === normalizedFilter);
+    const label = activeItem?.label || topSection?.title || t.pageTitle;
     const count = counts[normalizedFilter] ?? 0;
     return count > 0 ? `${label} (${count})` : label;
   }, [normalizedFilter, t.pageTitle, t.sidebar, counts]);
@@ -125,14 +126,16 @@ export function MessagesPage() {
             <FaPaperPlane />
             <span>{t.actions.sendNew}</span>
           </button>
-          <button className="btn btn-danger" type="button" onClick={() => handleAction(t.actions.deleteMessage)}>
-            <FaTrashCan />
-            <span>{t.actions.deleteMessage}</span>
-          </button>
         </div>
       </div>
 
-      <MessagesList filter={normalizedFilter} lang={lang} userId={currentUser?.id} onCountsChange={setCounts} />
+      <MessagesList
+        filter={normalizedFilter}
+        lang={lang}
+        userId={currentUser?.id}
+        onCountsChange={setCounts}
+        onActionFeedback={setLastActionText}
+      />
       {lastActionText ? <p className="shipments-last-action">{lastActionText}</p> : null}
     </AppShell>
   );

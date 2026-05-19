@@ -29,16 +29,15 @@ export const MESSAGES_I18N: Record<'he' | 'en', MessagesI18n> = {
     ],
     sidebar: [
       {
-        id: 'all-messages', title: 'כל ההודעות', href: '/messages/all-messages', icon: 'fa-envelope', items: []
-      },
-      {
-        id: 'incoming-messages', title: 'הודעות נכנסות', href: '/messages/incoming-messages', icon: 'fa-inbox', items: []
-      },
-      {
-        id: 'outgoing-messages', title: 'הודעות יוצאות', href: '/messages/outgoing-messages', icon: 'fa-paper-plane', items: []
-      },
-      {
-        id: 'unread-messages', title: 'הודעות שלא נקראו', href: '/messages/unread-messages', icon: 'fa-envelope-open-text', items: []
+        id: 'all-messages',
+        title: 'כל ההודעות',
+        href: '/messages/all-messages',
+        icon: 'fa-envelope',
+        items: [
+          { id: 'incoming-messages', label: 'הודעות נכנסות', href: '/messages/incoming-messages', icon: 'fa-inbox' },
+          { id: 'outgoing-messages', label: 'הודעות יוצאות', href: '/messages/outgoing-messages', icon: 'fa-paper-plane' },
+          { id: 'unread-messages', label: 'הודעות שלא נקראו', href: '/messages/unread-messages', icon: 'fa-envelope-open-text' },
+        ],
       },
     ],
     pageTitle: 'הודעות',
@@ -81,16 +80,15 @@ export const MESSAGES_I18N: Record<'he' | 'en', MessagesI18n> = {
     ],
     sidebar: [
       {
-        id: 'all-messages', title: 'All Messages', href: '/messages/all-messages', icon: 'fa-envelope', items: []
-      },
-      {
-        id: 'incoming-messages', title: 'Incoming Messages', href: '/messages/incoming-messages', icon: 'fa-inbox', items: []
-      },
-      {
-        id: 'outgoing-messages', title: 'Outgoing Messages', href: '/messages/outgoing-messages', icon: 'fa-paper-plane', items: []
-      },
-      {
-        id: 'unread-messages', title: 'Unread Messages', href: '/messages/unread-messages', icon: 'fa-envelope-open-text', items: []
+        id: 'all-messages',
+        title: 'All Messages',
+        href: '/messages/all-messages',
+        icon: 'fa-envelope',
+        items: [
+          { id: 'incoming-messages', label: 'Incoming Messages', href: '/messages/incoming-messages', icon: 'fa-inbox' },
+          { id: 'outgoing-messages', label: 'Outgoing Messages', href: '/messages/outgoing-messages', icon: 'fa-paper-plane' },
+          { id: 'unread-messages', label: 'Unread Messages', href: '/messages/unread-messages', icon: 'fa-envelope-open-text' },
+        ],
       },
     ],
     pageTitle: 'Messages',
