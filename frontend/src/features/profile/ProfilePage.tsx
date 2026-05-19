@@ -99,7 +99,7 @@ export function ProfilePage() {
   }, [location.pathname]);
 
   const isProfilesListView = PROFILE_LIST_VIEW_IDS.has(activeSidebarId);
-  const canManageProfiles = MANAGER_ROLES.has((currentUser?.role || '').toLowerCase());
+  const canManageProfiles = MANAGER_ROLES.has((profile?.role || currentUser?.role || '').trim().toLowerCase());
 
   const pageTitle = useMemo(() => {
     for (const section of t.sidebar) {
@@ -180,8 +180,9 @@ export function ProfilePage() {
 
   useEffect(() => {
     let isMounted = true;
+    const isProfileRoute = location.pathname === '/profile' || location.pathname.startsWith('/profile/');
 
-    if (!isProfilesListView || !isAuthenticated()) {
+    if (!isAuthenticated() || !isProfileRoute) {
       return () => {
         isMounted = false;
       };
@@ -208,7 +209,10 @@ export function ProfilePage() {
           return;
         }
 
-        setProfilesListError(t.profilesList.error);
+        // Non-manager users can be denied for /users; show error only when the list view is explicitly open.
+        if (isProfilesListView) {
+          setProfilesListError(t.profilesList.error);
+        }
       })
       .finally(() => {
         if (!isMounted) {
@@ -221,7 +225,7 @@ export function ProfilePage() {
     return () => {
       isMounted = false;
     };
-  }, [isProfilesListView, t.profilesList.error]);
+  }, [isProfilesListView, location.pathname, t.profilesList.error]);
 
   const filteredProfilesList = useMemo(() => {
     if (activeSidebarId === 'active-profiles') {
