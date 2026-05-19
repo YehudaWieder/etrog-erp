@@ -9,6 +9,14 @@ export function HomePage() {
   const navigate = useNavigate();
   const [activeTopId, setActiveTopId] = useState('shipments');
   const currentUser = getCurrentUser();
+  const [alertsCount, setAlertsCount] = useState<number>(0);
+
+  useEffect(() => {
+    // טען כמות הודעות שלא נקראו
+    import('../../services/messagesApi').then(({ fetchUnreadCount }) => {
+      fetchUnreadCount().then((res) => setAlertsCount(res.count)).catch(() => setAlertsCount(0));
+    });
+  }, []);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -44,7 +52,7 @@ export function HomePage() {
       onSidebarClick={() => {}}
       onBrandClick={() => navigate('/home')}
       topBarOptions={{
-        alertsCount: 0,
+        alertsCount,
         onAlertsClick: () => navigate('/messages'),
         isAuthenticated: isAuthenticated(),
         onLogin: () => navigate('/login'),

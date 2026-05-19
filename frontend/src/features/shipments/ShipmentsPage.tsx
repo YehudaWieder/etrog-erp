@@ -15,7 +15,14 @@ export function ShipmentsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTopId, setActiveTopId] = useState('shipments');
-  const [alertsCount, setAlertsCount] = useState(3);
+  const [alertsCount, setAlertsCount] = useState<number>(0);
+
+  useEffect(() => {
+    // טען כמות הודעות שלא נקראו
+    import('../../services/messagesApi').then(({ fetchUnreadCount }) => {
+      fetchUnreadCount().then((res) => setAlertsCount(res.count)).catch(() => setAlertsCount(0));
+    });
+  }, []);
   const [lastActionText, setLastActionText] = useState<string>('');
   const currentUser = getCurrentUser();
 

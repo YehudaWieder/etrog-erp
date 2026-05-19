@@ -53,7 +53,14 @@ function normalizeIsActive(value: unknown): boolean | undefined {
 export function ProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [alertsCount, setAlertsCount] = useState(0);
+  const [alertsCount, setAlertsCount] = useState<number>(0);
+
+  useEffect(() => {
+    // טען כמות הודעות שלא נקראו
+    import('../../services/messagesApi').then(({ fetchUnreadCount }) => {
+      fetchUnreadCount().then((res) => setAlertsCount(res.count)).catch(() => setAlertsCount(0));
+    });
+  }, []);
   const currentUser = getCurrentUser();
   const [profile, setProfile] = useState<AuthProfile | null>(currentUser);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
