@@ -34,3 +34,9 @@ export async function fetchThread(messageId: number): Promise<Message[]> {
   // Use the filter endpoint to get a thread by replyToMessageId
   return apiClient<Message[]>(`/messages/filter?replyToMessageId=${messageId}`);
 }
+
+export async function deleteMessage(id: number): Promise<void> {
+  await apiClient(`/messages/${id}`, {
+    method: 'DELETE',
+  });
+}

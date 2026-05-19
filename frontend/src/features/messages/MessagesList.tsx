@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fetchAllMessages, Message } from '../../services/messagesApi';
-import { FaReply, FaEnvelopeOpen, FaEnvelope } from 'react-icons/fa6';
+import { deleteMessage, fetchAllMessages, Message } from '../../services/messagesApi';
+import { FaReply, FaEnvelopeOpen, FaEnvelope, FaShareFromSquare, FaTrashCan } from 'react-icons/fa6';
 
 type MessagePriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
 
@@ -13,13 +13,15 @@ type MessagesListProps = {
   userId?: number;
   lang: 'he' | 'en';
   onCountsChange?: (counts: MailboxCounts) => void;
+  onActionFeedback?: (text: string) => void;
 };
 
-export function MessagesList({ filter, userId, lang, onCountsChange }: MessagesListProps) {
+export function MessagesList({ filter, userId, lang, onCountsChange, onActionFeedback }: MessagesListProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRootId, setSelectedRootId] = useState<number | null>(null);
+  const [deletingMessageId, setDeletingMessageId] = useState<number | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -147,6 +149,41 @@ export function MessagesList({ filter, userId, lang, onCountsChange }: MessagesL
       HIGH: lang === 'he' ? 'גבוהה' : 'High',
       URGENT: lang === 'he' ? 'דחופה' : 'Urgent',
     } as Record<MessagePriority, string>,
+    actions: {
+      reply: lang === 'he' ? 'מענה' : 'Reply',
+      forward: lang === 'he' ? 'העברה' : 'Forward',
+      delete: lang === 'he' ? 'מחיקה' : 'Delete',
+      deleting: lang === 'he' ? 'מוחק...' : 'Deleting...',
+      replyNotice: lang === 'he' ? 'נבחרה פעולה: מענה להודעה' : 'Action selected: reply to message',
+      forwardNotice: lang === 'he' ? 'נבחרה פעולה: העברת הודעה' : 'Action selected: forward message',
+      deleteNotice: lang === 'he' ? 'ההודעה נמחקה' : 'Message deleted',
+      deleteError: lang === 'he' ? 'מחיקת ההודעה נכשלה' : 'Failed to delete message',
+    },
+  };
+
+  const handleReply = (message: Message) => {
+    onActionFeedback?.(`${labels.actions.replyNotice} #${message.id}`);
+  };
+
+  const handleForward = (message: Message) => {
+    onActionFeedback?.(`${labels.actions.forwardNotice} #${message.id}`);
+  };
+
+  const handleDelete = async (message: Message) => {
+    if (!userId || message.senderId !== userId || deletingMessageId !== null) {
+      return;
+    }
+
+    try {
+      setDeletingMessageId(message.id);
+      await deleteMessage(message.id);
+      setMessages((prev) => prev.filter((item) => item.id !== message.id));
+      onActionFeedback?.(labels.actions.deleteNotice);
+    } catch {
+      onActionFeedback?.(labels.actions.deleteError);
+    } finally {
+      setDeletingMessageId(null);
+    }
   };
 
   if (loading) return <div>{labels.loading}</div>;
@@ -225,6 +262,38 @@ export function MessagesList({ filter, userId, lang, onCountsChange }: MessagesL
                       </div>
                     </div>
                     <p className="messages-thread__text">{msg.content}</p>
+                    <div className="messages-thread__actions">
+                      <button
+                        type="button"
+                        className="messages-thread__action messages-thread__action--icon"
+                        onClick={() => handleReply(msg)}
+                        aria-label={labels.actions.reply}
+                        title={labels.actions.reply}
+                      >
+                        <FaReply />
+                      </button>
+                      <button
+                        type="button"
+                        className="messages-thread__action messages-thread__action--icon"
+                        onClick={() => handleForward(msg)}
+                        aria-label={labels.actions.forward}
+                        title={labels.actions.forward}
+                      >
+                        <FaShareFromSquare />
+                      </button>
+                      {isOutgoing ? (
+                        <button
+                          type="button"
+                          className="messages-thread__action messages-thread__action--icon messages-thread__action--danger"
+                          onClick={() => handleDelete(msg)}
+                          disabled={deletingMessageId === msg.id}
+                          aria-label={deletingMessageId === msg.id ? labels.actions.deleting : labels.actions.delete}
+                          title={deletingMessageId === msg.id ? labels.actions.deleting : labels.actions.delete}
+                        >
+                          <FaTrashCan />
+                        </button>
+                      ) : null}
+                    </div>
                   </article>
                 );
               })}

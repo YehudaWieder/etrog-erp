@@ -645,6 +645,56 @@ select {
   line-height: 1.45;
 }
 
+.messages-thread__actions {
+  margin-top: var(--space-3);
+  display: flex;
+  justify-content: flex-start;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  direction: ltr;
+}
+
+.messages-thread__action {
+  border: 1px solid #d3e8cb;
+  background: #f6fbf3;
+  color: #2f5a2b;
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.messages-thread__action--icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.84rem;
+}
+
+.messages-thread__action:hover {
+  background: #edf6e9;
+}
+
+.messages-thread__action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.messages-thread__action--danger {
+  border-color: #f3b7c2;
+  background: #ffe8e8;
+  color: #8f2435;
+}
+
+.messages-thread__action--danger:hover {
+  background: #ffd9df;
+}
+
 .messages-thread__placeholder {
   color: var(--color-text-muted);
 }
