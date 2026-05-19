@@ -5,6 +5,7 @@ import type { NavItem } from '../../types/navigation';
 import { HomeIcon } from '../ui/HomeIcon';
 import { ProfileMenu, type ProfileMenuProps } from './ProfileMenu';
 import { TopBar } from './TopBar';
+import { fetchUnreadCount } from '../../services/messagesApi';
 
 type AppTopBarProps = {
   links: NavItem[];
@@ -43,14 +44,47 @@ export function AppTopBar({
     }
 
     let isMounted = true;
-    import('../../services/messagesApi').then(({ fetchUnreadCount }) => {
-      fetchUnreadCount().then((res) => {
-        if (isMounted) setFetchedUnreadCount(res.count);
-      }).catch(() => {
-        if (isMounted) setFetchedUnreadCount(0);
-      });
-    });
-    return () => { isMounted = false; };
+
+    const pollIntervalMs = 2 * 60 * 1000;
+
+    const refreshUnreadCount = async () => {
+      try {
+        const res = await fetchUnreadCount();
+        if (isMounted) {
+          setFetchedUnreadCount(res.count);
+        }
+      } catch {
+        if (isMounted) {
+          setFetchedUnreadCount(0);
+        }
+      }
+    };
+
+    void refreshUnreadCount();
+
+    const intervalId = window.setInterval(() => {
+      void refreshUnreadCount();
+    }, pollIntervalMs);
+
+    const handleWindowFocus = () => {
+      void refreshUnreadCount();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void refreshUnreadCount();
+      }
+    };
+
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [alertsCount]);
 
   return (

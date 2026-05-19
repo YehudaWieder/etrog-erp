@@ -21,6 +21,7 @@ export type SendMessagePayload = {
   subject: string;
   content: string;
   priority: MessagePriority;
+  replyToMessageId?: number;
 };
 
 export async function fetchAllMessages(): Promise<Message[]> {
@@ -60,5 +61,12 @@ export async function sendMessage(payload: SendMessagePayload): Promise<Message>
   return apiClient<Message>('/messages', {
     method: 'POST',
     body: JSON.stringify(payload),
+  });
+}
+
+export async function markMessageAsRead(id: number): Promise<Message> {
+  return apiClient<Message>('/messages/read', {
+    method: 'PATCH',
+    body: JSON.stringify({ id }),
   });
 }

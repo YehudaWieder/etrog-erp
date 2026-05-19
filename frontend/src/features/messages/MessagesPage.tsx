@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { FaPaperPlane, FaXmark, FaChevronDown } from 'react-icons/fa6';
-import { MessagesList } from './MessagesList';
+import { MessagesList, type ComposeAction } from './MessagesList';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from '../../app/layout/AppShell';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import type { NavItem } from '../../types/navigation';
 import { getAllProfiles, getCurrentUser, isAuthenticated, logout } from '../../services/authService';
 import { MESSAGES_I18N } from './i18n';
-import { sendMessage, type MessagePriority } from '../../services/messagesApi';
+import { sendMessage, type Message, type MessagePriority } from '../../services/messagesApi';
 
 const DEFAULT_SIDEBAR_ITEM_ID = 'all-messages';
 type SidebarFilter = 'all-messages' | 'incoming-messages' | 'outgoing-messages' | 'unread-messages';
@@ -34,6 +34,7 @@ export function MessagesPage() {
     priority: MessagePriority;
     subject: string;
     content: string;
+    replyToMessageId?: number;
   }>({
     recipientIds: [],
     priority: 'NORMAL',
@@ -135,6 +136,7 @@ export function MessagesPage() {
       priority: 'NORMAL',
       subject: '',
       content: '',
+      replyToMessageId: undefined,
     });
     setRecipientQuery('');
     setIsRecipientMenuOpen(false);
@@ -206,6 +208,7 @@ export function MessagesPage() {
         priority: composeForm.priority,
         subject: composeForm.subject.trim(),
         content: composeForm.content.trim(),
+        replyToMessageId: composeForm.replyToMessageId,
       });
 
       setLastActionText(t.compose.success);
@@ -217,6 +220,59 @@ export function MessagesPage() {
     } finally {
       setIsSubmittingCompose(false);
     }
+  };
+
+  const prefixSubject = (subject: string, prefix: string) => {
+    const trimmed = subject.trim();
+    if (!trimmed) {
+      return prefix;
+    }
+    return trimmed.toLowerCase().startsWith(prefix.toLowerCase()) ? trimmed : `${prefix}${trimmed}`;
+  };
+
+  const handleComposeRequest = (action: ComposeAction, message: Message) => {
+    const replyPrefix = 'Re: ';
+    const forwardPrefix = 'Fwd: ';
+
+    if (action === 'reply') {
+      const recipientIds = currentUser?.id && message.senderId === currentUser.id
+        ? message.recipientIds.filter((id) => id !== currentUser.id)
+        : [message.senderId];
+
+      setComposeForm({
+        recipientIds,
+        priority: message.priority === 'LOW' || message.priority === 'NORMAL' || message.priority === 'HIGH' || message.priority === 'URGENT'
+          ? message.priority
+          : 'NORMAL',
+        subject: prefixSubject(message.subject, replyPrefix),
+        content: '',
+        replyToMessageId: message.id,
+      });
+      setRecipientQuery('');
+      setIsRecipientMenuOpen(false);
+      setComposeError('');
+      setIsComposeOpen(true);
+      return;
+    }
+
+    const quotedHeader =
+      lang === 'he'
+        ? `\n\n--- הודעה מקורית ---\nמאת: ${message.sender.name}\nבתאריך: ${new Date(message.createdAt).toLocaleString()}\n\n${message.content}`
+        : `\n\n--- Original message ---\nFrom: ${message.sender.name}\nDate: ${new Date(message.createdAt).toLocaleString()}\n\n${message.content}`;
+
+    setComposeForm({
+      recipientIds: [],
+      priority: message.priority === 'LOW' || message.priority === 'NORMAL' || message.priority === 'HIGH' || message.priority === 'URGENT'
+        ? message.priority
+        : 'NORMAL',
+      subject: prefixSubject(message.subject, forwardPrefix),
+      content: quotedHeader,
+      replyToMessageId: undefined,
+    });
+    setRecipientQuery('');
+    setIsRecipientMenuOpen(false);
+    setComposeError('');
+    setIsComposeOpen(true);
   };
 
   return (
@@ -433,6 +489,7 @@ export function MessagesPage() {
         refreshKey={refreshKey}
         onCountsChange={setCounts}
         onActionFeedback={setLastActionText}
+        onComposeRequest={handleComposeRequest}
       />
       {lastActionText ? <p className="shipments-last-action">{lastActionText}</p> : null}
     </AppShell>
