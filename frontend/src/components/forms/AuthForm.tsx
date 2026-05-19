@@ -21,6 +21,10 @@ export type AuthFormField = {
   label: string;
   type: string;
   placeholder: string;
+  required?: boolean;
+  helperText?: string;
+  actionLabel?: string;
+  onActionClick?: () => void;
 };
 
 type AuthFormProps = {
@@ -66,16 +70,24 @@ export function AuthForm({
               <label htmlFor={field.id} className="form-label">
                 {field.label}
               </label>
-              <input
-                id={field.id}
-                type={field.type}
-                name={field.name}
-                className={`form-input ${field.type === 'tel' ? 'rtl-placeholder' : ''}`}
-                placeholder={field.placeholder}
-                value={values[field.name] ?? ''}
-                onChange={(event) => onChange(field.name, event.target.value)}
-                required
-              />
+              <div className="form-input-row">
+                <input
+                  id={field.id}
+                  type={field.type}
+                  name={field.name}
+                  className={`form-input ${field.type === 'tel' ? 'rtl-placeholder' : ''}`}
+                  placeholder={field.placeholder}
+                  value={values[field.name] ?? ''}
+                  onChange={(event) => onChange(field.name, event.target.value)}
+                  required={field.required ?? true}
+                />
+                {field.actionLabel && field.onActionClick ? (
+                  <button type="button" className="form-input-action" onClick={field.onActionClick}>
+                    {field.actionLabel}
+                  </button>
+                ) : null}
+              </div>
+              {field.helperText ? <small className="form-helper-text">{field.helperText}</small> : null}
             </div>
           ))}
 

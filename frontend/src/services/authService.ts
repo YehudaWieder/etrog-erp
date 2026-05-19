@@ -13,6 +13,13 @@ type LoginPayload = {
   password: string;
 };
 
+type RegisterPayload = {
+  name: string;
+  email: string;
+  phone?: string;
+  password: string;
+};
+
 type LoginResponse = {
   accessToken: string;
   tokenType: 'Bearer';
@@ -62,6 +69,13 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
 
   persistAuthSession(result.accessToken, result.user);
   return result;
+}
+
+export async function register(payload: RegisterPayload): Promise<AuthProfile> {
+  return apiClient<AuthProfile>('/users', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function logout(): Promise<void> {
