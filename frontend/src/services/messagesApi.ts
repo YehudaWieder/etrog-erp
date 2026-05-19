@@ -14,6 +14,15 @@ export type Message = {
   createdAt: string;
 };
 
+export type MessagePriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+
+export type SendMessagePayload = {
+  recipientIds: number[];
+  subject: string;
+  content: string;
+  priority: MessagePriority;
+};
+
 export async function fetchAllMessages(): Promise<Message[]> {
   return apiClient<Message[]>('/messages/all');
 }
@@ -44,5 +53,12 @@ export async function fetchThread(messageId: number): Promise<Message[]> {
 export async function deleteMessage(id: number): Promise<void> {
   await apiClient(`/messages/${id}`, {
     method: 'DELETE',
+  });
+}
+
+export async function sendMessage(payload: SendMessagePayload): Promise<Message> {
+  return apiClient<Message>('/messages', {
+    method: 'POST',
+    body: JSON.stringify(payload),
   });
 }

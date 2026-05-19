@@ -14,6 +14,35 @@ type MessagesI18n = {
     sendNew: string;
     deleteMessage: string;
   };
+  compose: {
+    title: string;
+    description: string;
+    recipients: string;
+    recipientsPlaceholder: string;
+    recipientsEmpty: string;
+    noMatchingRecipients: string;
+    toggleRecipients: string;
+    priority: string;
+    subject: string;
+    content: string;
+    subjectPlaceholder: string;
+    contentPlaceholder: string;
+    cancel: string;
+    close: string;
+    send: string;
+    sending: string;
+    success: string;
+    validationRecipients: string;
+    validationSubject: string;
+    validationContent: string;
+    failed: string;
+    priorities: {
+      LOW: string;
+      NORMAL: string;
+      HIGH: string;
+      URGENT: string;
+    };
+  };
   emptyState: Record<string, EmptyStateContent>;
 };
 
@@ -45,6 +74,35 @@ export const MESSAGES_I18N: Record<'he' | 'en', MessagesI18n> = {
     actions: {
       sendNew: 'שליחת הודעה חדשה',
       deleteMessage: 'מחיקת הודעה',
+    },
+    compose: {
+      title: 'שליחת הודעה חדשה',
+      description: 'בחר נמענים, עדכן דחיפות ושלח הודעה מתוך המערכת.',
+      recipients: 'נמענים',
+      recipientsPlaceholder: 'הקלד שם נמען...',
+      recipientsEmpty: 'אין נמענים זמינים',
+      noMatchingRecipients: 'אין התאמות לחיפוש',
+      toggleRecipients: 'פתיחת רשימת נמענים',
+      priority: 'רמת דחיפות',
+      subject: 'כותרת',
+      content: 'תוכן ההודעה',
+      subjectPlaceholder: 'כתוב כותרת ברורה להודעה',
+      contentPlaceholder: 'כתוב כאן את גוף ההודעה...',
+      cancel: 'ביטול',
+      close: 'סגירה',
+      send: 'שליחה',
+      sending: 'שולח...',
+      success: 'ההודעה נשלחה בהצלחה',
+      validationRecipients: 'יש לבחור לפחות נמען אחד',
+      validationSubject: 'יש להזין כותרת',
+      validationContent: 'יש להזין תוכן הודעה',
+      failed: 'שליחת ההודעה נכשלה',
+      priorities: {
+        LOW: 'נמוכה',
+        NORMAL: 'רגילה',
+        HIGH: 'גבוהה',
+        URGENT: 'דחופה',
+      },
     },
     emptyState: {
       'all-messages': {
@@ -96,6 +154,35 @@ export const MESSAGES_I18N: Record<'he' | 'en', MessagesI18n> = {
     actions: {
       sendNew: 'Send New Message',
       deleteMessage: 'Delete Message',
+    },
+    compose: {
+      title: 'Send New Message',
+      description: 'Select recipients, set urgency, and send directly from the system.',
+      recipients: 'Recipients',
+      recipientsPlaceholder: 'Type a recipient name...',
+      recipientsEmpty: 'No recipients available',
+      noMatchingRecipients: 'No matching recipients',
+      toggleRecipients: 'Open recipients list',
+      priority: 'Priority',
+      subject: 'Subject',
+      content: 'Message Content',
+      subjectPlaceholder: 'Write a clear subject',
+      contentPlaceholder: 'Write the message body here...',
+      cancel: 'Cancel',
+      close: 'Close',
+      send: 'Send',
+      sending: 'Sending...',
+      success: 'Message sent successfully',
+      validationRecipients: 'Please select at least one recipient',
+      validationSubject: 'Please enter a subject',
+      validationContent: 'Please enter message content',
+      failed: 'Failed to send message',
+      priorities: {
+        LOW: 'Low',
+        NORMAL: 'Normal',
+        HIGH: 'High',
+        URGENT: 'Urgent',
+      },
     },
     emptyState: {
       'all-messages': {

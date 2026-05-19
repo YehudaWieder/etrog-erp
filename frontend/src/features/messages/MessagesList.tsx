@@ -13,11 +13,12 @@ type MessagesListProps = {
   filter: SidebarFilter;
   userId?: number;
   lang: 'he' | 'en';
+  refreshKey?: number;
   onCountsChange?: (counts: MailboxCounts) => void;
   onActionFeedback?: (text: string) => void;
 };
 
-export function MessagesList({ filter, userId, lang, onCountsChange, onActionFeedback }: MessagesListProps) {
+export function MessagesList({ filter, userId, lang, refreshKey = 0, onCountsChange, onActionFeedback }: MessagesListProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [userNamesById, setUserNamesById] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
@@ -27,11 +28,12 @@ export function MessagesList({ filter, userId, lang, onCountsChange, onActionFee
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     fetchAllMessages()
       .then(setMessages)
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshKey]);
 
   useEffect(() => {
     getAllProfiles()
@@ -239,7 +241,13 @@ export function MessagesList({ filter, userId, lang, onCountsChange, onActionFee
                   {labels.priority[toPriority(lastMessage.priority)]}
                 </span>
                 <div className="messages-list__meta">
-                  <span title={metaMain.tooltip}>{metaMain.text}</span>
+                  {metaMain.tooltip ? (
+                    <span className="messages-meta-tooltip" data-tooltip={metaMain.tooltip}>
+                      {metaMain.text}
+                    </span>
+                  ) : (
+                    <span>{metaMain.text}</span>
+                  )}
                   <span>{new Date(lastMessage.createdAt).toLocaleString()}</span>
                 </div>
                 <div className="messages-list__subject">{lastMessage.subject}</div>
@@ -280,7 +288,11 @@ export function MessagesList({ filter, userId, lang, onCountsChange, onActionFee
                       {labels.priority[toPriority(msg.priority)]}
                     </span>
                     <div className="messages-thread__meta">
-                      <strong title={metaMain.tooltip}>{metaMain.text}</strong>
+                      {metaMain.tooltip ? (
+                        <strong className="messages-meta-tooltip" data-tooltip={metaMain.tooltip}>{metaMain.text}</strong>
+                      ) : (
+                        <strong>{metaMain.text}</strong>
+                      )}
                       <div className="messages-thread__meta-right">
                         <span>{new Date(msg.createdAt).toLocaleString()}</span>
                       </div>
