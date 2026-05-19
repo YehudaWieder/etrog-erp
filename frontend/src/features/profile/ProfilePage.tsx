@@ -40,6 +40,13 @@ export function ProfilePage() {
   const [isDeletingProfile, setIsDeletingProfile] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      navigate('/login');
+    }
+  }, [navigate]);
+
   const lang = useMemo(() => {
     if (typeof window !== 'undefined') {
       const stored = window.localStorage.getItem('app.language');

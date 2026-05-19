@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from '../../app/layout/AppShell';
 import { SHIPMENTS_I18N } from '../shipments/i18n';
@@ -9,6 +9,13 @@ export function HomePage() {
   const navigate = useNavigate();
   const [activeTopId, setActiveTopId] = useState('shipments');
   const currentUser = getCurrentUser();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      navigate('/login');
+    }
+  }, [navigate]);
 
   const lang = useMemo(() => {
     if (typeof window !== 'undefined') {

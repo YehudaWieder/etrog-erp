@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FaPlus } from 'react-icons/fa6';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from '../../app/layout/AppShell';
@@ -18,6 +18,13 @@ export function ShipmentsPage() {
   const [alertsCount, setAlertsCount] = useState(3);
   const [lastActionText, setLastActionText] = useState<string>('');
   const currentUser = getCurrentUser();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      navigate('/login');
+    }
+  }, [navigate]);
 
   const handleLogin = () => navigate('/login');
   const handleRegister = () => alert('הרשמה');
