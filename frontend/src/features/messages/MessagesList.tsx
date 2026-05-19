@@ -167,11 +167,11 @@ export function MessagesList({ filter, userId, lang, onCountsChange }: MessagesL
                 {thread.length > 1 ? <FaReply /> : isUnread ? <FaEnvelope /> : <FaEnvelopeOpen />}
               </div>
               <div className="messages-list__content">
-                <div className="messages-list__subject">{lastMessage.subject}</div>
                 <div className="messages-list__meta">
                   <span>{lastMessage.sender.name}</span>
                   <span>{new Date(lastMessage.createdAt).toLocaleString()}</span>
                 </div>
+                <div className="messages-list__subject">{lastMessage.subject}</div>
                 <div className="messages-list__preview">
                   {lastMessage.content.slice(0, 90)}
                   {lastMessage.content.length > 90 ? '...' : ''}
