@@ -412,19 +412,28 @@ export function MessagesList({
       return;
     }
 
-    const isIncoming = lastMessage.recipientIds.includes(userId);
-    const isUnread = !lastMessage.readByIds.includes(userId);
+    // Find all messages in this thread
+    const threadMessages = userMessages.filter((msg) => findThreadRootId(msg, byId) === rootId);
+    
+    // Filter unread incoming messages
+    const unreadIncoming = threadMessages.filter(
+      (msg) =>
+        msg.recipientIds.includes(userId) &&
+        !msg.readByIds.includes(userId) &&
+        !markingAsReadIds.includes(msg.id),
+    );
 
-    if (!isIncoming || !isUnread || markingAsReadIds.includes(lastMessage.id)) {
+    if (!unreadIncoming.length) {
       return;
     }
 
-    setMarkingAsReadIds((prev) => [...prev, lastMessage.id]);
+    const newMarkingIds = unreadIncoming.map((msg) => msg.id);
+    setMarkingAsReadIds((prev) => [...prev, ...newMarkingIds]);
     try {
-      await markMessageAsRead(lastMessage.id);
+      await Promise.all(unreadIncoming.map((msg) => markMessageAsRead(msg.id)));
       setMessages((prev) =>
         prev.map((msg) => {
-          if (msg.id !== lastMessage.id || msg.readByIds.includes(userId)) {
+          if (!unreadIncoming.some((um) => um.id === msg.id) || msg.readByIds.includes(userId)) {
             return msg;
           }
           return {
@@ -434,7 +443,7 @@ export function MessagesList({
         }),
       );
     } finally {
-      setMarkingAsReadIds((prev) => prev.filter((id) => id !== lastMessage.id));
+      setMarkingAsReadIds((prev) => prev.filter((id) => !newMarkingIds.includes(id)));
     }
   };
 
