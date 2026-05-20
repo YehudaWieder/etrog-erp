@@ -46,6 +46,10 @@ export async function fetchUnreadCount(): Promise<{ count: number }> {
   return { count: typeof response?.count === 'number' ? response.count : 0 };
 }
 
+export async function fetchUnreadUrgentInboxMessages(): Promise<Message[]> {
+  return apiClient<Message[]>('/messages/filter?box=inbox&isRead=false&priority=URGENT');
+}
+
 export async function fetchThread(messageId: number): Promise<Message[]> {
   // Use the filter endpoint to get a thread by replyToMessageId
   return apiClient<Message[]>(`/messages/filter?replyToMessageId=${messageId}`);

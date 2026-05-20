@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { deleteMessage, fetchAllMessages, sendMessage, markMessageAsRead, Message, type MessagePriority } from '../../services/messagesApi';
 import { FaReply, FaEnvelopeOpen, FaEnvelope, FaShareFromSquare, FaTrashCan, FaPaperPlane, FaXmark, FaChevronDown } from 'react-icons/fa6';
+import { StickyHeaderBar } from '../../components/StickyHeaderBar';
 import { getAllProfiles, getCurrentUser } from '../../services/authService';
 
 type SidebarFilter = 'all-messages' | 'incoming-messages' | 'outgoing-messages' | 'unread-messages';
@@ -13,18 +14,22 @@ type MessagesListProps = {
   filter: SidebarFilter;
   userId?: number;
   lang: 'he' | 'en';
+  initialOpenMessageId?: number;
   refreshKey?: number;
   onCountsChange?: (counts: MailboxCounts) => void;
   onActionFeedback?: (text: string) => void;
+  onComposeRequest?: (action: ComposeAction, message: Message) => void;
 };
 
 export function MessagesList({
   filter,
   userId,
   lang,
+  initialOpenMessageId,
   refreshKey = 0,
   onCountsChange,
   onActionFeedback,
+  onComposeRequest,
 }: MessagesListProps) {
   // Inline reply/forward state
   const [inlineAction, setInlineAction] = useState<null | { type: 'reply' | 'forward'; messageId: number }>(null);
@@ -236,6 +241,25 @@ export function MessagesList({
 
   const selectedSubject = selectedThreadMessages[0]?.subject ?? '';
 
+  useEffect(() => {
+    if (!initialOpenMessageId || !sortedThreads.length) {
+      return;
+    }
+
+    const targetMessage = userMessages.find((message) => message.id === initialOpenMessageId);
+    if (!targetMessage) {
+      return;
+    }
+
+    const targetRootId = findThreadRootId(targetMessage, byId);
+    const targetThread = sortedThreads.find((thread) => thread.rootId === targetRootId);
+    if (!targetThread) {
+      return;
+    }
+
+    void handleThreadOpen(targetRootId, targetThread.lastMessage);
+  }, [initialOpenMessageId, sortedThreads, userMessages, byId]);
+
   const labels = {
     loading: lang === 'he' ? 'טוען הודעות...' : 'Loading messages...',
     error: lang === 'he' ? 'שגיאה:' : 'Error:',
@@ -398,8 +422,16 @@ export function MessagesList({
       await deleteMessage(message.id);
       setMessages((prev) => prev.filter((item) => item.id !== message.id));
       onActionFeedback?.(labels.actions.deleteNotice);
-    } catch {
-      onActionFeedback?.(labels.actions.deleteError);
+    } catch (e: any) {
+      // Try to detect backend error for replies
+      let errorMsg = labels.actions.deleteError;
+      if (e && typeof e === 'object' && e.message &&
+          (e.message.includes('replies') || e.message.includes('Cannot delete a message that has replies'))) {
+        errorMsg = lang === 'he'
+          ? 'לא ניתן למחוק הודעה שיש לה תשובות'
+          : 'Cannot delete a message that has replies';
+      }
+      onActionFeedback?.(errorMsg);
     } finally {
       setDeletingMessageId(null);
     }
@@ -513,11 +545,51 @@ export function MessagesList({
       <section className="messages-thread" aria-label="Thread view">
         {selectedThreadMessages.length ? (
           <>
-            <header className="messages-thread__header">
-              <h3 className="messages-thread__title">{selectedSubject}</h3>
-              <p className="messages-thread__subtitle">
-                {selectedThreadMessages.length} {labels.threadMessages}
-              </p>
+            <header className="messages-thread__header messages-thread__toolbar">
+              <StickyHeaderBar
+                title={selectedSubject}
+                subtitle={`${selectedThreadMessages.length} ${labels.threadMessages}`}
+                actions={(() => {
+                  // Actions for the last message in thread (if outgoing)
+                  const lastMsg = selectedThreadMessages[selectedThreadMessages.length - 1];
+                  const isOutgoing = userId !== undefined && lastMsg?.senderId === userId;
+                  if (!lastMsg) return null;
+                  return (
+                    <>
+                      <button
+                        type="button"
+                        className="messages-thread__action messages-thread__action--icon"
+                        onClick={() => handleReply(lastMsg)}
+                        aria-label={labels.actions.reply}
+                        title={labels.actions.reply}
+                      >
+                        <FaReply />
+                      </button>
+                      <button
+                        type="button"
+                        className="messages-thread__action messages-thread__action--icon"
+                        onClick={() => handleForward(lastMsg)}
+                        aria-label={labels.actions.forward}
+                        title={labels.actions.forward}
+                      >
+                        <FaShareFromSquare />
+                      </button>
+                      {isOutgoing ? (
+                        <button
+                          type="button"
+                          className="messages-thread__action messages-thread__action--icon messages-thread__action--danger"
+                          onClick={() => handleDelete(lastMsg)}
+                          disabled={deletingMessageId === lastMsg.id}
+                          aria-label={deletingMessageId === lastMsg.id ? labels.actions.deleting : labels.actions.delete}
+                          title={deletingMessageId === lastMsg.id ? labels.actions.deleting : labels.actions.delete}
+                        >
+                          <FaTrashCan />
+                        </button>
+                      ) : null}
+                    </>
+                  );
+                })()}
+              />
             </header>
             <div className="messages-thread__items">
               {selectedThreadMessages.map((msg) => {
@@ -542,38 +614,7 @@ export function MessagesList({
                       </div>
                     </div>
                     <p className="messages-thread__text">{msg.content}</p>
-                    <div className="messages-thread__actions">
-                      <button
-                        type="button"
-                        className="messages-thread__action messages-thread__action--icon"
-                        onClick={() => handleReply(msg)}
-                        aria-label={labels.actions.reply}
-                        title={labels.actions.reply}
-                      >
-                        <FaReply />
-                      </button>
-                      <button
-                        type="button"
-                        className="messages-thread__action messages-thread__action--icon"
-                        onClick={() => handleForward(msg)}
-                        aria-label={labels.actions.forward}
-                        title={labels.actions.forward}
-                      >
-                        <FaShareFromSquare />
-                      </button>
-                      {isOutgoing ? (
-                        <button
-                          type="button"
-                          className="messages-thread__action messages-thread__action--icon messages-thread__action--danger"
-                          onClick={() => handleDelete(msg)}
-                          disabled={deletingMessageId === msg.id}
-                          aria-label={deletingMessageId === msg.id ? labels.actions.deleting : labels.actions.delete}
-                          title={deletingMessageId === msg.id ? labels.actions.deleting : labels.actions.delete}
-                        >
-                          <FaTrashCan />
-                        </button>
-                      ) : null}
-                    </div>
+                    {/* Actions moved to sticky header bar */}
                     {/* Inline reply/forward form */}
                     {inlineAction && inlineAction.messageId === msg.id && (
                       <div className="messages-inline-compose" style={{ marginTop: 16, background: '#fff', borderRadius: 10, boxShadow: '0 2px 12px #0001', padding: 16 }}>

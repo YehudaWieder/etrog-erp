@@ -467,6 +467,58 @@ export function ProfilePage() {
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
       pageTitle={pageTitleWithCount}
+      pageHeaderActions={(
+        <>
+          {activeSidebarId === 'edit-my-profile' && (
+            <div className="action-buttons">
+              <button
+                className="btn btn-primary"
+                type="button"
+                onClick={handleUpdateProfile}
+                disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
+              >
+                <FaFloppyDisk />
+                <span>{isUpdatingProfile ? t.editProfile.actions.updating : t.editProfile.actions.update}</span>
+              </button>
+              <button
+                className="btn btn-danger"
+                type="button"
+                onClick={() => setShowDeleteDialog(true)}
+                disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
+              >
+                <FaTrashCan />
+                <span>{isDeletingProfile ? t.editProfile.actions.deleting : t.editProfile.actions.delete}</span>
+              </button>
+            </div>
+          )}
+          {isProfilesListView && canManageProfiles && (
+            <div className="action-buttons">
+              <button
+                className="btn btn-primary"
+                type="button"
+                onClick={() => {
+                  if (selectedManagedProfileId) {
+                    navigate(`/profile/manage-profile/${selectedManagedProfileId}`);
+                  }
+                }}
+                disabled={!selectedManagedProfileId || isLoadingProfilesList || isDeletingProfile}
+              >
+                <FaFloppyDisk />
+                <span>{lang === 'he' ? 'עדכון פרופיל נבחר' : 'Update Selected Profile'}</span>
+              </button>
+              <button
+                className="btn btn-danger"
+                type="button"
+                onClick={() => setShowManagerDeleteDialog(true)}
+                disabled={!selectedManagedProfileId || isLoadingProfilesList || isDeletingProfile}
+              >
+                <FaTrashCan />
+                <span>{lang === 'he' ? 'מחיקת פרופיל נבחר' : 'Delete Selected Profile'}</span>
+              </button>
+            </div>
+          )}
+        </>
+      )}
       topNav={t.topNav}
       sidebarSections={t.sidebar}
       activeSidebarItemId={activeSidebarId}
@@ -506,56 +558,6 @@ export function ProfilePage() {
         </button>
       }
     >
-      <div className="app-shell__content-header">
-        {activeSidebarId === 'edit-my-profile' && (
-          <div className="action-buttons">
-            <button
-              className="btn btn-primary"
-              type="button"
-              onClick={handleUpdateProfile}
-              disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
-            >
-              <FaFloppyDisk />
-              <span>{isUpdatingProfile ? t.editProfile.actions.updating : t.editProfile.actions.update}</span>
-            </button>
-            <button
-              className="btn btn-danger"
-              type="button"
-              onClick={() => setShowDeleteDialog(true)}
-              disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
-            >
-              <FaTrashCan />
-              <span>{isDeletingProfile ? t.editProfile.actions.deleting : t.editProfile.actions.delete}</span>
-            </button>
-          </div>
-        )}
-        {isProfilesListView && canManageProfiles && (
-          <div className="action-buttons">
-            <button
-              className="btn btn-primary"
-              type="button"
-              onClick={() => {
-                if (selectedManagedProfileId) {
-                  navigate(`/profile/manage-profile/${selectedManagedProfileId}`);
-                }
-              }}
-              disabled={!selectedManagedProfileId || isLoadingProfilesList || isDeletingProfile}
-            >
-              <FaFloppyDisk />
-              <span>{lang === 'he' ? 'עדכון פרופיל נבחר' : 'Update Selected Profile'}</span>
-            </button>
-            <button
-              className="btn btn-danger"
-              type="button"
-              onClick={() => setShowManagerDeleteDialog(true)}
-              disabled={!selectedManagedProfileId || isLoadingProfilesList || isDeletingProfile}
-            >
-              <FaTrashCan />
-              <span>{lang === 'he' ? 'מחיקת פרופיל נבחר' : 'Delete Selected Profile'}</span>
-            </button>
-          </div>
-        )}
-      </div>
       {activeSidebarId === 'my-profile' ? (
         <section className="profile-hub">
           <div className="profile-hub__hero">

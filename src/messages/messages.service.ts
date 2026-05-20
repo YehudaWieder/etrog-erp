@@ -150,7 +150,10 @@ export class MessagesService {
 
   // Permanently deletes a message from the database. Only the sender can delete.
   async deleteMessage(id: number, actorId: number) {
-    const message = await this.prisma.message.findUnique({ where: { id } });
+    const message = await this.prisma.message.findUnique({
+      where: { id },
+      include: { replies: true },
+    });
 
     if (!message) {
       throw new NotFoundException('Message not found');
@@ -158,6 +161,10 @@ export class MessagesService {
 
     if (message.senderId !== actorId) {
       throw new ForbiddenException('Only the sender can delete this message');
+    }
+
+    if (message.replies && message.replies.length > 0) {
+      throw new ForbiddenException('Cannot delete a message that has replies');
     }
 
     return this.prisma.message.delete({

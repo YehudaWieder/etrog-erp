@@ -83,6 +83,11 @@ export function MessagesPage() {
     return subRoute || DEFAULT_SIDEBAR_ITEM_ID;
   }, [location.pathname]);
 
+  const initialOpenMessageId = useMemo(() => {
+    const state = location.state as { openMessageId?: number } | null;
+    return typeof state?.openMessageId === 'number' ? state.openMessageId : undefined;
+  }, [location.state]);
+
   const normalizedFilter = useMemo<SidebarFilter>(() => {
     if (activeSidebarId === 'incoming-messages' || activeSidebarId === 'outgoing-messages' || activeSidebarId === 'unread-messages') {
       return activeSidebarId;
@@ -280,6 +285,14 @@ export function MessagesPage() {
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
       pageTitle={pageTitle}
+      pageHeaderActions={
+        <div className="action-buttons">
+          <button className="btn btn-primary" type="button" onClick={handleAction}>
+            <FaPaperPlane />
+            <span>{t.actions.sendNew}</span>
+          </button>
+        </div>
+      }
       topNav={t.topNav}
       sidebarSections={t.sidebar}
       activeSidebarItemId={activeSidebarId}
@@ -287,7 +300,7 @@ export function MessagesPage() {
       onSidebarClick={handleSidebarClick}
       onBrandClick={() => navigate('/home')}
       topBarOptions={{
-        alertsCount: counts['unread-messages'] > 0 ? counts['unread-messages'] : undefined,
+        alertsCount: counts['unread-messages'],
         onAlertsClick: () => navigate('/messages'),
         isAuthenticated: isAuthenticated(),
         onLogin: () => navigate('/login'),
@@ -319,15 +332,6 @@ export function MessagesPage() {
         </button>
       }
     >
-      <div className="app-shell__content-header">
-        <div className="action-buttons">
-          <button className="btn btn-primary" type="button" onClick={handleAction}>
-            <FaPaperPlane />
-            <span>{t.actions.sendNew}</span>
-          </button>
-        </div>
-      </div>
-
       {isComposeOpen ? (
         <div className="modal-overlay messages-compose-modal-overlay" onClick={() => {
           setIsComposeOpen(false);
@@ -486,6 +490,7 @@ export function MessagesPage() {
         filter={normalizedFilter}
         lang={lang}
         userId={currentUser?.id}
+        initialOpenMessageId={initialOpenMessageId}
         refreshKey={refreshKey}
         onCountsChange={setCounts}
         onActionFeedback={setLastActionText}

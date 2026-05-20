@@ -142,6 +142,18 @@ export function ManagerProfileEditPage() {
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
       pageTitle={lang === 'he' ? `עדכון פרופיל #${profileId}` : `Manage Profile #${profileId}`}
+      pageHeaderActions={
+        <div className="action-buttons">
+          <button className="btn btn-primary" type="button" onClick={handleSave} disabled={isSaving || isLoading || !targetProfile}>
+            <FaFloppyDisk />
+            <span>{isSaving ? (lang === 'he' ? 'מעדכן...' : 'Updating...') : (lang === 'he' ? 'עדכן פרופיל' : 'Update Profile')}</span>
+          </button>
+          <button className="btn btn-danger" type="button" onClick={() => navigate('/profile/all-profiles')}>
+            <FaXmark />
+            <span>{lang === 'he' ? 'חזרה לרשימה' : 'Back to list'}</span>
+          </button>
+        </div>
+      }
       topNav={t.topNav}
       sidebarSections={t.sidebar}
       activeSidebarItemId="all-profiles"
@@ -181,19 +193,6 @@ export function ManagerProfileEditPage() {
         </button>
       }
     >
-      <div className="app-shell__content-header">
-        <div className="action-buttons">
-          <button className="btn btn-primary" type="button" onClick={handleSave} disabled={isSaving || isLoading || !targetProfile}>
-            <FaFloppyDisk />
-            <span>{isSaving ? (lang === 'he' ? 'מעדכן...' : 'Updating...') : (lang === 'he' ? 'עדכן פרופיל' : 'Update Profile')}</span>
-          </button>
-          <button className="btn btn-danger" type="button" onClick={() => navigate('/profile/all-profiles')}>
-            <FaXmark />
-            <span>{lang === 'he' ? 'חזרה לרשימה' : 'Back to list'}</span>
-          </button>
-        </div>
-      </div>
-
       <section className="profile-editor">
         {isLoading ? <p className="profile-hub__loading">{lang === 'he' ? 'טוען פרופיל...' : 'Loading profile...'}</p> : null}
         {error ? <p className="profile-editor__error">{error}</p> : null}

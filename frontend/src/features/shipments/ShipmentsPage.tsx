@@ -95,6 +95,34 @@ export function ShipmentsPage() {
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
       pageTitle={pageTitle}
+      pageHeaderActions={
+        <div className="action-buttons">
+          <button
+            className="btn btn-primary"
+            type="button"
+            onClick={() => handleCreateAction(t.addItem)}
+          >
+            <FaPlus />
+            <span>{t.addItem}</span>
+          </button>
+          <button
+            className="btn btn-primary"
+            type="button"
+            onClick={() => handleCreateAction(t.addBox)}
+          >
+            <FaPlus />
+            <span>{t.addBox}</span>
+          </button>
+          <button
+            className="btn btn-primary"
+            type="button"
+            onClick={() => handleCreateAction(t.addShipment)}
+          >
+            <FaPlus />
+            <span>{t.addShipment}</span>
+          </button>
+        </div>
+      }
       topNav={t.topNav}
       activeTopNavId={activeTopId}
       sidebarSections={t.sidebar}
@@ -128,35 +156,6 @@ export function ShipmentsPage() {
         </button>
       }
     >
-      <div className="app-shell__content-header">
-        <div className="action-buttons">
-          <button
-            className="btn btn-primary"
-            type="button"
-            onClick={() => handleCreateAction(t.addItem)}
-          >
-            <FaPlus />
-            <span>{t.addItem}</span>
-          </button>
-          <button
-            className="btn btn-primary"
-            type="button"
-            onClick={() => handleCreateAction(t.addBox)}
-          >
-            <FaPlus />
-            <span>{t.addBox}</span>
-          </button>
-          <button
-            className="btn btn-primary"
-            type="button"
-            onClick={() => handleCreateAction(t.addShipment)}
-          >
-            <FaPlus />
-            <span>{t.addShipment}</span>
-          </button>
-        </div>
-      </div>
-
       <section className="shipments-empty-state">
         <h2 className="shipments-empty-title">{content.title}</h2>
         <p className="shipments-empty-desc">{content.description}</p>
