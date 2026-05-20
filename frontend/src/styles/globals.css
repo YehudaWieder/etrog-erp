@@ -548,6 +548,18 @@ select {
   background: var(--color-primary-strong);
 }
 
+.btn-secondary {
+  background: #f0f0f0;
+  color: #555;
+  border: 1px solid #ddd;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.btn-secondary:hover {
+  background: #e0e0e0;
+  color: #333;
+}
+
 
 .btn-success {
   background: var(--color-text-accent);
@@ -2149,4 +2161,62 @@ select {
 .rtl-placeholder::placeholder {
   text-align: right;
   direction: rtl;
+}
+.rtl-placeholder::placeholder {
+  text-align: right;
+  direction: rtl;
+}
+
+/* Dark Mode Overrides */
+:root[data-dark-mode='true'] .sticky-header-bar {
+  background: #2d2d2d;
+  border-bottom-color: #404040;
+}
+
+:root[data-dark-mode='true'] .app-shell__sidebar {
+  background: #2d2d2d;
+  border-color: #404040;
+}
+
+:root[data-dark-mode='true'] .app-shell__body {
+  background: #1a1a1a;
+}
+
+:root[data-dark-mode='true'] .settings-card {
+  background: #2d2d2d;
+  border-color: #404040;
+  color: #e0e0e0;
+}
+
+:root[data-dark-mode='true'] input[type="color"],
+:root[data-dark-mode='true'] input[type="text"],
+:root[data-dark-mode='true'] input[type="email"],
+:root[data-dark-mode='true'] textarea,
+:root[data-dark-mode='true'] select {
+  background: #1a1a1a;
+  color: #e0e0e0;
+  border-color: #404040;
+}
+
+:root[data-dark-mode='true'] .messages-list__item {
+  background: #2d2d2d;
+  border-color: #404040;
+  color: #e0e0e0;
+}
+
+:root[data-dark-mode='true'] button:not(.btn-primary):not(.btn-success):not(.btn-danger):not(.btn-secondary) {
+  background: #2d2d2d;
+  color: #e0e0e0;
+  border-color: #404040;
+}
+
+:root[data-dark-mode='true'] .settings-choice-list .settings-choice {
+  background: #1a1a1a;
+  color: #e0e0e0;
+  border-color: #404040;
+}
+
+:root[data-dark-mode='true'] .settings-choice-list .settings-choice.is-active {
+  background: #404040;
+  border-color: #505050;
 }

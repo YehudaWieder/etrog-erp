@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaCheck } from 'react-icons/fa6';
+import { FaCheck, FaRotateLeft } from 'react-icons/fa6';
 import { AppShell } from '../../app/layout/AppShell';
 import type { NavItem, SidebarSection } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
@@ -18,10 +18,17 @@ type SettingsI18n = {
   pageTitle: string;
   save: string;
   saved: string;
+  reset: string;
   languageLabel: string;
   languageOptions: { he: string; en: string };
   colorLabel: string;
   colorHint: string;
+  primaryColorLabel: string;
+  accentColorLabel: string;
+  textColorLabel: string;
+  darkModeLabel: string;
+  darkModeOn: string;
+  darkModeOff: string;
   managerOnlyHint: string;
   sidebarWorker: SidebarSection[];
   sidebarManager: SidebarSection[];
@@ -41,10 +48,17 @@ const SETTINGS_I18N: Record<Lang, SettingsI18n> = {
     pageTitle: 'הגדרות',
     save: 'שמירה',
     saved: 'השינויים נשמרו',
+    reset: 'אתחול',
     languageLabel: 'שפה',
     languageOptions: { he: 'עברית', en: 'English' },
-    colorLabel: 'צבע',
-    colorHint: 'בחר צבע ראשי לממשק. נשמר מקומית בדפדפן.',
+    colorLabel: 'צבעים וממשק',
+    colorHint: 'בחר את צבעי הממשק שלך. הגדרות נשמרות בדפדפן.',
+    primaryColorLabel: 'צבע ראשי',
+    accentColorLabel: 'צבע accent',
+    textColorLabel: 'צבע טקסט',
+    darkModeLabel: 'מוד כהה',
+    darkModeOn: 'כהה',
+    darkModeOff: 'בהיר',
     managerOnlyHint: 'תוכן זה זמין למנהל מערכת.',
     sidebarWorker: [
       {
@@ -142,10 +156,17 @@ const SETTINGS_I18N: Record<Lang, SettingsI18n> = {
     pageTitle: 'Settings',
     save: 'Save',
     saved: 'Changes were saved',
+    reset: 'Reset',
     languageLabel: 'Language',
     languageOptions: { he: 'Hebrew', en: 'English' },
-    colorLabel: 'Color',
-    colorHint: 'Pick a primary UI color. Stored locally in browser.',
+    colorLabel: 'Colors & Interface',
+    colorHint: 'Customize your interface colors. Settings are saved locally in your browser.',
+    primaryColorLabel: 'Primary Color',
+    accentColorLabel: 'Accent Color',
+    textColorLabel: 'Text Color',
+    darkModeLabel: 'Dark Mode',
+    darkModeOn: 'Dark',
+    darkModeOff: 'Light',
     managerOnlyHint: 'This area is visible to managers only.',
     sidebarWorker: [
       {
@@ -286,18 +307,48 @@ export default function SettingsPage(): JSX.Element {
   const content = t.content[activeChildId];
 
   const [selectedLanguage, setSelectedLanguage] = useState<Lang>(lang);
-  const [selectedColor, setSelectedColor] = useState('#ffca2b');
+  const [selectedPrimaryColor, setSelectedPrimaryColor] = useState<string>('#ffca2b');
+  const [selectedAccentColor, setSelectedAccentColor] = useState<string>('#2d5a27');
+  const [selectedTextColor, setSelectedTextColor] = useState<string>('#333333');
+  const [selectedDarkMode, setSelectedDarkMode] = useState<boolean>(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
 
-    const storedColor = window.localStorage.getItem('app.themeColor');
-    if (storedColor) {
-      setSelectedColor(storedColor);
+    const storedPrimary = window.localStorage.getItem('app.primaryColor');
+    const storedAccent = window.localStorage.getItem('app.accentColor');
+    const storedTextColor = window.localStorage.getItem('app.textColor');
+    const storedDarkMode = window.localStorage.getItem('app.darkMode');
+
+    if (storedPrimary) {
+      setSelectedPrimaryColor(storedPrimary);
+      document.documentElement.style.setProperty('--color-primary', storedPrimary);
+    }
+    if (storedAccent) {
+      setSelectedAccentColor(storedAccent);
+      document.documentElement.style.setProperty('--color-text-accent', storedAccent);
+    }
+    if (storedTextColor) {
+      setSelectedTextColor(storedTextColor);
+      document.documentElement.style.setProperty('--color-text-main', storedTextColor);
+    }
+    if (storedDarkMode !== null) {
+      const isDarkMode = storedDarkMode === 'true';
+      setSelectedDarkMode(isDarkMode);
+      document.documentElement.setAttribute('data-dark-mode', isDarkMode ? 'true' : 'false');
     }
   }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      document.documentElement.style.setProperty('--color-primary', selectedPrimaryColor);
+      document.documentElement.style.setProperty('--color-text-accent', selectedAccentColor);
+      document.documentElement.style.setProperty('--color-text-main', selectedTextColor);
+      document.documentElement.setAttribute('data-dark-mode', selectedDarkMode ? 'true' : 'false');
+    }
+  }, [selectedPrimaryColor, selectedAccentColor, selectedTextColor, selectedDarkMode]);
 
   const handleSave = () => {
     const nextLanguage = selectedLanguage;
@@ -305,7 +356,10 @@ export default function SettingsPage(): JSX.Element {
 
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('app.language', nextLanguage);
-      window.localStorage.setItem('app.themeColor', selectedColor);
+      window.localStorage.setItem('app.primaryColor', selectedPrimaryColor);
+      window.localStorage.setItem('app.accentColor', selectedAccentColor);
+      window.localStorage.setItem('app.textColor', selectedTextColor);
+      window.localStorage.setItem('app.darkMode', String(selectedDarkMode));
     }
 
     setLang(nextLanguage);
@@ -317,6 +371,13 @@ export default function SettingsPage(): JSX.Element {
         window.location.reload();
       }
     }, 350);
+  };
+
+  const handleReset = () => {
+    setSelectedPrimaryColor('#ffca2b');
+    setSelectedAccentColor('#2d5a27');
+    setSelectedTextColor('#333333');
+    setSelectedDarkMode(false);
   };
 
   const handleTopNavClick = (item: NavItem) => {
@@ -398,14 +459,89 @@ export default function SettingsPage(): JSX.Element {
             <article className="settings-card">
               <h3 className="settings-card__title">{t.colorLabel}</h3>
               <p className="settings-card__hint">{t.colorHint}</p>
-              <div className="settings-color-picker-row">
-                <input
-                  type="color"
-                  value={selectedColor}
-                  onChange={(event) => setSelectedColor(event.target.value)}
-                  aria-label={t.colorLabel}
-                />
-                <code className="settings-color-value">{selectedColor}</code>
+
+              <div style={{ marginTop: 24 }}>
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>
+                    {t.primaryColorLabel}
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <input
+                      type="color"
+                      value={selectedPrimaryColor}
+                      onChange={(event) => setSelectedPrimaryColor(event.target.value)}
+                      aria-label={t.primaryColorLabel}
+                      style={{ width: 60, height: 44, cursor: 'pointer', border: 'none', borderRadius: 4 }}
+                    />
+                    <code className="settings-color-value">{selectedPrimaryColor}</code>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>
+                    {t.accentColorLabel}
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <input
+                      type="color"
+                      value={selectedAccentColor}
+                      onChange={(event) => setSelectedAccentColor(event.target.value)}
+                      aria-label={t.accentColorLabel}
+                      style={{ width: 60, height: 44, cursor: 'pointer', border: 'none', borderRadius: 4 }}
+                    />
+                    <code className="settings-color-value">{selectedAccentColor}</code>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>
+                    {t.textColorLabel}
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <input
+                      type="color"
+                      value={selectedTextColor}
+                      onChange={(event) => setSelectedTextColor(event.target.value)}
+                      aria-label={t.textColorLabel}
+                      style={{ width: 60, height: 44, cursor: 'pointer', border: 'none', borderRadius: 4 }}
+                    />
+                    <code className="settings-color-value">{selectedTextColor}</code>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ display: 'block', marginBottom: 12, fontWeight: 500 }}>
+                    {t.darkModeLabel}
+                  </label>
+                  <div className="settings-choice-list">
+                    <button
+                      type="button"
+                      className={`settings-choice${!selectedDarkMode ? ' is-active' : ''}`}
+                      onClick={() => setSelectedDarkMode(false)}
+                    >
+                      {t.darkModeOff}
+                    </button>
+                    <button
+                      type="button"
+                      className={`settings-choice${selectedDarkMode ? ' is-active' : ''}`}
+                      onClick={() => setSelectedDarkMode(true)}
+                    >
+                      {t.darkModeOn}
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 28, paddingTop: 16, borderTop: '1px solid #eaeaea' }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={handleReset}
+                    style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                  >
+                    <FaRotateLeft />
+                    {t.reset}
+                  </button>
+                </div>
               </div>
             </article>
           </div>

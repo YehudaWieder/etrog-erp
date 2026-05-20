@@ -35,3 +35,14 @@
 
   --easing-standard: 180ms ease;
 }
+
+/* Dark Mode Theme */
+:root[data-dark-mode='true'] {
+  --color-bg-main: #1a1a1a;
+  --color-bg-surface: #2d2d2d;
+  --color-bg-hover: #3a3a3a;
+  --color-text-main: #e0e0e0;
+  --color-text-muted: #a0a0a0;
+  --color-border: #404040;
+  --color-shadow: rgba(0, 0, 0, 0.3);
+}

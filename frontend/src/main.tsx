@@ -12,6 +12,31 @@ import { MessagesRoute } from './app/routes/MessagesRoute';
 import { AUTH_SESSION_EXPIRED_EVENT } from './services/apiClient';
 import SettingsPage from './features/settings/SettingsPage';
 
+// Load saved colors from localStorage and apply to CSS variables
+function initializeTheme(): void {
+  if (typeof window !== 'undefined') {
+    const primaryColor = window.localStorage.getItem('app.primaryColor');
+    const accentColor = window.localStorage.getItem('app.accentColor');
+    const textColor = window.localStorage.getItem('app.textColor');
+    const darkMode = window.localStorage.getItem('app.darkMode');
+
+    if (primaryColor) {
+      document.documentElement.style.setProperty('--color-primary', primaryColor);
+    }
+    if (accentColor) {
+      document.documentElement.style.setProperty('--color-text-accent', accentColor);
+    }
+    if (textColor) {
+      document.documentElement.style.setProperty('--color-text-main', textColor);
+    }
+    if (darkMode === 'true') {
+      document.documentElement.setAttribute('data-dark-mode', 'true');
+    }
+  }
+}
+
+initializeTheme();
+
 function AppRouter(): JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
