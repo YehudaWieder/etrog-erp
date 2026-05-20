@@ -183,7 +183,7 @@ select {
 }
 
 .app-shell[data-direction='ltr'] .app-shell__body {
-  flex-direction: row-reverse;
+  flex-direction: row;
 }
 
 .app-shell__sidebar {

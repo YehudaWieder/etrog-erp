@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from '../../app/layout/AppShell';
 import type { NavItem, SidebarSection } from '../../types/navigation';
@@ -257,7 +257,7 @@ export default function SettingsPage(): JSX.Element {
     }
   }, [navigate]);
 
-  const lang = useMemo<Lang>(() => {
+  const [lang, setLang] = useState<Lang>(() => {
     if (typeof window !== 'undefined') {
       const stored = window.localStorage.getItem('app.language');
       if (stored === 'en' || stored === 'he') {
@@ -265,7 +265,7 @@ export default function SettingsPage(): JSX.Element {
       }
     }
     return 'he';
-  }, []);
+  });
 
   const t = SETTINGS_I18N[lang];
   const normalizedRole = (currentUser?.role || '').trim().toLowerCase();
@@ -289,13 +289,23 @@ export default function SettingsPage(): JSX.Element {
   }, []);
 
   const handleSave = () => {
+    const nextLanguage = selectedLanguage;
+    const savedMessageText = SETTINGS_I18N[nextLanguage].saved;
+
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem('app.language', selectedLanguage);
+      window.localStorage.setItem('app.language', nextLanguage);
       window.localStorage.setItem('app.themeColor', selectedColor);
     }
 
-    setSavedMessage(t.saved);
-    window.setTimeout(() => setSavedMessage(''), 2400);
+    setLang(nextLanguage);
+    setSavedMessage(savedMessageText);
+
+    // Reload to ensure all app modules pick up persisted settings consistently.
+    window.setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
+    }, 350);
   };
 
   const handleTopNavClick = (item: NavItem) => {
