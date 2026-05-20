@@ -7,7 +7,6 @@ export const SHIPMENTS_I18N = {
       { id: 'customers', label: 'לקוחות', icon: 'fa-users' },
       { id: 'workers', label: 'עובדים', icon: 'fa-person' },
       { id: 'payments', label: 'הוצאות ותשלומים', icon: 'fa-money-bill' },
-      { id: 'seasons', label: 'עונות', icon: 'fa-calendar-days' },
     ],
     sidebar: [
       {
@@ -95,7 +94,6 @@ export const SHIPMENTS_I18N = {
       { id: 'customers', label: 'Customers' },
       { id: 'workers', label: 'Workers' },
       { id: 'payments', label: 'Expenses & Payments' },
-      { id: 'seasons', label: 'Seasons' },
     ],
     sidebar: [
       {
