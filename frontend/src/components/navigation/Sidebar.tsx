@@ -22,6 +22,15 @@ const iconMap: Record<string, keyof typeof FAIcons> = {
   'fa-envelope': 'FaEnvelope',
   'fa-inbox': 'FaInbox',
   'fa-envelope-open-text': 'FaEnvelopeOpenText',
+  'fa-sliders': 'FaSliders',
+  'fa-globe': 'FaGlobe',
+  'fa-palette': 'FaPalette',
+  'fa-cog': 'FaGear',
+  'fa-calendar': 'FaCalendar',
+  'fa-grip': 'FaGripVertical',
+  'fa-handshake': 'FaHandshake',
+  'fa-tag': 'FaTag',
+  'fa-bookmark': 'FaBookmark',
 };
 
 type SidebarProps = {

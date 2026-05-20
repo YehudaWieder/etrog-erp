@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { FaCheck } from 'react-icons/fa6';
 import { AppShell } from '../../app/layout/AppShell';
 import type { NavItem, SidebarSection } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
@@ -50,9 +51,10 @@ const SETTINGS_I18N: Record<Lang, SettingsI18n> = {
         id: 'site',
         title: 'הגדרות אתר',
         href: '/settings/site/language',
+        icon: 'fa-sliders',
         items: [
-          { id: 'language', label: 'שפה', href: '/settings/site/language' },
-          { id: 'themeColor', label: 'צבע', href: '/settings/site/theme-color' },
+          { id: 'language', label: 'שפה', href: '/settings/site/language', icon: 'fa-globe' },
+          { id: 'themeColor', label: 'צבע', href: '/settings/site/theme-color', icon: 'fa-palette' },
         ],
       },
     ],
@@ -61,35 +63,39 @@ const SETTINGS_I18N: Record<Lang, SettingsI18n> = {
         id: 'site',
         title: 'הגדרות אתר',
         href: '/settings/site/language',
+        icon: 'fa-sliders',
         items: [
-          { id: 'language', label: 'שפה', href: '/settings/site/language' },
-          { id: 'themeColor', label: 'צבע', href: '/settings/site/theme-color' },
+          { id: 'language', label: 'שפה', href: '/settings/site/language', icon: 'fa-globe' },
+          { id: 'themeColor', label: 'צבע', href: '/settings/site/theme-color', icon: 'fa-palette' },
         ],
       },
       {
         id: 'system',
         title: 'הגדרות מערכת',
         href: '/settings/system/seasons',
+        icon: 'fa-cog',
         items: [
-          { id: 'seasons', label: 'עונות', href: '/settings/system/seasons' },
-          { id: 'fields', label: 'שדות', href: '/settings/system/fields' },
+          { id: 'seasons', label: 'עונות', href: '/settings/system/seasons', icon: 'fa-calendar' },
+          { id: 'fields', label: 'שדות', href: '/settings/system/fields', icon: 'fa-grip' },
         ],
       },
       {
         id: 'traders',
         title: 'סוחרים',
         href: '/settings/traders/categories',
+        icon: 'fa-handshake',
         items: [
-          { id: 'traderCategories', label: 'קטגוריות סוחרים', href: '/settings/traders/categories' },
-          { id: 'defaultTraderCategories', label: 'קטגוריות סוחרים ברירת מחדל', href: '/settings/traders/default-categories' },
+          { id: 'traderCategories', label: 'קטגוריות סוחרים', href: '/settings/traders/categories', icon: 'fa-tag' },
+          { id: 'defaultTraderCategories', label: 'קטגוריות סוחרים ברירת מחדל', href: '/settings/traders/default-categories', icon: 'fa-bookmark' },
         ],
       },
       {
         id: 'customers',
         title: 'לקוחות',
         href: '/settings/customers/categories',
+        icon: 'fa-users',
         items: [
-          { id: 'customerCategories', label: 'קטגוריות לקוחות', href: '/settings/customers/categories' },
+          { id: 'customerCategories', label: 'קטגוריות לקוחות', href: '/settings/customers/categories', icon: 'fa-tag' },
         ],
       },
     ],
@@ -146,9 +152,10 @@ const SETTINGS_I18N: Record<Lang, SettingsI18n> = {
         id: 'site',
         title: 'Site Settings',
         href: '/settings/site/language',
+        icon: 'fa-sliders',
         items: [
-          { id: 'language', label: 'Language', href: '/settings/site/language' },
-          { id: 'themeColor', label: 'Color', href: '/settings/site/theme-color' },
+          { id: 'language', label: 'Language', href: '/settings/site/language', icon: 'fa-globe' },
+          { id: 'themeColor', label: 'Color', href: '/settings/site/theme-color', icon: 'fa-palette' },
         ],
       },
     ],
@@ -157,35 +164,39 @@ const SETTINGS_I18N: Record<Lang, SettingsI18n> = {
         id: 'site',
         title: 'Site Settings',
         href: '/settings/site/language',
+        icon: 'fa-sliders',
         items: [
-          { id: 'language', label: 'Language', href: '/settings/site/language' },
-          { id: 'themeColor', label: 'Color', href: '/settings/site/theme-color' },
+          { id: 'language', label: 'Language', href: '/settings/site/language', icon: 'fa-globe' },
+          { id: 'themeColor', label: 'Color', href: '/settings/site/theme-color', icon: 'fa-palette' },
         ],
       },
       {
         id: 'system',
         title: 'System Settings',
         href: '/settings/system/seasons',
+        icon: 'fa-cog',
         items: [
-          { id: 'seasons', label: 'Seasons', href: '/settings/system/seasons' },
-          { id: 'fields', label: 'Fields', href: '/settings/system/fields' },
+          { id: 'seasons', label: 'Seasons', href: '/settings/system/seasons', icon: 'fa-calendar' },
+          { id: 'fields', label: 'Fields', href: '/settings/system/fields', icon: 'fa-grip' },
         ],
       },
       {
         id: 'traders',
         title: 'Traders',
         href: '/settings/traders/categories',
+        icon: 'fa-handshake',
         items: [
-          { id: 'traderCategories', label: 'Trader Categories', href: '/settings/traders/categories' },
-          { id: 'defaultTraderCategories', label: 'Default Trader Categories', href: '/settings/traders/default-categories' },
+          { id: 'traderCategories', label: 'Trader Categories', href: '/settings/traders/categories', icon: 'fa-tag' },
+          { id: 'defaultTraderCategories', label: 'Default Trader Categories', href: '/settings/traders/default-categories', icon: 'fa-bookmark' },
         ],
       },
       {
         id: 'customers',
         title: 'Customers',
         href: '/settings/customers/categories',
+        icon: 'fa-users',
         items: [
-          { id: 'customerCategories', label: 'Customer Categories', href: '/settings/customers/categories' },
+          { id: 'customerCategories', label: 'Customer Categories', href: '/settings/customers/categories', icon: 'fa-tag' },
         ],
       },
     ],
@@ -321,6 +332,12 @@ export default function SettingsPage(): JSX.Element {
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
       pageTitle={t.pageTitle}
+      pageHeaderActions={(
+        <button type="button" className="btn btn-primary" onClick={handleSave}>
+          <FaCheck style={{ marginInlineEnd: 8 }} />
+          {t.save}
+        </button>
+      )}
       topNav={t.topNav}
       sidebarSections={sidebarSections}
       activeSidebarItemId={activeChildId}
@@ -347,9 +364,6 @@ export default function SettingsPage(): JSX.Element {
             <h2 className="settings-workspace__title">{content.title}</h2>
             <p className="settings-workspace__description">{content.description}</p>
           </div>
-          <button type="button" className="btn btn-success" onClick={handleSave}>
-            {t.save}
-          </button>
         </header>
 
         {savedMessage ? <p className="settings-workspace__saved">{savedMessage}</p> : null}
