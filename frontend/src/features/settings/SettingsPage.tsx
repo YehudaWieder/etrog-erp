@@ -276,6 +276,7 @@ export default function SettingsPage(): JSX.Element {
   const location = useLocation();
   const currentUser = getCurrentUser();
   const [alertsCount, setAlertsCount] = useState<number>(0);
+  const [saveFeedback, setSaveFeedback] = useState('');
   const [seasonsHeaderState, setSeasonsHeaderState] = useState<SeasonsHeaderState | null>(null);
 
   useEffect(() => {
@@ -351,6 +352,28 @@ export default function SettingsPage(): JSX.Element {
     }
   }, [selectedPrimaryColor, selectedAccentColor, selectedTextColor, selectedDarkMode]);
 
+  const handleUpdateSettings = () => {
+    const nextLanguage = selectedLanguage;
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('app.language', nextLanguage);
+      window.localStorage.setItem('app.primaryColor', selectedPrimaryColor);
+      window.localStorage.setItem('app.accentColor', selectedAccentColor);
+      window.localStorage.setItem('app.textColor', selectedTextColor);
+      window.localStorage.setItem('app.darkMode', String(selectedDarkMode));
+    }
+
+    setLang(nextLanguage);
+    setSaveFeedback(SETTINGS_I18N[nextLanguage].saved);
+
+    // Reload to ensure all modules in the app consume persisted settings consistently.
+    window.setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
+    }, 500);
+  };
+
   const handleReset = () => {
     setSelectedPrimaryColor('#ffca2b');
     setSelectedAccentColor('#2d5a27');
@@ -396,6 +419,17 @@ export default function SettingsPage(): JSX.Element {
         <span>{seasonsActionText.remove}</span>
       </button>
     </div>
+  ) : activeChildId === 'language' || activeChildId === 'themeColor' ? (
+    <div className="settings-seasons-header-buttons">
+      <button
+        type="button"
+        className="settings-seasons-header-btn settings-seasons-header-btn--success"
+        onClick={handleUpdateSettings}
+      >
+        <FaCheck />
+        <span>{t.save}</span>
+      </button>
+    </div>
   ) : undefined;
 
   return (
@@ -425,77 +459,76 @@ export default function SettingsPage(): JSX.Element {
       }}
     >
       <section className="settings-workspace">
+        {saveFeedback ? <p className="settings-workspace__saved">{saveFeedback}</p> : null}
+
         {activeChildId === 'language' ? (
-          <>
+          <div className="settings-panel-wide settings-panel-wide--language">
             <button
               type="button"
-              className={`settings-choice${selectedLanguage === 'he' ? ' is-active' : ''}`}
+              className={`settings-choice settings-choice--wide${selectedLanguage === 'he' ? ' is-active' : ''}`}
               onClick={() => setSelectedLanguage('he')}
             >
               {t.languageOptions.he}
             </button>
             <button
               type="button"
-              className={`settings-choice${selectedLanguage === 'en' ? ' is-active' : ''}`}
+              className={`settings-choice settings-choice--wide${selectedLanguage === 'en' ? ' is-active' : ''}`}
               onClick={() => setSelectedLanguage('en')}
             >
               {t.languageOptions.en}
             </button>
-          </>
+          </div>
         ) : null}
 
         {activeChildId === 'themeColor' ? (
-          <>
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>
+          <div className="settings-panel-wide settings-panel-wide--theme">
+            <div className="settings-color-block">
+              <label className="settings-color-label">
                 {t.primaryColorLabel}
               </label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div className="settings-color-control">
                 <input
                   type="color"
                   value={selectedPrimaryColor}
                   onChange={(event) => setSelectedPrimaryColor(event.target.value)}
                   aria-label={t.primaryColorLabel}
-                  style={{ width: 60, height: 44, cursor: 'pointer', border: 'none', borderRadius: 4 }}
                 />
                 <code className="settings-color-value">{selectedPrimaryColor}</code>
               </div>
             </div>
 
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>
+            <div className="settings-color-block">
+              <label className="settings-color-label">
                 {t.accentColorLabel}
               </label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div className="settings-color-control">
                 <input
                   type="color"
                   value={selectedAccentColor}
                   onChange={(event) => setSelectedAccentColor(event.target.value)}
                   aria-label={t.accentColorLabel}
-                  style={{ width: 60, height: 44, cursor: 'pointer', border: 'none', borderRadius: 4 }}
                 />
                 <code className="settings-color-value">{selectedAccentColor}</code>
               </div>
             </div>
 
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>
+            <div className="settings-color-block">
+              <label className="settings-color-label">
                 {t.textColorLabel}
               </label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div className="settings-color-control">
                 <input
                   type="color"
                   value={selectedTextColor}
                   onChange={(event) => setSelectedTextColor(event.target.value)}
                   aria-label={t.textColorLabel}
-                  style={{ width: 60, height: 44, cursor: 'pointer', border: 'none', borderRadius: 4 }}
                 />
                 <code className="settings-color-value">{selectedTextColor}</code>
               </div>
             </div>
 
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', marginBottom: 12, fontWeight: 500 }}>
+            <div className="settings-color-block settings-color-block--mode">
+              <label className="settings-color-label">
                 {t.darkModeLabel}
               </label>
               <div className="settings-choice-list">
@@ -516,18 +549,17 @@ export default function SettingsPage(): JSX.Element {
               </div>
             </div>
 
-            <div style={{ marginTop: 28, paddingTop: 16, borderTop: '1px solid #eaeaea' }}>
+            <div className="settings-reset-row">
               <button
                 type="button"
                 className="btn btn-secondary"
                 onClick={handleReset}
-                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
               >
                 <FaRotateLeft />
                 {t.reset}
               </button>
             </div>
-          </>
+          </div>
         ) : null}
 
         {activeChildId === 'seasons' ? (
