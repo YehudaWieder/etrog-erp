@@ -1,15 +1,42 @@
 // src/seasons/seasons.service.ts
 
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SeedService } from '../system-config/services/seed/seed.service';
 
 @Injectable()
 export class SeasonsService {
+  private static readonly MIN_SEASON_YEAR = 2020;
+  private static readonly MAX_SEASON_YEAR = 2100;
+
   constructor(
     private prisma: PrismaService,
     private seedService: SeedService,
   ) {}
+
+  private normalizeAndValidateYear(yearName: unknown): number {
+    const normalizedYear =
+      typeof yearName === 'string' ? Number(yearName.trim()) : yearName;
+
+    const isValidYear =
+      typeof normalizedYear === 'number' &&
+      Number.isInteger(normalizedYear) &&
+      normalizedYear >= SeasonsService.MIN_SEASON_YEAR &&
+      normalizedYear <= SeasonsService.MAX_SEASON_YEAR;
+
+    if (!isValidYear) {
+      throw new BadRequestException(
+        `yearName must be an integer between ${SeasonsService.MIN_SEASON_YEAR} and ${SeasonsService.MAX_SEASON_YEAR}`,
+      );
+    }
+
+    return normalizedYear;
+  }
 
   private mapDefaultTraderCategoryPreview(category: any) {
     let totalPercent = 0;
@@ -35,8 +62,10 @@ export class SeasonsService {
   }
 
   async previewSeasonCreation(yearName: number) {
+    const validatedYear = this.normalizeAndValidateYear(yearName);
+
     const existingSeason = await this.prisma.season.findUnique({
-      where: { yearName },
+      where: { yearName: validatedYear },
       select: { id: true, yearName: true, slug: true, isActive: true },
     });
 
@@ -61,7 +90,7 @@ export class SeasonsService {
 
     return {
       canCreate: !existingSeason,
-      yearName,
+      yearName: validatedYear,
       existingSeason,
       defaults: {
         defaultTraderCategories: templates.length,
@@ -77,11 +106,13 @@ export class SeasonsService {
 
   // Create a new season
   async createSeason(yearName: number) {
+    const validatedYear = this.normalizeAndValidateYear(yearName);
+
     // Check if season already exists
     const existing = await this.prisma.season.findUnique({
-      where: { yearName },
+      where: { yearName: validatedYear },
     });
-    if (existing) throw new ConflictException(`Season ${yearName} already exists`);
+    if (existing) throw new ConflictException(`Season ${validatedYear} already exists`);
 
     return this.prisma.$transaction(async (tx) => {
       // Deactivate all other seasons
@@ -92,8 +123,8 @@ export class SeasonsService {
       // Create new season
       const season = await tx.season.create({
         data: {
-          yearName,
-          slug: `${yearName}`,
+          yearName: validatedYear,
+          slug: `${validatedYear}`,
           isActive: true,
         },
       });

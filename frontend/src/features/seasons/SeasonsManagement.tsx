@@ -3,6 +3,19 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addSeason, activateSeason, fetchSeasons } from '../../store/seasonsSlice';
 import type { AppDispatch, RootState } from '../../store';
 
+const MIN_SEASON_YEAR = 2020;
+const MAX_SEASON_YEAR = 2100;
+
+const isSeasonYearInAllowedRange = (value: string): boolean => {
+  const parsedYear = Number(value);
+
+  return (
+    Number.isInteger(parsedYear) &&
+    parsedYear >= MIN_SEASON_YEAR &&
+    parsedYear <= MAX_SEASON_YEAR
+  );
+};
+
 const SeasonsManagement: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { items: seasons, loading, error, activeSeasonId } = useSelector((state: RootState) => state.seasons);
@@ -14,7 +27,7 @@ const SeasonsManagement: React.FC = () => {
 
   const handleAdd = () => {
     const parsedYear = Number(newSeasonYear);
-    if (Number.isInteger(parsedYear) && parsedYear > 2000) {
+    if (isSeasonYearInAllowedRange(newSeasonYear)) {
       void dispatch(addSeason({ yearName: parsedYear }));
       setNewSeasonYear('');
     }
@@ -24,7 +37,7 @@ const SeasonsManagement: React.FC = () => {
     void dispatch(activateSeason(id));
   };
 
-  const isNewYearValid = Number.isInteger(Number(newSeasonYear)) && Number(newSeasonYear) > 2000;
+  const isNewYearValid = isSeasonYearInAllowedRange(newSeasonYear);
 
   return (
     <div className="seasons-manager">
@@ -37,11 +50,12 @@ const SeasonsManagement: React.FC = () => {
         <input
           className="seasons-manager__year-input"
           type="number"
-          min={2001}
+          min={MIN_SEASON_YEAR}
+          max={MAX_SEASON_YEAR}
           step={1}
           value={newSeasonYear}
           onChange={(e) => setNewSeasonYear(e.target.value)}
-          placeholder="שנת עונה חדשה (לדוגמה 2027)"
+          placeholder={`שנת עונה חדשה (${MIN_SEASON_YEAR}-${MAX_SEASON_YEAR})`}
         />
         <button
           type="button"

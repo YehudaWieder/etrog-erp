@@ -1076,7 +1076,12 @@ export class DefaultTraderCategoryApprovalResponseSwaggerDto {
 }
 
 export class SeasonYearNameSwaggerDto {
-  @ApiProperty({ description: 'Four-digit season year.', example: 2027 })
+  @ApiProperty({
+    description: 'Four-digit season year. Allowed range: 2020-2100.',
+    example: 2027,
+    minimum: 2020,
+    maximum: 2100,
+  })
   yearName!: number;
 }
 
