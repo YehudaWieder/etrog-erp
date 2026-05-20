@@ -1,7 +1,6 @@
 import type { NavItem, SidebarSection } from '../../types/navigation';
 import * as FAIcons from 'react-icons/fa6';
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
 
 const iconMap: Record<string, keyof typeof FAIcons> = {
   'fa-truck': 'FaTruck',
@@ -38,21 +37,75 @@ export function Sidebar({
   onNavigate,
   footerSlot,
 }: SidebarProps) {
+  const initiallyOpenSectionIds = useMemo(() => {
+    const withActiveChild = sections
+      .filter((section) => section.items.some((item) => item.id === activeItemId) || section.id === activeItemId)
+      .map((section) => section.id);
+
+    if (withActiveChild.length > 0) {
+      return withActiveChild;
+    }
+
+    return sections.length > 0 ? [sections[0].id] : [];
+  }, [activeItemId, sections]);
+
+  const [openSectionIds, setOpenSectionIds] = useState<string[]>(initiallyOpenSectionIds);
+
+  useEffect(() => {
+    setOpenSectionIds((previous) => {
+      if (initiallyOpenSectionIds.length === 0) {
+        return previous;
+      }
+
+      const next = new Set([...previous, ...initiallyOpenSectionIds]);
+      return Array.from(next);
+    });
+  }, [initiallyOpenSectionIds]);
+
+  const toggleSection = (sectionId: string) => {
+    setOpenSectionIds((previous) => {
+      if (previous.includes(sectionId)) {
+        return previous.filter((id) => id !== sectionId);
+      }
+      return [...previous, sectionId];
+    });
+  };
+
+  const ensureSectionOpen = (sectionId: string) => {
+    setOpenSectionIds((previous) => (previous.includes(sectionId) ? previous : [...previous, sectionId]));
+  };
+
   return (
     <aside className="app-shell__sidebar" aria-label="Page sidebar">
       <div className="app-shell__sidebar-scroll">
         {sections.map((section) => {
-          const isSectionActive = section.id === activeItemId;
+          const hasActiveChild = section.items.some((item) => item.id === activeItemId);
+          const isSectionActive = section.id === activeItemId || hasActiveChild;
+          const isOpen = openSectionIds.includes(section.id);
+          const hasChildren = section.items.length > 0;
+          const contentId = `sidebar-section-${section.id}-content`;
 
           return (
           <section key={section.id} className="app-shell__sidebar-section">
             <button
               type="button"
               className={`app-shell__sidebar-title app-shell__sidebar-title--button${isSectionActive ? ' is-active' : ''}`}
-              onClick={() => section.href && onNavigate?.({ id: section.id, label: section.title, href: section.href })}
+              onClick={() => {
+                if (section.href) {
+                  onNavigate?.({ id: section.id, label: section.title, href: section.href });
+                } else if (hasChildren && section.items[0]?.href) {
+                  onNavigate?.(section.items[0]);
+                }
+
+                if (hasChildren) {
+                  ensureSectionOpen(section.id);
+                }
+              }}
               aria-current={isSectionActive ? 'page' : undefined}
+              aria-expanded={hasChildren ? isOpen : undefined}
+              aria-controls={hasChildren ? contentId : undefined}
             >
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span className="app-shell__sidebar-title-content">
                 {section.icon && (
                   <>
                     {(() => {
@@ -63,18 +116,25 @@ export function Sidebar({
                 )}
                 {section.title}
               </span>
-              {typeof section.badge === 'number' ? (
-                <span className="app-shell__badge">{section.badge}</span>
-              ) : null}
+              <span className="app-shell__sidebar-title-meta">
+                {typeof section.badge === 'number' ? (
+                  <span className="app-shell__badge">{section.badge}</span>
+                ) : null}
+                {hasChildren ? <FAIcons.FaChevronDown className={`app-shell__sidebar-chevron${isOpen ? ' is-open' : ''}`} /> : null}
+              </span>
             </button>
-            <div>
+            <div
+              id={contentId}
+              className={`app-shell__sidebar-subitems${isOpen ? ' is-open' : ''}`}
+              hidden={!isOpen}
+            >
               {section.items.map((item) => {
                 const isActive = item.id === activeItemId;
                 return (
                   <button
                     key={item.id}
                     type="button"
-                    className={`app-shell__sidebar-item${isActive ? ' is-active' : ''}`}
+                    className={`app-shell__sidebar-item app-shell__sidebar-subitem${isActive ? ' is-active' : ''}`}
                     onClick={() => onNavigate?.(item)}
                     aria-current={isActive ? 'page' : undefined}
                   >
@@ -105,17 +165,3 @@ export function Sidebar({
     </aside>
   );
 }
-
-const SidebarLink = () => {
-  return (
-    <nav className="sidebar">
-      <ul>
-        <li><Link to="/">דף הבית</Link></li>
-        <li><Link to="/settings">הגדרות</Link></li>
-        {/* Add other navigation links here */}
-      </ul>
-    </nav>
-  );
-};
-
-export default SidebarLink;
