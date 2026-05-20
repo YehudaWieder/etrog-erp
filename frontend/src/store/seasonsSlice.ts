@@ -97,7 +97,19 @@ const seasonsSlice = createSlice({
       })
       .addCase(addSeason.fulfilled, (state, action) => {
         state.loading = false;
-        state.items.push(action.payload);
+        const createdSeason = action.payload;
+
+        state.items = state.items.filter((season) => season.id !== createdSeason.id);
+
+        if (createdSeason.isActive) {
+          state.activeSeasonId = createdSeason.id;
+          state.items = state.items.map((season) => ({
+            ...season,
+            isActive: season.id === createdSeason.id,
+          }));
+        }
+
+        state.items.push(createdSeason);
       })
       .addCase(addSeason.rejected, (state, action) => {
         state.loading = false;
