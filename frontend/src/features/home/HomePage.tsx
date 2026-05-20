@@ -36,7 +36,11 @@ export function HomePage() {
 
   const handleTopNavClick = (item: NavItem) => {
     setActiveTopId(item.id);
-    navigate(`/${item.id}`);
+    if (item.id === 'seasons') {
+      navigate('/seasons');
+    } else {
+      navigate(`/${item.id}`);
+    }
   };
 
   return (

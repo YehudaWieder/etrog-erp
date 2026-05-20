@@ -4,6 +4,7 @@ import { FaCheck, FaRotateLeft } from 'react-icons/fa6';
 import { AppShell } from '../../app/layout/AppShell';
 import type { NavItem, SidebarSection } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
+import SeasonsManagement from '../seasons/SeasonsManagement';
 
 type Lang = 'he' | 'en';
 type SettingsChildKey = 'language' | 'themeColor' | 'seasons' | 'fields' | 'traderCategories' | 'defaultTraderCategories' | 'customerCategories';
@@ -547,7 +548,15 @@ export default function SettingsPage(): JSX.Element {
           </div>
         ) : null}
 
-        {activeChildId !== 'language' && activeChildId !== 'themeColor' ? (
+        {activeChildId === 'seasons' ? (
+          <div className="settings-card-grid">
+            <article className="settings-card">
+              <SeasonsManagement />
+            </article>
+          </div>
+        ) : null}
+
+        {activeChildId !== 'language' && activeChildId !== 'themeColor' && activeChildId !== 'seasons' ? (
           <div className="settings-card-grid">
             <article className="settings-card settings-card--placeholder">
               <h3 className="settings-card__title">{content.title}</h3>

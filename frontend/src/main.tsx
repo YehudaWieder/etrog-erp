@@ -2,6 +2,8 @@ import './styles/globals.css';
 import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import store from './store';
 import { HomeRoute } from './app/routes/HomeRoute';
 import { ShipmentsRoute } from './app/routes/ShipmentsRoute';
 import { LoginRoute } from './app/routes/LoginRoute';
@@ -9,6 +11,7 @@ import { RegisterRoute } from './app/routes/RegisterRoute';
 import { ProfileRoute } from './app/routes/ProfileRoute';
 import { ManagerProfileEditRoute } from './app/routes/ManagerProfileEditRoute';
 import { MessagesRoute } from './app/routes/MessagesRoute';
+import { SeasonsRoute } from './app/routes/SeasonsRoute';
 import { AUTH_SESSION_EXPIRED_EVENT } from './services/apiClient';
 import SettingsPage from './features/settings/SettingsPage';
 
@@ -64,6 +67,7 @@ function AppRouter(): JSX.Element {
       <Route path="/messages/*" element={<MessagesRoute />} />
       <Route path="/shipments/*" element={<ShipmentsRoute />} />
       <Route path="/settings/*" element={<SettingsPage />} />
+      <Route path="/seasons" element={<SeasonsRoute />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
@@ -71,8 +75,10 @@ function AppRouter(): JSX.Element {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <AppRouter />
-    </BrowserRouter>
+    <Provider store={store}>
+      <BrowserRouter>
+        <AppRouter />
+      </BrowserRouter>
+    </Provider>
   </React.StrictMode>,
 );
