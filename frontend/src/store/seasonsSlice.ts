@@ -1,5 +1,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { createSeason, getSeasons, setActiveSeason, type CreateSeasonPayload, type Season } from '../services/seasonsApi';
+import { ApiError } from '../services/apiClient';
+import {
+  createSeason,
+  deleteSeason,
+  getSeasons,
+  setActiveSeason,
+  type CreateSeasonPayload,
+  type Season,
+} from '../services/seasonsApi';
 
 type SeasonsState = {
   items: Season[];
@@ -19,13 +27,50 @@ export const fetchSeasons = createAsyncThunk('seasons/fetchSeasons', async () =>
   return await getSeasons();
 });
 
-export const addSeason = createAsyncThunk('seasons/addSeason', async (seasonData: CreateSeasonPayload) => {
-  return await createSeason(seasonData);
-});
+export const addSeason = createAsyncThunk(
+  'seasons/addSeason',
+  async (seasonData: CreateSeasonPayload, { rejectWithValue }) => {
+    try {
+      return await createSeason(seasonData);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return rejectWithValue(error.message);
+      }
 
-export const activateSeason = createAsyncThunk('seasons/activateSeason', async (seasonId: number) => {
-  return await setActiveSeason(seasonId);
-});
+      throw error;
+    }
+  },
+);
+
+export const activateSeason = createAsyncThunk(
+  'seasons/activateSeason',
+  async (seasonId: number, { rejectWithValue }) => {
+    try {
+      return await setActiveSeason(seasonId);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return rejectWithValue(error.message);
+      }
+
+      throw error;
+    }
+  },
+);
+
+export const removeSeason = createAsyncThunk(
+  'seasons/removeSeason',
+  async (seasonId: number, { rejectWithValue }) => {
+    try {
+      return await deleteSeason(seasonId);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return rejectWithValue(error.message);
+      }
+
+      throw error;
+    }
+  },
+);
 
 const seasonsSlice = createSlice({
   name: 'seasons',
@@ -44,14 +89,48 @@ const seasonsSlice = createSlice({
       })
       .addCase(fetchSeasons.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message ?? 'Failed to fetch seasons';
+        state.error = (action.payload as string | undefined) ?? action.error.message ?? 'Failed to fetch seasons';
+      })
+      .addCase(addSeason.pending, (state) => {
+        state.loading = true;
+        state.error = null;
       })
       .addCase(addSeason.fulfilled, (state, action) => {
+        state.loading = false;
         state.items.push(action.payload);
       })
+      .addCase(addSeason.rejected, (state, action) => {
+        state.loading = false;
+        state.error = (action.payload as string | undefined) ?? action.error.message ?? 'Failed to create season';
+      })
+      .addCase(activateSeason.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(activateSeason.fulfilled, (state, action) => {
+        state.loading = false;
         state.activeSeasonId = action.payload.id;
         state.items = state.items.map((s) => ({ ...s, isActive: s.id === action.payload.id }));
+      })
+      .addCase(activateSeason.rejected, (state, action) => {
+        state.loading = false;
+        state.error = (action.payload as string | undefined) ?? action.error.message ?? 'Failed to activate season';
+      })
+      .addCase(removeSeason.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(removeSeason.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = state.items.filter((s) => s.id !== action.payload.id);
+
+        if (state.activeSeasonId === action.payload.id) {
+          state.activeSeasonId = state.items.find((s) => s.isActive)?.id ?? null;
+        }
+      })
+      .addCase(removeSeason.rejected, (state, action) => {
+        state.loading = false;
+        state.error = (action.payload as string | undefined) ?? action.error.message ?? 'Failed to delete season';
       });
   },
 });

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaCheck, FaRotateLeft } from 'react-icons/fa6';
+import { FaCheck, FaRotateLeft, FaTrashCan } from 'react-icons/fa6';
 import { AppShell } from '../../app/layout/AppShell';
 import type { NavItem, SidebarSection } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
-import SeasonsManagement from '../seasons/SeasonsManagement';
+import SeasonsManagement, { type SeasonsHeaderState } from '../seasons/SeasonsManagement';
 
 type Lang = 'he' | 'en';
 type SettingsChildKey = 'language' | 'themeColor' | 'seasons' | 'fields' | 'traderCategories' | 'defaultTraderCategories' | 'customerCategories';
@@ -276,7 +276,7 @@ export default function SettingsPage(): JSX.Element {
   const location = useLocation();
   const currentUser = getCurrentUser();
   const [alertsCount, setAlertsCount] = useState<number>(0);
-  const [savedMessage, setSavedMessage] = useState('');
+  const [seasonsHeaderState, setSeasonsHeaderState] = useState<SeasonsHeaderState | null>(null);
 
   useEffect(() => {
     import('../../services/messagesApi').then(({ fetchUnreadCount }) => {
@@ -351,29 +351,6 @@ export default function SettingsPage(): JSX.Element {
     }
   }, [selectedPrimaryColor, selectedAccentColor, selectedTextColor, selectedDarkMode]);
 
-  const handleSave = () => {
-    const nextLanguage = selectedLanguage;
-    const savedMessageText = SETTINGS_I18N[nextLanguage].saved;
-
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('app.language', nextLanguage);
-      window.localStorage.setItem('app.primaryColor', selectedPrimaryColor);
-      window.localStorage.setItem('app.accentColor', selectedAccentColor);
-      window.localStorage.setItem('app.textColor', selectedTextColor);
-      window.localStorage.setItem('app.darkMode', String(selectedDarkMode));
-    }
-
-    setLang(nextLanguage);
-    setSavedMessage(savedMessageText);
-
-    // Reload to ensure all app modules pick up persisted settings consistently.
-    window.setTimeout(() => {
-      if (typeof window !== 'undefined') {
-        window.location.reload();
-      }
-    }, 350);
-  };
-
   const handleReset = () => {
     setSelectedPrimaryColor('#ffca2b');
     setSelectedAccentColor('#2d5a27');
@@ -389,17 +366,44 @@ export default function SettingsPage(): JSX.Element {
     navigate(item.href || '/settings/site/language');
   };
 
+  // הכותרת העליונה תמיד שם הטאב הפעיל; בעונות מציגים גם מונה כחלק מהכותרת.
+  const pageTitle = activeChildId === 'seasons' && seasonsHeaderState
+    ? `${content.title} (${seasonsHeaderState.count})`
+    : content.title;
+  const seasonsActionText = {
+    activate: lang === 'he' ? 'הגדר כפעילה' : 'Set Active',
+    remove: lang === 'he' ? 'מחיקה' : 'Delete',
+  };
+
+  const pageHeaderActions = activeChildId === 'seasons' && seasonsHeaderState ? (
+    <div className="settings-seasons-header-buttons">
+      <button
+        type="button"
+        className="settings-seasons-header-btn settings-seasons-header-btn--success"
+        onClick={seasonsHeaderState.onActivate}
+        disabled={seasonsHeaderState.isActivateDisabled}
+      >
+        <FaCheck />
+        <span>{seasonsActionText.activate}</span>
+      </button>
+      <button
+        type="button"
+        className="settings-seasons-header-btn settings-seasons-header-btn--danger"
+        onClick={seasonsHeaderState.onDelete}
+        disabled={seasonsHeaderState.isDeleteDisabled}
+      >
+        <FaTrashCan />
+        <span>{seasonsActionText.remove}</span>
+      </button>
+    </div>
+  ) : undefined;
+
   return (
     <AppShell
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
-      pageTitle={t.pageTitle}
-      pageHeaderActions={(
-        <button type="button" className="btn btn-primary" onClick={handleSave}>
-          <FaCheck style={{ marginInlineEnd: 8 }} />
-          {t.save}
-        </button>
-      )}
+      pageTitle={pageTitle}
+      pageHeaderActions={pageHeaderActions}
       topNav={t.topNav}
       sidebarSections={sidebarSections}
       activeSidebarItemId={activeChildId}
@@ -421,149 +425,117 @@ export default function SettingsPage(): JSX.Element {
       }}
     >
       <section className="settings-workspace">
-        <header className="settings-workspace__header">
-          <div>
-            <h2 className="settings-workspace__title">{content.title}</h2>
-            <p className="settings-workspace__description">{content.description}</p>
-          </div>
-        </header>
-
-        {savedMessage ? <p className="settings-workspace__saved">{savedMessage}</p> : null}
-
         {activeChildId === 'language' ? (
-          <div className="settings-card-grid">
-            <article className="settings-card">
-              <h3 className="settings-card__title">{t.languageLabel}</h3>
-              <p className="settings-card__hint">{content.description}</p>
-              <div className="settings-choice-list">
-                <button
-                  type="button"
-                  className={`settings-choice${selectedLanguage === 'he' ? ' is-active' : ''}`}
-                  onClick={() => setSelectedLanguage('he')}
-                >
-                  {t.languageOptions.he}
-                </button>
-                <button
-                  type="button"
-                  className={`settings-choice${selectedLanguage === 'en' ? ' is-active' : ''}`}
-                  onClick={() => setSelectedLanguage('en')}
-                >
-                  {t.languageOptions.en}
-                </button>
-              </div>
-            </article>
-          </div>
+          <>
+            <button
+              type="button"
+              className={`settings-choice${selectedLanguage === 'he' ? ' is-active' : ''}`}
+              onClick={() => setSelectedLanguage('he')}
+            >
+              {t.languageOptions.he}
+            </button>
+            <button
+              type="button"
+              className={`settings-choice${selectedLanguage === 'en' ? ' is-active' : ''}`}
+              onClick={() => setSelectedLanguage('en')}
+            >
+              {t.languageOptions.en}
+            </button>
+          </>
         ) : null}
 
         {activeChildId === 'themeColor' ? (
-          <div className="settings-card-grid">
-            <article className="settings-card">
-              <h3 className="settings-card__title">{t.colorLabel}</h3>
-              <p className="settings-card__hint">{t.colorHint}</p>
-
-              <div style={{ marginTop: 24 }}>
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>
-                    {t.primaryColorLabel}
-                  </label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <input
-                      type="color"
-                      value={selectedPrimaryColor}
-                      onChange={(event) => setSelectedPrimaryColor(event.target.value)}
-                      aria-label={t.primaryColorLabel}
-                      style={{ width: 60, height: 44, cursor: 'pointer', border: 'none', borderRadius: 4 }}
-                    />
-                    <code className="settings-color-value">{selectedPrimaryColor}</code>
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>
-                    {t.accentColorLabel}
-                  </label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <input
-                      type="color"
-                      value={selectedAccentColor}
-                      onChange={(event) => setSelectedAccentColor(event.target.value)}
-                      aria-label={t.accentColorLabel}
-                      style={{ width: 60, height: 44, cursor: 'pointer', border: 'none', borderRadius: 4 }}
-                    />
-                    <code className="settings-color-value">{selectedAccentColor}</code>
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>
-                    {t.textColorLabel}
-                  </label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <input
-                      type="color"
-                      value={selectedTextColor}
-                      onChange={(event) => setSelectedTextColor(event.target.value)}
-                      aria-label={t.textColorLabel}
-                      style={{ width: 60, height: 44, cursor: 'pointer', border: 'none', borderRadius: 4 }}
-                    />
-                    <code className="settings-color-value">{selectedTextColor}</code>
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ display: 'block', marginBottom: 12, fontWeight: 500 }}>
-                    {t.darkModeLabel}
-                  </label>
-                  <div className="settings-choice-list">
-                    <button
-                      type="button"
-                      className={`settings-choice${!selectedDarkMode ? ' is-active' : ''}`}
-                      onClick={() => setSelectedDarkMode(false)}
-                    >
-                      {t.darkModeOff}
-                    </button>
-                    <button
-                      type="button"
-                      className={`settings-choice${selectedDarkMode ? ' is-active' : ''}`}
-                      onClick={() => setSelectedDarkMode(true)}
-                    >
-                      {t.darkModeOn}
-                    </button>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: 28, paddingTop: 16, borderTop: '1px solid #eaeaea' }}>
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={handleReset}
-                    style={{ display: 'flex', alignItems: 'center', gap: 8 }}
-                  >
-                    <FaRotateLeft />
-                    {t.reset}
-                  </button>
-                </div>
+          <>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>
+                {t.primaryColorLabel}
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <input
+                  type="color"
+                  value={selectedPrimaryColor}
+                  onChange={(event) => setSelectedPrimaryColor(event.target.value)}
+                  aria-label={t.primaryColorLabel}
+                  style={{ width: 60, height: 44, cursor: 'pointer', border: 'none', borderRadius: 4 }}
+                />
+                <code className="settings-color-value">{selectedPrimaryColor}</code>
               </div>
-            </article>
-          </div>
+            </div>
+
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>
+                {t.accentColorLabel}
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <input
+                  type="color"
+                  value={selectedAccentColor}
+                  onChange={(event) => setSelectedAccentColor(event.target.value)}
+                  aria-label={t.accentColorLabel}
+                  style={{ width: 60, height: 44, cursor: 'pointer', border: 'none', borderRadius: 4 }}
+                />
+                <code className="settings-color-value">{selectedAccentColor}</code>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>
+                {t.textColorLabel}
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <input
+                  type="color"
+                  value={selectedTextColor}
+                  onChange={(event) => setSelectedTextColor(event.target.value)}
+                  aria-label={t.textColorLabel}
+                  style={{ width: 60, height: 44, cursor: 'pointer', border: 'none', borderRadius: 4 }}
+                />
+                <code className="settings-color-value">{selectedTextColor}</code>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', marginBottom: 12, fontWeight: 500 }}>
+                {t.darkModeLabel}
+              </label>
+              <div className="settings-choice-list">
+                <button
+                  type="button"
+                  className={`settings-choice${!selectedDarkMode ? ' is-active' : ''}`}
+                  onClick={() => setSelectedDarkMode(false)}
+                >
+                  {t.darkModeOff}
+                </button>
+                <button
+                  type="button"
+                  className={`settings-choice${selectedDarkMode ? ' is-active' : ''}`}
+                  onClick={() => setSelectedDarkMode(true)}
+                >
+                  {t.darkModeOn}
+                </button>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 28, paddingTop: 16, borderTop: '1px solid #eaeaea' }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleReset}
+                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+              >
+                <FaRotateLeft />
+                {t.reset}
+              </button>
+            </div>
+          </>
         ) : null}
 
         {activeChildId === 'seasons' ? (
-          <div className="settings-card-grid">
-            <article className="settings-card">
-              <SeasonsManagement />
-            </article>
-          </div>
+          <SeasonsManagement onHeaderStateChange={setSeasonsHeaderState} />
         ) : null}
 
         {activeChildId !== 'language' && activeChildId !== 'themeColor' && activeChildId !== 'seasons' ? (
-          <div className="settings-card-grid">
-            <article className="settings-card settings-card--placeholder">
-              <h3 className="settings-card__title">{content.title}</h3>
-              <p className="settings-card__hint">{content.description}</p>
-              {isManager ? null : <p className="settings-workspace__manager-note">{t.managerOnlyHint}</p>}
-            </article>
-          </div>
+          isManager ? null : <p className="settings-workspace__manager-note">{t.managerOnlyHint}</p>
         ) : null}
       </section>
     </AppShell>

@@ -28,3 +28,9 @@ export async function setActiveSeason(seasonId: number): Promise<Season> {
     body: JSON.stringify({ id: seasonId }),
   });
 }
+
+export async function deleteSeason(seasonId: number): Promise<Season> {
+  return apiClient<Season>(`/seasons/${seasonId}`, {
+    method: 'DELETE',
+  });
+}
