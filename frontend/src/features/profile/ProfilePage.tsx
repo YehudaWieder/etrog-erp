@@ -462,6 +462,8 @@ export function ProfilePage() {
     }
   };
 
+  const hasSelectedManagedProfile = selectedManagedProfileId !== null;
+
   return (
     <AppShell
       direction={lang === 'he' ? 'rtl' : 'ltr'}
@@ -492,25 +494,25 @@ export function ProfilePage() {
             </div>
           )}
           {isProfilesListView && canManageProfiles && (
-            <div className="action-buttons">
+            <div className="settings-seasons-header-buttons">
               <button
-                className="btn btn-primary"
+                className="settings-seasons-header-btn settings-seasons-header-btn--success"
                 type="button"
                 onClick={() => {
                   if (selectedManagedProfileId) {
                     navigate(`/profile/manage-profile/${selectedManagedProfileId}`);
                   }
                 }}
-                disabled={!selectedManagedProfileId || isLoadingProfilesList || isDeletingProfile}
+                disabled={!hasSelectedManagedProfile || isLoadingProfilesList || isDeletingProfile}
               >
                 <FaFloppyDisk />
                 <span>{lang === 'he' ? 'עדכון פרופיל נבחר' : 'Update Selected Profile'}</span>
               </button>
               <button
-                className="btn btn-danger"
+                className="settings-seasons-header-btn settings-seasons-header-btn--danger"
                 type="button"
                 onClick={() => setShowManagerDeleteDialog(true)}
-                disabled={!selectedManagedProfileId || isLoadingProfilesList || isDeletingProfile}
+                disabled={!hasSelectedManagedProfile || isLoadingProfilesList || isDeletingProfile}
               >
                 <FaTrashCan />
                 <span>{lang === 'he' ? 'מחיקת פרופיל נבחר' : 'Delete Selected Profile'}</span>
