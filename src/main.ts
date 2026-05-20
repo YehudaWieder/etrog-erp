@@ -5,6 +5,7 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableShutdownHooks();
 
   // Enable CORS – allow the Vite dev server and any configured frontend origin
   const allowedOrigin = process.env.FRONTEND_ORIGIN ?? 'http://localhost:5173';

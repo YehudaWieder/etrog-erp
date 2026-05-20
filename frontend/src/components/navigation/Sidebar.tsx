@@ -1,5 +1,7 @@
 import type { NavItem, SidebarSection } from '../../types/navigation';
 import * as FAIcons from 'react-icons/fa6';
+import React from 'react';
+import { Link } from 'react-router-dom';
 
 const iconMap: Record<string, keyof typeof FAIcons> = {
   'fa-truck': 'FaTruck',
@@ -103,3 +105,17 @@ export function Sidebar({
     </aside>
   );
 }
+
+const SidebarLink = () => {
+  return (
+    <nav className="sidebar">
+      <ul>
+        <li><Link to="/">דף הבית</Link></li>
+        <li><Link to="/settings">הגדרות</Link></li>
+        {/* Add other navigation links here */}
+      </ul>
+    </nav>
+  );
+};
+
+export default SidebarLink;
