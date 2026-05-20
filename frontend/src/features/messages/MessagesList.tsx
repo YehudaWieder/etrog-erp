@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { deleteMessage, fetchAllMessages, sendMessage, markMessageAsRead, Message, type MessagePriority } from '../../services/messagesApi';
-import { FaReply, FaEnvelopeOpen, FaEnvelope, FaShareFromSquare, FaTrashCan, FaPaperPlane, FaXmark, FaChevronDown } from 'react-icons/fa6';
+import { FaReply, FaEnvelopeOpen, FaEnvelope, FaShareFromSquare, FaTrashCan, FaPaperPlane, FaXmark, FaChevronDown, FaUsers, FaPrint } from 'react-icons/fa6';
 import { StickyHeaderBar } from '../../components/StickyHeaderBar';
 import { getAllProfiles, getCurrentUser } from '../../services/authService';
 
@@ -8,7 +8,7 @@ type SidebarFilter = 'all-messages' | 'incoming-messages' | 'outgoing-messages' 
 
 type MailboxCounts = Record<SidebarFilter, number>;
 
-export type ComposeAction = 'reply' | 'forward';
+export type ComposeAction = 'reply' | 'reply-all' | 'forward';
 
 type MessagesListProps = {
   filter: SidebarFilter;
@@ -35,7 +35,7 @@ export function MessagesList({
   onUnreadCountChange,
 }: MessagesListProps) {
   // Inline reply/forward state
-  const [inlineAction, setInlineAction] = useState<null | { type: 'reply' | 'forward'; messageId: number }>(null);
+  const [inlineAction, setInlineAction] = useState<null | { type: 'reply' | 'reply-all' | 'forward'; messageId: number }>(null);
   const [inlineReplyContent, setInlineReplyContent] = useState('');
   const [inlineForwardContent, setInlineForwardContent] = useState('');
   const [inlineForwardRecipients, setInlineForwardRecipients] = useState<number[]>([]);
@@ -279,19 +279,37 @@ export function MessagesList({
     } as Record<MessagePriority, string>,
     actions: {
       reply: lang === 'he' ? 'מענה' : 'Reply',
+      replyAll: lang === 'he' ? 'השב לכולם' : 'Reply all',
       forward: lang === 'he' ? 'העברה' : 'Forward',
+      print: lang === 'he' ? 'הדפס שרשור' : 'Print thread',
       delete: lang === 'he' ? 'מחיקה' : 'Delete',
       deleting: lang === 'he' ? 'מוחק...' : 'Deleting...',
       replyNotice: lang === 'he' ? 'נבחרה פעולה: מענה להודעה' : 'Action selected: reply to message',
+      replyAllNotice: lang === 'he' ? 'נבחרה פעולה: השב לכולם' : 'Action selected: reply all',
       forwardNotice: lang === 'he' ? 'נבחרה פעולה: העברת הודעה' : 'Action selected: forward message',
       deleteNotice: lang === 'he' ? 'ההודעה נמחקה' : 'Message deleted',
       deleteError: lang === 'he' ? 'מחיקת ההודעה נכשלה' : 'Failed to delete message',
     },
+    multiRecipient: lang === 'he' ? 'נשלח למספר נמענים' : 'Sent to multiple recipients',
+    printWindowTitle: lang === 'he' ? 'הדפסת שרשור הודעות' : 'Print Messages Thread',
+    printThreadHeading: lang === 'he' ? 'שרשור הודעות' : 'Messages Thread',
+    printSubjectLabel: lang === 'he' ? 'נושא' : 'Subject',
+    printGeneratedAtLabel: lang === 'he' ? 'הופק בתאריך' : 'Generated at',
   };
 
 
   const handleReply = (message: Message) => {
     setInlineAction({ type: 'reply', messageId: message.id });
+    setInlineReplyContent('');
+    setInlineError('');
+    setTimeout(() => {
+      const el = document.getElementById(`inline-reply-input-${message.id}`);
+      if (el) (el as HTMLTextAreaElement).focus();
+    }, 100);
+  };
+
+  const handleReplyAll = (message: Message) => {
+    setInlineAction({ type: 'reply-all', messageId: message.id });
     setInlineReplyContent('');
     setInlineError('');
     setTimeout(() => {
@@ -354,9 +372,11 @@ export function MessagesList({
     }
 
     const replyRecipientIds =
-      userId !== undefined && msg.senderId === userId
-        ? msg.recipientIds.filter((id) => id !== userId)
-        : [msg.senderId];
+      inlineAction?.type === 'reply-all'
+        ? getReplyAllRecipientIds(msg, userId)
+        : userId !== undefined && msg.senderId === userId
+          ? msg.recipientIds.filter((id) => id !== userId)
+          : [msg.senderId];
 
     if (!replyRecipientIds.length) {
       setInlineError(lang === 'he' ? 'לא נמצא נמען לשליחת התשובה' : 'No recipient found for this reply');
@@ -378,7 +398,11 @@ export function MessagesList({
       setInlineReplyContent('');
       setInlineError('');
       setInlineLoading(false);
-      onActionFeedback?.(lang === 'he' ? 'התשובה נשלחה' : 'Reply sent');
+      onActionFeedback?.(
+        inlineAction?.type === 'reply-all'
+          ? (lang === 'he' ? 'התשובה נשלחה לכולם' : 'Reply sent to all')
+          : (lang === 'he' ? 'התשובה נשלחה' : 'Reply sent'),
+      );
     } catch {
       setInlineError(lang === 'he' ? 'שליחת התשובה נכשלה' : 'Failed to send reply');
       setInlineLoading(false);
@@ -483,6 +507,63 @@ export function MessagesList({
     }
   };
 
+  const handlePrintThread = () => {
+    if (!selectedThreadMessages.length) {
+      return;
+    }
+
+    const renderedMessages = selectedThreadMessages
+      .map((msg) => {
+        const metaMain = buildMessageMetaMain(msg, { lang, userId, userNamesById });
+        const dateText = new Date(msg.createdAt).toLocaleString();
+        return `
+          <article style="border:1px solid #ddd; border-radius:8px; padding:12px; margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; gap:12px; margin-bottom:8px; font-size:13px; color:#444;">
+              <strong>${escapeHtml(metaMain.text)}</strong>
+              <span>${escapeHtml(dateText)}</span>
+            </div>
+            <div style="font-size:14px; line-height:1.5; white-space:pre-wrap;">${escapeHtml(msg.content)}</div>
+          </article>
+        `;
+      })
+      .join('');
+
+    const nowText = new Date().toLocaleString();
+    const html = `
+      <!doctype html>
+      <html lang="${lang}" dir="${lang === 'he' ? 'rtl' : 'ltr'}">
+        <head>
+          <meta charset="utf-8" />
+          <title>${escapeHtml(labels.printWindowTitle)}</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; margin: 24px; color: #111;">
+          <h1 style="margin: 0 0 8px;">${escapeHtml(labels.printThreadHeading)}</h1>
+          <p style="margin: 0 0 6px;"><strong>${escapeHtml(labels.printSubjectLabel)}:</strong> ${escapeHtml(selectedSubject || '-')}</p>
+          <p style="margin: 0 0 18px; color:#555;"><strong>${escapeHtml(labels.printGeneratedAtLabel)}:</strong> ${escapeHtml(nowText)}</p>
+          ${renderedMessages}
+          <script>
+            window.addEventListener('load', function () {
+              window.print();
+            });
+          </script>
+        </body>
+      </html>
+    `;
+
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const printUrl = URL.createObjectURL(blob);
+    const printWindow = window.open(printUrl, '_blank');
+    if (!printWindow) {
+      URL.revokeObjectURL(printUrl);
+      return;
+    }
+
+    // Let the new tab finish loading before revoking the temporary URL.
+    window.setTimeout(() => {
+      URL.revokeObjectURL(printUrl);
+    }, 30_000);
+  };
+
   if (loading) return <div>{labels.loading}</div>;
   if (error) return <div>{labels.error} {error}</div>;
   if (filteredMessages.length === 0) return <div>{labels.empty}</div>;
@@ -517,9 +598,17 @@ export function MessagesList({
                 {thread.length > 1 ? <FaReply /> : isUnread ? <FaEnvelope /> : <FaEnvelopeOpen />}
               </div>
               <div className="messages-list__content">
-                <span className={`messages-priority messages-priority--${toPriority(lastMessage.priority).toLowerCase()}`}>
-                  {labels.priority[toPriority(lastMessage.priority)]}
-                </span>
+                <div className="messages-badges-row">
+                  <span className={`messages-priority messages-priority--${toPriority(lastMessage.priority).toLowerCase()}`}>
+                    {labels.priority[toPriority(lastMessage.priority)]}
+                  </span>
+                  {lastMessage.recipientIds.length > 1 ? (
+                    <span className="messages-recipient-badge" title={labels.multiRecipient}>
+                      <FaUsers />
+                      <span>{lastMessage.recipientIds.length}</span>
+                    </span>
+                  ) : null}
+                </div>
                 <div className="messages-list__meta">
                   {metaMain.tooltip ? (
                     <span className="messages-meta-tooltip" data-tooltip={metaMain.tooltip}>
@@ -557,9 +646,19 @@ export function MessagesList({
                   // Actions for the last message in thread (if outgoing)
                   const lastMsg = selectedThreadMessages[selectedThreadMessages.length - 1];
                   const isOutgoing = userId !== undefined && lastMsg?.senderId === userId;
+                  const canReplyAll = Boolean(lastMsg && getReplyAllRecipientIds(lastMsg, userId).length > 1);
                   if (!lastMsg) return null;
                   return (
                     <>
+                      <button
+                        type="button"
+                        className="messages-thread__action messages-thread__action--icon"
+                        onClick={handlePrintThread}
+                        aria-label={labels.actions.print}
+                        title={labels.actions.print}
+                      >
+                        <FaPrint />
+                      </button>
                       <button
                         type="button"
                         className="messages-thread__action messages-thread__action--icon"
@@ -569,6 +668,17 @@ export function MessagesList({
                       >
                         <FaReply />
                       </button>
+                      {canReplyAll ? (
+                        <button
+                          type="button"
+                          className="messages-thread__action messages-thread__action--icon"
+                          onClick={() => handleReplyAll(lastMsg)}
+                          aria-label={labels.actions.replyAll}
+                          title={labels.actions.replyAll}
+                        >
+                          <FaUsers />
+                        </button>
+                      ) : null}
                       <button
                         type="button"
                         className="messages-thread__action messages-thread__action--icon"
@@ -604,9 +714,17 @@ export function MessagesList({
                     key={msg.id}
                     className={`messages-thread__item${isOutgoing ? ' messages-thread__item--outgoing' : ''}`}
                   >
-                    <span className={`messages-priority messages-priority--${toPriority(msg.priority).toLowerCase()}`}>
-                      {labels.priority[toPriority(msg.priority)]}
-                    </span>
+                    <div className="messages-badges-row">
+                      <span className={`messages-priority messages-priority--${toPriority(msg.priority).toLowerCase()}`}>
+                        {labels.priority[toPriority(msg.priority)]}
+                      </span>
+                      {msg.recipientIds.length > 1 ? (
+                        <span className="messages-recipient-badge" title={labels.multiRecipient}>
+                          <FaUsers />
+                          <span>{msg.recipientIds.length}</span>
+                        </span>
+                      ) : null}
+                    </div>
                     <div className="messages-thread__meta">
                       {metaMain.tooltip ? (
                         <strong className="messages-meta-tooltip" data-tooltip={metaMain.tooltip}>{metaMain.text}</strong>
@@ -631,7 +749,7 @@ export function MessagesList({
                         >
                           <FaXmark />
                         </button>
-                        {inlineAction.type === 'reply' ? (
+                        {inlineAction.type === 'reply' || inlineAction.type === 'reply-all' ? (
                           <>
                             <textarea
                               id={`inline-reply-input-${msg.id}`}
@@ -650,7 +768,7 @@ export function MessagesList({
                               onClick={() => handleInlineReplySend(msg)}
                               disabled={inlineLoading}
                             >
-                              <FaPaperPlane /> {inlineLoading ? (lang === 'he' ? 'שולח...' : 'Sending...') : (lang === 'he' ? 'שלח תשובה' : 'Send reply')}
+                              <FaPaperPlane /> {inlineLoading ? (lang === 'he' ? 'שולח...' : 'Sending...') : (inlineAction.type === 'reply-all' ? (lang === 'he' ? 'שלח לכולם' : 'Send to all') : (lang === 'he' ? 'שלח תשובה' : 'Send reply'))}
                             </button>
                           </>
                         ) : (
@@ -809,4 +927,24 @@ function findThreadRootId(msg: Message, byId: Map<number, Message>): number {
     current = parent;
   }
   return current.id;
+}
+
+function getReplyAllRecipientIds(message: Message, userId?: number): number[] {
+  const participants = [message.senderId, ...message.recipientIds];
+  const unique = Array.from(new Set(participants));
+
+  if (userId === undefined) {
+    return unique;
+  }
+
+  return unique.filter((id) => id !== userId);
+}
+
+function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }

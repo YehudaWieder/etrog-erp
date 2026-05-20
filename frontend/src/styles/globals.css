@@ -825,10 +825,34 @@ select {
   flex: 1;
 }
 
+.messages-badges-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.messages-badges-row .messages-recipient-badge {
+  margin-inline-start: auto;
+}
+
 .messages-list__subject {
   font-weight: 700;
   color: #17312f;
   margin-bottom: 4px;
+}
+
+.messages-recipient-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid #d4dcee;
+  background: #f2f6ff;
+  color: #2f537f;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 2px 8px;
 }
 
 .messages-list__meta {
@@ -1008,6 +1032,10 @@ select {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+}
+
+.messages-thread__meta-right .messages-recipient-badge {
+  margin-bottom: 0;
 }
 
 .messages-thread__text {
