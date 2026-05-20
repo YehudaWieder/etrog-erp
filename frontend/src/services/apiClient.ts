@@ -3,6 +3,9 @@ const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:300
 
 export const AUTH_TOKEN_STORAGE_KEY = 'auth.accessToken';
 export const AUTH_USER_STORAGE_KEY = 'auth.user';
+export const AUTH_SESSION_EXPIRED_EVENT = 'auth:session-expired';
+
+let hasSignaledSessionExpiry = false;
 
 export type StoredAuthUser = {
   id: number;
@@ -58,6 +61,7 @@ export function persistAuthSession(accessToken: string, user: StoredAuthUser): v
 
   window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, accessToken);
   window.localStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(user));
+  hasSignaledSessionExpiry = false;
 }
 
 export function clearAuthSession(): void {
@@ -67,6 +71,15 @@ export function clearAuthSession(): void {
 
   window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
   window.localStorage.removeItem(AUTH_USER_STORAGE_KEY);
+}
+
+function signalSessionExpired(): void {
+  if (typeof window === 'undefined' || hasSignaledSessionExpiry) {
+    return;
+  }
+
+  hasSignaledSessionExpiry = true;
+  window.dispatchEvent(new CustomEvent(AUTH_SESSION_EXPIRED_EVENT));
 }
 
 export function patchStoredAuthUser(patch: Partial<StoredAuthUser>): StoredAuthUser | null {
@@ -98,6 +111,7 @@ function buildUrl(path: string): string {
 
 export async function apiClient<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = getAuthToken();
+  const requestHadAuthToken = Boolean(token);
   const headers = new Headers(init.headers);
 
   if (!headers.has('Accept')) {
@@ -130,6 +144,11 @@ export async function apiClient<T>(path: string, init: RequestInit = {}): Promis
   }
 
   if (!response.ok) {
+    if (response.status === 401 && requestHadAuthToken) {
+      clearAuthSession();
+      signalSessionExpired();
+    }
+
     const rawMessage =
       data && typeof data === 'object' && 'message' in data
         ? (data as { message?: string | string[] }).message
