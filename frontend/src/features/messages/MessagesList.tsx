@@ -19,6 +19,8 @@ type MessagesListProps = {
   onCountsChange?: (counts: MailboxCounts) => void;
   onActionFeedback?: (text: string) => void;
   onComposeRequest?: (action: ComposeAction, message: Message) => void;
+  /** Called when the unread count changes (for global badge update) */
+  onUnreadCountChange?: (count: number) => void;
 };
 
 export function MessagesList({
@@ -30,6 +32,7 @@ export function MessagesList({
   onCountsChange,
   onActionFeedback,
   onComposeRequest,
+  onUnreadCountChange,
 }: MessagesListProps) {
   // Inline reply/forward state
   const [inlineAction, setInlineAction] = useState<null | { type: 'reply' | 'forward'; messageId: number }>(null);
@@ -152,7 +155,8 @@ export function MessagesList({
 
   useEffect(() => {
     onCountsChange?.(counts);
-  }, [counts, onCountsChange]);
+    onUnreadCountChange?.(counts['unread-messages']);
+  }, [counts, onCountsChange, onUnreadCountChange]);
 
   const filteredMessages = useMemo(() => {
     if (!userId) {

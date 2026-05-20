@@ -116,6 +116,14 @@ export function AppShell({
     };
   }, [topBarOptions.isAuthenticated]);
 
+  // Keep top bar unread badge in sync with explicit page-level updates
+  // (for example, immediately after marking a thread as read).
+  useEffect(() => {
+    if (typeof topBarOptions.alertsCount === 'number') {
+      setLiveUnreadCount(topBarOptions.alertsCount);
+    }
+  }, [topBarOptions.alertsCount]);
+
   const activeUrgentMessage = useMemo(() => {
     if (!urgentMessages.length) {
       return null;
