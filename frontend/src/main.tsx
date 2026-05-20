@@ -10,6 +10,7 @@ import { ProfileRoute } from './app/routes/ProfileRoute';
 import { ManagerProfileEditRoute } from './app/routes/ManagerProfileEditRoute';
 import { MessagesRoute } from './app/routes/MessagesRoute';
 import { AUTH_SESSION_EXPIRED_EVENT } from './services/apiClient';
+import SettingsPage from './features/settings/SettingsPage';
 
 function AppRouter(): JSX.Element {
   const navigate = useNavigate();
@@ -37,6 +38,7 @@ function AppRouter(): JSX.Element {
       <Route path="/profile/*" element={<ProfileRoute />} />
       <Route path="/messages/*" element={<MessagesRoute />} />
       <Route path="/shipments/*" element={<ShipmentsRoute />} />
+      <Route path="/settings" element={<SettingsPage userRole="WORKER" />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
