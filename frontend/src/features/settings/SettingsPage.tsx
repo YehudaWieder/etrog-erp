@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaCheck, FaRotateLeft, FaTrashCan } from 'react-icons/fa6';
+import { FaCheck, FaPenToSquare, FaRotateLeft, FaTrashCan } from 'react-icons/fa6';
 import { AppShell } from '../../app/layout/AppShell';
 import type { NavItem, SidebarSection } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
+import FieldsManagement, { type FieldsHeaderState } from '../fields/FieldsManagement';
 import SeasonsManagement, { type SeasonsHeaderState } from '../seasons/SeasonsManagement';
 
 type Lang = 'he' | 'en';
@@ -278,6 +279,7 @@ export default function SettingsPage(): JSX.Element {
   const [alertsCount, setAlertsCount] = useState<number>(0);
   const [saveFeedback, setSaveFeedback] = useState('');
   const [seasonsHeaderState, setSeasonsHeaderState] = useState<SeasonsHeaderState | null>(null);
+  const [fieldsHeaderState, setFieldsHeaderState] = useState<FieldsHeaderState | null>(null);
 
   useEffect(() => {
     import('../../services/messagesApi').then(({ fetchUnreadCount }) => {
@@ -390,12 +392,15 @@ export default function SettingsPage(): JSX.Element {
   };
 
   // הכותרת העליונה תמיד שם הטאב הפעיל; בעונות מציגים גם מונה כחלק מהכותרת.
-  const pageTitle = activeChildId === 'seasons' && seasonsHeaderState
-    ? `${content.title} (${seasonsHeaderState.count})`
-    : content.title;
+  const pageTitle =
+    (activeChildId === 'seasons' && seasonsHeaderState)
+    || (activeChildId === 'fields' && fieldsHeaderState)
+      ? `${content.title} (${activeChildId === 'seasons' ? seasonsHeaderState?.count ?? 0 : fieldsHeaderState?.count ?? 0})`
+      : content.title;
   const seasonsActionText = {
     activate: lang === 'he' ? 'הגדר כפעילה' : 'Set Active',
     remove: lang === 'he' ? 'מחיקה' : 'Delete',
+    edit: lang === 'he' ? 'עריכה' : 'Edit',
   };
 
   const pageHeaderActions = activeChildId === 'seasons' && seasonsHeaderState ? (
@@ -414,6 +419,27 @@ export default function SettingsPage(): JSX.Element {
         className="settings-seasons-header-btn settings-seasons-header-btn--danger"
         onClick={seasonsHeaderState.onDelete}
         disabled={seasonsHeaderState.isDeleteDisabled}
+      >
+        <FaTrashCan />
+        <span>{seasonsActionText.remove}</span>
+      </button>
+    </div>
+  ) : activeChildId === 'fields' && fieldsHeaderState ? (
+    <div className="settings-seasons-header-buttons">
+      <button
+        type="button"
+        className="settings-seasons-header-btn settings-seasons-header-btn--success"
+        onClick={fieldsHeaderState.onEdit}
+        disabled={fieldsHeaderState.isEditDisabled}
+      >
+        <FaPenToSquare />
+        <span>{seasonsActionText.edit}</span>
+      </button>
+      <button
+        type="button"
+        className="settings-seasons-header-btn settings-seasons-header-btn--danger"
+        onClick={fieldsHeaderState.onDelete}
+        disabled={fieldsHeaderState.isDeleteDisabled}
       >
         <FaTrashCan />
         <span>{seasonsActionText.remove}</span>
@@ -566,7 +592,11 @@ export default function SettingsPage(): JSX.Element {
           <SeasonsManagement onHeaderStateChange={setSeasonsHeaderState} />
         ) : null}
 
-        {activeChildId !== 'language' && activeChildId !== 'themeColor' && activeChildId !== 'seasons' ? (
+        {activeChildId === 'fields' ? (
+          <FieldsManagement onHeaderStateChange={setFieldsHeaderState} />
+        ) : null}
+
+        {activeChildId !== 'language' && activeChildId !== 'themeColor' && activeChildId !== 'seasons' && activeChildId !== 'fields' ? (
           isManager ? null : <p className="settings-workspace__manager-note">{t.managerOnlyHint}</p>
         ) : null}
       </section>
