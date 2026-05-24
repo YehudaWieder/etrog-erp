@@ -8,7 +8,16 @@ import FieldsManagement, { type FieldsHeaderState } from '../fields/FieldsManage
 import SeasonsManagement, { type SeasonsHeaderState } from '../seasons/SeasonsManagement';
 
 type Lang = 'he' | 'en';
-type SettingsChildKey = 'language' | 'themeColor' | 'seasons' | 'fields' | 'traderCategories' | 'defaultTraderCategories' | 'customerCategories';
+type SettingsChildKey =
+  | 'language'
+  | 'themeColor'
+  | 'seasons'
+  | 'fields'
+  | 'traders'
+  | 'traderCategories'
+  | 'defaultTraderCategories'
+  | 'customers'
+  | 'customerCategories';
 
 type SettingsContent = {
   title: string;
@@ -97,20 +106,22 @@ const SETTINGS_I18N: Record<Lang, SettingsI18n> = {
       },
       {
         id: 'traders',
-        title: 'סוחרים',
-        href: '/settings/traders/categories',
+        title: 'הגדרות סוחרים',
+        href: '/settings/traders',
         icon: 'fa-handshake',
         items: [
+          { id: 'traders', label: 'סוחרים', href: '/settings/traders', icon: 'fa-handshake' },
           { id: 'traderCategories', label: 'קטגוריות סוחרים', href: '/settings/traders/categories', icon: 'fa-tag' },
           { id: 'defaultTraderCategories', label: 'קטגוריות סוחרים ברירת מחדל', href: '/settings/traders/default-categories', icon: 'fa-bookmark' },
         ],
       },
       {
         id: 'customers',
-        title: 'לקוחות',
-        href: '/settings/customers/categories',
+        title: 'הגדרות לקוחות',
+        href: '/settings/customers',
         icon: 'fa-users',
         items: [
+          { id: 'customers', label: 'לקוחות', href: '/settings/customers', icon: 'fa-users' },
           { id: 'customerCategories', label: 'קטגוריות לקוחות', href: '/settings/customers/categories', icon: 'fa-tag' },
         ],
       },
@@ -132,6 +143,10 @@ const SETTINGS_I18N: Record<Lang, SettingsI18n> = {
         title: 'ניהול שדות',
         description: 'כאן ינוהלו שדות ומאפייני שדה ברמת המערכת.',
       },
+      traders: {
+        title: 'הגדרות סוחרים',
+        description: 'כאן מנוהלות הגדרות סוחרים ברמת המערכת.',
+      },
       traderCategories: {
         title: 'קטגוריות סוחרים',
         description: 'כאן תוגדר היררכיית קטגוריות לסוחרים.',
@@ -139,6 +154,10 @@ const SETTINGS_I18N: Record<Lang, SettingsI18n> = {
       defaultTraderCategories: {
         title: 'קטגוריות סוחרים ברירת מחדל',
         description: 'כאן תוגדר ברירת המחדל לקטגוריות סוחרים בעת יצירת סוחר חדש.',
+      },
+      customers: {
+        title: 'הגדרות לקוחות',
+        description: 'כאן מנוהלות הגדרות לקוחות ברמת המערכת.',
       },
       customerCategories: {
         title: 'קטגוריות לקוחות',
@@ -205,20 +224,22 @@ const SETTINGS_I18N: Record<Lang, SettingsI18n> = {
       },
       {
         id: 'traders',
-        title: 'Traders',
-        href: '/settings/traders/categories',
+        title: 'Trader Settings',
+        href: '/settings/traders',
         icon: 'fa-handshake',
         items: [
+          { id: 'traders', label: 'Traders', href: '/settings/traders', icon: 'fa-handshake' },
           { id: 'traderCategories', label: 'Trader Categories', href: '/settings/traders/categories', icon: 'fa-tag' },
           { id: 'defaultTraderCategories', label: 'Default Trader Categories', href: '/settings/traders/default-categories', icon: 'fa-bookmark' },
         ],
       },
       {
         id: 'customers',
-        title: 'Customers',
-        href: '/settings/customers/categories',
+        title: 'Customer Settings',
+        href: '/settings/customers',
         icon: 'fa-users',
         items: [
+          { id: 'customers', label: 'Customers', href: '/settings/customers', icon: 'fa-users' },
           { id: 'customerCategories', label: 'Customer Categories', href: '/settings/customers/categories', icon: 'fa-tag' },
         ],
       },
@@ -240,6 +261,10 @@ const SETTINGS_I18N: Record<Lang, SettingsI18n> = {
         title: 'Field Management',
         description: 'System-level field definitions appear here.',
       },
+      traders: {
+        title: 'Trader Settings',
+        description: 'Manage trader-related system settings here.',
+      },
       traderCategories: {
         title: 'Trader Categories',
         description: 'Maintain trader category hierarchy here.',
@@ -247,6 +272,10 @@ const SETTINGS_I18N: Record<Lang, SettingsI18n> = {
       defaultTraderCategories: {
         title: 'Default Trader Categories',
         description: 'Set default trader categories used when creating a new trader.',
+      },
+      customers: {
+        title: 'Customer Settings',
+        description: 'Manage customer-related system settings here.',
       },
       customerCategories: {
         title: 'Customer Categories',
@@ -267,7 +296,9 @@ function normalizeChildId(pathname: string, isManager: boolean): SettingsChildKe
   if (path.includes('/system/fields')) return isManager ? 'fields' : 'language';
   if (path.includes('/traders/default-categories')) return isManager ? 'defaultTraderCategories' : 'language';
   if (path.includes('/traders/categories')) return isManager ? 'traderCategories' : 'language';
+  if (path.includes('/traders')) return isManager ? 'traders' : 'language';
   if (path.includes('/customers/categories')) return isManager ? 'customerCategories' : 'language';
+  if (path.includes('/customers')) return isManager ? 'customers' : 'language';
 
   return 'language';
 }
