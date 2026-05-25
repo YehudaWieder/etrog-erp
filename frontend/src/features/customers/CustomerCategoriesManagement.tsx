@@ -405,7 +405,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
 
       {isAddDialogOpen || isEditDialogOpen ? (
         <div className="modal-overlay">
-          <div className="modal-dialog">
+          <div className="modal-dialog modal-dialog--form">
             <h3 className="modal-title">{isAddDialogOpen ? t.addTitle : t.editTitle}</h3>
             <div className="modal-message">
               {isAddDialogOpen

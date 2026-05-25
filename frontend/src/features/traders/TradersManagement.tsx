@@ -322,31 +322,33 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
 
       {isEditDialogOpen ? (
         <div className="modal-overlay">
-          <div className="modal-dialog">
+          <div className="modal-dialog modal-dialog--form">
             <h3 className="modal-title">{t.editTitle}</h3>
             <div className="modal-message">
               {selectedTrader ? t.editMessage(selectedTrader.name) : t.editFallback}
             </div>
 
-            <input
-              className="seasons-manager__year-input"
-              type="text"
-              value={editTraderName}
-              onChange={(event) => setEditTraderName(event.target.value)}
-              placeholder={t.traderPlaceholder}
-              autoFocus
-            />
+            <div className="management-form-grid">
+              <input
+                className="seasons-manager__year-input"
+                type="text"
+                value={editTraderName}
+                onChange={(event) => setEditTraderName(event.target.value)}
+                placeholder={t.traderPlaceholder}
+                autoFocus
+              />
 
-            <input
-              className="seasons-manager__year-input"
-              type="number"
-              min={MIN_PAYMENT_PERCENT}
-              max={MAX_PAYMENT_PERCENT}
-              step="0.01"
-              value={editTraderPercent}
-              onChange={(event) => setEditTraderPercent(event.target.value)}
-              placeholder={t.paymentPlaceholder}
-            />
+              <input
+                className="seasons-manager__year-input"
+                type="number"
+                min={MIN_PAYMENT_PERCENT}
+                max={MAX_PAYMENT_PERCENT}
+                step="0.01"
+                value={editTraderPercent}
+                onChange={(event) => setEditTraderPercent(event.target.value)}
+                placeholder={t.paymentPlaceholder}
+              />
+            </div>
 
             {editError ? <p className="seasons-manager__error">{editError}</p> : null}
 

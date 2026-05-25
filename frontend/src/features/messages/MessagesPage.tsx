@@ -337,7 +337,7 @@ export function MessagesPage() {
           setIsComposeOpen(false);
           resetComposeForm();
         }}>
-          <section className="modal-dialog messages-compose-modal" aria-label={t.compose.title} onClick={(event) => event.stopPropagation()}>
+          <section className="modal-dialog modal-dialog--form messages-compose-modal" aria-label={t.compose.title} onClick={(event) => event.stopPropagation()}>
             <header className="messages-compose__header">
               <h2 className="messages-compose__title">{t.compose.title}</h2>
               <p className="messages-compose__description">{t.compose.description}</p>

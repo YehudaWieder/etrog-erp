@@ -94,9 +94,7 @@ export const PROFILE_I18N: Record<'he' | 'en', ProfileI18n> = {
         title: 'הפרופיל שלי',
         href: '/profile/my-profile',
         icon: 'fa-id-card',
-        items: [
-          { id: 'edit-my-profile', label: 'עריכת פרופיל שלי', href: '/profile/edit-my-profile', icon: 'fa-user-pen' },
-        ],
+        items: [],
       },
       {
         id: 'all-profiles',
@@ -218,9 +216,7 @@ export const PROFILE_I18N: Record<'he' | 'en', ProfileI18n> = {
         title: 'My Profile',
         href: '/profile/my-profile',
         icon: 'fa-id-card',
-        items: [
-          { id: 'edit-my-profile', label: 'Edit My Profile', href: '/profile/edit-my-profile', icon: 'fa-user-pen' },
-        ],
+        items: [],
       },
       {
         id: 'all-profiles',

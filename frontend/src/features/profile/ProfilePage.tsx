@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaFloppyDisk, FaTrashCan } from 'react-icons/fa6';
+import { FaFloppyDisk, FaPenToSquare, FaTrashCan } from 'react-icons/fa6';
 import { AppShell } from '../../app/layout/AppShell';
 import type { NavItem } from '../../types/navigation';
 import { ApiError } from '../../services/apiClient';
@@ -11,6 +11,7 @@ import {
   getMyProfile,
   isAuthenticated,
   logout,
+  updateManagedProfile,
   updateMyProfile,
   type AuthProfile,
   type AuthUserListItem,
@@ -78,11 +79,18 @@ export function ProfilePage() {
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isDeletingProfile, setIsDeletingProfile] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const [profilesList, setProfilesList] = useState<AuthUserListItem[]>([]);
   const [isLoadingProfilesList, setIsLoadingProfilesList] = useState(false);
   const [profilesListError, setProfilesListError] = useState('');
   const [selectedManagedProfileId, setSelectedManagedProfileId] = useState<number | null>(null);
   const [showManagerDeleteDialog, setShowManagerDeleteDialog] = useState(false);
+  const [showManagerEditDialog, setShowManagerEditDialog] = useState(false);
+  const [managedRole, setManagedRole] = useState('WORKER');
+  const [managedIsActive, setManagedIsActive] = useState(true);
+  const [managedEditError, setManagedEditError] = useState('');
+  const [managedEditMessage, setManagedEditMessage] = useState('');
+  const [isUpdatingManagedProfile, setIsUpdatingManagedProfile] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -330,6 +338,16 @@ export function ProfilePage() {
     }));
   }, [profile]);
 
+  useEffect(() => {
+    if (activeSidebarId === 'edit-my-profile') {
+      setIsEditProfileModalOpen(true);
+      navigate('/profile/my-profile', { replace: true });
+      return;
+    }
+
+    setIsEditProfileModalOpen(false);
+  }, [activeSidebarId, navigate]);
+
   const handleEditFieldChange = (field: keyof typeof editForm, value: string) => {
     setEditForm((prev) => ({
       ...prev,
@@ -483,6 +501,63 @@ export function ProfilePage() {
   };
 
   const hasSelectedManagedProfile = selectedManagedProfileId !== null;
+  const selectedManagedProfile = useMemo(
+    () => filteredProfilesList.find((item) => item.id === selectedManagedProfileId) ?? null,
+    [filteredProfilesList, selectedManagedProfileId],
+  );
+
+  const handleOpenManagedEditDialog = () => {
+    if (!selectedManagedProfile) {
+      return;
+    }
+
+    setManagedRole((selectedManagedProfile.role || 'WORKER').toUpperCase());
+    setManagedIsActive(Boolean(selectedManagedProfile.isActive));
+    setManagedEditError('');
+    setManagedEditMessage('');
+    setShowManagerEditDialog(true);
+  };
+
+  const handleUpdateManagedProfile = async () => {
+    if (!selectedManagedProfileId) {
+      return;
+    }
+
+    setIsUpdatingManagedProfile(true);
+    setManagedEditError('');
+    setManagedEditMessage('');
+
+    try {
+      const updated = await updateManagedProfile({
+        id: selectedManagedProfileId,
+        role: managedRole,
+        isActive: managedIsActive,
+      });
+
+      setProfilesList((prev) =>
+        prev.map((item) =>
+          item.id === updated.id
+            ? {
+                ...item,
+                role: updated.role,
+                isActive: updated.isActive,
+                updatedAt: updated.updatedAt,
+              }
+            : item,
+        ),
+      );
+
+      if (profile && profile.id === updated.id) {
+        setProfile((prev) => (prev ? { ...prev, role: updated.role, isActive: updated.isActive, updatedAt: updated.updatedAt } : prev));
+      }
+
+      setManagedEditMessage(lang === 'he' ? 'הפרופיל עודכן בהצלחה.' : 'Profile updated successfully.');
+    } catch {
+      setManagedEditError(lang === 'he' ? 'העדכון נכשל. בדוק הרשאות ונסה שוב.' : 'Update failed. Check permissions and try again.');
+    } finally {
+      setIsUpdatingManagedProfile(false);
+    }
+  };
 
   return (
     <AppShell
@@ -491,19 +566,19 @@ export function ProfilePage() {
       pageTitle={pageTitleWithCount}
       pageHeaderActions={(
         <>
-          {activeSidebarId === 'edit-my-profile' && (
-            <div className="action-buttons">
+          {activeSidebarId === 'my-profile' ? (
+            <div className="settings-seasons-header-buttons">
               <button
-                className="btn btn-primary"
+                className="settings-seasons-header-btn settings-seasons-header-btn--success"
                 type="button"
-                onClick={handleUpdateProfile}
+                onClick={() => setIsEditProfileModalOpen(true)}
                 disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
               >
-                <FaFloppyDisk />
-                <span>{isUpdatingProfile ? t.editProfile.actions.updating : t.editProfile.actions.update}</span>
+                <FaPenToSquare />
+                <span>{t.editProfile.actions.update}</span>
               </button>
               <button
-                className="btn btn-danger"
+                className="settings-seasons-header-btn settings-seasons-header-btn--danger"
                 type="button"
                 onClick={() => setShowDeleteDialog(true)}
                 disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
@@ -512,18 +587,14 @@ export function ProfilePage() {
                 <span>{isDeletingProfile ? t.editProfile.actions.deleting : t.editProfile.actions.delete}</span>
               </button>
             </div>
-          )}
+          ) : null}
           {isProfilesListView && canManageProfiles && (
             <div className="settings-seasons-header-buttons">
               <button
                 className="settings-seasons-header-btn settings-seasons-header-btn--success"
                 type="button"
-                onClick={() => {
-                  if (selectedManagedProfileId) {
-                    navigate(`/profile/manage-profile/${selectedManagedProfileId}`);
-                  }
-                }}
-                disabled={!hasSelectedManagedProfile || isLoadingProfilesList || isDeletingProfile}
+                onClick={handleOpenManagedEditDialog}
+                disabled={!hasSelectedManagedProfile || isLoadingProfilesList || isDeletingProfile || isUpdatingManagedProfile}
               >
                 <FaFloppyDisk />
                 <span>{lang === 'he' ? 'עדכון פרופיל נבחר' : 'Update Selected Profile'}</span>
@@ -637,96 +708,6 @@ export function ProfilePage() {
             </article>
           </div>
         </section>
-      ) : activeSidebarId === 'edit-my-profile' ? (
-        <section className="profile-editor">
-          <header className="profile-editor__header">
-            <div>
-              <h2 className="profile-editor__title">{t.editProfile.title}</h2>
-              <p className="profile-editor__description">{t.editProfile.description}</p>
-            </div>
-          </header>
-
-          <p className="profile-editor__hint">{t.editProfile.permissionsHint}</p>
-          {isSelfAdmin && (
-            <p className="profile-editor__hint profile-editor__hint--muted">{t.editProfile.cannotEditRoleStatus}</p>
-          )}
-
-          {editMessage ? <p className="profile-editor__message">{editMessage}</p> : null}
-          {editError ? <p className="profile-editor__error">{editError}</p> : null}
-
-          <div className="profile-editor__form-grid">
-            <label className="form-group">
-              <span className="form-label">{t.editProfile.fields.name}</span>
-              <input
-                className="form-input"
-                value={editForm.name}
-                onChange={(event) => handleEditFieldChange('name', event.target.value)}
-                placeholder={t.editProfile.placeholders.name}
-                disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
-              />
-            </label>
-
-            <label className="form-group">
-              <span className="form-label">{t.editProfile.fields.email}</span>
-              <input
-                className="form-input"
-                type="email"
-                value={editForm.email}
-                onChange={(event) => handleEditFieldChange('email', event.target.value)}
-                placeholder={t.editProfile.placeholders.email}
-                disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
-              />
-            </label>
-
-            <label className="form-group">
-              <span className="form-label">{t.editProfile.fields.phone}</span>
-              <input
-                className="form-input"
-                value={editForm.phone}
-                onChange={(event) => handleEditFieldChange('phone', event.target.value)}
-                placeholder={t.editProfile.placeholders.phone}
-                disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
-              />
-            </label>
-
-            <label className="form-group">
-              <span className="form-label">{t.editProfile.fields.currentPassword}</span>
-              <input
-                className="form-input"
-                type="password"
-                value={editForm.currentPassword}
-                onChange={(event) => handleEditFieldChange('currentPassword', event.target.value)}
-                placeholder={t.editProfile.placeholders.currentPassword}
-                disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
-              />
-            </label>
-
-            <label className="form-group">
-              <span className="form-label">{t.editProfile.fields.newPassword}</span>
-              <input
-                className="form-input"
-                type="password"
-                value={editForm.newPassword}
-                onChange={(event) => handleEditFieldChange('newPassword', event.target.value)}
-                placeholder={t.editProfile.placeholders.newPassword}
-                disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
-              />
-            </label>
-          </div>
-
-          <ConfirmDialog
-            open={showDeleteDialog}
-            title={t.editProfile.actions.delete}
-            message={t.editProfile.messages.deleteConfirm}
-            confirmLabel={t.editProfile.actions.delete}
-            cancelLabel={lang === 'he' ? 'ביטול' : 'Cancel'}
-            onConfirm={() => {
-              setShowDeleteDialog(false);
-              handleDeleteProfile();
-            }}
-            onCancel={() => setShowDeleteDialog(false)}
-          />
-        </section>
       ) : isProfilesListView ? (
         <section className="profiles-list-hub">
           <p className="profile-hub__description">{content.description}</p>
@@ -836,6 +817,212 @@ export function ProfilePage() {
           <p className="shipments-empty-desc">{content.description}</p>
         </section>
       )}
+
+      {isEditProfileModalOpen ? (
+        <div
+          className="modal-overlay"
+          onClick={() => {
+            setIsEditProfileModalOpen(false);
+          }}
+        >
+          <section
+            className="modal-dialog modal-dialog--form"
+            onClick={(event) => event.stopPropagation()}
+            aria-label={t.editProfile.title}
+          >
+            <h2 className="modal-title">{t.editProfile.title}</h2>
+            <p className="modal-message">{t.editProfile.description}</p>
+
+            <p className="profile-editor__hint">{t.editProfile.permissionsHint}</p>
+            {isSelfAdmin ? (
+              <p className="profile-editor__hint profile-editor__hint--muted">{t.editProfile.cannotEditRoleStatus}</p>
+            ) : null}
+
+            {editMessage ? <p className="profile-editor__message">{editMessage}</p> : null}
+            {editError ? <p className="profile-editor__error">{editError}</p> : null}
+
+            <div className="profile-editor__form-grid">
+              <label className="form-group">
+                <span className="form-label">{t.editProfile.fields.name}</span>
+                <input
+                  className="form-input"
+                  value={editForm.name}
+                  onChange={(event) => handleEditFieldChange('name', event.target.value)}
+                  placeholder={t.editProfile.placeholders.name}
+                  disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
+                />
+              </label>
+
+              <label className="form-group">
+                <span className="form-label">{t.editProfile.fields.email}</span>
+                <input
+                  className="form-input"
+                  type="email"
+                  value={editForm.email}
+                  onChange={(event) => handleEditFieldChange('email', event.target.value)}
+                  placeholder={t.editProfile.placeholders.email}
+                  disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
+                />
+              </label>
+
+              <label className="form-group">
+                <span className="form-label">{t.editProfile.fields.phone}</span>
+                <input
+                  className="form-input"
+                  value={editForm.phone}
+                  onChange={(event) => handleEditFieldChange('phone', event.target.value)}
+                  placeholder={t.editProfile.placeholders.phone}
+                  disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
+                />
+              </label>
+
+              <label className="form-group">
+                <span className="form-label">{t.editProfile.fields.currentPassword}</span>
+                <input
+                  className="form-input"
+                  type="password"
+                  value={editForm.currentPassword}
+                  onChange={(event) => handleEditFieldChange('currentPassword', event.target.value)}
+                  placeholder={t.editProfile.placeholders.currentPassword}
+                  disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
+                />
+              </label>
+
+              <label className="form-group">
+                <span className="form-label">{t.editProfile.fields.newPassword}</span>
+                <input
+                  className="form-input"
+                  type="password"
+                  value={editForm.newPassword}
+                  onChange={(event) => handleEditFieldChange('newPassword', event.target.value)}
+                  placeholder={t.editProfile.placeholders.newPassword}
+                  disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
+                />
+              </label>
+            </div>
+
+            <div className="modal-actions">
+              <button
+                className="btn"
+                type="button"
+                onClick={() => {
+                  setIsEditProfileModalOpen(false);
+                }}
+                disabled={isUpdatingProfile || isDeletingProfile}
+              >
+                {lang === 'he' ? 'ביטול' : 'Cancel'}
+              </button>
+              <button
+                className="btn btn-primary"
+                type="button"
+                onClick={handleUpdateProfile}
+                disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
+              >
+                <FaFloppyDisk />
+                <span>{isUpdatingProfile ? t.editProfile.actions.updating : t.editProfile.actions.update}</span>
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      <ConfirmDialog
+        open={showDeleteDialog}
+        title={t.editProfile.actions.delete}
+        message={t.editProfile.messages.deleteConfirm}
+        confirmLabel={t.editProfile.actions.delete}
+        cancelLabel={lang === 'he' ? 'ביטול' : 'Cancel'}
+        onConfirm={() => {
+          setShowDeleteDialog(false);
+          handleDeleteProfile();
+        }}
+        onCancel={() => setShowDeleteDialog(false)}
+      />
+
+      {showManagerEditDialog ? (
+        <div
+          className="modal-overlay"
+          onClick={() => {
+            setShowManagerEditDialog(false);
+          }}
+        >
+          <section
+            className="modal-dialog modal-dialog--form"
+            onClick={(event) => event.stopPropagation()}
+            aria-label={lang === 'he' ? 'עדכון פרופיל נבחר' : 'Update selected profile'}
+          >
+            <h2 className="modal-title">{lang === 'he' ? 'עדכון פרופיל נבחר' : 'Update Selected Profile'}</h2>
+            <p className="modal-message">
+              {selectedManagedProfile
+                ? `${selectedManagedProfile.name}${selectedManagedProfile.email ? ` (${selectedManagedProfile.email})` : ''}`
+                : (lang === 'he' ? 'עדכון פרופיל משתמש' : 'Update user profile')}
+            </p>
+
+            {managedEditMessage ? <p className="profile-editor__message">{managedEditMessage}</p> : null}
+            {managedEditError ? <p className="profile-editor__error">{managedEditError}</p> : null}
+
+            <div className="profile-editor__form-grid">
+              <label className="form-group">
+                <span className="form-label">{t.profileCard.fields.name}</span>
+                <input className="form-input" value={selectedManagedProfile?.name || ''} disabled />
+              </label>
+
+              <label className="form-group">
+                <span className="form-label">{t.profileCard.fields.email}</span>
+                <input className="form-input" value={selectedManagedProfile?.email || ''} disabled />
+              </label>
+
+              <label className="form-group">
+                <span className="form-label">{t.profileCard.fields.role}</span>
+                <select
+                  className="form-input"
+                  value={managedRole}
+                  onChange={(event) => setManagedRole(event.target.value)}
+                  disabled={isUpdatingManagedProfile}
+                >
+                  <option value="WORKER">WORKER</option>
+                  <option value="EDITOR">EDITOR</option>
+                  <option value="MANAGER">MANAGER</option>
+                  <option value="OWNER">OWNER</option>
+                </select>
+              </label>
+
+              <label className="form-group">
+                <span className="form-label">{t.profileCard.fields.status}</span>
+                <select
+                  className="form-input"
+                  value={managedIsActive ? 'active' : 'inactive'}
+                  onChange={(event) => setManagedIsActive(event.target.value === 'active')}
+                  disabled={isUpdatingManagedProfile}
+                >
+                  <option value="active">{t.profileCard.active}</option>
+                  <option value="inactive">{t.profileCard.inactive}</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="modal-actions">
+              <button
+                className="btn"
+                type="button"
+                onClick={() => setShowManagerEditDialog(false)}
+                disabled={isUpdatingManagedProfile}
+              >
+                {lang === 'he' ? 'ביטול' : 'Cancel'}
+              </button>
+              <button
+                className="btn btn-primary"
+                type="button"
+                onClick={handleUpdateManagedProfile}
+                disabled={!selectedManagedProfileId || isUpdatingManagedProfile}
+              >
+                <FaFloppyDisk />
+                <span>{isUpdatingManagedProfile ? (lang === 'he' ? 'מעדכן...' : 'Updating...') : (lang === 'he' ? 'עדכון' : 'Update')}</span>
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </AppShell>
   );
 }

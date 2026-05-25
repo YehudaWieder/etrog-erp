@@ -91,6 +91,13 @@
   overflow-y: auto;
 }
 
+.modal-dialog--form {
+  width: min(1120px, 94vw);
+  max-width: 1120px;
+  border: 1px solid rgba(255, 202, 43, 0.7);
+  box-shadow: 0 0 0 2px rgba(255, 202, 43, 0.14), 0 14px 34px rgba(0, 0, 0, 0.16);
+}
+
 .modal-dialog::before {
   content: '';
   position: absolute;
@@ -633,11 +640,8 @@ select {
 }
 
 .messages-compose-modal {
-  width: min(920px, calc(100vw - 2 * var(--space-6)));
   max-height: min(90vh, 840px);
   overflow: auto;
-  border: 1px solid #dae6df;
-  box-shadow: 0 22px 44px rgba(11, 30, 50, 0.2);
 }
 
 .messages-compose__header {
@@ -1252,7 +1256,7 @@ select {
   }
 
   .messages-compose-modal {
-    width: calc(100vw - 2 * var(--space-3));
+    width: min(100%, 94vw);
   }
 
   .messages-compose__grid {
@@ -2087,11 +2091,22 @@ select {
 
 .seasons-manager__create-row {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: var(--space-3);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   padding-top: var(--space-4);
   padding-bottom: var(--space-4);
+}
+
+.seasons-manager__create-row .seasons-manager__year-input {
+  flex: 1 1 220px;
+  width: auto;
+  min-width: 0;
+}
+
+.seasons-manager__create-row .btn {
+  flex: 0 0 auto;
+  min-height: 42px;
 }
 
 .seasons-manager__selection {
@@ -2222,8 +2237,8 @@ select {
 }
 
 .customer-categories-manager__form-grid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-3);
 }
 
@@ -2242,6 +2257,35 @@ select {
 
 .customer-categories-manager__field .seasons-manager__year-input {
   width: 100%;
+}
+
+.management-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.management-form-grid .seasons-manager__year-input {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .seasons-manager__create-row {
+    flex-wrap: wrap;
+  }
+
+  .seasons-manager__create-row .seasons-manager__year-input {
+    flex: 1 1 100%;
+  }
+
+  .seasons-manager__create-row .btn {
+    width: 100%;
+  }
+
+  .management-form-grid,
+  .customer-categories-manager__form-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .seasons-manager__card-status {

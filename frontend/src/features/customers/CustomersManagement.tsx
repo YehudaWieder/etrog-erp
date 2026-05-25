@@ -313,36 +313,38 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
 
       {isEditDialogOpen ? (
         <div className="modal-overlay">
-          <div className="modal-dialog">
+          <div className="modal-dialog modal-dialog--form">
             <h3 className="modal-title">{t.editTitle}</h3>
             <div className="modal-message">
               {selectedCustomer ? t.editMessage(selectedCustomer.customerName) : t.editFallback}
             </div>
 
-            <input
-              className="seasons-manager__year-input"
-              type="text"
-              value={editCustomerName}
-              onChange={(event) => setEditCustomerName(event.target.value)}
-              placeholder={t.customerPlaceholder}
-              autoFocus
-            />
+            <div className="management-form-grid">
+              <input
+                className="seasons-manager__year-input"
+                type="text"
+                value={editCustomerName}
+                onChange={(event) => setEditCustomerName(event.target.value)}
+                placeholder={t.customerPlaceholder}
+                autoFocus
+              />
 
-            <input
-              className="seasons-manager__year-input"
-              type="email"
-              value={editCustomerEmail}
-              onChange={(event) => setEditCustomerEmail(event.target.value)}
-              placeholder={t.optionalEmailPlaceholder}
-            />
+              <input
+                className="seasons-manager__year-input"
+                type="email"
+                value={editCustomerEmail}
+                onChange={(event) => setEditCustomerEmail(event.target.value)}
+                placeholder={t.optionalEmailPlaceholder}
+              />
 
-            <input
-              className="seasons-manager__year-input"
-              type="text"
-              value={editCustomerPhone}
-              onChange={(event) => setEditCustomerPhone(event.target.value)}
-              placeholder={t.optionalPhonePlaceholder}
-            />
+              <input
+                className="seasons-manager__year-input"
+                type="text"
+                value={editCustomerPhone}
+                onChange={(event) => setEditCustomerPhone(event.target.value)}
+                placeholder={t.optionalPhonePlaceholder}
+              />
+            </div>
 
             {editError ? <p className="seasons-manager__error">{editError}</p> : null}
 
