@@ -71,6 +71,8 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: var(--space-3);
+  overflow-y: auto;
 }
 
 .modal-dialog {
@@ -85,7 +87,8 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .modal-dialog::before {
@@ -2216,6 +2219,29 @@ select {
 
 .customers-manager__meta-line {
   line-height: 1.35;
+}
+
+.customer-categories-manager__form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+
+.customer-categories-manager__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.customer-categories-manager__label {
+  font-weight: 700;
+  color: #10324a;
+  font-size: 0.92rem;
+}
+
+.customer-categories-manager__field .seasons-manager__year-input {
+  width: 100%;
 }
 
 .seasons-manager__card-status {

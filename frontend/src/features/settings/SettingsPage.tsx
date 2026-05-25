@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaCheck, FaPenToSquare, FaRotateLeft, FaTrashCan } from 'react-icons/fa6';
+import { FaCheck, FaCirclePlus, FaPenToSquare, FaRotateLeft, FaTrashCan } from 'react-icons/fa6';
 import { AppShell } from '../../app/layout/AppShell';
 import type { NavItem, SidebarSection } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
@@ -8,6 +8,7 @@ import FieldsManagement, { type FieldsHeaderState } from '../fields/FieldsManage
 import SeasonsManagement, { type SeasonsHeaderState } from '../seasons/SeasonsManagement';
 import TradersManagement, { type TradersHeaderState } from '../traders/TradersManagement';
 import CustomersManagement, { type CustomersHeaderState } from '../customers/CustomersManagement';
+import CustomerCategoriesManagement, { type CustomerCategoriesHeaderState } from '../customers/CustomerCategoriesManagement';
 
 type Lang = 'he' | 'en';
 type SettingsChildKey =
@@ -162,8 +163,8 @@ const SETTINGS_I18N: Record<Lang, SettingsI18n> = {
         description: 'הוסף פרטי לקוח חדש למערכת.',
       },
       customerCategories: {
-        title: 'קטגוריות לקוחות',
-        description: 'הוסף קטגוריות לקוח לעונה הפעילה עם דרגה ומחיר.',
+        title: 'הגדרת קטגוריות לקוחות',
+        description: 'נהל קטגוריות לקוח לעונה הפעילה עם דרגה ומחיר.',
       },
     },
   },
@@ -280,8 +281,8 @@ const SETTINGS_I18N: Record<Lang, SettingsI18n> = {
         description: 'Add a new customer to the system; customer setup is not season-dependent.',
       },
       customerCategories: {
-        title: 'Customer Categories',
-        description: 'Add customer categories for the active season with grade and price.',
+        title: 'Customer Category Settings',
+        description: 'Manage customer categories for the active season with grade and price.',
       },
     },
   },
@@ -315,6 +316,7 @@ export default function SettingsPage(): JSX.Element {
   const [fieldsHeaderState, setFieldsHeaderState] = useState<FieldsHeaderState | null>(null);
   const [tradersHeaderState, setTradersHeaderState] = useState<TradersHeaderState | null>(null);
   const [customersHeaderState, setCustomersHeaderState] = useState<CustomersHeaderState | null>(null);
+  const [customerCategoriesHeaderState, setCustomerCategoriesHeaderState] = useState<CustomerCategoriesHeaderState | null>(null);
 
   useEffect(() => {
     import('../../services/messagesApi').then(({ fetchUnreadCount }) => {
@@ -431,13 +433,15 @@ export default function SettingsPage(): JSX.Element {
     (activeChildId === 'seasons' && seasonsHeaderState)
     || (activeChildId === 'fields' && fieldsHeaderState)
     || (activeChildId === 'traders' && tradersHeaderState)
+    || (activeChildId === 'customerCategories' && customerCategoriesHeaderState)
     || (activeChildId === 'customers' && customersHeaderState)
-      ? `${content.title} (${activeChildId === 'seasons' ? seasonsHeaderState?.count ?? 0 : activeChildId === 'fields' ? fieldsHeaderState?.count ?? 0 : activeChildId === 'traders' ? tradersHeaderState?.count ?? 0 : customersHeaderState?.count ?? 0})`
+      ? `${content.title} (${activeChildId === 'seasons' ? seasonsHeaderState?.count ?? 0 : activeChildId === 'fields' ? fieldsHeaderState?.count ?? 0 : activeChildId === 'traders' ? tradersHeaderState?.count ?? 0 : activeChildId === 'customerCategories' ? customerCategoriesHeaderState?.count ?? 0 : customersHeaderState?.count ?? 0})`
       : content.title;
   const seasonsActionText = {
     activate: lang === 'he' ? 'הגדר כפעילה' : 'Set Active',
     remove: lang === 'he' ? 'מחיקה' : 'Delete',
     edit: lang === 'he' ? 'עריכה' : 'Edit',
+    add: lang === 'he' ? 'חדש' : 'New',
   };
 
   const pageHeaderActions = activeChildId === 'seasons' && seasonsHeaderState ? (
@@ -498,6 +502,36 @@ export default function SettingsPage(): JSX.Element {
         className="settings-seasons-header-btn settings-seasons-header-btn--danger"
         onClick={customersHeaderState.onDelete}
         disabled={customersHeaderState.isDeleteDisabled}
+      >
+        <FaTrashCan />
+        <span>{seasonsActionText.remove}</span>
+      </button>
+    </div>
+  ) : activeChildId === 'customerCategories' && customerCategoriesHeaderState ? (
+    <div className="settings-seasons-header-buttons">
+      <button
+        type="button"
+        className="settings-seasons-header-btn settings-seasons-header-btn--success"
+        onClick={customerCategoriesHeaderState.onAdd}
+        disabled={customerCategoriesHeaderState.isAddDisabled}
+      >
+        <FaCirclePlus />
+        <span>{seasonsActionText.add}</span>
+      </button>
+      <button
+        type="button"
+        className="settings-seasons-header-btn settings-seasons-header-btn--success"
+        onClick={customerCategoriesHeaderState.onEdit}
+        disabled={customerCategoriesHeaderState.isEditDisabled}
+      >
+        <FaPenToSquare />
+        <span>{seasonsActionText.edit}</span>
+      </button>
+      <button
+        type="button"
+        className="settings-seasons-header-btn settings-seasons-header-btn--danger"
+        onClick={customerCategoriesHeaderState.onDelete}
+        disabled={customerCategoriesHeaderState.isDeleteDisabled}
       >
         <FaTrashCan />
         <span>{seasonsActionText.remove}</span>
@@ -684,7 +718,11 @@ export default function SettingsPage(): JSX.Element {
           <CustomersManagement onHeaderStateChange={setCustomersHeaderState} />
         ) : null}
 
-        {activeChildId !== 'language' && activeChildId !== 'themeColor' && activeChildId !== 'seasons' && activeChildId !== 'fields' && activeChildId !== 'traders' && activeChildId !== 'customers' ? (
+        {activeChildId === 'customerCategories' ? (
+          <CustomerCategoriesManagement onHeaderStateChange={setCustomerCategoriesHeaderState} />
+        ) : null}
+
+        {activeChildId !== 'language' && activeChildId !== 'themeColor' && activeChildId !== 'seasons' && activeChildId !== 'fields' && activeChildId !== 'traders' && activeChildId !== 'customers' && activeChildId !== 'customerCategories' ? (
           isManager ? null : <p className="settings-workspace__manager-note">{t.managerOnlyHint}</p>
         ) : null}
       </section>

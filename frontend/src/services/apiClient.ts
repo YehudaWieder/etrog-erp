@@ -151,6 +151,7 @@ function resolveResourceKey(path: string): keyof typeof RESOURCE_LABELS | null {
   if (first === 'traders' && second === 'categories') return 'traderCategory';
   if (first === 'traders' && second === 'default-categories') return 'defaultTraderCategory';
   if (first === 'traders') return 'trader';
+  if (first === 'customer-categories') return 'customerCategory';
   if (first === 'customers' && second === 'categories') return 'customerCategory';
   if (first === 'customers') return 'customer';
   if (first === 'messages') return 'message';
