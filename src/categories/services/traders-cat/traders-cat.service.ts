@@ -133,8 +133,16 @@ export class TradersCatService {
   // Remove a category
   // Prisma will block this if there are classifications or stock linked to it
   async remove(id: number) {
-    return this.prisma.tradersCategories.delete({
-      where: { id },
-    });
+    try {
+      return await this.prisma.tradersCategories.delete({
+        where: { id },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+        throw new ConflictException('Cannot delete trader category because related records exist in the system.');
+      }
+
+      throw error;
+    }
   }
 }

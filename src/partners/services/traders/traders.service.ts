@@ -128,8 +128,16 @@ export class TradersService {
   // Remove a trader
   // Note: Will fail if the trader has active stock or classifications (Foreign Key protection)
   async remove(id: number) {
-    return this.prisma.trader.delete({
-      where: { id },
-    });
+    try {
+      return await this.prisma.trader.delete({
+        where: { id },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+        throw new ConflictException('Cannot delete trader because related records exist in the system.');
+      }
+
+      throw error;
+    }
   }
 }

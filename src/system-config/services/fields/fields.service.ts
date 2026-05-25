@@ -1,6 +1,7 @@
 // src/system-config/services/fields/fields.service.ts
 
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -30,9 +31,17 @@ export class FieldService {
 
   // Remove field
   async removeField(id: number) {
-    return this.prisma.field.delete({
-      where: { id },
-    });
+    try {
+      return await this.prisma.field.delete({
+        where: { id },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+        throw new ConflictException('Cannot delete field because related records exist in the system.');
+      }
+
+      throw error;
+    }
   }
 
   // Update field name

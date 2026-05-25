@@ -2,7 +2,7 @@
 
 import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Role } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { isValidEmail, isValidPhone, sanitizeEmail, sanitizePhone, sanitizeText } from 'src/common/utils/input-normalization.util';
 
@@ -133,8 +133,16 @@ export class CustomersService {
   // Remove a customer
   // Protection: Prisma will block this if there are associated allocations/shipments
   async remove(id: number) {
-    return this.prisma.customer.delete({
-      where: { id },
-    });
+    try {
+      return await this.prisma.customer.delete({
+        where: { id },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+        throw new ConflictException('Cannot delete customer because related records exist in the system.');
+      }
+
+      throw error;
+    }
   }
 }

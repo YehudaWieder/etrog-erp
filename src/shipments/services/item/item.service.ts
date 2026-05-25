@@ -1191,25 +1191,33 @@ export class ItemService {
 
   // Hard deletes an item and updates totals accordingly.
   async remove(id: number) {
-    return this.prisma.$transaction(async (tx) => {
-      const existing = await tx.shipmentItem.findFirst({
-        where: { id, isDeleted: false },
-        select: { boxId: true, shipmentId: true },
-      });
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const existing = await tx.shipmentItem.findFirst({
+          where: { id, isDeleted: false },
+          select: { boxId: true, shipmentId: true },
+        });
 
-      if (!existing) {
-        throw new NotFoundException(`Shipment item #${id} not found`);
+        if (!existing) {
+          throw new NotFoundException(`Shipment item #${id} not found`);
+        }
+
+        await this.deletePackedMovementsByItemId(tx, id);
+
+        const item = await tx.shipmentItem.delete({
+          where: { id },
+        });
+
+        await this.shipmentsService.syncBoxAndShipmentTotals(tx, existing.boxId, existing.shipmentId);
+
+        return item;
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+        throw new ConflictException('Cannot delete shipment item because related records exist in the system.');
       }
 
-      await this.deletePackedMovementsByItemId(tx, id);
-
-      const item = await tx.shipmentItem.delete({
-        where: { id },
-      });
-
-      await this.shipmentsService.syncBoxAndShipmentTotals(tx, existing.boxId, existing.shipmentId);
-
-      return item;
-    });
+      throw error;
+    }
   }
 }

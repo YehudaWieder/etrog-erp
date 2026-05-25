@@ -1,6 +1,6 @@
 // src/categories/services/traders-cat-share/traders-cat-share.service.ts
 
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma, Role } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
@@ -280,8 +280,16 @@ export class TraderCatShareService {
 
   // Remove a share record
   async remove(id: number) {
-    return this.prisma.traderCategoryShare.delete({
-      where: { id },
-    });
+    try {
+      return await this.prisma.traderCategoryShare.delete({
+        where: { id },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+        throw new ConflictException('Cannot delete trader category share because related records exist in the system.');
+      }
+
+      throw error;
+    }
   }
 }

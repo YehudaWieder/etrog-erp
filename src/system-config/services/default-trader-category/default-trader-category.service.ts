@@ -4,6 +4,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import {
   CreateDefaultTraderCategorySwaggerDto,
@@ -206,20 +207,28 @@ export class DefaultTraderCategoryService {
       );
     }
 
-    // Delete the category and its shares in a transaction
-    return this.prisma.$transaction(async (tx) => {
-      // Delete all shares first
-      if (category.shares.length > 0) {
-        await tx.defaultTraderCategoryShare.deleteMany({
-          where: { defaultTraderCategoryId: id },
+    try {
+      // Delete the category and its shares in a transaction
+      return await this.prisma.$transaction(async (tx) => {
+        // Delete all shares first
+        if (category.shares.length > 0) {
+          await tx.defaultTraderCategoryShare.deleteMany({
+            where: { defaultTraderCategoryId: id },
+          });
+        }
+
+        // Then delete the category
+        return tx.defaultTraderCategory.delete({
+          where: { id },
         });
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+        throw new ConflictException('Cannot delete default trader category because related records exist in the system.');
       }
 
-      // Then delete the category
-      return tx.defaultTraderCategory.delete({
-        where: { id },
-      });
-    });
+      throw error;
+    }
   }
 
   /**
@@ -352,13 +361,21 @@ export class DefaultTraderCategoryService {
       );
     }
 
-    return this.prisma.defaultTraderCategoryShare.delete({
-      where: {
-        traderId_defaultTraderCategoryId: {
-          traderId,
-          defaultTraderCategoryId,
+    try {
+      return await this.prisma.defaultTraderCategoryShare.delete({
+        where: {
+          traderId_defaultTraderCategoryId: {
+            traderId,
+            defaultTraderCategoryId,
+          },
         },
-      },
-    });
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+        throw new ConflictException('Cannot delete default trader category share because related records exist in the system.');
+      }
+
+      throw error;
+    }
   }
 }

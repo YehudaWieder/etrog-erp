@@ -1,6 +1,6 @@
 // src/categories/services/customer-cat/customer-cat.service.ts
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Currency, Prisma, Role } from '@prisma/client';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
@@ -250,8 +250,16 @@ export class CustomerCatService {
 
   // Remove a price record
   async remove(id: number) {
-    return this.prisma.customerCategories.delete({
-      where: { id },
-    });
+    try {
+      return await this.prisma.customerCategories.delete({
+        where: { id },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+        throw new ConflictException('Cannot delete customer category because related records exist in the system.');
+      }
+
+      throw error;
+    }
   }
 }

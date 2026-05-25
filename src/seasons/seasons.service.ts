@@ -6,6 +6,7 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { SeedService } from '../system-config/services/seed/seed.service';
 
@@ -215,32 +216,40 @@ export class SeasonsService {
       );
     }
 
-    // Delete all default categories and their shares, then the season
-    return this.prisma.$transaction(async (tx) => {
-      // Get all trader category IDs for this season
-      const categories = await tx.tradersCategories.findMany({
-        where: { seasonId: id },
-        select: { id: true },
-      });
-
-      const categoryIds = categories.map((cat) => cat.id);
-
-      // Delete all shares for these categories
-      if (categoryIds.length > 0) {
-        await tx.traderCategoryShare.deleteMany({
-          where: { traderCategoryId: { in: categoryIds } },
-        });
-
-        // Delete all categories
-        await tx.tradersCategories.deleteMany({
+    try {
+      // Delete all default categories and their shares, then the season
+      return await this.prisma.$transaction(async (tx) => {
+        // Get all trader category IDs for this season
+        const categories = await tx.tradersCategories.findMany({
           where: { seasonId: id },
+          select: { id: true },
         });
+
+        const categoryIds = categories.map((cat) => cat.id);
+
+        // Delete all shares for these categories
+        if (categoryIds.length > 0) {
+          await tx.traderCategoryShare.deleteMany({
+            where: { traderCategoryId: { in: categoryIds } },
+          });
+
+          // Delete all categories
+          await tx.tradersCategories.deleteMany({
+            where: { seasonId: id },
+          });
+        }
+
+        // Finally delete the season
+        return tx.season.delete({
+          where: { id },
+        });
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+        throw new ConflictException('Cannot delete season because related records exist in the system.');
       }
 
-      // Finally delete the season
-      return tx.season.delete({
-        where: { id },
-      });
-    });
+      throw error;
+    }
   }
 }

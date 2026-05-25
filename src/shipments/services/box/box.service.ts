@@ -2,7 +2,7 @@
 
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { BoxOwnership, BoxStatus, BoxType } from '@prisma/client';
+import { BoxOwnership, BoxStatus, BoxType, Prisma } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { ShipmentsService } from '../../shipments.service';
 
@@ -266,20 +266,28 @@ export class BoxService {
 
   // Hard (permanent) delete – removes all items in the box first, then the box itself
   async removeHard(id: number) {
-    return this.prisma.$transaction(async (tx) => {
-      const box = await tx.box.findFirst({
-        where: { id },
-        select: { id: true, shipmentId: true },
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const box = await tx.box.findFirst({
+          where: { id },
+          select: { id: true, shipmentId: true },
+        });
+
+        if (!box) throw new NotFoundException(`Box #${id} not found`);
+
+        await tx.shipmentItem.deleteMany({ where: { boxId: id } });
+        await tx.box.delete({ where: { id } });
+
+        await this.shipmentsService.syncShipmentTotals(tx, box.shipmentId);
+
+        return { deleted: true, id };
       });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+        throw new ConflictException('Cannot delete box because related records exist in the system.');
+      }
 
-      if (!box) throw new NotFoundException(`Box #${id} not found`);
-
-      await tx.shipmentItem.deleteMany({ where: { boxId: id } });
-      await tx.box.delete({ where: { id } });
-
-      await this.shipmentsService.syncShipmentTotals(tx, box.shipmentId);
-
-      return { deleted: true, id };
-    });
+      throw error;
+    }
   }
 }

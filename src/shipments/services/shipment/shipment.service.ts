@@ -1,8 +1,8 @@
 // src/shipments/services/shipment/shipment.service.ts
 
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { ShipmentStatus } from '@prisma/client';
+import { Prisma, ShipmentStatus } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { ShipmentsService } from '../../shipments.service';
 
@@ -273,19 +273,27 @@ export class ShipmentService {
 
   // Hard (permanent) delete – removes all items and boxes first, then the shipment
   async removeHard(id: number) {
-    return this.prisma.$transaction(async (tx) => {
-      const shipment = await tx.shipment.findFirst({
-        where: { id },
-        select: { id: true },
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const shipment = await tx.shipment.findFirst({
+          where: { id },
+          select: { id: true },
+        });
+
+        if (!shipment) throw new NotFoundException(`Shipment #${id} not found`);
+
+        await tx.shipmentItem.deleteMany({ where: { shipmentId: id } });
+        await tx.box.deleteMany({ where: { shipmentId: id } });
+        await tx.shipment.delete({ where: { id } });
+
+        return { deleted: true, id };
       });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+        throw new ConflictException('Cannot delete shipment because related records exist in the system.');
+      }
 
-      if (!shipment) throw new NotFoundException(`Shipment #${id} not found`);
-
-      await tx.shipmentItem.deleteMany({ where: { shipmentId: id } });
-      await tx.box.deleteMany({ where: { shipmentId: id } });
-      await tx.shipment.delete({ where: { id } });
-
-      return { deleted: true, id };
-    });
+      throw error;
+    }
   }
 }

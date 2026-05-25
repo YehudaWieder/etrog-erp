@@ -146,31 +146,39 @@ export class HarvestService {
       throw new NotFoundException(`Harvest report #${id} not found`);
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      const classificationIds = await tx.classification.findMany({
-        where: { fieldHarvestId: id },
-        select: { id: true },
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const classificationIds = await tx.classification.findMany({
+          where: { fieldHarvestId: id },
+          select: { id: true },
+        });
+
+        const ids = classificationIds.map((item) => item.id);
+
+        if (ids.length > 0) {
+          await tx.customerAllocation.deleteMany({
+            where: { MovementReferenceId: { in: ids } },
+          });
+
+          await tx.traderStock.deleteMany({
+            where: { MovementReferenceId: { in: ids } },
+          });
+
+          await tx.classification.deleteMany({
+            where: { id: { in: ids } },
+          });
+        }
+
+        return tx.fieldHarvest.delete({
+          where: { id },
+        });
       });
-
-      const ids = classificationIds.map((item) => item.id);
-
-      if (ids.length > 0) {
-        await tx.customerAllocation.deleteMany({
-          where: { MovementReferenceId: { in: ids } },
-        });
-
-        await tx.traderStock.deleteMany({
-          where: { MovementReferenceId: { in: ids } },
-        });
-
-        await tx.classification.deleteMany({
-          where: { id: { in: ids } },
-        });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+        throw new ConflictException('Cannot delete harvest report because related records exist in the system.');
       }
 
-      return tx.fieldHarvest.delete({
-        where: { id },
-      });
-    });
+      throw error;
+    }
   }
 }

@@ -1,6 +1,6 @@
 // src/inventory/services/trader-stock/trader-stock.service.ts
 
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma, MovementType, Grade, PitamStatus } from 'src/generated/prisma';
 import { SeasonsService } from 'src/seasons/seasons.service';
@@ -350,9 +350,17 @@ export class TraderStockService {
 
     // Hard delete a movement
     async remove(id: number) {
-        return this.prisma.traderStock.delete({
-        where: { id },
-        });
+        try {
+            return await this.prisma.traderStock.delete({
+            where: { id },
+            });
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+                throw new ConflictException('Cannot delete trader stock movement because related records exist in the system.');
+            }
+
+            throw error;
+        }
     }
 
     private validateAdjustmentType(type?: MovementType | null) {

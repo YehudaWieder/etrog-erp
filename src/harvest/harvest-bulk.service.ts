@@ -841,39 +841,47 @@ export class HarvestBulkService {
       updatedById: actorId,
     };
 
-    return this.prisma.$transaction(async (tx) => {
-      const classification = await tx.classification.findUnique({
-        where: { id: classificationId },
-        select: { id: true, fieldHarvestId: true },
-      });
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const classification = await tx.classification.findUnique({
+          where: { id: classificationId },
+          select: { id: true, fieldHarvestId: true },
+        });
 
-      if (!classification) {
-        throw new NotFoundException(`Classification ${classificationId} not found`);
+        if (!classification) {
+          throw new NotFoundException(`Classification ${classificationId} not found`);
+        }
+
+        if (classification.fieldHarvestId !== harvestId) {
+          throw new BadRequestException(
+            `Classification ${classificationId} does not belong to harvest ${harvestId}`,
+          );
+        }
+
+        await this.applyHarvestInlineUpdate(tx, harvestId, deletePayload.harvestUpdate);
+
+        await tx.customerAllocation.deleteMany({
+          where: { MovementReferenceId: classificationId },
+        });
+
+        await tx.traderStock.deleteMany({
+          where: { MovementReferenceId: classificationId },
+        });
+
+        const deleted = await tx.classification.delete({
+          where: { id: classificationId },
+        });
+
+        await this.syncHarvestClassificationProgress(tx, harvestId, deletePayload.isPartialClassification);
+
+        return deleted;
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+        throw new ConflictException('Cannot delete classification because related records exist in the system.');
       }
 
-      if (classification.fieldHarvestId !== harvestId) {
-        throw new BadRequestException(
-          `Classification ${classificationId} does not belong to harvest ${harvestId}`,
-        );
-      }
-
-      await this.applyHarvestInlineUpdate(tx, harvestId, deletePayload.harvestUpdate);
-
-      await tx.customerAllocation.deleteMany({
-        where: { MovementReferenceId: classificationId },
-      });
-
-      await tx.traderStock.deleteMany({
-        where: { MovementReferenceId: classificationId },
-      });
-
-      const deleted = await tx.classification.delete({
-        where: { id: classificationId },
-      });
-
-      await this.syncHarvestClassificationProgress(tx, harvestId, deletePayload.isPartialClassification);
-
-      return deleted;
-    });
+      throw error;
+    }
   }
 }
