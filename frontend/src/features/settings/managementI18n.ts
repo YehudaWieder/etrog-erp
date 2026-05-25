@@ -70,6 +70,48 @@ type ManagementI18n = {
     traderPlaceholder: string;
     save: string;
   };
+  traderCategories: {
+    seasonFilterLabel: string;
+    traderFilterLabel: string;
+    activeSeasonBadge: string;
+    allTradersOption: string;
+    noActiveSeason: string;
+    noSeasonSelected: string;
+    addTitle: string;
+    editTitle: string;
+    addMessage: string;
+    editMessage: (name: string) => string;
+    categoryNameLabel: string;
+    categoryNamePlaceholder: string;
+    notesLabel: string;
+    notesPlaceholder: string;
+    categoryId: string;
+    sharesDetailsTitle: string;
+    selectTraderOption: string;
+    percentPlaceholder: (index: number) => string;
+    addRow: string;
+    removeRow: string;
+    totalPercentLabel: string;
+    totalMustBeHundred: string;
+    loading: string;
+    noTraders: string;
+    loadFailed: string;
+    addFailed: string;
+    editFailed: string;
+    deleteFailed: string;
+    emptyName: string;
+    atLeastOneShare: string;
+    selectTrader: string;
+    uniqueTraders: string;
+    invalidPercent: string;
+    empty: string;
+    deleteTitle: string;
+    deleteMessage: (name: string) => string;
+    deleteFallback: string;
+    deleteConfirm: string;
+    cancel: string;
+    save: string;
+  };
   customers: {
     emptyName: string;
     invalidEmail: string;
@@ -245,6 +287,48 @@ const MANAGEMENT_I18N: Record<AppLang, ManagementI18n> = {
       traderPlaceholder: 'שם סוחר',
       save: 'שמור',
     },
+    traderCategories: {
+      seasonFilterLabel: 'סינון לפי עונה',
+      traderFilterLabel: 'סינון לפי סוחר',
+      activeSeasonBadge: 'פעילה',
+      allTradersOption: 'כל הסוחרים',
+      noActiveSeason: 'אין עונה פעילה כרגע',
+      noSeasonSelected: 'יש לבחור עונה כדי לנהל קטגוריות סוחרים.',
+      addTitle: 'הוספת קטגוריית סוחרים',
+      editTitle: 'עריכת קטגוריית סוחרים',
+      addMessage: 'צור קטגוריה עונתית עם חלוקת אחוזים בין סוחרים. סכום השורות חייב להיות 100%.',
+      editMessage: (name) => `עדכון קטגוריית הסוחרים ${name}`,
+      categoryNameLabel: 'שם קטגוריה',
+      categoryNamePlaceholder: 'שם קטגוריה (לדוגמה: חזו"א)',
+      notesLabel: 'הערות',
+      notesPlaceholder: 'הערות (לא חובה)',
+      categoryId: 'מזהה קטגוריה',
+      sharesDetailsTitle: 'פירוט חלוקה',
+      selectTraderOption: 'בחר סוחר',
+      percentPlaceholder: (index) => `אחוז שורה ${index}`,
+      addRow: 'הוסף שורה',
+      removeRow: 'הסר שורה',
+      totalPercentLabel: 'סה"כ אחוזים',
+      totalMustBeHundred: 'סך האחוזים חייב להיות בדיוק 100%.',
+      loading: 'טוען קטגוריות סוחרים...',
+      noTraders: 'לא נמצאו סוחרים. יש להוסיף סוחר לפני יצירת קטגוריה.',
+      loadFailed: 'טעינת קטגוריות הסוחרים נכשלה.',
+      addFailed: 'יצירת קטגוריית הסוחרים נכשלה.',
+      editFailed: 'עדכון קטגוריית הסוחרים נכשל.',
+      deleteFailed: 'מחיקת קטגוריית הסוחרים נכשלה.',
+      emptyName: 'שם הקטגוריה לא יכול להיות ריק.',
+      atLeastOneShare: 'יש להוסיף לפחות שורת חלוקה אחת.',
+      selectTrader: 'יש לבחור סוחר בכל השורות.',
+      uniqueTraders: 'לא ניתן לבחור אותו סוחר יותר מפעם אחת.',
+      invalidPercent: 'האחוז בכל שורה חייב להיות גדול מ-0 ועד 100.',
+      empty: 'אין קטגוריות סוחרים להצגה בעונה הנבחרת.',
+      deleteTitle: 'מחיקת קטגוריית סוחרים',
+      deleteMessage: (name) => `האם למחוק את קטגוריית הסוחרים ${name}?`,
+      deleteFallback: 'האם למחוק את קטגוריית הסוחרים שנבחרה?',
+      deleteConfirm: 'מחק',
+      cancel: 'ביטול',
+      save: 'שמור',
+    },
     customers: {
       emptyName: 'שם הלקוח לא יכול להיות ריק.',
       invalidEmail: 'כתובת אימייל לא תקינה.',
@@ -416,6 +500,48 @@ const MANAGEMENT_I18N: Record<AppLang, ManagementI18n> = {
       editMessage: (name) => `Update trader details for ${name}`,
       editFallback: 'Update selected trader details',
       traderPlaceholder: 'Trader name',
+      save: 'Save',
+    },
+    traderCategories: {
+      seasonFilterLabel: 'Filter by season',
+      traderFilterLabel: 'Filter by trader',
+      activeSeasonBadge: 'Active',
+      allTradersOption: 'All traders',
+      noActiveSeason: 'No active season right now',
+      noSeasonSelected: 'Select a season to manage trader categories.',
+      addTitle: 'Add trader category',
+      editTitle: 'Edit trader category',
+      addMessage: 'Create a seasonal category with trader allocation rows. Total of all rows must be 100%.',
+      editMessage: (name) => `Update trader category ${name}`,
+      categoryNameLabel: 'Category name',
+      categoryNamePlaceholder: 'Category name (for example: Chazon Ish)',
+      notesLabel: 'Notes',
+      notesPlaceholder: 'Notes (optional)',
+      categoryId: 'Category ID',
+      sharesDetailsTitle: 'Distribution details',
+      selectTraderOption: 'Select trader',
+      percentPlaceholder: (index) => `Row ${index} percent`,
+      addRow: 'Add row',
+      removeRow: 'Remove row',
+      totalPercentLabel: 'Total percent',
+      totalMustBeHundred: 'Total percent must be exactly 100%.',
+      loading: 'Loading trader categories...',
+      noTraders: 'No traders found. Add at least one trader before creating a category.',
+      loadFailed: 'Failed to load trader categories.',
+      addFailed: 'Failed to create trader category.',
+      editFailed: 'Failed to update trader category.',
+      deleteFailed: 'Failed to delete trader category.',
+      emptyName: 'Category name cannot be empty.',
+      atLeastOneShare: 'At least one share row is required.',
+      selectTrader: 'Please select a trader in each row.',
+      uniqueTraders: 'Each trader can appear only once in the category.',
+      invalidPercent: 'Each share percent must be greater than 0 and up to 100.',
+      empty: 'No trader categories to display for the selected season.',
+      deleteTitle: 'Delete trader category',
+      deleteMessage: (name) => `Delete trader category ${name}?`,
+      deleteFallback: 'Delete the selected trader category?',
+      deleteConfirm: 'Delete',
+      cancel: 'Cancel',
       save: 'Save',
     },
     customers: {

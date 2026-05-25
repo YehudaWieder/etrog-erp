@@ -7,7 +7,12 @@ import { Prisma, Role } from '@prisma/client';
 import { Roles } from 'src/authorization/decorators/roles.decorator';
 import type { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
-import { TradersCategoryUpdateSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+import {
+  TradersCategoryUpdateSwaggerDto,
+  CreateTraderCategoryWithSharesSwaggerDto,
+  UpdateTraderCategoryWithSharesSwaggerDto,
+  TraderCategoryWithSharesResponseSwaggerDto,
+} from 'src/docs/dto/swagger-enums.dto';
 
 @ApiTags('Categories')
 @ApiBearerAuth('access-token')
@@ -43,6 +48,17 @@ export class TradersCatController {
     return this.tradersCatService.create(name, notes);
   }
 
+  @Post('with-shares')
+  @ApiOperation({ summary: 'Create a trader category for a selected season with full trader distribution (total must equal 100%).' })
+  @ApiBody({ type: CreateTraderCategoryWithSharesSwaggerDto })
+  @ApiResponse({ status: 201, description: 'Trader category with shares created successfully.', type: TraderCategoryWithSharesResponseSwaggerDto })
+  @ApiResponse({ status: 400, description: 'Invalid category or shares payload.' })
+  @ApiResponse({ status: 404, description: 'Season or one or more traders not found.' })
+  @ApiResponse({ status: 409, description: 'Category already exists in this season.' })
+  createWithShares(@Body() dto: CreateTraderCategoryWithSharesSwaggerDto) {
+    return this.tradersCatService.createWithShares(dto);
+  }
+
   @Get()
   @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
   @ApiOperation({ summary: 'Retrieve all trader categories for a specific season' })
@@ -51,6 +67,16 @@ export class TradersCatController {
   @ApiResponse({ status: 400, description: 'Invalid or missing seasonId query parameter.' })
   findAll(@Query('seasonId', ParseIntPipe) seasonId: number, @Req() req: Request) {
     return this.tradersCatService.findAllBySeason(seasonId, req.user as AuthenticatedUser);
+  }
+
+  @Get('with-shares')
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
+  @ApiOperation({ summary: 'Retrieve trader categories with full shares for a selected season.' })
+  @ApiQuery({ name: 'seasonId', type: Number, description: 'The season ID to load category shares from.' })
+  @ApiResponse({ status: 200, description: 'Trader categories with shares returned successfully.', type: [TraderCategoryWithSharesResponseSwaggerDto] })
+  @ApiResponse({ status: 400, description: 'Invalid or missing seasonId query parameter.' })
+  findAllWithShares(@Query('seasonId', ParseIntPipe) seasonId: number) {
+    return this.tradersCatService.findAllWithSharesBySeason(seasonId);
   }
 
   @Get('by-name')
@@ -101,6 +127,17 @@ export class TradersCatController {
   ) {
     const { id, ...data } = updateData;
     return this.tradersCatService.update(id, data as Partial<Prisma.TradersCategoriesUpdateInput>);
+  }
+
+  @Patch('with-shares')
+  @ApiOperation({ summary: 'Update trader category details and replace full trader distribution (total must equal 100%).' })
+  @ApiBody({ type: UpdateTraderCategoryWithSharesSwaggerDto })
+  @ApiResponse({ status: 200, description: 'Trader category with shares updated successfully.', type: TraderCategoryWithSharesResponseSwaggerDto })
+  @ApiResponse({ status: 400, description: 'Invalid category or shares payload.' })
+  @ApiResponse({ status: 404, description: 'Category or one or more traders not found.' })
+  @ApiResponse({ status: 409, description: 'Category already exists in this season.' })
+  updateWithShares(@Body() dto: UpdateTraderCategoryWithSharesSwaggerDto) {
+    return this.tradersCatService.updateWithShares(dto);
   }
 
   @Delete(':id')

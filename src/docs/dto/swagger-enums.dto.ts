@@ -80,6 +80,92 @@ export class TradersCategoryUpdateSwaggerDto {
   notes?: string;
 }
 
+export class TraderCategoryWithSharesItemSwaggerDto {
+  @ApiProperty({ description: 'Trader ID to include in this category distribution.', example: 3 })
+  traderId!: number;
+
+  @ApiProperty({
+    description: 'Percentage share for this trader (0-100).',
+    example: 35.5,
+    minimum: 0,
+    maximum: 100,
+  })
+  percent!: number;
+}
+
+export class CreateTraderCategoryWithSharesSwaggerDto {
+  @ApiProperty({ description: 'Season ID for this trader category.', example: 1 })
+  seasonId!: number;
+
+  @ApiProperty({ description: 'Trader category name.', example: 'Yanover Premium' })
+  name!: string;
+
+  @ApiPropertyOptional({ description: 'Optional category notes.', example: 'Large-size export category' })
+  notes?: string;
+
+  @ApiProperty({
+    type: [TraderCategoryWithSharesItemSwaggerDto],
+    description: 'Trader share rows for this category. Total must be exactly 100%.',
+    minItems: 1,
+  })
+  shares!: TraderCategoryWithSharesItemSwaggerDto[];
+}
+
+export class UpdateTraderCategoryWithSharesSwaggerDto {
+  @ApiProperty({ description: 'Trader category ID to update.', example: 1 })
+  id!: number;
+
+  @ApiPropertyOptional({ description: 'Updated category name.', example: 'Yanover Export' })
+  name?: string;
+
+  @ApiPropertyOptional({ description: 'Updated category notes.', example: 'Rebalanced for season demand' })
+  notes?: string;
+
+  @ApiProperty({
+    type: [TraderCategoryWithSharesItemSwaggerDto],
+    description: 'Full trader distribution for this category. Total must be exactly 100%.',
+    minItems: 1,
+  })
+  shares!: TraderCategoryWithSharesItemSwaggerDto[];
+}
+
+export class TraderCategoryShareDetailSwaggerDto {
+  @ApiProperty({ description: 'Trader ID.', example: 3 })
+  traderId!: number;
+
+  @ApiProperty({ description: 'Trader name.', example: 'Cohen Trading' })
+  traderName!: string;
+
+  @ApiProperty({ description: 'Trader percentage share.', example: 35.5 })
+  percent!: number;
+}
+
+export class TraderCategoryWithSharesResponseSwaggerDto {
+  @ApiProperty({ description: 'Trader category ID.', example: 1 })
+  id!: number;
+
+  @ApiProperty({ description: 'Season ID.', example: 1 })
+  seasonId!: number;
+
+  @ApiProperty({ description: 'Category name.', example: 'Yanover Premium' })
+  name!: string;
+
+  @ApiPropertyOptional({ description: 'Category notes.' })
+  notes?: string;
+
+  @ApiProperty({ type: [TraderCategoryShareDetailSwaggerDto] })
+  shares!: TraderCategoryShareDetailSwaggerDto[];
+
+  @ApiProperty({ description: 'Total percent across all shares.', example: 100 })
+  totalPercent!: number;
+
+  @ApiProperty({ description: 'Creation timestamp.' })
+  createdAt!: Date;
+
+  @ApiProperty({ description: 'Update timestamp.' })
+  updatedAt!: Date;
+}
+
 export class TraderCreateSwaggerDto {
   @ApiProperty({ description: 'Unique trader name.', example: 'Trader Cohen' })
   name!: string;
