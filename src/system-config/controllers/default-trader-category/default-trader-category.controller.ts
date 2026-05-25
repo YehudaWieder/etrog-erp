@@ -27,6 +27,7 @@ import { RolesGuard } from 'src/authorization/guards/roles.guard';
 import {
   CreateDefaultTraderCategoryShareSwaggerDto,
   CreateDefaultTraderCategorySwaggerDto,
+  CreateDefaultTraderCategoryWithSharesSwaggerDto,
   UpdateDefaultTraderCategoryShareSwaggerDto,
   UpdateDefaultTraderCategorySwaggerDto,
   DefaultTraderCategoryApprovalResponseSwaggerDto,
@@ -78,6 +79,22 @@ export class DefaultTraderCategoryController {
   @Post()
   async createDefaultCategory(@Body() dto: CreateDefaultTraderCategorySwaggerDto) {
     return this.defaultTraderCategoryService.create(dto);
+  }
+
+  @ApiOperation({ summary: 'Create a new default trader category with full trader share distribution. Roles: OWNER, MANAGER.' })
+  @ApiBody({ type: CreateDefaultTraderCategoryWithSharesSwaggerDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Default trader category with shares created successfully.',
+    type: DefaultTraderCategoryApprovalResponseSwaggerDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid shares payload or total percent is not exactly 100.' })
+  @ApiResponse({ status: 404, description: 'One or more traders were not found.' })
+  @ApiResponse({ status: 409, description: 'Category name already exists.' })
+  @Roles(Role.OWNER, Role.MANAGER)
+  @Post('with-shares')
+  async createDefaultCategoryWithShares(@Body() dto: CreateDefaultTraderCategoryWithSharesSwaggerDto) {
+    return this.defaultTraderCategoryService.createWithShares(dto);
   }
 
   @ApiOperation({ summary: 'Update a default trader category. Roles: OWNER, MANAGER.' })

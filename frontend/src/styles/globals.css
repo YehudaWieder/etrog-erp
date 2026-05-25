@@ -2278,6 +2278,84 @@ select {
   width: 100%;
 }
 
+.default-trader-categories-manager__form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.default-trader-categories-manager__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.default-trader-categories-manager__label {
+  font-weight: 700;
+  color: #10324a;
+  font-size: 0.92rem;
+}
+
+.default-trader-categories-manager__field .seasons-manager__year-input {
+  width: 100%;
+}
+
+.default-trader-categories-manager__shares-area {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.default-trader-categories-manager__share-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.default-trader-categories-manager__shares-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.default-trader-categories-manager__card-top {
+  margin-bottom: var(--space-2);
+}
+
+.default-trader-categories-manager__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.default-trader-categories-manager__rows .profile-detail-row {
+  padding-bottom: var(--space-2);
+}
+
+.default-trader-categories-manager__top-id {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+  font-weight: 400;
+}
+
+.default-trader-categories-manager__shares-subtitle {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #274a62;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+.default-trader-categories-manager__share-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #17384f;
+}
+
 .management-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2302,8 +2380,18 @@ select {
   }
 
   .management-form-grid,
-  .customer-categories-manager__form-grid {
+  .customer-categories-manager__form-grid,
+  .default-trader-categories-manager__form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .default-trader-categories-manager__share-row {
+    grid-template-columns: 1fr;
+  }
+
+  .default-trader-categories-manager__shares-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .global-filters-bar {

@@ -988,6 +988,34 @@ export class CreateDefaultTraderCategorySwaggerDto {
   notes?: string;
 }
 
+export class CreateDefaultTraderCategoryWithSharesItemSwaggerDto {
+  @ApiProperty({ description: 'Trader ID to include in the default category distribution.', example: 1 })
+  traderId!: number;
+
+  @ApiProperty({
+    description: 'Percentage share for this trader in the default category (0-100).',
+    example: 35,
+    minimum: 0,
+    maximum: 100,
+  })
+  percent!: number;
+}
+
+export class CreateDefaultTraderCategoryWithSharesSwaggerDto {
+  @ApiProperty({ description: 'Default trader category name.', example: 'Yanover Premium' })
+  name!: string;
+
+  @ApiPropertyOptional({ description: 'Optional notes for the category.', example: 'Default multi-season setup' })
+  notes?: string;
+
+  @ApiProperty({
+    type: [CreateDefaultTraderCategoryWithSharesItemSwaggerDto],
+    description: 'Trader distribution rows for this category. Sum must equal 100%.',
+    minItems: 1,
+  })
+  shares!: CreateDefaultTraderCategoryWithSharesItemSwaggerDto[];
+}
+
 export class UpdateDefaultTraderCategorySwaggerDto {
   @ApiProperty({ description: 'Default trader category ID.', example: 1 })
   id!: number;

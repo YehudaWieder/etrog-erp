@@ -8,6 +8,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import {
   CreateDefaultTraderCategorySwaggerDto,
+  CreateDefaultTraderCategoryWithSharesSwaggerDto,
   UpdateDefaultTraderCategorySwaggerDto,
   CreateDefaultTraderCategoryShareSwaggerDto,
 } from '../../../docs/dto/swagger-enums.dto';
@@ -15,6 +16,8 @@ import {
 @Injectable()
 export class DefaultTraderCategoryService {
   constructor(private prisma: PrismaService) {}
+
+  private static readonly DEFAULT_CATEGORY_TOTAL_EPSILON = 0.001;
 
   private async validateCategoryTotalPercent(
     categoryId: number,
@@ -70,6 +73,39 @@ export class DefaultTraderCategoryService {
     };
   }
 
+  private validateCreateWithSharesPayload(dto: CreateDefaultTraderCategoryWithSharesSwaggerDto) {
+    if (!dto.shares?.length) {
+      throw new BadRequestException('At least one trader share row is required.');
+    }
+
+    const seenTraderIds = new Set<number>();
+    let totalPercent = 0;
+
+    for (const share of dto.shares) {
+      const traderId = Number(share.traderId);
+      const percent = Number(share.percent);
+
+      if (!Number.isInteger(traderId) || traderId <= 0) {
+        throw new BadRequestException('Each share row must include a valid trader ID.');
+      }
+
+      if (!Number.isFinite(percent) || percent <= 0 || percent > 100) {
+        throw new BadRequestException('Each share percent must be a number greater than 0 and up to 100.');
+      }
+
+      if (seenTraderIds.has(traderId)) {
+        throw new BadRequestException('Trader rows must be unique within a category.');
+      }
+
+      seenTraderIds.add(traderId);
+      totalPercent += percent;
+    }
+
+    if (Math.abs(totalPercent - 100) > DefaultTraderCategoryService.DEFAULT_CATEGORY_TOTAL_EPSILON) {
+      throw new BadRequestException(`Total share percent must be exactly 100%. Current total is ${totalPercent.toFixed(2)}%.`);
+    }
+  }
+
   /**
    * Create a new default trader category
    */
@@ -91,6 +127,76 @@ export class DefaultTraderCategoryService {
         notes: dto.notes,
       },
     });
+  }
+
+  /**
+   * Create a default trader category together with its trader shares in one transaction
+   */
+  async createWithShares(dto: CreateDefaultTraderCategoryWithSharesSwaggerDto) {
+    this.validateCreateWithSharesPayload(dto);
+
+    const categoryName = dto.name.trim();
+    if (!categoryName) {
+      throw new BadRequestException('Category name is required.');
+    }
+
+    const existing = await this.prisma.defaultTraderCategory.findUnique({
+      where: { name: categoryName },
+    });
+
+    if (existing) {
+      throw new ConflictException(`Default trader category "${categoryName}" already exists`);
+    }
+
+    const traderIds = [...new Set(dto.shares.map((share) => Number(share.traderId)))];
+    const traders = await this.prisma.trader.findMany({
+      where: { id: { in: traderIds } },
+      select: { id: true },
+    });
+
+    if (traders.length !== traderIds.length) {
+      throw new NotFoundException('One or more selected traders were not found.');
+    }
+
+    const createdCategoryId = await this.prisma.$transaction(async (tx) => {
+      const createdCategory = await tx.defaultTraderCategory.create({
+        data: {
+          name: categoryName,
+          notes: dto.notes,
+        },
+        select: { id: true },
+      });
+
+      await tx.defaultTraderCategoryShare.createMany({
+        data: dto.shares.map((share) => ({
+          defaultTraderCategoryId: createdCategory.id,
+          traderId: Number(share.traderId),
+          percent: Number(share.percent),
+        })),
+      });
+
+      return createdCategory.id;
+    });
+
+    const createdCategory = await this.prisma.defaultTraderCategory.findUnique({
+      where: { id: createdCategoryId },
+      include: {
+        shares: {
+          orderBy: { traderId: 'asc' },
+          include: {
+            trader: {
+              select: { id: true, name: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!createdCategory) {
+      throw new NotFoundException('Created default trader category was not found.');
+    }
+
+    return this.transformToApprovalResponse(createdCategory);
   }
 
   /**

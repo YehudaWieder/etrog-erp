@@ -139,6 +139,45 @@ type ManagementI18n = {
     currencyLabel: string;
     save: string;
   };
+  defaultTraderCategories: {
+    addTitle: string;
+    editTitle: string;
+    addMessage: string;
+    editMessage: (name: string) => string;
+    categoryNameLabel: string;
+    categoryNamePlaceholder: string;
+    notesLabel: string;
+    notesPlaceholder: string;
+    categoryId: string;
+    sharesDetailsTitle: string;
+    selectTraderOption: string;
+    percentPlaceholder: (index: number) => string;
+    addRow: string;
+    removeRow: string;
+    totalPercentLabel: string;
+    totalMustBeHundred: string;
+    createCategory: string;
+    deleteCategory: string;
+    loading: string;
+    noTraders: string;
+    loadFailed: string;
+    addFailed: string;
+    deleteFailed: string;
+    emptyName: string;
+    atLeastOneShare: string;
+    selectTrader: string;
+    uniqueTraders: string;
+    invalidPercent: string;
+    empty: string;
+    sharesCount: (count: number) => string;
+    deleteTitle: string;
+    deleteMessage: (name: string) => string;
+    deleteFallback: string;
+    deleteConfirm: string;
+    cancel: string;
+    editFailed: string;
+    save: string;
+  };
 };
 
 const MANAGEMENT_I18N: Record<AppLang, ManagementI18n> = {
@@ -275,6 +314,45 @@ const MANAGEMENT_I18N: Record<AppLang, ManagementI18n> = {
       currencyLabel: 'מטבע',
       save: 'שמור',
     },
+    defaultTraderCategories: {
+      addTitle: 'הוספת קטגוריית סוחרים ברירת מחדל',
+      editTitle: 'עריכת קטגוריית סוחרים ברירת מחדל',
+      addMessage: 'צור קטגוריה עם חלוקת אחוזים בין סוחרים. סכום כל השורות חייב להיות 100%.',
+      editMessage: (name) => `עדכון קטגוריית ברירת המחדל ${name}`,
+      categoryNameLabel: 'שם קטגוריה',
+      categoryNamePlaceholder: 'שם קטגוריה (לדוגמה: יאנעווע)',
+      notesLabel: 'הערות',
+      notesPlaceholder: 'הערות (לא חובה)',
+      categoryId: 'מזהה קטגוריה',
+      sharesDetailsTitle: 'פירוט חלוקה',
+      selectTraderOption: 'בחר סוחר',
+      percentPlaceholder: (index) => `אחוז שורה ${index}`,
+      addRow: 'הוסף שורה',
+      removeRow: 'הסר שורה',
+      totalPercentLabel: 'סה"כ אחוזים',
+      totalMustBeHundred: 'סך האחוזים חייב להיות בדיוק 100%.',
+      createCategory: 'צור קטגוריה',
+      deleteCategory: 'מחק קטגוריה נבחרת',
+      loading: 'טוען קטגוריות ברירת מחדל...',
+      noTraders: 'לא נמצאו סוחרים. יש להוסיף סוחר לפני יצירת קטגוריה.',
+      loadFailed: 'טעינת קטגוריות ברירת המחדל נכשלה.',
+      addFailed: 'יצירת הקטגוריה נכשלה.',
+      editFailed: 'עדכון הקטגוריה נכשל.',
+      deleteFailed: 'מחיקת הקטגוריה נכשלה.',
+      emptyName: 'שם הקטגוריה לא יכול להיות ריק.',
+      atLeastOneShare: 'יש להוסיף לפחות שורת חלוקה אחת.',
+      selectTrader: 'יש לבחור סוחר בכל השורות.',
+      uniqueTraders: 'לא ניתן לבחור אותו סוחר יותר מפעם אחת.',
+      invalidPercent: 'האחוז בכל שורה חייב להיות גדול מ-0 ועד 100.',
+      empty: 'אין קטגוריות סוחרים ברירת מחדל להצגה כרגע.',
+      sharesCount: (count) => `${count} שורות חלוקה`,
+      deleteTitle: 'מחיקת קטגוריית ברירת מחדל',
+      deleteMessage: (name) => `האם למחוק את קטגוריית ברירת המחדל ${name}?`,
+      deleteFallback: 'האם למחוק את קטגוריית ברירת המחדל שנבחרה?',
+      deleteConfirm: 'מחק',
+      cancel: 'ביטול',
+      save: 'שמור',
+    },
   },
   en: {
     seasons: {
@@ -407,6 +485,45 @@ const MANAGEMENT_I18N: Record<AppLang, ManagementI18n> = {
       priceLabel: 'Price',
       pricePlaceholder: 'Enter price',
       currencyLabel: 'Currency',
+      save: 'Save',
+    },
+    defaultTraderCategories: {
+      addTitle: 'Add default trader category',
+      editTitle: 'Edit default trader category',
+      addMessage: 'Create a category with trader allocation rows. Total of all rows must be 100%.',
+      editMessage: (name) => `Update default category ${name}`,
+      categoryNameLabel: 'Category name',
+      categoryNamePlaceholder: 'Category name (for example: Yanover)',
+      notesLabel: 'Notes',
+      notesPlaceholder: 'Notes (optional)',
+      categoryId: 'Category ID',
+      sharesDetailsTitle: 'Distribution details',
+      selectTraderOption: 'Select trader',
+      percentPlaceholder: (index) => `Row ${index} percent`,
+      addRow: 'Add row',
+      removeRow: 'Remove row',
+      totalPercentLabel: 'Total percent',
+      totalMustBeHundred: 'Total percent must be exactly 100%.',
+      createCategory: 'Create category',
+      deleteCategory: 'Delete selected category',
+      loading: 'Loading default trader categories...',
+      noTraders: 'No traders found. Add at least one trader before creating a category.',
+      loadFailed: 'Failed to load default trader categories.',
+      addFailed: 'Failed to create default trader category.',
+      editFailed: 'Failed to update default trader category.',
+      deleteFailed: 'Failed to delete default trader category.',
+      emptyName: 'Category name cannot be empty.',
+      atLeastOneShare: 'At least one share row is required.',
+      selectTrader: 'Please select a trader in each row.',
+      uniqueTraders: 'Each trader can appear only once in the category.',
+      invalidPercent: 'Each share percent must be greater than 0 and up to 100.',
+      empty: 'No default trader categories to display yet.',
+      sharesCount: (count) => `${count} share rows`,
+      deleteTitle: 'Delete default trader category',
+      deleteMessage: (name) => `Delete default category ${name}?`,
+      deleteFallback: 'Delete the selected default category?',
+      deleteConfirm: 'Delete',
+      cancel: 'Cancel',
       save: 'Save',
     },
   },
