@@ -69,6 +69,7 @@ const isShareRowComplete = (row: ShareRow): boolean => {
 
 const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({ onHeaderStateChange }) => {
   const dispatch = useDispatch<AppDispatch>();
+  const appLang = resolveAppLang();
   const t = getManagementI18n(resolveAppLang()).traderCategories;
 
   const seasons = useSelector((state: RootState) => state.seasons.items);
@@ -90,6 +91,7 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
   const [categoryName, setCategoryName] = useState('');
   const [categoryNotes, setCategoryNotes] = useState('');
   const [shareRows, setShareRows] = useState<ShareRow[]>([createEmptyShareRow(1)]);
+  const [showAddRowBlockReason, setShowAddRowBlockReason] = useState(false);
 
   const [addError, setAddError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
@@ -206,16 +208,44 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
       .filter((traderId): traderId is number => traderId !== null),
   ).size;
   const hasAvailableTraders = selectedTraderIdsCount < sortedTraders.length;
-  const canAddShareRow =
-    shareRows.length > 0
-    && isShareRowComplete(shareRows[shareRows.length - 1])
-    && !isTotalAtLeastHundred
-    && hasAvailableTraders;
+  const addRowBlockReason = useMemo(() => {
+    if (shareRows.length === 0) {
+      return null;
+    }
+
+    const lastRow = shareRows[shareRows.length - 1];
+    const isHebrew = appLang === 'he';
+
+    if (!isShareRowComplete(lastRow)) {
+      return isHebrew
+        ? 'לא ניתן להוסיף שורה חדשה לפני השלמת השורה האחרונה (סוחר ואחוז תקין).'
+        : 'Complete the previous row (trader and valid percent) before adding a new one.';
+    }
+
+    if (isTotalAtLeastHundred) {
+      return isHebrew
+        ? 'לא ניתן להוסיף שורה נוספת כי הסכום הכולל כבר הגיע ל-100%.'
+        : 'Cannot add another row because total percent already reached 100%.';
+    }
+
+    if (!hasAvailableTraders) {
+      return isHebrew
+        ? 'לא ניתן להוסיף שורה נוספת כי כל הסוחרים כבר נבחרו.'
+        : 'Cannot add another row because all traders are already selected.';
+    }
+
+    return null;
+  }, [shareRows, appLang, isTotalAtLeastHundred, hasAvailableTraders]);
+
+  const canAddShareRow = addRowBlockReason === null;
 
   const addShareRow = () => {
     if (!canAddShareRow) {
+      setShowAddRowBlockReason(true);
       return;
     }
+
+    setShowAddRowBlockReason(false);
 
     setShareRows((currentRows) => {
       const nextRowId = currentRows.reduce((maxId, row) => Math.max(maxId, row.rowId), 0) + 1;
@@ -243,6 +273,7 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
     setCategoryName('');
     setCategoryNotes('');
     setShareRows([createEmptyShareRow(1)]);
+    setShowAddRowBlockReason(false);
   };
 
   const validateBeforeSubmit = (): string | null => {
@@ -311,6 +342,7 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
     setAddError(null);
     setCategoryName(selectedCategory.name);
     setCategoryNotes(selectedCategory.notes ?? '');
+    setShowAddRowBlockReason(false);
     setShareRows(
       selectedCategory.shares.length > 0
         ? selectedCategory.shares.map((share, index) => ({
@@ -566,6 +598,8 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
               </div>
             </div>
 
+            <p className="default-trader-categories-manager__shares-subtitle">{t.allocationSectionTitle}</p>
+
             <div className="default-trader-categories-manager__shares-area">
               {shareRows.map((row, index) => (
                 <div key={row.rowId} className="default-trader-categories-manager__share-row">
@@ -622,13 +656,15 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
               ))}
 
               <div className="default-trader-categories-manager__shares-actions">
-                <button type="button" className="btn btn-secondary" onClick={addShareRow} disabled={!canAddShareRow}>
+                <button type="button" className="btn btn-primary" onClick={addShareRow}>
                   {t.addRow}
                 </button>
                 <strong className={isTotalExact ? '' : 'seasons-manager__error'}>
                   {t.totalPercentLabel}: {totalPercent.toFixed(2)}%
                 </strong>
               </div>
+
+              {showAddRowBlockReason && addRowBlockReason ? <p className="seasons-manager__error">{addRowBlockReason}</p> : null}
             </div>
 
             {isAddDialogOpen && addError ? <p className="seasons-manager__error">{addError}</p> : null}

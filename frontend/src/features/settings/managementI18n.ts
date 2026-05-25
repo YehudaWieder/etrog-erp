@@ -85,6 +85,7 @@ type ManagementI18n = {
     categoryNamePlaceholder: string;
     notesLabel: string;
     notesPlaceholder: string;
+    allocationSectionTitle: string;
     categoryId: string;
     sharesDetailsTitle: string;
     selectTraderOption: string;
@@ -190,6 +191,7 @@ type ManagementI18n = {
     categoryNamePlaceholder: string;
     notesLabel: string;
     notesPlaceholder: string;
+    allocationSectionTitle: string;
     categoryId: string;
     sharesDetailsTitle: string;
     selectTraderOption: string;
@@ -302,6 +304,7 @@ const MANAGEMENT_I18N: Record<AppLang, ManagementI18n> = {
       categoryNamePlaceholder: 'שם קטגוריה (לדוגמה: חזו"א)',
       notesLabel: 'הערות',
       notesPlaceholder: 'הערות (לא חובה)',
+      allocationSectionTitle: 'פירוט חלוקת הקטגוריה באחוזים',
       categoryId: 'מזהה קטגוריה',
       sharesDetailsTitle: 'פירוט חלוקה',
       selectTraderOption: 'בחר סוחר',
@@ -407,6 +410,7 @@ const MANAGEMENT_I18N: Record<AppLang, ManagementI18n> = {
       categoryNamePlaceholder: 'שם קטגוריה (לדוגמה: יאנעווע)',
       notesLabel: 'הערות',
       notesPlaceholder: 'הערות (לא חובה)',
+      allocationSectionTitle: 'פירוט חלוקת הקטגוריה באחוזים',
       categoryId: 'מזהה קטגוריה',
       sharesDetailsTitle: 'פירוט חלוקה',
       selectTraderOption: 'בחר סוחר',
@@ -517,6 +521,7 @@ const MANAGEMENT_I18N: Record<AppLang, ManagementI18n> = {
       categoryNamePlaceholder: 'Category name (for example: Chazon Ish)',
       notesLabel: 'Notes',
       notesPlaceholder: 'Notes (optional)',
+      allocationSectionTitle: 'Category allocation breakdown (%)',
       categoryId: 'Category ID',
       sharesDetailsTitle: 'Distribution details',
       selectTraderOption: 'Select trader',
@@ -622,6 +627,7 @@ const MANAGEMENT_I18N: Record<AppLang, ManagementI18n> = {
       categoryNamePlaceholder: 'Category name (for example: Yanover)',
       notesLabel: 'Notes',
       notesPlaceholder: 'Notes (optional)',
+      allocationSectionTitle: 'Category allocation breakdown (%)',
       categoryId: 'Category ID',
       sharesDetailsTitle: 'Distribution details',
       selectTraderOption: 'Select trader',
