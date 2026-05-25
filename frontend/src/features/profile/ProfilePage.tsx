@@ -709,6 +709,7 @@ export function ProfilePage() {
         </section>
       ) : isProfilesListView ? (
         <section className="profiles-list-hub">
+          <p className="profile-hub__description">{content.description}</p>
           {isLoadingProfilesList ? <p className="profile-hub__loading">{t.profilesList.loading}</p> : null}
           {profilesListError ? <p className="profile-hub__notice">{profilesListError}</p> : null}
 

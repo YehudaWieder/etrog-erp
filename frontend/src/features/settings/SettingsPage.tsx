@@ -138,31 +138,31 @@ const SETTINGS_I18N: Record<Lang, SettingsI18n> = {
       },
       seasons: {
         title: 'ניהול עונות',
-        description: 'כאן יופיעו פעולות יצירה, בחירה וסגירת עונות פעילות.',
+        description: 'נהל עונות: צור עונה חדשה, בחר עונה פעילה ומחק עונות לפי הצורך.',
       },
       fields: {
         title: 'ניהול שדות',
-        description: 'כאן ינוהלו שדות ומאפייני שדה ברמת המערכת.',
+        description: 'נהל את רשימת השדות במערכת, כולל הוספה, עריכה ומחיקה.',
       },
       traders: {
         title: 'הגדרות סוחרים',
-        description: 'כאן מנוהלות הגדרות סוחרים ברמת המערכת.',
+        description: 'נהל סוחרים במערכת: הוסף, עדכן ומחק לפי הצורך.',
       },
       traderCategories: {
         title: 'קטגוריות סוחרים',
-        description: 'כאן תוגדר היררכיית קטגוריות לסוחרים.',
+        description: 'הגדר וארגן קטגוריות לסוחרים (לדוגמה: יאנעווע, חזו"א); כל קטגוריה נוצרת לעונה הפעילה.',
       },
       defaultTraderCategories: {
         title: 'קטגוריות סוחרים ברירת מחדל',
-        description: 'כאן תוגדר ברירת המחדל לקטגוריות סוחרים בעת יצירת סוחר חדש.',
+        description: 'הגדר קטגוריות ברירת מחדל לכל העונות; הקטגוריות האלה נוצרות אוטומטית לכל עונת שנה חדשה שנוספת.',
       },
       customers: {
         title: 'הגדרות לקוחות',
-        description: 'כאן מנוהלות הגדרות לקוחות ברמת המערכת.',
+        description: 'הוסף פרטי לקוח חדש למערכת.',
       },
       customerCategories: {
         title: 'קטגוריות לקוחות',
-        description: 'כאן תוגדר היררכיית קטגוריות ללקוחות.',
+        description: 'הוסף קטגוריות לקוח לעונה הפעילה עם דרגה ומחיר.',
       },
     },
   },
@@ -256,31 +256,31 @@ const SETTINGS_I18N: Record<Lang, SettingsI18n> = {
       },
       seasons: {
         title: 'Season Management',
-        description: 'Season lifecycle configuration appears here.',
+        description: 'Manage seasons: create a new season, set the active season, and remove seasons when needed.',
       },
       fields: {
         title: 'Field Management',
-        description: 'System-level field definitions appear here.',
+        description: 'Manage system field definitions, including creating, editing, and deleting fields.',
       },
       traders: {
         title: 'Trader Settings',
-        description: 'Manage trader-related system settings here.',
+        description: 'Manage traders in the system, including add, edit, and delete actions.',
       },
       traderCategories: {
         title: 'Trader Categories',
-        description: 'Maintain trader category hierarchy here.',
+        description: 'Define and organize trader categories (for example: Yanueve, Chazon Ish); each category is created for the active season.',
       },
       defaultTraderCategories: {
         title: 'Default Trader Categories',
-        description: 'Set default trader categories used when creating a new trader.',
+        description: 'Set default trader categories for all seasons; these categories are created automatically for every new season year that is added.',
       },
       customers: {
         title: 'Customer Settings',
-        description: 'Manage customer-related system settings here.',
+        description: 'Add a new customer to the system; customer setup is not season-dependent.',
       },
       customerCategories: {
         title: 'Customer Categories',
-        description: 'Maintain customer category hierarchy here.',
+        description: 'Add customer categories for the active season with grade and price.',
       },
     },
   },
@@ -540,6 +540,7 @@ export default function SettingsPage(): JSX.Element {
       }}
     >
       <section className="settings-workspace">
+        <p className="settings-workspace__description">{content.description}</p>
         {saveFeedback ? <p className="settings-workspace__saved">{saveFeedback}</p> : null}
 
         {activeChildId === 'language' ? (

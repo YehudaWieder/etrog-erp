@@ -187,15 +187,15 @@ export const PROFILE_I18N: Record<'he' | 'en', ProfileI18n> = {
       },
       'all-profiles': {
         title: 'כל הפרופילים יוצגו כאן',
-        description: 'ניתן לעבור לרשימת הפרופילים הפעילים או הלא פעילים.',
+        description: 'רשימת כל המשתמשים עם חשבון במערכת, כולל פעילים ולא פעילים.',
       },
       'active-profiles': {
         title: 'פרופילים פעילים',
-        description: 'כאן תופיע רשימת כל הפרופילים הפעילים במערכת.',
+        description: 'רשימת המשתמשים הפעילים עם חשבון במערכת.',
       },
       'inactive-profiles': {
         title: 'פרופילים לא פעילים',
-        description: 'כאן תופיע רשימת כל הפרופילים הלא פעילים במערכת.',
+        description: 'רשימת המשתמשים הלא פעילים עם חשבון במערכת.',
       },
       default: {
         title: 'אין נתונים להצגה',
@@ -311,15 +311,15 @@ export const PROFILE_I18N: Record<'he' | 'en', ProfileI18n> = {
       },
       'all-profiles': {
         title: 'All profiles will appear here',
-        description: 'You can move between the active and inactive profile lists.',
+        description: 'This area shows all users with a system account, including active and inactive users.',
       },
       'active-profiles': {
         title: 'Active profiles',
-        description: 'The list of all active system profiles will appear here.',
+        description: 'This list shows active users with a system account.',
       },
       'inactive-profiles': {
         title: 'Inactive profiles',
-        description: 'The list of all inactive system profiles will appear here.',
+        description: 'This list shows inactive users with a system account.',
       },
       default: {
         title: 'No data to display',

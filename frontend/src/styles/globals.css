@@ -1377,7 +1377,7 @@ select {
 }
 
 .profile-hub__description {
-  margin: var(--space-2) 0 0;
+  margin: var(--space-2) 0 var(--space-4);
   color: var(--color-text-muted);
 }
 
@@ -1751,7 +1751,7 @@ select {
 }
 
 .settings-workspace__description {
-  margin: var(--space-2) 0 0;
+  margin: var(--space-2) 0 var(--space-4);
   color: var(--color-text-muted);
 }
 
