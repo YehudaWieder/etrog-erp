@@ -3,7 +3,7 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { CustomersService } from '../../services/customers/customers.service';
-import { Prisma, Role } from '@prisma/client';
+import { Role } from '@prisma/client';
 import { Roles } from 'src/authorization/decorators/roles.decorator';
 import { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
@@ -38,7 +38,7 @@ export class CustomersController {
   @ApiResponse({ status: 201, description: 'Customer created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate customer name/email/phone.' })
   @Roles(Role.OWNER, Role.MANAGER)
-  create(@Body() data: { customerName: string; email?: string; phone?: string }) {
+  create(@Body() data: { customerName: string; email?: string | null; phone?: string | null }) {
     return this.customersService.create(data);
   }
 
@@ -83,7 +83,7 @@ export class CustomersController {
     @Body() updateData: CustomerUpdateSwaggerDto,
   ) {
     const { id, ...data } = updateData;
-    return this.customersService.update(id, data as Partial<Prisma.CustomerUpdateInput>);
+    return this.customersService.update(id, data);
   }
 
   @Delete(':id')

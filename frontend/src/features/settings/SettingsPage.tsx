@@ -7,6 +7,7 @@ import { getCurrentUser, isAuthenticated, logout } from '../../services/authServ
 import FieldsManagement, { type FieldsHeaderState } from '../fields/FieldsManagement';
 import SeasonsManagement, { type SeasonsHeaderState } from '../seasons/SeasonsManagement';
 import TradersManagement, { type TradersHeaderState } from '../traders/TradersManagement';
+import CustomersManagement, { type CustomersHeaderState } from '../customers/CustomersManagement';
 
 type Lang = 'he' | 'en';
 type SettingsChildKey =
@@ -313,6 +314,7 @@ export default function SettingsPage(): JSX.Element {
   const [seasonsHeaderState, setSeasonsHeaderState] = useState<SeasonsHeaderState | null>(null);
   const [fieldsHeaderState, setFieldsHeaderState] = useState<FieldsHeaderState | null>(null);
   const [tradersHeaderState, setTradersHeaderState] = useState<TradersHeaderState | null>(null);
+  const [customersHeaderState, setCustomersHeaderState] = useState<CustomersHeaderState | null>(null);
 
   useEffect(() => {
     import('../../services/messagesApi').then(({ fetchUnreadCount }) => {
@@ -429,7 +431,8 @@ export default function SettingsPage(): JSX.Element {
     (activeChildId === 'seasons' && seasonsHeaderState)
     || (activeChildId === 'fields' && fieldsHeaderState)
     || (activeChildId === 'traders' && tradersHeaderState)
-      ? `${content.title} (${activeChildId === 'seasons' ? seasonsHeaderState?.count ?? 0 : activeChildId === 'fields' ? fieldsHeaderState?.count ?? 0 : tradersHeaderState?.count ?? 0})`
+    || (activeChildId === 'customers' && customersHeaderState)
+      ? `${content.title} (${activeChildId === 'seasons' ? seasonsHeaderState?.count ?? 0 : activeChildId === 'fields' ? fieldsHeaderState?.count ?? 0 : activeChildId === 'traders' ? tradersHeaderState?.count ?? 0 : customersHeaderState?.count ?? 0})`
       : content.title;
   const seasonsActionText = {
     activate: lang === 'he' ? 'הגדר כפעילה' : 'Set Active',
@@ -474,6 +477,27 @@ export default function SettingsPage(): JSX.Element {
         className="settings-seasons-header-btn settings-seasons-header-btn--danger"
         onClick={fieldsHeaderState.onDelete}
         disabled={fieldsHeaderState.isDeleteDisabled}
+      >
+        <FaTrashCan />
+        <span>{seasonsActionText.remove}</span>
+      </button>
+    </div>
+  ) : activeChildId === 'customers' && customersHeaderState ? (
+    <div className="settings-seasons-header-buttons">
+      <button
+        type="button"
+        className="settings-seasons-header-btn settings-seasons-header-btn--success"
+        onClick={customersHeaderState.onEdit}
+        disabled={customersHeaderState.isEditDisabled}
+      >
+        <FaPenToSquare />
+        <span>{seasonsActionText.edit}</span>
+      </button>
+      <button
+        type="button"
+        className="settings-seasons-header-btn settings-seasons-header-btn--danger"
+        onClick={customersHeaderState.onDelete}
+        disabled={customersHeaderState.isDeleteDisabled}
       >
         <FaTrashCan />
         <span>{seasonsActionText.remove}</span>
@@ -656,7 +680,11 @@ export default function SettingsPage(): JSX.Element {
           <TradersManagement onHeaderStateChange={setTradersHeaderState} />
         ) : null}
 
-        {activeChildId !== 'language' && activeChildId !== 'themeColor' && activeChildId !== 'seasons' && activeChildId !== 'fields' && activeChildId !== 'traders' ? (
+        {activeChildId === 'customers' ? (
+          <CustomersManagement onHeaderStateChange={setCustomersHeaderState} />
+        ) : null}
+
+        {activeChildId !== 'language' && activeChildId !== 'themeColor' && activeChildId !== 'seasons' && activeChildId !== 'fields' && activeChildId !== 'traders' && activeChildId !== 'customers' ? (
           isManager ? null : <p className="settings-workspace__manager-note">{t.managerOnlyHint}</p>
         ) : null}
       </section>

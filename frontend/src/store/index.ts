@@ -2,6 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import seasonsReducer from "./seasonsSlice";
 import fieldsReducer from "./fieldsSlice";
 import tradersReducer from './tradersSlice';
+import customersReducer from './customersSlice';
 // ... ייבוא רידוסרים נוספים בהמשך
 
 const store = configureStore({
@@ -9,6 +10,7 @@ const store = configureStore({
     seasons: seasonsReducer,
     fields: fieldsReducer,
     traders: tradersReducer,
+    customers: customersReducer,
     // ... רידוסרים נוספים
   },
 });
