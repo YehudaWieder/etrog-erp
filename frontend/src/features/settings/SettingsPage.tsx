@@ -6,6 +6,7 @@ import type { NavItem, SidebarSection } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
 import FieldsManagement, { type FieldsHeaderState } from '../fields/FieldsManagement';
 import SeasonsManagement, { type SeasonsHeaderState } from '../seasons/SeasonsManagement';
+import TradersManagement, { type TradersHeaderState } from '../traders/TradersManagement';
 
 type Lang = 'he' | 'en';
 type SettingsChildKey =
@@ -311,6 +312,7 @@ export default function SettingsPage(): JSX.Element {
   const [saveFeedback, setSaveFeedback] = useState('');
   const [seasonsHeaderState, setSeasonsHeaderState] = useState<SeasonsHeaderState | null>(null);
   const [fieldsHeaderState, setFieldsHeaderState] = useState<FieldsHeaderState | null>(null);
+  const [tradersHeaderState, setTradersHeaderState] = useState<TradersHeaderState | null>(null);
 
   useEffect(() => {
     import('../../services/messagesApi').then(({ fetchUnreadCount }) => {
@@ -426,7 +428,8 @@ export default function SettingsPage(): JSX.Element {
   const pageTitle =
     (activeChildId === 'seasons' && seasonsHeaderState)
     || (activeChildId === 'fields' && fieldsHeaderState)
-      ? `${content.title} (${activeChildId === 'seasons' ? seasonsHeaderState?.count ?? 0 : fieldsHeaderState?.count ?? 0})`
+    || (activeChildId === 'traders' && tradersHeaderState)
+      ? `${content.title} (${activeChildId === 'seasons' ? seasonsHeaderState?.count ?? 0 : activeChildId === 'fields' ? fieldsHeaderState?.count ?? 0 : tradersHeaderState?.count ?? 0})`
       : content.title;
   const seasonsActionText = {
     activate: lang === 'he' ? 'הגדר כפעילה' : 'Set Active',
@@ -471,6 +474,27 @@ export default function SettingsPage(): JSX.Element {
         className="settings-seasons-header-btn settings-seasons-header-btn--danger"
         onClick={fieldsHeaderState.onDelete}
         disabled={fieldsHeaderState.isDeleteDisabled}
+      >
+        <FaTrashCan />
+        <span>{seasonsActionText.remove}</span>
+      </button>
+    </div>
+  ) : activeChildId === 'traders' && tradersHeaderState ? (
+    <div className="settings-seasons-header-buttons">
+      <button
+        type="button"
+        className="settings-seasons-header-btn settings-seasons-header-btn--success"
+        onClick={tradersHeaderState.onEdit}
+        disabled={tradersHeaderState.isEditDisabled}
+      >
+        <FaPenToSquare />
+        <span>{seasonsActionText.edit}</span>
+      </button>
+      <button
+        type="button"
+        className="settings-seasons-header-btn settings-seasons-header-btn--danger"
+        onClick={tradersHeaderState.onDelete}
+        disabled={tradersHeaderState.isDeleteDisabled}
       >
         <FaTrashCan />
         <span>{seasonsActionText.remove}</span>
@@ -627,7 +651,11 @@ export default function SettingsPage(): JSX.Element {
           <FieldsManagement onHeaderStateChange={setFieldsHeaderState} />
         ) : null}
 
-        {activeChildId !== 'language' && activeChildId !== 'themeColor' && activeChildId !== 'seasons' && activeChildId !== 'fields' ? (
+        {activeChildId === 'traders' ? (
+          <TradersManagement onHeaderStateChange={setTradersHeaderState} />
+        ) : null}
+
+        {activeChildId !== 'language' && activeChildId !== 'themeColor' && activeChildId !== 'seasons' && activeChildId !== 'fields' && activeChildId !== 'traders' ? (
           isManager ? null : <p className="settings-workspace__manager-note">{t.managerOnlyHint}</p>
         ) : null}
       </section>
