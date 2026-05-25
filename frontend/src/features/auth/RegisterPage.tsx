@@ -7,6 +7,7 @@ import type { NavItem } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout, register } from '../../services/authService';
 import { ApiError } from '../../services/apiClient';
 import { AUTH_I18N } from './i18n';
+import { isValidEmail, isValidPhone, sanitizeEmail, sanitizePhone, sanitizeText } from '../../utils/inputValidation';
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -33,7 +34,6 @@ export function RegisterPage() {
   }, []);
   const t = SHIPMENTS_I18N[lang];
   const a = AUTH_I18N[lang];
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 
   const handleLogin = () => navigate('/login');
@@ -55,13 +55,22 @@ export function RegisterPage() {
 
     if (isSubmitting) return;
 
-    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
+    const normalizedName = sanitizeText(formData.name);
+    const normalizedEmail = sanitizeEmail(formData.email);
+    const normalizedPhone = sanitizePhone(formData.phone);
+
+    if (!normalizedName || !normalizedEmail || !formData.password || !formData.confirmPassword) {
       setError(a.requiredFields);
       return;
     }
 
-    if (!emailRegex.test(formData.email)) {
+    if (!isValidEmail(normalizedEmail)) {
       setError(a.invalidEmail);
+      return;
+    }
+
+    if (normalizedPhone && !isValidPhone(normalizedPhone)) {
+      setError(lang === 'he' ? 'מספר טלפון לא תקין.' : 'Invalid phone number format.');
       return;
     }
 
@@ -80,9 +89,9 @@ export function RegisterPage() {
       setError('');
 
       await register({
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        phone: formData.phone.trim() || undefined,
+        name: normalizedName,
+        email: normalizedEmail,
+        phone: normalizedPhone || undefined,
         password: formData.password,
       });
 

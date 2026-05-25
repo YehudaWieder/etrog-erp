@@ -4,6 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { buildNewUserPendingActivationMessage } from 'src/notifications/templates/user-registration-notification';
+import { isValidEmail, isValidPhone, sanitizeEmail, sanitizePhone, sanitizeText } from 'src/common/utils/input-normalization.util';
 
 type CreateUserInput = {
 	name: string;
@@ -32,7 +33,6 @@ type UpdateUserByActorInput = SelfUpdateInput & AdminUpdateInput;
 @Injectable()
 export class UsersService {
 	private readonly saltRounds = 10;
-	private readonly emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	private readonly passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 	private readonly privilegedRoles = new Set<Role>([Role.OWNER, Role.MANAGER]);
 
@@ -43,15 +43,27 @@ export class UsersService {
 			throw new BadRequestException('role and isActive cannot be set during user registration.');
 		}
 
-		this.assertEmailFormat(data.email);
+		const sanitizedName = sanitizeText(data.name);
+		const sanitizedEmail = sanitizeEmail(data.email);
+		const sanitizedPhoneRaw = data.phone !== undefined ? sanitizePhone(data.phone) : undefined;
+		const sanitizedPhone = sanitizedPhoneRaw && sanitizedPhoneRaw.length > 0 ? sanitizedPhoneRaw : undefined;
+
+		if (!sanitizedName) {
+			throw new BadRequestException('name is required');
+		}
+
+		this.assertEmailFormat(sanitizedEmail);
+		if (sanitizedPhone) {
+			this.assertPhoneFormat(sanitizedPhone);
+		}
 		this.assertPasswordFormat(data.password);
 
 		const existing = await this.prisma.user.findFirst({
 			where: {
 				OR: [
-					{ email: data.email },
-					{ name: data.name },
-					...(data.phone ? [{ phone: data.phone }] : []),
+					{ email: sanitizedEmail },
+					{ name: sanitizedName },
+					...(sanitizedPhone ? [{ phone: sanitizedPhone }] : []),
 				],
 			},
 		});
@@ -61,14 +73,14 @@ export class UsersService {
 		}
 
 		const hashedPassword = await bcrypt.hash(data.password, this.saltRounds);
-		const slug = data.name.toLowerCase().replace(/ /g, '-');
+		const slug = sanitizedName.toLowerCase().replace(/ /g, '-');
 
 		return this.prisma.$transaction(async (tx) => {
 			const newUser = await tx.user.create({
 				data: {
-					name: data.name,
-					email: data.email,
-					phone: data.phone,
+					name: sanitizedName,
+					email: sanitizedEmail,
+					phone: sanitizedPhone,
 					passwordHash: hashedPassword,
 					role: Role.WORKER,
 					isActive: false,
@@ -188,8 +200,26 @@ export class UsersService {
 			throw new ForbiddenException('You are not allowed to update role or isActive on your own account.');
 		}
 
+		if (profileFields.name !== undefined) {
+			profileFields.name = sanitizeText(profileFields.name);
+			if (profileFields.name.length === 0) {
+				throw new BadRequestException('name cannot be empty');
+			}
+		}
+
 		if (profileFields.email !== undefined) {
+			profileFields.email = sanitizeEmail(profileFields.email);
 			this.assertEmailFormat(profileFields.email);
+		}
+
+		if (profileFields.phone !== undefined && profileFields.phone !== null) {
+			const sanitizedPhone = sanitizePhone(profileFields.phone);
+			if (sanitizedPhone.length === 0) {
+				profileFields.phone = null;
+			} else {
+				this.assertPhoneFormat(sanitizedPhone);
+				profileFields.phone = sanitizedPhone;
+			}
 		}
 
 		const updateData: Prisma.UserUpdateInput = { ...profileFields };
@@ -299,8 +329,14 @@ export class UsersService {
 	}
 
 	private assertEmailFormat(email: string) {
-		if (!this.emailRegex.test(email)) {
+		if (!isValidEmail(email)) {
 			throw new BadRequestException('Invalid email format.');
+		}
+	}
+
+	private assertPhoneFormat(phone: string) {
+		if (!isValidPhone(phone)) {
+			throw new BadRequestException('Invalid phone format.');
 		}
 	}
 

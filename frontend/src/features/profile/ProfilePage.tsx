@@ -18,6 +18,7 @@ import {
 import { PROFILE_I18N } from './i18n';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { isValidEmail, isValidPhone, sanitizeEmail, sanitizePhone, sanitizeText } from '../../utils/inputValidation';
 
 const DEFAULT_PROFILE_ITEM_ID = 'my-profile';
 const PROFILE_LIST_VIEW_IDS = new Set(['all-profiles', 'active-profiles', 'inactive-profiles']);
@@ -351,9 +352,28 @@ export function ProfilePage() {
       return;
     }
 
-    const trimmedName = editForm.name.trim();
-    const trimmedEmail = editForm.email.trim();
-    const trimmedPhone = editForm.phone.trim();
+    const trimmedName = sanitizeText(editForm.name);
+    const trimmedEmail = sanitizeEmail(editForm.email);
+    const trimmedPhone = sanitizePhone(editForm.phone);
+
+    if (!trimmedName) {
+      setEditError(lang === 'he' ? 'שם לא יכול להיות ריק.' : 'Name cannot be empty.');
+      return;
+    }
+
+    if (!isValidEmail(trimmedEmail)) {
+      setEditError(lang === 'he' ? 'כתובת אימייל לא תקינה.' : 'Invalid email format.');
+      return;
+    }
+
+    if (trimmedPhone && !isValidPhone(trimmedPhone)) {
+      setEditError(
+        lang === 'he'
+          ? 'מספר טלפון לא תקין. יש להזין בין 7 ל-15 ספרות (אפשר עם + בתחילה).'
+          : 'Invalid phone number. Use 7-15 digits, optionally starting with +.',
+      );
+      return;
+    }
 
     const payload: {
       id: number;

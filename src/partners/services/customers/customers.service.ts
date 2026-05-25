@@ -4,6 +4,7 @@ import { Injectable, ConflictException, NotFoundException, BadRequestException }
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Role } from '@prisma/client';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+import { isValidEmail, isValidPhone, sanitizeEmail, sanitizePhone, sanitizeText } from 'src/common/utils/input-normalization.util';
 
 type CustomerWriteInput = {
   customerName?: string;
@@ -15,23 +16,20 @@ type CustomerWriteInput = {
 export class CustomersService {
   constructor(private prisma: PrismaService) {}
 
-  private readonly emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  private readonly phoneRegex = /^\+?[0-9]{7,15}$/;
-
   private sanitizeCustomerWriteInput(data: CustomerWriteInput): CustomerWriteInput {
     const sanitized: CustomerWriteInput = { ...data };
 
     if (typeof sanitized.customerName === 'string') {
-      sanitized.customerName = sanitized.customerName.trim();
+      sanitized.customerName = sanitizeText(sanitized.customerName);
     }
 
     if (typeof sanitized.email === 'string') {
-      const normalizedEmail = sanitized.email.trim().toLowerCase();
+      const normalizedEmail = sanitizeEmail(sanitized.email);
       sanitized.email = normalizedEmail === '' ? null : normalizedEmail;
     }
 
     if (typeof sanitized.phone === 'string') {
-      const normalizedPhone = sanitized.phone.trim().replace(/[\s\-()]/g, '');
+      const normalizedPhone = sanitizePhone(sanitized.phone);
       sanitized.phone = normalizedPhone === '' ? null : normalizedPhone;
     }
 
@@ -43,11 +41,11 @@ export class CustomersService {
       throw new BadRequestException('customerName cannot be empty');
     }
 
-    if (typeof data.email === 'string' && !this.emailRegex.test(data.email)) {
+    if (typeof data.email === 'string' && !isValidEmail(data.email)) {
       throw new BadRequestException('email is not valid');
     }
 
-    if (typeof data.phone === 'string' && !this.phoneRegex.test(data.phone)) {
+    if (typeof data.phone === 'string' && !isValidPhone(data.phone)) {
       throw new BadRequestException('phone is not valid');
     }
   }

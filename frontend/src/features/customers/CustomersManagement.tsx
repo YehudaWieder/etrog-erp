@@ -3,13 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { addCustomer, editCustomer, fetchCustomers, removeCustomer } from '../../store/customersSlice';
 import type { AppDispatch, RootState } from '../../store';
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_REGEX = /^\+?[0-9]{7,15}$/;
-
-const sanitizeEmail = (value: string): string => value.trim().toLowerCase();
-
-const sanitizePhone = (value: string): string => value.trim().replace(/[\s\-()]/g, '');
+import { isValidEmail, isValidPhone, sanitizeEmail, sanitizePhone, sanitizeText } from '../../utils/inputValidation';
 
 export type CustomersHeaderState = {
   count: number;
@@ -64,7 +58,7 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
   );
 
   const handleAdd = async () => {
-    const trimmedName = newCustomerName.trim();
+    const trimmedName = sanitizeText(newCustomerName);
     const sanitizedEmail = sanitizeEmail(newCustomerEmail);
     const sanitizedPhone = sanitizePhone(newCustomerPhone);
 
@@ -73,12 +67,12 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
       return;
     }
 
-    if (sanitizedEmail && !EMAIL_REGEX.test(sanitizedEmail)) {
+    if (sanitizedEmail && !isValidEmail(sanitizedEmail)) {
       setAddError('כתובת אימייל לא תקינה.');
       return;
     }
 
-    if (sanitizedPhone && !PHONE_REGEX.test(sanitizedPhone)) {
+    if (sanitizedPhone && !isValidPhone(sanitizedPhone)) {
       setAddError('מספר טלפון לא תקין. יש להזין בין 7 ל-15 ספרות (אפשר עם + בתחילה).');
       return;
     }
@@ -134,7 +128,7 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
       return;
     }
 
-    const trimmedName = editCustomerName.trim();
+    const trimmedName = sanitizeText(editCustomerName);
     const sanitizedEmail = sanitizeEmail(editCustomerEmail);
     const sanitizedPhone = sanitizePhone(editCustomerPhone);
 
@@ -143,12 +137,12 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
       return;
     }
 
-    if (sanitizedEmail && !EMAIL_REGEX.test(sanitizedEmail)) {
+    if (sanitizedEmail && !isValidEmail(sanitizedEmail)) {
       setEditError('כתובת אימייל לא תקינה.');
       return;
     }
 
-    if (sanitizedPhone && !PHONE_REGEX.test(sanitizedPhone)) {
+    if (sanitizedPhone && !isValidPhone(sanitizedPhone)) {
       setEditError('מספר טלפון לא תקין. יש להזין בין 7 ל-15 ספרות (אפשר עם + בתחילה).');
       return;
     }
