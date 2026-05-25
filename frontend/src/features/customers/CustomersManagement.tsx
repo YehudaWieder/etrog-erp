@@ -4,6 +4,7 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { addCustomer, editCustomer, fetchCustomers, removeCustomer } from '../../store/customersSlice';
 import type { AppDispatch, RootState } from '../../store';
 import { isValidEmail, isValidPhone, sanitizeEmail, sanitizePhone, sanitizeText } from '../../utils/inputValidation';
+import { getManagementI18n, resolveAppLang } from '../settings/managementI18n';
 
 export type CustomersHeaderState = {
   count: number;
@@ -36,6 +37,7 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
   const [editCustomerName, setEditCustomerName] = useState('');
   const [editCustomerEmail, setEditCustomerEmail] = useState('');
   const [editCustomerPhone, setEditCustomerPhone] = useState('');
+  const t = getManagementI18n(resolveAppLang()).customers;
 
   useEffect(() => {
     dispatch(fetchCustomers());
@@ -63,17 +65,17 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
     const sanitizedPhone = sanitizePhone(newCustomerPhone);
 
     if (!trimmedName) {
-      setAddError('שם הלקוח לא יכול להיות ריק.');
+      setAddError(t.emptyName);
       return;
     }
 
     if (sanitizedEmail && !isValidEmail(sanitizedEmail)) {
-      setAddError('כתובת אימייל לא תקינה.');
+      setAddError(t.invalidEmail);
       return;
     }
 
     if (sanitizedPhone && !isValidPhone(sanitizedPhone)) {
-      setAddError('מספר טלפון לא תקין. יש להזין בין 7 ל-15 ספרות (אפשר עם + בתחילה).');
+      setAddError(t.invalidPhone);
       return;
     }
 
@@ -97,7 +99,7 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
     const failureMessage =
       (typeof actionResult.payload === 'string' && actionResult.payload) ||
       actionResult.error.message ||
-      'הוספת הלקוח נכשלה.';
+      t.addFailed;
 
     setAddError(failureMessage);
   };
@@ -133,17 +135,17 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
     const sanitizedPhone = sanitizePhone(editCustomerPhone);
 
     if (!trimmedName) {
-      setEditError('שם הלקוח לא יכול להיות ריק.');
+      setEditError(t.emptyName);
       return;
     }
 
     if (sanitizedEmail && !isValidEmail(sanitizedEmail)) {
-      setEditError('כתובת אימייל לא תקינה.');
+      setEditError(t.invalidEmail);
       return;
     }
 
     if (sanitizedPhone && !isValidPhone(sanitizedPhone)) {
-      setEditError('מספר טלפון לא תקין. יש להזין בין 7 ל-15 ספרות (אפשר עם + בתחילה).');
+      setEditError(t.invalidPhone);
       return;
     }
 
@@ -165,7 +167,7 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
     const failureMessage =
       (typeof actionResult.payload === 'string' && actionResult.payload) ||
       actionResult.error.message ||
-      'עדכון הלקוח נכשל.';
+      t.editFailed;
 
     setEditError(failureMessage);
   };
@@ -186,7 +188,7 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
     const failureMessage =
       (typeof actionResult.payload === 'string' && actionResult.payload) ||
       actionResult.error.message ||
-      'לא ניתן למחוק את הלקוח שנבחר.';
+      t.deleteFailed;
 
     setDeleteError(failureMessage);
     setIsDeleteDialogOpen(false);
@@ -222,21 +224,21 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
           type="text"
           value={newCustomerName}
           onChange={(e) => setNewCustomerName(e.target.value)}
-          placeholder="שם לקוח חדש"
+          placeholder={t.newCustomerPlaceholder}
         />
         <input
           className="seasons-manager__year-input"
           type="email"
           value={newCustomerEmail}
           onChange={(e) => setNewCustomerEmail(e.target.value)}
-          placeholder="אימייל (לא חובה)"
+          placeholder={t.optionalEmailPlaceholder}
         />
         <input
           className="seasons-manager__year-input"
           type="text"
           value={newCustomerPhone}
           onChange={(e) => setNewCustomerPhone(e.target.value)}
-          placeholder="טלפון (לא חובה)"
+          placeholder={t.optionalPhonePlaceholder}
         />
         <button
           type="button"
@@ -246,15 +248,15 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
           }}
           disabled={loading}
         >
-          הוסף לקוח
+          {t.addCustomer}
         </button>
       </div>
 
-      {loading ? <p className="seasons-manager__state">טוען לקוחות...</p> : null}
+      {loading ? <p className="seasons-manager__state">{t.loading}</p> : null}
       {shownError ? <p className="seasons-manager__error">{shownError}</p> : null}
 
       {sortedCustomers.length === 0 && !loading ? (
-        <div className="seasons-manager__empty">אין לקוחות להצגה כרגע.</div>
+        <div className="seasons-manager__empty">{t.empty}</div>
       ) : null}
 
       {sortedCustomers.length > 0 ? (
@@ -281,9 +283,9 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
                   <span className="seasons-manager__card-main">
                     <span className="seasons-manager__year">{customer.customerName}</span>
                     <span className="seasons-manager__meta customers-manager__meta">
-                      <span className="customers-manager__meta-line">מזהה לקוח: {customer.id}</span>
-                      <span className="customers-manager__meta-line">אימייל: {customer.email || '-'}</span>
-                      <span className="customers-manager__meta-line">טלפון: {customer.phone || '-'}</span>
+                      <span className="customers-manager__meta-line">{t.customerId}: {customer.id}</span>
+                      <span className="customers-manager__meta-line">{t.email}: {customer.email || '-'}</span>
+                      <span className="customers-manager__meta-line">{t.phone}: {customer.phone || '-'}</span>
                     </span>
                   </span>
                 </button>
@@ -295,14 +297,14 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
 
       <ConfirmDialog
         open={isDeleteDialogOpen}
-        title="מחיקת לקוח"
+        title={t.deleteTitle}
         message={
           selectedCustomer
-            ? `האם למחוק את הלקוח ${selectedCustomer.customerName}? פעולה זו לא ניתנת לשחזור.`
-            : 'האם למחוק את הלקוח שנבחר?'
+            ? t.deleteMessage(selectedCustomer.customerName)
+            : t.deleteFallback
         }
-        confirmLabel="מחק"
-        cancelLabel="ביטול"
+        confirmLabel={t.deleteConfirm}
+        cancelLabel={t.cancel}
         onConfirm={() => {
           void handleDeleteCustomer();
         }}
@@ -312,9 +314,9 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
       {isEditDialogOpen ? (
         <div className="modal-overlay">
           <div className="modal-dialog">
-            <h3 className="modal-title">עריכת לקוח</h3>
+            <h3 className="modal-title">{t.editTitle}</h3>
             <div className="modal-message">
-              {selectedCustomer ? `עדכון פרטי הלקוח ${selectedCustomer.customerName}` : 'עדכון פרטי לקוח נבחר'}
+              {selectedCustomer ? t.editMessage(selectedCustomer.customerName) : t.editFallback}
             </div>
 
             <input
@@ -322,7 +324,7 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
               type="text"
               value={editCustomerName}
               onChange={(event) => setEditCustomerName(event.target.value)}
-              placeholder="שם לקוח"
+              placeholder={t.customerPlaceholder}
               autoFocus
             />
 
@@ -331,7 +333,7 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
               type="email"
               value={editCustomerEmail}
               onChange={(event) => setEditCustomerEmail(event.target.value)}
-              placeholder="אימייל (לא חובה)"
+              placeholder={t.optionalEmailPlaceholder}
             />
 
             <input
@@ -339,14 +341,14 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
               type="text"
               value={editCustomerPhone}
               onChange={(event) => setEditCustomerPhone(event.target.value)}
-              placeholder="טלפון (לא חובה)"
+              placeholder={t.optionalPhonePlaceholder}
             />
 
             {editError ? <p className="seasons-manager__error">{editError}</p> : null}
 
             <div className="modal-actions">
               <button className="btn btn-danger" onClick={() => setIsEditDialogOpen(false)} type="button">
-                ביטול
+                {t.cancel}
               </button>
               <button
                 className="btn btn-success"
@@ -355,7 +357,7 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
                 }}
                 type="button"
               >
-                שמור
+                {t.save}
               </button>
             </div>
           </div>

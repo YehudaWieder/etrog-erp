@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { addField, editField, fetchFields, removeField } from '../../store/fieldsSlice';
 import type { AppDispatch, RootState } from '../../store';
+import { getManagementI18n, resolveAppLang } from '../settings/managementI18n';
 
 export type FieldsHeaderState = {
   count: number;
@@ -27,6 +28,7 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
   const [addError, setAddError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [editFieldName, setEditFieldName] = useState('');
+  const t = getManagementI18n(resolveAppLang()).fields;
 
   useEffect(() => {
     dispatch(fetchFields());
@@ -66,7 +68,7 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
     const failureMessage =
       (typeof actionResult.payload === 'string' && actionResult.payload) ||
       actionResult.error.message ||
-      'הוספת השדה נכשלה.';
+      t.addFailed;
 
     setAddError(failureMessage);
   };
@@ -97,7 +99,7 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
 
     const trimmedName = editFieldName.trim();
     if (!trimmedName) {
-      setEditError('שם השדה לא יכול להיות ריק.');
+      setEditError(t.emptyName);
       return;
     }
 
@@ -112,7 +114,7 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
     const failureMessage =
       (typeof actionResult.payload === 'string' && actionResult.payload) ||
       actionResult.error.message ||
-      'עדכון השדה נכשל.';
+      t.editFailed;
 
     setEditError(failureMessage);
   };
@@ -133,7 +135,7 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
     const failureMessage =
       (typeof actionResult.payload === 'string' && actionResult.payload) ||
       actionResult.error.message ||
-      'לא ניתן למחוק את השדה שנבחר.';
+      t.deleteFailed;
 
     setDeleteError(failureMessage);
     setIsDeleteDialogOpen(false);
@@ -169,7 +171,7 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
           type="text"
           value={newFieldName}
           onChange={(e) => setNewFieldName(e.target.value)}
-          placeholder="שם שדה חדש"
+          placeholder={t.newFieldPlaceholder}
         />
         <button
           type="button"
@@ -179,18 +181,18 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
           }}
           disabled={loading}
         >
-          הוסף שדה
+          {t.addField}
         </button>
       </div>
 
-      {loading ? <p className="seasons-manager__state">טוען שדות...</p> : null}
+      {loading ? <p className="seasons-manager__state">{t.loading}</p> : null}
       {shownError ? <p className="seasons-manager__error">{shownError}</p> : null}
       {newFieldName.trim() === '' && newFieldName !== '' ? (
-        <p className="seasons-manager__error">שם השדה לא יכול להיות ריק.</p>
+        <p className="seasons-manager__error">{t.emptyName}</p>
       ) : null}
 
       {sortedFields.length === 0 && !loading ? (
-        <div className="seasons-manager__empty">אין שדות להצגה כרגע.</div>
+        <div className="seasons-manager__empty">{t.empty}</div>
       ) : null}
 
       {sortedFields.length > 0 ? (
@@ -216,7 +218,7 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
 
                   <span className="seasons-manager__card-main">
                     <span className="seasons-manager__year">{field.name}</span>
-                    <span className="seasons-manager__meta">מזהה שדה: {field.id}</span>
+                    <span className="seasons-manager__meta">{t.fieldId}: {field.id}</span>
                   </span>
                 </button>
               </li>
@@ -227,14 +229,14 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
 
       <ConfirmDialog
         open={isDeleteDialogOpen}
-        title="מחיקת שדה"
+        title={t.deleteTitle}
         message={
           selectedField
-            ? `האם למחוק את השדה ${selectedField.name}? פעולה זו לא ניתנת לשחזור.`
-            : 'האם למחוק את השדה שנבחר?'
+            ? t.deleteMessage(selectedField.name)
+            : t.deleteFallback
         }
-        confirmLabel="מחק"
-        cancelLabel="ביטול"
+        confirmLabel={t.deleteConfirm}
+        cancelLabel={t.cancel}
         onConfirm={() => {
           void handleDeleteField();
         }}
@@ -244,9 +246,9 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
       {isEditDialogOpen ? (
         <div className="modal-overlay">
           <div className="modal-dialog">
-            <h3 className="modal-title">עריכת שדה</h3>
+            <h3 className="modal-title">{t.editTitle}</h3>
             <div className="modal-message">
-              {selectedField ? `עדכון שם השדה ${selectedField.name}` : 'עדכון שם שדה נבחר'}
+              {selectedField ? t.editMessage(selectedField.name) : t.editFallback}
             </div>
 
             <input
@@ -254,7 +256,7 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
               type="text"
               value={editFieldName}
               onChange={(event) => setEditFieldName(event.target.value)}
-              placeholder="שם שדה"
+              placeholder={t.editFieldPlaceholder}
               autoFocus
             />
 
@@ -262,7 +264,7 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
 
             <div className="modal-actions">
               <button className="btn btn-danger" onClick={() => setIsEditDialogOpen(false)} type="button">
-                ביטול
+                {t.cancel}
               </button>
               <button
                 className="btn btn-success"
@@ -271,7 +273,7 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
                 }}
                 type="button"
               >
-                שמור
+                {t.save}
               </button>
             </div>
           </div>

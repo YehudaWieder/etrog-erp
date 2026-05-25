@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { addSeason, activateSeason, fetchSeasons, removeSeason } from '../../store/seasonsSlice';
 import type { AppDispatch, RootState } from '../../store';
+import { getManagementI18n, resolveAppLang } from '../settings/managementI18n';
 
 const MIN_SEASON_YEAR = 2020;
 const MAX_SEASON_YEAR = 2100;
@@ -37,6 +38,7 @@ const SeasonsManagement: React.FC<SeasonsManagementProps> = ({ onHeaderStateChan
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [addError, setAddError] = useState<string | null>(null);
+  const t = getManagementI18n(resolveAppLang()).seasons;
 
   useEffect(() => {
     dispatch(fetchSeasons());
@@ -86,7 +88,7 @@ const SeasonsManagement: React.FC<SeasonsManagementProps> = ({ onHeaderStateChan
     const failureMessage =
       (typeof actionResult.payload === 'string' && actionResult.payload) ||
       actionResult.error.message ||
-      'הוספת העונה נכשלה.';
+      t.addFailed;
 
     setAddError(failureMessage);
   };
@@ -125,7 +127,7 @@ const SeasonsManagement: React.FC<SeasonsManagementProps> = ({ onHeaderStateChan
     const failureMessage =
       (typeof actionResult.payload === 'string' && actionResult.payload) ||
       actionResult.error.message ||
-      'לא ניתן למחוק את העונה שנבחרה.';
+      t.deleteFailed;
 
     setDeleteError(failureMessage);
     setIsDeleteDialogOpen(false);
@@ -168,7 +170,7 @@ const SeasonsManagement: React.FC<SeasonsManagementProps> = ({ onHeaderStateChan
           step={1}
           value={newSeasonYear}
           onChange={(e) => setNewSeasonYear(e.target.value)}
-          placeholder={`שנת עונה חדשה (${MIN_SEASON_YEAR}-${MAX_SEASON_YEAR})`}
+          placeholder={t.newSeasonPlaceholder(MIN_SEASON_YEAR, MAX_SEASON_YEAR)}
         />
         <button
           type="button"
@@ -178,18 +180,18 @@ const SeasonsManagement: React.FC<SeasonsManagementProps> = ({ onHeaderStateChan
           }}
           disabled={loading}
         >
-          הוסף עונה
+          {t.addSeason}
         </button>
       </div>
 
-      {loading ? <p className="seasons-manager__state">טוען עונות...</p> : null}
+      {loading ? <p className="seasons-manager__state">{t.loading}</p> : null}
       {shownError ? <p className="seasons-manager__error">{shownError}</p> : null}
       {!isNewYearValid && newSeasonYear.trim() !== '' ? (
-        <p className="seasons-manager__error">ניתן להוסיף שנה רק בין {MIN_SEASON_YEAR} ל-{MAX_SEASON_YEAR}.</p>
+        <p className="seasons-manager__error">{t.yearRangeError(MIN_SEASON_YEAR, MAX_SEASON_YEAR)}</p>
       ) : null}
 
       {sortedSeasons.length === 0 && !loading ? (
-        <div className="seasons-manager__empty">אין עונות להצגה כרגע.</div>
+        <div className="seasons-manager__empty">{t.empty}</div>
       ) : null}
 
       {sortedSeasons.length > 0 ? (
@@ -214,11 +216,11 @@ const SeasonsManagement: React.FC<SeasonsManagementProps> = ({ onHeaderStateChan
 
                   <span className="seasons-manager__card-main">
                     <span className="seasons-manager__year">{season.yearName}</span>
-                    <span className="seasons-manager__meta">מזהה עונה: {season.id}</span>
+                    <span className="seasons-manager__meta">{t.seasonId}: {season.id}</span>
                   </span>
 
                   <span className={`seasons-manager__card-status${season.isActive ? ' is-active' : ''}`}>
-                    {season.isActive ? 'פעיל' : 'לא פעיל'}
+                    {season.isActive ? t.active : t.inactive}
                   </span>
                 </button>
               </li>
@@ -229,14 +231,14 @@ const SeasonsManagement: React.FC<SeasonsManagementProps> = ({ onHeaderStateChan
 
       <ConfirmDialog
         open={isDeleteDialogOpen}
-        title="מחיקת עונה"
+        title={t.deleteTitle}
         message={
           selectedSeason
-            ? `האם למחוק את עונת ${selectedSeason.yearName}? פעולה זו לא ניתנת לשחזור.`
-            : 'האם למחוק את העונה שנבחרה?'
+            ? t.deleteMessage(selectedSeason.yearName)
+            : t.deleteFallback
         }
-        confirmLabel="מחק"
-        cancelLabel="ביטול"
+        confirmLabel={t.deleteConfirm}
+        cancelLabel={t.cancel}
         onConfirm={() => {
           void handleDeleteSeason();
         }}

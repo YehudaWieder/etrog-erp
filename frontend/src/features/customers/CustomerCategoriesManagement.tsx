@@ -12,6 +12,7 @@ import {
 import type { AppDispatch, RootState } from '../../store';
 import { sanitizeText } from '../../utils/inputValidation';
 import type { Currency, Grade } from '../../services/customerCategoriesApi';
+import { getManagementI18n, resolveAppLang } from '../settings/managementI18n';
 
 const GRADES: Grade[] = ['א', 'ב', 'ג', 'ד', 'ה', 'ו'];
 const CURRENCIES: Currency[] = ['ILS', 'USD', 'EUR'];
@@ -74,6 +75,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
   const [addError, setAddError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const t = getManagementI18n(resolveAppLang()).customerCategories;
 
   useEffect(() => {
     dispatch(fetchSeasons());
@@ -145,28 +147,28 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
     const sanitizedName = sanitizeText(state.name);
 
     if (!activeSeasonId) {
-      return { ok: false, error: 'לא נמצאה עונה פעילה. יש להגדיר עונה פעילה לפני הוספת קטגוריות.' };
+      return { ok: false, error: t.noActiveSeasonForAdd };
     }
 
     if (!state.customerId) {
-      return { ok: false, error: 'יש לבחור לקוח.' };
+      return { ok: false, error: t.selectCustomer };
     }
     if (!state.grade) {
-      return { ok: false, error: 'יש לבחור דרגה.' };
+      return { ok: false, error: t.selectGrade };
     }
 
     if (!state.currency) {
-      return { ok: false, error: 'יש לבחור מטבע.' };
+      return { ok: false, error: t.selectCurrency };
     }
 
 
     if (!sanitizedName) {
-      return { ok: false, error: 'שם הקטגוריה לא יכול להיות ריק.' };
+      return { ok: false, error: t.emptyName };
     }
 
     const numericPrice = Number(state.price);
     if (!Number.isFinite(numericPrice) || numericPrice < 0) {
-      return { ok: false, error: 'המחיר חייב להיות מספר חוקי גדול או שווה ל-0.' };
+      return { ok: false, error: t.invalidPrice };
     }
 
     return {
@@ -183,12 +185,12 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
 
   const handleOpenAddDialog = () => {
     if (!activeSeasonId) {
-      setAddError('לא נמצאה עונה פעילה. יש להגדיר עונה פעילה לפני הוספת קטגוריות.');
+      setAddError(t.noActiveSeasonForAdd);
       return;
     }
 
     if (sortedCustomers.length === 0) {
-      setAddError('אין לקוחות במערכת. יש להוסיף לקוח לפני הגדרת קטגוריה.');
+      setAddError(t.noCustomers);
       return;
     }
 
@@ -246,7 +248,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
     const failureMessage =
       (typeof actionResult.payload === 'string' && actionResult.payload) ||
       actionResult.error.message ||
-      'הוספת קטגוריית הלקוח נכשלה.';
+      t.addFailed;
 
     setAddError(failureMessage);
   };
@@ -280,7 +282,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
     const failureMessage =
       (typeof actionResult.payload === 'string' && actionResult.payload) ||
       actionResult.error.message ||
-      'עדכון קטגוריית הלקוח נכשל.';
+      t.editFailed;
 
     setEditError(failureMessage);
   };
@@ -301,7 +303,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
     const failureMessage =
       (typeof actionResult.payload === 'string' && actionResult.payload) ||
       actionResult.error.message ||
-      'לא ניתן למחוק את קטגוריית הלקוח שנבחרה.';
+      t.deleteFailed;
 
     setDeleteError(failureMessage);
     setIsDeleteDialogOpen(false);
@@ -335,18 +337,18 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
   return (
     <div className="seasons-manager">
       <div className="seasons-manager__state">
-        {activeSeason ? `עונה פעילה: ${activeSeason.yearName}` : 'אין עונה פעילה כרגע'}
+        {activeSeason ? t.activeSeason(activeSeason.yearName) : t.noActiveSeason}
       </div>
 
-      {loading ? <p className="seasons-manager__state">טוען קטגוריות לקוחות...</p> : null}
+      {loading ? <p className="seasons-manager__state">{t.loading}</p> : null}
       {shownError ? <p className="seasons-manager__error">{shownError}</p> : null}
 
       {!activeSeasonId ? (
-        <div className="seasons-manager__empty">לא נמצאה עונה פעילה. הגדר עונה פעילה ואז הוסף קטגוריות לקוחות.</div>
+        <div className="seasons-manager__empty">{t.empty}</div>
       ) : null}
 
       {activeSeasonId && sortedCategories.length === 0 && !loading ? (
-        <div className="seasons-manager__empty">אין קטגוריות לקוחות להצגה בעונה הפעילה.</div>
+        <div className="seasons-manager__empty">{t.categoryForSeasonEmpty}</div>
       ) : null}
 
       {sortedCategories.length > 0 ? (
@@ -370,12 +372,12 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
 
                   <span className="seasons-manager__card-main">
                     <span className="seasons-manager__year">
-                      {category.name} | דרגה {category.grade}
+                      {category.name} | {t.grade} {category.grade}
                     </span>
                     <span className="seasons-manager__meta customers-manager__meta">
-                      <span className="customers-manager__meta-line">לקוח: {category.customerName}</span>
-                      <span className="customers-manager__meta-line">מחיר: {normalizePriceValue(category.price)} {category.currency}</span>
-                      <span className="customers-manager__meta-line">מזהה קטגוריה: {category.id}</span>
+                      <span className="customers-manager__meta-line">{t.customer}: {category.customerName}</span>
+                      <span className="customers-manager__meta-line">{t.price}: {normalizePriceValue(category.price)} {category.currency}</span>
+                      <span className="customers-manager__meta-line">{t.categoryId}: {category.id}</span>
                     </span>
                   </span>
                 </button>
@@ -387,14 +389,14 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
 
       <ConfirmDialog
         open={isDeleteDialogOpen}
-        title="מחיקת קטגוריית לקוח"
+        title={t.deleteTitle}
         message={
           selectedCategory
-            ? `האם למחוק את הקטגוריה ${selectedCategory.name} (דרגה ${selectedCategory.grade}) עבור הלקוח ${selectedCategory.customerName}?`
-            : 'האם למחוק את קטגוריית הלקוח שנבחרה?'
+            ? t.deleteMessage(selectedCategory.name, selectedCategory.grade, selectedCategory.customerName)
+            : t.deleteFallback
         }
-        confirmLabel="מחק"
-        cancelLabel="ביטול"
+        confirmLabel={t.deleteConfirm}
+        cancelLabel={t.cancel}
         onConfirm={() => {
           void handleDeleteCategory();
         }}
@@ -404,16 +406,16 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
       {isAddDialogOpen || isEditDialogOpen ? (
         <div className="modal-overlay">
           <div className="modal-dialog">
-            <h3 className="modal-title">{isAddDialogOpen ? 'הוספת קטגוריית לקוח' : 'עריכת קטגוריית לקוח'}</h3>
+            <h3 className="modal-title">{isAddDialogOpen ? t.addTitle : t.editTitle}</h3>
             <div className="modal-message">
               {isAddDialogOpen
-                ? 'הזן את פרטי הקטגוריה לעונה הפעילה.'
-                : `עדכון פרטי הקטגוריה ${selectedCategory?.name ?? ''}`}
+                ? t.addMessage
+                : t.editMessage(selectedCategory?.name ?? '')}
             </div>
 
             <div className="customer-categories-manager__form-grid">
               <div className="customer-categories-manager__field">
-                <label className="customer-categories-manager__label">לקוח</label>
+                <label className="customer-categories-manager__label">{t.customerLabel}</label>
                 <select
                   className="seasons-manager__year-input"
                   value={formState.customerId}
@@ -425,7 +427,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
                   }}
                 >
                   <option value="" disabled>
-                    בחר לקוח מהרשימה
+                    {t.selectCustomer}
                   </option>
                   {sortedCustomers.map((customer) => (
                     <option key={customer.id} value={customer.id}>
@@ -436,7 +438,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
               </div>
 
               <div className="customer-categories-manager__field">
-                <label className="customer-categories-manager__label">שם קטגוריה</label>
+                <label className="customer-categories-manager__label">{t.categoryNameLabel}</label>
                 <input
                   className="seasons-manager__year-input"
                   type="text"
@@ -447,13 +449,13 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
                       name: event.target.value,
                     }));
                   }}
-                  placeholder="לדוגמה: מהדרין"
+                  placeholder={t.categoryNamePlaceholder}
                   autoFocus
                 />
               </div>
 
               <div className="customer-categories-manager__field">
-                <label className="customer-categories-manager__label">דרגה</label>
+                <label className="customer-categories-manager__label">{t.gradeLabel}</label>
                 <select
                   className="seasons-manager__year-input"
                   value={formState.grade}
@@ -465,7 +467,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
                   }}
                 >
                   <option value="" disabled>
-                    בחר דרגה
+                    {t.selectGrade}
                   </option>
                   {GRADES.map((grade) => (
                     <option key={grade} value={grade}>
@@ -476,7 +478,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
               </div>
 
               <div className="customer-categories-manager__field">
-                <label className="customer-categories-manager__label">מחיר</label>
+                <label className="customer-categories-manager__label">{t.priceLabel}</label>
                 <input
                   className="seasons-manager__year-input"
                   type="number"
@@ -489,12 +491,12 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
                       price: event.target.value,
                     }));
                   }}
-                  placeholder="הזן מחיר"
+                  placeholder={t.pricePlaceholder}
                 />
               </div>
 
               <div className="customer-categories-manager__field">
-                <label className="customer-categories-manager__label">מטבע</label>
+                <label className="customer-categories-manager__label">{t.currencyLabel}</label>
                 <select
                   className="seasons-manager__year-input"
                   value={formState.currency}
@@ -506,7 +508,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
                   }}
                 >
                   <option value="" disabled>
-                    בחר מטבע
+                    {t.selectCurrency}
                   </option>
                   {CURRENCIES.map((currency) => (
                     <option key={currency} value={currency}>
@@ -529,7 +531,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
                 }}
                 type="button"
               >
-                ביטול
+                {t.cancel}
               </button>
               <button
                 className="btn btn-success"
@@ -543,7 +545,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
                 }}
                 type="button"
               >
-                שמור
+                {t.save}
               </button>
             </div>
           </div>

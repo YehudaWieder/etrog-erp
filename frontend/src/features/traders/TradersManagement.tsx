@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { addTrader, editTrader, fetchTraders, removeTrader } from '../../store/tradersSlice';
 import type { AppDispatch, RootState } from '../../store';
+import { getManagementI18n, resolveAppLang } from '../settings/managementI18n';
 
 const MIN_PAYMENT_PERCENT = 0;
 const MAX_PAYMENT_PERCENT = 100;
@@ -42,6 +43,7 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
   const [editError, setEditError] = useState<string | null>(null);
   const [editTraderName, setEditTraderName] = useState('');
   const [editTraderPercent, setEditTraderPercent] = useState('');
+  const t = getManagementI18n(resolveAppLang()).traders;
 
   useEffect(() => {
     dispatch(fetchTraders());
@@ -72,7 +74,7 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
     }
 
     if (trimmedPercent === '') {
-      setAddError('אחוז התשלום הוא שדה חובה.');
+      setAddError(t.paymentRequired);
       return;
     }
 
@@ -99,7 +101,7 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
     const failureMessage =
       (typeof actionResult.payload === 'string' && actionResult.payload) ||
       actionResult.error.message ||
-      'הוספת הסוחר נכשלה.';
+      t.addFailed;
 
     setAddError(failureMessage);
   };
@@ -137,17 +139,17 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
     const trimmedPercent = editTraderPercent.trim();
 
     if (!trimmedName) {
-      setEditError('שם הסוחר לא יכול להיות ריק.');
+      setEditError(t.emptyName);
       return;
     }
 
     if (trimmedPercent === '') {
-      setEditError('אחוז התשלום הוא שדה חובה.');
+      setEditError(t.paymentRequired);
       return;
     }
 
     if (!isValidPaymentPercent(trimmedPercent)) {
-      setEditError('אחוז התשלום חייב להיות בין 0 ל-100.');
+      setEditError(t.invalidPercent);
       return;
     }
 
@@ -170,7 +172,7 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
     const failureMessage =
       (typeof actionResult.payload === 'string' && actionResult.payload) ||
       actionResult.error.message ||
-      'עדכון הסוחר נכשל.';
+      t.editFailed;
 
     setEditError(failureMessage);
   };
@@ -191,7 +193,7 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
     const failureMessage =
       (typeof actionResult.payload === 'string' && actionResult.payload) ||
       actionResult.error.message ||
-      'לא ניתן למחוק את הסוחר שנבחר.';
+      t.deleteFailed;
 
     setDeleteError(failureMessage);
     setIsDeleteDialogOpen(false);
@@ -227,7 +229,7 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
           type="text"
           value={newTraderName}
           onChange={(e) => setNewTraderName(e.target.value)}
-          placeholder="שם סוחר חדש"
+          placeholder={t.newTraderPlaceholder}
         />
         <input
           className="seasons-manager__year-input"
@@ -237,7 +239,7 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
           step="0.01"
           value={newTraderPercent}
           onChange={(e) => setNewTraderPercent(e.target.value)}
-          placeholder="אחוז תשלום בהוצאות"
+          placeholder={t.paymentPlaceholder}
         />
         <button
           type="button"
@@ -247,24 +249,24 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
           }}
           disabled={loading}
         >
-          הוסף סוחר
+          {t.addTrader}
         </button>
       </div>
 
-      {loading ? <p className="seasons-manager__state">טוען סוחרים...</p> : null}
+      {loading ? <p className="seasons-manager__state">{t.loading}</p> : null}
       {shownError ? <p className="seasons-manager__error">{shownError}</p> : null}
       {newTraderName.trim() === '' && newTraderName !== '' ? (
-        <p className="seasons-manager__error">שם הסוחר לא יכול להיות ריק.</p>
+        <p className="seasons-manager__error">{t.emptyName}</p>
       ) : null}
       {newTraderPercent.trim() === '' && newTraderName.trim() !== '' ? (
-        <p className="seasons-manager__error">אחוז התשלום הוא שדה חובה.</p>
+        <p className="seasons-manager__error">{t.paymentRequired}</p>
       ) : null}
       {newTraderPercent.trim() !== '' && !isValidPaymentPercent(newTraderPercent) ? (
-        <p className="seasons-manager__error">אחוז התשלום חייב להיות בין 0 ל-100.</p>
+        <p className="seasons-manager__error">{t.invalidPercent}</p>
       ) : null}
 
       {sortedTraders.length === 0 && !loading ? (
-        <div className="seasons-manager__empty">אין סוחרים להצגה כרגע.</div>
+        <div className="seasons-manager__empty">{t.empty}</div>
       ) : null}
 
       {sortedTraders.length > 0 ? (
@@ -291,8 +293,8 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
                   <span className="seasons-manager__card-main">
                     <span className="seasons-manager__year">{trader.name}</span>
                     <span className="seasons-manager__meta">
-                      מזהה סוחר: {trader.id}
-                      {typeof trader.paymentPercent === 'number' ? ` | אחוז תשלום: ${trader.paymentPercent}%` : ''}
+                      {t.traderId}: {trader.id}
+                      {typeof trader.paymentPercent === 'number' ? ` | ${t.paymentPercentLabel}: ${trader.paymentPercent}%` : ''}
                     </span>
                   </span>
                 </button>
@@ -304,14 +306,14 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
 
       <ConfirmDialog
         open={isDeleteDialogOpen}
-        title="מחיקת סוחר"
+        title={t.deleteTitle}
         message={
           selectedTrader
-            ? `האם למחוק את הסוחר ${selectedTrader.name}? פעולה זו לא ניתנת לשחזור.`
-            : 'האם למחוק את הסוחר שנבחר?'
+            ? t.deleteMessage(selectedTrader.name)
+            : t.deleteFallback
         }
-        confirmLabel="מחק"
-        cancelLabel="ביטול"
+        confirmLabel={t.deleteConfirm}
+        cancelLabel={t.cancel}
         onConfirm={() => {
           void handleDeleteTrader();
         }}
@@ -321,9 +323,9 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
       {isEditDialogOpen ? (
         <div className="modal-overlay">
           <div className="modal-dialog">
-            <h3 className="modal-title">עריכת סוחר</h3>
+            <h3 className="modal-title">{t.editTitle}</h3>
             <div className="modal-message">
-              {selectedTrader ? `עדכון פרטי הסוחר ${selectedTrader.name}` : 'עדכון פרטי סוחר נבחר'}
+              {selectedTrader ? t.editMessage(selectedTrader.name) : t.editFallback}
             </div>
 
             <input
@@ -331,7 +333,7 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
               type="text"
               value={editTraderName}
               onChange={(event) => setEditTraderName(event.target.value)}
-              placeholder="שם סוחר"
+              placeholder={t.traderPlaceholder}
               autoFocus
             />
 
@@ -343,14 +345,14 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
               step="0.01"
               value={editTraderPercent}
               onChange={(event) => setEditTraderPercent(event.target.value)}
-              placeholder="אחוז תשלום בהוצאות"
+              placeholder={t.paymentPlaceholder}
             />
 
             {editError ? <p className="seasons-manager__error">{editError}</p> : null}
 
             <div className="modal-actions">
               <button className="btn btn-danger" onClick={() => setIsEditDialogOpen(false)} type="button">
-                ביטול
+                {t.cancel}
               </button>
               <button
                 className="btn btn-success"
@@ -359,7 +361,7 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
                 }}
                 type="button"
               >
-                שמור
+                {t.save}
               </button>
             </div>
           </div>
