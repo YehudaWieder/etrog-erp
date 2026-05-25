@@ -1,0 +1,6 @@
+DO $$
+BEGIN
+  ALTER TYPE "Role" ADD VALUE 'EDITOR';
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;

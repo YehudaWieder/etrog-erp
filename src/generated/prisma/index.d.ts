@@ -116,6 +116,7 @@ export namespace $Enums {
   export const Role: {
   OWNER: 'OWNER',
   MANAGER: 'MANAGER',
+  EDITOR: 'EDITOR',
   WORKER: 'WORKER'
 };
 

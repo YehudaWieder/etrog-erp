@@ -619,6 +619,7 @@ model Message {
 enum Role {
   OWNER
   MANAGER
+  EDITOR
   WORKER
 }
 

@@ -5,6 +5,7 @@ import { Request } from 'express';
 import { UserSwaggerDto, UserUpdateSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+import { Roles } from 'src/authorization/decorators/roles.decorator';
 import { UsersService } from './users.service';
 
 type CreateUserRequestBody = {
@@ -46,13 +47,15 @@ export class UsersController {
 	}
 
 	@Get()
+	@Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.WORKER)
 	@ApiOperation({ summary: 'Retrieve a list of all system users' })
-	@ApiResponse({ status: 200, description: 'Users list returned successfully (manager+: full details, worker: names only).' })
+	@ApiResponse({ status: 200, description: 'Users list returned successfully (manager+: full details, editor/worker: names only).' })
 	findAll(@Req() req: Request) {
 		return this.usersService.findAllByActor(req.user as AuthenticatedUser);
 	}
 
 	@Get(':idOrSlug')
+	@Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.WORKER)
 	@ApiOperation({ summary: 'Retrieve a single user by ID or slug (manager/owner or the user themself)' })
 	@ApiParam({ name: 'idOrSlug', type: String, description: 'The numeric ID or unique slug identifier of the user.' })
 	@ApiResponse({ status: 200, description: 'User returned successfully.' })
@@ -65,6 +68,7 @@ export class UsersController {
 	}
 
 	@Patch()
+	@Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.WORKER)
 	@ApiOperation({ summary: 'Update a user\'s details by ID' })
 	@ApiBody({
 		type: UserUpdateSwaggerDto,
@@ -94,6 +98,7 @@ export class UsersController {
 	}
 
 	@Delete(':id')
+	@Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.WORKER)
 	@ApiOperation({ summary: 'Remove a user by ID (manager/owner or the user themself)' })
 	@ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the user to delete.' })
 	@ApiResponse({ status: 200, description: 'User removed successfully.' })

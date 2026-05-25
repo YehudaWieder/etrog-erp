@@ -34,7 +34,7 @@ export class TradersService {
     });
   }
 
-  // Get all traders. Worker receives only id and name.
+  // Get all traders. Editor receives only id and name.
   async findAllByActor(actor: AuthenticatedUser) {
     const isManagerOrAbove = actor.role === Role.MANAGER || actor.role === Role.OWNER;
 
@@ -50,7 +50,7 @@ export class TradersService {
     });
   }
 
-  // Find one by ID or Slug. Worker receives only id and name.
+  // Find one by ID or Slug. Editor receives only id and name.
   async findOneByActor(idOrSlug: string | number, actor: AuthenticatedUser) {
     const isManagerOrAbove = actor.role === Role.MANAGER || actor.role === Role.OWNER;
 

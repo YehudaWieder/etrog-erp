@@ -46,7 +46,7 @@ export class TradersController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Retrieve a list of all registered traders. Worker returns only id and name.' })
+  @ApiOperation({ summary: 'Retrieve a list of all registered traders. Editor returns only id and name.' })
   @ApiResponse({ status: 200, description: 'List of traders returned successfully.' })
   findAll(@Req() req: Request) {
     return this.tradersService.findAllByActor(req.user as AuthenticatedUser);

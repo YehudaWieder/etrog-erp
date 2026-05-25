@@ -24,7 +24,7 @@ export class CustomersService {
     });
   }
 
-  // Get all customers. Worker receives only id and customerName.
+  // Get all customers. Editor receives only id and customerName.
   async findAllByActor(actor: AuthenticatedUser) {
     const isManagerOrAbove = actor.role === Role.MANAGER || actor.role === Role.OWNER;
 
@@ -40,7 +40,7 @@ export class CustomersService {
     });
   }
 
-  // Find one by ID or Slug. Worker receives only id and customerName.
+  // Find one by ID or Slug. Editor receives only id and customerName.
   async findOneByActor(idOrSlug: string | number, actor: AuthenticatedUser) {
     const isManagerOrAbove = actor.role === Role.MANAGER || actor.role === Role.OWNER;
 

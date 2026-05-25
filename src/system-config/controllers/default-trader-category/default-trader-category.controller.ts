@@ -44,19 +44,19 @@ export class DefaultTraderCategoryController {
     private readonly defaultTraderCategoryService: DefaultTraderCategoryService,
   ) {}
 
-  @ApiOperation({ summary: 'Get all default trader categories with their shares for approval display. Roles: OWNER, MANAGER, WORKER.' })
+  @ApiOperation({ summary: 'Get all default trader categories with their shares for approval display. Roles: OWNER, MANAGER, EDITOR.' })
   @ApiResponse({
     status: 200,
     description: 'Default trader categories with complete share breakdown returned successfully.',
     type: [DefaultTraderCategoryApprovalResponseSwaggerDto],
   })
-  @Roles(Role.OWNER, Role.MANAGER, Role.WORKER)
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
   @Get()
   async getDefaultCategories() {
     return this.defaultTraderCategoryService.findAll();
   }
 
-  @ApiOperation({ summary: 'Get one default trader category by ID with all trader shares and total. Roles: OWNER, MANAGER, WORKER.' })
+  @ApiOperation({ summary: 'Get one default trader category by ID with all trader shares and total. Roles: OWNER, MANAGER, EDITOR.' })
   @ApiParam({ name: 'id', type: Number, description: 'Default trader category ID.' })
   @ApiResponse({
     status: 200,
@@ -64,7 +64,7 @@ export class DefaultTraderCategoryController {
     type: DefaultTraderCategoryApprovalResponseSwaggerDto,
   })
   @ApiResponse({ status: 404, description: 'Default trader category not found.' })
-  @Roles(Role.OWNER, Role.MANAGER, Role.WORKER)
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
   @Get(':id')
   async getDefaultCategory(@Param('id', ParseIntPipe) id: number) {
     return this.defaultTraderCategoryService.findOne(id);

@@ -21,7 +21,7 @@ export class FieldController {
   constructor(private readonly fieldService: FieldService) {}
 
   @Get()
-  @Roles(Role.OWNER, Role.MANAGER, Role.WORKER)
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
   @ApiOperation({ summary: 'Retrieve a list of all registered harvest fields' })
   @ApiResponse({ status: 200, description: 'List of fields returned successfully.' })
   getAllFields() {

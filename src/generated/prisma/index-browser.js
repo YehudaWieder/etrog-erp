@@ -406,6 +406,7 @@ exports.Currency = exports.$Enums.Currency = {
 exports.Role = exports.$Enums.Role = {
   OWNER: 'OWNER',
   MANAGER: 'MANAGER',
+  EDITOR: 'EDITOR',
   WORKER: 'WORKER'
 };
 

@@ -219,6 +219,7 @@ export function ManagerProfileEditPage() {
                 disabled={isSaving}
               >
                 <option value="WORKER">WORKER</option>
+                <option value="EDITOR">EDITOR</option>
                 <option value="MANAGER">MANAGER</option>
                 <option value="OWNER">OWNER</option>
               </select>

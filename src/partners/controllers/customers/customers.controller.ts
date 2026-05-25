@@ -43,7 +43,7 @@ export class CustomersController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Retrieve a list of all registered customers. Worker returns only id and customerName.' })
+  @ApiOperation({ summary: 'Retrieve a list of all registered customers. Editor returns only id and customerName.' })
   @ApiResponse({ status: 200, description: 'List of customers returned successfully.' })
   findAll(@Req() req: Request) {
     return this.customersService.findAllByActor(req.user as AuthenticatedUser);

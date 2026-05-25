@@ -35,7 +35,7 @@ export class CustomerCatController {
   }
 
   @Get('by-customer')
-  @Roles()
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
   @ApiOperation({ summary: 'Retrieve all category prices for a specific customer within a season' })
   @ApiQuery({ name: 'customerId', type: Number, description: 'The ID of the customer.' })
   @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season.' })
@@ -50,7 +50,7 @@ export class CustomerCatController {
   }
 
   @Get('by-customer-and-name-grade')
-  @Roles()
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
   @ApiOperation({ summary: 'Find a specific customer category by customer, name, grade, and season (composite key lookup)' })
   @ApiQuery({ name: 'customerId', type: Number, description: 'The ID of the customer.' })
   @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season.' })
@@ -69,7 +69,7 @@ export class CustomerCatController {
   }
 
   @Get()
-  @Roles()
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
   @ApiOperation({ summary: 'Retrieve all customer categories across all customers for a specific season' })
   @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season.' })
   @ApiResponse({ status: 200, description: 'List of all customer categories for the season returned.' })
@@ -79,7 +79,7 @@ export class CustomerCatController {
   }
 
   @Get(':id')
-  @Roles()
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
   @ApiOperation({ summary: 'Retrieve a single customer category by ID' })
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the customer category.' })
   @ApiResponse({ status: 200, description: 'Customer category returned successfully.' })

@@ -40,7 +40,7 @@ export class TraderCatShareController {
   }
 
   @Get()
-  @Roles()
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
   @ApiOperation({ summary: 'Retrieve all trader category shares for a specific season' })
   @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season to filter shares by.' })
   @ApiResponse({ status: 200, description: 'List of trader category shares returned successfully.' })
@@ -50,7 +50,7 @@ export class TraderCatShareController {
   }
 
   @Get('by-trader-category')
-  @Roles()
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
   @ApiOperation({ summary: 'Retrieve share record by trader, category, and season (composite key lookup)' })
   @ApiQuery({ name: 'traderId', type: Number, description: 'The ID of the trader.' })
   @ApiQuery({ name: 'traderCategoryId', type: Number, description: 'The ID of the trader category.' })
@@ -67,7 +67,7 @@ export class TraderCatShareController {
   }
 
   @Get(':id')
-  @Roles()
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
   @ApiOperation({ summary: 'Retrieve a single trader category share by ID' })
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the share record.' })
   @ApiResponse({ status: 200, description: 'Trader category share returned successfully.' })
