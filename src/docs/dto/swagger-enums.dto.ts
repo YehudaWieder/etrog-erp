@@ -84,8 +84,8 @@ export class TraderCreateSwaggerDto {
   @ApiProperty({ description: 'Unique trader name.', example: 'Trader Cohen' })
   name!: string;
 
-  @ApiPropertyOptional({ description: 'Optional payment percentage for the trader.', example: 12.5 })
-  paymentPercent?: number;
+  @ApiProperty({ description: 'Payment percentage for the trader.', example: 12.5 })
+  paymentPercent!: number;
 }
 
 export class TraderUpdateSwaggerDto {
@@ -95,8 +95,8 @@ export class TraderUpdateSwaggerDto {
   @ApiPropertyOptional({ description: 'Updated unique trader name.', example: 'Trader Levi' })
   name?: string;
 
-  @ApiPropertyOptional({ description: 'Updated payment percentage for the trader.', example: 15 })
-  paymentPercent?: number;
+  @ApiProperty({ description: 'Updated payment percentage for the trader.', example: 15 })
+  paymentPercent!: number;
 }
 
 export class MessageMarkAsReadSwaggerDto {

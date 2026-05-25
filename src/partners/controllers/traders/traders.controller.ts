@@ -1,6 +1,6 @@
 // src/partners/controllers/traders/traders.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Req } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { TradersService } from '../../services/traders/traders.service';
 import { Prisma, Role } from '@prisma/client';
@@ -36,8 +36,12 @@ export class TradersController {
   @Roles(Role.OWNER, Role.MANAGER)
   create(
     @Body('name') name: string,
-    @Body('paymentPercent') paymentPercent?: number,
+    @Body('paymentPercent') paymentPercent: number,
   ) {
+    if (paymentPercent === undefined || paymentPercent === null) {
+      throw new BadRequestException('paymentPercent is required');
+    }
+
     return this.tradersService.create(name, paymentPercent);
   }
 
@@ -80,6 +84,10 @@ export class TradersController {
   update(
     @Body() updateData: TraderUpdateSwaggerDto,
   ) {
+    if (updateData.paymentPercent === undefined || updateData.paymentPercent === null) {
+      throw new BadRequestException('paymentPercent is required');
+    }
+
     const { id, ...data } = updateData;
     return this.tradersService.update(id, data as Partial<Prisma.TraderUpdateInput>);
   }

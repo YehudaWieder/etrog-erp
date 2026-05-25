@@ -9,8 +9,16 @@ import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interf
 export class TradersService {
   constructor(private prisma: PrismaService) {}
 
+  private validatePaymentPercentInput(paymentPercent: number): void {
+    if (!Number.isFinite(paymentPercent) || paymentPercent < 0 || paymentPercent > 100) {
+      throw new BadRequestException('paymentPercent must be between 0 and 100');
+    }
+  }
+
   // Create a new trader
-  async create(name: string, paymentPercent: number = 33.33) {
+  async create(name: string, paymentPercent: number) {
+    this.validatePaymentPercentInput(paymentPercent);
+
     const existing = await this.prisma.trader.findUnique({ where: { name } });
     if (existing) throw new ConflictException(`Trader with name ${name} already exists`);
 
@@ -57,8 +65,14 @@ export class TradersService {
 
   // Update trader details
   async update(id: number, data: Partial<Prisma.TraderUpdateInput>) {
+    if (data.paymentPercent === undefined || typeof data.paymentPercent !== 'number') {
+      throw new BadRequestException('paymentPercent is required');
+    }
+
+    this.validatePaymentPercentInput(data.paymentPercent);
+
     // If paymentPercent is being updated, validate the total
-    if (data.paymentPercent !== undefined && typeof data.paymentPercent === 'number') {
+    if (typeof data.paymentPercent === 'number') {
       // Get the current trader's old payment percent
       const currentTrader = await this.prisma.trader.findUnique({ where: { id } });
       if (!currentTrader) throw new NotFoundException('Trader not found');

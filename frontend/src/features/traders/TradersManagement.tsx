@@ -9,7 +9,7 @@ const MAX_PAYMENT_PERCENT = 100;
 
 const isValidPaymentPercent = (value: string): boolean => {
   if (value.trim() === '') {
-    return true;
+    return false;
   }
 
   const parsedValue = Number(value);
@@ -65,9 +65,20 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
 
   const handleAdd = async () => {
     const trimmedName = newTraderName.trim();
-    const parsedPercent = newTraderPercent.trim() === '' ? undefined : Number(newTraderPercent);
+    const trimmedPercent = newTraderPercent.trim();
 
-    if (!trimmedName || !isValidPaymentPercent(newTraderPercent)) {
+    if (!trimmedName) {
+      return;
+    }
+
+    if (trimmedPercent === '') {
+      setAddError('אחוז התשלום הוא שדה חובה.');
+      return;
+    }
+
+    const parsedPercent = Number(trimmedPercent);
+
+    if (!isValidPaymentPercent(trimmedPercent)) {
       return;
     }
 
@@ -123,17 +134,24 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
     }
 
     const trimmedName = editTraderName.trim();
-    const parsedPercent = editTraderPercent.trim() === '' ? undefined : Number(editTraderPercent);
+    const trimmedPercent = editTraderPercent.trim();
 
     if (!trimmedName) {
       setEditError('שם הסוחר לא יכול להיות ריק.');
       return;
     }
 
-    if (!isValidPaymentPercent(editTraderPercent)) {
+    if (trimmedPercent === '') {
+      setEditError('אחוז התשלום הוא שדה חובה.');
+      return;
+    }
+
+    if (!isValidPaymentPercent(trimmedPercent)) {
       setEditError('אחוז התשלום חייב להיות בין 0 ל-100.');
       return;
     }
+
+    const parsedPercent = Number(trimmedPercent);
 
     const actionResult = await dispatch(
       editTrader({
@@ -219,7 +237,7 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
           step="0.01"
           value={newTraderPercent}
           onChange={(e) => setNewTraderPercent(e.target.value)}
-          placeholder="אחוז תשלום (אופציונלי)"
+          placeholder="אחוז תשלום בהוצאות"
         />
         <button
           type="button"
@@ -238,7 +256,10 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
       {newTraderName.trim() === '' && newTraderName !== '' ? (
         <p className="seasons-manager__error">שם הסוחר לא יכול להיות ריק.</p>
       ) : null}
-      {!isValidPaymentPercent(newTraderPercent) ? (
+      {newTraderPercent.trim() === '' && newTraderName.trim() !== '' ? (
+        <p className="seasons-manager__error">אחוז התשלום הוא שדה חובה.</p>
+      ) : null}
+      {newTraderPercent.trim() !== '' && !isValidPaymentPercent(newTraderPercent) ? (
         <p className="seasons-manager__error">אחוז התשלום חייב להיות בין 0 ל-100.</p>
       ) : null}
 
@@ -322,7 +343,7 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
               step="0.01"
               value={editTraderPercent}
               onChange={(event) => setEditTraderPercent(event.target.value)}
-              placeholder="אחוז תשלום (אופציונלי)"
+              placeholder="אחוז תשלום בהוצאות"
             />
 
             {editError ? <p className="seasons-manager__error">{editError}</p> : null}
