@@ -4,6 +4,7 @@ import fieldsReducer from "./fieldsSlice";
 import tradersReducer from './tradersSlice';
 import customersReducer from './customersSlice';
 import customerCategoriesReducer from './customerCategoriesSlice';
+import globalFiltersReducer from './globalFiltersSlice';
 // ... ייבוא רידוסרים נוספים בהמשך
 
 const store = configureStore({
@@ -13,6 +14,7 @@ const store = configureStore({
     traders: tradersReducer,
     customers: customersReducer,
     customerCategories: customerCategoriesReducer,
+    globalFilters: globalFiltersReducer,
     // ... רידוסרים נוספים
   },
 });

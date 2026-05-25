@@ -2242,6 +2242,25 @@ select {
   gap: var(--space-3);
 }
 
+.global-filters-bar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.global-filters-bar__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 220px;
+}
+
+.global-filters-bar__select {
+  width: 100%;
+}
+
 
 .customer-categories-manager__field {
   display: flex;
@@ -2285,6 +2304,14 @@ select {
   .management-form-grid,
   .customer-categories-manager__form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .global-filters-bar {
+    align-items: stretch;
+  }
+
+  .global-filters-bar__field {
+    min-width: 100%;
   }
 }
 

@@ -99,8 +99,12 @@ type ManagementI18n = {
   };
   customerCategories: {
     activeSeason: (yearName: number) => string;
+    activeSeasonBadge: string;
     noActiveSeason: string;
     loading: string;
+    seasonFilterLabel: string;
+    customerFilterLabel: string;
+    allCustomersOption: string;
     noActiveSeasonForAdd: string;
     noCustomers: string;
     selectCustomer: string;
@@ -231,8 +235,12 @@ const MANAGEMENT_I18N: Record<AppLang, ManagementI18n> = {
     },
     customerCategories: {
       activeSeason: (yearName) => `עונה פעילה: ${yearName}`,
+      activeSeasonBadge: 'פעילה',
       noActiveSeason: 'אין עונה פעילה כרגע',
       loading: 'טוען קטגוריות לקוחות...',
+      seasonFilterLabel: 'סינון לפי עונה',
+      customerFilterLabel: 'סינון לפי לקוח',
+      allCustomersOption: 'כל הלקוחות',
       noActiveSeasonForAdd: 'לא נמצאה עונה פעילה. יש להגדיר עונה פעילה לפני הוספת קטגוריות.',
       noCustomers: 'אין לקוחות במערכת. יש להוסיף לקוח לפני הגדרת קטגוריה.',
       selectCustomer: 'יש לבחור לקוח.',
@@ -361,8 +369,12 @@ const MANAGEMENT_I18N: Record<AppLang, ManagementI18n> = {
     },
     customerCategories: {
       activeSeason: (yearName) => `Active season: ${yearName}`,
+      activeSeasonBadge: 'Active',
       noActiveSeason: 'No active season right now',
       loading: 'Loading customer categories...',
+      seasonFilterLabel: 'Filter by season',
+      customerFilterLabel: 'Filter by customer',
+      allCustomersOption: 'All customers',
       noActiveSeasonForAdd: 'No active season found. Set an active season before adding categories.',
       noCustomers: 'No customers found. Add a customer before creating a category.',
       selectCustomer: 'Please select a customer.',

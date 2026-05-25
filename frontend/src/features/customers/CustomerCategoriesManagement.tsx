@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { GlobalScopedFilters, type GlobalScopedFiltersApi } from '../../components/ui/GlobalScopedFilters';
 import { fetchCustomers } from '../../store/customersSlice';
 import { fetchSeasons } from '../../store/seasonsSlice';
 import {
@@ -13,6 +14,11 @@ import type { AppDispatch, RootState } from '../../store';
 import { sanitizeText } from '../../utils/inputValidation';
 import type { Currency, Grade } from '../../services/customerCategoriesApi';
 import { getManagementI18n, resolveAppLang } from '../settings/managementI18n';
+import {
+  buildCustomerCategoriesFiltersConfig,
+  parseCustomerFilterId,
+  parseSeasonFilterId,
+} from './customerCategoriesFilters';
 
 const GRADES: Grade[] = ['א', 'ב', 'ג', 'ד', 'ה', 'ו'];
 const CURRENCIES: Currency[] = ['ILS', 'USD', 'EUR'];
@@ -77,18 +83,43 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const t = getManagementI18n(resolveAppLang()).customerCategories;
 
+  const [globalFilterValues, setGlobalFilterValues] = useState<Record<string, string>>({
+    seasonId: activeSeasonId ? String(activeSeasonId) : '',
+    customerId: 'all',
+  });
+  const filtersApiRef = useRef<GlobalScopedFiltersApi | null>(null);
+
   useEffect(() => {
     dispatch(fetchSeasons());
     dispatch(fetchCustomers());
   }, [dispatch]);
 
+  const seasonFilterId = useMemo(() => {
+    return parseSeasonFilterId(globalFilterValues.seasonId ?? '');
+  }, [globalFilterValues.seasonId]);
+
+  const customerFilterId = useMemo<number | 'all'>(() => {
+    return parseCustomerFilterId(globalFilterValues.customerId ?? 'all');
+  }, [globalFilterValues.customerId]);
+
   useEffect(() => {
-    if (!activeSeasonId) {
+    if (activeSeasonId && (seasonFilterId === null || !seasons.some((season) => season.id === seasonFilterId))) {
+      filtersApiRef.current?.setFilterValue('seasonId', String(activeSeasonId));
       return;
     }
 
-    dispatch(fetchCustomerCategories(activeSeasonId));
-  }, [dispatch, activeSeasonId]);
+    if (!activeSeasonId && seasonFilterId !== null && !seasons.some((season) => season.id === seasonFilterId)) {
+      filtersApiRef.current?.setFilterValue('seasonId', seasons[0] ? String(seasons[0].id) : '');
+    }
+  }, [activeSeasonId, seasonFilterId, seasons]);
+
+  useEffect(() => {
+    if (!seasonFilterId) {
+      return;
+    }
+
+    dispatch(fetchCustomerCategories(seasonFilterId));
+  }, [dispatch, seasonFilterId]);
 
   const sortedCustomers = useMemo(
     () => [...customers].sort((a, b) => a.customerName.localeCompare(b.customerName, 'he')),
@@ -127,26 +158,45 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
     [categoriesWithResolvedCustomer],
   );
 
-  useEffect(() => {
-    if (selectedCategoryId && !sortedCategories.some((category) => category.id === selectedCategoryId)) {
-      setSelectedCategoryId(null);
-    }
-  }, [selectedCategoryId, sortedCategories]);
-
-  const selectedCategory = useMemo(
-    () => sortedCategories.find((category) => category.id === selectedCategoryId) ?? null,
-    [selectedCategoryId, sortedCategories],
+  const filteredCategories = useMemo(
+    () =>
+      sortedCategories.filter((category) =>
+        customerFilterId === 'all' ? true : category.customerId === customerFilterId,
+      ),
+    [sortedCategories, customerFilterId],
   );
 
-  const activeSeason = useMemo(
-    () => seasons.find((season) => season.id === activeSeasonId) ?? null,
-    [seasons, activeSeasonId],
+  useEffect(() => {
+    if (selectedCategoryId && !filteredCategories.some((category) => category.id === selectedCategoryId)) {
+      setSelectedCategoryId(null);
+    }
+  }, [selectedCategoryId, filteredCategories]);
+
+  const selectedCategory = useMemo(
+    () => filteredCategories.find((category) => category.id === selectedCategoryId) ?? null,
+    [selectedCategoryId, filteredCategories],
+  );
+
+  const selectedSeason = useMemo(
+    () => seasons.find((season) => season.id === seasonFilterId) ?? null,
+    [seasons, seasonFilterId],
+  );
+
+  const filters = useMemo(
+    () =>
+      buildCustomerCategoriesFiltersConfig({
+        activeSeasonId,
+        seasons,
+        customers: sortedCustomers,
+        t,
+      }),
+    [activeSeasonId, seasons, sortedCustomers, t],
   );
 
   const validateFormState = (state: CategoryFormState): { ok: true; payload: { customerId: number; name: string; grade: Grade; price: number; currency: Currency } } | { ok: false; error: string } => {
     const sanitizedName = sanitizeText(state.name);
 
-    if (!activeSeasonId) {
+    if (!seasonFilterId) {
       return { ok: false, error: t.noActiveSeasonForAdd };
     }
 
@@ -184,7 +234,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
   };
 
   const handleOpenAddDialog = () => {
-    if (!activeSeasonId) {
+    if (!seasonFilterId) {
       setAddError(t.noActiveSeasonForAdd);
       return;
     }
@@ -235,7 +285,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
 
     const actionResult = await dispatch(
       addCustomerCategory({
-        seasonId: activeSeasonId as number,
+        seasonId: seasonFilterId as number,
         ...validation.payload,
       }),
     );
@@ -269,7 +319,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
     const actionResult = await dispatch(
       editCustomerCategory({
         id: selectedCategory.id,
-        seasonId: activeSeasonId as number,
+        seasonId: seasonFilterId as number,
         ...validation.payload,
       }),
     );
@@ -309,7 +359,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
     setIsDeleteDialogOpen(false);
   };
 
-  const isAddDisabled = loading || !activeSeasonId || sortedCustomers.length === 0;
+  const isAddDisabled = loading || !seasonFilterId || sortedCustomers.length === 0;
   const isEditDisabled = !selectedCategory || loading;
   const isDeleteDisabled = !selectedCategory || loading;
   const shownError = addError ?? editError ?? deleteError ?? error;
@@ -320,7 +370,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
     }
 
     onHeaderStateChange({
-      count: sortedCategories.length,
+      count: filteredCategories.length,
       isAddDisabled,
       isEditDisabled,
       isDeleteDisabled,
@@ -328,7 +378,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
       onEdit: handleOpenEditDialog,
       onDelete: handleOpenDeleteDialog,
     });
-  }, [onHeaderStateChange, sortedCategories.length, isAddDisabled, isEditDisabled, isDeleteDisabled, selectedCategory, loading, activeSeasonId, sortedCustomers.length]);
+  }, [onHeaderStateChange, filteredCategories.length, isAddDisabled, isEditDisabled, isDeleteDisabled, selectedCategory, loading, seasonFilterId, sortedCustomers.length]);
 
   useEffect(() => () => {
     onHeaderStateChange?.(null);
@@ -336,24 +386,38 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
 
   return (
     <div className="seasons-manager">
+      <GlobalScopedFilters
+        scope="customer-categories-management"
+        filters={filters}
+        className="customer-categories-manager__filters"
+        direction="rtl"
+        onValuesChange={(values) => {
+          setGlobalFilterValues(values);
+          setSelectedCategoryId(null);
+        }}
+        onApiReady={(api) => {
+          filtersApiRef.current = api;
+        }}
+      />
+
       <div className="seasons-manager__state">
-        {activeSeason ? t.activeSeason(activeSeason.yearName) : t.noActiveSeason}
+        {selectedSeason ? t.activeSeason(selectedSeason.yearName) : t.noActiveSeason}
       </div>
 
       {loading ? <p className="seasons-manager__state">{t.loading}</p> : null}
       {shownError ? <p className="seasons-manager__error">{shownError}</p> : null}
 
-      {!activeSeasonId ? (
+      {!seasonFilterId ? (
         <div className="seasons-manager__empty">{t.empty}</div>
       ) : null}
 
-      {activeSeasonId && sortedCategories.length === 0 && !loading ? (
+      {seasonFilterId && filteredCategories.length === 0 && !loading ? (
         <div className="seasons-manager__empty">{t.categoryForSeasonEmpty}</div>
       ) : null}
 
-      {sortedCategories.length > 0 ? (
+      {filteredCategories.length > 0 ? (
         <ul className="seasons-manager__cards">
-          {sortedCategories.map((category) => {
+          {filteredCategories.map((category) => {
             const isSelected = selectedCategoryId === category.id;
             const badgeLabel = category.name.trim().slice(0, 2).toUpperCase() || '#';
 
