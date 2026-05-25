@@ -2,6 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { GlobalScopedFilters } from '../../components/ui/GlobalScopedFilters';
+import ManagementCardsGrid from '../../components/ui/ManagementCardsGrid';
+import ManagementSelectableCard from '../../components/ui/ManagementSelectableCard';
+import SettingsInnerTemplate from '../../components/ui/SettingsInnerTemplate';
 import { fetchCustomers } from '../../store/customersSlice';
 import { fetchSeasons } from '../../store/seasonsSlice';
 import { setScopeFilter } from '../../store/globalFiltersSlice';
@@ -397,63 +400,57 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
   }, [onHeaderStateChange]);
 
   return (
-    <div className="seasons-manager">
-      <GlobalScopedFilters
-        scope={FILTER_SCOPE}
-        filters={filters}
-        className="customer-categories-manager__filters"
-        direction="rtl"
-      />
-
-      <div className="seasons-manager__state">
-        {selectedSeason ? t.activeSeason(selectedSeason.yearName) : t.noActiveSeason}
-      </div>
-
-      {loading ? <p className="seasons-manager__state">{t.loading}</p> : null}
-      {shownError ? <p className="seasons-manager__error">{shownError}</p> : null}
-
-      {!seasonFilterId ? (
-        <div className="seasons-manager__empty">{t.empty}</div>
-      ) : null}
-
-      {seasonFilterId && filteredCategories.length === 0 && !loading ? (
-        <div className="seasons-manager__empty">{t.categoryForSeasonEmpty}</div>
-      ) : null}
-
+    <SettingsInnerTemplate
+      filters={(
+        <GlobalScopedFilters
+          scope={FILTER_SCOPE}
+          filters={filters}
+          className="customer-categories-manager__filters"
+          direction="rtl"
+        />
+      )}
+      info={(
+        <div className="seasons-manager__state">
+          {selectedSeason ? t.activeSeason(selectedSeason.yearName) : t.noActiveSeason}
+        </div>
+      )}
+      loadingMessage={loading ? t.loading : null}
+      errorMessage={shownError}
+      emptyMessage={!seasonFilterId ? t.empty : seasonFilterId && filteredCategories.length === 0 && !loading ? t.categoryForSeasonEmpty : null}
+    >
       {filteredCategories.length > 0 ? (
-        <ul className="seasons-manager__cards">
+        <ManagementCardsGrid>
           {filteredCategories.map((category) => {
             const isSelected = selectedCategoryId === category.id;
             const badgeLabel = category.name.trim().slice(0, 2).toUpperCase() || '#';
 
             return (
               <li key={category.id}>
-                <button
-                  type="button"
-                  className={`seasons-manager__card${isSelected ? ' is-selected' : ''}`}
-                  onClick={() => {
+                <ManagementSelectableCard
+                  isSelected={isSelected}
+                  badgeLabel={badgeLabel}
+                  onToggle={() => {
                     setSelectedCategoryId((previousId) => (previousId === category.id ? null : category.id));
                   }}
-                >
-                  <span className={`seasons-manager__selector${isSelected ? ' is-selected' : ''}`}>
-                    {isSelected ? '✓' : badgeLabel}
-                  </span>
-
-                  <span className="seasons-manager__card-main">
-                    <span className="seasons-manager__year">
-                      {category.name} | {t.grade} {category.grade}
-                    </span>
+                  topContent={
+                    <>
+                      <span className="seasons-manager__year">
+                        {category.name} | {t.grade} {category.grade}
+                      </span>
+                      <span className="seasons-manager__meta">{t.categoryId}: {category.id}</span>
+                    </>
+                  }
+                  bottomContent={
                     <span className="seasons-manager__meta customers-manager__meta">
                       <span className="customers-manager__meta-line">{t.customer}: {category.customerName}</span>
                       <span className="customers-manager__meta-line">{t.price}: {normalizePriceValue(category.price)} {category.currency}</span>
-                      <span className="customers-manager__meta-line">{t.categoryId}: {category.id}</span>
                     </span>
-                  </span>
-                </button>
+                  }
+                />
               </li>
             );
           })}
-        </ul>
+        </ManagementCardsGrid>
       ) : null}
 
       <ConfirmDialog
@@ -620,7 +617,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
           </div>
         </div>
       ) : null}
-    </div>
+    </SettingsInnerTemplate>
   );
 };
 

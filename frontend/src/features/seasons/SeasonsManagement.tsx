@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import ManagementCardsGrid from '../../components/ui/ManagementCardsGrid';
+import ManagementSelectableCard from '../../components/ui/ManagementSelectableCard';
+import SettingsInnerTemplate from '../../components/ui/SettingsInnerTemplate';
 import { addSeason, activateSeason, fetchSeasons, removeSeason } from '../../store/seasonsSlice';
 import type { AppDispatch, RootState } from '../../store';
 import { getManagementI18n, resolveAppLang } from '../settings/managementI18n';
@@ -160,73 +163,70 @@ const SeasonsManagement: React.FC<SeasonsManagementProps> = ({ onHeaderStateChan
 
 
   return (
-    <div className="seasons-manager">
-      <div className="seasons-manager__create-row">
-        <input
-          className="seasons-manager__year-input"
-          type="number"
-          min={MIN_SEASON_YEAR}
-          max={MAX_SEASON_YEAR}
-          step={1}
-          value={newSeasonYear}
-          onChange={(e) => setNewSeasonYear(e.target.value)}
-          placeholder={t.newSeasonPlaceholder(MIN_SEASON_YEAR, MAX_SEASON_YEAR)}
-        />
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={() => {
-            void handleAdd();
-          }}
-          disabled={loading}
-        >
-          {t.addSeason}
-        </button>
-      </div>
-
-      {loading ? <p className="seasons-manager__state">{t.loading}</p> : null}
-      {shownError ? <p className="seasons-manager__error">{shownError}</p> : null}
+    <SettingsInnerTemplate
+      toolbar={(
+        <div className="seasons-manager__create-row">
+          <input
+            className="seasons-manager__year-input"
+            type="number"
+            min={MIN_SEASON_YEAR}
+            max={MAX_SEASON_YEAR}
+            step={1}
+            value={newSeasonYear}
+            onChange={(e) => setNewSeasonYear(e.target.value)}
+            placeholder={t.newSeasonPlaceholder(MIN_SEASON_YEAR, MAX_SEASON_YEAR)}
+          />
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => {
+              void handleAdd();
+            }}
+            disabled={loading}
+          >
+            {t.addSeason}
+          </button>
+        </div>
+      )}
+      loadingMessage={loading ? t.loading : null}
+      errorMessage={shownError}
+      emptyMessage={sortedSeasons.length === 0 && !loading ? t.empty : null}
+    >
       {!isNewYearValid && newSeasonYear.trim() !== '' ? (
         <p className="seasons-manager__error">{t.yearRangeError(MIN_SEASON_YEAR, MAX_SEASON_YEAR)}</p>
       ) : null}
 
-      {sortedSeasons.length === 0 && !loading ? (
-        <div className="seasons-manager__empty">{t.empty}</div>
-      ) : null}
-
       {sortedSeasons.length > 0 ? (
-        <ul className="seasons-manager__cards">
+        <ManagementCardsGrid>
           {sortedSeasons.map((season) => {
             const isSelected = selectedSeasonId === season.id;
 
             return (
               <li key={season.id}>
-                <button
-                  type="button"
-                  className={`seasons-manager__card${isSelected ? ' is-selected' : ''}`}
-                  onClick={() => {
+                <ManagementSelectableCard
+                  isSelected={isSelected}
+                  badgeLabel={String(season.yearName).slice(-2)}
+                  onToggle={() => {
                     setSelectedSeasonId((previousSelectedId) =>
                       previousSelectedId === season.id ? null : season.id,
                     );
                   }}
-                >
-                  <span className={`seasons-manager__selector${isSelected ? ' is-selected' : ''}`}>
-                    {isSelected ? '✓' : String(season.yearName).slice(-2)}
-                  </span>
-
-                  <span className="seasons-manager__card-main">
-                    <span className="seasons-manager__year">{season.yearName}</span>
-                    <span className="seasons-manager__meta">{t.seasonId}: {season.id}</span>
-                  </span>
-
-                  <span className={`seasons-manager__card-status${season.isActive ? ' is-active' : ''}`}>
-                    {season.isActive ? t.active : t.inactive}
-                  </span>
-                </button>
+                  topContent={
+                    <>
+                      <span className="seasons-manager__year">{season.yearName}</span>
+                      <span className="seasons-manager__meta">{t.seasonId}: {season.id}</span>
+                    </>
+                  }
+                  topAside={
+                    <span className={`seasons-manager__card-status${season.isActive ? ' is-active' : ''}`}>
+                      {season.isActive ? t.active : t.inactive}
+                    </span>
+                  }
+                />
               </li>
             );
           })}
-        </ul>
+        </ManagementCardsGrid>
       ) : null}
 
       <ConfirmDialog
@@ -244,7 +244,7 @@ const SeasonsManagement: React.FC<SeasonsManagementProps> = ({ onHeaderStateChan
         }}
         onCancel={() => setIsDeleteDialogOpen(false)}
       />
-    </div>
+    </SettingsInnerTemplate>
   );
 };
 

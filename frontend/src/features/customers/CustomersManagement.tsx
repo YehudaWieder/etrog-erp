@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import ManagementCardsGrid from '../../components/ui/ManagementCardsGrid';
+import ManagementSelectableCard from '../../components/ui/ManagementSelectableCard';
+import SettingsInnerTemplate from '../../components/ui/SettingsInnerTemplate';
 import { addCustomer, editCustomer, fetchCustomers, removeCustomer } from '../../store/customersSlice';
 import type { AppDispatch, RootState } from '../../store';
 import { isValidEmail, isValidPhone, sanitizeEmail, sanitizePhone, sanitizeText } from '../../utils/inputValidation';
@@ -217,82 +220,79 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
   }, [onHeaderStateChange]);
 
   return (
-    <div className="seasons-manager">
-      <div className="seasons-manager__create-row">
-        <input
-          className="seasons-manager__year-input"
-          type="text"
-          value={newCustomerName}
-          onChange={(e) => setNewCustomerName(e.target.value)}
-          placeholder={t.newCustomerPlaceholder}
-        />
-        <input
-          className="seasons-manager__year-input"
-          type="email"
-          value={newCustomerEmail}
-          onChange={(e) => setNewCustomerEmail(e.target.value)}
-          placeholder={t.optionalEmailPlaceholder}
-        />
-        <input
-          className="seasons-manager__year-input"
-          type="text"
-          value={newCustomerPhone}
-          onChange={(e) => setNewCustomerPhone(e.target.value)}
-          placeholder={t.optionalPhonePlaceholder}
-        />
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={() => {
-            void handleAdd();
-          }}
-          disabled={loading}
-        >
-          {t.addCustomer}
-        </button>
-      </div>
-
-      {loading ? <p className="seasons-manager__state">{t.loading}</p> : null}
-      {shownError ? <p className="seasons-manager__error">{shownError}</p> : null}
-
-      {sortedCustomers.length === 0 && !loading ? (
-        <div className="seasons-manager__empty">{t.empty}</div>
-      ) : null}
-
+    <SettingsInnerTemplate
+      toolbar={(
+        <div className="seasons-manager__create-row">
+          <input
+            className="seasons-manager__year-input"
+            type="text"
+            value={newCustomerName}
+            onChange={(e) => setNewCustomerName(e.target.value)}
+            placeholder={t.newCustomerPlaceholder}
+          />
+          <input
+            className="seasons-manager__year-input"
+            type="email"
+            value={newCustomerEmail}
+            onChange={(e) => setNewCustomerEmail(e.target.value)}
+            placeholder={t.optionalEmailPlaceholder}
+          />
+          <input
+            className="seasons-manager__year-input"
+            type="text"
+            value={newCustomerPhone}
+            onChange={(e) => setNewCustomerPhone(e.target.value)}
+            placeholder={t.optionalPhonePlaceholder}
+          />
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => {
+              void handleAdd();
+            }}
+            disabled={loading}
+          >
+            {t.addCustomer}
+          </button>
+        </div>
+      )}
+      loadingMessage={loading ? t.loading : null}
+      errorMessage={shownError}
+      emptyMessage={sortedCustomers.length === 0 && !loading ? t.empty : null}
+    >
       {sortedCustomers.length > 0 ? (
-        <ul className="seasons-manager__cards">
+        <ManagementCardsGrid>
           {sortedCustomers.map((customer) => {
             const isSelected = selectedCustomerId === customer.id;
             const customerBadgeLabel = customer.customerName.trim().slice(0, 2).toUpperCase() || '#';
 
             return (
               <li key={customer.id}>
-                <button
-                  type="button"
-                  className={`seasons-manager__card${isSelected ? ' is-selected' : ''}`}
-                  onClick={() => {
+                <ManagementSelectableCard
+                  isSelected={isSelected}
+                  badgeLabel={customerBadgeLabel}
+                  onToggle={() => {
                     setSelectedCustomerId((previousSelectedId) =>
                       previousSelectedId === customer.id ? null : customer.id,
                     );
                   }}
-                >
-                  <span className={`seasons-manager__selector${isSelected ? ' is-selected' : ''}`}>
-                    {isSelected ? '✓' : customerBadgeLabel}
-                  </span>
-
-                  <span className="seasons-manager__card-main">
-                    <span className="seasons-manager__year">{customer.customerName}</span>
+                  topContent={
+                    <>
+                      <span className="seasons-manager__year">{customer.customerName}</span>
+                      <span className="seasons-manager__meta">{t.customerId}: {customer.id}</span>
+                    </>
+                  }
+                  bottomContent={
                     <span className="seasons-manager__meta customers-manager__meta">
-                      <span className="customers-manager__meta-line">{t.customerId}: {customer.id}</span>
                       <span className="customers-manager__meta-line">{t.email}: {customer.email || '-'}</span>
                       <span className="customers-manager__meta-line">{t.phone}: {customer.phone || '-'}</span>
                     </span>
-                  </span>
-                </button>
+                  }
+                />
               </li>
             );
           })}
-        </ul>
+        </ManagementCardsGrid>
       ) : null}
 
       <ConfirmDialog
@@ -365,7 +365,7 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
           </div>
         </div>
       ) : null}
-    </div>
+    </SettingsInnerTemplate>
   );
 };
 

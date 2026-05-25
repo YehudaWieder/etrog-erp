@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import ManagementCardsGrid from '../../components/ui/ManagementCardsGrid';
+import ManagementSelectableCard from '../../components/ui/ManagementSelectableCard';
+import SettingsInnerTemplate from '../../components/ui/SettingsInnerTemplate';
 import { addTrader, editTrader, fetchTraders, removeTrader } from '../../store/tradersSlice';
 import type { AppDispatch, RootState } from '../../store';
 import { getManagementI18n, resolveAppLang } from '../settings/managementI18n';
@@ -222,39 +225,42 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
   }, [onHeaderStateChange]);
 
   return (
-    <div className="seasons-manager">
-      <div className="seasons-manager__create-row">
-        <input
-          className="seasons-manager__year-input"
-          type="text"
-          value={newTraderName}
-          onChange={(e) => setNewTraderName(e.target.value)}
-          placeholder={t.newTraderPlaceholder}
-        />
-        <input
-          className="seasons-manager__year-input"
-          type="number"
-          min={MIN_PAYMENT_PERCENT}
-          max={MAX_PAYMENT_PERCENT}
-          step="0.01"
-          value={newTraderPercent}
-          onChange={(e) => setNewTraderPercent(e.target.value)}
-          placeholder={t.paymentPlaceholder}
-        />
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={() => {
-            void handleAdd();
-          }}
-          disabled={loading}
-        >
-          {t.addTrader}
-        </button>
-      </div>
-
-      {loading ? <p className="seasons-manager__state">{t.loading}</p> : null}
-      {shownError ? <p className="seasons-manager__error">{shownError}</p> : null}
+    <SettingsInnerTemplate
+      toolbar={(
+        <div className="seasons-manager__create-row">
+          <input
+            className="seasons-manager__year-input"
+            type="text"
+            value={newTraderName}
+            onChange={(e) => setNewTraderName(e.target.value)}
+            placeholder={t.newTraderPlaceholder}
+          />
+          <input
+            className="seasons-manager__year-input"
+            type="number"
+            min={MIN_PAYMENT_PERCENT}
+            max={MAX_PAYMENT_PERCENT}
+            step="0.01"
+            value={newTraderPercent}
+            onChange={(e) => setNewTraderPercent(e.target.value)}
+            placeholder={t.paymentPlaceholder}
+          />
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => {
+              void handleAdd();
+            }}
+            disabled={loading}
+          >
+            {t.addTrader}
+          </button>
+        </div>
+      )}
+      loadingMessage={loading ? t.loading : null}
+      errorMessage={shownError}
+      emptyMessage={sortedTraders.length === 0 && !loading ? t.empty : null}
+    >
       {newTraderName.trim() === '' && newTraderName !== '' ? (
         <p className="seasons-manager__error">{t.emptyName}</p>
       ) : null}
@@ -265,43 +271,38 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
         <p className="seasons-manager__error">{t.invalidPercent}</p>
       ) : null}
 
-      {sortedTraders.length === 0 && !loading ? (
-        <div className="seasons-manager__empty">{t.empty}</div>
-      ) : null}
-
       {sortedTraders.length > 0 ? (
-        <ul className="seasons-manager__cards">
+        <ManagementCardsGrid>
           {sortedTraders.map((trader) => {
             const isSelected = selectedTraderId === trader.id;
             const traderBadgeLabel = trader.name.trim().slice(0, 2).toUpperCase() || '#';
 
             return (
               <li key={trader.id}>
-                <button
-                  type="button"
-                  className={`seasons-manager__card${isSelected ? ' is-selected' : ''}`}
-                  onClick={() => {
+                <ManagementSelectableCard
+                  isSelected={isSelected}
+                  badgeLabel={traderBadgeLabel}
+                  onToggle={() => {
                     setSelectedTraderId((previousSelectedId) =>
                       previousSelectedId === trader.id ? null : trader.id,
                     );
                   }}
-                >
-                  <span className={`seasons-manager__selector${isSelected ? ' is-selected' : ''}`}>
-                    {isSelected ? '✓' : traderBadgeLabel}
-                  </span>
-
-                  <span className="seasons-manager__card-main">
-                    <span className="seasons-manager__year">{trader.name}</span>
-                    <span className="seasons-manager__meta">
-                      {t.traderId}: {trader.id}
-                      {typeof trader.paymentPercent === 'number' ? ` | ${t.paymentPercentLabel}: ${trader.paymentPercent}%` : ''}
-                    </span>
-                  </span>
-                </button>
+                  topContent={
+                    <>
+                      <span className="seasons-manager__year">{trader.name}</span>
+                      <span className="seasons-manager__meta">{t.traderId}: {trader.id}</span>
+                    </>
+                  }
+                  bottomContent={
+                    typeof trader.paymentPercent === 'number' ? (
+                      <span className="seasons-manager__meta">{t.paymentPercentLabel}: {trader.paymentPercent}%</span>
+                    ) : null
+                  }
+                />
               </li>
             );
           })}
-        </ul>
+        </ManagementCardsGrid>
       ) : null}
 
       <ConfirmDialog
@@ -369,7 +370,7 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
           </div>
         </div>
       ) : null}
-    </div>
+    </SettingsInnerTemplate>
   );
 };
 

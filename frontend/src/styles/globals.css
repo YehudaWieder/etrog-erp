@@ -1596,14 +1596,6 @@ select {
   box-shadow: 0 0 0 3px rgba(255, 202, 43, 0.04), 0 10px 24px rgba(0, 0, 0, 0.05);
 }
 
-.profile-mini-card__header {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-3);
-}
-
 .profile-mini-card__avatar {
   width: 48px;
   height: 48px;
@@ -1627,6 +1619,10 @@ select {
 
 .profile-mini-card__identity {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
 }
 
 .profile-mini-card__name {
@@ -1637,6 +1633,7 @@ select {
 }
 
 .profile-mini-card__id {
+  display: block;
   margin: 2px 0 0;
   color: var(--color-text-muted);
   font-size: 0.86rem;
@@ -1646,6 +1643,8 @@ select {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  width: 100%;
+  min-width: 0;
 }
 
 .profile-mini-card__rows .profile-detail-row {
@@ -2069,6 +2068,10 @@ select {
   gap: var(--space-4);
 }
 
+.settings-inner-template {
+  width: 100%;
+}
+
 .seasons-manager__header {
   display: flex;
   flex-direction: column;
@@ -2179,6 +2182,10 @@ select {
   gap: var(--space-3);
 }
 
+.seasons-manager__cards--uniform .seasons-manager__card {
+  min-height: var(--uniform-card-min-height, 0px);
+}
+
 .seasons-manager__card {
   width: 100%;
   border: 1px solid rgba(226, 230, 235, 0.95);
@@ -2186,9 +2193,9 @@ select {
   border-radius: 14px;
   padding: var(--space-4);
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
   cursor: pointer;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
   text-align: start;
@@ -2205,13 +2212,50 @@ select {
   box-shadow: 0 0 0 3px rgba(255, 202, 43, 0.05), 0 10px 24px rgba(0, 0, 0, 0.05);
 }
 
-.seasons-manager__card-main {
+.seasons-manager__card-shell {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: var(--space-3);
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 100%;
+}
+
+.seasons-manager__card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.seasons-manager__card-top-main {
   display: flex;
   flex-direction: column;
   gap: 4px;
   align-items: flex-start;
   min-width: 0;
   flex: 1;
+}
+
+.seasons-manager__card-top-aside {
+  display: inline-flex;
+  align-items: flex-start;
+  margin-inline-start: auto;
+}
+
+.seasons-manager__card-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.seasons-manager__card-bottom > * {
+  width: 100%;
+  min-width: 0;
 }
 
 .seasons-manager__year {
@@ -2318,10 +2362,6 @@ select {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-}
-
-.default-trader-categories-manager__card-top {
-  margin-bottom: var(--space-2);
 }
 
 .default-trader-categories-manager__rows {
@@ -2499,10 +2539,6 @@ select {
 
   .profile-editor__form-grid {
     grid-template-columns: 1fr;
-  }
-
-  .profile-mini-card__header {
-    grid-template-columns: auto 1fr;
   }
 
   .settings-workspace {

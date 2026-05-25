@@ -2,6 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { GlobalScopedFilters } from '../../components/ui/GlobalScopedFilters';
+import ManagementCardsGrid from '../../components/ui/ManagementCardsGrid';
+import ManagementSelectableCard from '../../components/ui/ManagementSelectableCard';
+import SettingsInnerTemplate from '../../components/ui/SettingsInnerTemplate';
 import {
   createTraderCategoryWithShares,
   deleteTraderCategory,
@@ -430,50 +433,46 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
   }, [onHeaderStateChange]);
 
   return (
-    <div className="seasons-manager">
-      <GlobalScopedFilters
-        scope={FILTER_SCOPE}
-        filters={filters}
-        className="customer-categories-manager__filters"
-        direction="rtl"
-      />
-
-      {loading ? <p className="seasons-manager__state">{t.loading}</p> : null}
-      {sortedTraders.length === 0 && !loading ? <p className="seasons-manager__error">{t.noTraders}</p> : null}
-      {shownError ? <p className="seasons-manager__error">{shownError}</p> : null}
-
-      {!seasonFilterId ? <div className="seasons-manager__empty">{t.noSeasonSelected}</div> : null}
-
-      {seasonFilterId && filteredCategories.length === 0 && !loading ? (
-        <div className="seasons-manager__empty">{t.empty}</div>
-      ) : null}
+    <SettingsInnerTemplate
+      filters={(
+        <GlobalScopedFilters
+          scope={FILTER_SCOPE}
+          filters={filters}
+          className="customer-categories-manager__filters"
+          direction="rtl"
+        />
+      )}
+      loadingMessage={loading ? t.loading : null}
+      errorMessage={shownError ?? (sortedTraders.length === 0 && !loading ? t.noTraders : null)}
+      emptyMessage={!seasonFilterId ? t.noSeasonSelected : seasonFilterId && filteredCategories.length === 0 && !loading ? t.empty : null}
+    >
 
       {filteredCategories.length > 0 ? (
-        <ul className="seasons-manager__cards">
+        <ManagementCardsGrid>
           {filteredCategories.map((category) => {
             const isSelected = selectedCategoryId === category.id;
             const badge = category.name.trim().slice(0, 2).toUpperCase() || '#';
 
             return (
               <li key={category.id}>
-                <button
-                  type="button"
-                  className={`seasons-manager__card${isSelected ? ' is-selected' : ''}`}
-                  onClick={() => {
+                <ManagementSelectableCard
+                  isSelected={isSelected}
+                  badgeLabel={badge}
+                  selector={
+                    <span className={`profile-mini-card__avatar${isSelected ? ' is-selected' : ''}`}>
+                      {isSelected ? '✓' : badge}
+                    </span>
+                  }
+                  onToggle={() => {
                     setSelectedCategoryId((currentId) => (currentId === category.id ? null : category.id));
                   }}
-                >
-                  <span className="seasons-manager__card-main">
-                    <span className="profile-mini-card__header default-trader-categories-manager__card-top">
-                      <span className={`profile-mini-card__avatar${isSelected ? ' is-selected' : ''}`}>
-                        {isSelected ? '✓' : badge}
-                      </span>
-                      <span className="profile-mini-card__identity">
-                        <span className="seasons-manager__year">{category.name}</span>
-                        <span className="default-trader-categories-manager__top-id">{t.categoryId}: {category.id}</span>
-                      </span>
+                  topContent={
+                    <span className="profile-mini-card__identity">
+                      <span className="seasons-manager__year">{category.name}</span>
+                      <span className="default-trader-categories-manager__top-id">{t.categoryId}: {category.id}</span>
                     </span>
-
+                  }
+                  bottomContent={
                     <span className="profile-mini-card__rows default-trader-categories-manager__rows">
                       {category.notes ? (
                         <span className="profile-detail-row">
@@ -494,12 +493,12 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
                         </>
                       ) : null}
                     </span>
-                  </span>
-                </button>
+                  }
+                />
               </li>
             );
           })}
-        </ul>
+        </ManagementCardsGrid>
       ) : null}
 
       <ConfirmDialog
@@ -631,7 +630,7 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
           </div>
         </div>
       ) : null}
-    </div>
+    </SettingsInnerTemplate>
   );
 };
 

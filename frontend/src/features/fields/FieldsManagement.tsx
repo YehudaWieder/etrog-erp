@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import ManagementCardsGrid from '../../components/ui/ManagementCardsGrid';
+import ManagementSelectableCard from '../../components/ui/ManagementSelectableCard';
+import SettingsInnerTemplate from '../../components/ui/SettingsInnerTemplate';
 import { addField, editField, fetchFields, removeField } from '../../store/fieldsSlice';
 import type { AppDispatch, RootState } from '../../store';
 import { getManagementI18n, resolveAppLang } from '../settings/managementI18n';
@@ -164,67 +167,63 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
   }, [onHeaderStateChange]);
 
   return (
-    <div className="seasons-manager">
-      <div className="seasons-manager__create-row">
-        <input
-          className="seasons-manager__year-input"
-          type="text"
-          value={newFieldName}
-          onChange={(e) => setNewFieldName(e.target.value)}
-          placeholder={t.newFieldPlaceholder}
-        />
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={() => {
-            void handleAdd();
-          }}
-          disabled={loading}
-        >
-          {t.addField}
-        </button>
-      </div>
-
-      {loading ? <p className="seasons-manager__state">{t.loading}</p> : null}
-      {shownError ? <p className="seasons-manager__error">{shownError}</p> : null}
+    <SettingsInnerTemplate
+      toolbar={(
+        <div className="seasons-manager__create-row">
+          <input
+            className="seasons-manager__year-input"
+            type="text"
+            value={newFieldName}
+            onChange={(e) => setNewFieldName(e.target.value)}
+            placeholder={t.newFieldPlaceholder}
+          />
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => {
+              void handleAdd();
+            }}
+            disabled={loading}
+          >
+            {t.addField}
+          </button>
+        </div>
+      )}
+      loadingMessage={loading ? t.loading : null}
+      errorMessage={shownError}
+      emptyMessage={sortedFields.length === 0 && !loading ? t.empty : null}
+    >
       {newFieldName.trim() === '' && newFieldName !== '' ? (
         <p className="seasons-manager__error">{t.emptyName}</p>
       ) : null}
 
-      {sortedFields.length === 0 && !loading ? (
-        <div className="seasons-manager__empty">{t.empty}</div>
-      ) : null}
-
       {sortedFields.length > 0 ? (
-        <ul className="seasons-manager__cards">
+        <ManagementCardsGrid>
           {sortedFields.map((field) => {
             const isSelected = selectedFieldId === field.id;
             const fieldBadgeLabel = field.name.trim().slice(0, 2).toUpperCase() || '#';
 
             return (
               <li key={field.id}>
-                <button
-                  type="button"
-                  className={`seasons-manager__card${isSelected ? ' is-selected' : ''}`}
-                  onClick={() => {
+                <ManagementSelectableCard
+                  isSelected={isSelected}
+                  badgeLabel={fieldBadgeLabel}
+                  onToggle={() => {
                     setSelectedFieldId((previousSelectedId) =>
                       previousSelectedId === field.id ? null : field.id,
                     );
                   }}
-                >
-                  <span className={`seasons-manager__selector${isSelected ? ' is-selected' : ''}`}>
-                    {isSelected ? '✓' : fieldBadgeLabel}
-                  </span>
-
-                  <span className="seasons-manager__card-main">
-                    <span className="seasons-manager__year">{field.name}</span>
-                    <span className="seasons-manager__meta">{t.fieldId}: {field.id}</span>
-                  </span>
-                </button>
+                  topContent={
+                    <>
+                      <span className="seasons-manager__year">{field.name}</span>
+                      <span className="seasons-manager__meta">{t.fieldId}: {field.id}</span>
+                    </>
+                  }
+                />
               </li>
             );
           })}
-        </ul>
+        </ManagementCardsGrid>
       ) : null}
 
       <ConfirmDialog
@@ -279,7 +278,7 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
           </div>
         </div>
       ) : null}
-    </div>
+    </SettingsInnerTemplate>
   );
 };
 

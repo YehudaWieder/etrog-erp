@@ -19,6 +19,9 @@ import {
 import { PROFILE_I18N } from './i18n';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import ManagementCardsGrid from '../../components/ui/ManagementCardsGrid';
+import ManagementSelectableCard from '../../components/ui/ManagementSelectableCard';
+import SettingsInnerTemplate from '../../components/ui/SettingsInnerTemplate';
 import { isValidEmail, isValidPhone, sanitizeEmail, sanitizePhone, sanitizeText } from '../../utils/inputValidation';
 
 const DEFAULT_PROFILE_ITEM_ID = 'my-profile';
@@ -710,93 +713,106 @@ export function ProfilePage() {
         </section>
       ) : isProfilesListView ? (
         <section className="profiles-list-hub">
-          <p className="profile-hub__description">{content.description}</p>
-          {isLoadingProfilesList ? <p className="profile-hub__loading">{t.profilesList.loading}</p> : null}
-          {profilesListError ? <p className="profile-hub__notice">{profilesListError}</p> : null}
+          <SettingsInnerTemplate
+            info={<p className="profile-hub__description">{content.description}</p>}
+            loadingMessage={isLoadingProfilesList ? t.profilesList.loading : null}
+            errorMessage={profilesListError || null}
+          >
+            {!isLoadingProfilesList && !profilesListError && filteredProfilesList.length === 0 ? (
+              <div className="shipments-empty-state">
+                <h2 className="shipments-empty-title">{content.title}</h2>
+                <p className="shipments-empty-desc">{t.profilesList.empty}</p>
+              </div>
+            ) : null}
 
-          {!isLoadingProfilesList && !profilesListError && filteredProfilesList.length === 0 ? (
-            <div className="shipments-empty-state">
-              <h2 className="shipments-empty-title">{content.title}</h2>
-              <p className="shipments-empty-desc">{t.profilesList.empty}</p>
-            </div>
-          ) : null}
+            {!isLoadingProfilesList && !profilesListError && filteredProfilesList.length > 0 ? (
+              <ManagementCardsGrid className="profiles-list-grid">
+                {filteredProfilesList.map((item) => {
+                  const initials = item.name
+                    .split(/\s+/)
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .map((part) => part.charAt(0))
+                    .join('')
+                    .toUpperCase();
 
-          {!isLoadingProfilesList && !profilesListError && filteredProfilesList.length > 0 ? (
-            <div className="profiles-list-grid">
-              {filteredProfilesList.map((item) => {
-                const initials = item.name
-                  .split(/\s+/)
-                  .filter(Boolean)
-                  .slice(0, 2)
-                  .map((part) => part.charAt(0))
-                  .join('')
-                  .toUpperCase();
+                  const isSelected = item.id === selectedManagedProfileId;
 
-                return (
-                  <article
-                    key={item.id}
-                    className={`profile-mini-card${item.id === selectedManagedProfileId ? ' is-selected' : ''}`}
-                    onClick={() => {
-                      if (canManageProfiles) {
-                        setSelectedManagedProfileId((prev) => (prev === item.id ? null : item.id));
-                      }
-                    }}
-                  >
-                    <div className="profile-mini-card__header">
-                      <div
-                        className={`profile-mini-card__avatar${item.id === selectedManagedProfileId ? ' is-selected' : ''}`}
-                        aria-hidden="true"
-                      >
-                        {item.id === selectedManagedProfileId ? '✓' : initials || 'U'}
-                      </div>
-                      <div className="profile-mini-card__identity">
-                        <h3 className="profile-mini-card__name">{item.name}</h3>
-                        <p className="profile-mini-card__id">{`${t.profileCard.fields.id}: ${item.id}`}</p>
-                      </div>
-                      {typeof item.isActive === 'boolean' ? (
-                        <span className="profile-hub__status" data-active={item.isActive ? 'true' : 'false'}>
-                          {item.isActive ? t.profileCard.active : t.profileCard.inactive}
-                        </span>
-                      ) : null}
-                    </div>
+                  return (
+                    <li key={item.id}>
+                      <ManagementSelectableCard
+                        className="profile-mini-card"
+                        isSelected={isSelected}
+                        badgeLabel={initials || 'U'}
+                        onToggle={() => {
+                          if (!canManageProfiles) {
+                            return;
+                          }
 
-                    <div className="profile-mini-card__rows">
-                      {item.email ? (
-                        <div className="profile-detail-row">
-                          <span className="profile-detail-row__label">{t.profileCard.fields.email}</span>
-                          <strong className="profile-detail-row__value">{item.email}</strong>
-                        </div>
-                      ) : null}
-                      {item.phone ? (
-                        <div className="profile-detail-row">
-                          <span className="profile-detail-row__label">{t.profileCard.fields.phone}</span>
-                          <strong className="profile-detail-row__value">{item.phone}</strong>
-                        </div>
-                      ) : null}
-                      {item.role ? (
-                        <div className="profile-detail-row">
-                          <span className="profile-detail-row__label">{t.profileCard.fields.role}</span>
-                          <strong className="profile-detail-row__value">{item.role}</strong>
-                        </div>
-                      ) : null}
-                      {item.createdAt ? (
-                        <div className="profile-detail-row">
-                          <span className="profile-detail-row__label">{t.profileCard.fields.createdAt}</span>
-                          <strong className="profile-detail-row__value">{formatDate(item.createdAt)}</strong>
-                        </div>
-                      ) : null}
-                      {item.updatedAt ? (
-                        <div className="profile-detail-row">
-                          <span className="profile-detail-row__label">{t.profileCard.fields.updatedAt}</span>
-                          <strong className="profile-detail-row__value">{formatDate(item.updatedAt)}</strong>
-                        </div>
-                      ) : null}
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          ) : null}
+                          setSelectedManagedProfileId((prev) => (prev === item.id ? null : item.id));
+                        }}
+                        selector={
+                          <span
+                            className={`profile-mini-card__avatar${isSelected ? ' is-selected' : ''}`}
+                            aria-hidden="true"
+                          >
+                            {isSelected ? '✓' : initials || 'U'}
+                          </span>
+                        }
+                        topContent={
+                          <span className="profile-mini-card__identity">
+                            <span className="profile-mini-card__name">{item.name}</span>
+                            <span className="profile-mini-card__id">{`${t.profileCard.fields.id}: ${item.id}`}</span>
+                          </span>
+                        }
+                        topAside={
+                          typeof item.isActive === 'boolean' ? (
+                            <span className="profile-hub__status" data-active={item.isActive ? 'true' : 'false'}>
+                              {item.isActive ? t.profileCard.active : t.profileCard.inactive}
+                            </span>
+                          ) : null
+                        }
+                        bottomContent={
+                          <span className="profile-mini-card__rows">
+                            {item.email ? (
+                              <span className="profile-detail-row">
+                                <span className="profile-detail-row__label">{t.profileCard.fields.email}</span>
+                                <strong className="profile-detail-row__value">{item.email}</strong>
+                              </span>
+                            ) : null}
+                            {item.phone ? (
+                              <span className="profile-detail-row">
+                                <span className="profile-detail-row__label">{t.profileCard.fields.phone}</span>
+                                <strong className="profile-detail-row__value">{item.phone}</strong>
+                              </span>
+                            ) : null}
+                            {item.role ? (
+                              <span className="profile-detail-row">
+                                <span className="profile-detail-row__label">{t.profileCard.fields.role}</span>
+                                <strong className="profile-detail-row__value">{item.role}</strong>
+                              </span>
+                            ) : null}
+                            {item.createdAt ? (
+                              <span className="profile-detail-row">
+                                <span className="profile-detail-row__label">{t.profileCard.fields.createdAt}</span>
+                                <strong className="profile-detail-row__value">{formatDate(item.createdAt)}</strong>
+                              </span>
+                            ) : null}
+                            {item.updatedAt ? (
+                              <span className="profile-detail-row">
+                                <span className="profile-detail-row__label">{t.profileCard.fields.updatedAt}</span>
+                                <strong className="profile-detail-row__value">{formatDate(item.updatedAt)}</strong>
+                              </span>
+                            ) : null}
+                          </span>
+                        }
+                      />
+                    </li>
+                  );
+                })}
+              </ManagementCardsGrid>
+            ) : null}
+          </SettingsInnerTemplate>
 
           <ConfirmDialog
             open={showManagerDeleteDialog}
