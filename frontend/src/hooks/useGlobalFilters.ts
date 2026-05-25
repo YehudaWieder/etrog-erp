@@ -4,6 +4,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '../store';
 import { setScopeFilter, setScopeFilters } from '../store/globalFiltersSlice';
 
+const EMPTY_SCOPE_FILTERS: Record<string, string> = {};
+
 export type GlobalFilterDefinition = {
   key: string;
   defaultValue: string;
@@ -29,7 +31,9 @@ function areFilterMapsEqual(a: Record<string, string>, b: Record<string, string>
 export function useGlobalFilters(scope: string, definitions: GlobalFilterDefinition[]): UseGlobalFiltersResult {
   const dispatch = useDispatch<AppDispatch>();
   const [searchParams, setSearchParams] = useSearchParams();
-  const scopeFilters = useSelector((state: RootState) => state.globalFilters.scopes[scope] ?? {});
+  const scopeFilters = useSelector(
+    (state: RootState) => state.globalFilters.scopes[scope] ?? EMPTY_SCOPE_FILTERS,
+  );
 
   const resolvedValues = useMemo(() => {
     const next: Record<string, string> = {};
@@ -47,6 +51,12 @@ export function useGlobalFilters(scope: string, definitions: GlobalFilterDefinit
     for (const definition of definitions) {
       const queryKey = definition.queryParam ?? definition.key;
       const queryValue = searchParams.get(queryKey);
+      const scopeValue = scopeFilters[definition.key];
+
+      if (scopeValue !== undefined) {
+        mergedValues[definition.key] = scopeValue;
+        continue;
+      }
 
       if (queryValue !== null) {
         mergedValues[definition.key] = queryValue;
@@ -84,7 +94,7 @@ export function useGlobalFilters(scope: string, definitions: GlobalFilterDefinit
       }
     }
 
-    if (hasChanged) {
+    if (hasChanged && nextParams.toString() !== searchParams.toString()) {
       setSearchParams(nextParams, { replace: true });
     }
   }, [definitions, resolvedValues, searchParams, setSearchParams]);

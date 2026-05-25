@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
-import { GlobalScopedFilters, type GlobalScopedFiltersApi } from '../../components/ui/GlobalScopedFilters';
+import { GlobalScopedFilters } from '../../components/ui/GlobalScopedFilters';
 import { fetchCustomers } from '../../store/customersSlice';
 import { fetchSeasons } from '../../store/seasonsSlice';
+import { setScopeFilter } from '../../store/globalFiltersSlice';
 import {
   addCustomerCategory,
   editCustomerCategory,
@@ -22,6 +23,8 @@ import {
 
 const GRADES: Grade[] = ['א', 'ב', 'ג', 'ד', 'ה', 'ו'];
 const CURRENCIES: Currency[] = ['ILS', 'USD', 'EUR'];
+const FILTER_SCOPE = 'customer-categories-management';
+const EMPTY_FILTERS: Record<string, string> = {};
 
 type CategoryFormState = {
   customerId: number | '';
@@ -82,12 +85,9 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
   const [editError, setEditError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const t = getManagementI18n(resolveAppLang()).customerCategories;
-
-  const [globalFilterValues, setGlobalFilterValues] = useState<Record<string, string>>({
-    seasonId: activeSeasonId ? String(activeSeasonId) : '',
-    customerId: 'all',
-  });
-  const filtersApiRef = useRef<GlobalScopedFiltersApi | null>(null);
+  const globalFilterValues = useSelector(
+    (state: RootState) => state.globalFilters.scopes[FILTER_SCOPE] ?? EMPTY_FILTERS,
+  );
 
   useEffect(() => {
     dispatch(fetchSeasons());
@@ -104,14 +104,26 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
 
   useEffect(() => {
     if (activeSeasonId && (seasonFilterId === null || !seasons.some((season) => season.id === seasonFilterId))) {
-      filtersApiRef.current?.setFilterValue('seasonId', String(activeSeasonId));
+      dispatch(
+        setScopeFilter({
+          scope: FILTER_SCOPE,
+          key: 'seasonId',
+          value: String(activeSeasonId),
+        }),
+      );
       return;
     }
 
     if (!activeSeasonId && seasonFilterId !== null && !seasons.some((season) => season.id === seasonFilterId)) {
-      filtersApiRef.current?.setFilterValue('seasonId', seasons[0] ? String(seasons[0].id) : '');
+      dispatch(
+        setScopeFilter({
+          scope: FILTER_SCOPE,
+          key: 'seasonId',
+          value: seasons[0] ? String(seasons[0].id) : '',
+        }),
+      );
     }
-  }, [activeSeasonId, seasonFilterId, seasons]);
+  }, [activeSeasonId, dispatch, seasonFilterId, seasons]);
 
   useEffect(() => {
     if (!seasonFilterId) {
@@ -387,17 +399,10 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
   return (
     <div className="seasons-manager">
       <GlobalScopedFilters
-        scope="customer-categories-management"
+        scope={FILTER_SCOPE}
         filters={filters}
         className="customer-categories-manager__filters"
         direction="rtl"
-        onValuesChange={(values) => {
-          setGlobalFilterValues(values);
-          setSelectedCategoryId(null);
-        }}
-        onApiReady={(api) => {
-          filtersApiRef.current = api;
-        }}
       />
 
       <div className="seasons-manager__state">
