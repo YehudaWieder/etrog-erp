@@ -42,6 +42,10 @@ const isValidPercent = (value: string): boolean => {
   return Number.isFinite(parsedValue) && parsedValue > 0 && parsedValue <= 100;
 };
 
+const isShareRowComplete = (row: ShareRow): boolean => {
+  return row.traderId !== null && isValidPercent(row.percent);
+};
+
 export type DefaultTraderCategoriesHeaderState = {
   count: number;
   isAddDisabled: boolean;
@@ -106,8 +110,24 @@ const DefaultTraderCategoriesManagement: React.FC<DefaultTraderCategoriesManagem
   );
 
   const isTotalExact = Math.abs(totalPercent - 100) <= TOTAL_EPSILON;
+  const isTotalAtLeastHundred = totalPercent >= 100 - TOTAL_EPSILON;
+  const selectedTraderIdsCount = new Set(
+    shareRows
+      .map((row) => row.traderId)
+      .filter((traderId): traderId is number => traderId !== null),
+  ).size;
+  const hasAvailableTraders = selectedTraderIdsCount < sortedTraders.length;
+  const canAddShareRow =
+    shareRows.length > 0
+    && isShareRowComplete(shareRows[shareRows.length - 1])
+    && !isTotalAtLeastHundred
+    && hasAvailableTraders;
 
   const addShareRow = () => {
+    if (!canAddShareRow) {
+      return;
+    }
+
     setShareRows((currentRows) => {
       const nextRowId = currentRows.reduce((maxId, row) => Math.max(maxId, row.rowId), 0) + 1;
       return [...currentRows, createEmptyShareRow(nextRowId)];
@@ -495,6 +515,18 @@ const DefaultTraderCategoriesManagement: React.FC<DefaultTraderCategoriesManagem
             <div className="default-trader-categories-manager__shares-area">
               {shareRows.map((row, index) => (
                 <div key={row.rowId} className="default-trader-categories-manager__share-row">
+                  {(() => {
+                    const selectedTraderIdsInOtherRows = new Set(
+                      shareRows
+                        .filter((shareRow) => shareRow.rowId !== row.rowId && shareRow.traderId !== null)
+                        .map((shareRow) => shareRow.traderId as number),
+                    );
+
+                    const availableTraders = sortedTraders.filter(
+                      (trader) => trader.id === row.traderId || !selectedTraderIdsInOtherRows.has(trader.id),
+                    );
+
+                    return (
                   <select
                     className="seasons-manager__year-input"
                     value={row.traderId ?? ''}
@@ -506,10 +538,12 @@ const DefaultTraderCategoriesManagement: React.FC<DefaultTraderCategoriesManagem
                     }}
                   >
                     <option value="">{t.selectTraderOption}</option>
-                    {sortedTraders.map((trader) => (
+                    {availableTraders.map((trader) => (
                       <option key={trader.id} value={trader.id}>{trader.name}</option>
                     ))}
                   </select>
+                    );
+                  })()}
 
                   <input
                     className="seasons-manager__year-input"
@@ -534,7 +568,7 @@ const DefaultTraderCategoriesManagement: React.FC<DefaultTraderCategoriesManagem
               ))}
 
               <div className="default-trader-categories-manager__shares-actions">
-                <button type="button" className="btn btn-secondary" onClick={addShareRow}>
+                <button type="button" className="btn btn-secondary" onClick={addShareRow} disabled={!canAddShareRow}>
                   {t.addRow}
                 </button>
                 <strong className={isTotalExact ? '' : 'seasons-manager__error'}>
