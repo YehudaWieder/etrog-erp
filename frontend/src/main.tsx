@@ -11,6 +11,7 @@ import { RegisterRoute } from './app/routes/RegisterRoute';
 import { ProfileRoute } from './app/routes/ProfileRoute';
 import { ManagerProfileEditRoute } from './app/routes/ManagerProfileEditRoute';
 import { MessagesRoute } from './app/routes/MessagesRoute';
+import { HarvestRoute } from './app/routes/HarvestRoute';
 import { AUTH_SESSION_EXPIRED_EVENT } from './services/apiClient';
 import SettingsPage from './features/settings/SettingsPage';
 
@@ -64,6 +65,7 @@ function AppRouter(): JSX.Element {
       <Route path="/profile/manage-profile/:id" element={<ManagerProfileEditRoute />} />
       <Route path="/profile/*" element={<ProfileRoute />} />
       <Route path="/messages/*" element={<MessagesRoute />} />
+      <Route path="/harvest/*" element={<HarvestRoute />} />
       <Route path="/shipments/*" element={<ShipmentsRoute />} />
       <Route path="/settings/*" element={<SettingsPage />} />
       {/* <Route path="/seasons" element={<Navigate to="/settings/system/seasons" replace />} /> removed as per request */}
