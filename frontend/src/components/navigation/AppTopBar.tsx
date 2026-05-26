@@ -1,8 +1,9 @@
 
 import { useEffect, useState } from 'react';
-import { FaEnvelope, FaCalendarDays } from 'react-icons/fa6';
+import { FaEnvelope } from 'react-icons/fa6';
 import type { NavItem } from '../../types/navigation';
 import { HomeIcon } from '../ui/HomeIcon';
+import { CalendarPopover } from './CalendarPopover';
 import { ProfileMenu, type ProfileMenuProps } from './ProfileMenu';
 import { TopBar } from './TopBar';
 import { fetchUnreadCount } from '../../services/messagesApi';
@@ -116,9 +117,7 @@ export function AppTopBar({
       }
       rightSlot={
         <div className="nav-icons">
-          <button className="nav-icon-btn" type="button" aria-label={lang === 'he' ? 'לוח שנה' : 'Calendar'}>
-            <FaCalendarDays />
-          </button>
+          <CalendarPopover lang={lang} />
           <button
             className="nav-icon-btn"
             type="button"
