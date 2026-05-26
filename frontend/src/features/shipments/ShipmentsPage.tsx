@@ -141,7 +141,11 @@ export function ShipmentsPage() {
         userName: currentUser?.name || 'הפרופיל שלי',
       }}
       sidebarFooterSlot={
-        <button type="button" className="app-shell__sidebar-item app-shell__sidebar-settings">
+        <button
+          type="button"
+          className="app-shell__sidebar-item app-shell__sidebar-settings"
+          onClick={() => navigate('/settings')}
+        >
           {lang === 'he' ? (
             <>
               {t.settings}
