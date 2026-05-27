@@ -17,12 +17,14 @@ type GlobalFiltersBarProps = {
   controls: GlobalFilterControl[];
   className?: string;
   direction?: 'rtl' | 'ltr';
+  actions?: React.ReactNode;
 };
 
 export const GlobalFiltersBar: React.FC<GlobalFiltersBarProps> = ({
   controls,
   className,
   direction = 'rtl',
+  actions,
 }) => {
   const containerClassName = ['global-filters-bar', className].filter(Boolean).join(' ');
 
@@ -47,6 +49,7 @@ export const GlobalFiltersBar: React.FC<GlobalFiltersBarProps> = ({
           </select>
         </div>
       ))}
+      {actions ? <div className="global-filters-bar__actions">{actions}</div> : null}
     </div>
   );
 };

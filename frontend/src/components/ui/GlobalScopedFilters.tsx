@@ -19,6 +19,7 @@ type GlobalScopedFiltersProps = {
   filters: GlobalScopedFilterConfig[];
   className?: string;
   direction?: 'rtl' | 'ltr';
+  actions?: React.ReactNode;
   onValuesChange?: (values: Record<string, string>) => void;
   onApiReady?: (api: GlobalScopedFiltersApi) => void;
 };
@@ -28,6 +29,7 @@ export const GlobalScopedFilters: React.FC<GlobalScopedFiltersProps> = ({
   filters,
   className,
   direction = 'rtl',
+  actions,
   onValuesChange,
   onApiReady,
 }) => {
@@ -65,5 +67,5 @@ export const GlobalScopedFilters: React.FC<GlobalScopedFiltersProps> = ({
     [filters, scope, setFilterValue, values],
   );
 
-  return <GlobalFiltersBar controls={controls} className={className} direction={direction} />;
+  return <GlobalFiltersBar controls={controls} className={className} direction={direction} actions={actions} />;
 };

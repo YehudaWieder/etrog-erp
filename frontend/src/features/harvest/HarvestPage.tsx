@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { FaFileInvoice, FaPrint } from 'react-icons/fa6';
+import { FaCirclePlus, FaFileArrowDown, FaFileInvoice, FaPenToSquare, FaPrint, FaTrashCan } from 'react-icons/fa6';
 import { AppShell } from '../../app/layout/AppShell';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import { GlobalDataTable, type GlobalDataTableColumn } from '../../components/ui/GlobalDataTable';
@@ -12,6 +12,7 @@ import { getCurrentUser, isAuthenticated, logout } from '../../services/authServ
 import { getSeasons, type Season } from '../../services/seasonsApi';
 import { getFields, type Field } from '../../services/fieldsApi';
 import { getHarvestsBySeason, type HarvestRecord } from '../../services/harvestsApi';
+import { getClassificationsByHarvest, type ClassificationRecord } from '../../services/classificationsApi';
 import { setScopeFilter } from '../../store/globalFiltersSlice';
 import type { AppDispatch, RootState } from '../../store';
 import { HARVEST_I18N } from './i18n';
@@ -55,6 +56,9 @@ export function HarvestPage() {
   const [harvestRows, setHarvestRows] = useState<HarvestRecord[]>([]);
   const [sortConfig, setSortConfig] = useState<{ key: HarvestSortKey; direction: HarvestSortDirection } | null>(null);
   const [detailsRecord, setDetailsRecord] = useState<HarvestRecord | null>(null);
+  const [relatedSortings, setRelatedSortings] = useState<ClassificationRecord[]>([]);
+  const [isRelatedSortingsLoading, setIsRelatedSortingsLoading] = useState(false);
+  const [relatedSortingsLoadError, setRelatedSortingsLoadError] = useState<string>('');
   const [selectedNumericCells, setSelectedNumericCells] = useState<Record<string, number>>({});
   const [isDragSelecting, setIsDragSelecting] = useState(false);
   const dragSelectModeRef = useRef<'add' | 'remove'>('add');
@@ -272,6 +276,176 @@ export function HarvestPage() {
     }).format(date);
   };
 
+  const escapeHtml = (value: string) => {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  };
+
+  const escapeCsv = (value: string | number | boolean | null | undefined) => {
+    const normalized = String(value ?? '');
+    const escaped = normalized.replace(/\"/g, '""');
+    return `"${escaped}"`;
+  };
+
+  const createHarvestExportRows = () => {
+    const fields = t.dailyDetails.detailsPanel.fields;
+    const values = t.dailyDetails.detailsPanel.values;
+
+    const header = [
+      t.dailyDetails.columns.fieldName,
+      t.dailyDetails.columns.dateGregorian,
+      fields.dateHebrew,
+      t.dailyDetails.columns.totalHarvested,
+      t.dailyDetails.columns.totalRejected,
+      fields.totalAfterRejected,
+      fields.ownerHarvested,
+      fields.ownerRejected,
+      fields.ownerAfterRejected,
+      t.dailyDetails.columns.classifiedTotal,
+      fields.classificationStatus,
+      fields.rejectionRate,
+      fields.ownerRejectionRate,
+      fields.updatedBy,
+      fields.notes,
+    ];
+
+    const getClassificationStatus = (isPartialClassification: unknown) => {
+      return isPartialClassificationFlag(isPartialClassification) ? values.partial : values.final;
+    };
+
+    const rows = sortedHarvestRows.map((row) => [
+      row.field?.name ?? values.none,
+      formatGregorianDate(row.dateGregorian),
+      row.dateHebrew,
+      row.totalHarvested,
+      row.totalRejected,
+      row.totalAfterRejected,
+      row.ownerHarvested,
+      row.ownerRejected,
+      row.ownerAfterRejected,
+      row.classifiedTotal,
+      getClassificationStatus(row.isPartialClassification),
+      row.rejectionRate,
+      row.ownerRejectionRate,
+      row.updatedBy?.name ?? values.none,
+      row.notes ?? values.none,
+    ]);
+
+    return { header, rows };
+  };
+
+  const handlePrintHarvestTable = () => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const { header, rows } = createHarvestExportRows();
+    const tableHeaderHtml = header.map((label) => `<th>${escapeHtml(label)}</th>`).join('');
+    const tableRowsHtml = rows
+      .map((row) => `<tr>${row.map((value) => `<td>${escapeHtml(String(value))}</td>`).join('')}</tr>`)
+      .join('');
+
+    const printWindow = window.open('', '_blank', 'width=1100,height=760');
+    if (!printWindow) {
+      return;
+    }
+
+    const printTitle = lang === 'he' ? 'דוח קטיף לפי ימים' : 'Harvest Daily Details';
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html lang="${lang === 'he' ? 'he' : 'en'}" dir="${lang === 'he' ? 'rtl' : 'ltr'}">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>${escapeHtml(printTitle)}</title>
+          <style>
+            * { box-sizing: border-box; }
+            body {
+              margin: 0;
+              padding: 22px;
+              font-family: Assistant, sans-serif;
+              color: #1f2a22;
+              background: #fff;
+            }
+            h1 {
+              margin: 0 0 14px;
+              font-size: 22px;
+              color: #1f4f29;
+              text-align: center;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              table-layout: auto;
+              font-size: 10px;
+            }
+            th,
+            td {
+              border: 1px solid #ccd9cf;
+              padding: 5px;
+              text-align: center;
+              white-space: nowrap;
+            }
+            th {
+              background: #1f5a32;
+              color: #fff;
+              font-weight: 700;
+            }
+            tbody tr:nth-child(even) {
+              background: #f8fcf9;
+            }
+            @page {
+              size: A4 landscape;
+              margin: 8mm;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>${escapeHtml(printTitle)}</h1>
+          <table>
+            <thead>
+              <tr>${tableHeaderHtml}</tr>
+            </thead>
+            <tbody>
+              ${tableRowsHtml}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
+
+  const handleExportHarvestTableToExcel = () => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const { header, rows } = createHarvestExportRows();
+    const csvLines = [header, ...rows].map((row) => row.map((value) => escapeCsv(value)).join(','));
+    const csvContent = `\ufeff${csvLines.join('\n')}`;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    link.href = url;
+    link.download = lang === 'he' ? `harvest-daily-${dateStamp}.csv` : `harvest-daily-${dateStamp}.csv`;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  };
+
   const toggleSort = (key: HarvestSortKey) => {
     setSortConfig((prev) => {
       if (!prev || prev.key !== key) {
@@ -364,6 +538,24 @@ export function HarvestPage() {
   const columns = useMemo<GlobalDataTableColumn<HarvestRecord>[]>(() => {
     return [
       {
+        id: 'actions',
+        header: lang === 'he' ? 'פרטים' : 'Details',
+        headerLabel: lang === 'he' ? 'פרטים' : 'Details',
+        minWidth: '72px',
+        gridTemplate: '72px',
+        align: 'center',
+        render: (row) => (
+          <button
+            type="button"
+            className="harvest-daily-workspace__details-trigger"
+            aria-label={t.dailyDetails.detailsPanel.openDetails}
+            onClick={() => setDetailsRecord(row)}
+          >
+            <FaFileInvoice />
+          </button>
+        ),
+      },
+      {
         id: 'dateGregorian',
         header: renderSortableHeader(t.dailyDetails.columns.dateGregorian, 'dateGregorian'),
         headerLabel: t.dailyDetails.columns.dateGregorian,
@@ -427,24 +619,6 @@ export function HarvestPage() {
           )
         ),
       },
-      {
-        id: 'actions',
-        header: lang === 'he' ? 'פרטים' : 'Details',
-        headerLabel: lang === 'he' ? 'פרטים' : 'Details',
-        minWidth: '68px',
-        gridTemplate: '68px',
-        align: 'center',
-        render: (row) => (
-          <button
-            type="button"
-            className="harvest-daily-workspace__details-trigger"
-            aria-label={t.dailyDetails.detailsPanel.openDetails}
-            onClick={() => setDetailsRecord(row)}
-          >
-            <FaFileInvoice />
-          </button>
-        ),
-      },
     ];
   }, [t, lang, sortConfig, isDragSelecting, selectedNumericCells]);
 
@@ -505,6 +679,49 @@ export function HarvestPage() {
       setDetailsRecord(null);
     }
   }, [detailsRecord, sortedHarvestRows]);
+
+  useEffect(() => {
+    if (!detailsRecord) {
+      setRelatedSortings([]);
+      setRelatedSortingsLoadError('');
+      setIsRelatedSortingsLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadRelatedSortings = async () => {
+      setIsRelatedSortingsLoading(true);
+      setRelatedSortingsLoadError('');
+
+      try {
+        const rows = await getClassificationsByHarvest(detailsRecord.id);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setRelatedSortings(rows);
+      } catch {
+        if (!isMounted) {
+          return;
+        }
+
+        setRelatedSortings([]);
+        setRelatedSortingsLoadError(t.dailyDetails.detailsPanel.relatedSortings.loadError);
+      } finally {
+        if (isMounted) {
+          setIsRelatedSortingsLoading(false);
+        }
+      }
+    };
+
+    void loadRelatedSortings();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [detailsRecord, t.dailyDetails.detailsPanel.relatedSortings.loadError]);
 
   useEffect(() => {
     if (sortedHarvestRows.length === 0) {
@@ -590,6 +807,24 @@ export function HarvestPage() {
     const labels = t.dailyDetails.detailsPanel.fields;
     const values = t.dailyDetails.detailsPanel.values;
     const isPartialClassification = isPartialClassificationFlag(detailsRecord.isPartialClassification as unknown);
+    const seasonName = seasons.find((season) => season.id === detailsRecord.seasonId)?.yearName ?? values.none;
+    const seasonRows = harvestRows
+      .filter((row) => row.seasonId === detailsRecord.seasonId)
+      .sort((a, b) => {
+        const aTime = Date.parse(a.dateGregorian);
+        const bTime = Date.parse(b.dateGregorian);
+
+        if (!Number.isNaN(aTime) && !Number.isNaN(bTime) && aTime !== bTime) {
+          return aTime - bTime;
+        }
+
+        return a.id - b.id;
+      });
+    const harvestIndexInSeason = seasonRows.findIndex((row) => row.id === detailsRecord.id);
+    const harvestNumberDisplay =
+      harvestIndexInSeason >= 0
+        ? numberFormatter.format(harvestIndexInSeason + 1)
+        : values.none;
     const hasOwnerRowData =
       detailsRecord.ownerHarvested > 0 ||
       detailsRecord.ownerRejected > 0 ||
@@ -636,6 +871,8 @@ export function HarvestPage() {
     return {
       dateGregorian: formatGregorianDate(detailsRecord.dateGregorian),
       dateHebrew: detailsRecord.dateHebrew || values.none,
+      seasonName,
+      harvestNumber: harvestNumberDisplay,
       fieldName: detailsRecord.field?.name ?? values.none,
       updatedByName: detailsRecord.updatedBy?.name ?? values.none,
       statusLabel: `${values.statusPrefix} ${isPartialClassification ? values.partial : values.final}`,
@@ -644,7 +881,129 @@ export function HarvestPage() {
       labels,
       values,
     };
-  }, [detailsRecord, formatGregorianDate, numberFormatter, t.dailyDetails.detailsPanel.fields, t.dailyDetails.detailsPanel.values]);
+  }, [
+    detailsRecord,
+    formatGregorianDate,
+    harvestRows,
+    numberFormatter,
+    seasons,
+    t.dailyDetails.detailsPanel.fields,
+    t.dailyDetails.detailsPanel.values,
+  ]);
+
+  const relatedSortingsLabels = t.dailyDetails.detailsPanel.relatedSortings;
+
+  const getRelatedSortingAssignmentLabel = (assignmentType: string) => {
+    if (assignmentType === 'TRADER') {
+      return relatedSortingsLabels.assignmentTypes.trader;
+    }
+
+    if (assignmentType === 'CUSTOMER') {
+      return relatedSortingsLabels.assignmentTypes.customer;
+    }
+
+    return relatedSortingsLabels.assignmentTypes.general;
+  };
+
+  const getRelatedSortingTarget = (row: ClassificationRecord) => {
+    if (row.assignmentType === 'TRADER') {
+      return row.trader?.name ?? detailsSheetData?.values.none ?? '-';
+    }
+
+    if (row.assignmentType === 'CUSTOMER') {
+      return row.customer?.customerName ?? detailsSheetData?.values.none ?? '-';
+    }
+
+    return relatedSortingsLabels.assignmentTypes.general;
+  };
+
+  const getRelatedSortingCategory = (row: ClassificationRecord) => {
+    if (row.customerCategory?.name) {
+      return row.customerCategory.name;
+    }
+
+    if (row.traderCategory?.name) {
+      return row.traderCategory.name;
+    }
+
+    return detailsSheetData?.values.none ?? '-';
+  };
+
+  const getRelatedSortingGrade = (row: ClassificationRecord) => {
+    if (row.grade) {
+      return row.grade;
+    }
+
+    if (row.customerCategory?.grade) {
+      return row.customerCategory.grade;
+    }
+
+    return detailsSheetData?.values.none ?? '-';
+  };
+
+  const formatRelatedSortingText = (value?: string | null) => {
+    if (!value) {
+      return detailsSheetData?.values.none ?? '-';
+    }
+
+    const normalizedValue = value.replace(/\s+/g, '_').toUpperCase();
+
+    if (normalizedValue === 'WITH_PITAM') {
+      return relatedSortingsLabels.pitamValues.withPitam;
+    }
+
+    if (normalizedValue === 'WITHOUT_PITAM') {
+      return relatedSortingsLabels.pitamValues.withoutPitam;
+    }
+
+    return value.replace(/_/g, ' ');
+  };
+
+  const getRelatedSortingNote = (row: ClassificationRecord) => row.notes?.trim() ?? '';
+
+  const sortedRelatedSortings = useMemo(() => {
+    const locale = lang === 'he' ? 'he' : 'en';
+
+    const getAssignmentOrder = (assignmentType: string) => {
+      if (assignmentType === 'GENERAL') {
+        return 0;
+      }
+
+      if (assignmentType === 'TRADER') {
+        return 1;
+      }
+
+      if (assignmentType === 'CUSTOMER') {
+        return 2;
+      }
+
+      return 3;
+    };
+
+    const getCategoryNameForSort = (row: ClassificationRecord) => row.customerCategory?.name ?? row.traderCategory?.name ?? '';
+
+    const getGradeForSort = (row: ClassificationRecord) => row.grade ?? row.customerCategory?.grade ?? '';
+
+    return [...relatedSortings].sort((a, b) => {
+      const assignmentDiff = getAssignmentOrder(a.assignmentType) - getAssignmentOrder(b.assignmentType);
+      if (assignmentDiff !== 0) {
+        return assignmentDiff;
+      }
+
+      const categoryDiff = getCategoryNameForSort(a).localeCompare(getCategoryNameForSort(b), locale, {
+        sensitivity: 'base',
+        numeric: true,
+      });
+      if (categoryDiff !== 0) {
+        return categoryDiff;
+      }
+
+      return getGradeForSort(a).localeCompare(getGradeForSort(b), locale, {
+        sensitivity: 'base',
+        numeric: true,
+      });
+    });
+  }, [lang, relatedSortings]);
 
   const pageTitleWithCount = useMemo(() => {
     if (!isDailyDetailsTab) {
@@ -653,6 +1012,44 @@ export function HarvestPage() {
 
     return `${pageTitle} (${sortedHarvestRows.length})`;
   }, [isDailyDetailsTab, pageTitle, sortedHarvestRows.length]);
+
+  const addActionLabel = lang === 'he' ? 'הוסף קטיף' : 'Add Harvest';
+  const editActionLabel = lang === 'he' ? 'עריכה' : 'Edit';
+  const deleteActionLabel = lang === 'he' ? 'מחיקה' : 'Delete';
+
+  const pageHeaderActions = isDailyDetailsTab ? (
+    <div className="settings-seasons-header-buttons">
+      <button
+        type="button"
+        className="settings-seasons-header-btn settings-seasons-header-btn--success"
+        onClick={() => void 0}
+        aria-label={addActionLabel}
+      >
+        <FaCirclePlus />
+        <span>{addActionLabel}</span>
+      </button>
+      <button
+        type="button"
+        className="settings-seasons-header-btn settings-seasons-header-btn--success"
+        onClick={() => void 0}
+        disabled={!detailsRecord}
+        aria-label={editActionLabel}
+      >
+        <FaPenToSquare />
+        <span>{editActionLabel}</span>
+      </button>
+      <button
+        type="button"
+        className="settings-seasons-header-btn settings-seasons-header-btn--danger"
+        onClick={() => void 0}
+        disabled={!detailsRecord}
+        aria-label={deleteActionLabel}
+      >
+        <FaTrashCan />
+        <span>{deleteActionLabel}</span>
+      </button>
+    </div>
+  ) : null;
 
   const filters = useMemo<GlobalScopedFilterConfig[]>(() => {
     return [
@@ -722,11 +1119,17 @@ export function HarvestPage() {
             }
             .harvest-print__title {
               margin: 0 auto 12px;
-              max-width: 860px;
+              max-width: 1180px;
               text-align: center;
               font-size: 22px;
               font-weight: 800;
               color: #1f4f29;
+            }
+            .harvest-daily-workspace__print-content {
+              max-width: 1180px;
+              margin: 0 auto;
+              display: grid;
+              gap: 14px;
             }
             .harvest-daily-workspace__sheet-card {
               border: 1px solid #cfdcd2;
@@ -735,17 +1138,28 @@ export function HarvestPage() {
               padding: 12px;
               display: grid;
               gap: 12px;
-              max-width: 860px;
-              margin: 0 auto;
             }
             .harvest-daily-workspace__sheet-head {
-              display: grid;
+              display: flex;
+              flex-direction: column;
               gap: 6px;
-              text-align: end;
+              align-items: stretch;
+              direction: ltr;
+              text-align: left;
               color: #243f2b;
               font-weight: 600;
             }
-            .harvest-daily-workspace__sheet-head p { margin: 0; }
+            .harvest-daily-workspace__sheet-head p {
+              margin: 0;
+              width: 100%;
+              max-width: 100%;
+              direction: inherit;
+              unicode-bidi: plaintext;
+            }
+            html[dir='rtl'] .harvest-daily-workspace__sheet-head {
+              direction: rtl;
+              text-align: right;
+            }
             .harvest-daily-workspace__sheet-status {
               justify-self: center;
               border: 1px solid #b7cdbf;
@@ -788,9 +1202,57 @@ export function HarvestPage() {
               border-top: 1px dashed #d0dcd3;
               padding-top: 8px;
             }
+            .harvest-daily-workspace__related-sortings-card {
+              border-radius: 12px;
+              background: #fff;
+              padding: 12px;
+              display: grid;
+              gap: 10px;
+            }
+            .harvest-daily-workspace__related-sortings-title {
+              margin: 0;
+              color: #214f2a;
+              font-size: 16px;
+            }
+            .harvest-daily-workspace__related-sortings-table-wrap {
+              overflow: visible;
+            }
+            .harvest-daily-workspace__related-sortings-table {
+              width: 100%;
+              border-collapse: collapse;
+              table-layout: fixed;
+              font-size: 12px;
+            }
+            .harvest-daily-workspace__related-sortings-table th,
+            .harvest-daily-workspace__related-sortings-table td {
+              border: 1px solid #ccd9cf;
+              padding: 6px;
+              text-align: center;
+              vertical-align: middle;
+            }
+            .harvest-daily-workspace__related-sortings-table th {
+              background: #f1f7f3;
+              color: #284f31;
+              font-weight: 700;
+            }
+            .harvest-daily-workspace__related-sortings-table tbody tr:nth-child(even) {
+              background: #f8fcf9;
+            }
+            .harvest-daily-workspace__related-sorting-note {
+              display: inline;
+            }
+            .harvest-daily-workspace__related-sorting-note-bubble,
+            .harvest-daily-workspace__related-sorting-note-tooltip {
+              display: none !important;
+            }
+            .harvest-daily-workspace__related-sorting-note::after {
+              content: attr(aria-label);
+              color: #2f4536;
+              white-space: pre-wrap;
+            }
             @page {
-              size: A4 portrait;
-              margin: 12mm;
+              size: A4 landscape;
+              margin: 10mm;
             }
           </style>
         </head>
@@ -812,6 +1274,7 @@ export function HarvestPage() {
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
       pageTitle={pageTitleWithCount}
+      pageHeaderActions={pageHeaderActions}
       topNav={t.topNav}
       activeTopNavId={activeTopId}
       sidebarSections={t.sidebar}
@@ -864,6 +1327,28 @@ export function HarvestPage() {
             scope={HARVEST_DAILY_FILTER_SCOPE}
             filters={filters}
             direction={lang === 'he' ? 'rtl' : 'ltr'}
+            actions={
+              <div className="global-filters-bar__icon-actions" aria-label={lang === 'he' ? 'פעולות טבלה' : 'Table actions'}>
+                <button
+                  type="button"
+                  className="global-filters-bar__icon-btn"
+                  onClick={handlePrintHarvestTable}
+                  aria-label={lang === 'he' ? 'הדפסת טבלת הקטיפים' : 'Print harvest table'}
+                  title={lang === 'he' ? 'הדפסה' : 'Print'}
+                >
+                  <FaPrint />
+                </button>
+                <button
+                  type="button"
+                  className="global-filters-bar__icon-btn"
+                  onClick={handleExportHarvestTableToExcel}
+                  aria-label={lang === 'he' ? 'יצוא טבלת הקטיפים לאקסל' : 'Export harvest table to Excel'}
+                  title={lang === 'he' ? 'יצוא לאקסל' : 'Export to Excel'}
+                >
+                  <FaFileArrowDown />
+                </button>
+              </div>
+            }
           />
 
           {harvestLoadError ? <p className="seasons-manager__error">{harvestLoadError}</p> : null}
@@ -897,51 +1382,129 @@ export function HarvestPage() {
                   }
                 >
                   {detailsSheetData ? (
-                    <div className="harvest-daily-workspace__sheet-card" ref={detailsPrintRef}>
-                      <div className="harvest-daily-workspace__sheet-head">
-                        <p>{detailsSheetData.dateGregorian}</p>
-                        <p>{detailsSheetData.dateHebrew}</p>
-                        <p>
-                          <strong>{detailsSheetData.labels.updatedBy}:</strong> {detailsSheetData.updatedByName}
-                        </p>
-                        <p>
-                          <strong>{detailsSheetData.labels.field}:</strong> {detailsSheetData.fieldName}
-                        </p>
+                    <>
+                      <div className="harvest-daily-workspace__print-content" ref={detailsPrintRef}>
+                        <div className="harvest-daily-workspace__sheet-card">
+                          <div className="harvest-daily-workspace__sheet-head">
+                            <p>{detailsSheetData.dateGregorian}</p>
+                            <p>{detailsSheetData.dateHebrew}</p>
+                            <p>
+                              <strong>{detailsSheetData.labels.season}:</strong> {detailsSheetData.seasonName}
+                            </p>
+                            <p>
+                              <strong>{detailsSheetData.labels.harvestNumber}:</strong> {detailsSheetData.harvestNumber}
+                            </p>
+                            <p>
+                              <strong>{detailsSheetData.labels.updatedBy}:</strong> {detailsSheetData.updatedByName}
+                            </p>
+                            <p>
+                              <strong>{detailsSheetData.labels.field}:</strong> {detailsSheetData.fieldName}
+                            </p>
+                          </div>
+
+                          <div className="harvest-daily-workspace__sheet-status">{detailsSheetData.statusLabel}</div>
+
+                          <table className="harvest-daily-workspace__sheet-table">
+                            <thead>
+                              <tr>
+                                <th aria-label={detailsSheetData.values.rowType} />
+                                <th>{detailsSheetData.labels.totalHarvested}</th>
+                                <th>{detailsSheetData.labels.totalRejected}</th>
+                                <th>{detailsSheetData.labels.totalAfterRejected}</th>
+                                <th>{detailsSheetData.labels.classifiedTotal}</th>
+                                <th>{detailsSheetData.labels.rejectionRate}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {detailsSheetData.rows.map((row) => (
+                                <tr key={row.key} className={row.kind === 'summary' ? 'harvest-daily-workspace__sheet-row--summary' : undefined}>
+                                  <td>{row.label}</td>
+                                  <td>{row.totalHarvested}</td>
+                                  <td>{row.totalRejected}</td>
+                                  <td>{row.totalAfterRejected}</td>
+                                  <td>{row.classifiedTotal}</td>
+                                  <td>{row.rejectionRate}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+
+                          {detailsSheetData.notes ? (
+                            <p className="harvest-daily-workspace__sheet-note">
+                              <strong>{detailsSheetData.labels.notes}:</strong> {detailsSheetData.notes}
+                            </p>
+                          ) : null}
+                        </div>
+
+                        <div className="harvest-daily-workspace__related-sortings-card">
+                        <h4 className="harvest-daily-workspace__related-sortings-title">{relatedSortingsLabels.title}</h4>
+
+                        {isRelatedSortingsLoading ? (
+                          <p className="harvest-daily-workspace__related-sortings-state">{relatedSortingsLabels.loading}</p>
+                        ) : relatedSortingsLoadError ? (
+                          <p className="harvest-daily-workspace__related-sortings-state is-error">{relatedSortingsLoadError}</p>
+                        ) : relatedSortings.length === 0 ? (
+                          <p className="harvest-daily-workspace__related-sortings-state">{relatedSortingsLabels.empty}</p>
+                        ) : (
+                          <div className="harvest-daily-workspace__related-sortings-table-wrap">
+                            <table className="harvest-daily-workspace__related-sortings-table">
+                              <colgroup>
+                                <col className="harvest-daily-workspace__related-sortings-col--assignment-type" />
+                                <col className="harvest-daily-workspace__related-sortings-col--target" />
+                                <col className="harvest-daily-workspace__related-sortings-col--category" />
+                                <col className="harvest-daily-workspace__related-sortings-col--grade" />
+                                <col className="harvest-daily-workspace__related-sortings-col--pitam" />
+                                <col className="harvest-daily-workspace__related-sortings-col--quantity" />
+                                <col className="harvest-daily-workspace__related-sortings-col--updated-by" />
+                                <col className="harvest-daily-workspace__related-sortings-col--notes" />
+                              </colgroup>
+                              <thead>
+                                <tr>
+                                  <th>{relatedSortingsLabels.columns.assignmentType}</th>
+                                  <th>{relatedSortingsLabels.columns.target}</th>
+                                  <th>{relatedSortingsLabels.columns.category}</th>
+                                  <th>{relatedSortingsLabels.columns.grade}</th>
+                                  <th>{relatedSortingsLabels.columns.pitamStatus}</th>
+                                  <th>{relatedSortingsLabels.columns.quantity}</th>
+                                  <th>{relatedSortingsLabels.columns.updatedBy}</th>
+                                  <th>{relatedSortingsLabels.columns.notes}</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {sortedRelatedSortings.map((row, rowIndex) => {
+                                  const note = getRelatedSortingNote(row);
+
+                                  return (
+                                    <tr key={row.id}>
+                                      <td>{getRelatedSortingAssignmentLabel(row.assignmentType)}</td>
+                                      <td>{getRelatedSortingTarget(row)}</td>
+                                      <td>{getRelatedSortingCategory(row)}</td>
+                                      <td>{getRelatedSortingGrade(row)}</td>
+                                      <td>{formatRelatedSortingText(row.pitamStatus)}</td>
+                                      <td>{numberFormatter.format(row.quantity)}</td>
+                                      <td>{row.updatedBy?.name ?? detailsSheetData.values.none}</td>
+                                      <td>
+                                        {note ? (
+                                          <span
+                                            className={`harvest-daily-workspace__related-sorting-note${rowIndex === 0 ? ' is-first-row' : ''}`}
+                                            tabIndex={0}
+                                            aria-label={note}
+                                          >
+                                            <span className="harvest-daily-workspace__related-sorting-note-bubble" aria-hidden="true" />
+                                            <span className="harvest-daily-workspace__related-sorting-note-tooltip">{note}</span>
+                                          </span>
+                                        ) : null}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                        </div>
                       </div>
-
-                      <div className="harvest-daily-workspace__sheet-status">{detailsSheetData.statusLabel}</div>
-
-                      <table className="harvest-daily-workspace__sheet-table">
-                        <thead>
-                          <tr>
-                            <th aria-label={detailsSheetData.values.rowType} />
-                            <th>{detailsSheetData.labels.totalHarvested}</th>
-                            <th>{detailsSheetData.labels.totalRejected}</th>
-                            <th>{detailsSheetData.labels.totalAfterRejected}</th>
-                            <th>{detailsSheetData.labels.classifiedTotal}</th>
-                            <th>{detailsSheetData.labels.rejectionRate}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {detailsSheetData.rows.map((row) => (
-                            <tr key={row.key} className={row.kind === 'summary' ? 'harvest-daily-workspace__sheet-row--summary' : undefined}>
-                              <td>{row.label}</td>
-                              <td>{row.totalHarvested}</td>
-                              <td>{row.totalRejected}</td>
-                              <td>{row.totalAfterRejected}</td>
-                              <td>{row.classifiedTotal}</td>
-                              <td>{row.rejectionRate}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-
-                      {detailsSheetData.notes ? (
-                        <p className="harvest-daily-workspace__sheet-note">
-                          <strong>{detailsSheetData.labels.notes}:</strong> {detailsSheetData.notes}
-                        </p>
-                      ) : null}
-                    </div>
+                    </>
                   ) : (
                     <p className="harvest-daily-workspace__details-empty">{t.dailyDetails.detailsPanel.empty}</p>
                   )}

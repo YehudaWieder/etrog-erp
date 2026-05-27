@@ -34,9 +34,35 @@ type HarvestI18n = {
       empty: string;
       close: string;
       print: string;
+      relatedSortings: {
+        title: string;
+        loading: string;
+        empty: string;
+        loadError: string;
+        columns: {
+          assignmentType: string;
+          target: string;
+          category: string;
+            grade: string;
+          pitamStatus: string;
+          quantity: string;
+          updatedBy: string;
+            notes: string;
+        };
+        assignmentTypes: {
+          general: string;
+          trader: string;
+          customer: string;
+        };
+        pitamValues: {
+          withPitam: string;
+          withoutPitam: string;
+        };
+      };
       fields: {
         id: string;
         season: string;
+        harvestNumber: string;
         field: string;
         dateGregorian: string;
         dateHebrew: string;
@@ -155,9 +181,35 @@ export const HARVEST_I18N: Record<'he' | 'en', HarvestI18n> = {
         empty: 'בחר רשומה כדי לצפות בכל פרטי הקטיף.',
         close: 'סגירת פרטי קטיף',
         print: 'הדפסה',
+        relatedSortings: {
+          title: 'מיונים לקטיף זה',
+          loading: 'טוען מיונים קשורים...',
+          empty: 'אין מיונים קשורים לקטיף זה.',
+          loadError: 'לא ניתן לטעון את המיונים הקשורים כרגע.',
+          columns: {
+            assignmentType: 'סוג שיוך',
+            target: 'שיוך',
+            category: 'קטגוריה',
+            grade: 'דרגה',
+            pitamStatus: 'פיטם',
+            quantity: 'כמות',
+            updatedBy: 'עודכן על ידי',
+            notes: 'הערות',
+          },
+          assignmentTypes: {
+            general: 'כללי',
+            trader: 'סוחר',
+            customer: 'לקוח',
+          },
+          pitamValues: {
+            withPitam: 'פיטם',
+            withoutPitam: 'בל"פ',
+          },
+        },
         fields: {
           id: 'מזהה רשומה',
           season: 'עונה',
+          harvestNumber: 'קטיף מספר',
           field: 'שדה',
           dateGregorian: 'תאריך לועזי',
           dateHebrew: 'תאריך עברי',
@@ -291,9 +343,35 @@ export const HARVEST_I18N: Record<'he' | 'en', HarvestI18n> = {
         empty: 'Select a row to view full harvest details.',
         close: 'Close harvest details',
         print: 'Print',
+        relatedSortings: {
+          title: 'Related Sortings For This Harvest',
+          loading: 'Loading related sortings...',
+          empty: 'No related sortings for this harvest.',
+          loadError: 'Unable to load related sortings right now.',
+          columns: {
+            assignmentType: 'Type',
+            target: 'Assignment',
+            category: 'Category',
+            grade: 'Grade',
+            pitamStatus: 'Pitam',
+            quantity: 'Quantity',
+            updatedBy: 'Updated By',
+            notes: 'Notes',
+          },
+          assignmentTypes: {
+            general: 'General',
+            trader: 'Trader',
+            customer: 'Customer',
+          },
+          pitamValues: {
+            withPitam: 'פיטם',
+            withoutPitam: 'בל"פ',
+          },
+        },
         fields: {
           id: 'Record ID',
           season: 'Season',
+          harvestNumber: 'Harvest Number',
           field: 'Field',
           dateGregorian: 'Gregorian Date',
           dateHebrew: 'Hebrew Date',
