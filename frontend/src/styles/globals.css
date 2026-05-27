@@ -2870,6 +2870,14 @@ select {
   background: #fbfdff;
 }
 
+.seasons-manager__section-title {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #4f6678;
+}
+
 .seasons-manager__cards {
   list-style: none;
   margin: 0;
@@ -2878,6 +2886,20 @@ select {
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   justify-items: stretch;
   gap: var(--space-3);
+}
+
+.seasons-manager__cards--active-row {
+  grid-template-columns: minmax(300px, var(--active-season-card-width, 360px));
+  width: min(100%, var(--active-season-card-width, 360px));
+  justify-content: stretch;
+  margin-right: auto;
+  margin-left: 0;
+  margin-bottom: var(--space-3);
+}
+
+.app-shell[data-direction='rtl'] .seasons-manager__cards--active-row {
+  margin-right: 0;
+  margin-left: auto;
 }
 
 .seasons-manager__cards--uniform .seasons-manager__card {

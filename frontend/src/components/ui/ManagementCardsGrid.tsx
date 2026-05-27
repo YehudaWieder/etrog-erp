@@ -3,9 +3,10 @@ import React, { useEffect, useRef } from 'react';
 type ManagementCardsGridProps = {
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
 };
 
-const ManagementCardsGrid: React.FC<ManagementCardsGridProps> = ({ children, className }) => {
+const ManagementCardsGrid: React.FC<ManagementCardsGridProps> = ({ children, className, style }) => {
   const listRef = useRef<HTMLUListElement | null>(null);
 
   useEffect(() => {
@@ -78,7 +79,11 @@ const ManagementCardsGrid: React.FC<ManagementCardsGridProps> = ({ children, cla
   }, [children]);
 
   return (
-    <ul ref={listRef} className={`seasons-manager__cards seasons-manager__cards--uniform${className ? ` ${className}` : ''}`}>
+    <ul
+      ref={listRef}
+      className={`seasons-manager__cards seasons-manager__cards--uniform${className ? ` ${className}` : ''}`}
+      style={style}
+    >
       {children}
     </ul>
   );

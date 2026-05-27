@@ -18,6 +18,8 @@ type ManagementI18n = {
     seasonId: string;
     active: string;
     inactive: string;
+    activeSeasonSectionTitle: string;
+    inactiveSeasonsSectionTitle: string;
     deleteTitle: string;
     deleteMessage: (yearName: number) => string;
     deleteFallback: string;
@@ -237,6 +239,8 @@ const MANAGEMENT_I18N: Record<AppLang, ManagementI18n> = {
       seasonId: 'מזהה עונה',
       active: 'פעיל',
       inactive: 'לא פעיל',
+      activeSeasonSectionTitle: 'עונה פעילה',
+      inactiveSeasonsSectionTitle: 'עונות לא פעילות',
       deleteTitle: 'מחיקת עונה',
       deleteMessage: (yearName) => `האם למחוק את עונת ${yearName}? פעולה זו לא ניתנת לשחזור.`,
       deleteFallback: 'האם למחוק את העונה שנבחרה?',
@@ -454,6 +458,8 @@ const MANAGEMENT_I18N: Record<AppLang, ManagementI18n> = {
       seasonId: 'Season ID',
       active: 'Active',
       inactive: 'Inactive',
+      activeSeasonSectionTitle: 'Active Season',
+      inactiveSeasonsSectionTitle: 'Inactive Seasons',
       deleteTitle: 'Delete season',
       deleteMessage: (yearName) => `Delete season ${yearName}? This action cannot be undone.`,
       deleteFallback: 'Delete the selected season?',

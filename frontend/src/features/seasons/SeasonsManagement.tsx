@@ -41,6 +41,7 @@ const SeasonsManagement: React.FC<SeasonsManagementProps> = ({ onHeaderStateChan
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [addError, setAddError] = useState<string | null>(null);
+  const [secondaryCardWidth, setSecondaryCardWidth] = useState<number | null>(null);
   const t = getManagementI18n(resolveAppLang()).seasons;
 
   useEffect(() => {
@@ -72,6 +73,50 @@ const SeasonsManagement: React.FC<SeasonsManagementProps> = ({ onHeaderStateChan
     () => sortedSeasons.find((season) => season.id === selectedSeasonId) ?? null,
     [sortedSeasons, selectedSeasonId],
   );
+
+  const activeSeasons = useMemo(
+    () => sortedSeasons.filter((season) => season.isActive),
+    [sortedSeasons],
+  );
+
+  const nonActiveSeasons = useMemo(
+    () => sortedSeasons.filter((season) => !season.isActive),
+    [sortedSeasons],
+  );
+
+  useEffect(() => {
+    if (nonActiveSeasons.length === 0) {
+      setSecondaryCardWidth(null);
+      return;
+    }
+
+    const activeCardSelector = '.seasons-manager__cards--secondary-grid .seasons-manager__card';
+    const secondaryCard = document.querySelector<HTMLElement>(activeCardSelector);
+
+    if (!secondaryCard) {
+      setSecondaryCardWidth(null);
+      return;
+    }
+
+    const updateCardWidth = () => {
+      const measuredWidth = Math.round(secondaryCard.getBoundingClientRect().width);
+      setSecondaryCardWidth(measuredWidth > 0 ? measuredWidth : null);
+    };
+
+    updateCardWidth();
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateCardWidth();
+    });
+
+    resizeObserver.observe(secondaryCard);
+    window.addEventListener('resize', updateCardWidth);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateCardWidth);
+    };
+  }, [nonActiveSeasons.length, sortedSeasons.length]);
 
   const handleAdd = async () => {
     const parsedYear = Number(newSeasonYear);
@@ -196,37 +241,83 @@ const SeasonsManagement: React.FC<SeasonsManagementProps> = ({ onHeaderStateChan
         <p className="seasons-manager__error">{t.yearRangeError(MIN_SEASON_YEAR, MAX_SEASON_YEAR)}</p>
       ) : null}
 
-      {sortedSeasons.length > 0 ? (
-        <ManagementCardsGrid>
-          {sortedSeasons.map((season) => {
-            const isSelected = selectedSeasonId === season.id;
+      {activeSeasons.length > 0 ? (
+        <>
+          <h4 className="seasons-manager__section-title">{t.activeSeasonSectionTitle}</h4>
+          <ManagementCardsGrid
+            className="seasons-manager__cards--active-row"
+            style={
+              secondaryCardWidth
+                ? ({ ['--active-season-card-width' as string]: `${secondaryCardWidth}px` } as React.CSSProperties)
+                : undefined
+            }
+          >
+            {activeSeasons.map((season) => {
+              const isSelected = selectedSeasonId === season.id;
 
-            return (
-              <li key={season.id}>
-                <ManagementSelectableCard
-                  isSelected={isSelected}
-                  badgeLabel={String(season.yearName).slice(-2)}
-                  onToggle={() => {
-                    setSelectedSeasonId((previousSelectedId) =>
-                      previousSelectedId === season.id ? null : season.id,
-                    );
-                  }}
-                  topContent={
-                    <>
-                      <span className="seasons-manager__year">{season.yearName}</span>
-                      <span className="seasons-manager__meta">{t.seasonId}: {season.id}</span>
-                    </>
-                  }
-                  topAside={
-                    <span className={`seasons-manager__card-status${season.isActive ? ' is-active' : ''}`}>
-                      {season.isActive ? t.active : t.inactive}
-                    </span>
-                  }
-                />
-              </li>
-            );
-          })}
-        </ManagementCardsGrid>
+              return (
+                <li key={season.id}>
+                  <ManagementSelectableCard
+                    isSelected={isSelected}
+                    badgeLabel={String(season.yearName).slice(-2)}
+                    onToggle={() => {
+                      setSelectedSeasonId((previousSelectedId) =>
+                        previousSelectedId === season.id ? null : season.id,
+                      );
+                    }}
+                    topContent={
+                      <>
+                        <span className="seasons-manager__year">{season.yearName}</span>
+                        <span className="seasons-manager__meta">{t.seasonId}: {season.id}</span>
+                      </>
+                    }
+                    topAside={
+                      <span className="seasons-manager__card-status is-active">
+                        {t.active}
+                      </span>
+                    }
+                  />
+                </li>
+              );
+            })}
+          </ManagementCardsGrid>
+        </>
+      ) : null}
+
+      {nonActiveSeasons.length > 0 ? (
+        <>
+          <h4 className="seasons-manager__section-title">{t.inactiveSeasonsSectionTitle}</h4>
+          <ManagementCardsGrid className="seasons-manager__cards--secondary-grid">
+            {nonActiveSeasons.map((season) => {
+              const isSelected = selectedSeasonId === season.id;
+
+              return (
+                <li key={season.id}>
+                  <ManagementSelectableCard
+                    isSelected={isSelected}
+                    badgeLabel={String(season.yearName).slice(-2)}
+                    onToggle={() => {
+                      setSelectedSeasonId((previousSelectedId) =>
+                        previousSelectedId === season.id ? null : season.id,
+                      );
+                    }}
+                    topContent={
+                      <>
+                        <span className="seasons-manager__year">{season.yearName}</span>
+                        <span className="seasons-manager__meta">{t.seasonId}: {season.id}</span>
+                      </>
+                    }
+                    topAside={
+                      <span className="seasons-manager__card-status">
+                        {t.inactive}
+                      </span>
+                    }
+                  />
+                </li>
+              );
+            })}
+          </ManagementCardsGrid>
+        </>
       ) : null}
 
       <ConfirmDialog

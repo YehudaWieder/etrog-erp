@@ -15,6 +15,10 @@ export async function getSeasons(): Promise<Season[]> {
   return apiClient<Season[]>('/seasons');
 }
 
+export async function getActiveSeason(): Promise<Season> {
+  return apiClient<Season>('/seasons/active');
+}
+
 export async function createSeason(seasonData: CreateSeasonPayload): Promise<Season> {
   return apiClient<Season>('/seasons', {
     method: 'POST',
