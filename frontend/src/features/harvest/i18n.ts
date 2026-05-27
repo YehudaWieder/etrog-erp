@@ -33,6 +33,7 @@ type HarvestI18n = {
       title: string;
       empty: string;
       close: string;
+      print: string;
       fields: {
         id: string;
         season: string;
@@ -57,6 +58,11 @@ type HarvestI18n = {
         partial: string;
         final: string;
         none: string;
+        statusPrefix: string;
+        rowType: string;
+        generalRow: string;
+        ownerRow: string;
+        differenceRow: string;
       };
     };
     partial: string;
@@ -82,8 +88,8 @@ export const HARVEST_I18N: Record<'he' | 'en', HarvestI18n> = {
     topNav: [
       { id: 'harvest', label: 'קטיף ומיון', icon: 'fa-leaf' },
       { id: 'shipments', label: 'משלוחים', icon: 'fa-truck' },
-      { id: 'partners', label: 'מלאי סוחרים', icon: 'fa-handshake' },
-      { id: 'customers', label: 'מלאי לקוחות', icon: 'fa-users' },
+      { id: 'partners', label: 'סוחרים', icon: 'fa-handshake' },
+      { id: 'customers', label: 'לקוחות', icon: 'fa-users' },
       { id: 'workers', label: 'עובדים', icon: 'fa-person' },
       { id: 'payments', label: 'הוצאות ותשלומים', icon: 'fa-money-bill' },
     ],
@@ -148,6 +154,7 @@ export const HARVEST_I18N: Record<'he' | 'en', HarvestI18n> = {
         title: 'פרטי קטיף מלאים',
         empty: 'בחר רשומה כדי לצפות בכל פרטי הקטיף.',
         close: 'סגירת פרטי קטיף',
+        print: 'הדפסה',
         fields: {
           id: 'מזהה רשומה',
           season: 'עונה',
@@ -155,8 +162,8 @@ export const HARVEST_I18N: Record<'he' | 'en', HarvestI18n> = {
           dateGregorian: 'תאריך לועזי',
           dateHebrew: 'תאריך עברי',
           totalHarvested: 'סה"כ קטיף',
-          totalRejected: 'פסולים',
-          totalAfterRejected: 'נטו לאחר פסילה',
+          totalRejected: 'סה"כ יורדים',
+          totalAfterRejected: 'סה"כ נטו',
           ownerHarvested: 'קטיף בעלים',
           ownerRejected: 'פסולי בעלים',
           ownerAfterRejected: 'נטו בעלים',
@@ -172,6 +179,11 @@ export const HARVEST_I18N: Record<'he' | 'en', HarvestI18n> = {
           partial: 'חלקי',
           final: 'סופי',
           none: '-',
+          statusPrefix: 'מיון',
+          rowType: 'שורה',
+          generalRow: 'לשיטתנו',
+          ownerRow: 'לשיטת פרנקו',
+          differenceRow: 'סה"כ הפרש',
         },
       },
       partial: 'חלקי',
@@ -181,7 +193,7 @@ export const HARVEST_I18N: Record<'he' | 'en', HarvestI18n> = {
         dateHebrew: 'תאריך עברי',
         fieldName: 'שדה',
         totalHarvested: 'סה"כ קטיף',
-        totalRejected: 'פסולים',
+        totalRejected: 'יורדים',
         netHarvest: 'נטו לאחר פסילה',
         classifiedTotal: 'סה"כ מוין',
         mode: 'מצב מיון',
@@ -212,8 +224,8 @@ export const HARVEST_I18N: Record<'he' | 'en', HarvestI18n> = {
     topNav: [
       { id: 'harvest', label: 'Harvest & Sorting' },
       { id: 'shipments', label: 'Shipments' },
-      { id: 'partners', label: 'Partners Inventory' },
-      { id: 'customers', label: 'Customers Inventory' },
+      { id: 'partners', label: 'Partners' },
+      { id: 'customers', label: 'Customers' },
       { id: 'workers', label: 'Workers' },
       { id: 'payments', label: 'Expenses & Payments' },
     ],
@@ -278,6 +290,7 @@ export const HARVEST_I18N: Record<'he' | 'en', HarvestI18n> = {
         title: 'Full Harvest Details',
         empty: 'Select a row to view full harvest details.',
         close: 'Close harvest details',
+        print: 'Print',
         fields: {
           id: 'Record ID',
           season: 'Season',
@@ -285,7 +298,7 @@ export const HARVEST_I18N: Record<'he' | 'en', HarvestI18n> = {
           dateGregorian: 'Gregorian Date',
           dateHebrew: 'Hebrew Date',
           totalHarvested: 'Total Harvested',
-          totalRejected: 'Rejected',
+          totalRejected: 'Total Rejected',
           totalAfterRejected: 'Net After Rejection',
           ownerHarvested: 'Owner Harvested',
           ownerRejected: 'Owner Rejected',
@@ -302,6 +315,11 @@ export const HARVEST_I18N: Record<'he' | 'en', HarvestI18n> = {
           partial: 'Partial',
           final: 'Final',
           none: '-',
+          statusPrefix: 'Classification',
+          rowType: 'Row',
+          generalRow: 'General',
+          ownerRow: 'Owner',
+          differenceRow: 'Total Difference',
         },
       },
       partial: 'Partial',
