@@ -317,8 +317,8 @@ select {
 
 .app-shell__sidebar-title--button.is-active {
   background: #ffffff;
-  color: var(--color-text-accent);
   font-weight: 600;
+  color: var(--color-text-accent);
 }
 
 .app-shell__sidebar-title--button.is-child-active {
@@ -426,7 +426,7 @@ select {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--space-7);
+  padding: 0 var(--space-5);
 }
 
 .app-shell__topbar-left {
@@ -436,7 +436,7 @@ select {
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--color-text-accent);
-  margin-inline-end: var(--space-7);
+  margin-inline-end: var(--space-4);
 }
 
 .app-shell__topbar-left:hover {
@@ -451,7 +451,7 @@ select {
 .app-shell__topbar-links {
   display: flex;
   align-items: center;
-  gap: var(--space-6);
+  gap: var(--space-3);
   overflow-x: auto;
   white-space: nowrap;
 }
@@ -461,23 +461,42 @@ select {
   background: transparent;
   cursor: pointer;
   position: relative;
-  height: 100%;
+  height: auto;
   color: var(--color-text-main);
   font-weight: 600;
-  padding: 0;
+  padding: 5px 10px;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
+  transition: background var(--easing-standard), color var(--easing-standard), box-shadow var(--easing-standard), transform var(--easing-standard);
+}
+
+.app-shell__topbar-link:hover,
+.app-shell__topbar-link:focus-visible {
+  color: var(--color-text-accent);
+  background: rgba(45, 90, 39, 0.08);
 }
 
 .app-shell__topbar-link.is-active {
-  color: #3B6C25;
-  background: var(--color-primary-soft);
+  color: #ffffff;
+  background: var(--color-text-accent);
   border-radius: var(--radius-sm);
-  box-shadow: 0 2px 7px rgba(59, 108, 37, 0.08);
-  padding: 8px 16px;
-  min-height: 40px;
+  box-shadow: 0 2px 7px rgba(45, 90, 39, 0.25);
+  padding: 5px 10px;
+  min-height: 34px;
   display: flex;
   align-items: center;
   position: relative;
   z-index: 1;
+}
+
+.app-shell__topbar-link.is-active:hover,
+.app-shell__topbar-link.is-active:focus-visible {
+  background: #244b21;
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(45, 90, 39, 0.35);
+  transform: translateY(-1px);
 }
 
 .app-shell__topbar-link.is-active::after {
@@ -665,16 +684,21 @@ select {
 
 .app-shell__sidebar-settings {
   border: none;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.92);
-  font-weight: 600;
-  margin: var(--space-2) 0 var(--space-3) 0;
-  padding: var(--space-2) var(--space-5);
+  background: var(--color-primary);
+  color: #1f4520;
+  font-weight: 700;
+  width: auto;
+  min-width: 170px;
+  max-width: calc(100% - (var(--space-4) * 2));
+  margin: var(--space-3) auto var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  justify-content: center;
 }
 
 .app-shell__sidebar-settings:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
+  background: var(--color-primary-strong);
+  color: #1f4520;
   box-shadow: none;
 }
 
@@ -858,25 +882,48 @@ select {
 }
 
 .messages-compose__header {
-  margin-bottom: var(--space-4);
+  margin: 0 -2rem 0.25rem;
   position: relative;
-  padding-inline-end: 42px;
+  padding: 1.35rem 4.5rem 1.15rem;
+  background: var(--color-text-accent);
+  text-align: center;
 }
 
 .messages-compose__title {
   margin: 0;
-  color: #10324a;
+  color: #ffffff;
 }
 
 .messages-compose__description {
   margin: var(--space-2) 0 0;
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .messages-compose__close {
   position: absolute;
-  inset-inline-end: 0;
-  top: 0;
+  inset-inline-end: 12px;
+  top: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.messages-compose__close:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.modal-close {
+  position: absolute;
+  inset-inline-end: 8px;
+  top: 8px;
   width: 34px;
   height: 34px;
   border-radius: 50%;
@@ -889,7 +936,7 @@ select {
   cursor: pointer;
 }
 
-.messages-compose__close:hover {
+.modal-close:hover {
   background: #edf6e9;
 }
 
@@ -2107,7 +2154,7 @@ select {
 
 .settings-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
   gap: var(--space-4);
 }
 
@@ -2189,8 +2236,8 @@ select {
   top: var(--layout-topbar-height);
   left: 0;
   height: calc(100dvh - var(--layout-topbar-height));
-  width: min(560px, 56vw);
-  min-width: 380px;
+  width: min(680px, 64vw);
+  min-width: 460px;
   background: rgba(255, 255, 255, 0.98);
   border-inline-end: 1px solid rgba(210, 222, 214, 0.95);
   box-shadow: 10px 0 28px rgba(18, 49, 29, 0.12);
@@ -2907,8 +2954,8 @@ select {
 }
 
 .seasons-manager__create-row .seasons-manager__year-input {
-  flex: 1 1 220px;
-  width: auto;
+  flex: 0 1 280px;
+  width: min(280px, 100%);
   min-width: 0;
 }
 
@@ -2978,13 +3025,36 @@ select {
   background: #fbfdff;
 }
 
+.seasons-manager__section-title {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #4f6678;
+}
+
 .seasons-manager__cards {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  justify-items: stretch;
   gap: var(--space-3);
+}
+
+.seasons-manager__cards--active-row {
+  grid-template-columns: minmax(300px, var(--active-season-card-width, 360px));
+  width: min(100%, var(--active-season-card-width, 360px));
+  justify-content: stretch;
+  margin-right: auto;
+  margin-left: 0;
+  margin-bottom: var(--space-3);
+}
+
+.app-shell[data-direction='rtl'] .seasons-manager__cards--active-row {
+  margin-right: 0;
+  margin-left: auto;
 }
 
 .seasons-manager__cards--uniform .seasons-manager__card {
@@ -2993,7 +3063,10 @@ select {
 
 .seasons-manager__card {
   width: 100%;
+  min-width: 310px;
+  max-width: 500px;
   border: 1px solid rgba(226, 230, 235, 0.95);
+  border-right: 4px solid var(--color-text-accent);
   background: rgba(255, 255, 255, 0.92);
   border-radius: 14px;
   padding: var(--space-4);
@@ -3004,17 +3077,36 @@ select {
   cursor: pointer;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
   text-align: start;
-  direction: rtl;
+  direction: inherit;
+  transition: background var(--easing-standard), border-color var(--easing-standard), box-shadow var(--easing-standard), transform var(--easing-standard);
 }
 
 .seasons-manager__card:hover {
   border-color: #d4dce6;
+  border-right-color: var(--color-text-accent);
+  background: #ffffff;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.08);
   transform: translateY(-1px);
 }
 
 .seasons-manager__card.is-selected {
   border-color: var(--color-primary);
+  border-right-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(255, 202, 43, 0.05), 0 10px 24px rgba(0, 0, 0, 0.05);
+}
+
+.app-shell[data-direction='ltr'] .seasons-manager__card {
+  direction: ltr;
+  border-right: 1px solid rgba(226, 230, 235, 0.95);
+  border-left: 4px solid var(--color-text-accent);
+}
+
+.app-shell[data-direction='ltr'] .seasons-manager__card:hover {
+  border-left-color: var(--color-text-accent);
+}
+
+.app-shell[data-direction='ltr'] .seasons-manager__card.is-selected {
+  border-left-color: var(--color-primary);
 }
 
 .seasons-manager__card-shell {
@@ -3085,10 +3177,31 @@ select {
   line-height: 1.35;
 }
 
+.customer-categories-manager__groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.customer-categories-manager__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.customer-categories-manager__cards {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
 .customer-categories-manager__form-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(260px, 360px));
+  justify-content: end;
   gap: var(--space-3);
+  width: max-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: 0;
 }
 
 .global-filters-bar {
@@ -3129,8 +3242,13 @@ select {
 
 .default-trader-categories-manager__form-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(260px, 360px));
+  justify-content: end;
   gap: var(--space-3);
+  width: max-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: 0;
 }
 
 .default-trader-categories-manager__field {
@@ -3153,13 +3271,39 @@ select {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  width: max-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: 0;
 }
 
 .default-trader-categories-manager__share-row {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: var(--space-2);
+  grid-template-columns: 260px 150px auto;
+  justify-content: end;
+  gap: 6px;
   align-items: center;
+  width: max-content;
+  max-width: 100%;
+  margin-left: auto;
+}
+
+.default-trader-categories-manager__share-row .seasons-manager__year-input {
+  width: 100%;
+}
+
+.app-shell[data-direction='ltr'] .customer-categories-manager__form-grid,
+.app-shell[data-direction='ltr'] .default-trader-categories-manager__form-grid,
+.app-shell[data-direction='ltr'] .default-trader-categories-manager__shares-area {
+  margin-left: 0;
+  margin-right: auto;
+  justify-content: start;
+}
+
+.app-shell[data-direction='ltr'] .default-trader-categories-manager__share-row {
+  justify-content: start;
+  margin-left: 0;
+  margin-right: auto;
 }
 
 .default-trader-categories-manager__shares-actions {
@@ -3167,6 +3311,22 @@ select {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+}
+
+.default-trader-categories-manager__total {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-accent);
+  font-weight: 700;
+}
+
+.default-trader-categories-manager__total.is-invalid {
+  box-shadow: none;
 }
 
 .default-trader-categories-manager__rows {
@@ -3314,7 +3474,12 @@ select {
     position: static;
     border-inline-end: 0;
     width: 100%;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 0;
+    margin: 0;
+    border-radius: 0;
+    height: auto;
+    max-height: none;
+    box-shadow: none;
   }
 
   .app-shell__topbar {
@@ -3601,8 +3766,8 @@ select {
 }
 
 :root[data-dark-mode='true'] .app-shell__sidebar {
-  background: #2d2d2d;
-  border-color: #404040;
+  background: var(--color-text-accent);
+  border: none;
 }
 
 :root[data-dark-mode='true'] .app-shell__body {
