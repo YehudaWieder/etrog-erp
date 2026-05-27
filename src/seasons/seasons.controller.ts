@@ -109,6 +109,7 @@ export class SeasonsController {
   @ApiOperation({ summary: 'Delete a season by ID' })
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the season to delete.' })
   @ApiResponse({ status: 200, description: 'Season deleted successfully.' })
+  @ApiResponse({ status: 409, description: 'Cannot delete an active season.' })
   @ApiResponse({ status: 404, description: 'Season not found.' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.seasonsService.remove(id);

@@ -155,6 +155,11 @@ const SeasonsManagement: React.FC<SeasonsManagementProps> = ({ onHeaderStateChan
       return;
     }
 
+    if (selectedSeason.isActive) {
+      setDeleteError(t.activeSeasonDeleteBlocked);
+      return;
+    }
+
     setDeleteError(null);
     setIsDeleteDialogOpen(true);
   };
@@ -183,7 +188,7 @@ const SeasonsManagement: React.FC<SeasonsManagementProps> = ({ onHeaderStateChan
 
   const isNewYearValid = isSeasonYearInAllowedRange(newSeasonYear);
   const isActivateDisabled = !selectedSeason || selectedSeason.isActive || loading;
-  const isDeleteDisabled = !selectedSeason || loading;
+  const isDeleteDisabled = !selectedSeason || selectedSeason.isActive || loading;
   const shownError = addError ?? deleteError ?? error;
 
   useEffect(() => {

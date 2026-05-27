@@ -205,6 +205,12 @@ export class SeasonsService {
 
     if (!season) throw new NotFoundException('Season not found');
 
+    if (season.isActive) {
+      throw new ConflictException(
+        'Cannot delete the active season. Please activate another season first.',
+      );
+    }
+
     // Check if there are manually added categories (isDefault: false)
     const manualCategories = season.TradersCategories.filter(
       (cat) => !cat.isDefault,
