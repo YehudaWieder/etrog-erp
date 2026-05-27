@@ -671,7 +671,7 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
                 <button type="button" className="btn btn-primary" onClick={addShareRow}>
                   {t.addRow}
                 </button>
-                <strong className={isTotalExact ? '' : 'seasons-manager__error'}>
+                <strong className={`default-trader-categories-manager__total${isTotalExact ? '' : ' is-invalid'}`}>
                   {t.totalPercentLabel}: {totalPercent.toFixed(2)}%
                 </strong>
               </div>
