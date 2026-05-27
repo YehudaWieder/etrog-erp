@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaFloppyDisk, FaPenToSquare, FaTrashCan } from 'react-icons/fa6';
+import { FaFloppyDisk, FaPenToSquare, FaTrashCan, FaXmark } from 'react-icons/fa6';
 import { AppShell } from '../../app/layout/AppShell';
 import type { NavItem } from '../../types/navigation';
 import { ApiError } from '../../services/apiClient';
@@ -846,6 +846,16 @@ export function ProfilePage() {
             onClick={(event) => event.stopPropagation()}
             aria-label={t.editProfile.title}
           >
+            <button
+              className="modal-close"
+              type="button"
+              aria-label={lang === 'he' ? 'סגירה' : 'Close'}
+              onClick={() => {
+                setIsEditProfileModalOpen(false);
+              }}
+            >
+              <FaXmark />
+            </button>
             <h2 className="modal-title">{t.editProfile.title}</h2>
             <p className="modal-message">{t.editProfile.description}</p>
 
@@ -967,6 +977,14 @@ export function ProfilePage() {
             onClick={(event) => event.stopPropagation()}
             aria-label={lang === 'he' ? 'עדכון פרופיל נבחר' : 'Update selected profile'}
           >
+            <button
+              className="modal-close"
+              type="button"
+              aria-label={lang === 'he' ? 'סגירה' : 'Close'}
+              onClick={() => setShowManagerEditDialog(false)}
+            >
+              <FaXmark />
+            </button>
             <h2 className="modal-title">{lang === 'he' ? 'עדכון פרופיל נבחר' : 'Update Selected Profile'}</h2>
             <p className="modal-message">
               {selectedManagedProfile

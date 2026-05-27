@@ -58,30 +58,18 @@ export function Sidebar({
     return sections.length > 0 ? [sections[0].id] : [];
   }, [activeItemId, sections]);
 
-  const [openSectionIds, setOpenSectionIds] = useState<string[]>(initiallyOpenSectionIds);
+  const [openSectionId, setOpenSectionId] = useState<string | null>(initiallyOpenSectionIds[0] ?? null);
 
   useEffect(() => {
-    setOpenSectionIds((previous) => {
-      if (initiallyOpenSectionIds.length === 0) {
-        return previous;
-      }
+    if (initiallyOpenSectionIds.length === 0) {
+      return;
+    }
 
-      const next = new Set([...previous, ...initiallyOpenSectionIds]);
-      return Array.from(next);
-    });
+    setOpenSectionId(initiallyOpenSectionIds[0]);
   }, [initiallyOpenSectionIds]);
 
-  const toggleSection = (sectionId: string) => {
-    setOpenSectionIds((previous) => {
-      if (previous.includes(sectionId)) {
-        return previous.filter((id) => id !== sectionId);
-      }
-      return [...previous, sectionId];
-    });
-  };
-
   const ensureSectionOpen = (sectionId: string) => {
-    setOpenSectionIds((previous) => (previous.includes(sectionId) ? previous : [...previous, sectionId]));
+    setOpenSectionId(sectionId);
   };
 
   return (
@@ -89,8 +77,9 @@ export function Sidebar({
       <div className="app-shell__sidebar-scroll">
         {sections.map((section) => {
           const hasActiveChild = section.items.some((item) => item.id === activeItemId);
-          const isSectionActive = section.id === activeItemId || hasActiveChild;
-          const isOpen = openSectionIds.includes(section.id);
+          const hasSelfRepresentingChild = section.items.some((item) => item.id === section.id);
+          const isSectionActive = section.id === activeItemId && !hasSelfRepresentingChild;
+          const isOpen = openSectionId === section.id;
           const hasChildren = section.items.length > 0;
           const contentId = `sidebar-section-${section.id}-content`;
 
@@ -98,7 +87,7 @@ export function Sidebar({
           <section key={section.id} className="app-shell__sidebar-section">
             <button
               type="button"
-              className={`app-shell__sidebar-title app-shell__sidebar-title--button${isSectionActive ? ' is-active' : ''}`}
+              className={`app-shell__sidebar-title app-shell__sidebar-title--button${isSectionActive ? ' is-active' : hasActiveChild ? ' is-child-active' : ''}`}
               onClick={() => {
                 if (section.href) {
                   onNavigate?.({ id: section.id, label: section.title, href: section.href });
@@ -119,7 +108,7 @@ export function Sidebar({
                   <>
                     {(() => {
                       const Icon = FAIcons[iconMap[section.icon]];
-                      return Icon ? <Icon style={{ color: '#3B6C25' }} /> : null;
+                      return Icon ? <Icon style={{ color: 'currentColor' }} /> : null;
                     })()}
                   </>
                 )}
@@ -152,7 +141,7 @@ export function Sidebar({
                         <>
                           {(() => {
                             const Icon = FAIcons[iconMap[item.icon]];
-                            return Icon ? <Icon style={{ color: '#3B6C25' }} /> : null;
+                            return Icon ? <Icon style={{ color: 'currentColor' }} /> : null;
                           })()}
                         </>
                       )}

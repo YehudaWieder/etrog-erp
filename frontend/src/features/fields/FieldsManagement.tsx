@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { FaXmark } from 'react-icons/fa6';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import ManagementCardsGrid from '../../components/ui/ManagementCardsGrid';
 import ManagementSelectableCard from '../../components/ui/ManagementSelectableCard';
@@ -245,6 +246,9 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
       {isEditDialogOpen ? (
         <div className="modal-overlay">
           <div className="modal-dialog">
+            <button className="modal-close" type="button" aria-label={t.cancel} onClick={() => setIsEditDialogOpen(false)}>
+              <FaXmark />
+            </button>
             <h3 className="modal-title">{t.editTitle}</h3>
             <div className="modal-message">
               {selectedField ? t.editMessage(selectedField.name) : t.editFallback}

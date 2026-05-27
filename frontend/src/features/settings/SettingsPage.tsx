@@ -56,8 +56,8 @@ const SETTINGS_I18N: Record<Lang, SettingsI18n> = {
     topNav: [
       { id: 'harvest', label: 'קטיף ומיון', icon: 'fa-leaf' },
       { id: 'shipments', label: 'משלוחים', icon: 'fa-truck' },
-      { id: 'partners', label: 'סוחרים', icon: 'fa-handshake' },
-      { id: 'customers', label: 'לקוחות', icon: 'fa-users' },
+      { id: 'partners', label: 'מלאי סוחרים', icon: 'fa-handshake' },
+      { id: 'customers', label: 'מלאי לקוחות', icon: 'fa-users' },
       { id: 'workers', label: 'עובדים', icon: 'fa-person' },
       { id: 'payments', label: 'הוצאות ותשלומים', icon: 'fa-money-bill' },
     ],
@@ -174,8 +174,8 @@ const SETTINGS_I18N: Record<Lang, SettingsI18n> = {
     topNav: [
       { id: 'harvest', label: 'Harvest & Sorting' },
       { id: 'shipments', label: 'Shipments' },
-      { id: 'partners', label: 'Partners' },
-      { id: 'customers', label: 'Customers' },
+      { id: 'partners', label: 'Partners Inventory' },
+      { id: 'customers', label: 'Customers Inventory' },
       { id: 'workers', label: 'Workers' },
       { id: 'payments', label: 'Expenses & Payments' },
     ],

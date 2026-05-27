@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { FaXmark } from 'react-icons/fa6';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import ManagementCardsGrid from '../../components/ui/ManagementCardsGrid';
 import ManagementSelectableCard from '../../components/ui/ManagementSelectableCard';
@@ -514,6 +515,17 @@ const DefaultTraderCategoriesManagement: React.FC<DefaultTraderCategoriesManagem
       {isAddDialogOpen || isEditDialogOpen ? (
         <div className="modal-overlay">
           <div className="modal-dialog modal-dialog--form">
+            <button
+              className="modal-close"
+              type="button"
+              aria-label={t.cancel}
+              onClick={() => {
+                setIsAddDialogOpen(false);
+                setIsEditDialogOpen(false);
+              }}
+            >
+              <FaXmark />
+            </button>
             <h3 className="modal-title">{isAddDialogOpen ? t.addTitle : t.editTitle}</h3>
             <div className="modal-message">
               {isAddDialogOpen ? t.addMessage : t.editMessage(selectedCategory?.name ?? '')}
