@@ -182,6 +182,30 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
     [sortedCategories, customerFilterId],
   );
 
+  const categoriesByCustomer = useMemo(() => {
+    const groups = new Map<number, { customerName: string; categories: typeof filteredCategories }>();
+
+    filteredCategories.forEach((category) => {
+      const existingGroup = groups.get(category.customerId);
+
+      if (existingGroup) {
+        existingGroup.categories.push(category);
+        return;
+      }
+
+      groups.set(category.customerId, {
+        customerName: category.customerName,
+        categories: [category],
+      });
+    });
+
+    return Array.from(groups.entries()).map(([customerId, group]) => ({
+      customerId,
+      customerName: group.customerName,
+      categories: group.categories,
+    }));
+  }, [filteredCategories]);
+
   useEffect(() => {
     if (selectedCategoryId && !filteredCategories.some((category) => category.id === selectedCategoryId)) {
       setSelectedCategoryId(null);
@@ -419,39 +443,46 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
       errorMessage={shownError}
       emptyMessage={!seasonFilterId ? t.empty : seasonFilterId && filteredCategories.length === 0 && !loading ? t.categoryForSeasonEmpty : null}
     >
-      {filteredCategories.length > 0 ? (
-        <ManagementCardsGrid>
-          {filteredCategories.map((category) => {
-            const isSelected = selectedCategoryId === category.id;
-            const badgeLabel = category.name.trim().slice(0, 2).toUpperCase() || '#';
+      {categoriesByCustomer.length > 0 ? (
+        <div className="customer-categories-manager__groups">
+          {categoriesByCustomer.map((group) => (
+            <section key={group.customerId} className="customer-categories-manager__group">
+              <h4 className="seasons-manager__section-title">{group.customerName}</h4>
+              <ManagementCardsGrid className="customer-categories-manager__cards">
+                {group.categories.map((category) => {
+                  const isSelected = selectedCategoryId === category.id;
+                  const badgeLabel = category.name.trim().slice(0, 2).toUpperCase() || '#';
 
-            return (
-              <li key={category.id}>
-                <ManagementSelectableCard
-                  isSelected={isSelected}
-                  badgeLabel={badgeLabel}
-                  onToggle={() => {
-                    setSelectedCategoryId((previousId) => (previousId === category.id ? null : category.id));
-                  }}
-                  topContent={
-                    <>
-                      <span className="seasons-manager__year">
-                        {category.name} | {t.grade} {category.grade}
-                      </span>
-                      <span className="seasons-manager__meta">{t.categoryId}: {category.id}</span>
-                    </>
-                  }
-                  bottomContent={
-                    <span className="seasons-manager__meta customers-manager__meta">
-                      <span className="customers-manager__meta-line">{t.customer}: {category.customerName}</span>
-                      <span className="customers-manager__meta-line">{t.price}: {normalizePriceValue(category.price)} {category.currency}</span>
-                    </span>
-                  }
-                />
-              </li>
-            );
-          })}
-        </ManagementCardsGrid>
+                  return (
+                    <li key={category.id}>
+                      <ManagementSelectableCard
+                        isSelected={isSelected}
+                        badgeLabel={badgeLabel}
+                        onToggle={() => {
+                          setSelectedCategoryId((previousId) => (previousId === category.id ? null : category.id));
+                        }}
+                        topContent={
+                          <>
+                            <span className="seasons-manager__year">
+                              {category.name} | {t.grade} {category.grade}
+                            </span>
+                            <span className="seasons-manager__meta">{t.categoryId}: {category.id}</span>
+                          </>
+                        }
+                        bottomContent={
+                          <span className="seasons-manager__meta customers-manager__meta">
+                            <span className="customers-manager__meta-line">{t.customer}: {category.customerName}</span>
+                            <span className="customers-manager__meta-line">{t.price}: {normalizePriceValue(category.price)} {category.currency}</span>
+                          </span>
+                        }
+                      />
+                    </li>
+                  );
+                })}
+              </ManagementCardsGrid>
+            </section>
+          ))}
+        </div>
       ) : null}
 
       <ConfirmDialog

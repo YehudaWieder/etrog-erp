@@ -3022,6 +3022,22 @@ select {
   line-height: 1.35;
 }
 
+.customer-categories-manager__groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.customer-categories-manager__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.customer-categories-manager__cards {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
 .customer-categories-manager__form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(260px, 360px));
