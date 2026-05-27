@@ -1,6 +1,6 @@
 import { apiClient } from './apiClient';
 
-export type Grade = 'א' | 'ב' | 'ג' | 'ד' | 'ה' | 'ו';
+export type Grade = string;
 export type Currency = 'ILS' | 'USD' | 'EUR';
 
 export type CustomerCategory = {

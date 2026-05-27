@@ -180,6 +180,7 @@ type ManagementI18n = {
     categoryNameLabel: string;
     categoryNamePlaceholder: string;
     gradeLabel: string;
+    gradePlaceholder: string;
     priceLabel: string;
     pricePlaceholder: string;
     currencyLabel: string;
@@ -402,6 +403,7 @@ const MANAGEMENT_I18N: Record<AppLang, ManagementI18n> = {
       categoryNameLabel: 'שם קטגוריה',
       categoryNamePlaceholder: 'לדוגמה: מהדרין',
       gradeLabel: 'דרגה',
+      gradePlaceholder: 'לדוגמה: א, א+, פרימיום',
       priceLabel: 'מחיר',
       pricePlaceholder: 'הזן מחיר',
       currencyLabel: 'מטבע',
@@ -622,6 +624,7 @@ const MANAGEMENT_I18N: Record<AppLang, ManagementI18n> = {
       categoryNameLabel: 'Category name',
       categoryNamePlaceholder: 'For example: Mehadrin',
       gradeLabel: 'Grade',
+      gradePlaceholder: 'For example: A, A+, Premium',
       priceLabel: 'Price',
       pricePlaceholder: 'Enter price',
       currencyLabel: 'Currency',

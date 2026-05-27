@@ -25,7 +25,6 @@ import {
   parseSeasonFilterId,
 } from './customerCategoriesFilters';
 
-const GRADES: Grade[] = ['א', 'ב', 'ג', 'ד', 'ה', 'ו'];
 const CURRENCIES: Currency[] = ['ILS', 'USD', 'EUR'];
 const FILTER_SCOPE = 'customer-categories-management';
 const EMPTY_FILTERS: Record<string, string> = {};
@@ -235,6 +234,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
 
   const validateFormState = (state: CategoryFormState): { ok: true; payload: { customerId: number; name: string; grade: Grade; price: number; currency: Currency } } | { ok: false; error: string } => {
     const sanitizedName = sanitizeText(state.name);
+    const sanitizedGrade = sanitizeText(state.grade);
 
     if (!seasonFilterId) {
       return { ok: false, error: t.noActiveSeasonForAdd };
@@ -243,7 +243,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
     if (!state.customerId) {
       return { ok: false, error: t.selectCustomer };
     }
-    if (!state.grade) {
+    if (!sanitizedGrade) {
       return { ok: false, error: t.selectGrade };
     }
 
@@ -266,7 +266,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
       payload: {
         customerId: state.customerId,
         name: sanitizedName,
-        grade: state.grade,
+        grade: sanitizedGrade,
         price: numericPrice,
         currency: state.currency,
       },
@@ -565,25 +565,18 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
 
               <div className="customer-categories-manager__field">
                 <label className="customer-categories-manager__label">{t.gradeLabel}</label>
-                <select
+                <input
                   className="seasons-manager__year-input"
+                  type="text"
                   value={formState.grade}
                   onChange={(event) => {
                     setFormState((previous) => ({
                       ...previous,
-                      grade: event.target.value as Grade | '',
+                      grade: event.target.value,
                     }));
                   }}
-                >
-                  <option value="" disabled>
-                    {t.selectGrade}
-                  </option>
-                  {GRADES.map((grade) => (
-                    <option key={grade} value={grade}>
-                      {grade}
-                    </option>
-                  ))}
-                </select>
+                  placeholder={t.gradePlaceholder}
+                />
               </div>
 
               <div className="customer-categories-manager__field">
