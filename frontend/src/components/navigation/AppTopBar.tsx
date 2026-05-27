@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import { FaEnvelope } from 'react-icons/fa6';
 import type { NavItem } from '../../types/navigation';
-import { HomeIcon } from '../ui/HomeIcon';
 import { CalendarPopover } from './CalendarPopover';
 import { ProfileMenu, type ProfileMenuProps } from './ProfileMenu';
 import { TopBar } from './TopBar';
@@ -13,6 +12,7 @@ type AppTopBarProps = {
   activeId?: string;
   onNavigate?: (item: NavItem) => void;
   brandName?: string;
+  logoSrc?: string;
   lang: 'he' | 'en';
   alertsCount?: number;
   onAlertsClick?: () => void;
@@ -111,7 +111,6 @@ export function AppTopBar({
           }}
           aria-label={lang === 'he' ? 'לעמוד הבית' : 'Go to home'}
         >
-          <HomeIcon style={{ fontSize: 22, marginInlineEnd: 6 }} />
           {brandName}
         </button>
       }

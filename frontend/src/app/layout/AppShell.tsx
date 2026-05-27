@@ -14,7 +14,9 @@ import { Sidebar } from '../../components/navigation/Sidebar';
 import { AppTopBar } from '../../components/navigation/AppTopBar';
 import { StickyHeaderBar } from '../../components/StickyHeaderBar';
 import type { ProfileMenuProps } from '../../components/navigation/ProfileMenu';
+import { LoadingSplash } from '../../components/ui/LoadingSplash';
 import { directionFromLanguage, getPreferredLanguage } from '../../utils/locale';
+import brandLogo from '../../assets/logo.svg';
 
 type TopBarOptions = ProfileMenuProps & {
   alertsCount?: number;
@@ -24,6 +26,7 @@ type TopBarOptions = ProfileMenuProps & {
 type AppShellProps = {
   direction?: 'rtl' | 'ltr';
   brandName?: string;
+  logoSrc?: string;
   pageTitle?: string;
   topNav: NavItem[];
   activeTopNavId?: string;
@@ -42,6 +45,7 @@ type AppShellProps = {
 export function AppShell({
   direction,
   brandName = 'Wieders etrogs',
+  logoSrc = brandLogo,
   pageTitle,
   topNav,
   activeTopNavId,
@@ -63,6 +67,7 @@ export function AppShell({
   const [urgentMessages, setUrgentMessages] = useState<Message[]>([]);
   const [activeUrgentMessageId, setActiveUrgentMessageId] = useState<number | null>(null);
   const [liveUnreadCount, setLiveUnreadCount] = useState<number | undefined>(undefined);
+  const [showContentLoading, setShowContentLoading] = useState(true);
   const knownInboxMessageIdsRef = useRef<Set<number>>(new Set());
   const hasHydratedInboxRef = useRef(false);
   const suppressedUrgentIdsRef = useRef<Set<number>>(new Set());
@@ -91,6 +96,16 @@ export function AppShell({
         void audioContextRef.current.close();
         audioContextRef.current = null;
       }
+    };
+  }, []);
+
+  useEffect(() => {
+    const hideTimerId = window.setTimeout(() => {
+      setShowContentLoading(false);
+    }, 5000);
+
+    return () => {
+      window.clearTimeout(hideTimerId);
     };
   }, []);
 
@@ -321,6 +336,7 @@ export function AppShell({
         activeId={activeTopNavId}
         onNavigate={onTopNavClick}
         brandName={brandName}
+        logoSrc={logoSrc}
         lang={topBarLanguage}
         onBrandClick={onBrandClick}
         alertsCount={typeof liveUnreadCount === 'number' ? liveUnreadCount : topBarOptions.alertsCount}
@@ -341,7 +357,26 @@ export function AppShell({
             footerSlot={sidebarFooterSlot}
           />
         )}
-        <div className="app-shell__main">
+        <div className="app-shell__main" style={{ position: 'relative' }}>
+          {showContentLoading ? (
+            <div
+              className="app-shell__content-loading-overlay"
+              aria-live="polite"
+              aria-busy="true"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 25,
+                display: 'grid',
+                placeItems: 'center',
+                background: 'rgba(244, 245, 248, 0.82)',
+                backdropFilter: 'blur(4px)',
+                WebkitBackdropFilter: 'blur(4px)',
+              }}
+            >
+              <LoadingSplash message={topBarLanguage === 'he' ? 'טוען...' : 'Loading...'} compact fullArea />
+            </div>
+          ) : null}
           <main className={`app-shell__content${pageTitle ? ' app-shell__content--with-page-header' : ''}`}>
             {pageTitle ? (
               <div className="app-shell__page-header app-shell__page-header--sticky">
