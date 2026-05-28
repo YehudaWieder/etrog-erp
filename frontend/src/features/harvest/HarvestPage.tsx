@@ -4,25 +4,56 @@ import { useDispatch, useSelector } from 'react-redux';
 import { FaCirclePlus, FaFileArrowDown, FaFileInvoice, FaPenToSquare, FaPrint, FaTrashCan } from 'react-icons/fa6';
 import { AppShell } from '../../app/layout/AppShell';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
-import { GlobalDataTable, type GlobalDataTableColumn } from '../../components/ui/GlobalDataTable';
+import {
+  GLOBAL_DATA_TABLE_WIDTHS,
+  GlobalDataTable,
+  type GlobalDataTableColumn,
+} from '../../components/ui/GlobalDataTable';
 import { GlobalLeftDetailsPanel } from '../../components/ui/GlobalLeftDetailsPanel';
 import { GlobalScopedFilters, type GlobalScopedFilterConfig } from '../../components/ui/GlobalScopedFilters';
 import type { NavItem } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
 import { getSeasons, type Season } from '../../services/seasonsApi';
 import { getFields, type Field } from '../../services/fieldsApi';
-import { getHarvestsBySeason, type HarvestRecord } from '../../services/harvestsApi';
+import {
+  getHarvestFieldReportDetailsBySeasonAndField,
+  getHarvestFieldTotalsBySeason,
+  getHarvestsBySeason,
+  type HarvestFieldReportDetailsRecord,
+  type HarvestRecord,
+} from '../../services/harvestsApi';
 import { getClassificationsByHarvest, type ClassificationRecord } from '../../services/classificationsApi';
 import { setScopeFilter } from '../../store/globalFiltersSlice';
 import type { AppDispatch, RootState } from '../../store';
 import { HARVEST_I18N } from './i18n';
+import { HarvestFieldReportDetailsPanel } from './HarvestFieldReportDetailsPanel';
+import { openPrintableWindow } from '../../utils/printWindow';
 
 const DEFAULT_SIDEBAR_ITEM_ID = 'harvest-daily-details';
 const HARVEST_DAILY_FILTER_SCOPE = 'harvest-daily-details';
 const EMPTY_FILTERS: Record<string, string> = {};
-type HarvestSortKey = 'dateGregorian' | 'totalHarvested' | 'totalRejected' | 'totalAfterRejected' | 'classifiedTotal';
-type HarvestSortDirection = 'asc' | 'desc';
 type HarvestNumericColumnKey = 'totalHarvested' | 'totalRejected' | 'totalAfterRejected' | 'classifiedTotal';
+
+type HarvestFieldReportRow = {
+  id: number;
+  fieldName: string;
+  recordCount: number;
+  totalHarvested: number;
+  totalRejected: number;
+  totalAfterRejected: number;
+  classifiedTotal: number;
+  rejectionRate: number;
+  ownerHarvested: number;
+  ownerRejected: number;
+  ownerAfterRejected: number;
+  ownerRejectionRate: number;
+  differenceHarvested: number;
+  differenceRejected: number;
+  differenceAfterRejected: number;
+  differenceRejectionRate: number;
+  hasOwnerOverrides: boolean;
+  isPartialClassification: boolean;
+};
 
 const HARVEST_NUMERIC_COLUMNS: HarvestNumericColumnKey[] = [
   'totalHarvested',
@@ -54,8 +85,10 @@ export function HarvestPage() {
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [fields, setFields] = useState<Field[]>([]);
   const [harvestRows, setHarvestRows] = useState<HarvestRecord[]>([]);
-  const [sortConfig, setSortConfig] = useState<{ key: HarvestSortKey; direction: HarvestSortDirection } | null>(null);
+  const [fieldReportRows, setFieldReportRows] = useState<HarvestFieldReportRow[]>([]);
+  const [fieldReportDetailsPayload, setFieldReportDetailsPayload] = useState<HarvestFieldReportDetailsRecord | null>(null);
   const [detailsRecord, setDetailsRecord] = useState<HarvestRecord | null>(null);
+  const [fieldReportDetailsFieldId, setFieldReportDetailsFieldId] = useState<number | null>(null);
   const [relatedSortings, setRelatedSortings] = useState<ClassificationRecord[]>([]);
   const [isRelatedSortingsLoading, setIsRelatedSortingsLoading] = useState(false);
   const [relatedSortingsLoadError, setRelatedSortingsLoadError] = useState<string>('');
@@ -63,6 +96,9 @@ export function HarvestPage() {
   const [isDragSelecting, setIsDragSelecting] = useState(false);
   const dragSelectModeRef = useRef<'add' | 'remove'>('add');
   const detailsPrintRef = useRef<HTMLDivElement | null>(null);
+  const fieldReportDetailsPrintRef = useRef<HTMLDivElement | null>(null);
+  const visibleHarvestRowsRef = useRef<HarvestRecord[]>([]);
+  const visibleFieldReportRowsRef = useRef<HarvestFieldReportRow[]>([]);
   const [isHarvestLoading, setIsHarvestLoading] = useState(false);
   const [harvestLoadError, setHarvestLoadError] = useState<string>('');
   const globalFilterValues = useSelector(
@@ -141,6 +177,8 @@ export function HarvestPage() {
   };
 
   const isDailyDetailsTab = activeSidebarId === 'harvest-daily-details';
+  const isFieldReportTab = activeSidebarId === 'harvest-field-report';
+  const requiresHarvestData = isDailyDetailsTab || isFieldReportTab;
 
   const activeSeasonId = useMemo(() => {
     return seasons.find((season) => season.isActive)?.id ?? null;
@@ -155,7 +193,7 @@ export function HarvestPage() {
   }, [globalFilterValues.fieldId]);
 
   useEffect(() => {
-    if (!isDailyDetailsTab) {
+    if (!requiresHarvestData) {
       return;
     }
 
@@ -187,10 +225,10 @@ export function HarvestPage() {
     return () => {
       isMounted = false;
     };
-  }, [isDailyDetailsTab, t.dailyDetails.loadError]);
+  }, [requiresHarvestData, t.dailyDetails.loadError]);
 
   useEffect(() => {
-    if (!isDailyDetailsTab) {
+    if (!requiresHarvestData) {
       return;
     }
 
@@ -214,15 +252,16 @@ export function HarvestPage() {
         }),
       );
     }
-  }, [activeSeasonId, dispatch, isDailyDetailsTab, seasonFilterId, seasons]);
+  }, [activeSeasonId, dispatch, requiresHarvestData, seasonFilterId, seasons]);
 
   useEffect(() => {
-    if (!isDailyDetailsTab) {
+    if (!requiresHarvestData) {
       return;
     }
 
     if (!seasonFilterId) {
       setHarvestRows([]);
+      setFieldReportRows([]);
       return;
     }
 
@@ -233,19 +272,45 @@ export function HarvestPage() {
       setHarvestLoadError('');
 
       try {
-        const records = await getHarvestsBySeason(seasonFilterId);
+        const [records, fieldTotals] = await Promise.all([
+          isDailyDetailsTab ? getHarvestsBySeason(seasonFilterId) : Promise.resolve([]),
+          getHarvestFieldTotalsBySeason(seasonFilterId),
+        ]);
 
         if (!isMounted) {
           return;
         }
 
         setHarvestRows(records);
+        setFieldReportRows(
+          fieldTotals.map((row) => ({
+            id: row.fieldId,
+            fieldName: row.fieldName,
+            recordCount: row.recordCount,
+            totalHarvested: row.totalHarvested,
+            totalRejected: row.totalRejected,
+            totalAfterRejected: row.totalAfterRejected,
+            classifiedTotal: row.classifiedTotal,
+            rejectionRate: row.rejectionRate,
+            ownerHarvested: row.ownerHarvested,
+            ownerRejected: row.ownerRejected,
+            ownerAfterRejected: row.ownerAfterRejected,
+            ownerRejectionRate: row.ownerRejectionRate,
+            differenceHarvested: row.differenceHarvested,
+            differenceRejected: row.differenceRejected,
+            differenceAfterRejected: row.differenceAfterRejected,
+            differenceRejectionRate: row.differenceRejectionRate,
+            hasOwnerOverrides: row.hasOwnerOverrides,
+            isPartialClassification: row.isPartialClassification,
+          })),
+        );
       } catch {
         if (!isMounted) {
           return;
         }
 
         setHarvestRows([]);
+        setFieldReportRows([]);
         setHarvestLoadError(t.dailyDetails.loadError);
       } finally {
         if (isMounted) {
@@ -259,7 +324,7 @@ export function HarvestPage() {
     return () => {
       isMounted = false;
     };
-  }, [isDailyDetailsTab, seasonFilterId, t.dailyDetails.loadError]);
+  }, [isDailyDetailsTab, requiresHarvestData, seasonFilterId, t.dailyDetails.loadError]);
 
   const formatGregorianDate = (value: string) => {
     const date = new Date(value);
@@ -317,7 +382,9 @@ export function HarvestPage() {
       return isPartialClassificationFlag(isPartialClassification) ? values.partial : values.final;
     };
 
-    const rows = sortedHarvestRows.map((row) => [
+    const rowsSource = visibleHarvestRowsRef.current.length > 0 ? visibleHarvestRowsRef.current : filteredHarvestRows;
+
+    const rows = rowsSource.map((row) => [
       row.field?.name ?? values.none,
       formatGregorianDate(row.dateGregorian),
       row.dateHebrew,
@@ -333,6 +400,53 @@ export function HarvestPage() {
       row.ownerRejectionRate,
       row.updatedBy?.name ?? values.none,
       row.notes ?? values.none,
+    ]);
+
+    return { header, rows };
+  };
+
+  const createFieldReportExportRows = () => {
+    const fields = t.dailyDetails.detailsPanel.fields;
+    const values = t.dailyDetails.detailsPanel.values;
+
+    const header = [
+      t.dailyDetails.columns.fieldName,
+      lang === 'he' ? 'מספר קטיפים' : 'Harvest count',
+      t.dailyDetails.columns.totalHarvested,
+      t.dailyDetails.columns.totalRejected,
+      t.dailyDetails.columns.netHarvest,
+      t.dailyDetails.columns.classifiedTotal,
+      fields.rejectionRate,
+      fields.ownerHarvested,
+      fields.ownerRejected,
+      fields.ownerAfterRejected,
+      fields.ownerRejectionRate,
+      values.differenceRow,
+      lang === 'he' ? 'הפרש יורדים' : 'Rejected Difference',
+      lang === 'he' ? 'הפרש נטו' : 'Net Difference',
+      lang === 'he' ? 'הפרש אחוז פסילה' : 'Rejection Rate Difference',
+      fields.classificationStatus,
+    ];
+
+    const rowsSource = visibleFieldReportRowsRef.current.length > 0 ? visibleFieldReportRowsRef.current : fieldReportRows;
+
+    const rows = rowsSource.map((row) => [
+      row.fieldName,
+      row.recordCount,
+      row.totalHarvested,
+      row.totalRejected,
+      row.totalAfterRejected,
+      row.classifiedTotal,
+      row.rejectionRate,
+      row.ownerHarvested,
+      row.ownerRejected,
+      row.ownerAfterRejected,
+      row.ownerRejectionRate,
+      row.differenceHarvested,
+      row.differenceRejected,
+      row.differenceAfterRejected,
+      row.differenceRejectionRate,
+      row.isPartialClassification ? values.partial : values.final,
     ]);
 
     return { header, rows };
@@ -446,33 +560,112 @@ export function HarvestPage() {
     window.URL.revokeObjectURL(url);
   };
 
-  const toggleSort = (key: HarvestSortKey) => {
-    setSortConfig((prev) => {
-      if (!prev || prev.key !== key) {
-        return { key, direction: 'desc' };
-      }
+  const handlePrintFieldReportTable = () => {
+    if (typeof window === 'undefined') {
+      return;
+    }
 
-      return { key, direction: prev.direction === 'desc' ? 'asc' : 'desc' };
-    });
+    const { header, rows } = createFieldReportExportRows();
+    const tableHeaderHtml = header.map((label) => `<th>${escapeHtml(label)}</th>`).join('');
+    const tableRowsHtml = rows
+      .map((row) => `<tr>${row.map((value) => `<td>${escapeHtml(String(value))}</td>`).join('')}</tr>`)
+      .join('');
+
+    const printWindow = window.open('', '_blank', 'width=1200,height=760');
+    if (!printWindow) {
+      return;
+    }
+
+    const printTitle = lang === 'he' ? 'דוח קטיפים לפי שדה' : 'Harvest Field Report';
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html lang="${lang === 'he' ? 'he' : 'en'}" dir="${lang === 'he' ? 'rtl' : 'ltr'}">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>${escapeHtml(printTitle)}</title>
+          <style>
+            * { box-sizing: border-box; }
+            body {
+              margin: 0;
+              padding: 22px;
+              font-family: Assistant, sans-serif;
+              color: #1f2a22;
+              background: #fff;
+            }
+            h1 {
+              margin: 0 0 14px;
+              font-size: 22px;
+              color: #1f4f29;
+              text-align: center;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              table-layout: auto;
+              font-size: 10px;
+            }
+            th,
+            td {
+              border: 1px solid #ccd9cf;
+              padding: 5px;
+              text-align: center;
+              white-space: nowrap;
+            }
+            th {
+              background: #1f5a32;
+              color: #fff;
+              font-weight: 700;
+            }
+            tbody tr:nth-child(even) {
+              background: #f8fcf9;
+            }
+            @page {
+              size: A4 landscape;
+              margin: 8mm;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>${escapeHtml(printTitle)}</h1>
+          <table>
+            <thead>
+              <tr>${tableHeaderHtml}</tr>
+            </thead>
+            <tbody>
+              ${tableRowsHtml}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
   };
 
-  const renderSortableHeader = (label: string, key: HarvestSortKey) => {
-    const isActive = sortConfig?.key === key;
-    const direction = isActive ? sortConfig.direction : null;
+  const handleExportFieldReportTableToCsv = () => {
+    if (typeof window === 'undefined') {
+      return;
+    }
 
-    return (
-      <button
-        type="button"
-        className={`global-data-table__sort-button${isActive ? ' is-active' : ''}`}
-        onClick={() => toggleSort(key)}
-        aria-label={`${label} - מיון`}
-      >
-        <span>{label}</span>
-        <span className="global-data-table__sort-indicator" aria-hidden="true">
-          {direction === 'asc' ? '▲' : direction === 'desc' ? '▼' : '↕'}
-        </span>
-      </button>
-    );
+    const { header, rows } = createFieldReportExportRows();
+    const csvLines = [header, ...rows].map((row) => row.map((value) => escapeCsv(value)).join(','));
+    const csvContent = `\ufeff${csvLines.join('\n')}`;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    link.href = url;
+    link.download = `harvest-field-report-${dateStamp}.csv`;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
   };
 
   const buildNumericCellId = (rowId: number, column: HarvestNumericColumnKey) => `${rowId}:${column}`;
@@ -541,8 +734,8 @@ export function HarvestPage() {
         id: 'actions',
         header: lang === 'he' ? 'פרטים' : 'Details',
         headerLabel: lang === 'he' ? 'פרטים' : 'Details',
-        minWidth: '72px',
-        gridTemplate: '72px',
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.action,
+        gridTemplate: GLOBAL_DATA_TABLE_WIDTHS.action,
         align: 'center',
         render: (row) => (
           <button
@@ -557,54 +750,74 @@ export function HarvestPage() {
       },
       {
         id: 'dateGregorian',
-        header: renderSortableHeader(t.dailyDetails.columns.dateGregorian, 'dateGregorian'),
+        header: t.dailyDetails.columns.dateGregorian,
         headerLabel: t.dailyDetails.columns.dateGregorian,
-        minWidth: '120px',
+        sortKey: 'dateGregorian',
+        sortLabel: `${t.dailyDetails.columns.dateGregorian} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        defaultSortDirection: 'desc',
+        sortAccessor: (row) => Date.parse(row.dateGregorian),
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.dateShort,
         render: (row) => formatGregorianDate(row.dateGregorian),
       },
       {
         id: 'dateHebrew',
         header: t.dailyDetails.columns.dateHebrew,
         headerLabel: t.dailyDetails.columns.dateHebrew,
-        minWidth: '132px',
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.dateLong,
         render: (row) => row.dateHebrew,
       },
       {
         id: 'fieldName',
         header: t.dailyDetails.columns.fieldName,
         headerLabel: t.dailyDetails.columns.fieldName,
-        minWidth: '116px',
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.fieldName,
         render: (row) => row.field?.name ?? '-',
       },
       {
         id: 'totalHarvested',
-        header: renderSortableHeader(t.dailyDetails.columns.totalHarvested, 'totalHarvested'),
+        header: t.dailyDetails.columns.totalHarvested,
         headerLabel: t.dailyDetails.columns.totalHarvested,
-        minWidth: '104px',
+        sortKey: 'totalHarvested',
+        sortLabel: `${t.dailyDetails.columns.totalHarvested} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        defaultSortDirection: 'desc',
+        sortAccessor: (row) => row.totalHarvested,
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
         align: 'center',
         render: (row) => renderNumericCell(row, 'totalHarvested', row.totalHarvested),
       },
       {
         id: 'totalRejected',
-        header: renderSortableHeader(t.dailyDetails.columns.totalRejected, 'totalRejected'),
+        header: t.dailyDetails.columns.totalRejected,
         headerLabel: t.dailyDetails.columns.totalRejected,
-        minWidth: '104px',
+        sortKey: 'totalRejected',
+        sortLabel: `${t.dailyDetails.columns.totalRejected} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        defaultSortDirection: 'desc',
+        sortAccessor: (row) => row.totalRejected,
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
         align: 'center',
         render: (row) => renderNumericCell(row, 'totalRejected', row.totalRejected),
       },
       {
         id: 'totalAfterRejected',
-        header: renderSortableHeader(t.dailyDetails.columns.netHarvest, 'totalAfterRejected'),
+        header: t.dailyDetails.columns.netHarvest,
         headerLabel: t.dailyDetails.columns.netHarvest,
-        minWidth: '110px',
+        sortKey: 'totalAfterRejected',
+        sortLabel: `${t.dailyDetails.columns.netHarvest} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        defaultSortDirection: 'desc',
+        sortAccessor: (row) => row.totalAfterRejected,
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
         align: 'center',
         render: (row) => renderNumericCell(row, 'totalAfterRejected', row.totalAfterRejected),
       },
       {
         id: 'classifiedTotal',
-        header: renderSortableHeader(t.dailyDetails.columns.classifiedTotal, 'classifiedTotal'),
+        header: t.dailyDetails.columns.classifiedTotal,
         headerLabel: t.dailyDetails.columns.classifiedTotal,
-        minWidth: '110px',
+        sortKey: 'classifiedTotal',
+        sortLabel: `${t.dailyDetails.columns.classifiedTotal} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        defaultSortDirection: 'desc',
+        sortAccessor: (row) => row.classifiedTotal,
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
         align: 'center',
         render: (row) => (
           renderNumericCell(
@@ -620,65 +833,63 @@ export function HarvestPage() {
         ),
       },
     ];
-  }, [t, lang, sortConfig, isDragSelecting, selectedNumericCells]);
+  }, [t, lang, isDragSelecting, selectedNumericCells]);
 
   const filteredHarvestRows = useMemo(() => {
     return harvestRows.filter((row) => (fieldFilterId === 'all' ? true : row.fieldId === fieldFilterId));
   }, [harvestRows, fieldFilterId]);
 
-  const sortedHarvestRows = useMemo(() => {
-    if (!sortConfig) {
-      return filteredHarvestRows;
+  useEffect(() => {
+    if (fieldReportDetailsFieldId === null) {
+      setFieldReportDetailsPayload(null);
+      return;
     }
 
-    const directionFactor = sortConfig.direction === 'asc' ? 1 : -1;
-    const rows = [...filteredHarvestRows];
+    if (!fieldReportRows.some((row) => row.id === fieldReportDetailsFieldId)) {
+      setFieldReportDetailsFieldId(null);
+      setFieldReportDetailsPayload(null);
+    }
+  }, [fieldReportDetailsFieldId, fieldReportRows]);
 
-    rows.sort((a, b) => {
-      let comparison = 0;
+  useEffect(() => {
+    if (!isFieldReportTab || fieldReportDetailsFieldId === null || !seasonFilterId) {
+      setFieldReportDetailsPayload(null);
+      return;
+    }
 
-      switch (sortConfig.key) {
-        case 'dateGregorian': {
-          const aTime = Date.parse(a.dateGregorian);
-          const bTime = Date.parse(b.dateGregorian);
-          comparison = (Number.isNaN(aTime) ? 0 : aTime) - (Number.isNaN(bTime) ? 0 : bTime);
-          break;
+    let isMounted = true;
+
+    const loadFieldReportDetails = async () => {
+      try {
+        const data = await getHarvestFieldReportDetailsBySeasonAndField(seasonFilterId, fieldReportDetailsFieldId);
+        if (!isMounted) {
+          return;
         }
-        case 'totalHarvested':
-          comparison = a.totalHarvested - b.totalHarvested;
-          break;
-        case 'totalRejected':
-          comparison = a.totalRejected - b.totalRejected;
-          break;
-        case 'totalAfterRejected':
-          comparison = a.totalAfterRejected - b.totalAfterRejected;
-          break;
-        case 'classifiedTotal':
-          comparison = a.classifiedTotal - b.classifiedTotal;
-          break;
-        default:
-          comparison = 0;
+        setFieldReportDetailsPayload(data);
+      } catch {
+        if (!isMounted) {
+          return;
+        }
+        setFieldReportDetailsPayload(null);
       }
+    };
 
-      if (comparison !== 0) {
-        return comparison * directionFactor;
-      }
+    void loadFieldReportDetails();
 
-      return a.id - b.id;
-    });
-
-    return rows;
-  }, [filteredHarvestRows, sortConfig]);
+    return () => {
+      isMounted = false;
+    };
+  }, [fieldReportDetailsFieldId, isFieldReportTab, seasonFilterId]);
 
   useEffect(() => {
     if (!detailsRecord) {
       return;
     }
 
-    if (!sortedHarvestRows.some((row) => row.id === detailsRecord.id)) {
+    if (!filteredHarvestRows.some((row) => row.id === detailsRecord.id)) {
       setDetailsRecord(null);
     }
-  }, [detailsRecord, sortedHarvestRows]);
+  }, [detailsRecord, filteredHarvestRows]);
 
   useEffect(() => {
     if (!detailsRecord) {
@@ -724,14 +935,14 @@ export function HarvestPage() {
   }, [detailsRecord, t.dailyDetails.detailsPanel.relatedSortings.loadError]);
 
   useEffect(() => {
-    if (sortedHarvestRows.length === 0) {
+    if (filteredHarvestRows.length === 0) {
       if (Object.keys(selectedNumericCells).length > 0) {
         setSelectedNumericCells({});
       }
       return;
     }
 
-    const validIds = new Set(sortedHarvestRows.map((row) => String(row.id)));
+    const validIds = new Set(filteredHarvestRows.map((row) => String(row.id)));
 
     setSelectedNumericCells((prev) => {
       let changed = false;
@@ -748,7 +959,7 @@ export function HarvestPage() {
 
       return changed ? next : prev;
     });
-  }, [selectedNumericCells, sortedHarvestRows]);
+  }, [filteredHarvestRows, selectedNumericCells]);
 
   const selectedCellsCount = useMemo(() => Object.keys(selectedNumericCells).length, [selectedNumericCells]);
 
@@ -799,6 +1010,156 @@ export function HarvestPage() {
     return false;
   };
 
+  const fieldReportColumns = useMemo<GlobalDataTableColumn<HarvestFieldReportRow>[]>(() => {
+    return [
+      {
+        id: 'details',
+        header: lang === 'he' ? 'פרטים' : 'Details',
+        headerLabel: lang === 'he' ? 'פרטים' : 'Details',
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.action,
+        align: 'center',
+        render: (row) => (
+          <button
+            type="button"
+            className="harvest-daily-workspace__details-trigger"
+            onClick={() => setFieldReportDetailsFieldId(row.id)}
+            aria-label={lang === 'he' ? `הצגת כל פרטי השדה ${row.fieldName}` : `View all details for ${row.fieldName}`}
+          >
+            <FaFileInvoice />
+          </button>
+        ),
+      },
+      {
+        id: 'fieldName',
+        header: t.dailyDetails.columns.fieldName,
+        headerLabel: t.dailyDetails.columns.fieldName,
+        sortKey: 'fieldName',
+        sortLabel: `${t.dailyDetails.columns.fieldName} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        defaultSortDirection: 'asc',
+        sortAccessor: (row) => row.fieldName,
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.fieldName,
+        render: (row) => row.fieldName,
+      },
+      {
+        id: 'totalHarvested',
+        header: t.dailyDetails.columns.totalHarvested,
+        headerLabel: t.dailyDetails.columns.totalHarvested,
+        sortKey: 'totalHarvested',
+        sortLabel: `${t.dailyDetails.columns.totalHarvested} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        defaultSortDirection: 'desc',
+        sortAccessor: (row) => row.totalHarvested,
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
+        align: 'center',
+        render: (row) => numberFormatter.format(row.totalHarvested),
+      },
+      {
+        id: 'totalRejected',
+        header: t.dailyDetails.columns.totalRejected,
+        headerLabel: t.dailyDetails.columns.totalRejected,
+        sortKey: 'totalRejected',
+        sortLabel: `${t.dailyDetails.columns.totalRejected} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        defaultSortDirection: 'desc',
+        sortAccessor: (row) => row.totalRejected,
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
+        align: 'center',
+        render: (row) => numberFormatter.format(row.totalRejected),
+      },
+      {
+        id: 'totalAfterRejected',
+        header: t.dailyDetails.columns.netHarvest,
+        headerLabel: t.dailyDetails.columns.netHarvest,
+        sortKey: 'totalAfterRejected',
+        sortLabel: `${t.dailyDetails.columns.netHarvest} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        defaultSortDirection: 'desc',
+        sortAccessor: (row) => row.totalAfterRejected,
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
+        align: 'center',
+        render: (row) => numberFormatter.format(row.totalAfterRejected),
+      },
+      {
+        id: 'rejectionRate',
+        header: t.dailyDetails.detailsPanel.fields.rejectionRate,
+        headerLabel: t.dailyDetails.detailsPanel.fields.rejectionRate,
+        sortKey: 'rejectionRate',
+        sortLabel: `${t.dailyDetails.detailsPanel.fields.rejectionRate} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        defaultSortDirection: 'desc',
+        sortAccessor: (row) => row.rejectionRate,
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericPercent,
+        align: 'center',
+        render: (row) => formatRate(row.rejectionRate),
+      },
+    ];
+  }, [formatRate, lang, numberFormatter, t.dailyDetails.columns, t.dailyDetails.detailsPanel.fields]);
+
+  const fieldReportDetailsData = useMemo(() => {
+    if (!fieldReportDetailsPayload) {
+      return null;
+    }
+
+    const summaryStatus = !fieldReportDetailsPayload.isPartialClassification
+      ? lang === 'he'
+        ? 'מיון סופי'
+        : 'Final sorting'
+      : lang === 'he'
+        ? 'מיון חלקי'
+        : 'Partial sorting';
+
+    const summaryRows: Array<{
+      key: string;
+      kind: 'regular' | 'summary';
+      label: string;
+      totalHarvested: string;
+      totalRejected: string;
+      totalAfterRejected: string;
+      classifiedTotal: string;
+      rejectionRate: string;
+    }> = [
+      {
+        key: 'general',
+        kind: 'regular' as const,
+        label: lang === 'he' ? 'לשיטתנו' : 'Our method',
+        totalHarvested: numberFormatter.format(fieldReportDetailsPayload.totalHarvested),
+        totalRejected: numberFormatter.format(fieldReportDetailsPayload.totalRejected),
+        totalAfterRejected: numberFormatter.format(fieldReportDetailsPayload.totalAfterRejected),
+        classifiedTotal: numberFormatter.format(fieldReportDetailsPayload.classifiedTotal),
+        rejectionRate: formatRate(fieldReportDetailsPayload.rejectionRate),
+      },
+    ];
+
+    if (fieldReportDetailsPayload.hasOwnerOverrides) {
+      summaryRows.push({
+        key: 'owner',
+        kind: 'regular' as const,
+        label: lang === 'he' ? 'לשיטת פרנקו' : 'Owner method',
+        totalHarvested: numberFormatter.format(fieldReportDetailsPayload.ownerHarvested),
+        totalRejected: numberFormatter.format(fieldReportDetailsPayload.ownerRejected),
+        totalAfterRejected: numberFormatter.format(fieldReportDetailsPayload.ownerAfterRejected),
+        classifiedTotal: t.dailyDetails.detailsPanel.values.none,
+        rejectionRate: formatRate(fieldReportDetailsPayload.ownerRejectionRate),
+      });
+
+      summaryRows.push({
+        key: 'difference',
+        kind: 'summary' as const,
+        label: lang === 'he' ? 'סה"כ הפרש' : 'Total difference',
+        totalHarvested: numberFormatter.format(fieldReportDetailsPayload.differenceHarvested),
+        totalRejected: numberFormatter.format(fieldReportDetailsPayload.differenceRejected),
+        totalAfterRejected: numberFormatter.format(fieldReportDetailsPayload.differenceAfterRejected),
+        classifiedTotal: t.dailyDetails.detailsPanel.values.none,
+        rejectionRate: formatRate(fieldReportDetailsPayload.differenceRejectionRate),
+      });
+    }
+
+    return {
+      fieldName: fieldReportDetailsPayload.fieldName,
+      seasonName: fieldReportDetailsPayload.seasonName || t.dailyDetails.detailsPanel.values.none,
+      recordCount: fieldReportDetailsPayload.recordCount,
+      summaryStatus,
+      summaryRows,
+      rows: fieldReportDetailsPayload.rows,
+    };
+  }, [fieldReportDetailsPayload, formatRate, lang, numberFormatter, t.dailyDetails.detailsPanel.values.none]);
+
   const detailsSheetData = useMemo(() => {
     if (!detailsRecord) {
       return null;
@@ -831,7 +1192,7 @@ export function HarvestPage() {
       detailsRecord.ownerAfterRejected > 0 ||
       Number(detailsRecord.ownerRejectionRate) > 0;
 
-    const rows = [
+    const summaryRows = [
       {
         key: 'general',
         kind: 'regular',
@@ -845,7 +1206,7 @@ export function HarvestPage() {
     ];
 
     if (hasOwnerRowData) {
-      rows.push({
+      summaryRows.push({
         key: 'owner',
         kind: 'regular',
         label: values.ownerRow,
@@ -856,7 +1217,7 @@ export function HarvestPage() {
         rejectionRate: formatRate(detailsRecord.ownerRejectionRate),
       });
 
-      rows.push({
+      summaryRows.push({
         key: 'difference',
         kind: 'summary',
         label: values.differenceRow,
@@ -868,6 +1229,14 @@ export function HarvestPage() {
       });
     }
 
+    const summaryStatus = hasOwnerRowData
+      ? lang === 'he'
+        ? 'מיון חלקי'
+        : 'Partial sorting'
+      : lang === 'he'
+        ? 'מיון סופי'
+        : 'Final sorting';
+
     return {
       dateGregorian: formatGregorianDate(detailsRecord.dateGregorian),
       dateHebrew: detailsRecord.dateHebrew || values.none,
@@ -877,13 +1246,14 @@ export function HarvestPage() {
       updatedByName: detailsRecord.updatedBy?.name ?? values.none,
       statusLabel: `${values.statusPrefix} ${isPartialClassification ? values.partial : values.final}`,
       notes: detailsRecord.notes?.trim() || '',
-      rows,
+      rows: summaryRows,
       labels,
       values,
     };
   }, [
     detailsRecord,
     formatGregorianDate,
+    isPartialClassificationFlag,
     harvestRows,
     numberFormatter,
     seasons,
@@ -1010,8 +1380,8 @@ export function HarvestPage() {
       return pageTitle;
     }
 
-    return `${pageTitle} (${sortedHarvestRows.length})`;
-  }, [isDailyDetailsTab, pageTitle, sortedHarvestRows.length]);
+    return `${pageTitle} (${filteredHarvestRows.length})`;
+  }, [filteredHarvestRows.length, isDailyDetailsTab, pageTitle]);
 
   const addActionLabel = lang === 'he' ? 'הוסף קטיף' : 'Add Harvest';
   const editActionLabel = lang === 'he' ? 'עריכה' : 'Edit';
@@ -1052,20 +1422,26 @@ export function HarvestPage() {
   ) : null;
 
   const filters = useMemo<GlobalScopedFilterConfig[]>(() => {
+    const seasonFilter: GlobalScopedFilterConfig = {
+      key: 'seasonId',
+      label: t.dailyDetails.filters.seasonFilterLabel,
+      defaultValue: activeSeasonId ? String(activeSeasonId) : '',
+      queryParam: 'hdSeason',
+      options:
+        seasons.length > 0
+          ? seasons.map((season) => ({
+              value: String(season.id),
+              label: `${season.yearName}${season.isActive ? ` (${t.dailyDetails.filters.activeSeasonBadge})` : ''}`,
+            }))
+          : [{ value: '', label: t.dailyDetails.filters.noActiveSeason }],
+    };
+
+    if (isFieldReportTab) {
+      return [seasonFilter];
+    }
+
     return [
-      {
-        key: 'seasonId',
-        label: t.dailyDetails.filters.seasonFilterLabel,
-        defaultValue: activeSeasonId ? String(activeSeasonId) : '',
-        queryParam: 'hdSeason',
-        options:
-          seasons.length > 0
-            ? seasons.map((season) => ({
-                value: String(season.id),
-                label: `${season.yearName}${season.isActive ? ` (${t.dailyDetails.filters.activeSeasonBadge})` : ''}`,
-              }))
-            : [{ value: '', label: t.dailyDetails.filters.noActiveSeason }],
-      },
+      seasonFilter,
       {
         key: 'fieldId',
         label: t.dailyDetails.filters.fieldFilterLabel,
@@ -1080,193 +1456,303 @@ export function HarvestPage() {
         ],
       },
     ];
-  }, [activeSeasonId, fields, seasons, t.dailyDetails.filters]);
+  }, [activeSeasonId, fields, isFieldReportTab, seasons, t.dailyDetails.filters]);
 
   const handlePrintDetails = () => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
     const printableNode = detailsPrintRef.current;
     if (!printableNode) {
       return;
     }
+    openPrintableWindow({
+      title: t.dailyDetails.detailsPanel.title,
+      heading: lang === 'he' ? 'פרטי קטיף' : 'Harvest Details',
+      direction: lang === 'he' ? 'rtl' : 'ltr',
+      html: printableNode.outerHTML,
+      width: 900,
+      height: 700,
+      extraStyles: `
+        .harvest-daily-workspace__print-content {
+          max-width: 1180px;
+          margin: 0 auto;
+          display: grid;
+          gap: 14px;
+        }
+        .harvest-daily-workspace__sheet-card {
+          border: 1px solid #cfdcd2;
+          border-radius: 12px;
+          background: #fff;
+          padding: 12px;
+          display: grid;
+          gap: 12px;
+        }
+        .harvest-daily-workspace__sheet-head {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          align-items: stretch;
+          direction: ltr;
+          text-align: left;
+          color: #243f2b;
+          font-weight: 600;
+        }
+        .harvest-daily-workspace__sheet-head p {
+          margin: 0;
+          width: 100%;
+          max-width: 100%;
+          direction: inherit;
+          unicode-bidi: plaintext;
+        }
+        html[dir='rtl'] .harvest-daily-workspace__sheet-head {
+          direction: rtl;
+          text-align: right;
+        }
+        .harvest-daily-workspace__sheet-status {
+          justify-self: center;
+          border: 1px solid #b7cdbf;
+          background: #f1f8f3;
+          color: #1f4f29;
+          font-weight: 800;
+          padding: 4px 12px;
+          border-radius: 999px;
+        }
+        .harvest-daily-workspace__sheet-table {
+          width: 100%;
+          border-collapse: collapse;
+          table-layout: fixed;
+          font-size: 12px;
+        }
+        .harvest-daily-workspace__sheet-table th,
+        .harvest-daily-workspace__sheet-table td {
+          border: 1px solid #ccd9cf;
+          padding: 6px;
+          text-align: center;
+          vertical-align: middle;
+        }
+        .harvest-daily-workspace__sheet-table th {
+          background: #f1f7f3;
+          color: #284f31;
+          font-weight: 700;
+          white-space: nowrap;
+        }
+        .harvest-daily-workspace__sheet-row--summary {
+          background: #e7f2eb !important;
+        }
+        .harvest-daily-workspace__sheet-row--summary td {
+          font-weight: 800;
+          color: #1f4f29;
+        }
+        .harvest-daily-workspace__sheet-note {
+          margin: 0;
+          color: #2f4536;
+          line-height: 1.45;
+          border-top: 1px dashed #d0dcd3;
+          padding-top: 8px;
+        }
+        .harvest-daily-workspace__related-sortings-card {
+          border-radius: 12px;
+          background: #fff;
+          padding: 12px;
+          display: grid;
+          gap: 10px;
+        }
+        .harvest-daily-workspace__related-sortings-title {
+          margin: 0;
+          color: #214f2a;
+          font-size: 16px;
+        }
+        .harvest-daily-workspace__related-sortings-table-wrap {
+          overflow: visible;
+        }
+        .harvest-daily-workspace__related-sortings-table {
+          width: 100%;
+          border-collapse: collapse;
+          table-layout: fixed;
+          font-size: 12px;
+        }
+        .harvest-daily-workspace__related-sortings-table th,
+        .harvest-daily-workspace__related-sortings-table td {
+          border: 1px solid #ccd9cf;
+          padding: 6px;
+          text-align: center;
+          vertical-align: middle;
+        }
+        .harvest-daily-workspace__related-sortings-table th {
+          background: #f1f7f3;
+          color: #284f31;
+          font-weight: 700;
+        }
+        .harvest-daily-workspace__related-sortings-table tbody tr:nth-child(even) {
+          background: #f8fcf9;
+        }
+        .harvest-daily-workspace__related-sorting-note {
+          display: inline;
+        }
+        .harvest-daily-workspace__related-sorting-note-bubble,
+        .harvest-daily-workspace__related-sorting-note-tooltip {
+          display: none !important;
+        }
+        .harvest-daily-workspace__related-sorting-note::after {
+          content: attr(aria-label);
+          color: #2f4536;
+          white-space: pre-wrap;
+        }
+      `,
+    });
+  };
 
-    const printWindow = window.open('', '_blank', 'width=900,height=700');
-    if (!printWindow) {
+  const handlePrintFieldReportDetails = () => {
+    const printableNode = fieldReportDetailsPrintRef.current;
+    if (!printableNode) {
       return;
     }
 
-    const printableHtml = printableNode.outerHTML;
-    const title = t.dailyDetails.detailsPanel.title;
-    const printHeading = lang === 'he' ? 'פרטי קטיף' : 'Harvest Details';
-
-    printWindow.document.write(`
-      <!doctype html>
-      <html lang="${lang === 'he' ? 'he' : 'en'}" dir="${lang === 'he' ? 'rtl' : 'ltr'}">
-        <head>
-          <meta charset="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <title>${title}</title>
-          <style>
-            * { box-sizing: border-box; }
-            body {
-              margin: 0;
-              padding: 24px;
-              font-family: Assistant, sans-serif;
-              background: #fff;
-              color: #1f2a22;
-            }
-            .harvest-print__title {
-              margin: 0 auto 12px;
-              max-width: 1180px;
-              text-align: center;
-              font-size: 22px;
-              font-weight: 800;
-              color: #1f4f29;
-            }
-            .harvest-daily-workspace__print-content {
-              max-width: 1180px;
-              margin: 0 auto;
-              display: grid;
-              gap: 14px;
-            }
-            .harvest-daily-workspace__sheet-card {
-              border: 1px solid #cfdcd2;
-              border-radius: 12px;
-              background: #fff;
-              padding: 12px;
-              display: grid;
-              gap: 12px;
-            }
-            .harvest-daily-workspace__sheet-head {
-              display: flex;
-              flex-direction: column;
-              gap: 6px;
-              align-items: stretch;
-              direction: ltr;
-              text-align: left;
-              color: #243f2b;
-              font-weight: 600;
-            }
-            .harvest-daily-workspace__sheet-head p {
-              margin: 0;
-              width: 100%;
-              max-width: 100%;
-              direction: inherit;
-              unicode-bidi: plaintext;
-            }
-            html[dir='rtl'] .harvest-daily-workspace__sheet-head {
-              direction: rtl;
-              text-align: right;
-            }
-            .harvest-daily-workspace__sheet-status {
-              justify-self: center;
-              border: 1px solid #b7cdbf;
-              background: #f1f8f3;
-              color: #1f4f29;
-              font-weight: 800;
-              padding: 4px 12px;
-              border-radius: 999px;
-            }
-            .harvest-daily-workspace__sheet-table {
-              width: 100%;
-              border-collapse: collapse;
-              table-layout: fixed;
-              font-size: 12px;
-            }
-            .harvest-daily-workspace__sheet-table th,
-            .harvest-daily-workspace__sheet-table td {
-              border: 1px solid #ccd9cf;
-              padding: 6px;
-              text-align: center;
-              vertical-align: middle;
-            }
-            .harvest-daily-workspace__sheet-table th {
-              background: #f1f7f3;
-              color: #284f31;
-              font-weight: 700;
-              white-space: nowrap;
-            }
-            .harvest-daily-workspace__sheet-row--summary {
-              background: #e7f2eb !important;
-            }
-            .harvest-daily-workspace__sheet-row--summary td {
-              font-weight: 800;
-              color: #1f4f29;
-            }
-            .harvest-daily-workspace__sheet-note {
-              margin: 0;
-              color: #2f4536;
-              line-height: 1.45;
-              border-top: 1px dashed #d0dcd3;
-              padding-top: 8px;
-            }
-            .harvest-daily-workspace__related-sortings-card {
-              border-radius: 12px;
-              background: #fff;
-              padding: 12px;
-              display: grid;
-              gap: 10px;
-            }
-            .harvest-daily-workspace__related-sortings-title {
-              margin: 0;
-              color: #214f2a;
-              font-size: 16px;
-            }
-            .harvest-daily-workspace__related-sortings-table-wrap {
-              overflow: visible;
-            }
-            .harvest-daily-workspace__related-sortings-table {
-              width: 100%;
-              border-collapse: collapse;
-              table-layout: fixed;
-              font-size: 12px;
-            }
-            .harvest-daily-workspace__related-sortings-table th,
-            .harvest-daily-workspace__related-sortings-table td {
-              border: 1px solid #ccd9cf;
-              padding: 6px;
-              text-align: center;
-              vertical-align: middle;
-            }
-            .harvest-daily-workspace__related-sortings-table th {
-              background: #f1f7f3;
-              color: #284f31;
-              font-weight: 700;
-            }
-            .harvest-daily-workspace__related-sortings-table tbody tr:nth-child(even) {
-              background: #f8fcf9;
-            }
-            .harvest-daily-workspace__related-sorting-note {
-              display: inline;
-            }
-            .harvest-daily-workspace__related-sorting-note-bubble,
-            .harvest-daily-workspace__related-sorting-note-tooltip {
-              display: none !important;
-            }
-            .harvest-daily-workspace__related-sorting-note::after {
-              content: attr(aria-label);
-              color: #2f4536;
-              white-space: pre-wrap;
-            }
-            @page {
-              size: A4 landscape;
-              margin: 10mm;
-            }
-          </style>
-        </head>
-        <body>
-          <h1 class="harvest-print__title">${printHeading}</h1>
-          ${printableHtml}
-        </body>
-      </html>
-    `);
-
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
+    openPrintableWindow({
+      title: fieldReportDetailsData ? `${lang === 'he' ? 'פרטי שדה' : 'Field Details'} - ${fieldReportDetailsData.fieldName}` : t.dailyDetails.detailsPanel.title,
+      heading: lang === 'he' ? 'פרטי שדה' : 'Field Details',
+      direction: lang === 'he' ? 'rtl' : 'ltr',
+      html: printableNode.outerHTML,
+      extraStyles: `
+        .harvest-daily-workspace__sheet-card {
+          border: 1px solid #cfdcd2;
+          border-radius: 12px;
+          background: #fff;
+          padding: 12px;
+          display: grid;
+          gap: 12px;
+        }
+        .harvest-daily-workspace__sheet-head {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          align-items: stretch;
+          direction: ltr;
+          text-align: left;
+          color: #243f2b;
+          font-weight: 600;
+        }
+        .harvest-daily-workspace__sheet-head p {
+          margin: 0;
+          width: 100%;
+          max-width: 100%;
+          direction: inherit;
+          unicode-bidi: plaintext;
+        }
+        html[dir='rtl'] .harvest-daily-workspace__sheet-head {
+          direction: rtl;
+          text-align: right;
+        }
+        .harvest-daily-workspace__sheet-status {
+          justify-self: center;
+          border: 1px solid #b7cdbf;
+          background: #f1f8f3;
+          color: #1f4f29;
+          font-weight: 800;
+          padding: 4px 12px;
+          border-radius: 999px;
+        }
+        .harvest-daily-workspace__sheet-table {
+          width: 100%;
+          border-collapse: collapse;
+          table-layout: fixed;
+          font-size: 12px;
+        }
+        .harvest-daily-workspace__sheet-table th,
+        .harvest-daily-workspace__sheet-table td {
+          border: 1px solid #ccd9cf;
+          padding: 6px;
+          text-align: center;
+          vertical-align: middle;
+        }
+        .harvest-daily-workspace__sheet-table th {
+          background: #f1f7f3;
+          color: #284f31;
+          font-weight: 700;
+          white-space: nowrap;
+        }
+        .harvest-daily-workspace__sheet-table th:first-child,
+        .harvest-daily-workspace__sheet-table td:first-child {
+          font-weight: 700;
+          background: #f6fbf8;
+          min-width: 88px;
+        }
+        .harvest-daily-workspace__sheet-table tbody tr:nth-child(even) {
+          background: #f8fcf9;
+        }
+        .harvest-daily-workspace__related-sortings-card {
+          border-radius: 12px;
+          background: #fff;
+          padding: 12px;
+          display: grid;
+          gap: 10px;
+        }
+        .harvest-daily-workspace__related-sortings-title {
+          margin: 0;
+          color: #214f2a;
+          font-size: 16px;
+        }
+        .harvest-daily-workspace__related-sortings-table-wrap {
+          overflow: visible;
+        }
+        .harvest-daily-workspace__related-sortings-table {
+          width: 100%;
+          border-collapse: collapse;
+          table-layout: fixed;
+          font-size: 12px;
+        }
+        .harvest-daily-workspace__related-sortings-table th,
+        .harvest-daily-workspace__related-sortings-table td {
+          border: 1px solid #ccd9cf;
+          padding: 6px;
+          text-align: center;
+          vertical-align: middle;
+        }
+        .harvest-daily-workspace__related-sortings-table th {
+          background: #f1f7f3;
+          color: #284f31;
+          font-weight: 700;
+        }
+        .harvest-daily-workspace__related-sortings-table tbody tr:nth-child(even) {
+          background: #f8fcf9;
+        }
+        .harvest-daily-workspace__related-sorting-note {
+          display: inline;
+        }
+        .harvest-daily-workspace__related-sorting-note-bubble,
+        .harvest-daily-workspace__related-sorting-note-tooltip {
+          display: none !important;
+        }
+        .harvest-daily-workspace__related-sorting-note::after {
+          content: attr(aria-label);
+          color: #2f4536;
+          white-space: pre-wrap;
+        }
+        .global-left-details-panel {
+          position: static !important;
+          transform: none !important;
+          width: 100% !important;
+          min-width: 0 !important;
+          height: auto !important;
+          box-shadow: none !important;
+          border: 1px solid #d2ded6;
+        }
+        .global-left-details-panel__header-actions,
+        .global-left-details-panel__close {
+          display: none !important;
+        }
+        .global-left-details-panel__body {
+          overflow: visible !important;
+        }
+        .global-data-table__viewport {
+          overflow: visible !important;
+        }
+        .global-data-table__header,
+        .global-data-table__body,
+        .global-data-table__row {
+          width: 100% !important;
+          min-width: 0 !important;
+        }
+      `,
+    });
   };
 
   return (
@@ -1360,9 +1846,13 @@ export function HarvestPage() {
               <>
                 <GlobalDataTable
                   columns={columns}
-                  rows={sortedHarvestRows}
+                  rows={filteredHarvestRows}
                   getRowKey={(row) => row.id}
                   emptyLabel={t.dailyDetails.empty}
+                  defaultSortState={{ key: 'dateGregorian', direction: 'desc' }}
+                  onSortedRowsChange={(rows) => {
+                    visibleHarvestRowsRef.current = rows;
+                  }}
                 />
 
                 <GlobalLeftDetailsPanel
@@ -1523,6 +2013,115 @@ export function HarvestPage() {
                     </button>
                   </div>
                 ) : null}
+              </>
+            ) : null}
+          </div>
+        </section>
+      ) : isFieldReportTab ? (
+        <section className="settings-workspace harvest-daily-workspace">
+          <header className="settings-workspace__header">
+            <div>
+              <p className="settings-workspace__description">{content.description}</p>
+            </div>
+          </header>
+
+          <GlobalScopedFilters
+            scope={HARVEST_DAILY_FILTER_SCOPE}
+            filters={filters}
+            direction={lang === 'he' ? 'rtl' : 'ltr'}
+            actions={
+              <div className="global-filters-bar__icon-actions" aria-label={lang === 'he' ? 'פעולות טבלה' : 'Table actions'}>
+                <button
+                  type="button"
+                  className="global-filters-bar__icon-btn"
+                  onClick={handlePrintFieldReportTable}
+                  aria-label={lang === 'he' ? 'הדפסת דוח השדות' : 'Print field report table'}
+                  title={lang === 'he' ? 'הדפסה' : 'Print'}
+                >
+                  <FaPrint />
+                </button>
+                <button
+                  type="button"
+                  className="global-filters-bar__icon-btn"
+                  onClick={handleExportFieldReportTableToCsv}
+                  aria-label={lang === 'he' ? 'יצוא דוח השדות ל-CSV' : 'Export field report to CSV'}
+                  title={lang === 'he' ? 'יצוא ל-CSV' : 'Export to CSV'}
+                >
+                  <FaFileArrowDown />
+                </button>
+              </div>
+            }
+          />
+
+          {harvestLoadError ? <p className="seasons-manager__error">{harvestLoadError}</p> : null}
+
+          <div className="settings-panel-wide harvest-daily-workspace__panel">
+            {isHarvestLoading ? <p className="seasons-manager__state">{t.dailyDetails.loading}</p> : null}
+
+            {!isHarvestLoading ? (
+              <>
+                <GlobalDataTable
+                  columns={fieldReportColumns}
+                  rows={fieldReportRows}
+                  getRowKey={(row) => row.id}
+                  emptyLabel={t.dailyDetails.empty}
+                  defaultSortState={{ key: 'fieldName', direction: 'asc' }}
+                  onSortedRowsChange={(rows) => {
+                    visibleFieldReportRowsRef.current = rows;
+                  }}
+                />
+
+                <GlobalLeftDetailsPanel
+                  isOpen={fieldReportDetailsData !== null}
+                  title={
+                    fieldReportDetailsData
+                      ? `${lang === 'he' ? 'פרטי שדה' : 'Field Details'} - ${fieldReportDetailsData.fieldName}`
+                      : lang === 'he'
+                        ? 'פרטי שדה'
+                        : 'Field Details'
+                  }
+                  closeLabel={lang === 'he' ? 'סגירת פרטי שדה' : 'Close field details'}
+                  onClose={() => setFieldReportDetailsFieldId(null)}
+                  headerActions={
+                    <button
+                      type="button"
+                      className="global-left-details-panel__print"
+                      onClick={handlePrintFieldReportDetails}
+                    >
+                      <FaPrint aria-hidden="true" />
+                      <span>{lang === 'he' ? 'הדפסה' : 'Print'}</span>
+                    </button>
+                  }
+                >
+                  {fieldReportDetailsData ? (
+                    <div ref={fieldReportDetailsPrintRef} className="harvest-daily-workspace__print-content">
+                      <HarvestFieldReportDetailsPanel
+                        data={fieldReportDetailsData}
+                        locale={lang === 'he' ? 'he-IL' : 'en-GB'}
+                        labels={{
+                          rowType: lang === 'he' ? 'שורה' : 'Row',
+                          rowsTitle: lang === 'he' ? 'רשומות' : 'Records',
+                          season: t.dailyDetails.detailsPanel.fields.season,
+                          field: t.dailyDetails.detailsPanel.fields.field,
+                          recordCount: lang === 'he' ? 'מספר קטיפים' : 'Harvest count',
+                          dateGregorian: t.dailyDetails.columns.dateGregorian,
+                          dateHebrew: t.dailyDetails.columns.dateHebrew,
+                          totalHarvested: t.dailyDetails.columns.totalHarvested,
+                          totalRejected: t.dailyDetails.columns.totalRejected,
+                          netHarvest: t.dailyDetails.columns.netHarvest,
+                          classifiedTotal: t.dailyDetails.columns.classifiedTotal,
+                          rejectionRate: t.dailyDetails.detailsPanel.fields.rejectionRate,
+                          updatedBy: t.dailyDetails.detailsPanel.fields.updatedBy,
+                          notes: t.dailyDetails.detailsPanel.fields.notes,
+                          none: t.dailyDetails.detailsPanel.values.none,
+                          emptyRows: t.dailyDetails.empty,
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <p className="harvest-daily-workspace__details-empty">{t.dailyDetails.detailsPanel.empty}</p>
+                  )}
+                </GlobalLeftDetailsPanel>
               </>
             ) : null}
           </div>
