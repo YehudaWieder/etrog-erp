@@ -14,7 +14,6 @@ import { Sidebar } from '../../components/navigation/Sidebar';
 import { AppTopBar } from '../../components/navigation/AppTopBar';
 import { StickyHeaderBar } from '../../components/StickyHeaderBar';
 import type { ProfileMenuProps } from '../../components/navigation/ProfileMenu';
-import { LoadingSplash } from '../../components/ui/LoadingSplash';
 import { directionFromLanguage, getPreferredLanguage } from '../../utils/locale';
 import brandLogo from '../../assets/logo.svg';
 
@@ -67,7 +66,6 @@ export function AppShell({
   const [urgentMessages, setUrgentMessages] = useState<Message[]>([]);
   const [activeUrgentMessageId, setActiveUrgentMessageId] = useState<number | null>(null);
   const [liveUnreadCount, setLiveUnreadCount] = useState<number | undefined>(undefined);
-  const [showContentLoading, setShowContentLoading] = useState(true);
   const knownInboxMessageIdsRef = useRef<Set<number>>(new Set());
   const hasHydratedInboxRef = useRef(false);
   const suppressedUrgentIdsRef = useRef<Set<number>>(new Set());
@@ -96,16 +94,6 @@ export function AppShell({
         void audioContextRef.current.close();
         audioContextRef.current = null;
       }
-    };
-  }, []);
-
-  useEffect(() => {
-    const hideTimerId = window.setTimeout(() => {
-      setShowContentLoading(false);
-    }, 5000);
-
-    return () => {
-      window.clearTimeout(hideTimerId);
     };
   }, []);
 
@@ -357,26 +345,7 @@ export function AppShell({
             footerSlot={sidebarFooterSlot}
           />
         )}
-        <div className="app-shell__main" style={{ position: 'relative' }}>
-          {showContentLoading ? (
-            <div
-              className="app-shell__content-loading-overlay"
-              aria-live="polite"
-              aria-busy="true"
-              style={{
-                position: 'absolute',
-                inset: 0,
-                zIndex: 25,
-                display: 'grid',
-                placeItems: 'center',
-                background: 'rgba(244, 245, 248, 0.82)',
-                backdropFilter: 'blur(4px)',
-                WebkitBackdropFilter: 'blur(4px)',
-              }}
-            >
-              <LoadingSplash message={topBarLanguage === 'he' ? 'טוען...' : 'Loading...'} compact fullArea />
-            </div>
-          ) : null}
+        <div className="app-shell__main">
           <main className={`app-shell__content${pageTitle ? ' app-shell__content--with-page-header' : ''}`}>
             {pageTitle ? (
               <div className="app-shell__page-header app-shell__page-header--sticky">
