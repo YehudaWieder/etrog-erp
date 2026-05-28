@@ -66,6 +66,29 @@ export class HarvestController {
     return this.harvestService.findAllBySeason(seasonId);
   }
 
+  @Get('field-totals')
+  @ApiOperation({ summary: 'Retrieve per-field totals for a season with effective owner fallback and differences' })
+  @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season to aggregate by.' })
+  @ApiResponse({ status: 200, description: 'Per-field totals returned successfully.' })
+  @ApiResponse({ status: 400, description: 'Invalid or missing seasonId query parameter.' })
+  findFieldTotals(@Query('seasonId', ParseIntPipe) seasonId: number) {
+    return this.harvestService.findFieldTotalsBySeason(seasonId);
+  }
+
+  @Get('field-details')
+  @ApiOperation({ summary: 'Retrieve field report details for a specific season and field' })
+  @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season to filter by.' })
+  @ApiQuery({ name: 'fieldId', type: Number, description: 'The ID of the field to load details for.' })
+  @ApiResponse({ status: 200, description: 'Field report details returned successfully.' })
+  @ApiResponse({ status: 400, description: 'Invalid or missing seasonId/fieldId query parameter.' })
+  @ApiResponse({ status: 404, description: 'No field records found for the selected season and field.' })
+  findFieldDetails(
+    @Query('seasonId', ParseIntPipe) seasonId: number,
+    @Query('fieldId', ParseIntPipe) fieldId: number,
+  ) {
+    return this.harvestService.findFieldReportDetailsBySeasonAndField(seasonId, fieldId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Retrieve a single harvest record by ID' })
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the harvest record.' })

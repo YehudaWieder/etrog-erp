@@ -471,8 +471,20 @@ export class HarvestBulkService {
 
     const totalHarvested = harvestUpdate.totalHarvested ?? current.totalHarvested;
     const totalRejected = harvestUpdate.totalRejected ?? current.totalRejected;
-    const ownerHarvested = harvestUpdate.ownerHarvested ?? current.ownerHarvested;
-    const ownerRejected = harvestUpdate.ownerRejected ?? current.ownerRejected;
+    const ownerFieldsProvided = harvestUpdate.ownerHarvested !== undefined || harvestUpdate.ownerRejected !== undefined;
+    const currentHasExplicitOwnerData =
+      current.ownerHarvested > 0 ||
+      current.ownerRejected > 0;
+    const ownerHarvested = ownerFieldsProvided
+      ? (harvestUpdate.ownerHarvested ?? current.ownerHarvested)
+      : currentHasExplicitOwnerData
+        ? current.ownerHarvested
+        : totalHarvested;
+    const ownerRejected = ownerFieldsProvided
+      ? (harvestUpdate.ownerRejected ?? current.ownerRejected)
+      : currentHasExplicitOwnerData
+        ? current.ownerRejected
+        : totalRejected;
 
     await tx.fieldHarvest.update({
       where: { id: harvestId },
@@ -642,11 +654,14 @@ export class HarvestBulkService {
       const rates = calculateHarvestFields({
         totalHarvested: bulkPayload.totalHarvested,
         totalRejected: bulkPayload.totalRejected,
-        ownerHarvested: bulkPayload.ownerHarvested,
-        ownerRejected: bulkPayload.ownerRejected,
+        ownerHarvested: bulkPayload.ownerHarvested ?? bulkPayload.totalHarvested,
+        ownerRejected: bulkPayload.ownerRejected ?? bulkPayload.totalRejected,
         classifiedTotal,
         isPartialClassification: bulkPayload.isPartialClassification,
       });
+
+      const ownerHarvested = bulkPayload.ownerHarvested ?? bulkPayload.totalHarvested;
+      const ownerRejected = bulkPayload.ownerRejected ?? bulkPayload.totalRejected;
 
       const harvest = await tx.fieldHarvest.create({
         data: {
@@ -657,8 +672,8 @@ export class HarvestBulkService {
           updatedById: bulkPayload.updatedById,
           totalHarvested: bulkPayload.totalHarvested || 0,
           totalRejected: bulkPayload.totalRejected || 0,
-          ownerHarvested: bulkPayload.ownerHarvested || 0,
-          ownerRejected: bulkPayload.ownerRejected || 0,
+          ownerHarvested,
+          ownerRejected,
           notes: bulkPayload.notes,
           slug,
           ...rates,
