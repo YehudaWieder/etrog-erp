@@ -2477,6 +2477,25 @@ select {
   gap: 12px;
 }
 
+.harvest-daily-workspace__sheet-card--borderless {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.harvest-daily-workspace__sheet-card--category-breakdown {
+  position: relative;
+}
+
+.harvest-daily-workspace__sheet-card--category-breakdown::before {
+  content: '';
+  display: block;
+  width: 100%;
+  border-top: 1px solid rgba(205, 216, 208, 0.95);
+  margin-bottom: 12px;
+}
+
 .harvest-daily-workspace__sheet-head {
   display: flex;
   flex-direction: column;
@@ -2920,6 +2939,73 @@ select {
   justify-content: center;
   cursor: pointer;
   padding: 0 20px;
+}
+
+.harvest-sorting-daily-table__categories-cell {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-start;
+  white-space: nowrap;
+}
+
+.harvest-sorting-daily-table__category-chip {
+  border: 1px solid rgba(36, 71, 34, 0.26);
+  background: #ffffff;
+  color: #1f3924;
+  border-radius: 8px;
+  padding: 5px 9px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.harvest-sorting-daily-table__category-chip-label {
+  color: #2b4531;
+}
+
+.harvest-sorting-daily-table__category-chip-value {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: cell;
+  border-radius: 6px;
+  border-inline-start: 1px solid rgba(46, 79, 50, 0.28);
+  padding-inline-start: 8px;
+  color: #1d5b29;
+  font-weight: 800;
+  min-width: 48px;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--easing-standard), box-shadow var(--easing-standard);
+  user-select: none;
+}
+
+.harvest-sorting-daily-table__category-chip-value:hover {
+  background: rgba(230, 240, 232, 0.6);
+}
+
+.harvest-sorting-daily-table__category-chip-value.is-selected {
+  background: rgba(198, 225, 201, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(70, 120, 78, 0.35);
+}
+
+.harvest-sorting-daily-table__category-chip-value-text {
+  display: inline-block;
+  min-width: 40px;
+}
+
+.harvest-sorting-daily-table__category-chip.is-empty {
+  background: rgba(244, 246, 244, 0.9);
+  color: #5f6b62;
 }
 
 .global-data-table__sort-label {
@@ -3440,6 +3526,18 @@ select {
   gap: 8px;
 }
 
+.global-filters-bar__icon-menu {
+  position: relative;
+}
+
+.global-filters-bar__icon-menu summary {
+  list-style: none;
+}
+
+.global-filters-bar__icon-menu summary::-webkit-details-marker {
+  display: none;
+}
+
 .global-filters-bar__icon-btn {
   display: inline-flex;
   align-items: center;
@@ -3462,6 +3560,42 @@ select {
 
 .global-filters-bar__icon-btn svg {
   font-size: 1rem;
+}
+
+.global-filters-bar__icon-menu[open] .global-filters-bar__icon-btn {
+  background: #eabf2f;
+  border-color: #eabf2f;
+}
+
+.global-filters-bar__menu-list {
+  position: absolute;
+  top: calc(100% + 8px);
+  inset-inline-end: 0;
+  min-width: 180px;
+  background: #ffffff;
+  border: 1px solid rgba(216, 226, 218, 0.95);
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(33, 58, 41, 0.16);
+  padding: 6px;
+  display: grid;
+  gap: 4px;
+  z-index: 30;
+}
+
+.global-filters-bar__menu-item {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  border-radius: 8px;
+  padding: 8px 10px;
+  text-align: start;
+  color: #244834;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.global-filters-bar__menu-item:hover {
+  background: rgba(243, 197, 47, 0.18);
 }
 
 .global-filters-bar__field {

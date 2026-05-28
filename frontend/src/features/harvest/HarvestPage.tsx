@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { FaCirclePlus, FaFileArrowDown, FaFileInvoice, FaPenToSquare, FaPrint, FaTrashCan } from 'react-icons/fa6';
+import type { Row } from 'exceljs';
 import { AppShell } from '../../app/layout/AppShell';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import {
@@ -22,7 +23,17 @@ import {
   type HarvestFieldReportDetailsRecord,
   type HarvestRecord,
 } from '../../services/harvestsApi';
-import { getClassificationsByHarvest, type ClassificationRecord } from '../../services/classificationsApi';
+import {
+  getClassificationDailySummaryBySeason,
+  getClassificationsByHarvest,
+  type ClassificationDailySummaryCategory,
+  type ClassificationDailySummaryRow,
+  type ClassificationRecord,
+} from '../../services/classificationsApi';
+import { getTraders, type Trader } from '../../services/tradersApi';
+import { getCustomers, type Customer } from '../../services/customersApi';
+import { getDefaultTraderCategories } from '../../services/defaultTraderCategoriesApi';
+import { getTraderCategoriesWithShares } from '../../services/traderCategoriesApi';
 import { setScopeFilter } from '../../store/globalFiltersSlice';
 import type { AppDispatch, RootState } from '../../store';
 import { HARVEST_I18N } from './i18n';
@@ -34,8 +45,10 @@ const HARVEST_DAILY_FILTER_SCOPE = 'harvest-daily-details';
 const EMPTY_FILTERS: Record<string, string> = {};
 type HarvestNumericColumnKey = 'totalHarvested' | 'totalRejected' | 'totalAfterRejected' | 'classifiedTotal';
 type FieldReportNumericColumnKey = 'totalHarvested' | 'totalRejected' | 'totalAfterRejected' | 'rejectionRate';
-type NumericSelectionScope = 'daily' | 'field-report';
-type NumericSelectableColumnKey = HarvestNumericColumnKey | FieldReportNumericColumnKey;
+type SortingDailyNumericColumnKey = 'totalSorted' | `category:${string}`;
+type SortingAssignmentFilter = 'all' | 'trader' | 'customer' | `trader:${string}` | `customer:${string}`;
+type NumericSelectionScope = 'daily' | 'field-report' | 'sorting-daily';
+type NumericSelectableColumnKey = HarvestNumericColumnKey | FieldReportNumericColumnKey | SortingDailyNumericColumnKey;
 
 type HarvestFieldReportRow = {
   id: number;
@@ -72,6 +85,8 @@ const FIELD_REPORT_NUMERIC_COLUMNS: FieldReportNumericColumnKey[] = [
   'rejectionRate',
 ];
 
+const SORTING_DAILY_NUMERIC_COLUMNS: SortingDailyNumericColumnKey[] = ['totalSorted'];
+
 function parseSeasonFilterId(value: string): number | null {
   const parsedValue = Number(value);
   return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : null;
@@ -86,6 +101,41 @@ function parseFieldFilterId(value: string): number | 'all' {
   return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : 'all';
 }
 
+function parseSortingAssignmentFilter(value: string): SortingAssignmentFilter {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'all' || normalized === 'trader' || normalized === 'customer') {
+    return normalized;
+  }
+
+  if (normalized.startsWith('trader:') || normalized.startsWith('customer:')) {
+    return normalized as SortingAssignmentFilter;
+  }
+
+  if (normalized === 'general') {
+    return 'all';
+  }
+
+  return 'all';
+}
+
+function buildSortingCategoryDisplayLabel(category: ClassificationDailySummaryCategory, lang: 'he' | 'en') {
+  if (!category.ownerType && !category.categoryName) {
+    return category.label;
+  }
+
+  const defaultGeneralLabel = lang === 'he' ? 'כללי' : 'General';
+  const ownerName = category.ownerName?.trim();
+  const categoryLabel = category.categoryName?.trim() || category.label;
+
+  if (category.ownerType === 'GENERAL') {
+    return categoryLabel;
+  }
+
+  const ownerLabel = ownerName && ownerName.length > 0 ? ownerName : defaultGeneralLabel;
+
+  return `${ownerLabel} | ${categoryLabel}`;
+}
+
 export function HarvestPage() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -94,6 +144,8 @@ export function HarvestPage() {
   const [activeTopId, setActiveTopId] = useState('harvest');
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [fields, setFields] = useState<Field[]>([]);
+  const [traders, setTraders] = useState<Trader[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [harvestRows, setHarvestRows] = useState<HarvestRecord[]>([]);
   const [fieldReportRows, setFieldReportRows] = useState<HarvestFieldReportRow[]>([]);
   const [fieldReportDetailsPayload, setFieldReportDetailsPayload] = useState<HarvestFieldReportDetailsRecord | null>(null);
@@ -102,13 +154,24 @@ export function HarvestPage() {
   const [relatedSortings, setRelatedSortings] = useState<ClassificationRecord[]>([]);
   const [isRelatedSortingsLoading, setIsRelatedSortingsLoading] = useState(false);
   const [relatedSortingsLoadError, setRelatedSortingsLoadError] = useState<string>('');
+  const [sortingDailyRows, setSortingDailyRows] = useState<ClassificationDailySummaryRow[]>([]);
+  const [sortingDailyCategories, setSortingDailyCategories] = useState<ClassificationDailySummaryCategory[]>([]);
+  const [isSortingDailyLoading, setIsSortingDailyLoading] = useState(false);
+  const [sortingDailyLoadError, setSortingDailyLoadError] = useState<string>('');
+  const [sortingDailyDetailsRowId, setSortingDailyDetailsRowId] = useState<number | null>(null);
+  const [sortingDailyDetailRows, setSortingDailyDetailRows] = useState<ClassificationRecord[]>([]);
+  const [isSortingDailyDetailRowsLoading, setIsSortingDailyDetailRowsLoading] = useState(false);
+  const [sortingDailyDetailRowsLoadError, setSortingDailyDetailRowsLoadError] = useState<string>('');
   const [selectedNumericCells, setSelectedNumericCells] = useState<Record<string, number>>({});
   const [isDragSelecting, setIsDragSelecting] = useState(false);
   const dragSelectModeRef = useRef<'add' | 'remove'>('add');
   const detailsPrintRef = useRef<HTMLDivElement | null>(null);
   const fieldReportDetailsPrintRef = useRef<HTMLDivElement | null>(null);
+  const sortingDailyDetailsPrintRef = useRef<HTMLDivElement | null>(null);
+  const sortingDownloadMenuCloseTimeoutRef = useRef<number | null>(null);
   const visibleHarvestRowsRef = useRef<HarvestRecord[]>([]);
   const visibleFieldReportRowsRef = useRef<HarvestFieldReportRow[]>([]);
+  const visibleSortingDailyRowsRef = useRef<ClassificationDailySummaryRow[]>([]);
   const [isHarvestLoading, setIsHarvestLoading] = useState(false);
   const [harvestLoadError, setHarvestLoadError] = useState<string>('');
   const globalFilterValues = useSelector(
@@ -188,6 +251,8 @@ export function HarvestPage() {
 
   const isDailyDetailsTab = activeSidebarId === 'harvest-daily-details';
   const isFieldReportTab = activeSidebarId === 'harvest-field-report';
+  const isSortingDailyDetailsTab = activeSidebarId === 'sorting-daily-details';
+  const requiresFiltersData = isDailyDetailsTab || isFieldReportTab || isSortingDailyDetailsTab;
   const requiresHarvestData = isDailyDetailsTab || isFieldReportTab;
 
   const activeSeasonId = useMemo(() => {
@@ -202,8 +267,88 @@ export function HarvestPage() {
     return parseFieldFilterId(globalFilterValues.fieldId ?? 'all');
   }, [globalFilterValues.fieldId]);
 
+  const sortingAssignmentFilter = useMemo<SortingAssignmentFilter>(() => {
+    return parseSortingAssignmentFilter(globalFilterValues.sortingAssignmentType ?? 'all');
+  }, [globalFilterValues.sortingAssignmentType]);
+
+  const traderNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const trader of traders) {
+      map.set(String(trader.id), trader.name);
+    }
+    return map;
+  }, [traders]);
+
+  const customerNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const customer of customers) {
+      map.set(String(customer.id), customer.customerName);
+    }
+    return map;
+  }, [customers]);
+
+  const sortingAssignmentFilterOptions = useMemo(() => {
+    const traderPrefix = t.sortingDailyDetails.filters.assignmentOptions.traderPrefix;
+    const customerPrefix = t.sortingDailyDetails.filters.assignmentOptions.customerPrefix;
+
+    const locale = lang === 'he' ? 'he' : 'en';
+    const collator = new Intl.Collator(locale, { sensitivity: 'base', numeric: true });
+
+    const traderOptions = [...traders]
+      .sort((left, right) => collator.compare(left.name, right.name))
+      .map((trader) => ({
+        value: `trader:${String(trader.id)}`,
+        label: `${traderPrefix} ${trader.name}`,
+        group: t.sortingDailyDetails.filters.assignmentOptions.trader,
+      }));
+
+    const customerOptions = [...customers]
+      .sort((left, right) => collator.compare(left.customerName, right.customerName))
+      .map((customer) => ({
+        value: `customer:${String(customer.id)}`,
+        label: `${customerPrefix} ${customer.customerName}`,
+        group: t.sortingDailyDetails.filters.assignmentOptions.customer,
+      }));
+
+    return [
+      { value: 'all', label: t.sortingDailyDetails.filters.assignmentOptions.all },
+      { value: 'trader', label: t.sortingDailyDetails.filters.assignmentOptions.trader },
+      { value: 'customer', label: t.sortingDailyDetails.filters.assignmentOptions.customer },
+      ...traderOptions,
+      ...customerOptions,
+    ];
+  }, [
+    customers,
+    lang,
+    t.sortingDailyDetails.filters.assignmentOptions.all,
+    t.sortingDailyDetails.filters.assignmentOptions.customer,
+    t.sortingDailyDetails.filters.assignmentOptions.customerPrefix,
+    t.sortingDailyDetails.filters.assignmentOptions.trader,
+    t.sortingDailyDetails.filters.assignmentOptions.traderPrefix,
+    traders,
+  ]);
+
   useEffect(() => {
-    if (!requiresHarvestData) {
+    if (!isSortingDailyDetailsTab) {
+      return;
+    }
+
+    const rawValue = (globalFilterValues.sortingAssignmentType ?? 'all').trim().toLowerCase();
+    const validValues = new Set(sortingAssignmentFilterOptions.map((option) => option.value));
+
+    if (!validValues.has(rawValue)) {
+      dispatch(
+        setScopeFilter({
+          scope: HARVEST_DAILY_FILTER_SCOPE,
+          key: 'sortingAssignmentType',
+          value: 'all',
+        }),
+      );
+    }
+  }, [dispatch, globalFilterValues.sortingAssignmentType, isSortingDailyDetailsTab, sortingAssignmentFilterOptions]);
+
+  useEffect(() => {
+    if (!requiresFiltersData) {
       return;
     }
 
@@ -213,7 +358,12 @@ export function HarvestPage() {
       setHarvestLoadError('');
 
       try {
-        const [nextSeasons, nextFields] = await Promise.all([getSeasons(), getFields()]);
+        const [nextSeasons, nextFields, nextTraders, nextCustomers] = await Promise.all([
+          getSeasons(),
+          getFields(),
+          isSortingDailyDetailsTab ? getTraders() : Promise.resolve([] as Trader[]),
+          isSortingDailyDetailsTab ? getCustomers() : Promise.resolve([] as Customer[]),
+        ]);
 
         if (!isMounted) {
           return;
@@ -221,6 +371,8 @@ export function HarvestPage() {
 
         setSeasons(nextSeasons);
         setFields(nextFields);
+        setTraders(nextTraders);
+        setCustomers(nextCustomers);
       } catch {
         if (!isMounted) {
           return;
@@ -235,10 +387,10 @@ export function HarvestPage() {
     return () => {
       isMounted = false;
     };
-  }, [requiresHarvestData, t.dailyDetails.loadError]);
+  }, [isSortingDailyDetailsTab, requiresFiltersData, t.dailyDetails.loadError]);
 
   useEffect(() => {
-    if (!requiresHarvestData) {
+    if (!requiresFiltersData) {
       return;
     }
 
@@ -262,7 +414,7 @@ export function HarvestPage() {
         }),
       );
     }
-  }, [activeSeasonId, dispatch, requiresHarvestData, seasonFilterId, seasons]);
+  }, [activeSeasonId, dispatch, requiresFiltersData, seasonFilterId, seasons]);
 
   useEffect(() => {
     if (!requiresHarvestData) {
@@ -336,6 +488,202 @@ export function HarvestPage() {
     };
   }, [isDailyDetailsTab, requiresHarvestData, seasonFilterId, t.dailyDetails.loadError]);
 
+  useEffect(() => {
+    if (!isSortingDailyDetailsTab) {
+      setSortingDailyRows([]);
+      setSortingDailyCategories([]);
+      setSortingDailyLoadError('');
+      setIsSortingDailyLoading(false);
+      return;
+    }
+
+    if (!seasonFilterId) {
+      setSortingDailyRows([]);
+      setSortingDailyCategories([]);
+      setSortingDailyLoadError('');
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadSortingDailyRows = async () => {
+      setIsSortingDailyLoading(true);
+      setSortingDailyLoadError('');
+
+      const buildFallbackFromHarvestRows = async () => {
+        const harvests = await getHarvestsBySeason(seasonFilterId);
+        const groupedRows = new Map<number, ClassificationDailySummaryRow>();
+        const groupedCategories = new Map<string, ClassificationDailySummaryCategory>();
+
+        const classificationBuckets = await Promise.all(
+          harvests.map(async (harvest) => {
+            const rows = await getClassificationsByHarvest(harvest.id);
+            return { harvest, rows };
+          }),
+        );
+
+        for (const bucket of classificationBuckets) {
+          groupedRows.set(bucket.harvest.id, {
+            harvestId: bucket.harvest.id,
+            fieldId: bucket.harvest.fieldId,
+            fieldName: bucket.harvest.field?.name ?? '-',
+            dateGregorian: bucket.harvest.dateGregorian,
+            dateHebrew: bucket.harvest.dateHebrew,
+            totalSorted: 0,
+            categoryTotals: {},
+          });
+
+          const row = groupedRows.get(bucket.harvest.id)!;
+
+          for (const sorting of bucket.rows) {
+            const quantity = Number(sorting.quantity) || 0;
+            if (quantity <= 0) {
+              continue;
+            }
+
+            const traderName = sorting.trader?.name?.trim();
+            const customerName = sorting.customer?.customerName?.trim();
+            const ownerType: ClassificationDailySummaryCategory['ownerType'] = traderName
+              ? 'TRADER'
+              : customerName
+                ? 'CUSTOMER'
+                : 'GENERAL';
+            const ownerName = traderName || customerName || null;
+            const ownerKey = traderName
+              ? `trader:${traderName}`
+              : customerName
+                ? `customer:${customerName}`
+                : 'general';
+
+            const customerCategoryName = sorting.customerCategory?.name?.trim();
+            const traderCategoryName = sorting.traderCategory?.name?.trim();
+            const categoryLabel = customerCategoryName || traderCategoryName;
+            const categoryTypeKey = customerCategoryName
+              ? `customer:${customerCategoryName}`
+              : traderCategoryName
+                ? `trader:${traderCategoryName}`
+                : null;
+
+            if (!categoryTypeKey || !categoryLabel) {
+              continue;
+            }
+
+            const categoryKey = `${ownerKey}|${categoryTypeKey}`;
+
+            row.categoryTotals[categoryKey] = (row.categoryTotals[categoryKey] ?? 0) + quantity;
+            row.totalSorted += quantity;
+
+            const existingCategory = groupedCategories.get(categoryKey);
+            if (!existingCategory) {
+              groupedCategories.set(categoryKey, {
+                key: categoryKey,
+                label: categoryLabel,
+                ownerType,
+                ownerName,
+                categoryName: categoryLabel,
+                total: quantity,
+              });
+            } else {
+              existingCategory.total += quantity;
+            }
+          }
+        }
+
+        const categories = Array.from(groupedCategories.values())
+          .filter((category) => category.total > 0)
+          .sort((left, right) => {
+            if (right.total !== left.total) {
+              return right.total - left.total;
+            }
+
+            return buildSortingCategoryDisplayLabel(left, lang).localeCompare(buildSortingCategoryDisplayLabel(right, lang), 'he', {
+              sensitivity: 'base',
+              numeric: true,
+            });
+          });
+
+        const rows = Array.from(groupedRows.values())
+          .filter((row) => row.totalSorted > 0)
+          .map((row) => {
+            const categoryTotals: Record<string, number> = {};
+
+            for (const category of categories) {
+              const value = row.categoryTotals[category.key] ?? 0;
+              if (value > 0) {
+                categoryTotals[category.key] = value;
+              }
+            }
+
+            return {
+              ...row,
+              categoryTotals,
+            };
+          })
+          .sort((left, right) => {
+            const leftTime = Date.parse(left.dateGregorian);
+            const rightTime = Date.parse(right.dateGregorian);
+            if (rightTime !== leftTime) {
+              return rightTime - leftTime;
+            }
+
+            if (left.fieldName !== right.fieldName) {
+              return left.fieldName.localeCompare(right.fieldName, 'he', {
+                sensitivity: 'base',
+                numeric: true,
+              });
+            }
+
+            return right.harvestId - left.harvestId;
+          });
+
+        return {
+          rows,
+          categories,
+        };
+      };
+
+      try {
+        const payload = await getClassificationDailySummaryBySeason(seasonFilterId);
+        if (!isMounted) {
+          return;
+        }
+
+        setSortingDailyRows(payload.rows);
+        setSortingDailyCategories(payload.categories);
+      } catch {
+        try {
+          const fallbackPayload = await buildFallbackFromHarvestRows();
+
+          if (!isMounted) {
+            return;
+          }
+
+          setSortingDailyRows(fallbackPayload.rows);
+          setSortingDailyCategories(fallbackPayload.categories);
+          setSortingDailyLoadError('');
+        } catch {
+          if (!isMounted) {
+            return;
+          }
+
+          setSortingDailyRows([]);
+          setSortingDailyCategories([]);
+          setSortingDailyLoadError(t.sortingDailyDetails.loadError);
+        }
+      } finally {
+        if (isMounted) {
+          setIsSortingDailyLoading(false);
+        }
+      }
+    };
+
+    void loadSortingDailyRows();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isSortingDailyDetailsTab, seasonFilterId, t.sortingDailyDetails.loadError]);
+
   const formatGregorianDate = (value: string) => {
     const date = new Date(value);
 
@@ -364,6 +712,106 @@ export function HarvestPage() {
     const normalized = String(value ?? '');
     const escaped = normalized.replace(/\"/g, '""');
     return `"${escaped}"`;
+  };
+
+  const downloadStyledExcel = async ({
+    sheetName,
+    fileName,
+    header,
+    rows,
+  }: {
+    sheetName: string;
+    fileName: string;
+    header: Array<string | number>;
+    rows: Array<Array<string | number>>;
+  }) => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const { Workbook } = await import('exceljs');
+    const workbook = new Workbook();
+    const worksheet = workbook.addWorksheet(sheetName);
+
+    worksheet.addRow(header);
+    for (const row of rows) {
+      worksheet.addRow(row);
+    }
+
+    const headerBg = 'FF1F5A32';
+    const headerFont = 'FFFFFFFF';
+    const borderColor = 'FFCCD9CF';
+    const zebraBg = 'FFF8FCF9';
+
+    for (let rowIndex = 1; rowIndex <= worksheet.rowCount; rowIndex += 1) {
+      const row = worksheet.getRow(rowIndex);
+      for (let colIndex = 1; colIndex <= worksheet.columnCount; colIndex += 1) {
+        const cell = row.getCell(colIndex);
+        const isHeader = rowIndex === 1;
+        const isZebraDataRow = rowIndex > 1 && rowIndex % 2 === 0;
+
+        cell.alignment = {
+          horizontal: 'center',
+          vertical: 'middle',
+          wrapText: true,
+        };
+
+        cell.border = {
+          top: { style: 'thin', color: { argb: borderColor } },
+          left: { style: 'thin', color: { argb: borderColor } },
+          bottom: { style: 'thin', color: { argb: borderColor } },
+          right: { style: 'thin', color: { argb: borderColor } },
+        };
+
+        if (isHeader) {
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: headerBg },
+          };
+
+          cell.font = {
+            bold: true,
+            color: { argb: headerFont },
+          };
+        } else if (isZebraDataRow) {
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: zebraBg },
+          };
+        }
+      }
+    }
+
+    for (let colIndex = 1; colIndex <= worksheet.columnCount; colIndex += 1) {
+      let maxLength = 0;
+
+      worksheet.eachRow((row: Row) => {
+        const rawValue = row.getCell(colIndex).value;
+        const textValue = rawValue === null || rawValue === undefined ? '' : String(rawValue);
+        if (textValue.length > maxLength) {
+          maxLength = textValue.length;
+        }
+      });
+
+      worksheet.getColumn(colIndex).width = Math.max(10, Math.min(maxLength + 2, 40));
+    }
+
+    worksheet.views = [{ state: 'frozen', ySplit: 1, rightToLeft: lang === 'he' }];
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
   };
 
   const createHarvestExportRows = () => {
@@ -462,6 +910,427 @@ export function HarvestPage() {
     return { header, rows };
   };
 
+  const createSortingDailyExportRows = () => {
+    const rowsSource =
+      visibleSortingDailyRowsRef.current.length > 0 ? visibleSortingDailyRowsRef.current : filteredSortingDailyRows;
+
+    const exportCategories = sortingDailyCategories
+      .filter((category) => rowsSource.some((row) => (row.categoryTotals[category.key] ?? 0) > 0))
+      .map((category) => ({
+        key: category.key,
+        label: buildSortingCategoryDisplayLabel(category, lang),
+      }));
+
+    const header = [
+      t.sortingDailyDetails.columns.dateGregorian,
+      t.sortingDailyDetails.columns.dateHebrew,
+      t.sortingDailyDetails.columns.fieldName,
+      ...exportCategories.map((category) => category.label),
+      t.sortingDailyDetails.columns.totalSorted,
+    ];
+
+    const rows = rowsSource.map((row) => {
+      const categoryValues = exportCategories.map((category) => row.categoryTotals[category.key] ?? 0);
+
+      const rowDailyTotal = sortingDailyCategories.reduce(
+        (sum, category) => sum + (row.categoryTotals[category.key] ?? 0),
+        0,
+      );
+
+      return [
+        formatGregorianDate(row.dateGregorian),
+        row.dateHebrew,
+        row.fieldName,
+        ...categoryValues,
+        rowDailyTotal,
+      ];
+    });
+
+    return { header, rows };
+  };
+
+  const createSortingDailyExpandedMatrixData = async () => {
+    const values = t.dailyDetails.detailsPanel.values;
+    const rowsSource =
+      visibleSortingDailyRowsRef.current.length > 0 ? visibleSortingDailyRowsRef.current : filteredSortingDailyRows;
+
+    const fixedGrades = ['א', 'ב', 'ג', 'ד', 'ה', 'ו'];
+    const pitamGroups = [
+      { key: 'WITH_PITAM', label: lang === 'he' ? 'פיטם' : 'With pitam' },
+      { key: 'WITHOUT_PITAM', label: lang === 'he' ? 'בל"פ' : 'Without pitam' },
+      { key: 'MIXED', label: lang === 'he' ? 'מעורב' : 'Mixed' },
+    ] as const;
+
+    const normalizePitamGroup = (pitamStatus?: string | null) => {
+      if (!pitamStatus) {
+        return 'MIXED';
+      }
+
+      const normalized = pitamStatus.replace(/\s+/g, '_').toUpperCase();
+      if (normalized === 'WITH_PITAM') {
+        return 'WITH_PITAM';
+      }
+
+      if (normalized === 'WITHOUT_PITAM') {
+        return 'WITHOUT_PITAM';
+      }
+
+      return 'MIXED';
+    };
+
+    const normalizeOwnerType = (value?: string | null): 'GENERAL' | 'TRADER' | 'CUSTOMER' => {
+      const normalized = (value ?? '').toUpperCase();
+
+      if (normalized.includes('TRADER')) {
+        return 'TRADER';
+      }
+
+      if (normalized.includes('CUSTOMER')) {
+        return 'CUSTOMER';
+      }
+
+      return 'GENERAL';
+    };
+
+    const inferOwnerTypeFromCategoryKey = (key?: string): 'GENERAL' | 'TRADER' | 'CUSTOMER' => {
+      const normalized = (key ?? '').toUpperCase();
+      if (normalized.startsWith('TRADER:')) {
+        return 'TRADER';
+      }
+
+      if (normalized.startsWith('CUSTOMER:')) {
+        return 'CUSTOMER';
+      }
+
+      return 'GENERAL';
+    };
+
+    const categoryOwnerTypeMap = new Map<string, ClassificationDailySummaryCategory['ownerType']>();
+    for (const category of sortingDailyCategories) {
+      categoryOwnerTypeMap.set(
+        buildSortingCategoryDisplayLabel(category, lang),
+        category.ownerType ?? inferOwnerTypeFromCategoryKey(category.key),
+      );
+    }
+
+    const allGeneralCategoryLabels = new Set<string>();
+    for (const category of sortingDailyCategories) {
+      const ownerType = category.ownerType ?? inferOwnerTypeFromCategoryKey(category.key);
+      if (ownerType === 'GENERAL') {
+        allGeneralCategoryLabels.add(buildSortingCategoryDisplayLabel(category, lang));
+      }
+    }
+
+    try {
+      if (seasonFilterId) {
+        const seasonTraderCategories = await getTraderCategoriesWithShares(seasonFilterId);
+        for (const category of seasonTraderCategories) {
+          const label = category.name.trim();
+          if (!label) {
+            continue;
+          }
+
+          allGeneralCategoryLabels.add(label);
+          categoryOwnerTypeMap.set(label, 'GENERAL');
+        }
+      }
+    } catch {
+      // Fallback to default categories below.
+    }
+
+    if (allGeneralCategoryLabels.size === 0) {
+      try {
+        const defaultGeneralCategories = await getDefaultTraderCategories();
+        for (const category of defaultGeneralCategories) {
+          const label = category.name.trim();
+          if (!label) {
+            continue;
+          }
+
+          allGeneralCategoryLabels.add(label);
+          categoryOwnerTypeMap.set(label, 'GENERAL');
+        }
+      } catch {
+        // Keep export resilient if categories endpoints are unavailable.
+      }
+    }
+
+    const getCategoryContextFromDetail = (detail: ClassificationRecord) => {
+      const categoryName = detail.customerCategory?.name ?? detail.traderCategory?.name ?? '';
+      if (!categoryName) {
+        return {
+          categoryLabel: '',
+          ownerType: 'GENERAL' as const,
+        };
+      }
+
+      const traderName = detail.trader?.name?.trim();
+      const customerName = detail.customer?.customerName?.trim();
+      const rawAssignmentType = (detail.assignmentType ?? '').toUpperCase();
+      const assignmentType = normalizeOwnerType(detail.assignmentType);
+
+      if (rawAssignmentType === 'GENERAL') {
+        return {
+          categoryLabel: categoryName,
+          ownerType: 'GENERAL' as const,
+        };
+      }
+
+      if (rawAssignmentType === 'TRADER' || (assignmentType === 'TRADER' && rawAssignmentType !== 'CUSTOMER')) {
+        return {
+          categoryLabel: traderName ? `${traderName} | ${categoryName}` : `${lang === 'he' ? 'סוחר' : 'Trader'} | ${categoryName}`,
+          ownerType: 'TRADER' as const,
+        };
+      }
+
+      if (rawAssignmentType === 'CUSTOMER' || (assignmentType === 'CUSTOMER' && rawAssignmentType !== 'TRADER')) {
+        return {
+          categoryLabel: customerName
+            ? `${customerName} | ${categoryName}`
+            : `${lang === 'he' ? 'לקוח' : 'Customer'} | ${categoryName}`,
+          ownerType: 'CUSTOMER' as const,
+        };
+      }
+
+      if (traderName) {
+        return {
+          categoryLabel: `${traderName} | ${categoryName}`,
+          ownerType: 'TRADER' as const,
+        };
+      }
+
+      if (customerName) {
+        return {
+          categoryLabel: `${customerName} | ${categoryName}`,
+          ownerType: 'CUSTOMER' as const,
+        };
+      }
+
+      return {
+        categoryLabel: categoryName,
+        ownerType: 'GENERAL' as const,
+      };
+    };
+
+    const detailsByHarvest = await Promise.all(
+      rowsSource.map(async (row) => {
+        const details = await getClassificationsByHarvest(row.harvestId);
+        return { row, details };
+      }),
+    );
+
+    const categoryTotals = new Map<string, number>();
+    const ownerExistingColumns = new Map<string, Map<string, Set<string>>>();
+    const detectedCategoryOwnerType = new Map<string, 'GENERAL' | 'TRADER' | 'CUSTOMER'>();
+    const matrixRows: Array<{
+      dateGregorian: string;
+      dateHebrew: string;
+      fieldName: string;
+      values: Record<string, number>;
+    }> = [];
+
+    for (const { row, details } of detailsByHarvest) {
+      const dayValues: Record<string, number> = {};
+
+      for (const detail of details) {
+        const { categoryLabel, ownerType: resolvedOwnerType } = getCategoryContextFromDetail(detail);
+        if (!categoryLabel) {
+          continue;
+        }
+
+        if (!detectedCategoryOwnerType.has(categoryLabel)) {
+          detectedCategoryOwnerType.set(categoryLabel, resolvedOwnerType);
+        }
+
+        const grade = (detail.grade || detail.customerCategory?.grade || values.none).trim();
+
+        const pitamGroup = normalizePitamGroup(detail.pitamStatus);
+
+        const quantity = Number(detail.quantity) || 0;
+        const valueKey = `${categoryLabel}::${pitamGroup}::${grade}`;
+
+        if (quantity > 0) {
+          dayValues[valueKey] = (dayValues[valueKey] ?? 0) + quantity;
+
+          const ownerType = categoryOwnerTypeMap.get(categoryLabel) ?? detectedCategoryOwnerType.get(categoryLabel);
+          if (ownerType === 'CUSTOMER' || ownerType === 'TRADER') {
+            if (!ownerExistingColumns.has(categoryLabel)) {
+              ownerExistingColumns.set(categoryLabel, new Map<string, Set<string>>());
+            }
+
+            const pitamToGrades = ownerExistingColumns.get(categoryLabel)!;
+            if (!pitamToGrades.has(pitamGroup)) {
+              pitamToGrades.set(pitamGroup, new Set<string>());
+            }
+
+            pitamToGrades.get(pitamGroup)!.add(grade);
+          }
+        }
+
+        if (quantity > 0) {
+          categoryTotals.set(categoryLabel, (categoryTotals.get(categoryLabel) ?? 0) + quantity);
+        }
+      }
+
+      matrixRows.push({
+        dateGregorian: formatGregorianDate(row.dateGregorian),
+        dateHebrew: row.dateHebrew,
+        fieldName: row.fieldName,
+        values: dayValues,
+      });
+    }
+
+    const ownerOrder = (ownerType?: string) => {
+      if (ownerType === 'GENERAL') {
+        return 0;
+      }
+
+      if (ownerType === 'TRADER') {
+        return 1;
+      }
+
+      if (ownerType === 'CUSTOMER') {
+        return 2;
+      }
+
+      return 3;
+    };
+
+    const compareGrades = (left: string, right: string) => {
+      const leftFixedIndex = fixedGrades.indexOf(left);
+      const rightFixedIndex = fixedGrades.indexOf(right);
+
+      if (leftFixedIndex >= 0 || rightFixedIndex >= 0) {
+        if (leftFixedIndex === -1) {
+          return 1;
+        }
+
+        if (rightFixedIndex === -1) {
+          return -1;
+        }
+
+        return leftFixedIndex - rightFixedIndex;
+      }
+
+      return left.localeCompare(right, lang === 'he' ? 'he' : 'en', {
+        sensitivity: 'base',
+        numeric: true,
+      });
+    };
+
+    const preferredCategoryOrder = [...sortingDailyCategories]
+      .sort((left, right) => {
+        const ownerDiff = ownerOrder(left.ownerType) - ownerOrder(right.ownerType);
+        if (ownerDiff !== 0) {
+          return ownerDiff;
+        }
+
+        const leftLabel = buildSortingCategoryDisplayLabel(left, lang);
+        const rightLabel = buildSortingCategoryDisplayLabel(right, lang);
+
+        return leftLabel.localeCompare(rightLabel, lang === 'he' ? 'he' : 'en', {
+          sensitivity: 'base',
+          numeric: true,
+        });
+      })
+      .map((category) => buildSortingCategoryDisplayLabel(category, lang));
+
+    const missingGeneralCategories = Array.from(allGeneralCategoryLabels)
+      .filter((label) => !preferredCategoryOrder.includes(label))
+      .sort((left, right) =>
+        left.localeCompare(right, lang === 'he' ? 'he' : 'en', {
+          sensitivity: 'base',
+          numeric: true,
+        }),
+      );
+
+    preferredCategoryOrder.unshift(...missingGeneralCategories);
+
+    const extraCategories = Array.from(categoryTotals.keys())
+      .filter((label) => !preferredCategoryOrder.includes(label))
+      .sort((left, right) => {
+        const leftOwnerType = categoryOwnerTypeMap.get(left) ?? detectedCategoryOwnerType.get(left);
+        const rightOwnerType = categoryOwnerTypeMap.get(right) ?? detectedCategoryOwnerType.get(right);
+        const ownerDiff = ownerOrder(leftOwnerType) - ownerOrder(rightOwnerType);
+        if (ownerDiff !== 0) {
+          return ownerDiff;
+        }
+
+        return left.localeCompare(right, lang === 'he' ? 'he' : 'en', {
+          sensitivity: 'base',
+          numeric: true,
+        });
+      });
+
+    const preferredOrderIndex = new Map<string, number>();
+    preferredCategoryOrder.forEach((label, index) => {
+      preferredOrderIndex.set(label, index);
+    });
+
+    const orderedCategories = Array.from(new Set([...preferredCategoryOrder, ...extraCategories])).sort((left, right) => {
+      const leftOwnerType = categoryOwnerTypeMap.get(left) ?? detectedCategoryOwnerType.get(left);
+      const rightOwnerType = categoryOwnerTypeMap.get(right) ?? detectedCategoryOwnerType.get(right);
+      const ownerDiff = ownerOrder(leftOwnerType) - ownerOrder(rightOwnerType);
+      if (ownerDiff !== 0) {
+        return ownerDiff;
+      }
+
+      const leftIndex = preferredOrderIndex.get(left) ?? Number.MAX_SAFE_INTEGER;
+      const rightIndex = preferredOrderIndex.get(right) ?? Number.MAX_SAFE_INTEGER;
+      if (leftIndex !== rightIndex) {
+        return leftIndex - rightIndex;
+      }
+
+      return left.localeCompare(right, lang === 'he' ? 'he' : 'en', {
+        sensitivity: 'base',
+        numeric: true,
+      });
+    });
+
+    const groups = orderedCategories.map((categoryLabel) => {
+      const ownerType = categoryOwnerTypeMap.get(categoryLabel) ?? detectedCategoryOwnerType.get(categoryLabel);
+
+      if (ownerType === 'CUSTOMER' || ownerType === 'TRADER') {
+        const pitamToGrades = ownerExistingColumns.get(categoryLabel);
+        const pitamGroupsForCustomer = pitamGroups
+          .map((pitam) => {
+            const existingGrades = Array.from(pitamToGrades?.get(pitam.key) ?? []).sort(compareGrades);
+
+            return {
+              ...pitam,
+              grades: existingGrades,
+            };
+          })
+          .filter((pitam) => pitam.grades.length > 0);
+
+        return {
+          categoryLabel,
+          total: categoryTotals.get(categoryLabel) ?? 0,
+          pitamGroups: pitamGroupsForCustomer,
+        };
+      }
+
+      return {
+        categoryLabel,
+        total: categoryTotals.get(categoryLabel) ?? 0,
+        pitamGroups: pitamGroups.map((pitam) => ({
+          ...pitam,
+          grades: [...fixedGrades],
+        })),
+      };
+    });
+
+    return {
+      fixedHeaders: [
+        t.sortingDailyDetails.columns.dateGregorian,
+        t.sortingDailyDetails.columns.dateHebrew,
+        t.sortingDailyDetails.columns.fieldName,
+      ],
+      groups,
+      rows: matrixRows,
+    };
+  };
+
   const handlePrintHarvestTable = () => {
     if (typeof window === 'undefined') {
       return;
@@ -549,25 +1418,24 @@ export function HarvestPage() {
     printWindow.close();
   };
 
-  const handleExportHarvestTableToExcel = () => {
+  const handleExportHarvestTableToExcel = async () => {
     if (typeof window === 'undefined') {
       return;
     }
 
     const { header, rows } = createHarvestExportRows();
-    const csvLines = [header, ...rows].map((row) => row.map((value) => escapeCsv(value)).join(','));
-    const csvContent = `\ufeff${csvLines.join('\n')}`;
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-
     const dateStamp = new Date().toISOString().slice(0, 10);
-    link.href = url;
-    link.download = lang === 'he' ? `harvest-daily-${dateStamp}.csv` : `harvest-daily-${dateStamp}.csv`;
-    document.body.append(link);
-    link.click();
-    link.remove();
-    window.URL.revokeObjectURL(url);
+
+    try {
+      await downloadStyledExcel({
+        sheetName: lang === 'he' ? 'קטיף יומי' : 'Harvest Daily',
+        fileName: `harvest-daily-${dateStamp}.xlsx`,
+        header,
+        rows,
+      });
+    } catch {
+      window.alert(lang === 'he' ? 'לא ניתן לייצא כרגע לאקסל.' : 'Could not export to Excel right now.');
+    }
   };
 
   const handlePrintFieldReportTable = () => {
@@ -657,25 +1525,427 @@ export function HarvestPage() {
     printWindow.close();
   };
 
-  const handleExportFieldReportTableToCsv = () => {
+  const handleExportFieldReportTableToCsv = async () => {
     if (typeof window === 'undefined') {
       return;
     }
 
     const { header, rows } = createFieldReportExportRows();
-    const csvLines = [header, ...rows].map((row) => row.map((value) => escapeCsv(value)).join(','));
-    const csvContent = `\ufeff${csvLines.join('\n')}`;
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-
     const dateStamp = new Date().toISOString().slice(0, 10);
-    link.href = url;
-    link.download = `harvest-field-report-${dateStamp}.csv`;
-    document.body.append(link);
-    link.click();
-    link.remove();
-    window.URL.revokeObjectURL(url);
+
+    try {
+      await downloadStyledExcel({
+        sheetName: lang === 'he' ? 'דוח שדות' : 'Field Report',
+        fileName: `harvest-field-report-${dateStamp}.xlsx`,
+        header,
+        rows,
+      });
+    } catch {
+      window.alert(lang === 'he' ? 'לא ניתן לייצא כרגע לאקסל.' : 'Could not export to Excel right now.');
+    }
+  };
+
+  const closeSortingActionMenu = (target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    const menu = target.closest('.global-filters-bar__icon-menu');
+    if (menu instanceof HTMLDetailsElement) {
+      menu.open = false;
+    }
+  };
+
+  const cancelSortingDownloadMenuClose = () => {
+    if (sortingDownloadMenuCloseTimeoutRef.current !== null) {
+      window.clearTimeout(sortingDownloadMenuCloseTimeoutRef.current);
+      sortingDownloadMenuCloseTimeoutRef.current = null;
+    }
+  };
+
+  const scheduleSortingDownloadMenuClose = (menu: HTMLDetailsElement) => {
+    cancelSortingDownloadMenuClose();
+    sortingDownloadMenuCloseTimeoutRef.current = window.setTimeout(() => {
+      menu.open = false;
+      sortingDownloadMenuCloseTimeoutRef.current = null;
+    }, 180);
+  };
+
+  const handlePrintSortingDailyTable = async (variant: 'summary' | 'expanded') => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    let tableHeaderHtml = '';
+    let tableRowsHtml = '';
+
+    if (variant === 'expanded') {
+      try {
+        const { Workbook } = await import('exceljs');
+        const matrix = await createSortingDailyExpandedMatrixData();
+        const groups = matrix.groups.filter(
+          (group) => group.pitamGroups.reduce((sum, pitamGroup) => sum + pitamGroup.grades.length, 0) > 0,
+        );
+
+        const topHeader = [
+          ...matrix.fixedHeaders.map((label) => `<th rowspan="3">${escapeHtml(label)}</th>`),
+          ...groups.map(
+            (group) => {
+              const groupColumnCount = group.pitamGroups.reduce((sum, pitamGroup) => sum + pitamGroup.grades.length, 0);
+              return `<th colspan="${groupColumnCount}">${escapeHtml(group.categoryLabel)} (${escapeHtml(numberFormatter.format(group.total))})</th>`;
+            },
+          ),
+        ].join('');
+
+        const pitamHeader = groups
+          .flatMap((group) =>
+            group.pitamGroups.map(
+              (pitamGroup) => `<th colspan="${pitamGroup.grades.length}">${escapeHtml(pitamGroup.label)}</th>`,
+            ),
+          )
+          .join('');
+
+        const gradeHeader = groups
+          .flatMap((group) =>
+            group.pitamGroups.flatMap((pitamGroup) => pitamGroup.grades.map((grade) => `<th>${escapeHtml(grade)}</th>`)),
+          )
+          .join('');
+
+        tableHeaderHtml = `<tr>${topHeader}</tr><tr>${pitamHeader}</tr><tr>${gradeHeader}</tr>`;
+
+        tableRowsHtml = matrix.rows
+          .map((row) => {
+            const fixedCells = [
+              `<td>${escapeHtml(row.dateGregorian)}</td>`,
+              `<td>${escapeHtml(row.dateHebrew)}</td>`,
+              `<td>${escapeHtml(row.fieldName)}</td>`,
+            ].join('');
+
+            const valueCells = groups
+              .flatMap((group) =>
+                group.pitamGroups.flatMap((pitamGroup) =>
+                  pitamGroup.grades.map((grade) => {
+                    const cellKey = `${group.categoryLabel}::${pitamGroup.key}::${grade}`;
+                    return `<td>${escapeHtml(numberFormatter.format(row.values[cellKey] ?? 0))}</td>`;
+                  }),
+                ),
+              )
+              .join('');
+
+            return `<tr>${fixedCells}${valueCells}</tr>`;
+          })
+          .join('');
+      } catch {
+        window.alert(lang === 'he' ? 'לא ניתן להכין כרגע את גרסת ההדפסה המורחבת.' : 'Could not prepare the expanded print version right now.');
+        return;
+      }
+    } else {
+      const { header, rows } = createSortingDailyExportRows();
+      tableHeaderHtml = `<tr>${header.map((label) => `<th>${escapeHtml(label)}</th>`).join('')}</tr>`;
+      tableRowsHtml = rows
+        .map((row) => `<tr>${row.map((value) => `<td>${escapeHtml(String(value))}</td>`).join('')}</tr>`)
+        .join('');
+    }
+
+    const printWindow = window.open('', '_blank', 'width=1200,height=760');
+    if (!printWindow) {
+      return;
+    }
+
+    const printTitle =
+      variant === 'expanded'
+        ? lang === 'he'
+          ? 'דוח מיון יומי - גרסה מורחבת'
+          : 'Daily Sorting Report - Expanded'
+        : lang === 'he'
+          ? 'דוח מיון יומי'
+          : 'Daily Sorting Report';
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html lang="${lang === 'he' ? 'he' : 'en'}" dir="${lang === 'he' ? 'rtl' : 'ltr'}">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>${escapeHtml(printTitle)}</title>
+          <style>
+            * { box-sizing: border-box; }
+            body {
+              margin: 0;
+              padding: 22px;
+              font-family: Assistant, sans-serif;
+              color: #1f2a22;
+              background: #fff;
+            }
+            h1 {
+              margin: 0 0 14px;
+              font-size: 22px;
+              color: #1f4f29;
+              text-align: center;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              table-layout: auto;
+              font-size: 10px;
+            }
+            th,
+            td {
+              border: 1px solid #ccd9cf;
+              padding: 5px;
+              text-align: center;
+              white-space: nowrap;
+            }
+            th {
+              background: #1f5a32;
+              color: #fff;
+              font-weight: 700;
+            }
+            tbody tr:nth-child(even) {
+              background: #f8fcf9;
+            }
+            @page {
+              size: A4 landscape;
+              margin: 8mm;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>${escapeHtml(printTitle)}</h1>
+          <table>
+            <thead>
+              ${tableHeaderHtml}
+            </thead>
+            <tbody>
+              ${tableRowsHtml}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
+
+  const handleExportSortingDailyTableToCsv = async (variant: 'summary' | 'expanded') => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (variant === 'expanded') {
+      try {
+        const { Workbook } = await import('exceljs');
+        const matrix = await createSortingDailyExpandedMatrixData();
+        const groups = matrix.groups.filter(
+          (group) => group.pitamGroups.reduce((sum, pitamGroup) => sum + pitamGroup.grades.length, 0) > 0,
+        );
+
+        const topHeaderRow: Array<string | number> = [
+          ...matrix.fixedHeaders,
+          ...groups.flatMap((group) =>
+            group.pitamGroups.flatMap((pitamGroup, pitamIndex) =>
+              pitamGroup.grades.map((_, gradeIndex) =>
+                pitamIndex === 0 && gradeIndex === 0 ? `${group.categoryLabel} (${numberFormatter.format(group.total)})` : '',
+              ),
+            ),
+          ),
+        ];
+
+        const pitamHeaderRow: Array<string | number> = [
+          '',
+          '',
+          '',
+          ...groups.flatMap((group) =>
+            group.pitamGroups.flatMap((pitamGroup) =>
+              pitamGroup.grades.map((_, gradeIndex) => (gradeIndex === 0 ? pitamGroup.label : '')),
+            ),
+          ),
+        ];
+
+        const gradesHeaderRow: Array<string | number> = [
+          '',
+          '',
+          '',
+          ...groups.flatMap((group) => group.pitamGroups.flatMap((pitamGroup) => pitamGroup.grades)),
+        ];
+
+        const bodyRows = matrix.rows.map((row) => {
+          const valueColumns = groups.flatMap((group) =>
+            group.pitamGroups.flatMap((pitamGroup) =>
+              pitamGroup.grades.map((grade) => {
+                const cellKey = `${group.categoryLabel}::${pitamGroup.key}::${grade}`;
+                return row.values[cellKey] ?? 0;
+              }),
+            ),
+          );
+
+          return [row.dateGregorian, row.dateHebrew, row.fieldName, ...valueColumns];
+        });
+
+        const numericColumnCount = bodyRows[0]?.length ? Math.max(0, bodyRows[0].length - 3) : 0;
+        const summaryValues = Array.from({ length: numericColumnCount }, (_, index) =>
+          bodyRows.reduce((sum, row) => sum + (Number(row[index + 3]) || 0), 0),
+        );
+        const summaryRow: Array<string | number> = [lang === 'he' ? 'סה"כ' : 'Total', '', '', ...summaryValues];
+
+        const workbook = new Workbook();
+        const worksheet = workbook.addWorksheet(lang === 'he' ? 'מיון מורחב' : 'Sorting Expanded');
+        const excelRows = [topHeaderRow, pitamHeaderRow, gradesHeaderRow, ...bodyRows, summaryRow];
+
+        for (const row of excelRows) {
+          worksheet.addRow(row);
+        }
+
+        const headerBg = 'FF1F5A32';
+        const headerFont = 'FFFFFFFF';
+        const borderColor = 'FFCCD9CF';
+        const zebraBg = 'FFF8FCF9';
+        const summaryBg = 'FFE7F2EB';
+
+        for (let fixedCol = 1; fixedCol <= matrix.fixedHeaders.length; fixedCol += 1) {
+          worksheet.mergeCells(1, fixedCol, 3, fixedCol);
+        }
+
+        let currentCol = matrix.fixedHeaders.length + 1;
+
+        for (const group of groups) {
+          const groupColumns = group.pitamGroups.reduce((sum, pitamGroup) => sum + pitamGroup.grades.length, 0);
+          if (groupColumns <= 0) {
+            continue;
+          }
+
+          worksheet.mergeCells(1, currentCol, 1, currentCol + groupColumns - 1);
+
+          for (const pitamGroup of group.pitamGroups) {
+            const pitamColumns = pitamGroup.grades.length;
+            if (pitamColumns <= 0) {
+              continue;
+            }
+
+            worksheet.mergeCells(2, currentCol, 2, currentCol + pitamColumns - 1);
+            currentCol += pitamColumns;
+          }
+        }
+
+        const maxCol = worksheet.columnCount;
+        const bodyStartRow = 4;
+        const summaryRowIndex = bodyStartRow + bodyRows.length;
+        for (let rowIndex = 1; rowIndex <= worksheet.rowCount; rowIndex += 1) {
+          const row = worksheet.getRow(rowIndex);
+          for (let colIndex = 1; colIndex <= maxCol; colIndex += 1) {
+            const cell = row.getCell(colIndex);
+            const isHeader = rowIndex <= 3;
+            const isSummary = rowIndex === summaryRowIndex;
+            const isZebraDataRow = rowIndex >= bodyStartRow && rowIndex < summaryRowIndex && rowIndex % 2 === 0;
+
+            cell.alignment = {
+              horizontal: 'center',
+              vertical: 'middle',
+              wrapText: true,
+            };
+
+            cell.border = {
+              top: { style: 'thin', color: { argb: borderColor } },
+              left: { style: 'thin', color: { argb: borderColor } },
+              bottom: { style: 'thin', color: { argb: borderColor } },
+              right: { style: 'thin', color: { argb: borderColor } },
+            };
+
+            if (isHeader) {
+              cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: headerBg },
+              };
+
+              cell.font = {
+                bold: true,
+                color: { argb: headerFont },
+              };
+            } else if (isSummary) {
+              cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: summaryBg },
+              };
+
+              cell.font = {
+                bold: true,
+                color: { argb: 'FF1F4F29' },
+              };
+            } else if (isZebraDataRow) {
+              cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: zebraBg },
+              };
+
+              cell.font = {
+                color: { argb: 'FF1F2A22' },
+              };
+            } else {
+              cell.font = {
+                color: { argb: 'FF1F2A22' },
+              };
+            }
+          }
+        }
+
+        const minimumWidths = [14, 14, 20];
+        for (let colIndex = 1; colIndex <= worksheet.columnCount; colIndex += 1) {
+          let maxLength = 0;
+
+          worksheet.eachRow((row: Row) => {
+            const rawValue = row.getCell(colIndex).value;
+            const textValue = rawValue === null || rawValue === undefined ? '' : String(rawValue);
+            if (textValue.length > maxLength) {
+              maxLength = textValue.length;
+            }
+          });
+
+          const minWidth = minimumWidths[colIndex - 1] ?? 8;
+          worksheet.getColumn(colIndex).width = Math.max(minWidth, Math.min(maxLength + 2, 36));
+        }
+
+        worksheet.views = [{ state: 'frozen', xSplit: 3, ySplit: 3, rightToLeft: lang === 'he' }];
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+
+        const dateStamp = new Date().toISOString().slice(0, 10);
+        link.href = url;
+        link.download = `sorting-daily-expanded-${dateStamp}.xlsx`;
+        document.body.append(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch {
+        window.alert(lang === 'he' ? 'לא ניתן להכין כרגע את גרסת הייצוא המורחבת.' : 'Could not prepare the expanded export version right now.');
+      }
+
+      return;
+    }
+
+    try {
+      const { header, rows } = createSortingDailyExportRows();
+      const dateStamp = new Date().toISOString().slice(0, 10);
+
+      await downloadStyledExcel({
+        sheetName: lang === 'he' ? 'מיון יומי' : 'Sorting Daily',
+        fileName: `sorting-daily-${dateStamp}.xlsx`,
+        header,
+        rows,
+      });
+    } catch {
+      window.alert(lang === 'he' ? 'לא ניתן לייצא כרגע לאקסל.' : 'Could not export to Excel right now.');
+    }
   };
 
   const buildNumericCellId = (scope: NumericSelectionScope, rowId: number, column: NumericSelectableColumnKey) =>
@@ -758,6 +2028,29 @@ export function HarvestPage() {
         className={`harvest-daily-workspace__numeric-cell${isSelected ? ' is-selected' : ''}`}
         onPointerDown={handleNumericCellPointerDown('field-report', row.id, column, value)}
         onPointerEnter={handleNumericCellPointerEnter('field-report', row.id, column, value)}
+        aria-pressed={isSelected}
+      >
+        {content ?? value}
+      </button>
+    );
+  };
+
+  const renderSortingNumericCell = (
+    row: ClassificationDailySummaryRow,
+    column: SortingDailyNumericColumnKey,
+    value: number,
+    content?: React.ReactNode,
+    className = 'harvest-daily-workspace__numeric-cell',
+  ) => {
+    const cellId = buildNumericCellId('sorting-daily', row.harvestId, column);
+    const isSelected = selectedNumericCells[cellId] !== undefined;
+
+    return (
+      <button
+        type="button"
+        className={`${className}${isSelected ? ' is-selected' : ''}`}
+        onPointerDown={handleNumericCellPointerDown('sorting-daily', row.harvestId, column, value)}
+        onPointerEnter={handleNumericCellPointerEnter('sorting-daily', row.harvestId, column, value)}
         aria-pressed={isSelected}
       >
         {content ?? value}
@@ -972,16 +2265,76 @@ export function HarvestPage() {
   }, [detailsRecord, t.dailyDetails.detailsPanel.relatedSortings.loadError]);
 
   useEffect(() => {
+    if (!isSortingDailyDetailsTab || sortingDailyDetailsRowId === null) {
+      setSortingDailyDetailRows([]);
+      setSortingDailyDetailRowsLoadError('');
+      setIsSortingDailyDetailRowsLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadSortingDailyDetailRows = async () => {
+      setIsSortingDailyDetailRowsLoading(true);
+      setSortingDailyDetailRowsLoadError('');
+
+      try {
+        const rows = await getClassificationsByHarvest(sortingDailyDetailsRowId);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setSortingDailyDetailRows(rows);
+      } catch {
+        if (!isMounted) {
+          return;
+        }
+
+        setSortingDailyDetailRows([]);
+        setSortingDailyDetailRowsLoadError(
+          lang === 'he' ? 'לא ניתן לטעון את פירוט המיונים כרגע.' : 'Failed to load sorting details right now.',
+        );
+      } finally {
+        if (isMounted) {
+          setIsSortingDailyDetailRowsLoading(false);
+        }
+      }
+    };
+
+    void loadSortingDailyDetailRows();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isSortingDailyDetailsTab, lang, sortingDailyDetailsRowId]);
+
+  useEffect(() => {
     const activeScope: NumericSelectionScope | null = isDailyDetailsTab
       ? 'daily'
       : isFieldReportTab
         ? 'field-report'
+        : isSortingDailyDetailsTab
+          ? 'sorting-daily'
         : null;
-    const activeRows = isDailyDetailsTab ? filteredHarvestRows : isFieldReportTab ? fieldReportRows : [];
+    const activeRows = isDailyDetailsTab
+      ? filteredHarvestRows
+      : isFieldReportTab
+        ? fieldReportRows
+        : isSortingDailyDetailsTab
+          ? sortingDailyRows
+          : [];
     const activeColumns: NumericSelectableColumnKey[] = isDailyDetailsTab
       ? HARVEST_NUMERIC_COLUMNS
       : isFieldReportTab
         ? FIELD_REPORT_NUMERIC_COLUMNS
+        : isSortingDailyDetailsTab
+          ? [
+              ...SORTING_DAILY_NUMERIC_COLUMNS,
+              ...sortingDailyCategories.map(
+                (category) => `category:${category.key}` as SortingDailyNumericColumnKey,
+              ),
+            ]
         : [];
 
     if (!activeScope || activeRows.length === 0) {
@@ -991,14 +2344,17 @@ export function HarvestPage() {
       return;
     }
 
-    const validIds = new Set(activeRows.map((row) => String(row.id)));
+    const validIds = new Set(
+      activeRows.map((row) => String('harvestId' in row ? row.harvestId : row.id)),
+    );
 
     setSelectedNumericCells((prev) => {
       let changed = false;
       const next: Record<string, number> = {};
 
       for (const [cellId, value] of Object.entries(prev)) {
-        const [scope, rowId, column] = cellId.split(':');
+        const [scope, rowId, ...columnParts] = cellId.split(':');
+        const column = columnParts.join(':');
         if (scope === activeScope && validIds.has(rowId) && activeColumns.includes(column as NumericSelectableColumnKey)) {
           next[cellId] = value;
         } else {
@@ -1008,7 +2364,16 @@ export function HarvestPage() {
 
       return changed ? next : prev;
     });
-  }, [fieldReportRows, filteredHarvestRows, isDailyDetailsTab, isFieldReportTab, selectedNumericCells]);
+  }, [
+    fieldReportRows,
+    filteredHarvestRows,
+    isDailyDetailsTab,
+    isFieldReportTab,
+    isSortingDailyDetailsTab,
+    selectedNumericCells,
+    sortingDailyCategories,
+    sortingDailyRows,
+  ]);
 
   const selectedCellsCount = useMemo(() => Object.keys(selectedNumericCells).length, [selectedNumericCells]);
 
@@ -1066,6 +2431,7 @@ export function HarvestPage() {
         header: lang === 'he' ? 'פרטים' : 'Details',
         headerLabel: lang === 'he' ? 'פרטים' : 'Details',
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.action,
+        gridTemplate: GLOBAL_DATA_TABLE_WIDTHS.action,
         align: 'center',
         render: (row) => (
           <button
@@ -1153,6 +2519,411 @@ export function HarvestPage() {
     t.dailyDetails.columns,
     t.dailyDetails.detailsPanel.fields,
   ]);
+
+  const sortingDailyColumns = useMemo<GlobalDataTableColumn<ClassificationDailySummaryRow>[]>(() => {
+    return [
+      {
+        id: 'details',
+        header: lang === 'he' ? 'פרטים' : 'Details',
+        headerLabel: lang === 'he' ? 'פרטים' : 'Details',
+        minWidth: '72px',
+        gridTemplate: '72px',
+        align: 'center',
+        render: (row) => (
+          <button
+            type="button"
+            className="harvest-daily-workspace__details-trigger"
+            onClick={() => setSortingDailyDetailsRowId(row.harvestId)}
+            aria-label={lang === 'he' ? 'הצגת פרטי שורת מיון' : 'Show sorting row details'}
+          >
+            <FaFileInvoice />
+          </button>
+        ),
+      },
+      {
+        id: 'dateGregorian',
+        header: t.sortingDailyDetails.columns.dateGregorian,
+        headerLabel: t.sortingDailyDetails.columns.dateGregorian,
+        sortKey: 'dateGregorian',
+        sortLabel: `${t.sortingDailyDetails.columns.dateGregorian} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        defaultSortDirection: 'desc',
+        sortAccessor: (row) => Date.parse(row.dateGregorian),
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.dateShort,
+        gridTemplate: GLOBAL_DATA_TABLE_WIDTHS.dateShort,
+        render: (row) => formatGregorianDate(row.dateGregorian),
+      },
+      {
+        id: 'dateHebrew',
+        header: t.sortingDailyDetails.columns.dateHebrew,
+        headerLabel: t.sortingDailyDetails.columns.dateHebrew,
+        sortKey: 'dateHebrew',
+        sortLabel: `${t.sortingDailyDetails.columns.dateHebrew} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        defaultSortDirection: 'desc',
+        sortAccessor: (row) => row.dateHebrew,
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.dateLong,
+        gridTemplate: GLOBAL_DATA_TABLE_WIDTHS.dateLong,
+        render: (row) => row.dateHebrew,
+      },
+      {
+        id: 'fieldName',
+        header: t.sortingDailyDetails.columns.fieldName,
+        headerLabel: t.sortingDailyDetails.columns.fieldName,
+        sortKey: 'fieldName',
+        sortLabel: `${t.sortingDailyDetails.columns.fieldName} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        defaultSortDirection: 'asc',
+        sortAccessor: (row) => row.fieldName,
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.fieldName,
+        gridTemplate: GLOBAL_DATA_TABLE_WIDTHS.fieldName,
+        render: (row) => row.fieldName,
+      },
+      {
+        id: 'categories',
+        header: t.sortingDailyDetails.columns.categoriesGroup,
+        headerLabel: t.sortingDailyDetails.columns.categoriesGroup,
+        minWidth: '560px',
+        gridTemplate: 'minmax(560px, 1fr)',
+        align: 'center',
+        render: (row) => {
+          const rowCategories = sortingDailyCategories
+            .map((category) => ({
+              key: category.key,
+              label: buildSortingCategoryDisplayLabel(category, lang),
+              value: row.categoryTotals[category.key] ?? 0,
+            }))
+            .filter((category) => category.value > 0);
+
+          return (
+            <div className="harvest-sorting-daily-table__categories-cell">
+              {rowCategories.length === 0 ? (
+                <span className="harvest-sorting-daily-table__category-chip is-empty">-</span>
+              ) : (
+                rowCategories.map((category) => (
+                  <span
+                    key={`sorting-row-${row.harvestId}-${category.key}`}
+                    className="harvest-sorting-daily-table__category-chip"
+                  >
+                    <span className="harvest-sorting-daily-table__category-chip-label">{category.label}</span>
+                    {renderSortingNumericCell(
+                      row,
+                      `category:${category.key}`,
+                      category.value,
+                      <span className="harvest-sorting-daily-table__category-chip-value-text">
+                        {numberFormatter.format(category.value)}
+                      </span>,
+                      'harvest-sorting-daily-table__category-chip-value',
+                    )}
+                  </span>
+                ))
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        id: 'totalSorted',
+        header: t.sortingDailyDetails.columns.totalSorted,
+        headerLabel: t.sortingDailyDetails.columns.totalSorted,
+        sortKey: 'totalSorted',
+        sortLabel: `${t.sortingDailyDetails.columns.totalSorted} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        defaultSortDirection: 'desc',
+        sortAccessor: (row) =>
+          sortingDailyCategories.reduce((sum, category) => sum + (row.categoryTotals[category.key] ?? 0), 0),
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
+        gridTemplate: GLOBAL_DATA_TABLE_WIDTHS.numeric,
+        align: 'center',
+        render: (row) => {
+          const rowDailyTotal = sortingDailyCategories.reduce(
+            (sum, category) => sum + (row.categoryTotals[category.key] ?? 0),
+            0,
+          );
+
+          return renderSortingNumericCell(
+            row,
+            'totalSorted',
+            rowDailyTotal,
+            <strong>{numberFormatter.format(rowDailyTotal)}</strong>,
+          );
+        },
+      },
+    ];
+  }, [
+    formatGregorianDate,
+    isDragSelecting,
+    lang,
+    numberFormatter,
+    selectedNumericCells,
+    sortingDailyCategories,
+    t.sortingDailyDetails.columns,
+  ]);
+
+  const filteredSortingDailyRows = useMemo<ClassificationDailySummaryRow[]>(() => {
+    const resolveOwnerToken = (category: ClassificationDailySummaryCategory) => {
+      return (category.key.split('|')[0] ?? 'general').trim().toLowerCase();
+    };
+
+    const normalizeName = (value: string | undefined | null) =>
+      (value ?? '')
+        .trim()
+        .toLocaleLowerCase(lang === 'he' ? 'he' : 'en');
+
+    const resolveOwnerType = (category: ClassificationDailySummaryCategory): 'GENERAL' | 'TRADER' | 'CUSTOMER' => {
+      if (category.ownerType === 'GENERAL' || category.ownerType === 'TRADER' || category.ownerType === 'CUSTOMER') {
+        return category.ownerType;
+      }
+
+      const ownerToken = resolveOwnerToken(category);
+      if (ownerToken.startsWith('trader:')) {
+        return 'TRADER';
+      }
+      if (ownerToken.startsWith('customer:')) {
+        return 'CUSTOMER';
+      }
+      return 'GENERAL';
+    };
+
+    const isCategoryAllowed = (category: ClassificationDailySummaryCategory) => {
+      const ownerType = resolveOwnerType(category);
+      const ownerToken = resolveOwnerToken(category);
+
+      if (sortingAssignmentFilter === 'all') {
+        return true;
+      }
+
+      if (sortingAssignmentFilter === 'trader') {
+        return ownerType === 'TRADER';
+      }
+
+      if (sortingAssignmentFilter === 'customer') {
+        return ownerType === 'CUSTOMER';
+      }
+
+      if (sortingAssignmentFilter.startsWith('trader:')) {
+        const selectedId = sortingAssignmentFilter.slice('trader:'.length);
+        if (ownerType !== 'TRADER') {
+          return false;
+        }
+
+        if (ownerToken === sortingAssignmentFilter) {
+          return true;
+        }
+
+        const ownerNameFromId = traderNameById.get(selectedId);
+        if (!ownerNameFromId || !ownerToken.startsWith('trader:')) {
+          return false;
+        }
+
+        const ownerTokenName = ownerToken.slice('trader:'.length);
+        return normalizeName(ownerTokenName) === normalizeName(ownerNameFromId);
+      }
+
+      const selectedId = sortingAssignmentFilter.slice('customer:'.length);
+      if (ownerType !== 'CUSTOMER') {
+        return false;
+      }
+
+      if (ownerToken === sortingAssignmentFilter) {
+        return true;
+      }
+
+      const ownerNameFromId = customerNameById.get(selectedId);
+      if (!ownerNameFromId || !ownerToken.startsWith('customer:')) {
+        return false;
+      }
+
+      const ownerTokenName = ownerToken.slice('customer:'.length);
+      return normalizeName(ownerTokenName) === normalizeName(ownerNameFromId);
+    };
+
+    return sortingDailyRows
+      .filter((row) => (fieldFilterId === 'all' ? true : row.fieldId === fieldFilterId))
+      .map((row) => {
+        const categoryTotals: Record<string, number> = {};
+        let totalSorted = 0;
+
+        for (const category of sortingDailyCategories) {
+          if (!isCategoryAllowed(category)) {
+            continue;
+          }
+
+          const value = row.categoryTotals[category.key] ?? 0;
+          if (value <= 0) {
+            continue;
+          }
+
+          categoryTotals[category.key] = value;
+          totalSorted += value;
+        }
+
+        return {
+          ...row,
+          categoryTotals,
+          totalSorted,
+        };
+      })
+      .filter((row) => row.totalSorted > 0);
+  }, [
+    customerNameById,
+    fieldFilterId,
+    lang,
+    sortingAssignmentFilter,
+    sortingDailyCategories,
+    sortingDailyRows,
+    traderNameById,
+  ]);
+
+  const sortingDailyDetailsData = useMemo(() => {
+    if (sortingDailyDetailsRowId === null) {
+      return null;
+    }
+
+    const row = filteredSortingDailyRows.find((item) => item.harvestId === sortingDailyDetailsRowId);
+    if (!row) {
+      return null;
+    }
+
+    const rowCategories = sortingDailyCategories
+      .map((category) => ({
+        key: category.key,
+        label: buildSortingCategoryDisplayLabel(category, lang),
+        value: row.categoryTotals[category.key] ?? 0,
+      }))
+      .filter((category) => category.value > 0);
+
+    const rowDailyTotal = rowCategories.reduce((sum, category) => sum + category.value, 0);
+
+    return {
+      row,
+      rowCategories,
+      rowDailyTotal,
+    };
+  }, [filteredSortingDailyRows, lang, sortingDailyCategories, sortingDailyDetailsRowId]);
+
+  const sortingDailyCategoryBreakdown = useMemo(() => {
+    if (!sortingDailyDetailsData) {
+      return [] as Array<{
+        label: string;
+        total: number;
+        pitamHeaders: Array<{ key: string; label: string; total: number }>;
+        gradeRows: Array<{ grade: string; values: Record<string, number>; total: number }>;
+      }>;
+    }
+
+    const pitamLabelMap: Record<string, string> = {
+      WITH_PITAM: lang === 'he' ? 'פיטם' : 'With pitam',
+      WITHOUT_PITAM: lang === 'he' ? 'בל"פ' : 'Without pitam',
+      MIXED: lang === 'he' ? 'מעורב' : 'Mixed',
+      UNKNOWN: lang === 'he' ? 'לא ידוע' : 'Unknown',
+    };
+
+    const getPitamKey = (value?: string | null) => {
+      if (!value) {
+        return 'UNKNOWN';
+      }
+
+      const normalized = value.replace(/\s+/g, '_').toUpperCase();
+      if (normalized === 'WITH_PITAM' || normalized === 'WITHOUT_PITAM') {
+        return normalized;
+      }
+
+      return 'MIXED';
+    };
+
+    const getCategoryDisplayLabel = (row: ClassificationRecord) => {
+      const categoryName = row.customerCategory?.name ?? row.traderCategory?.name ?? '';
+      if (!categoryName) {
+        return '';
+      }
+
+      if (row.assignmentType === 'TRADER') {
+        const ownerName = row.trader?.name?.trim();
+        return ownerName ? `${ownerName} | ${categoryName}` : categoryName;
+      }
+
+      if (row.assignmentType === 'CUSTOMER') {
+        const ownerName = row.customer?.customerName?.trim();
+        return ownerName ? `${ownerName} | ${categoryName}` : categoryName;
+      }
+
+      return categoryName;
+    };
+
+    const categoryOrder = sortingDailyDetailsData.rowCategories.map((category) => category.label);
+    const allowedCategories = new Set(categoryOrder);
+
+    const grouped = new Map<
+      string,
+      {
+        total: number;
+        pitamTotals: Record<string, number>;
+        grades: Map<string, Record<string, number>>;
+      }
+    >();
+
+    for (const row of sortingDailyDetailRows) {
+      const quantity = Number(row.quantity) || 0;
+      if (quantity <= 0) {
+        continue;
+      }
+
+      const categoryLabel = getCategoryDisplayLabel(row);
+      if (!categoryLabel || !allowedCategories.has(categoryLabel)) {
+        continue;
+      }
+
+      const grade = row.grade || row.customerCategory?.grade || '-';
+      const pitamKey = getPitamKey(row.pitamStatus);
+
+      if (!grouped.has(categoryLabel)) {
+        grouped.set(categoryLabel, {
+          total: 0,
+          pitamTotals: {},
+          grades: new Map<string, Record<string, number>>(),
+        });
+      }
+
+      const categoryGroup = grouped.get(categoryLabel)!;
+      categoryGroup.total += quantity;
+      categoryGroup.pitamTotals[pitamKey] = (categoryGroup.pitamTotals[pitamKey] ?? 0) + quantity;
+
+      if (!categoryGroup.grades.has(grade)) {
+        categoryGroup.grades.set(grade, {});
+      }
+
+      const gradeValues = categoryGroup.grades.get(grade)!;
+      gradeValues[pitamKey] = (gradeValues[pitamKey] ?? 0) + quantity;
+    }
+
+    return categoryOrder
+      .filter((label) => grouped.has(label))
+      .map((label) => {
+        const group = grouped.get(label)!;
+        const pitamKeys = Object.keys(group.pitamTotals).sort((left, right) => {
+          const order = ['WITHOUT_PITAM', 'WITH_PITAM', 'MIXED', 'UNKNOWN'];
+          return order.indexOf(left) - order.indexOf(right);
+        });
+
+        const pitamHeaders = pitamKeys.map((key) => ({
+          key,
+          label: pitamLabelMap[key] ?? key,
+          total: group.pitamTotals[key] ?? 0,
+        }));
+
+        const gradeRows = Array.from(group.grades.entries())
+          .map(([grade, values]) => ({
+            grade,
+            values,
+            total: pitamKeys.reduce((sum, key) => sum + (values[key] ?? 0), 0),
+          }))
+          .sort((a, b) => a.grade.localeCompare(b.grade, lang === 'he' ? 'he' : 'en', { sensitivity: 'base', numeric: true }));
+
+        return {
+          label,
+          total: group.total,
+          pitamHeaders,
+          gradeRows,
+        };
+      });
+  }, [lang, sortingDailyDetailRows, sortingDailyDetailsData]);
 
   const fieldReportDetailsData = useMemo(() => {
     if (!fieldReportDetailsPayload) {
@@ -1447,8 +3218,20 @@ export function HarvestPage() {
       return `${pageTitle} (${fieldReportRows.length})`;
     }
 
+    if (isSortingDailyDetailsTab) {
+      return `${pageTitle} (${sortingDailyRows.length})`;
+    }
+
     return pageTitle;
-  }, [fieldReportRows.length, filteredHarvestRows.length, isDailyDetailsTab, isFieldReportTab, pageTitle]);
+  }, [
+    fieldReportRows.length,
+    filteredHarvestRows.length,
+    isDailyDetailsTab,
+    isFieldReportTab,
+    isSortingDailyDetailsTab,
+    pageTitle,
+    sortingDailyRows.length,
+  ]);
 
   const addActionLabel = lang === 'he' ? 'הוסף קטיף' : 'Add Harvest';
   const editActionLabel = lang === 'he' ? 'עריכה' : 'Edit';
@@ -1515,27 +3298,59 @@ export function HarvestPage() {
           : [{ value: '', label: t.dailyDetails.filters.noActiveSeason }],
     };
 
+    const fieldFilter: GlobalScopedFilterConfig = {
+      key: 'fieldId',
+      label: isSortingDailyDetailsTab
+        ? t.sortingDailyDetails.filters.fieldFilterLabel
+        : t.dailyDetails.filters.fieldFilterLabel,
+      defaultValue: 'all',
+      queryParam: 'hdField',
+      options: [
+        {
+          value: 'all',
+          label: isSortingDailyDetailsTab
+            ? t.sortingDailyDetails.filters.allFieldsOption
+            : t.dailyDetails.filters.allFieldsOption,
+        },
+        ...fields.map((field) => ({
+          value: String(field.id),
+          label: field.name,
+        })),
+      ],
+    };
+
     if (isFieldReportTab) {
       return [seasonFilter];
     }
 
+    if (isSortingDailyDetailsTab) {
+      return [
+        seasonFilter,
+        fieldFilter,
+        {
+          key: 'sortingAssignmentType',
+          label: t.sortingDailyDetails.filters.assignmentFilterLabel,
+          defaultValue: 'all',
+          queryParam: 'sdAssign',
+          options: sortingAssignmentFilterOptions,
+        },
+      ];
+    }
+
     return [
       seasonFilter,
-      {
-        key: 'fieldId',
-        label: t.dailyDetails.filters.fieldFilterLabel,
-        defaultValue: 'all',
-        queryParam: 'hdField',
-        options: [
-          { value: 'all', label: t.dailyDetails.filters.allFieldsOption },
-          ...fields.map((field) => ({
-            value: String(field.id),
-            label: field.name,
-          })),
-        ],
-      },
+      fieldFilter,
     ];
-  }, [activeSeasonId, fields, isFieldReportTab, seasons, t.dailyDetails.filters]);
+  }, [
+    activeSeasonId,
+    fields,
+    isFieldReportTab,
+    isSortingDailyDetailsTab,
+    seasons,
+    sortingAssignmentFilterOptions,
+    t.dailyDetails.filters,
+    t.sortingDailyDetails.filters,
+  ]);
 
   const handlePrintDetails = () => {
     const printableNode = detailsPrintRef.current;
@@ -1834,6 +3649,101 @@ export function HarvestPage() {
     });
   };
 
+  const handlePrintSortingDailyDetails = () => {
+    const printableNode = sortingDailyDetailsPrintRef.current;
+    if (!printableNode) {
+      return;
+    }
+
+    openPrintableWindow({
+      title: lang === 'he' ? 'פרטי מיון יומי' : 'Daily Sorting Details',
+      heading: lang === 'he' ? 'פרטי מיון יומי' : 'Daily Sorting Details',
+      direction: lang === 'he' ? 'rtl' : 'ltr',
+      html: printableNode.outerHTML,
+      extraStyles: `
+        .harvest-daily-workspace__print-content {
+          max-width: 1180px;
+          margin: 0 auto;
+          display: grid;
+          gap: 14px;
+        }
+        .harvest-daily-workspace__sheet-card {
+          border: 1px solid #cfdcd2;
+          border-radius: 12px;
+          background: #fff;
+          padding: 12px;
+          display: grid;
+          gap: 12px;
+        }
+        .harvest-daily-workspace__sheet-card--borderless {
+          border: 0;
+          border-radius: 0;
+          background: transparent;
+          padding: 0;
+        }
+        .harvest-daily-workspace__sheet-card--category-breakdown::before {
+          content: '';
+          display: block;
+          width: 100%;
+          border-top: 1px solid #d4dfd7;
+          margin-bottom: 12px;
+        }
+        .harvest-daily-workspace__sheet-head {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          align-items: stretch;
+          direction: ltr;
+          text-align: left;
+          color: #243f2b;
+          font-weight: 600;
+        }
+        .harvest-daily-workspace__sheet-head p {
+          margin: 0;
+          width: 100%;
+          max-width: 100%;
+          direction: inherit;
+          unicode-bidi: plaintext;
+        }
+        html[dir='rtl'] .harvest-daily-workspace__sheet-head {
+          direction: rtl;
+          text-align: right;
+        }
+        .harvest-daily-workspace__sheet-table {
+          width: 100%;
+          border-collapse: collapse;
+          table-layout: fixed;
+          font-size: 12px;
+        }
+        .harvest-daily-workspace__sheet-table th,
+        .harvest-daily-workspace__sheet-table td {
+          border: 1px solid #ccd9cf;
+          padding: 6px;
+          text-align: center;
+          vertical-align: middle;
+        }
+        .harvest-daily-workspace__sheet-table th {
+          background: #f1f7f3;
+          color: #284f31;
+          font-weight: 700;
+          white-space: nowrap;
+        }
+        .harvest-daily-workspace__sheet-row--summary {
+          background: #e7f2eb !important;
+        }
+        .harvest-daily-workspace__sheet-row--summary td {
+          font-weight: 800;
+          color: #1f4f29;
+        }
+        .harvest-daily-workspace__related-sortings-title {
+          margin: 0;
+          color: #214f2a;
+          font-size: 16px;
+        }
+      `,
+    });
+  };
+
   return (
     <AppShell
       direction={lang === 'he' ? 'rtl' : 'ltr'}
@@ -1906,7 +3816,9 @@ export function HarvestPage() {
                 <button
                   type="button"
                   className="global-filters-bar__icon-btn"
-                  onClick={handleExportHarvestTableToExcel}
+                  onClick={() => {
+                    void handleExportHarvestTableToExcel();
+                  }}
                   aria-label={lang === 'he' ? 'יצוא טבלת הקטיפים לאקסל' : 'Export harvest table to Excel'}
                   title={lang === 'he' ? 'יצוא לאקסל' : 'Export to Excel'}
                 >
@@ -2122,9 +4034,11 @@ export function HarvestPage() {
                 <button
                   type="button"
                   className="global-filters-bar__icon-btn"
-                  onClick={handleExportFieldReportTableToCsv}
-                  aria-label={lang === 'he' ? 'יצוא דוח השדות ל-CSV' : 'Export field report to CSV'}
-                  title={lang === 'he' ? 'יצוא ל-CSV' : 'Export to CSV'}
+                  onClick={() => {
+                    void handleExportFieldReportTableToCsv();
+                  }}
+                  aria-label={lang === 'he' ? 'יצוא דוח השדות לאקסל' : 'Export field report to Excel'}
+                  title={lang === 'he' ? 'יצוא לאקסל' : 'Export to Excel'}
                 >
                   <FaFileArrowDown />
                 </button>
@@ -2199,6 +4113,253 @@ export function HarvestPage() {
                     </div>
                   ) : (
                     <p className="harvest-daily-workspace__details-empty">{t.dailyDetails.detailsPanel.empty}</p>
+                  )}
+                </GlobalLeftDetailsPanel>
+
+                {selectedCellsCount > 0 ? (
+                  <div className="harvest-daily-workspace__selection-summary" role="status" aria-live="polite">
+                    <span>{t.dailyDetails.selection.selectedCells(selectedCellsCount)}</span>
+                    <span>{t.dailyDetails.selection.total(formattedSelectedTotal)}</span>
+                    <button
+                      type="button"
+                      className="harvest-daily-workspace__selection-clear"
+                      onClick={() => setSelectedNumericCells({})}
+                    >
+                      {t.dailyDetails.selection.clear}
+                    </button>
+                  </div>
+                ) : null}
+              </>
+            ) : null}
+          </div>
+        </section>
+      ) : isSortingDailyDetailsTab ? (
+        <section className="settings-workspace harvest-daily-workspace">
+          <header className="settings-workspace__header">
+            <div>
+              <p className="settings-workspace__description">{t.sortingDailyDetails.description}</p>
+            </div>
+          </header>
+
+          <GlobalScopedFilters
+            scope={HARVEST_DAILY_FILTER_SCOPE}
+            filters={filters}
+            direction={lang === 'he' ? 'rtl' : 'ltr'}
+            actions={
+              <div className="global-filters-bar__icon-actions" aria-label={lang === 'he' ? 'פעולות טבלה' : 'Table actions'}>
+                <button
+                  type="button"
+                  className="global-filters-bar__icon-btn"
+                  onClick={() => {
+                    void handlePrintSortingDailyTable('summary');
+                  }}
+                  aria-label={lang === 'he' ? 'הדפסת טבלת המיון היומי' : 'Print daily sorting table'}
+                  title={lang === 'he' ? 'הדפסה' : 'Print'}
+                >
+                  <FaPrint />
+                </button>
+
+                <details
+                  className="global-filters-bar__icon-menu"
+                  onMouseEnter={cancelSortingDownloadMenuClose}
+                  onMouseLeave={(event) => {
+                    scheduleSortingDownloadMenuClose(event.currentTarget);
+                  }}
+                >
+                  <summary
+                    className="global-filters-bar__icon-btn"
+                    aria-label={lang === 'he' ? 'יצוא טבלת המיון היומי לאקסל' : 'Export daily sorting table to Excel'}
+                    title={lang === 'he' ? 'יצוא לאקסל' : 'Export to Excel'}
+                  >
+                    <FaFileArrowDown />
+                  </summary>
+                  <div className="global-filters-bar__menu-list" role="menu">
+                    <button
+                      type="button"
+                      className="global-filters-bar__menu-item"
+                      onClick={(event) => {
+                        closeSortingActionMenu(event.currentTarget);
+                        void handleExportSortingDailyTableToCsv('summary');
+                      }}
+                    >
+                      {lang === 'he' ? 'הורדה רגילה' : 'Standard download'}
+                    </button>
+                    <button
+                      type="button"
+                      className="global-filters-bar__menu-item"
+                      onClick={(event) => {
+                        closeSortingActionMenu(event.currentTarget);
+                        void handleExportSortingDailyTableToCsv('expanded');
+                      }}
+                    >
+                      {lang === 'he' ? 'הורדה מורחבת' : 'Expanded download'}
+                    </button>
+                  </div>
+                </details>
+              </div>
+            }
+          />
+
+          {sortingDailyLoadError ? <p className="seasons-manager__error">{sortingDailyLoadError}</p> : null}
+
+          <div className="settings-panel-wide harvest-daily-workspace__panel">
+            {isSortingDailyLoading ? <p className="seasons-manager__state">{t.sortingDailyDetails.loading}</p> : null}
+
+            {!isSortingDailyLoading ? (
+              <>
+                <GlobalDataTable
+                  columns={sortingDailyColumns}
+                  rows={filteredSortingDailyRows}
+                  getRowKey={(row) => row.harvestId}
+                  emptyLabel={t.sortingDailyDetails.empty}
+                  defaultSortState={{ key: 'dateGregorian', direction: 'desc' }}
+                  onSortedRowsChange={(rows) => {
+                    visibleSortingDailyRowsRef.current = rows;
+                  }}
+                />
+
+                <GlobalLeftDetailsPanel
+                  isOpen={sortingDailyDetailsData !== null}
+                  title={lang === 'he' ? 'פרטי מיון יומי' : 'Daily Sorting Details'}
+                  closeLabel={lang === 'he' ? 'סגירת פרטי מיון יומי' : 'Close daily sorting details'}
+                  onClose={() => setSortingDailyDetailsRowId(null)}
+                  headerActions={
+                    <button
+                      type="button"
+                      className="global-left-details-panel__print"
+                      onClick={handlePrintSortingDailyDetails}
+                    >
+                      <FaPrint aria-hidden="true" />
+                      <span>{lang === 'he' ? 'הדפסה' : 'Print'}</span>
+                    </button>
+                  }
+                >
+                  {sortingDailyDetailsData ? (
+                    <div className="harvest-daily-workspace__print-content" ref={sortingDailyDetailsPrintRef}>
+                      <div className="harvest-daily-workspace__sheet-card">
+                        <div className="harvest-daily-workspace__sheet-head">
+                          <p>
+                            <strong>{t.sortingDailyDetails.columns.dateGregorian}:</strong>{' '}
+                            {formatGregorianDate(sortingDailyDetailsData.row.dateGregorian)}
+                          </p>
+                          <p>
+                            <strong>{t.sortingDailyDetails.columns.dateHebrew}:</strong>{' '}
+                            {sortingDailyDetailsData.row.dateHebrew}
+                          </p>
+                          <p>
+                            <strong>{t.sortingDailyDetails.columns.fieldName}:</strong> {sortingDailyDetailsData.row.fieldName}
+                          </p>
+                        </div>
+
+                        <table className="harvest-daily-workspace__sheet-table" style={{ marginTop: 18 }}>
+                          <thead>
+                            <tr>
+                              <th>{lang === 'he' ? 'קטגוריה' : 'Category'}</th>
+                              <th>{lang === 'he' ? 'כמות' : 'Quantity'}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {sortingDailyDetailsData.rowCategories.length === 0 ? (
+                              <tr>
+                                <td colSpan={2}>{t.sortingDailyDetails.empty}</td>
+                              </tr>
+                            ) : (
+                              sortingDailyDetailsData.rowCategories.map((category) => (
+                                <tr key={`sorting-details-${sortingDailyDetailsData.row.harvestId}-${category.key}`}>
+                                  <td>{category.label}</td>
+                                  <td>{numberFormatter.format(category.value)}</td>
+                                </tr>
+                              ))
+                            )}
+
+                            <tr className="harvest-daily-workspace__sheet-row--summary">
+                              <td>{lang === 'he' ? 'סה"כ יומי' : 'Daily Total'}</td>
+                              <td>{numberFormatter.format(sortingDailyDetailsData.rowDailyTotal)}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {isSortingDailyDetailRowsLoading ? (
+                        <p className="harvest-daily-workspace__details-empty" style={{ marginTop: 14 }}>
+                          {lang === 'he' ? 'טוען פירוט קטגוריות...' : 'Loading category breakdown...'}
+                        </p>
+                      ) : null}
+
+                      {sortingDailyDetailRowsLoadError ? (
+                        <p className="harvest-daily-workspace__details-error" style={{ marginTop: 14 }}>
+                          {sortingDailyDetailRowsLoadError}
+                        </p>
+                      ) : null}
+
+                      {!isSortingDailyDetailRowsLoading && !sortingDailyDetailRowsLoadError ? (
+                        sortingDailyCategoryBreakdown.length > 0 ? (
+                          sortingDailyCategoryBreakdown.map((category) => (
+                            <div
+                              key={`sorting-details-breakdown-${sortingDailyDetailsData.row.harvestId}-${category.label}`}
+                              className="harvest-daily-workspace__sheet-card harvest-daily-workspace__sheet-card--borderless harvest-daily-workspace__sheet-card--category-breakdown"
+                              style={{ marginTop: 14 }}
+                            >
+                              <h4 className="harvest-daily-workspace__related-sortings-title" style={{ marginTop: 0 }}>
+                                {category.label}
+                                <span style={{ marginInlineStart: 8 }}>
+                                  ({numberFormatter.format(category.total)})
+                                </span>
+                              </h4>
+
+                              <table className="harvest-daily-workspace__sheet-table" style={{ marginTop: 12 }}>
+                                <thead>
+                                  <tr>
+                                    <th>{lang === 'he' ? 'דרגה' : 'Grade'}</th>
+                                    {category.pitamHeaders.map((header) => (
+                                      <th key={`sorting-details-pitam-header-${category.label}-${header.key}`}>
+                                        {header.label} ({numberFormatter.format(header.total)})
+                                      </th>
+                                    ))}
+                                    <th>{lang === 'he' ? 'סה"כ' : 'Total'}</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {category.gradeRows.length === 0 ? (
+                                    <tr>
+                                      <td colSpan={category.pitamHeaders.length + 2}>{t.sortingDailyDetails.empty}</td>
+                                    </tr>
+                                  ) : (
+                                    category.gradeRows.map((gradeRow) => (
+                                      <tr key={`sorting-details-grade-row-${category.label}-${gradeRow.grade}`}>
+                                        <td>{gradeRow.grade}</td>
+                                        {category.pitamHeaders.map((header) => (
+                                          <td key={`sorting-details-grade-cell-${category.label}-${gradeRow.grade}-${header.key}`}>
+                                            {numberFormatter.format(gradeRow.values[header.key] ?? 0)}
+                                          </td>
+                                        ))}
+                                        <td>{numberFormatter.format(gradeRow.total)}</td>
+                                      </tr>
+                                    ))
+                                  )}
+
+                                  <tr className="harvest-daily-workspace__sheet-row--summary">
+                                    <td>{lang === 'he' ? 'סה"כ' : 'Total'}</td>
+                                    {category.pitamHeaders.map((header) => (
+                                      <td key={`sorting-details-summary-${category.label}-${header.key}`}>
+                                        {numberFormatter.format(header.total)}
+                                      </td>
+                                    ))}
+                                    <td>{numberFormatter.format(category.total)}</td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="harvest-daily-workspace__details-empty" style={{ marginTop: 14 }}>
+                            {lang === 'he' ? 'אין פירוט קטגוריות להצגה.' : 'No category breakdown available.'}
+                          </p>
+                        )
+                      ) : null}
+                    </div>
+                  ) : (
+                    <p className="harvest-daily-workspace__details-empty">{t.sortingDailyDetails.empty}</p>
                   )}
                 </GlobalLeftDetailsPanel>
 

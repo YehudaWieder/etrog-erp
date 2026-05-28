@@ -106,6 +106,31 @@ type HarvestI18n = {
       notes: string;
     };
   };
+  sortingDailyDetails: {
+    description: string;
+    loading: string;
+    loadError: string;
+    empty: string;
+    filters: {
+      fieldFilterLabel: string;
+      assignmentFilterLabel: string;
+      allFieldsOption: string;
+      assignmentOptions: {
+        all: string;
+        trader: string;
+        customer: string;
+        traderPrefix: string;
+        customerPrefix: string;
+      };
+    };
+    columns: {
+      dateGregorian: string;
+      dateHebrew: string;
+      fieldName: string;
+      categoriesGroup: string;
+      totalSorted: string;
+    };
+  };
   emptyState: Record<string, EmptyStateContent>;
 };
 
@@ -251,6 +276,31 @@ export const HARVEST_I18N: Record<'he' | 'en', HarvestI18n> = {
         mode: 'מצב מיון',
         updatedBy: 'עודכן על ידי',
         notes: 'הערות',
+      },
+    },
+    sortingDailyDetails: {
+      description: 'ריכוז מיון יומי לפי תאריך קטיף ושדה. כל עמודת קטגוריה מוצגת רק אם קיימים בה מיונים מעל 0.',
+      loading: 'טוען נתוני מיון יומיים...',
+      loadError: 'טעינת נתוני המיון היומיים נכשלה.',
+      empty: 'לא נמצאו נתוני מיון להצגה עבור העונה הנבחרת.',
+      filters: {
+        fieldFilterLabel: 'סינון לפי שדה',
+        assignmentFilterLabel: 'סוג שיוך',
+        allFieldsOption: 'כל השדות',
+        assignmentOptions: {
+          all: 'הכל',
+          trader: 'סוחרים',
+          customer: 'לקוחות',
+          traderPrefix: 'סוחר:',
+          customerPrefix: 'לקוח:',
+        },
+      },
+      columns: {
+        dateGregorian: 'תאריך קטיף לועזי',
+        dateHebrew: 'תאריך קטיף עברי',
+        fieldName: 'שדה',
+        categoriesGroup: 'קטגוריות שמיינו',
+        totalSorted: 'סה"כ',
       },
     },
     emptyState: {
@@ -413,6 +463,31 @@ export const HARVEST_I18N: Record<'he' | 'en', HarvestI18n> = {
         mode: 'Mode',
         updatedBy: 'Updated By',
         notes: 'Notes',
+      },
+    },
+    sortingDailyDetails: {
+      description: 'Daily sorting summary grouped by harvest date and field. Category columns are shown only when totals are above 0.',
+      loading: 'Loading daily sorting data...',
+      loadError: 'Failed to load daily sorting data right now.',
+      empty: 'No sorting records found for the selected season.',
+      filters: {
+        fieldFilterLabel: 'Filter by field',
+        assignmentFilterLabel: 'Assignment type',
+        allFieldsOption: 'All fields',
+        assignmentOptions: {
+          all: 'All',
+          trader: 'Traders',
+          customer: 'Customers',
+          traderPrefix: 'Trader:',
+          customerPrefix: 'Customer:',
+        },
+      },
+      columns: {
+        dateGregorian: 'Harvest Gregorian Date',
+        dateHebrew: 'Harvest Hebrew Date',
+        fieldName: 'Field',
+        categoriesGroup: 'Sorted Categories',
+        totalSorted: 'Total',
       },
     },
     emptyState: {

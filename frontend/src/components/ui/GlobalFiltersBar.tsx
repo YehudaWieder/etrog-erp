@@ -3,6 +3,7 @@ import React from 'react';
 export type GlobalFilterOption = {
   value: string;
   label: string;
+  group?: string;
 };
 
 export type GlobalFilterControl = {
@@ -41,11 +42,49 @@ export const GlobalFiltersBar: React.FC<GlobalFiltersBarProps> = ({
             value={control.value}
             onChange={(event) => control.onChange(event.target.value)}
           >
-            {control.options.map((option) => (
-              <option key={`${control.id}-${option.value || 'empty'}`} value={option.value}>
-                {option.label}
-              </option>
-            ))}
+            {(() => {
+              const hasGroupedOptions = control.options.some((option) => Boolean(option.group));
+
+              if (!hasGroupedOptions) {
+                return control.options.map((option) => (
+                  <option key={`${control.id}-${option.value || 'empty'}`} value={option.value}>
+                    {option.label}
+                  </option>
+                ));
+              }
+
+              const ungroupedOptions = control.options.filter((option) => !option.group);
+              const groupedOptionsMap = new Map<string, GlobalFilterOption[]>();
+
+              for (const option of control.options) {
+                if (!option.group) {
+                  continue;
+                }
+
+                if (!groupedOptionsMap.has(option.group)) {
+                  groupedOptionsMap.set(option.group, []);
+                }
+
+                groupedOptionsMap.get(option.group)!.push(option);
+              }
+
+              return [
+                ...ungroupedOptions.map((option) => (
+                  <option key={`${control.id}-${option.value || 'empty'}`} value={option.value}>
+                    {option.label}
+                  </option>
+                )),
+                ...Array.from(groupedOptionsMap.entries()).map(([groupLabel, groupedOptions]) => (
+                  <optgroup key={`${control.id}-group-${groupLabel}`} label={groupLabel}>
+                    {groupedOptions.map((option) => (
+                      <option key={`${control.id}-${option.value || 'empty'}`} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                )),
+              ];
+            })()}
           </select>
         </div>
       ))}

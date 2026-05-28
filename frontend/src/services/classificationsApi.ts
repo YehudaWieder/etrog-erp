@@ -35,6 +35,34 @@ export type ClassificationRecord = {
   updatedBy?: ClassificationUpdatedBy | null;
 };
 
+export type ClassificationDailySummaryCategory = {
+  key: string;
+  label: string;
+  ownerType?: 'GENERAL' | 'TRADER' | 'CUSTOMER';
+  ownerName?: string | null;
+  categoryName?: string;
+  total: number;
+};
+
+export type ClassificationDailySummaryRow = {
+  harvestId: number;
+  fieldId: number;
+  fieldName: string;
+  dateGregorian: string;
+  dateHebrew: string;
+  totalSorted: number;
+  categoryTotals: Record<string, number>;
+};
+
+export type ClassificationDailySummaryResponse = {
+  categories: ClassificationDailySummaryCategory[];
+  rows: ClassificationDailySummaryRow[];
+};
+
 export async function getClassificationsByHarvest(harvestId: number): Promise<ClassificationRecord[]> {
   return apiClient<ClassificationRecord[]>(`/classifications/harvest/${harvestId}`);
+}
+
+export async function getClassificationDailySummaryBySeason(seasonId: number): Promise<ClassificationDailySummaryResponse> {
+  return apiClient<ClassificationDailySummaryResponse>(`/classifications/daily-summary?seasonId=${seasonId}`);
 }
