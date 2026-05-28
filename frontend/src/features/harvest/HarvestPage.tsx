@@ -1376,12 +1376,16 @@ export function HarvestPage() {
   }, [lang, relatedSortings]);
 
   const pageTitleWithCount = useMemo(() => {
-    if (!isDailyDetailsTab) {
-      return pageTitle;
+    if (isDailyDetailsTab) {
+      return `${pageTitle} (${filteredHarvestRows.length})`;
     }
 
-    return `${pageTitle} (${filteredHarvestRows.length})`;
-  }, [filteredHarvestRows.length, isDailyDetailsTab, pageTitle]);
+    if (isFieldReportTab) {
+      return `${pageTitle} (${fieldReportRows.length})`;
+    }
+
+    return pageTitle;
+  }, [fieldReportRows.length, filteredHarvestRows.length, isDailyDetailsTab, isFieldReportTab, pageTitle]);
 
   const addActionLabel = lang === 'he' ? 'הוסף קטיף' : 'Add Harvest';
   const editActionLabel = lang === 'he' ? 'עריכה' : 'Edit';
@@ -1417,6 +1421,18 @@ export function HarvestPage() {
       >
         <FaTrashCan />
         <span>{deleteActionLabel}</span>
+      </button>
+    </div>
+  ) : isFieldReportTab ? (
+    <div className="settings-seasons-header-buttons">
+      <button
+        type="button"
+        className="settings-seasons-header-btn settings-seasons-header-btn--success"
+        onClick={() => void 0}
+        aria-label={addActionLabel}
+      >
+        <FaCirclePlus />
+        <span>{addActionLabel}</span>
       </button>
     </div>
   ) : null;
