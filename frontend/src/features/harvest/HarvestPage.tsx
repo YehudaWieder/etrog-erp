@@ -33,6 +33,9 @@ const DEFAULT_SIDEBAR_ITEM_ID = 'harvest-daily-details';
 const HARVEST_DAILY_FILTER_SCOPE = 'harvest-daily-details';
 const EMPTY_FILTERS: Record<string, string> = {};
 type HarvestNumericColumnKey = 'totalHarvested' | 'totalRejected' | 'totalAfterRejected' | 'classifiedTotal';
+type FieldReportNumericColumnKey = 'totalHarvested' | 'totalRejected' | 'totalAfterRejected' | 'rejectionRate';
+type NumericSelectionScope = 'daily' | 'field-report';
+type NumericSelectableColumnKey = HarvestNumericColumnKey | FieldReportNumericColumnKey;
 
 type HarvestFieldReportRow = {
   id: number;
@@ -60,6 +63,13 @@ const HARVEST_NUMERIC_COLUMNS: HarvestNumericColumnKey[] = [
   'totalRejected',
   'totalAfterRejected',
   'classifiedTotal',
+];
+
+const FIELD_REPORT_NUMERIC_COLUMNS: FieldReportNumericColumnKey[] = [
+  'totalHarvested',
+  'totalRejected',
+  'totalAfterRejected',
+  'rejectionRate',
 ];
 
 function parseSeasonFilterId(value: string): number | null {
@@ -668,7 +678,8 @@ export function HarvestPage() {
     window.URL.revokeObjectURL(url);
   };
 
-  const buildNumericCellId = (rowId: number, column: HarvestNumericColumnKey) => `${rowId}:${column}`;
+  const buildNumericCellId = (scope: NumericSelectionScope, rowId: number, column: NumericSelectableColumnKey) =>
+    `${scope}:${rowId}:${column}`;
 
   const applyNumericCellSelection = (cellId: string, value: number) => {
     setSelectedNumericCells((prev) => {
@@ -684,25 +695,29 @@ export function HarvestPage() {
     });
   };
 
-  const handleNumericCellPointerDown = (rowId: number, column: HarvestNumericColumnKey, value: number) => (event: React.PointerEvent) => {
+  const handleNumericCellPointerDown =
+    (scope: NumericSelectionScope, rowId: number, column: NumericSelectableColumnKey, value: number) =>
+    (event: React.PointerEvent) => {
     if (event.pointerType === 'mouse' && event.button !== 0) {
       return;
     }
 
     event.preventDefault();
 
-    const cellId = buildNumericCellId(rowId, column);
+    const cellId = buildNumericCellId(scope, rowId, column);
     dragSelectModeRef.current = selectedNumericCells[cellId] !== undefined ? 'remove' : 'add';
     applyNumericCellSelection(cellId, value);
     setIsDragSelecting(true);
   };
 
-  const handleNumericCellPointerEnter = (rowId: number, column: HarvestNumericColumnKey, value: number) => () => {
+  const handleNumericCellPointerEnter =
+    (scope: NumericSelectionScope, rowId: number, column: NumericSelectableColumnKey, value: number) =>
+    () => {
     if (!isDragSelecting) {
       return;
     }
 
-    const cellId = buildNumericCellId(rowId, column);
+    const cellId = buildNumericCellId(scope, rowId, column);
     applyNumericCellSelection(cellId, value);
   };
 
@@ -712,15 +727,37 @@ export function HarvestPage() {
     value: number,
     content?: React.ReactNode,
   ) => {
-    const cellId = buildNumericCellId(row.id, column);
+    const cellId = buildNumericCellId('daily', row.id, column);
     const isSelected = selectedNumericCells[cellId] !== undefined;
 
     return (
       <button
         type="button"
         className={`harvest-daily-workspace__numeric-cell${isSelected ? ' is-selected' : ''}`}
-        onPointerDown={handleNumericCellPointerDown(row.id, column, value)}
-        onPointerEnter={handleNumericCellPointerEnter(row.id, column, value)}
+        onPointerDown={handleNumericCellPointerDown('daily', row.id, column, value)}
+        onPointerEnter={handleNumericCellPointerEnter('daily', row.id, column, value)}
+        aria-pressed={isSelected}
+      >
+        {content ?? value}
+      </button>
+    );
+  };
+
+  const renderFieldReportNumericCell = (
+    row: HarvestFieldReportRow,
+    column: FieldReportNumericColumnKey,
+    value: number,
+    content?: React.ReactNode,
+  ) => {
+    const cellId = buildNumericCellId('field-report', row.id, column);
+    const isSelected = selectedNumericCells[cellId] !== undefined;
+
+    return (
+      <button
+        type="button"
+        className={`harvest-daily-workspace__numeric-cell${isSelected ? ' is-selected' : ''}`}
+        onPointerDown={handleNumericCellPointerDown('field-report', row.id, column, value)}
+        onPointerEnter={handleNumericCellPointerEnter('field-report', row.id, column, value)}
         aria-pressed={isSelected}
       >
         {content ?? value}
@@ -935,22 +972,34 @@ export function HarvestPage() {
   }, [detailsRecord, t.dailyDetails.detailsPanel.relatedSortings.loadError]);
 
   useEffect(() => {
-    if (filteredHarvestRows.length === 0) {
+    const activeScope: NumericSelectionScope | null = isDailyDetailsTab
+      ? 'daily'
+      : isFieldReportTab
+        ? 'field-report'
+        : null;
+    const activeRows = isDailyDetailsTab ? filteredHarvestRows : isFieldReportTab ? fieldReportRows : [];
+    const activeColumns: NumericSelectableColumnKey[] = isDailyDetailsTab
+      ? HARVEST_NUMERIC_COLUMNS
+      : isFieldReportTab
+        ? FIELD_REPORT_NUMERIC_COLUMNS
+        : [];
+
+    if (!activeScope || activeRows.length === 0) {
       if (Object.keys(selectedNumericCells).length > 0) {
         setSelectedNumericCells({});
       }
       return;
     }
 
-    const validIds = new Set(filteredHarvestRows.map((row) => String(row.id)));
+    const validIds = new Set(activeRows.map((row) => String(row.id)));
 
     setSelectedNumericCells((prev) => {
       let changed = false;
       const next: Record<string, number> = {};
 
       for (const [cellId, value] of Object.entries(prev)) {
-        const [rowId, column] = cellId.split(':');
-        if (validIds.has(rowId) && HARVEST_NUMERIC_COLUMNS.includes(column as HarvestNumericColumnKey)) {
+        const [scope, rowId, column] = cellId.split(':');
+        if (scope === activeScope && validIds.has(rowId) && activeColumns.includes(column as NumericSelectableColumnKey)) {
           next[cellId] = value;
         } else {
           changed = true;
@@ -959,7 +1008,7 @@ export function HarvestPage() {
 
       return changed ? next : prev;
     });
-  }, [filteredHarvestRows, selectedNumericCells]);
+  }, [fieldReportRows, filteredHarvestRows, isDailyDetailsTab, isFieldReportTab, selectedNumericCells]);
 
   const selectedCellsCount = useMemo(() => Object.keys(selectedNumericCells).length, [selectedNumericCells]);
 
@@ -1050,7 +1099,7 @@ export function HarvestPage() {
         sortAccessor: (row) => row.totalHarvested,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
         align: 'center',
-        render: (row) => numberFormatter.format(row.totalHarvested),
+        render: (row) => renderFieldReportNumericCell(row, 'totalHarvested', row.totalHarvested, numberFormatter.format(row.totalHarvested)),
       },
       {
         id: 'totalRejected',
@@ -1062,7 +1111,7 @@ export function HarvestPage() {
         sortAccessor: (row) => row.totalRejected,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
         align: 'center',
-        render: (row) => numberFormatter.format(row.totalRejected),
+        render: (row) => renderFieldReportNumericCell(row, 'totalRejected', row.totalRejected, numberFormatter.format(row.totalRejected)),
       },
       {
         id: 'totalAfterRejected',
@@ -1074,7 +1123,13 @@ export function HarvestPage() {
         sortAccessor: (row) => row.totalAfterRejected,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
         align: 'center',
-        render: (row) => numberFormatter.format(row.totalAfterRejected),
+        render: (row) =>
+          renderFieldReportNumericCell(
+            row,
+            'totalAfterRejected',
+            row.totalAfterRejected,
+            numberFormatter.format(row.totalAfterRejected),
+          ),
       },
       {
         id: 'rejectionRate',
@@ -1086,10 +1141,18 @@ export function HarvestPage() {
         sortAccessor: (row) => row.rejectionRate,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericPercent,
         align: 'center',
-        render: (row) => formatRate(row.rejectionRate),
+        render: (row) => renderFieldReportNumericCell(row, 'rejectionRate', row.rejectionRate, formatRate(row.rejectionRate)),
       },
     ];
-  }, [formatRate, lang, numberFormatter, t.dailyDetails.columns, t.dailyDetails.detailsPanel.fields]);
+  }, [
+    formatRate,
+    isDragSelecting,
+    lang,
+    numberFormatter,
+    selectedNumericCells,
+    t.dailyDetails.columns,
+    t.dailyDetails.detailsPanel.fields,
+  ]);
 
   const fieldReportDetailsData = useMemo(() => {
     if (!fieldReportDetailsPayload) {
@@ -2138,6 +2201,20 @@ export function HarvestPage() {
                     <p className="harvest-daily-workspace__details-empty">{t.dailyDetails.detailsPanel.empty}</p>
                   )}
                 </GlobalLeftDetailsPanel>
+
+                {selectedCellsCount > 0 ? (
+                  <div className="harvest-daily-workspace__selection-summary" role="status" aria-live="polite">
+                    <span>{t.dailyDetails.selection.selectedCells(selectedCellsCount)}</span>
+                    <span>{t.dailyDetails.selection.total(formattedSelectedTotal)}</span>
+                    <button
+                      type="button"
+                      className="harvest-daily-workspace__selection-clear"
+                      onClick={() => setSelectedNumericCells({})}
+                    >
+                      {t.dailyDetails.selection.clear}
+                    </button>
+                  </div>
+                ) : null}
               </>
             ) : null}
           </div>
