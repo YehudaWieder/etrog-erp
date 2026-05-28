@@ -2,7 +2,7 @@
 
 import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, MovementType } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { calculateHarvestFields } from './harvest.utils';
 
@@ -422,11 +422,21 @@ export class HarvestService {
 
         if (ids.length > 0) {
           await tx.customerAllocation.deleteMany({
-            where: { MovementReferenceId: { in: ids } },
+            where: {
+              MovementReferenceId: { in: ids },
+              type: MovementType.HARVEST_IN,
+              shipmentId: null,
+              boxId: null,
+            },
           });
 
           await tx.traderStock.deleteMany({
-            where: { MovementReferenceId: { in: ids } },
+            where: {
+              MovementReferenceId: { in: ids },
+              type: { in: [MovementType.HARVEST_IN, MovementType.ASSIGNED] },
+              shipmentId: null,
+              boxId: null,
+            },
           });
 
           await tx.classification.deleteMany({

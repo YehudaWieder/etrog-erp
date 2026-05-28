@@ -2,7 +2,7 @@
 
 import { Injectable, BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma, AssignmentType, Classification } from '@prisma/client';
+import { Prisma, AssignmentType, Classification, MovementType } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { calculateHarvestFields } from './harvest.utils';
 import {
@@ -775,10 +775,20 @@ export class HarvestBulkService {
     return this.prisma.$transaction(async (tx) => {
       // Delete all old movements linked to this classification
       await tx.customerAllocation.deleteMany({
-        where: { MovementReferenceId: classificationId },
+        where: {
+          MovementReferenceId: classificationId,
+          type: MovementType.HARVEST_IN,
+          shipmentId: null,
+          boxId: null,
+        },
       });
       await tx.traderStock.deleteMany({
-        where: { MovementReferenceId: classificationId },
+        where: {
+          MovementReferenceId: classificationId,
+          type: { in: [MovementType.HARVEST_IN, MovementType.ASSIGNED] },
+          shipmentId: null,
+          boxId: null,
+        },
       });
 
       // Get the harvest to update quantities
@@ -876,11 +886,21 @@ export class HarvestBulkService {
         await this.applyHarvestInlineUpdate(tx, harvestId, deletePayload.harvestUpdate);
 
         await tx.customerAllocation.deleteMany({
-          where: { MovementReferenceId: classificationId },
+          where: {
+            MovementReferenceId: classificationId,
+            type: MovementType.HARVEST_IN,
+            shipmentId: null,
+            boxId: null,
+          },
         });
 
         await tx.traderStock.deleteMany({
-          where: { MovementReferenceId: classificationId },
+          where: {
+            MovementReferenceId: classificationId,
+            type: { in: [MovementType.HARVEST_IN, MovementType.ASSIGNED] },
+            shipmentId: null,
+            boxId: null,
+          },
         });
 
         const deleted = await tx.classification.delete({
