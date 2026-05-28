@@ -367,7 +367,7 @@ select {
   box-sizing: border-box;
   margin-right: var(--space-3);
   margin-left: 0;
-  border-radius: 12px 999px 999px 12px;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
 }
 
 .app-shell[data-direction='rtl'] .app-shell__sidebar-item.is-active {
@@ -375,7 +375,7 @@ select {
   box-sizing: border-box;
   margin-right: var(--space-3);
   margin-left: 0;
-  border-radius: 12px 999px 999px 12px;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
 }
 
 .app-shell[data-direction='ltr'] .app-shell__sidebar-title--button.is-active {
@@ -383,7 +383,7 @@ select {
   box-sizing: border-box;
   margin-left: var(--space-3);
   margin-right: 0;
-  border-radius: 999px 12px 12px 999px;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
 }
 
 .app-shell[data-direction='ltr'] .app-shell__sidebar-item.is-active {
@@ -391,7 +391,7 @@ select {
   box-sizing: border-box;
   margin-left: var(--space-3);
   margin-right: 0;
-  border-radius: 999px 12px 12px 999px;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
 }
 
 .app-shell__badge {
@@ -2849,7 +2849,8 @@ select {
 }
 
 .global-data-table__row {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
 }
 
 .global-data-table__header {
@@ -2912,11 +2913,19 @@ select {
   color: inherit;
   font: inherit;
   font-weight: inherit;
+  position: relative;
   display: inline-flex;
+  width: 100%;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
   cursor: pointer;
-  padding: 0;
+  padding: 0 20px;
+}
+
+.global-data-table__sort-label {
+  display: inline-flex;
+  justify-content: center;
+  text-align: center;
 }
 
 .global-data-table__sort-button:focus-visible {
@@ -2930,6 +2939,8 @@ select {
 }
 
 .global-data-table__sort-indicator {
+  position: absolute;
+  inset-inline-end: 0;
   font-size: 0.72rem;
   opacity: 0.7;
   line-height: 1;
