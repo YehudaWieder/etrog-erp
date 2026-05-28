@@ -287,6 +287,108 @@ export function HarvestPage() {
     return map;
   }, [customers]);
 
+  const normalizeSortingAssignmentName = (value: string | undefined | null) =>
+    (value ?? '').trim().toLocaleLowerCase(lang === 'he' ? 'he' : 'en');
+
+  const matchesSortingAssignmentSelection = (
+    ownerType: 'GENERAL' | 'TRADER' | 'CUSTOMER',
+    ownerName?: string | null,
+    ownerToken?: string | null,
+  ) => {
+    if (sortingAssignmentFilter === 'all') {
+      return true;
+    }
+
+    if (sortingAssignmentFilter === 'trader') {
+      return ownerType === 'TRADER';
+    }
+
+    if (sortingAssignmentFilter === 'customer') {
+      return ownerType === 'CUSTOMER';
+    }
+
+    if (sortingAssignmentFilter.startsWith('trader:')) {
+      if (ownerType !== 'TRADER') {
+        return false;
+      }
+
+      const selectedId = sortingAssignmentFilter.slice('trader:'.length);
+      const normalizedOwnerToken = (ownerToken ?? '').trim().toLowerCase();
+      if (normalizedOwnerToken === sortingAssignmentFilter) {
+        return true;
+      }
+
+      const selectedName = traderNameById.get(selectedId);
+      if (!selectedName) {
+        return false;
+      }
+
+      return normalizeSortingAssignmentName(ownerName) === normalizeSortingAssignmentName(selectedName);
+    }
+
+    if (ownerType !== 'CUSTOMER') {
+      return false;
+    }
+
+    const selectedId = sortingAssignmentFilter.slice('customer:'.length);
+    const normalizedOwnerToken = (ownerToken ?? '').trim().toLowerCase();
+    if (normalizedOwnerToken === sortingAssignmentFilter) {
+      return true;
+    }
+
+    const selectedName = customerNameById.get(selectedId);
+    if (!selectedName) {
+      return false;
+    }
+
+    return normalizeSortingAssignmentName(ownerName) === normalizeSortingAssignmentName(selectedName);
+  };
+
+  const resolveSortingCategoryOwnerToken = (category: ClassificationDailySummaryCategory) => {
+    return (category.key.split('|')[0] ?? 'general').trim().toLowerCase();
+  };
+
+  const resolveSortingCategoryOwnerType = (
+    category: ClassificationDailySummaryCategory,
+  ): 'GENERAL' | 'TRADER' | 'CUSTOMER' => {
+    if (category.ownerType === 'GENERAL' || category.ownerType === 'TRADER' || category.ownerType === 'CUSTOMER') {
+      return category.ownerType;
+    }
+
+    const ownerToken = resolveSortingCategoryOwnerToken(category);
+    if (ownerToken.startsWith('trader:')) {
+      return 'TRADER';
+    }
+    if (ownerToken.startsWith('customer:')) {
+      return 'CUSTOMER';
+    }
+    return 'GENERAL';
+  };
+
+  const filteredSortingDailyCategories = useMemo(
+    () =>
+      sortingDailyCategories.filter((category) =>
+        matchesSortingAssignmentSelection(
+          resolveSortingCategoryOwnerType(category),
+          category.ownerName,
+          resolveSortingCategoryOwnerToken(category),
+        ),
+      ),
+    [customerNameById, sortingAssignmentFilter, sortingDailyCategories, traderNameById],
+  );
+
+  const getCurrentSortingDailyExportRows = () => {
+    const visibleRows = visibleSortingDailyRowsRef.current;
+    if (visibleRows.length !== filteredSortingDailyRows.length) {
+      return filteredSortingDailyRows;
+    }
+
+    const filteredIds = new Set(filteredSortingDailyRows.map((row) => row.harvestId));
+    const areRowsInSync = visibleRows.every((row) => filteredIds.has(row.harvestId));
+
+    return areRowsInSync ? visibleRows : filteredSortingDailyRows;
+  };
+
   const sortingAssignmentFilterOptions = useMemo(() => {
     const traderPrefix = t.sortingDailyDetails.filters.assignmentOptions.traderPrefix;
     const customerPrefix = t.sortingDailyDetails.filters.assignmentOptions.customerPrefix;
@@ -911,10 +1013,9 @@ export function HarvestPage() {
   };
 
   const createSortingDailyExportRows = () => {
-    const rowsSource =
-      visibleSortingDailyRowsRef.current.length > 0 ? visibleSortingDailyRowsRef.current : filteredSortingDailyRows;
+    const rowsSource = getCurrentSortingDailyExportRows();
 
-    const exportCategories = sortingDailyCategories
+    const exportCategories = filteredSortingDailyCategories
       .filter((category) => rowsSource.some((row) => (row.categoryTotals[category.key] ?? 0) > 0))
       .map((category) => ({
         key: category.key,
@@ -932,7 +1033,7 @@ export function HarvestPage() {
     const rows = rowsSource.map((row) => {
       const categoryValues = exportCategories.map((category) => row.categoryTotals[category.key] ?? 0);
 
-      const rowDailyTotal = sortingDailyCategories.reduce(
+      const rowDailyTotal = filteredSortingDailyCategories.reduce(
         (sum, category) => sum + (row.categoryTotals[category.key] ?? 0),
         0,
       );
@@ -951,8 +1052,7 @@ export function HarvestPage() {
 
   const createSortingDailyExpandedMatrixData = async () => {
     const values = t.dailyDetails.detailsPanel.values;
-    const rowsSource =
-      visibleSortingDailyRowsRef.current.length > 0 ? visibleSortingDailyRowsRef.current : filteredSortingDailyRows;
+    const rowsSource = getCurrentSortingDailyExportRows();
 
     const fixedGrades = ['א', 'ב', 'ג', 'ד', 'ה', 'ו'];
     const pitamGroups = [
@@ -1006,7 +1106,7 @@ export function HarvestPage() {
     };
 
     const categoryOwnerTypeMap = new Map<string, ClassificationDailySummaryCategory['ownerType']>();
-    for (const category of sortingDailyCategories) {
+    for (const category of filteredSortingDailyCategories) {
       categoryOwnerTypeMap.set(
         buildSortingCategoryDisplayLabel(category, lang),
         category.ownerType ?? inferOwnerTypeFromCategoryKey(category.key),
@@ -1014,7 +1114,7 @@ export function HarvestPage() {
     }
 
     const allGeneralCategoryLabels = new Set<string>();
-    for (const category of sortingDailyCategories) {
+    for (const category of filteredSortingDailyCategories) {
       const ownerType = category.ownerType ?? inferOwnerTypeFromCategoryKey(category.key);
       if (ownerType === 'GENERAL') {
         allGeneralCategoryLabels.add(buildSortingCategoryDisplayLabel(category, lang));
@@ -1022,7 +1122,7 @@ export function HarvestPage() {
     }
 
     try {
-      if (seasonFilterId) {
+      if (seasonFilterId && sortingAssignmentFilter === 'all') {
         const seasonTraderCategories = await getTraderCategoriesWithShares(seasonFilterId);
         for (const category of seasonTraderCategories) {
           const label = category.name.trim();
@@ -1038,7 +1138,7 @@ export function HarvestPage() {
       // Fallback to default categories below.
     }
 
-    if (allGeneralCategoryLabels.size === 0) {
+    if (allGeneralCategoryLabels.size === 0 && sortingAssignmentFilter === 'all') {
       try {
         const defaultGeneralCategories = await getDefaultTraderCategories();
         for (const category of defaultGeneralCategories) {
@@ -1061,6 +1161,7 @@ export function HarvestPage() {
         return {
           categoryLabel: '',
           ownerType: 'GENERAL' as const,
+          ownerName: '',
         };
       }
 
@@ -1073,6 +1174,7 @@ export function HarvestPage() {
         return {
           categoryLabel: categoryName,
           ownerType: 'GENERAL' as const,
+          ownerName: '',
         };
       }
 
@@ -1080,6 +1182,7 @@ export function HarvestPage() {
         return {
           categoryLabel: traderName ? `${traderName} | ${categoryName}` : `${lang === 'he' ? 'סוחר' : 'Trader'} | ${categoryName}`,
           ownerType: 'TRADER' as const,
+          ownerName: traderName ?? '',
         };
       }
 
@@ -1089,6 +1192,7 @@ export function HarvestPage() {
             ? `${customerName} | ${categoryName}`
             : `${lang === 'he' ? 'לקוח' : 'Customer'} | ${categoryName}`,
           ownerType: 'CUSTOMER' as const,
+          ownerName: customerName ?? '',
         };
       }
 
@@ -1096,6 +1200,7 @@ export function HarvestPage() {
         return {
           categoryLabel: `${traderName} | ${categoryName}`,
           ownerType: 'TRADER' as const,
+          ownerName: traderName,
         };
       }
 
@@ -1103,12 +1208,14 @@ export function HarvestPage() {
         return {
           categoryLabel: `${customerName} | ${categoryName}`,
           ownerType: 'CUSTOMER' as const,
+          ownerName: customerName,
         };
       }
 
       return {
         categoryLabel: categoryName,
         ownerType: 'GENERAL' as const,
+        ownerName: '',
       };
     };
 
@@ -1133,8 +1240,12 @@ export function HarvestPage() {
       const dayValues: Record<string, number> = {};
 
       for (const detail of details) {
-        const { categoryLabel, ownerType: resolvedOwnerType } = getCategoryContextFromDetail(detail);
+        const { categoryLabel, ownerType: resolvedOwnerType, ownerName } = getCategoryContextFromDetail(detail);
         if (!categoryLabel) {
+          continue;
+        }
+
+        if (!matchesSortingAssignmentSelection(resolvedOwnerType, ownerName)) {
           continue;
         }
 
@@ -1218,7 +1329,7 @@ export function HarvestPage() {
       });
     };
 
-    const preferredCategoryOrder = [...sortingDailyCategories]
+    const preferredCategoryOrder = [...filteredSortingDailyCategories]
       .sort((left, right) => {
         const ownerDiff = ownerOrder(left.ownerType) - ownerOrder(right.ownerType);
         if (ownerDiff !== 0) {
@@ -2657,94 +2768,13 @@ export function HarvestPage() {
   ]);
 
   const filteredSortingDailyRows = useMemo<ClassificationDailySummaryRow[]>(() => {
-    const resolveOwnerToken = (category: ClassificationDailySummaryCategory) => {
-      return (category.key.split('|')[0] ?? 'general').trim().toLowerCase();
-    };
-
-    const normalizeName = (value: string | undefined | null) =>
-      (value ?? '')
-        .trim()
-        .toLocaleLowerCase(lang === 'he' ? 'he' : 'en');
-
-    const resolveOwnerType = (category: ClassificationDailySummaryCategory): 'GENERAL' | 'TRADER' | 'CUSTOMER' => {
-      if (category.ownerType === 'GENERAL' || category.ownerType === 'TRADER' || category.ownerType === 'CUSTOMER') {
-        return category.ownerType;
-      }
-
-      const ownerToken = resolveOwnerToken(category);
-      if (ownerToken.startsWith('trader:')) {
-        return 'TRADER';
-      }
-      if (ownerToken.startsWith('customer:')) {
-        return 'CUSTOMER';
-      }
-      return 'GENERAL';
-    };
-
-    const isCategoryAllowed = (category: ClassificationDailySummaryCategory) => {
-      const ownerType = resolveOwnerType(category);
-      const ownerToken = resolveOwnerToken(category);
-
-      if (sortingAssignmentFilter === 'all') {
-        return true;
-      }
-
-      if (sortingAssignmentFilter === 'trader') {
-        return ownerType === 'TRADER';
-      }
-
-      if (sortingAssignmentFilter === 'customer') {
-        return ownerType === 'CUSTOMER';
-      }
-
-      if (sortingAssignmentFilter.startsWith('trader:')) {
-        const selectedId = sortingAssignmentFilter.slice('trader:'.length);
-        if (ownerType !== 'TRADER') {
-          return false;
-        }
-
-        if (ownerToken === sortingAssignmentFilter) {
-          return true;
-        }
-
-        const ownerNameFromId = traderNameById.get(selectedId);
-        if (!ownerNameFromId || !ownerToken.startsWith('trader:')) {
-          return false;
-        }
-
-        const ownerTokenName = ownerToken.slice('trader:'.length);
-        return normalizeName(ownerTokenName) === normalizeName(ownerNameFromId);
-      }
-
-      const selectedId = sortingAssignmentFilter.slice('customer:'.length);
-      if (ownerType !== 'CUSTOMER') {
-        return false;
-      }
-
-      if (ownerToken === sortingAssignmentFilter) {
-        return true;
-      }
-
-      const ownerNameFromId = customerNameById.get(selectedId);
-      if (!ownerNameFromId || !ownerToken.startsWith('customer:')) {
-        return false;
-      }
-
-      const ownerTokenName = ownerToken.slice('customer:'.length);
-      return normalizeName(ownerTokenName) === normalizeName(ownerNameFromId);
-    };
-
     return sortingDailyRows
       .filter((row) => (fieldFilterId === 'all' ? true : row.fieldId === fieldFilterId))
       .map((row) => {
         const categoryTotals: Record<string, number> = {};
         let totalSorted = 0;
 
-        for (const category of sortingDailyCategories) {
-          if (!isCategoryAllowed(category)) {
-            continue;
-          }
-
+        for (const category of filteredSortingDailyCategories) {
           const value = row.categoryTotals[category.key] ?? 0;
           if (value <= 0) {
             continue;
@@ -2762,13 +2792,9 @@ export function HarvestPage() {
       })
       .filter((row) => row.totalSorted > 0);
   }, [
-    customerNameById,
     fieldFilterId,
-    lang,
-    sortingAssignmentFilter,
-    sortingDailyCategories,
+    filteredSortingDailyCategories,
     sortingDailyRows,
-    traderNameById,
   ]);
 
   const sortingDailyDetailsData = useMemo(() => {
