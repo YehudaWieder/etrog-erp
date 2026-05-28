@@ -37,6 +37,15 @@ export class ClassificationController {
     return this.classificationService.findAllBySeason(seasonId);
   }
 
+  @Get('daily-summary')
+  @ApiOperation({ summary: 'Retrieve sorting daily summary rows by season (grouped by harvest day and field)' })
+  @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season to summarize.' })
+  @ApiResponse({ status: 200, description: 'Daily sorting summary returned successfully.' })
+  @ApiResponse({ status: 400, description: 'Invalid or missing seasonId query parameter.' })
+  findDailySummary(@Query('seasonId', ParseIntPipe) seasonId: number) {
+    return this.classificationService.findDailySummaryBySeason(seasonId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Retrieve a single classification record by ID' })
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the classification record.' })
