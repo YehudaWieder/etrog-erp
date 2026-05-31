@@ -7,12 +7,10 @@ import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interf
 import { TraderStockService } from '../../services/trader-stock/trader-stock.service';
 import { InventoryOwnerScope, InventoryShipmentScope, InventorySortBy } from '../../services/trader-stock/dto/inventory-summary.dto';
 import { Prisma, Grade, PitamStatus } from '@prisma/client';
-
-type TraderStockAdjustmentUpdateBody = {
-  id: number;
-  quantity?: number;
-  notes?: string;
-};
+import { CreateTraderStockMovementDto } from '../../services/trader-stock/dto/create-trader-stock-movement.dto';
+import { UpdateTraderStockAdjustmentDto } from '../../services/trader-stock/dto/update-trader-stock-adjustment.dto';
+import { buildTraderStockSummaryQuery } from '../../services/trader-stock/utils/trader-stock-query-parse.util';
+import { parseOptionalInt } from 'src/inventory/services/inventory-core/utils/inventory-query-parse.util';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('access-token')
@@ -62,9 +60,9 @@ export class TraderStockController {
   })
   @ApiResponse({ status: 201, description: 'Stock movement recorded successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid movement data.' })
-  create(@Body() data: Prisma.TraderStockUncheckedCreateInput, @Req() req: Request) {
+  create(@Body() data: CreateTraderStockMovementDto, @Req() req: Request) {
     const actor = req.user as AuthenticatedUser;
-    return this.stockService.createMovement(data, actor.id);
+    return this.stockService.createMovement(data as Prisma.TraderStockUncheckedCreateInput, actor.id);
   }
 
   @Get('balance')
@@ -88,7 +86,7 @@ export class TraderStockController {
       traderCategoryId,
       grade,
       pitamStatus,
-      traderId: traderId ? parseInt(traderId) : undefined,
+      traderId: parseOptionalInt(traderId),
     });
   }
 
@@ -146,17 +144,19 @@ export class TraderStockController {
     @Query('sortBy') sortBy?: InventorySortBy,
     @Query('sortOrder') sortOrder?: 'asc' | 'desc',
   ) {
-    return this.stockService.getInventorySummary({
-      seasonId: seasonId ? parseInt(seasonId) : undefined,
-      traderId: traderId ? parseInt(traderId) : undefined,
-      ownerScope,
-      shipmentScope,
-      traderCategoryId: traderCategoryId ? parseInt(traderCategoryId) : undefined,
-      grade,
-      pitamStatus,
-      sortBy,
-      sortOrder,
-    });
+    return this.stockService.getInventorySummary(
+      buildTraderStockSummaryQuery({
+        seasonId,
+        traderId,
+        ownerScope,
+        shipmentScope,
+        traderCategoryId,
+        grade,
+        pitamStatus,
+        sortBy,
+        sortOrder,
+      }),
+    );
   }
 
   @Get('reference/:referenceId')
@@ -228,9 +228,9 @@ export class TraderStockController {
   })
   @ApiResponse({ status: 201, description: 'Trader adjustment movement created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid adjustment payload.' })
-  createAdjustment(@Body() data: Prisma.TraderStockUncheckedCreateInput, @Req() req: Request) {
+  createAdjustment(@Body() data: CreateTraderStockMovementDto, @Req() req: Request) {
     const actor = req.user as AuthenticatedUser;
-    return this.stockService.createAdjustment(data, actor.id);
+    return this.stockService.createAdjustment(data as Prisma.TraderStockUncheckedCreateInput, actor.id);
   }
 
   @Patch('adjustments')
@@ -259,7 +259,7 @@ export class TraderStockController {
   @ApiResponse({ status: 200, description: 'Trader adjustment movement updated successfully.' })
   @ApiResponse({ status: 404, description: 'Trader adjustment movement not found.' })
   updateAdjustment(
-    @Body() data: TraderStockAdjustmentUpdateBody,
+    @Body() data: UpdateTraderStockAdjustmentDto,
     @Req() req: Request,
   ) {
     const actor = req.user as AuthenticatedUser;

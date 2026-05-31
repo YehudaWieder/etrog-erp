@@ -20,6 +20,7 @@ import { InventoryService } from 'src/inventory/services/inventory.service';
 import { Grade, PitamStatus } from 'src/generated/prisma';
 import { InternalTransferRequestDto } from 'src/inventory/services/inventory-core/dto/internal-transfer.dto';
 import { CustomerGeneralAllocationRequestDto } from 'src/inventory/services/inventory-core/dto/customer-general-allocation.dto';
+import { parseOptionalInt } from 'src/inventory/services/inventory-core/utils/inventory-query-parse.util';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('access-token')
@@ -55,15 +56,15 @@ export class InventoryController {
 		@Query('customerCategoryId') customerCategoryId?: string,
 	) {
 		return this.inventoryService.getCombinedSummary({
-			seasonId: seasonId ? parseInt(seasonId) : undefined,
+			seasonId: parseOptionalInt(seasonId),
 			movementScope,
 			pitamStatus,
 			ownerScope,
-			traderId: traderId ? parseInt(traderId) : undefined,
-			traderCategoryId: traderCategoryId ? parseInt(traderCategoryId) : undefined,
+			traderId: parseOptionalInt(traderId),
+			traderCategoryId: parseOptionalInt(traderCategoryId),
 			grade,
-			customerId: customerId ? parseInt(customerId) : undefined,
-			customerCategoryId: customerCategoryId ? parseInt(customerCategoryId) : undefined,
+			customerId: parseOptionalInt(customerId),
+			customerCategoryId: parseOptionalInt(customerCategoryId),
 		});
 	}
 

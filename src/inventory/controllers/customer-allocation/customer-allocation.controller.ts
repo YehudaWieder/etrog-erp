@@ -12,12 +12,9 @@ import {
   CustomerInventorySortBy,
   } from '../../services/customer-allocation/dto/customer-inventory-summary.dto';
 import { Prisma, PitamStatus } from 'src/generated/prisma';
-
-type CustomerAllocationUpdateBody = {
-  id: number;
-  quantity?: number;
-  notes?: string;
-};
+import { CreateCustomerAllocationDto } from '../../services/customer-allocation/dto/create-customer-allocation.dto';
+import { UpdateCustomerAllocationAdjustmentDto } from '../../services/customer-allocation/dto/update-customer-allocation-adjustment.dto';
+import { buildCustomerAllocationSummaryQuery } from '../../services/customer-allocation/utils/customer-allocation-query-parse.util';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('access-token')
@@ -68,9 +65,9 @@ export class CustomerAllocationController {
   })
   @ApiResponse({ status: 201, description: 'Customer allocation created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input data.' })
-  create(@Body() data: Prisma.CustomerAllocationUncheckedCreateInput, @Req() req: Request) {
+  create(@Body() data: CreateCustomerAllocationDto, @Req() req: Request) {
     const actor = req.user as AuthenticatedUser;
-    return this.allocationService.create(data, actor.id);
+    return this.allocationService.create(data as Prisma.CustomerAllocationUncheckedCreateInput, actor.id);
   }
 
   @Get('balance')
@@ -143,15 +140,17 @@ export class CustomerAllocationController {
     @Query('sortBy') sortBy?: CustomerInventorySortBy,
     @Query('sortOrder') sortOrder?: 'asc' | 'desc',
   ) {
-    return this.allocationService.getInventorySummary({
-      seasonId: seasonId ? parseInt(seasonId) : undefined,
-      customerId: customerId ? parseInt(customerId) : undefined,
-      shipmentScope,
-      customerCategoryId: customerCategoryId ? parseInt(customerCategoryId) : undefined,
-      pitamStatus,
-      sortBy,
-      sortOrder,
-    });
+    return this.allocationService.getInventorySummary(
+      buildCustomerAllocationSummaryQuery({
+        seasonId,
+        customerId,
+        shipmentScope,
+        customerCategoryId,
+        pitamStatus,
+        sortBy,
+        sortOrder,
+      }),
+    );
   }
 
   @Patch()
@@ -181,7 +180,7 @@ export class CustomerAllocationController {
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Allocation not found.' })
   update(
-    @Body() updateData: CustomerAllocationUpdateBody,
+    @Body() updateData: UpdateCustomerAllocationAdjustmentDto,
   ) {
     const { id, ...data } = updateData;
     return this.allocationService.update(id, data as Prisma.CustomerAllocationUncheckedUpdateInput);
@@ -247,9 +246,9 @@ export class CustomerAllocationController {
   })
   @ApiResponse({ status: 201, description: 'Customer adjustment movement created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid adjustment payload.' })
-  createAdjustment(@Body() data: Prisma.CustomerAllocationUncheckedCreateInput, @Req() req: Request) {
+  createAdjustment(@Body() data: CreateCustomerAllocationDto, @Req() req: Request) {
     const actor = req.user as AuthenticatedUser;
-    return this.allocationService.createAdjustment(data, actor.id);
+    return this.allocationService.createAdjustment(data as Prisma.CustomerAllocationUncheckedCreateInput, actor.id);
   }
 
   @Patch('adjustments')
@@ -278,7 +277,7 @@ export class CustomerAllocationController {
   @ApiResponse({ status: 200, description: 'Customer adjustment movement updated successfully.' })
   @ApiResponse({ status: 404, description: 'Customer adjustment movement not found.' })
   updateAdjustment(
-    @Body() data: CustomerAllocationUpdateBody,
+    @Body() data: UpdateCustomerAllocationAdjustmentDto,
     @Req() req: Request,
   ) {
     const actor = req.user as AuthenticatedUser;
