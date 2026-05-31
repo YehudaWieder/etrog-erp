@@ -9,8 +9,8 @@ import SeasonsManagement, { type SeasonsHeaderState } from '../seasons/SeasonsMa
 import TradersManagement, { type TradersHeaderState } from '../traders/TradersManagement';
 import TraderCategoriesManagement, { type TraderCategoriesHeaderState } from '../traders/TraderCategoriesManagement';
 import DefaultTraderCategoriesManagement, { type DefaultTraderCategoriesHeaderState } from '../traders/DefaultTraderCategoriesManagement';
-import CustomersManagement, { type CustomersHeaderState } from '../customers/CustomersManagement';
-import CustomerCategoriesManagement, { type CustomerCategoriesHeaderState } from '../customers/CustomerCategoriesManagement';
+import CustomersManagement, { type CustomersHeaderState } from '../customers/components/CustomersManagement';
+import CustomerCategoriesManagement, { type CustomerCategoriesHeaderState } from '../customers/components/CustomerCategoriesManagement';
 
 type Lang = 'he' | 'en';
 type SettingsChildKey =

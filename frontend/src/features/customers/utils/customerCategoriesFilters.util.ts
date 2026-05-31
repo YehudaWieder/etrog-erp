@@ -1,4 +1,5 @@
-import type { GlobalScopedFilterConfig } from '../../components/ui/GlobalScopedFilters';
+import type { GlobalScopedFilterConfig } from '../../../components/ui/GlobalScopedFilters';
+import type { CustomerCategoriesFilterText } from '../customersPage.types';
 
 type SeasonFilterItem = {
   id: number;
@@ -9,14 +10,6 @@ type SeasonFilterItem = {
 type CustomerFilterItem = {
   id: number;
   customerName: string;
-};
-
-type CustomerCategoriesFilterText = {
-  seasonFilterLabel: string;
-  customerFilterLabel: string;
-  activeSeasonBadge: string;
-  allCustomersOption: string;
-  noActiveSeason: string;
 };
 
 export function parseSeasonFilterId(value: string): number | null {
