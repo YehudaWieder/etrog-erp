@@ -1,4 +1,4 @@
-import type { HarvestRecord } from '../../services/harvestsApi';
+﻿import type { HarvestRecord } from '../../../../services/harvestsApi';
 
 export type HarvestFieldReportDetailsData = {
   fieldName: string;
@@ -21,24 +21,26 @@ export type HarvestFieldReportDetailsData = {
 type HarvestFieldReportDetailsPanelProps = {
   data: HarvestFieldReportDetailsData;
   locale: string;
-  labels: {
-    rowType: string;
-    rowsTitle: string;
-    season: string;
-    field: string;
-    recordCount: string;
-    dateGregorian: string;
-    dateHebrew: string;
-    totalHarvested: string;
-    totalRejected: string;
-    netHarvest: string;
-    classifiedTotal: string;
-    rejectionRate: string;
-    updatedBy: string;
-    notes: string;
-    none: string;
-    emptyRows: string;
-  };
+  labels: HarvestFieldReportDetailsPanelLabels;
+};
+
+export type HarvestFieldReportDetailsPanelLabels = {
+  rowType: string;
+  rowsTitle: string;
+  season: string;
+  field: string;
+  recordCount: string;
+  dateGregorian: string;
+  dateHebrew: string;
+  totalHarvested: string;
+  totalRejected: string;
+  netHarvest: string;
+  classifiedTotal: string;
+  rejectionRate: string;
+  updatedBy: string;
+  notes: string;
+  none: string;
+  emptyRows: string;
 };
 
 export function HarvestFieldReportDetailsPanel({ data, locale, labels }: HarvestFieldReportDetailsPanelProps): JSX.Element {
@@ -111,29 +113,29 @@ export function HarvestFieldReportDetailsPanel({ data, locale, labels }: Harvest
                   const note = row.notes?.trim() ?? '';
 
                   return (
-                  <tr key={row.id}>
-                    <td>{new Date(row.dateGregorian).toLocaleDateString(locale)}</td>
-                    <td>{row.dateHebrew || labels.none}</td>
-                    <td>{row.totalHarvested.toLocaleString(locale)}</td>
-                    <td>{row.totalRejected.toLocaleString(locale)}</td>
-                    <td>{row.totalAfterRejected.toLocaleString(locale)}</td>
-                    <td>{row.classifiedTotal.toLocaleString(locale)}</td>
-                    <td>{`${Number(row.rejectionRate).toLocaleString(locale, { maximumFractionDigits: 2 })}%`}</td>
-                    <td>{row.updatedBy?.name ?? labels.none}</td>
-                    <td>
-                      {note ? (
-                        <span
-                          className={`harvest-daily-workspace__related-sorting-note${rowIndex === 0 ? ' is-first-row' : ''}`}
-                          tabIndex={0}
-                          aria-label={note}
-                        >
-                          <span className="harvest-daily-workspace__related-sorting-note-bubble" aria-hidden="true" />
-                          <span className="harvest-daily-workspace__related-sorting-note-tooltip">{note}</span>
-                        </span>
-                      ) : null}
-                    </td>
-                  </tr>
-                );
+                    <tr key={row.id}>
+                      <td>{new Date(row.dateGregorian).toLocaleDateString(locale)}</td>
+                      <td>{row.dateHebrew || labels.none}</td>
+                      <td>{row.totalHarvested.toLocaleString(locale)}</td>
+                      <td>{row.totalRejected.toLocaleString(locale)}</td>
+                      <td>{row.totalAfterRejected.toLocaleString(locale)}</td>
+                      <td>{row.classifiedTotal.toLocaleString(locale)}</td>
+                      <td>{`${Number(row.rejectionRate).toLocaleString(locale, { maximumFractionDigits: 2 })}%`}</td>
+                      <td>{row.updatedBy?.name ?? labels.none}</td>
+                      <td>
+                        {note ? (
+                          <span
+                            className={`harvest-daily-workspace__related-sorting-note${rowIndex === 0 ? ' is-first-row' : ''}`}
+                            tabIndex={0}
+                            aria-label={note}
+                          >
+                            <span className="harvest-daily-workspace__related-sorting-note-bubble" aria-hidden="true" />
+                            <span className="harvest-daily-workspace__related-sorting-note-tooltip">{note}</span>
+                          </span>
+                        ) : null}
+                      </td>
+                    </tr>
+                  );
                 })}
               </tbody>
             </table>
@@ -143,3 +145,4 @@ export function HarvestFieldReportDetailsPanel({ data, locale, labels }: Harvest
     </div>
   );
 }
+

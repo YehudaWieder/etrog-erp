@@ -5,7 +5,7 @@ type EmptyStateContent = {
   description: string;
 };
 
-type HarvestI18n = {
+export type HarvestI18n = {
   topNav: NavItem[];
   sidebar: SidebarSection[];
   pageTitle: string;

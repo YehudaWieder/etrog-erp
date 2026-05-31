@@ -1,0 +1,172 @@
+import type { RefObject } from 'react';
+import { FaPrint } from 'react-icons/fa6';
+import { GlobalDataTable, type GlobalDataTableColumn } from '../../../../components/ui/GlobalDataTable';
+import { GlobalLeftDetailsPanel } from '../../../../components/ui/GlobalLeftDetailsPanel';
+import { GlobalScopedFilters, type GlobalScopedFilterConfig } from '../../../../components/ui/GlobalScopedFilters';
+import type { ClassificationDailySummaryRow } from '../../../../services/classificationsApi';
+import type { HarvestSelectionSummaryLabels } from '../../harvestPage.types';
+import { HarvestSelectionSummary } from '../shared/HarvestSelectionSummary';
+import {
+  HarvestSortingDailyDetailsContent,
+  type SortingDailyCategoryBreakdown,
+  type SortingDailyDetailsData,
+} from './HarvestSortingDailyDetailsContent';
+import { HarvestSortingPrintExportActions } from '../shared/HarvestSortingPrintExportActions';
+
+type HarvestSortingDailySectionProps = {
+  lang: 'he' | 'en';
+  description: string;
+  filters: GlobalScopedFilterConfig[];
+  sortingDailyLoadError: string;
+  isSortingDailyLoading: boolean;
+  loadingLabel: string;
+  emptyLabel: string;
+  sortingDailyColumns: GlobalDataTableColumn<ClassificationDailySummaryRow>[];
+  filteredSortingDailyRows: ClassificationDailySummaryRow[];
+  onSortingDailySortedRowsChange: (rows: ClassificationDailySummaryRow[]) => void;
+  onPrintSummary: () => void;
+  onExportSummary: () => void;
+  onExportExpanded: () => void;
+  onCloseMenuFromTarget: (target: EventTarget | null) => void;
+  onCancelMenuClose: () => void;
+  onScheduleMenuClose: (menu: HTMLDetailsElement) => void;
+  sortingDailyDetailsData: SortingDailyDetailsData | null;
+  onCloseSortingDailyDetails: () => void;
+  onPrintSortingDailyDetails: () => void;
+  sortingDailyDetailsPrintRef: RefObject<HTMLDivElement>;
+  sortingDailyCategoryBreakdown: SortingDailyCategoryBreakdown[];
+  isSortingDailyDetailRowsLoading: boolean;
+  sortingDailyDetailRowsLoadError: string;
+  formatGregorianDate: (value: string) => string;
+  numberFormatter: Intl.NumberFormat;
+  sortingDailyDetailsLabels: {
+    dateGregorian: string;
+    dateHebrew: string;
+    fieldName: string;
+  };
+  selectedCellsCount: number;
+  formattedSelectedTotal: string;
+  selectionLabels: HarvestSelectionSummaryLabels;
+  onClearSelectedNumericCells: () => void;
+};
+
+export function HarvestSortingDailySection({
+  lang,
+  description,
+  filters,
+  sortingDailyLoadError,
+  isSortingDailyLoading,
+  loadingLabel,
+  emptyLabel,
+  sortingDailyColumns,
+  filteredSortingDailyRows,
+  onSortingDailySortedRowsChange,
+  onPrintSummary,
+  onExportSummary,
+  onExportExpanded,
+  onCloseMenuFromTarget,
+  onCancelMenuClose,
+  onScheduleMenuClose,
+  sortingDailyDetailsData,
+  onCloseSortingDailyDetails,
+  onPrintSortingDailyDetails,
+  sortingDailyDetailsPrintRef,
+  sortingDailyCategoryBreakdown,
+  isSortingDailyDetailRowsLoading,
+  sortingDailyDetailRowsLoadError,
+  formatGregorianDate,
+  numberFormatter,
+  sortingDailyDetailsLabels,
+  selectedCellsCount,
+  formattedSelectedTotal,
+  selectionLabels,
+  onClearSelectedNumericCells,
+}: HarvestSortingDailySectionProps): JSX.Element {
+  return (
+    <section className="settings-workspace harvest-daily-workspace">
+      <header className="settings-workspace__header">
+        <div>
+          <p className="settings-workspace__description">{description}</p>
+        </div>
+      </header>
+
+      <GlobalScopedFilters
+        scope="harvest-daily-details"
+        filters={filters}
+        direction={lang === 'he' ? 'rtl' : 'ltr'}
+        actions={
+          <HarvestSortingPrintExportActions
+            lang={lang}
+            onPrintSummary={onPrintSummary}
+            onExportSummary={onExportSummary}
+            onExportExpanded={onExportExpanded}
+            onCloseMenuFromTarget={onCloseMenuFromTarget}
+            onCancelMenuClose={onCancelMenuClose}
+            onScheduleMenuClose={onScheduleMenuClose}
+          />
+        }
+      />
+
+      {sortingDailyLoadError ? <p className="seasons-manager__error">{sortingDailyLoadError}</p> : null}
+
+      <div className="settings-panel-wide harvest-daily-workspace__panel">
+        {isSortingDailyLoading ? <p className="seasons-manager__state">{loadingLabel}</p> : null}
+
+        {!isSortingDailyLoading ? (
+          <>
+            <GlobalDataTable
+              columns={sortingDailyColumns}
+              rows={filteredSortingDailyRows}
+              getRowKey={(row) => row.harvestId}
+              emptyLabel={emptyLabel}
+              defaultSortState={{ key: 'dateGregorian', direction: 'desc' }}
+              onSortedRowsChange={onSortingDailySortedRowsChange}
+            />
+
+            <GlobalLeftDetailsPanel
+              isOpen={sortingDailyDetailsData !== null}
+              title={lang === 'he' ? 'פרטי מיון יומי' : 'Daily Sorting Details'}
+              closeLabel={lang === 'he' ? 'סגירת פרטי מיון יומי' : 'Close daily sorting details'}
+              onClose={onCloseSortingDailyDetails}
+              headerActions={
+                <button
+                  type="button"
+                  className="global-left-details-panel__print"
+                  onClick={onPrintSortingDailyDetails}
+                >
+                  <FaPrint aria-hidden="true" />
+                  <span>{lang === 'he' ? 'הדפסה' : 'Print'}</span>
+                </button>
+              }
+            >
+              {sortingDailyDetailsData ? (
+                <div className="harvest-daily-workspace__print-content" ref={sortingDailyDetailsPrintRef}>
+                  <HarvestSortingDailyDetailsContent
+                    lang={lang}
+                    data={sortingDailyDetailsData}
+                    categoryBreakdown={sortingDailyCategoryBreakdown}
+                    isDetailRowsLoading={isSortingDailyDetailRowsLoading}
+                    detailRowsLoadError={sortingDailyDetailRowsLoadError}
+                    emptyLabel={emptyLabel}
+                    formatGregorianDate={formatGregorianDate}
+                    numberFormatter={numberFormatter}
+                    labels={sortingDailyDetailsLabels}
+                  />
+                </div>
+              ) : (
+                <p className="harvest-daily-workspace__details-empty">{emptyLabel}</p>
+              )}
+            </GlobalLeftDetailsPanel>
+
+            <HarvestSelectionSummary
+              selectedCellsCount={selectedCellsCount}
+              formattedSelectedTotal={formattedSelectedTotal}
+              labels={selectionLabels}
+              onClear={onClearSelectedNumericCells}
+            />
+          </>
+        ) : null}
+      </div>
+    </section>
+  );
+}
