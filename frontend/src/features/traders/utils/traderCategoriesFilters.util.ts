@@ -1,4 +1,4 @@
-import type { GlobalScopedFilterConfig } from '../../components/ui/GlobalScopedFilters';
+import type { GlobalScopedFilterConfig } from '../../../components/ui/GlobalScopedFilters';
 
 type SeasonFilterItem = {
   id: number;
