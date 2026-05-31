@@ -7,17 +7,27 @@ import {
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import {
-  CreateDefaultTraderCategorySwaggerDto,
-  CreateDefaultTraderCategoryWithSharesSwaggerDto,
-  UpdateDefaultTraderCategorySwaggerDto,
-  CreateDefaultTraderCategoryShareSwaggerDto,
-} from '../../../docs/dto/swagger-enums.dto';
+  CreateDefaultTraderCategoryDto,
+} from './dto/create-default-trader-category.dto';
+import {
+  CreateDefaultTraderCategoryWithSharesDto,
+} from './dto/create-default-trader-category-with-shares.dto';
+import {
+  UpdateDefaultTraderCategoryDto,
+} from './dto/update-default-trader-category.dto';
+import {
+  CreateDefaultTraderCategoryShareDto,
+} from './dto/create-default-trader-category-share.dto';
+import {
+  normalizeCategoryName,
+  toApprovalResponse,
+  validateCreateWithSharesPayload,
+  validateProjectedCategoryTotal,
+} from './utils/default-trader-category.utils';
 
 @Injectable()
 export class DefaultTraderCategoryService {
   constructor(private prisma: PrismaService) {}
-
-  private static readonly DEFAULT_CATEGORY_TOTAL_EPSILON = 0.001;
 
   private async validateCategoryTotalPercent(
     categoryId: number,
@@ -32,98 +42,29 @@ export class DefaultTraderCategoryService {
       },
     });
 
-    let total = newPercent;
-    for (const share of shares) {
-      if (excludeTraderId && share.traderId === excludeTraderId) {
-        continue;
-      }
-      total += Number(share.percent);
-    }
-
-    if (total > 100) {
-      throw new BadRequestException(
-        `Total share percent cannot exceed 100% for category ${categoryId}. Current total would be ${total.toFixed(2)}%.`,
-      );
-    }
-  }
-
-  /**
-   * Transform raw Prisma data to approval response format with computed totals
-   */
-  private transformToApprovalResponse(category: any) {
-    let totalPercent = 0;
-    const shares = (category.shares || []).map((share) => {
-      const percent = Number(share.percent);
-      totalPercent += percent;
-      return {
-        traderId: share.traderId,
-        traderName: share.trader.name,
-        percent,
-      };
-    });
-
-    return {
-      id: category.id,
-      name: category.name,
-      notes: category.notes,
-      shares,
-      totalPercent: Number(totalPercent.toFixed(2)),
-      createdAt: category.createdAt,
-      updatedAt: category.updatedAt,
-    };
-  }
-
-  private validateCreateWithSharesPayload(dto: CreateDefaultTraderCategoryWithSharesSwaggerDto) {
-    if (!dto.shares?.length) {
-      throw new BadRequestException('At least one trader share row is required.');
-    }
-
-    const seenTraderIds = new Set<number>();
-    let totalPercent = 0;
-
-    for (const share of dto.shares) {
-      const traderId = Number(share.traderId);
-      const percent = Number(share.percent);
-
-      if (!Number.isInteger(traderId) || traderId <= 0) {
-        throw new BadRequestException('Each share row must include a valid trader ID.');
-      }
-
-      if (!Number.isFinite(percent) || percent <= 0 || percent > 100) {
-        throw new BadRequestException('Each share percent must be a number greater than 0 and up to 100.');
-      }
-
-      if (seenTraderIds.has(traderId)) {
-        throw new BadRequestException('Trader rows must be unique within a category.');
-      }
-
-      seenTraderIds.add(traderId);
-      totalPercent += percent;
-    }
-
-    if (Math.abs(totalPercent - 100) > DefaultTraderCategoryService.DEFAULT_CATEGORY_TOTAL_EPSILON) {
-      throw new BadRequestException(`Total share percent must be exactly 100%. Current total is ${totalPercent.toFixed(2)}%.`);
-    }
+    validateProjectedCategoryTotal(shares, newPercent, categoryId, excludeTraderId);
   }
 
   /**
    * Create a new default trader category
    */
-  async create(dto: CreateDefaultTraderCategorySwaggerDto) {
+  async create(dto: CreateDefaultTraderCategoryDto) {
+    const categoryName = normalizeCategoryName(dto.name);
+
     // Check if category already exists
     const existing = await this.prisma.defaultTraderCategory.findUnique({
-      where: { name: dto.name },
+      where: { name: categoryName },
     });
 
     if (existing) {
       throw new ConflictException(
-        `Default trader category "${dto.name}" already exists`,
+        `Default trader category "${categoryName}" already exists`,
       );
     }
 
     return this.prisma.defaultTraderCategory.create({
       data: {
-        name: dto.name,
+        name: categoryName,
         notes: dto.notes,
       },
     });
@@ -132,10 +73,10 @@ export class DefaultTraderCategoryService {
   /**
    * Create a default trader category together with its trader shares in one transaction
    */
-  async createWithShares(dto: CreateDefaultTraderCategoryWithSharesSwaggerDto) {
-    this.validateCreateWithSharesPayload(dto);
+  async createWithShares(dto: CreateDefaultTraderCategoryWithSharesDto) {
+    validateCreateWithSharesPayload(dto);
 
-    const categoryName = dto.name.trim();
+    const categoryName = normalizeCategoryName(dto.name);
     if (!categoryName) {
       throw new BadRequestException('Category name is required.');
     }
@@ -196,7 +137,7 @@ export class DefaultTraderCategoryService {
       throw new NotFoundException('Created default trader category was not found.');
     }
 
-    return this.transformToApprovalResponse(createdCategory);
+    return toApprovalResponse(createdCategory);
   }
 
   /**
@@ -217,7 +158,7 @@ export class DefaultTraderCategoryService {
       },
     });
 
-    return categories.map((cat) => this.transformToApprovalResponse(cat));
+    return categories.map((cat) => toApprovalResponse(cat));
   }
 
   /**
@@ -244,13 +185,13 @@ export class DefaultTraderCategoryService {
       );
     }
 
-    return this.transformToApprovalResponse(category);
+    return toApprovalResponse(category);
   }
 
   /**
    * Update a default trader category
    */
-  async update(id: number, dto: UpdateDefaultTraderCategorySwaggerDto) {
+  async update(id: number, dto: UpdateDefaultTraderCategoryDto) {
     const category = await this.prisma.defaultTraderCategory.findUnique({
       where: { id },
     });
@@ -262,14 +203,16 @@ export class DefaultTraderCategoryService {
     }
 
     // Check if new name already exists (if name is being updated)
-    if (dto.name && dto.name !== category.name) {
+    const normalizedName = dto.name ? normalizeCategoryName(dto.name) : undefined;
+
+    if (normalizedName && normalizedName !== category.name) {
       const existing = await this.prisma.defaultTraderCategory.findUnique({
-        where: { name: dto.name },
+        where: { name: normalizedName },
       });
 
       if (existing) {
         throw new ConflictException(
-          `Default trader category "${dto.name}" already exists`,
+          `Default trader category "${normalizedName}" already exists`,
         );
       }
     }
@@ -277,7 +220,7 @@ export class DefaultTraderCategoryService {
     const updated = await this.prisma.defaultTraderCategory.update({
       where: { id },
       data: {
-        name: dto.name,
+        name: normalizedName,
         notes: dto.notes,
       },
       include: {
@@ -292,7 +235,7 @@ export class DefaultTraderCategoryService {
       },
     });
 
-    return this.transformToApprovalResponse(updated);
+    return toApprovalResponse(updated);
   }
 
   /**
@@ -340,7 +283,7 @@ export class DefaultTraderCategoryService {
   /**
    * Add a trader share to a default category
    */
-  async addShare(defaultTraderCategoryId: number, dto: CreateDefaultTraderCategoryShareSwaggerDto) {
+  async addShare(defaultTraderCategoryId: number, dto: CreateDefaultTraderCategoryShareDto) {
     // Verify category exists
     const category = await this.prisma.defaultTraderCategory.findUnique({
       where: { id: defaultTraderCategoryId },

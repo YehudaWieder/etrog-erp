@@ -13,12 +13,10 @@ import {
 } from '@nestjs/swagger';
 import { SystemConfigService } from 'src/system-config/services/config/config.service';
 import { Currency, Role } from '@prisma/client';
-import {
-  PricingConfigSwaggerDto,
-  SystemConfigCreateSwaggerDto,
-  SystemConfigUpdateSwaggerDto,
-} from 'src/docs/dto/swagger-enums.dto';
 import { Roles } from 'src/authorization/decorators/roles.decorator';
+import { PricingConfigDto } from 'src/system-config/services/config/dto/pricing-config.dto';
+import { SystemConfigCreateDto } from 'src/system-config/services/config/dto/system-config-create.dto';
+import { SystemConfigUpdateDto } from 'src/system-config/services/config/dto/system-config-update.dto';
 
 @ApiTags('System Configuration')
 @ApiBearerAuth('access-token')
@@ -60,7 +58,7 @@ export class SystemConfigController {
       'Create or retrieve pricing configuration for a season. Roles: OWNER, MANAGER. New creation requires both currency and unitPrice.',
   })
   @ApiBody({
-    type: SystemConfigCreateSwaggerDto,
+    type: SystemConfigCreateDto,
     examples: {
       full: {
         summary: 'Create config with initial pricing values',
@@ -87,15 +85,7 @@ export class SystemConfigController {
   })
   createConfig(
     @Body()
-    body: {
-      seasonId: number;
-      currency: Currency;
-      unitPrice: number;
-      smallBoxCapacity?: number;
-      mediumBoxCapacity?: number;
-      largeBoxCapacity?: number;
-      customBoxCapacity?: number;
-    },
+    body: SystemConfigCreateDto,
   ) {
     return this.systemConfigService.getOrCreateConfig(
       body.seasonId,
@@ -117,7 +107,7 @@ export class SystemConfigController {
       "Update only the pricing settings (currency and unit price) for a season's configuration",
   })
   @ApiBody({
-    type: PricingConfigSwaggerDto,
+    type: PricingConfigDto,
     examples: {
       sample: {
         summary: 'Update pricing for a season',
@@ -135,7 +125,7 @@ export class SystemConfigController {
     status: 404,
     description: 'Configuration not found for the given season.',
   })
-  updatePricing(@Body() body: PricingConfigSwaggerDto) {
+  updatePricing(@Body() body: PricingConfigDto) {
     return this.systemConfigService.updatePricing(
       body.seasonId,
       body.currency,
@@ -148,7 +138,7 @@ export class SystemConfigController {
     summary: 'Update general system configuration fields for a season',
   })
   @ApiBody({
-    type: SystemConfigUpdateSwaggerDto,
+    type: SystemConfigUpdateDto,
     examples: {
       full: {
         summary: 'Update both currency and unit price',
@@ -177,7 +167,7 @@ export class SystemConfigController {
     status: 404,
     description: 'Configuration not found for the given season.',
   })
-  updateConfig(@Body() body: SystemConfigUpdateSwaggerDto) {
+  updateConfig(@Body() body: SystemConfigUpdateDto) {
     const { seasonId, ...data } = body;
     return this.systemConfigService.updateConfig(seasonId, data);
   }

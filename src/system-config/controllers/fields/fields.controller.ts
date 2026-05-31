@@ -23,10 +23,8 @@ import {
 import { Role } from '@prisma/client';
 import { FieldService } from 'src/system-config/services/fields/fields.service';
 import { Roles } from 'src/authorization/decorators/roles.decorator';
-import {
-  FieldCreateSwaggerDto,
-  FieldUpdateSwaggerDto,
-} from 'src/docs/dto/swagger-enums.dto';
+import { FieldCreateDto } from 'src/system-config/services/fields/dto/field-create.dto';
+import { FieldUpdateDto } from 'src/system-config/services/fields/dto/field-update.dto';
 
 @ApiTags('System Configuration')
 @ApiBearerAuth('access-token')
@@ -57,7 +55,7 @@ export class FieldController {
     summary: 'Register a new harvest field. Unique constraint: [name].',
   })
   @ApiBody({
-    type: FieldCreateSwaggerDto,
+    type: FieldCreateDto,
     examples: {
       sample: {
         summary: 'Create a new field',
@@ -72,7 +70,7 @@ export class FieldController {
     status: 400,
     description: 'Invalid input or duplicate field name.',
   })
-  addField(@Body() body: FieldCreateSwaggerDto) {
+  addField(@Body() body: FieldCreateDto) {
     return this.fieldService.addField(body.name);
   }
 
@@ -92,7 +90,7 @@ export class FieldController {
   @Patch()
   @ApiOperation({ summary: 'Rename an existing harvest field by ID' })
   @ApiBody({
-    type: FieldUpdateSwaggerDto,
+    type: FieldUpdateDto,
     examples: {
       sample: {
         summary: 'Rename a field by ID',
@@ -112,7 +110,7 @@ export class FieldController {
     status: 404,
     description: 'Field with the given ID not found.',
   })
-  updateField(@Body() body: FieldUpdateSwaggerDto) {
+  updateField(@Body() body: FieldUpdateDto) {
     return this.fieldService.updateFieldName(body.id, body.name);
   }
 }

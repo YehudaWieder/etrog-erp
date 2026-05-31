@@ -21,13 +21,23 @@ import {
 import { Role } from '@prisma/client';
 import { Roles } from 'src/authorization/decorators/roles.decorator';
 import {
-  CreateDefaultTraderCategoryShareSwaggerDto,
-  CreateDefaultTraderCategorySwaggerDto,
-  CreateDefaultTraderCategoryWithSharesSwaggerDto,
-  UpdateDefaultTraderCategoryShareSwaggerDto,
-  UpdateDefaultTraderCategorySwaggerDto,
-  DefaultTraderCategoryApprovalResponseSwaggerDto,
-} from 'src/docs/dto/swagger-enums.dto';
+  CreateDefaultTraderCategoryShareDto,
+} from 'src/system-config/services/default-trader-category/dto/create-default-trader-category-share.dto';
+import {
+  CreateDefaultTraderCategoryDto,
+} from 'src/system-config/services/default-trader-category/dto/create-default-trader-category.dto';
+import {
+  CreateDefaultTraderCategoryWithSharesDto,
+} from 'src/system-config/services/default-trader-category/dto/create-default-trader-category-with-shares.dto';
+import {
+  UpdateDefaultTraderCategoryShareDto,
+} from 'src/system-config/services/default-trader-category/dto/update-default-trader-category-share.dto';
+import {
+  UpdateDefaultTraderCategoryDto,
+} from 'src/system-config/services/default-trader-category/dto/update-default-trader-category.dto';
+import {
+  DefaultTraderCategoryApprovalResponseDto,
+} from 'src/system-config/services/default-trader-category/dto/default-trader-category-approval-response.dto';
 import { DefaultTraderCategoryService } from 'src/system-config/services/default-trader-category/default-trader-category.service';
 
 @ApiTags('System Configuration')
@@ -52,7 +62,7 @@ export class DefaultTraderCategoryController {
     status: 200,
     description:
       'Default trader categories with complete share breakdown returned successfully.',
-    type: [DefaultTraderCategoryApprovalResponseSwaggerDto],
+    type: [DefaultTraderCategoryApprovalResponseDto],
   })
   @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
   @Get()
@@ -73,7 +83,7 @@ export class DefaultTraderCategoryController {
     status: 200,
     description:
       'Default trader category with complete share breakdown returned successfully.',
-    type: DefaultTraderCategoryApprovalResponseSwaggerDto,
+    type: DefaultTraderCategoryApprovalResponseDto,
   })
   @ApiResponse({
     status: 404,
@@ -88,7 +98,7 @@ export class DefaultTraderCategoryController {
   @ApiOperation({
     summary: 'Create a new default trader category. Roles: OWNER, MANAGER.',
   })
-  @ApiBody({ type: CreateDefaultTraderCategorySwaggerDto })
+  @ApiBody({ type: CreateDefaultTraderCategoryDto })
   @ApiResponse({
     status: 201,
     description: 'Default trader category created successfully.',
@@ -97,7 +107,7 @@ export class DefaultTraderCategoryController {
   @Roles(Role.OWNER, Role.MANAGER)
   @Post()
   async createDefaultCategory(
-    @Body() dto: CreateDefaultTraderCategorySwaggerDto,
+    @Body() dto: CreateDefaultTraderCategoryDto,
   ) {
     return this.defaultTraderCategoryService.create(dto);
   }
@@ -106,11 +116,11 @@ export class DefaultTraderCategoryController {
     summary:
       'Create a new default trader category with full trader share distribution. Roles: OWNER, MANAGER.',
   })
-  @ApiBody({ type: CreateDefaultTraderCategoryWithSharesSwaggerDto })
+  @ApiBody({ type: CreateDefaultTraderCategoryWithSharesDto })
   @ApiResponse({
     status: 201,
     description: 'Default trader category with shares created successfully.',
-    type: DefaultTraderCategoryApprovalResponseSwaggerDto,
+    type: DefaultTraderCategoryApprovalResponseDto,
   })
   @ApiResponse({
     status: 400,
@@ -124,7 +134,7 @@ export class DefaultTraderCategoryController {
   @Roles(Role.OWNER, Role.MANAGER)
   @Post('with-shares')
   async createDefaultCategoryWithShares(
-    @Body() dto: CreateDefaultTraderCategoryWithSharesSwaggerDto,
+    @Body() dto: CreateDefaultTraderCategoryWithSharesDto,
   ) {
     return this.defaultTraderCategoryService.createWithShares(dto);
   }
@@ -132,11 +142,11 @@ export class DefaultTraderCategoryController {
   @ApiOperation({
     summary: 'Update a default trader category. Roles: OWNER, MANAGER.',
   })
-  @ApiBody({ type: UpdateDefaultTraderCategorySwaggerDto })
+  @ApiBody({ type: UpdateDefaultTraderCategoryDto })
   @ApiResponse({
     status: 200,
     description: 'Default trader category updated successfully.',
-    type: DefaultTraderCategoryApprovalResponseSwaggerDto,
+    type: DefaultTraderCategoryApprovalResponseDto,
   })
   @ApiResponse({
     status: 404,
@@ -145,7 +155,7 @@ export class DefaultTraderCategoryController {
   @Roles(Role.OWNER, Role.MANAGER)
   @Patch()
   async updateDefaultCategory(
-    @Body() dto: UpdateDefaultTraderCategorySwaggerDto,
+    @Body() dto: UpdateDefaultTraderCategoryDto,
   ) {
     return this.defaultTraderCategoryService.update(dto.id, dto);
   }
@@ -177,7 +187,7 @@ export class DefaultTraderCategoryController {
     summary:
       'Add a trader share to a default trader category. Roles: OWNER, MANAGER.',
   })
-  @ApiBody({ type: CreateDefaultTraderCategoryShareSwaggerDto })
+  @ApiBody({ type: CreateDefaultTraderCategoryShareDto })
   @ApiResponse({
     status: 201,
     description: 'Default share created successfully.',
@@ -190,7 +200,7 @@ export class DefaultTraderCategoryController {
   @Roles(Role.OWNER, Role.MANAGER)
   @Post('shares')
   async addTraderShare(
-    @Body() dto: CreateDefaultTraderCategoryShareSwaggerDto,
+    @Body() dto: CreateDefaultTraderCategoryShareDto,
   ) {
     return this.defaultTraderCategoryService.addShare(
       dto.defaultTraderCategoryId,
@@ -202,7 +212,7 @@ export class DefaultTraderCategoryController {
     summary:
       'Update trader share percent in a default category. Roles: OWNER, MANAGER.',
   })
-  @ApiBody({ type: UpdateDefaultTraderCategoryShareSwaggerDto })
+  @ApiBody({ type: UpdateDefaultTraderCategoryShareDto })
   @ApiResponse({
     status: 200,
     description: 'Default share updated successfully.',
@@ -211,7 +221,7 @@ export class DefaultTraderCategoryController {
   @Roles(Role.OWNER, Role.MANAGER)
   @Patch('shares')
   async updateTraderShare(
-    @Body() dto: UpdateDefaultTraderCategoryShareSwaggerDto,
+    @Body() dto: UpdateDefaultTraderCategoryShareDto,
   ) {
     return this.defaultTraderCategoryService.updateShare(
       dto.defaultTraderCategoryId,

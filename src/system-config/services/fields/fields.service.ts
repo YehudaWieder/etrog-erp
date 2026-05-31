@@ -3,6 +3,7 @@
 import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { createFieldSlug, normalizeFieldName } from './utils/fields.utils';
 
 @Injectable()
 export class FieldService {
@@ -17,11 +18,13 @@ export class FieldService {
 
   // Add field
   async addField(name: string) {
+    const normalizedName = normalizeFieldName(name);
+
     try {
       return await this.prisma.field.create({
         data: {
-          name,
-          slug: name.toLowerCase().replace(/\s+/g, '-')
+          name: normalizedName,
+          slug: createFieldSlug(normalizedName),
         },
       });
     } catch (error) {
@@ -46,12 +49,14 @@ export class FieldService {
 
   // Update field name
   async updateFieldName(id: number, newName: string) {
+    const normalizedName = normalizeFieldName(newName);
+
     try {
       return await this.prisma.field.update({
         where: { id },
         data: {
-          name: newName,
-          slug: newName.toLowerCase().replace(/\s+/g, '-'),
+          name: normalizedName,
+          slug: createFieldSlug(normalizedName),
         },
       });
     } catch (error) {
