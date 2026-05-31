@@ -11,12 +11,8 @@ import {
 import { Request } from 'express';
 import { Public } from '../decorators/public.decorator';
 import { AuthenticatedUser } from '../interfaces/authenticated-user.interface';
-import { AuthService } from '../auth.service';
-
-type LoginBody = {
-  email: string;
-  password: string;
-};
+import { AuthService } from '../services/auth/auth.service';
+import { LoginDto } from '../services/auth/dto/login.dto';
 
 @ApiTags('Auth')
 @ApiBearerAuth('access-token')
@@ -41,8 +37,8 @@ export class AuthController {
   })
   @ApiResponse({ status: 200, description: 'Login successful. Returns JWT access token.' })
   @ApiResponse({ status: 401, description: 'Invalid email or password.' })
-  login(@Body() body: LoginBody) {
-    return this.authService.login(body.email, body.password);
+  login(@Body() body: LoginDto) {
+    return this.authService.login(body);
   }
 
   @Get('me')

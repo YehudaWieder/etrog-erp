@@ -1,45 +1,28 @@
-import { BadRequestException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '../prisma/prisma.service';
-import { AuthenticatedUser } from './interfaces/authenticated-user.interface';
-import { JwtPayload } from './interfaces/jwt-payload.interface';
 import * as bcrypt from 'bcrypt';
-
-type LoginResult = {
-  accessToken: string;
-  tokenType: 'Bearer';
-  expiresIn: string;
-  user: {
-    id: number;
-    name: string;
-    email: string;
-    role: AuthenticatedUser['role'];
-    isActive: boolean;
-  };
-};
+import { PrismaService } from '../../../prisma/prisma.service';
+import { AuthenticatedUser } from '../../interfaces/authenticated-user.interface';
+import { JwtPayload } from '../../interfaces/jwt-payload.interface';
+import { LoginDto } from './dto/login.dto';
+import { LoginResponseDto } from './dto/login-response.dto';
+import { normalizeLoginDto, validateLoginDto } from './utils/login.utils';
 
 @Injectable()
 export class AuthService {
-  private readonly emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
 
-  async login(email: string, password: string): Promise<LoginResult> {
-    if (!email || !password) {
-      throw new BadRequestException('email and password are required.');
-    }
-
-    if (!this.emailRegex.test(email)) {
-      throw new BadRequestException('Invalid email format.');
-    }
+  async login(loginDto: LoginDto): Promise<LoginResponseDto> {
+    validateLoginDto(loginDto);
+    const normalizedLogin = normalizeLoginDto(loginDto);
 
     const user = await this.prisma.user.findUnique({
-      where: { email },
+      where: { email: normalizedLogin.email },
       select: {
         id: true,
         name: true,
@@ -54,7 +37,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password.');
     }
 
-    const passwordMatches = await bcrypt.compare(password, user.passwordHash);
+    const passwordMatches = await bcrypt.compare(normalizedLogin.password, user.passwordHash);
     if (!passwordMatches) {
       throw new UnauthorizedException('Invalid email or password.');
     }
