@@ -15,11 +15,11 @@ import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interf
 import {
 	CombinedInventorySummaryQuery,
 	CombinedMovementScope,
-	CustomerGeneralAllocationRequest,
-	InternalTransferRequest,
-	InventoryService,
-} from './inventory.service';
+	} from './dto/combined-inventory-summary.dto';
+import { InventoryService } from './inventory.service';
 import { Grade, PitamStatus } from 'src/generated/prisma';
+import { InternalTransferRequestDto } from './dto/internal-transfer.dto';
+import { CustomerGeneralAllocationRequestDto } from './dto/customer-general-allocation.dto';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('access-token')
@@ -73,7 +73,7 @@ export class InventoryController {
 			'Create internal transfer in TX with both sides (minus/plus): INTERNAL_TRANSFER, OWNERSHIP_TRANSFER, ASSIGNED manual.',
 	})
 	@ApiBody({
-		type: InternalTransferRequest,
+		type: InternalTransferRequestDto,
 		description:
 			'Always provide source and destination owners. For TRADER<->CUSTOMER flows you can provide side-specific fields (from*/to*) to map different source/target category/grade/pitam snapshots.',
 		examples: {
@@ -131,7 +131,7 @@ export class InventoryController {
 	})
 	@ApiResponse({ status: 201, description: 'Internal transfer created successfully.' })
 	@ApiResponse({ status: 400, description: 'Invalid payload or unsupported owner flow.' })
-	create(@Body() data: InternalTransferRequest, @Req() req: Request) {
+	create(@Body() data: InternalTransferRequestDto, @Req() req: Request) {
 		const actor = req.user as AuthenticatedUser;
 		return this.inventoryService.createInternalTransfer(data, actor.id);
 	}
@@ -142,7 +142,7 @@ export class InventoryController {
 			'Create customer INTERNAL_TRANSFER from GENERAL in one TX: consume modulo first, then pull proportionally from traders by configured shares, and return rounding remainder to modulo as ASSIGNED.',
 	})
 	@ApiBody({
-		type: CustomerGeneralAllocationRequest,
+		type: CustomerGeneralAllocationRequestDto,
 		description:
 			'Creates customer allocation from general pool. System consumes modulo first, then completes from trader shares if needed.',
 		examples: {
@@ -164,7 +164,7 @@ export class InventoryController {
 	})
 	@ApiResponse({ status: 201, description: 'Customer general transfer created successfully.' })
 	@ApiResponse({ status: 400, description: 'Invalid payload, missing shares, or insufficient stock.' })
-	createCustomerAllocationFromGeneral(@Body() data: CustomerGeneralAllocationRequest, @Req() req: Request) {
+	createCustomerAllocationFromGeneral(@Body() data: CustomerGeneralAllocationRequestDto, @Req() req: Request) {
 		const actor = req.user as AuthenticatedUser;
 		return this.inventoryService.createCustomerAllocationFromGeneral(data, actor.id);
 	}
@@ -175,7 +175,7 @@ export class InventoryController {
 			'Update customer general transfer in one TX: rollback linked trader movements and rebuild by current modulo+shares rules.',
 	})
 	@ApiBody({
-		type: CustomerGeneralAllocationRequest,
+		type: CustomerGeneralAllocationRequestDto,
 		examples: {
 			default: {
 				summary: 'Update customer allocation from general inventory',
@@ -197,12 +197,12 @@ export class InventoryController {
 	@ApiResponse({ status: 200, description: 'Customer general transfer updated successfully.' })
 	@ApiResponse({ status: 404, description: 'Customer general transfer not found.' })
 	updateCustomerAllocationFromGeneral(
-		@Body() data: CustomerGeneralAllocationRequest,
+		@Body() data: CustomerGeneralAllocationRequestDto,
 		@Req() req: Request,
 	) {
 		const { id, ...updateData } = data;
 		const actor = req.user as AuthenticatedUser;
-		return this.inventoryService.updateCustomerAllocationFromGeneral(id, updateData as CustomerGeneralAllocationRequest, actor.id);
+		return this.inventoryService.updateCustomerAllocationFromGeneral(id, updateData as CustomerGeneralAllocationRequestDto, actor.id);
 	}
 
 	@Delete('customer-general-transfer/:customerAllocationId')
@@ -222,7 +222,7 @@ export class InventoryController {
 	@Patch('internal-transfer')
 	@ApiOperation({ summary: 'Update internal transfer in TX while preserving minus/plus integrity.' })
 	@ApiBody({
-		type: InternalTransferRequest,
+		type: InternalTransferRequestDto,
 		description: 'Same payload contract as create endpoint with required id field.',
 		examples: {
 			updateExample: {
@@ -250,12 +250,12 @@ export class InventoryController {
 	@ApiResponse({ status: 200, description: 'Internal transfer updated successfully.' })
 	@ApiResponse({ status: 404, description: 'Internal transfer not found.' })
 	update(
-		@Body() data: InternalTransferRequest,
+		@Body() data: InternalTransferRequestDto,
 		@Req() req: Request,
 	) {
 		const { id, ...updateData } = data;
 		const actor = req.user as AuthenticatedUser;
-		return this.inventoryService.updateInternalTransfer(id, updateData as InternalTransferRequest, actor.id);
+		return this.inventoryService.updateInternalTransfer(id, updateData as InternalTransferRequestDto, actor.id);
 	}
 
 	@Delete('internal-transfer/:operationId')

@@ -1,16 +1,23 @@
 // src/inventory/controllers/customer-allocation/customer-allocation.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query, Req } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseEnumPipe, ParseIntPipe, Query, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import {
   CustomerAllocationService,
+  } from '../../services/customer-allocation/customer-allocation.service';
+import {
   CustomerInventoryShipmentScope,
   CustomerInventorySortBy,
-} from '../../services/customer-allocation/customer-allocation.service';
+  } from '../../services/customer-allocation/dto/customer-inventory-summary.dto';
 import { Prisma, PitamStatus } from 'src/generated/prisma';
-import { CustomerAllocationSwaggerDto, CustomerAllocationUpdateSwaggerDto, CustomerAllocationUpdateAdjustmentSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+
+type CustomerAllocationUpdateBody = {
+  id: number;
+  quantity?: number;
+  notes?: string;
+};
 
 @ApiTags('Inventory')
 @ApiBearerAuth('access-token')
@@ -23,7 +30,24 @@ export class CustomerAllocationController {
   @Post()
   @ApiOperation({ summary: 'Record a new customer allocation (sale or transfer)' })
   @ApiBody({
-    type: CustomerAllocationSwaggerDto,
+    schema: {
+      type: 'object',
+      required: ['date', 'customerId', 'customerCategoryId', 'pitamStatus', 'quantity', 'type', 'takenFrom'],
+      properties: {
+        date: { type: 'string', format: 'date-time', example: '2026-10-10T09:00:00.000Z' },
+        dateHebrew: { type: 'string', example: 'י"ז תשרי תשפ"ז', nullable: true },
+        customerId: { type: 'number', example: 5 },
+        customerCategoryId: { type: 'number', example: 11 },
+        pitamStatus: { type: 'string', enum: Object.values(PitamStatus) },
+        quantity: { type: 'number', example: 80 },
+        type: {
+          type: 'string',
+          enum: ['HARVEST_IN', 'PACKED_SHIPPED', 'SELF_PICKUP', 'WASTE', 'ADJUSTMENT', 'INTERNAL_TRANSFER', 'OWNERSHIP_TRANSFER', 'ASSIGNED'],
+        },
+        takenFrom: { type: 'string', example: 'GENERAL' },
+        notes: { type: 'string', example: 'Reserved for customer order #A120', nullable: true },
+      },
+    },
     examples: {
       sample: {
         summary: 'Sample customer allocation payload',
@@ -61,7 +85,7 @@ export class CustomerAllocationController {
     @Query('seasonId', ParseIntPipe) seasonId: number,
     @Query('customerId', ParseIntPipe) customerId: number,
     @Query('customerCategoryId', ParseIntPipe) customerCategoryId: number,
-    @Query('pitamStatus') pitamStatus: any,
+    @Query('pitamStatus', new ParseEnumPipe(PitamStatus)) pitamStatus: PitamStatus,
   ) {
     return this.allocationService.getBalance({
       seasonId,
@@ -133,7 +157,15 @@ export class CustomerAllocationController {
   @Patch()
   @ApiOperation({ summary: 'Update an existing customer allocation record by ID' })
   @ApiBody({
-    type: CustomerAllocationUpdateSwaggerDto,
+    schema: {
+      type: 'object',
+      required: ['id'],
+      properties: {
+        id: { type: 'number', example: 1 },
+        quantity: { type: 'number', example: 95 },
+        notes: { type: 'string', example: 'Quantity increased after customer confirmation', nullable: true },
+      },
+    },
     examples: {
       sample: {
         summary: 'Sample customer allocation update payload',
@@ -149,7 +181,7 @@ export class CustomerAllocationController {
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Allocation not found.' })
   update(
-    @Body() updateData: CustomerAllocationUpdateSwaggerDto,
+    @Body() updateData: CustomerAllocationUpdateBody,
   ) {
     const { id, ...data } = updateData;
     return this.allocationService.update(id, data as Prisma.CustomerAllocationUncheckedUpdateInput);
@@ -167,7 +199,21 @@ export class CustomerAllocationController {
   @Post('adjustments')
   @ApiOperation({ summary: 'Create customer WASTE/ADJUSTMENT/SELF_PICKUP movement (same endpoint, different type).' })
   @ApiBody({
-    type: CustomerAllocationSwaggerDto,
+    schema: {
+      type: 'object',
+      required: ['date', 'customerId', 'customerCategoryId', 'pitamStatus', 'quantity', 'type', 'takenFrom'],
+      properties: {
+        date: { type: 'string', format: 'date-time', example: '2026-10-12T08:00:00.000Z' },
+        dateHebrew: { type: 'string', example: 'יט תשרי תשפז', nullable: true },
+        customerId: { type: 'number', example: 5 },
+        customerCategoryId: { type: 'number', example: 11 },
+        pitamStatus: { type: 'string', enum: Object.values(PitamStatus) },
+        quantity: { type: 'number', example: 7 },
+        type: { type: 'string', enum: ['WASTE', 'ADJUSTMENT', 'SELF_PICKUP'] },
+        takenFrom: { type: 'string', example: 'GENERAL' },
+        notes: { type: 'string', example: 'Packaging damage', nullable: true },
+      },
+    },
     examples: {
       waste: {
         summary: 'Create customer WASTE adjustment',
@@ -209,7 +255,15 @@ export class CustomerAllocationController {
   @Patch('adjustments')
   @ApiOperation({ summary: 'Update customer WASTE/ADJUSTMENT/SELF_PICKUP movement.' })
   @ApiBody({
-    type: CustomerAllocationUpdateAdjustmentSwaggerDto,
+    schema: {
+      type: 'object',
+      required: ['id'],
+      properties: {
+        id: { type: 'number', example: 1 },
+        quantity: { type: 'number', example: 9 },
+        notes: { type: 'string', example: 'Updated after recount', nullable: true },
+      },
+    },
     examples: {
       update: {
         summary: 'Update customer adjustment payload',
@@ -224,7 +278,7 @@ export class CustomerAllocationController {
   @ApiResponse({ status: 200, description: 'Customer adjustment movement updated successfully.' })
   @ApiResponse({ status: 404, description: 'Customer adjustment movement not found.' })
   updateAdjustment(
-    @Body() data: CustomerAllocationUpdateAdjustmentSwaggerDto,
+    @Body() data: CustomerAllocationUpdateBody,
     @Req() req: Request,
   ) {
     const actor = req.user as AuthenticatedUser;

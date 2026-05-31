@@ -5,51 +5,8 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma, MovementType, PitamStatus } from 'src/generated/prisma';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { InventoryAvailabilityService } from '../inventory-availability.service';
-
-export type CustomerInventoryShipmentScope =
-  | 'ALL'
-  | 'SHIPPED'
-  | 'UNSHIPPED'
-  | 'PACKED_SHIPPED'
-  | 'SELF_PICKUP'
-  | 'HARVEST_IN'
-  | 'INTERNAL_TRANSFER'
-  | 'OWNERSHIP_TRANSFER'
-  | 'ASSIGNED'
-  | 'WASTE'
-  | 'ADJUSTMENT';
-export type CustomerInventorySortBy = 'category' | 'customer' | 'quantity' | 'pitamStatus' | 'updatedAt';
-export type CustomerInventorySortOrder = 'asc' | 'desc';
-
-export interface CustomerInventorySummaryQuery {
-  seasonId?: number;
-  customerId?: number;
-  customerCategoryId?: number;
-  pitamStatus?: PitamStatus;
-  shipmentScope?: CustomerInventoryShipmentScope;
-  sortBy?: CustomerInventorySortBy;
-  sortOrder?: CustomerInventorySortOrder;
-}
-
-export interface CustomerInventorySummaryTotals {
-  totalQuantity: number;
-}
-
-export interface CustomerInventorySummaryRow {
-  customerId: number;
-  customerName: string | null;
-  customerCategoryId: number;
-  customerCategoryName: string | null;
-  categoryGrade: string | null;
-  pitamStatus: PitamStatus;
-  quantity: number;
-  lastUpdatedAt: Date | null;
-}
-
-export interface CustomerInventorySummaryResult {
-  rows: CustomerInventorySummaryRow[];
-  totals: CustomerInventorySummaryTotals;
-}
+import { CustomerInventorySummaryQuery } from './dto/customer-inventory-summary.dto';
+import { CustomerAllocationSummaryService } from './customer-allocation-summary.service';
 
 @Injectable()
 export class CustomerAllocationService {
@@ -57,6 +14,7 @@ export class CustomerAllocationService {
     private prisma: PrismaService,
     private seasonsService: SeasonsService,
     private inventoryAvailabilityService: InventoryAvailabilityService,
+    private customerAllocationSummaryService: CustomerAllocationSummaryService,
   ) {}
 
   // Create a new allocation record
@@ -86,7 +44,7 @@ export class CustomerAllocationService {
     seasonId: number;
     customerId: number;
     customerCategoryId: number;
-    pitamStatus: any;
+    pitamStatus: PitamStatus;
   }) {
     const aggregation = await this.prisma.customerAllocation.aggregate({
       where: {
@@ -145,88 +103,8 @@ export class CustomerAllocationService {
     });
   }
 
-  async getInventorySummary(query: CustomerInventorySummaryQuery): Promise<CustomerInventorySummaryResult> {
-    const seasonId = query.seasonId ?? (await this.seasonsService.findActiveSeason()).id;
-    await this.seasonsService.assertSeasonExists(seasonId);
-
-    const shipmentScope = query.shipmentScope ?? 'ALL';
-    const sortBy = query.sortBy ?? 'customer';
-    const sortOrder = query.sortOrder ?? 'asc';
-
-    this.validateSummaryQuery(shipmentScope, sortBy, sortOrder);
-
-    const where: Prisma.CustomerAllocationWhereInput = {
-      seasonId,
-      isDeleted: false,
-      customerId: query.customerId,
-      customerCategoryId: query.customerCategoryId,
-      pitamStatus: query.pitamStatus,
-    };
-
-    this.applyShipmentScope(where, shipmentScope);
-
-    const rows = await this.prisma.customerAllocation.groupBy({
-      by: ['customerId', 'customerCategoryId', 'pitamStatus'],
-      where,
-      _sum: { quantity: true },
-      _max: { updatedAt: true },
-    });
-
-    const filteredRows = rows.filter((row) => (row._sum.quantity ?? 0) !== 0);
-    const customerIds = [...new Set(filteredRows.map((row) => row.customerId))];
-    const categoryIds = [...new Set(filteredRows.map((row) => row.customerCategoryId))];
-
-    const [customers, categories] = await Promise.all([
-      customerIds.length
-        ? this.prisma.customer.findMany({
-            where: { id: { in: customerIds } },
-            select: { id: true, customerName: true },
-          })
-        : Promise.resolve([]),
-      categoryIds.length
-        ? this.prisma.customerCategories.findMany({
-            where: { id: { in: categoryIds } },
-            select: { id: true, name: true, grade: true },
-          })
-        : Promise.resolve([]),
-    ]);
-
-    const customerMap = new Map<number, string>();
-    for (const customer of customers) {
-      customerMap.set(customer.id, customer.customerName);
-    }
-
-    const categoryMap = new Map<number, { name: string; grade: string | null }>();
-    for (const category of categories) {
-      categoryMap.set(category.id, {
-        name: category.name,
-        grade: category.grade,
-      });
-    }
-
-    const summary: CustomerInventorySummaryRow[] = filteredRows.map((row) => {
-      const category = categoryMap.get(row.customerCategoryId);
-
-      return {
-        customerId: row.customerId,
-        customerName: customerMap.get(row.customerId) ?? null,
-        customerCategoryId: row.customerCategoryId,
-        customerCategoryName: category?.name ?? null,
-        categoryGrade: category?.grade ?? null,
-        pitamStatus: row.pitamStatus,
-        quantity: row._sum.quantity ?? 0,
-        lastUpdatedAt: row._max.updatedAt,
-      };
-    });
-
-    const sorted = this.sortSummary(summary, sortBy, sortOrder);
-
-    return {
-      rows: sorted,
-      totals: {
-        totalQuantity: sorted.reduce((acc, row) => acc + row.quantity, 0),
-      },
-    };
+  async getInventorySummary(query: CustomerInventorySummaryQuery) {
+    return this.customerAllocationSummaryService.getSummary(query);
   }
 
   async createAdjustment(data: Prisma.CustomerAllocationUncheckedCreateInput, actorId: number) {
@@ -408,96 +286,4 @@ export class CustomerAllocationService {
     });
   }
 
-  private validateSummaryQuery(
-    shipmentScope: CustomerInventoryShipmentScope,
-    sortBy: CustomerInventorySortBy,
-    sortOrder: CustomerInventorySortOrder,
-  ) {
-    const validShipmentScopes: CustomerInventoryShipmentScope[] = [
-      'ALL', 'SHIPPED', 'UNSHIPPED',
-      'PACKED_SHIPPED', 'SELF_PICKUP',
-      'HARVEST_IN', 'INTERNAL_TRANSFER', 'OWNERSHIP_TRANSFER', 'ASSIGNED',
-      'WASTE', 'ADJUSTMENT',
-    ];
-    if (!validShipmentScopes.includes(shipmentScope)) {
-      throw new BadRequestException(
-        'shipmentScope must be one of: ALL, SHIPPED, UNSHIPPED, PACKED_SHIPPED, SELF_PICKUP, HARVEST_IN, INTERNAL_TRANSFER, OWNERSHIP_TRANSFER, ASSIGNED, WASTE, ADJUSTMENT',
-      );
-    }
-
-    if (!['category', 'customer', 'quantity', 'pitamStatus', 'updatedAt'].includes(sortBy)) {
-      throw new BadRequestException('sortBy must be category, customer, quantity, pitamStatus, or updatedAt');
-    }
-
-    if (!['asc', 'desc'].includes(sortOrder)) {
-      throw new BadRequestException('sortOrder must be asc or desc');
-    }
-  }
-
-  private applyShipmentScope(
-    where: Prisma.CustomerAllocationWhereInput,
-    shipmentScope: CustomerInventoryShipmentScope,
-  ) {
-    // Logical groups
-    if (shipmentScope === 'SHIPPED') {
-      where.type = { in: [MovementType.PACKED_SHIPPED, MovementType.SELF_PICKUP] };
-      return;
-    }
-    if (shipmentScope === 'UNSHIPPED') {
-      where.type = { notIn: [MovementType.PACKED_SHIPPED, MovementType.SELF_PICKUP] };
-      return;
-    }
-    // Exact movement type matches
-    const exactMap: Partial<Record<CustomerInventoryShipmentScope, MovementType>> = {
-      PACKED_SHIPPED: MovementType.PACKED_SHIPPED,
-      SELF_PICKUP: MovementType.SELF_PICKUP,
-      HARVEST_IN: MovementType.HARVEST_IN,
-      INTERNAL_TRANSFER: MovementType.INTERNAL_TRANSFER,
-      OWNERSHIP_TRANSFER: MovementType.OWNERSHIP_TRANSFER,
-      ASSIGNED: MovementType.ASSIGNED,
-      WASTE: MovementType.WASTE,
-      ADJUSTMENT: MovementType.ADJUSTMENT,
-    };
-    const exact = exactMap[shipmentScope];
-    if (exact) {
-      where.type = exact;
-    }
-    // ALL → no type filter applied
-  }
-
-  private sortSummary(
-    summary: CustomerInventorySummaryRow[],
-    sortBy: CustomerInventorySortBy,
-    sortOrder: CustomerInventorySortOrder,
-  ) {
-    const factor = sortOrder === 'asc' ? 1 : -1;
-
-    return summary.sort((left, right) => {
-      switch (sortBy) {
-        case 'category':
-          return this.compareValues(left.customerCategoryName ?? '', right.customerCategoryName ?? '', factor);
-        case 'quantity':
-          return this.compareValues(left.quantity, right.quantity, factor);
-        case 'pitamStatus':
-          return this.compareValues(left.pitamStatus, right.pitamStatus, factor);
-        case 'updatedAt':
-          return this.compareValues(left.lastUpdatedAt?.getTime() ?? 0, right.lastUpdatedAt?.getTime() ?? 0, factor);
-        case 'customer':
-        default:
-          return this.compareValues(left.customerName ?? '', right.customerName ?? '', factor);
-      }
-    });
-  }
-
-  private compareValues(left: string | number, right: string | number, factor: number) {
-    if (left < right) {
-      return -1 * factor;
-    }
-
-    if (left > right) {
-      return 1 * factor;
-    }
-
-    return 0;
-  }
 }

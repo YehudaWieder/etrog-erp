@@ -1,12 +1,18 @@
 // src/inventory/controllers/trader-stock/trader-stock.controller.ts
 
-import { Controller, Get, Post, Delete, Body, Param, ParseIntPipe, Query, Patch, Req } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, ParseEnumPipe, ParseIntPipe, Query, Patch, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
-import { InventoryOwnerScope, InventoryShipmentScope, InventorySortBy, TraderStockService } from '../../services/trader-stock/trader-stock.service';
+import { TraderStockService } from '../../services/trader-stock/trader-stock.service';
+import { InventoryOwnerScope, InventoryShipmentScope, InventorySortBy } from '../../services/trader-stock/dto/inventory-summary.dto';
 import { Prisma, Grade, PitamStatus } from '@prisma/client';
-import { TraderStockSwaggerDto, TraderStockUpdateSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+
+type TraderStockAdjustmentUpdateBody = {
+  id: number;
+  quantity?: number;
+  notes?: string;
+};
 
 @ApiTags('Inventory')
 @ApiBearerAuth('access-token')
@@ -19,7 +25,24 @@ export class TraderStockController {
   @Post('movement')
   @ApiOperation({ summary: 'Record a new trader stock movement (e.g., HARVEST_IN, PACKED_SHIPPED, WASTE)' })
   @ApiBody({
-    type: TraderStockSwaggerDto,
+    schema: {
+      type: 'object',
+      required: ['date', 'traderCategoryId', 'grade', 'pitamStatus', 'quantity', 'type'],
+      properties: {
+        date: { type: 'string', format: 'date-time', example: '2026-10-08T08:30:00.000Z' },
+        traderId: { type: 'number', example: 3, nullable: true },
+        traderCategoryId: { type: 'number', example: 2 },
+        grade: { type: 'string', enum: Object.values(Grade) },
+        pitamStatus: { type: 'string', enum: Object.values(PitamStatus) },
+        quantity: { type: 'number', example: 200 },
+        isModulo: { type: 'boolean', example: false },
+        type: {
+          type: 'string',
+          enum: ['HARVEST_IN', 'PACKED_SHIPPED', 'SELF_PICKUP', 'WASTE', 'ADJUSTMENT', 'INTERNAL_TRANSFER', 'OWNERSHIP_TRANSFER', 'ASSIGNED'],
+        },
+        notes: { type: 'string', example: 'Inbound from sorting line', nullable: true },
+      },
+    },
     examples: {
       sample: {
         summary: 'Sample trader stock movement payload',
@@ -56,8 +79,8 @@ export class TraderStockController {
   getBalance(
     @Query('seasonId', ParseIntPipe) seasonId: number,
     @Query('traderCategoryId', ParseIntPipe) traderCategoryId: number,
-    @Query('grade') grade: any,
-    @Query('pitamStatus') pitamStatus: any,
+    @Query('grade', new ParseEnumPipe(Grade)) grade: Grade,
+    @Query('pitamStatus', new ParseEnumPipe(PitamStatus)) pitamStatus: PitamStatus,
     @Query('traderId') traderId?: string,
   ) {
     return this.stockService.getBalance({
@@ -157,7 +180,21 @@ export class TraderStockController {
   @Post('adjustments')
   @ApiOperation({ summary: 'Create trader WASTE/ADJUSTMENT/SELF_PICKUP movement (same endpoint, different type).' })
   @ApiBody({
-    type: TraderStockSwaggerDto,
+    schema: {
+      type: 'object',
+      required: ['date', 'traderCategoryId', 'grade', 'pitamStatus', 'quantity', 'type'],
+      properties: {
+        date: { type: 'string', format: 'date-time', example: '2026-10-11T07:30:00.000Z' },
+        traderId: { type: 'number', example: 3, nullable: true },
+        traderCategoryId: { type: 'number', example: 2 },
+        grade: { type: 'string', enum: Object.values(Grade) },
+        pitamStatus: { type: 'string', enum: Object.values(PitamStatus) },
+        quantity: { type: 'number', example: 12 },
+        isModulo: { type: 'boolean', example: false },
+        type: { type: 'string', enum: ['WASTE', 'ADJUSTMENT', 'SELF_PICKUP'] },
+        notes: { type: 'string', example: 'Damaged in storage', nullable: true },
+      },
+    },
     examples: {
       waste: {
         summary: 'Create WASTE adjustment',
@@ -199,7 +236,15 @@ export class TraderStockController {
   @Patch('adjustments')
   @ApiOperation({ summary: 'Update trader WASTE/ADJUSTMENT/SELF_PICKUP movement.' })
   @ApiBody({
-    type: TraderStockUpdateSwaggerDto,
+    schema: {
+      type: 'object',
+      required: ['id'],
+      properties: {
+        id: { type: 'number', example: 1 },
+        quantity: { type: 'number', example: 10 },
+        notes: { type: 'string', example: 'Updated after recount', nullable: true },
+      },
+    },
     examples: {
       update: {
         summary: 'Update trader adjustment payload',
@@ -214,7 +259,7 @@ export class TraderStockController {
   @ApiResponse({ status: 200, description: 'Trader adjustment movement updated successfully.' })
   @ApiResponse({ status: 404, description: 'Trader adjustment movement not found.' })
   updateAdjustment(
-    @Body() data: TraderStockUpdateSwaggerDto,
+    @Body() data: TraderStockAdjustmentUpdateBody,
     @Req() req: Request,
   ) {
     const actor = req.user as AuthenticatedUser;
