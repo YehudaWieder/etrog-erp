@@ -21,21 +21,13 @@ import {
 } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Request } from 'express';
-import {
-  UserSwaggerDto,
-  UserUpdateSwaggerDto,
-} from 'src/docs/dto/swagger-enums.dto';
 import { Public } from 'src/authorization/decorators/public.decorator';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { Roles } from 'src/authorization/decorators/roles.decorator';
 import { UsersService } from './users.service';
-
-type CreateUserRequestBody = {
-  name: string;
-  email: string;
-  phone?: string;
-  password: string;
-};
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { parseUserIdOrSlug } from './utils/users.utils';
 
 @ApiTags('Users')
 @ApiBearerAuth('access-token')
@@ -55,7 +47,7 @@ export class UsersController {
       'Create a new system user. Unique constraints: [name], [email], [phone].',
   })
   @ApiBody({
-    type: UserSwaggerDto,
+    type: CreateUserDto,
     examples: {
       default: {
         summary: 'Create user payload',
@@ -75,7 +67,7 @@ export class UsersController {
       'Invalid input, forbidden fields (role/isActive), or duplicate name/email/phone.',
   })
   @Public()
-  create(@Body() createUserDto: CreateUserRequestBody) {
+  create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.createUser(createUserDto);
   }
 
@@ -110,10 +102,8 @@ export class UsersController {
       'You can only access your own user unless you are manager/owner.',
   })
   findOne(@Param('idOrSlug') idOrSlug: string, @Req() req: Request) {
-    const parsedId = Number.parseInt(idOrSlug, 10);
-    const identifier = Number.isNaN(parsedId) ? idOrSlug : parsedId;
     return this.usersService.findOneByActor(
-      identifier,
+      parseUserIdOrSlug(idOrSlug),
       req.user as AuthenticatedUser,
     );
   }
@@ -122,7 +112,7 @@ export class UsersController {
   @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.WORKER)
   @ApiOperation({ summary: "Update a user's details by ID" })
   @ApiBody({
-    type: UserUpdateSwaggerDto,
+    type: UpdateUserDto,
     examples: {
       sample: {
         summary: 'Update a user by ID',
@@ -141,7 +131,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'User updated successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'User not found.' })
-  update(@Body() updateData: UserUpdateSwaggerDto, @Req() req: Request) {
+  update(@Body() updateData: UpdateUserDto, @Req() req: Request) {
     return this.usersService.updateUserByActor(
       updateData.id,
       updateData,
