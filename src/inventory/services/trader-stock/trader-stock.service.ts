@@ -7,6 +7,11 @@ import { SeasonsService } from 'src/seasons/seasons.service';
 import { InventoryAvailabilityService } from '../inventory-availability.service';
 import { InventorySummaryQuery } from './dto/inventory-summary.dto';
 import { TraderStockSummaryService } from './trader-stock-summary.service';
+import {
+    normalizeAdjustmentQuantity,
+    requireAdjustmentQuantity,
+    validateAdjustmentType,
+} from 'src/inventory/services/inventory-core/utils/adjustment-movement.util';
 
 @Injectable()
 export class TraderStockService {
@@ -116,11 +121,11 @@ export class TraderStockService {
             updatedById: actorId,
         };
 
-        this.validateAdjustmentType(createPayload.type);
+        validateAdjustmentType(createPayload.type);
         const { id: seasonId } = await this.seasonsService.findActiveSeason();
         const movementType = createPayload.type as MovementType;
-        const quantity = this.requireQuantity(createPayload.quantity);
-        const normalizedQuantity = this.normalizeAdjustmentQuantity(movementType, quantity);
+        const quantity = requireAdjustmentQuantity(createPayload.quantity);
+        const normalizedQuantity = normalizeAdjustmentQuantity(movementType, quantity);
 
         return this.prisma.$transaction(async (tx) => {
             await this.assertNegativeTraderMovementHasStock(tx, {
@@ -161,14 +166,14 @@ export class TraderStockService {
             }
 
             const nextType = (updatePayload.type ?? existing.type) as MovementType;
-            this.validateAdjustmentType(nextType);
+            validateAdjustmentType(nextType);
 
             const nextQuantityRaw =
                 updatePayload.quantity === undefined ? existing.quantity : Number(updatePayload.quantity);
             const nextQuantity =
                 updatePayload.quantity === undefined
                     ? existing.quantity
-                    : this.normalizeAdjustmentQuantity(nextType, nextQuantityRaw);
+                    : normalizeAdjustmentQuantity(nextType, nextQuantityRaw);
 
             await this.assertNegativeTraderMovementHasStock(tx, {
                 seasonId: existing.seasonId,
@@ -226,36 +231,6 @@ export class TraderStockService {
 
             throw error;
         }
-    }
-
-    private validateAdjustmentType(type?: MovementType | null) {
-        if (!type) {
-            throw new BadRequestException('type is required for adjustment movement');
-        }
-
-        if (type !== MovementType.WASTE && type !== MovementType.ADJUSTMENT && type !== MovementType.SELF_PICKUP) {
-            throw new BadRequestException('type must be WASTE, ADJUSTMENT, or SELF_PICKUP');
-        }
-    }
-
-    private normalizeAdjustmentQuantity(type: MovementType, quantity: number) {
-        if (!Number.isFinite(quantity) || quantity === 0) {
-            throw new BadRequestException('quantity must be a non-zero number');
-        }
-
-        if (type === MovementType.WASTE || type === MovementType.SELF_PICKUP) {
-            return -Math.abs(quantity);
-        }
-
-        return quantity;
-    }
-
-    private requireQuantity(value?: number) {
-        if (value === undefined || value === null) {
-            throw new BadRequestException('quantity is required for adjustment movement');
-        }
-
-        return Number(value);
     }
 
     private async assertNegativeTraderMovementHasStock(
