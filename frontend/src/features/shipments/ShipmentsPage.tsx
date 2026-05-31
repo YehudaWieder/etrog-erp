@@ -34,7 +34,7 @@ export function ShipmentsPage() {
   }, [navigate]);
 
   const handleLogin = () => navigate('/login');
-  const handleRegister = () => alert('הרשמה');
+  const handleRegister = () => alert(t.addShipment);
   const handleLogout = async () => {
     await logout();
     navigate('/login');
@@ -87,7 +87,7 @@ export function ShipmentsPage() {
   };
 
   const handleCreateAction = (label: string) => {
-    setLastActionText(lang === 'he' ? `נבחרה פעולה: ${label}` : `Action selected: ${label}`);
+    setLastActionText(t.actionSelected(label));
   };
 
   return (
@@ -138,7 +138,7 @@ export function ShipmentsPage() {
         onRegister: handleRegister,
         onLogout: handleLogout,
         onProfile: handleProfile,
-        userName: currentUser?.name || 'הפרופיל שלי',
+        userName: currentUser?.name || t.userNameFallback,
       }}
       sidebarFooterSlot={
         <button

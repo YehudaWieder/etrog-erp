@@ -43,10 +43,10 @@ export function useHarvestPageControls({
   fields,
   sortingAssignmentFilterOptions,
 }: UseHarvestPageControlsParams) {
-  const addActionLabel = lang === 'he' ? 'הוסף קטיף' : 'Add Harvest';
-  const addSortingActionLabel = lang === 'he' ? 'הוספת מיון' : 'Add Sorting';
-  const editActionLabel = lang === 'he' ? 'עריכה' : 'Edit';
-  const deleteActionLabel = lang === 'he' ? 'מחיקה' : 'Delete';
+  const addActionLabel = t.pageControls.addHarvest;
+  const addSortingActionLabel = t.pageControls.addSorting;
+  const editActionLabel = t.pageControls.edit;
+  const deleteActionLabel = t.pageControls.delete;
 
   const pageHeaderActions = useMemo<ReactNode>(() => {
     if (isDailyDetailsTab) {

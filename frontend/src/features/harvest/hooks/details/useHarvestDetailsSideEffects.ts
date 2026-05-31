@@ -181,9 +181,7 @@ export function useHarvestDetailsSideEffects({
         }
 
         setSortingDailyDetailRows([]);
-        setSortingDailyDetailRowsLoadError(
-          lang === 'he' ? 'לא ניתן לטעון את פירוט המיונים כרגע.' : 'Failed to load sorting details right now.',
-        );
+        setSortingDailyDetailRowsLoadError(t.sortingDailyDetails.loadError);
       } finally {
         if (isMounted) {
           setIsSortingDailyDetailRowsLoading(false);

@@ -2,6 +2,7 @@ import { FaFileArrowDown, FaPrint } from 'react-icons/fa6';
 
 type HarvestPrintExportActionsProps = {
   lang: 'he' | 'en';
+  tableActionsLabel: string;
   onPrint: () => void;
   onExport: () => void;
   printAriaLabel: string;
@@ -12,6 +13,7 @@ type HarvestPrintExportActionsProps = {
 
 export function HarvestPrintExportActions({
   lang,
+  tableActionsLabel,
   onPrint,
   onExport,
   printAriaLabel,
@@ -20,7 +22,7 @@ export function HarvestPrintExportActions({
   exportTitle,
 }: HarvestPrintExportActionsProps): JSX.Element {
   return (
-    <div className="global-filters-bar__icon-actions" aria-label={lang === 'he' ? 'פעולות טבלה' : 'Table actions'}>
+    <div className="global-filters-bar__icon-actions" aria-label={tableActionsLabel}>
       <button
         type="button"
         className="global-filters-bar__icon-btn"

@@ -79,6 +79,7 @@ export function useDefaultTraderCategoriesManagement({ onHeaderStateChange }: De
         isHebrew: appLang === 'he',
         isTotalAtLeastHundred,
         hasAvailableTraders,
+    labels: t.shareRows,
       }),
     [shareRows, appLang, isTotalAtLeastHundred, hasAvailableTraders],
   );

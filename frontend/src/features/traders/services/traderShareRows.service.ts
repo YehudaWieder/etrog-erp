@@ -6,6 +6,11 @@ type AddRowBlockReasonParams = {
   isHebrew: boolean;
   isTotalAtLeastHundred: boolean;
   hasAvailableTraders: boolean;
+  labels: {
+    incompleteLastRow: string;
+    totalReachedHundred: string;
+    allTradersSelected: string;
+  };
 };
 
 export function getAddShareRowBlockReason({
@@ -13,6 +18,7 @@ export function getAddShareRowBlockReason({
   isHebrew,
   isTotalAtLeastHundred,
   hasAvailableTraders,
+  labels,
 }: AddRowBlockReasonParams): string | null {
   if (shareRows.length === 0) {
     return null;
@@ -21,21 +27,15 @@ export function getAddShareRowBlockReason({
   const lastRow = shareRows[shareRows.length - 1];
 
   if (!isShareRowComplete(lastRow)) {
-    return isHebrew
-      ? 'לא ניתן להוסיף שורה חדשה לפני השלמת השורה האחרונה (סוחר ואחוז תקין).'
-      : 'Complete the previous row (trader and valid percent) before adding a new one.';
+    return labels.incompleteLastRow;
   }
 
   if (isTotalAtLeastHundred) {
-    return isHebrew
-      ? 'לא ניתן להוסיף שורה נוספת כי הסכום הכולל כבר הגיע ל-100%.'
-      : 'Cannot add another row because total percent already reached 100%.';
+    return labels.totalReachedHundred;
   }
 
   if (!hasAvailableTraders) {
-    return isHebrew
-      ? 'לא ניתן להוסיף שורה נוספת כי כל הסוחרים כבר נבחרו.'
-      : 'Cannot add another row because all traders are already selected.';
+    return labels.allTradersSelected;
   }
 
   return null;

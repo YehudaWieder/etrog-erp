@@ -170,7 +170,7 @@ export function ProfilePage() {
           navigate('/login');
         },
         onProfile: () => navigate('/profile'),
-        userName: currentUser?.name || (lang === 'he' ? 'הפרופיל שלי' : 'My Profile'),
+        userName: currentUser?.name || t.userNameFallback,
       }}
       sidebarFooterSlot={<ProfileSettingsSidebarButton lang={lang} label={t.settings} onClick={() => navigate('/settings')} />}
     >
@@ -237,7 +237,7 @@ export function ProfilePage() {
         title={t.editProfile.actions.delete}
         message={t.editProfile.messages.deleteConfirm}
         confirmLabel={t.editProfile.actions.delete}
-        cancelLabel={lang === 'he' ? 'ביטול' : 'Cancel'}
+        cancelLabel={t.common.cancel}
         onConfirm={() => {
           setShowDeleteDialog(false);
           void handleDeleteProfile();

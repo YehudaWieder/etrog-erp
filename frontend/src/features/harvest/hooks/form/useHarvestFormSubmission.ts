@@ -10,11 +10,13 @@ import {
   type ClassificationDailySummaryCategory,
   type ClassificationDailySummaryRow,
 } from '../../../../services/classificationsApi';
+import type { HarvestI18n } from '../../i18n';
 import { buildHarvestFormSubmissionPayload } from '../../utils/harvestFormSubmission.util';
 import type { HarvestFieldReportRow, HarvestFormClassificationDraft } from '../../harvestPage.types';
 
 type UseHarvestFormSubmissionParams = {
   lang: 'he' | 'en';
+  t: HarvestI18n;
   seasonFilterId: number | null;
   currentUserId: number | null | undefined;
   form: {
@@ -41,6 +43,7 @@ type UseHarvestFormSubmissionParams = {
 
 export function useHarvestFormSubmission({
   lang,
+  t,
   seasonFilterId,
   currentUserId,
   form,
@@ -107,6 +110,7 @@ export function useHarvestFormSubmission({
   const handleSubmitHarvestGlobalForm = useCallback(async () => {
     const submission = buildHarvestFormSubmissionPayload({
       lang,
+      t: t.formSubmission,
       seasonFilterId,
       currentUserId: currentUserId ?? undefined,
       form,

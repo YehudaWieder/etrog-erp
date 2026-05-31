@@ -33,7 +33,7 @@ export function useLoginPage() {
     loginFailed: a.loginFailed,
     connecting: a.loginConnecting,
     networkError: a.networkError,
-    notFound: lang === 'he' ? 'נתיב ההתחברות לא נמצא בשרת.' : 'The login endpoint was not found on the server.',
+    notFound: a.loginEndpointNotFound,
     submitLabel: a.loginSubmit,
   };
 

@@ -76,7 +76,7 @@ export function MessagesPage() {
           navigate('/login');
         },
         onProfile: () => navigate('/profile'),
-        userName: currentUser?.name || (lang === 'he' ? 'הפרופיל שלי' : 'My Profile'),
+        userName: currentUser?.name || t.userNameFallback,
       }}
       sidebarFooterSlot={
         <button

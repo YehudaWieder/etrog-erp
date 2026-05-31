@@ -132,10 +132,10 @@ export function ProfilesListSection({
 
       <ConfirmDialog
         open={showManagerDeleteDialog}
-        title={lang === 'he' ? 'מחיקת פרופיל' : 'Delete Profile'}
-        message={lang === 'he' ? 'האם למחוק את הפרופיל שנבחר? פעולה זו אינה הפיכה.' : 'Delete the selected profile? This action cannot be undone.'}
-        confirmLabel={lang === 'he' ? 'מחיקה' : 'Delete'}
-        cancelLabel={lang === 'he' ? 'ביטול' : 'Cancel'}
+        title={t.profilesList.deleteDialogTitle}
+        message={t.profilesList.deleteDialogMessage}
+        confirmLabel={t.profilesList.deleteDialogConfirm}
+        cancelLabel={t.common.cancel}
         onConfirm={() => {
           setShowManagerDeleteDialog(false);
           onDeleteManagedProfile();

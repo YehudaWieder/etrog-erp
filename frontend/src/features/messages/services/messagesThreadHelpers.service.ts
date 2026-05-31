@@ -1,26 +1,27 @@
 import type { Message, MessagePriority } from '../../../services/messagesApi';
+import type { MessagesListLabels } from '../messagesPage.types';
 
 export function buildMessageMetaMain(
   message: Message,
-  options: { lang: 'he' | 'en'; userId?: number; userNamesById: Record<number, string> },
+  options: { lang: 'he' | 'en'; userId?: number; userNamesById: Record<number, string>; labels: MessagesListLabels['threadMeta'] },
 ): { text: string; tooltip?: string } {
-  const { lang, userId, userNamesById } = options;
+  const { lang, userId, userNamesById, labels } = options;
   const isOutgoing = userId !== undefined && message.senderId === userId;
 
   if (!isOutgoing) {
     return {
-      text: lang === 'he' ? `מאת: ${message.sender.name}` : `From: ${message.sender.name}`,
+      text: `${labels.from}: ${message.sender.name}`,
     };
   }
 
   const recipientNames = message.recipientIds.map((id) => userNamesById[id] || `#${id}`);
   if (recipientNames.length === 0) {
-    return { text: lang === 'he' ? 'אל: -' : 'To: -' };
+    return { text: labels.toFallback };
   }
 
   if (recipientNames.length === 1) {
     return {
-      text: lang === 'he' ? `אל: ${recipientNames[0]}` : `To: ${recipientNames[0]}`,
+      text: `${labels.to}: ${recipientNames[0]}`,
       tooltip: recipientNames[0],
     };
   }
@@ -28,9 +29,7 @@ export function buildMessageMetaMain(
   const firstName = recipientNames[0];
   const additionalCount = recipientNames.length - 1;
   const shortText =
-    lang === 'he'
-      ? `אל: ${firstName} +${additionalCount}`
-      : `To: ${firstName} +${additionalCount}`;
+    `${labels.to}: ${firstName} +${additionalCount}`;
 
   return {
     text: shortText,

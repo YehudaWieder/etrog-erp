@@ -5,6 +5,7 @@ import { GlobalLeftDetailsPanel } from '../../../../components/ui/GlobalLeftDeta
 import { GlobalScopedFilters, type GlobalScopedFilterConfig } from '../../../../components/ui/GlobalScopedFilters';
 import type { ClassificationDailySummaryRow } from '../../../../services/classificationsApi';
 import type { HarvestSelectionSummaryLabels } from '../../harvestPage.types';
+import type { HarvestI18n } from '../../i18n';
 import { HarvestSelectionSummary } from '../shared/HarvestSelectionSummary';
 import {
   HarvestSortingDailyDetailsContent,
@@ -15,6 +16,7 @@ import { HarvestSortingPrintExportActions } from '../shared/HarvestSortingPrintE
 
 type HarvestSortingDailySectionProps = {
   lang: 'he' | 'en';
+  t: HarvestI18n;
   description: string;
   filters: GlobalScopedFilterConfig[];
   sortingDailyLoadError: string;
@@ -52,6 +54,7 @@ type HarvestSortingDailySectionProps = {
 
 export function HarvestSortingDailySection({
   lang,
+  t,
   description,
   filters,
   sortingDailyLoadError,
@@ -97,6 +100,8 @@ export function HarvestSortingDailySection({
         actions={
           <HarvestSortingPrintExportActions
             lang={lang}
+            tableActionsLabel={t.tableActionsLabel}
+            t={t.sortingDailyDetails.actions}
             onPrintSummary={onPrintSummary}
             onExportSummary={onExportSummary}
             onExportExpanded={onExportExpanded}
@@ -125,8 +130,8 @@ export function HarvestSortingDailySection({
 
             <GlobalLeftDetailsPanel
               isOpen={sortingDailyDetailsData !== null}
-              title={lang === 'he' ? 'פרטי מיון יומי' : 'Daily Sorting Details'}
-              closeLabel={lang === 'he' ? 'סגירת פרטי מיון יומי' : 'Close daily sorting details'}
+              title={t.sortingDailyDetails.title}
+              closeLabel={t.sortingDailyDetails.closeLabel}
               onClose={onCloseSortingDailyDetails}
               headerActions={
                 <button
@@ -135,7 +140,7 @@ export function HarvestSortingDailySection({
                   onClick={onPrintSortingDailyDetails}
                 >
                   <FaPrint aria-hidden="true" />
-                  <span>{lang === 'he' ? 'הדפסה' : 'Print'}</span>
+                  <span>{t.sortingDailyDetails.print}</span>
                 </button>
               }
             >
@@ -143,6 +148,7 @@ export function HarvestSortingDailySection({
                 <div className="harvest-daily-workspace__print-content" ref={sortingDailyDetailsPrintRef}>
                   <HarvestSortingDailyDetailsContent
                     lang={lang}
+                    t={t}
                     data={sortingDailyDetailsData}
                     categoryBreakdown={sortingDailyCategoryBreakdown}
                     isDetailRowsLoading={isSortingDailyDetailRowsLoading}

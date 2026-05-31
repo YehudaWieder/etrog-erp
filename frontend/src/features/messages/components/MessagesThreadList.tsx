@@ -27,6 +27,7 @@ export function MessagesThreadList(props: MessagesThreadListProps) {
           lang,
           userId,
           userNamesById,
+          labels: labels.threadMeta,
         });
 
         return (

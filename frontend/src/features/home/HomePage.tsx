@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from '../../app/layout/AppShell';
 import { SHIPMENTS_I18N } from '../shipments/i18n';
+import { HOME_I18N } from './i18n';
 import type { NavItem } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
 
@@ -33,6 +34,7 @@ export function HomePage() {
     return 'he';
   }, []);
   const t = SHIPMENTS_I18N[lang];
+  const home = HOME_I18N[lang];
 
   const handleTopNavClick = (item: NavItem) => {
     setActiveTopId(item.id);
@@ -67,8 +69,8 @@ export function HomePage() {
       hideSidebar={true}
     >
       <section className="home-welcome">
-        <h2>{lang === 'he' ? 'ברוכים הבאים' : 'Welcome'}</h2>
-        <p>{lang === 'he' ? 'בחר פעולה מהסרגל העליון' : 'Select an action from the top bar'}</p>
+        <h2>{home.welcomeTitle}</h2>
+        <p>{home.welcomeDescription}</p>
       </section>
     </AppShell>
   );

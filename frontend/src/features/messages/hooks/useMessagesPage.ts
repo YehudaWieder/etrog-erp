@@ -234,10 +234,7 @@ export function useMessagesPage() {
       return;
     }
 
-    const quotedHeader =
-      lang === 'he'
-        ? `\n\n--- הודעה מקורית ---\nמאת: ${message.sender.name}\nבתאריך: ${new Date(message.createdAt).toLocaleString()}\n\n${message.content}`
-        : `\n\n--- Original message ---\nFrom: ${message.sender.name}\nDate: ${new Date(message.createdAt).toLocaleString()}\n\n${message.content}`;
+    const quotedHeader = `\n\n--- ${t.threadMeta.originalMessage} ---\n${t.threadMeta.from}: ${message.sender.name}\n${t.threadMeta.date}: ${new Date(message.createdAt).toLocaleString()}\n\n${message.content}`;
 
     setComposeForm({
       recipientIds: [],

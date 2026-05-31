@@ -1,9 +1,10 @@
 import { useState, type Dispatch, type SetStateAction } from 'react';
 import { deleteMyProfile, updateManagedProfile, type AuthProfile, type AuthUserListItem } from '../../../services/authService';
-import type { ProfileLang } from '../profilePage.types';
+import type { ProfileI18nLabels, ProfileLang } from '../profilePage.types';
 
 type UseManagedProfilesActionsParams = {
   lang: ProfileLang;
+  t: ProfileI18nLabels;
   profile: AuthProfile | null;
   setProfile: Dispatch<SetStateAction<AuthProfile | null>>;
   selectedManagedProfileId: number | null;
@@ -15,6 +16,7 @@ type UseManagedProfilesActionsParams = {
 
 export function useManagedProfilesActions({
   lang,
+  t,
   profile,
   setProfile,
   selectedManagedProfileId,
@@ -45,7 +47,7 @@ export function useManagedProfilesActions({
       setProfilesList((prev) => prev.filter((item) => item.id !== selectedManagedProfileId));
       setSelectedManagedProfileId(null);
     } catch {
-      setProfilesListError(lang === 'he' ? 'לא ניתן למחוק את הפרופיל שנבחר.' : 'Could not delete the selected profile.');
+      setProfilesListError(t.editProfile.messages.deleteFailed);
     } finally {
       setIsDeletingManagedProfile(false);
     }
@@ -96,9 +98,9 @@ export function useManagedProfilesActions({
         setProfile((prev) => (prev ? { ...prev, role: updated.role, isActive: updated.isActive, updatedAt: updated.updatedAt } : prev));
       }
 
-      setManagedEditMessage(lang === 'he' ? 'הפרופיל עודכן בהצלחה.' : 'Profile updated successfully.');
+      setManagedEditMessage(t.editProfile.messages.updateSuccess);
     } catch {
-      setManagedEditError(lang === 'he' ? 'העדכון נכשל. בדוק הרשאות ונסה שוב.' : 'Update failed. Check permissions and try again.');
+      setManagedEditError(t.editProfile.messages.updateFailed);
     } finally {
       setIsUpdatingManagedProfile(false);
     }

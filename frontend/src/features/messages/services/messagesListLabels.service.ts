@@ -8,7 +8,15 @@ export function createMessagesListLabels(lang: 'he' | 'en'): MessagesListLabels 
     empty: lang === 'he' ? 'אין הודעות להצגה' : 'No messages to display',
     openThread: lang === 'he' ? 'בחר שרשור כדי לצפות בהודעות' : 'Select a thread to view messages',
     threadMessages: lang === 'he' ? 'הודעות בשרשור' : 'Messages in thread',
+    threadViewLabel: lang === 'he' ? 'תצוגת שרשור' : 'Thread view',
     threadCount: lang === 'he' ? 'הודעות בשרשור' : 'messages in thread',
+    threadMeta: {
+      originalMessage: lang === 'he' ? 'הודעה מקורית' : 'Original message',
+      from: lang === 'he' ? 'מאת' : 'From',
+      date: lang === 'he' ? 'בתאריך' : 'Date',
+      to: lang === 'he' ? 'אל' : 'To',
+      toFallback: lang === 'he' ? 'אל: -' : 'To: -',
+    },
     priority: {
       LOW: lang === 'he' ? 'נמוכה' : 'Low',
       NORMAL: lang === 'he' ? 'רגילה' : 'Normal',

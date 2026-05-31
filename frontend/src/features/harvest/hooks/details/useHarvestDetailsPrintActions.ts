@@ -5,9 +5,11 @@ import {
   HARVEST_SORTING_DAILY_DETAILS_PRINT_EXTRA_STYLES,
 } from '../../services/harvestPrintStyles';
 import { openPrintableWindow } from '../../../../utils/printWindow';
+import type { HarvestI18n } from '../../i18n';
 
 type UseHarvestDetailsPrintActionsParams = {
   lang: 'he' | 'en';
+  t: HarvestI18n;
   detailsPanelTitle: string;
   fieldReportDetailsFieldName: string | null;
   detailsPrintRef: RefObject<HTMLDivElement>;
@@ -17,6 +19,7 @@ type UseHarvestDetailsPrintActionsParams = {
 
 export function useHarvestDetailsPrintActions({
   lang,
+  t,
   detailsPanelTitle,
   fieldReportDetailsFieldName,
   detailsPrintRef,
@@ -33,7 +36,7 @@ export function useHarvestDetailsPrintActions({
 
     openPrintableWindow({
       title: detailsPanelTitle,
-      heading: lang === 'he' ? 'פרטי קטיף' : 'Harvest Details',
+      heading: t.dailyDetails.printHeading,
       direction,
       html: printableNode.outerHTML,
       width: 900,
@@ -50,9 +53,9 @@ export function useHarvestDetailsPrintActions({
 
     openPrintableWindow({
       title: fieldReportDetailsFieldName
-        ? `${lang === 'he' ? 'פרטי שדה' : 'Field Details'} - ${fieldReportDetailsFieldName}`
+        ? `${t.fieldReport.detailsTitle()} - ${fieldReportDetailsFieldName}`
         : detailsPanelTitle,
-      heading: lang === 'he' ? 'פרטי שדה' : 'Field Details',
+      heading: t.fieldReport.detailsTitle(),
       direction,
       html: printableNode.outerHTML,
       extraStyles: HARVEST_FIELD_REPORT_DETAILS_PRINT_EXTRA_STYLES,
@@ -66,8 +69,8 @@ export function useHarvestDetailsPrintActions({
     }
 
     openPrintableWindow({
-      title: lang === 'he' ? 'פרטי מיון יומי' : 'Daily Sorting Details',
-      heading: lang === 'he' ? 'פרטי מיון יומי' : 'Daily Sorting Details',
+      title: t.sortingDailyDetails.title,
+      heading: t.sortingDailyDetails.title,
       direction,
       html: printableNode.outerHTML,
       extraStyles: HARVEST_SORTING_DAILY_DETAILS_PRINT_EXTRA_STYLES,

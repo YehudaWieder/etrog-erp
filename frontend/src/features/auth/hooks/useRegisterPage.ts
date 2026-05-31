@@ -65,7 +65,7 @@ export function useRegisterPage() {
     }
 
     if (normalizedPhone && !isValidPhone(normalizedPhone)) {
-      setError(lang === 'he' ? 'מספר טלפון לא תקין.' : 'Invalid phone number format.');
+      setError(a.invalidPhone);
       return;
     }
 
@@ -93,7 +93,7 @@ export function useRegisterPage() {
       navigate('/login', { state: { notice: a.registerSuccess } });
     } catch (submitError) {
       if (submitError instanceof ApiError && submitError.status === 404) {
-        setError(lang === 'he' ? 'נתיב ההרשמה לא נמצא בשרת.' : 'The registration endpoint was not found on the server.');
+        setError(a.registrationEndpointNotFound);
       } else if (submitError instanceof Error && submitError.message === 'Failed to fetch') {
         setError(a.networkError);
       } else {

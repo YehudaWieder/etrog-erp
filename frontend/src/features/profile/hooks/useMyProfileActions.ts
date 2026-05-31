@@ -40,12 +40,9 @@ export function useMyProfileActions({
       profile,
       form: editForm,
       messages: {
-        nameRequired: lang === 'he' ? 'שם לא יכול להיות ריק.' : 'Name cannot be empty.',
-        invalidEmail: lang === 'he' ? 'כתובת אימייל לא תקינה.' : 'Invalid email format.',
-        invalidPhone:
-          lang === 'he'
-            ? 'מספר טלפון לא תקין. יש להזין בין 7 ל-15 ספרות (אפשר עם + בתחילה).'
-            : 'Invalid phone number. Use 7-15 digits, optionally starting with +.',
+        nameRequired: t.editProfile.messages.nameRequired,
+        invalidEmail: t.editProfile.messages.invalidEmail,
+        invalidPhone: t.editProfile.messages.invalidPhone,
         passwordNeedsCurrent: t.editProfile.messages.passwordNeedsCurrent,
       },
     });

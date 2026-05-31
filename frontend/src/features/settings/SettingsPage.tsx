@@ -120,7 +120,7 @@ export default function SettingsPage(): JSX.Element {
           navigate('/login');
         },
         onProfile: () => navigate('/profile'),
-        userName: currentUser?.name || (lang === 'he' ? 'הפרופיל שלי' : 'My Profile'),
+        userName: currentUser?.name || t.userNameFallback,
       }}
     >
       <section className="settings-workspace">

@@ -67,8 +67,8 @@ export function useHarvestTableColumns({
     return [
       {
         id: 'actions',
-        header: lang === 'he' ? 'פרטים' : 'Details',
-        headerLabel: lang === 'he' ? 'פרטים' : 'Details',
+        header: t.tableLabels.details,
+        headerLabel: t.tableLabels.details,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.action,
         gridTemplate: GLOBAL_DATA_TABLE_WIDTHS.action,
         align: 'center',
@@ -84,7 +84,7 @@ export function useHarvestTableColumns({
         header: t.dailyDetails.columns.dateGregorian,
         headerLabel: t.dailyDetails.columns.dateGregorian,
         sortKey: 'dateGregorian',
-        sortLabel: `${t.dailyDetails.columns.dateGregorian} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        sortLabel: `${t.dailyDetails.columns.dateGregorian} - ${t.tableLabels.sort}`,
         defaultSortDirection: 'desc',
         sortAccessor: (row) => Date.parse(row.dateGregorian),
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.dateShort,
@@ -109,7 +109,7 @@ export function useHarvestTableColumns({
         header: t.dailyDetails.columns.totalHarvested,
         headerLabel: t.dailyDetails.columns.totalHarvested,
         sortKey: 'totalHarvested',
-        sortLabel: `${t.dailyDetails.columns.totalHarvested} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        sortLabel: `${t.dailyDetails.columns.totalHarvested} - ${t.tableLabels.sort}`,
         defaultSortDirection: 'desc',
         sortAccessor: (row) => row.totalHarvested,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
@@ -121,7 +121,7 @@ export function useHarvestTableColumns({
         header: t.dailyDetails.columns.totalRejected,
         headerLabel: t.dailyDetails.columns.totalRejected,
         sortKey: 'totalRejected',
-        sortLabel: `${t.dailyDetails.columns.totalRejected} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        sortLabel: `${t.dailyDetails.columns.totalRejected} - ${t.tableLabels.sort}`,
         defaultSortDirection: 'desc',
         sortAccessor: (row) => row.totalRejected,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
@@ -133,7 +133,7 @@ export function useHarvestTableColumns({
         header: t.dailyDetails.columns.netHarvest,
         headerLabel: t.dailyDetails.columns.netHarvest,
         sortKey: 'totalAfterRejected',
-        sortLabel: `${t.dailyDetails.columns.netHarvest} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        sortLabel: `${t.dailyDetails.columns.netHarvest} - ${t.tableLabels.sort}`,
         defaultSortDirection: 'desc',
         sortAccessor: (row) => row.totalAfterRejected,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
@@ -145,7 +145,7 @@ export function useHarvestTableColumns({
         header: t.dailyDetails.columns.classifiedTotal,
         headerLabel: t.dailyDetails.columns.classifiedTotal,
         sortKey: 'classifiedTotal',
-        sortLabel: `${t.dailyDetails.columns.classifiedTotal} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        sortLabel: `${t.dailyDetails.columns.classifiedTotal} - ${t.tableLabels.sort}`,
         defaultSortDirection: 'desc',
         sortAccessor: (row) => row.classifiedTotal,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
@@ -169,14 +169,14 @@ export function useHarvestTableColumns({
     return [
       {
         id: 'details',
-        header: lang === 'he' ? 'פרטים' : 'Details',
-        headerLabel: lang === 'he' ? 'פרטים' : 'Details',
+        header: t.tableLabels.details,
+        headerLabel: t.tableLabels.details,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.action,
         gridTemplate: GLOBAL_DATA_TABLE_WIDTHS.action,
         align: 'center',
         render: (row) => (
           <HarvestDetailsTriggerButton
-            ariaLabel={lang === 'he' ? `הצגת כל פרטי השדה ${row.fieldName}` : `View all details for ${row.fieldName}`}
+            ariaLabel={t.tableLabels.viewAllFieldDetails(row.fieldName)}
             onClick={() => setFieldReportDetailsFieldId(row.id)}
           />
         ),
@@ -186,7 +186,7 @@ export function useHarvestTableColumns({
         header: t.dailyDetails.columns.fieldName,
         headerLabel: t.dailyDetails.columns.fieldName,
         sortKey: 'fieldName',
-        sortLabel: `${t.dailyDetails.columns.fieldName} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        sortLabel: `${t.dailyDetails.columns.fieldName} - ${t.tableLabels.sort}`,
         defaultSortDirection: 'asc',
         sortAccessor: (row) => row.fieldName,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.fieldName,
@@ -197,7 +197,7 @@ export function useHarvestTableColumns({
         header: t.dailyDetails.columns.totalHarvested,
         headerLabel: t.dailyDetails.columns.totalHarvested,
         sortKey: 'totalHarvested',
-        sortLabel: `${t.dailyDetails.columns.totalHarvested} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        sortLabel: `${t.dailyDetails.columns.totalHarvested} - ${t.tableLabels.sort}`,
         defaultSortDirection: 'desc',
         sortAccessor: (row) => row.totalHarvested,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
@@ -210,7 +210,7 @@ export function useHarvestTableColumns({
         header: t.dailyDetails.columns.totalRejected,
         headerLabel: t.dailyDetails.columns.totalRejected,
         sortKey: 'totalRejected',
-        sortLabel: `${t.dailyDetails.columns.totalRejected} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        sortLabel: `${t.dailyDetails.columns.totalRejected} - ${t.tableLabels.sort}`,
         defaultSortDirection: 'desc',
         sortAccessor: (row) => row.totalRejected,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
@@ -223,7 +223,7 @@ export function useHarvestTableColumns({
         header: t.dailyDetails.columns.netHarvest,
         headerLabel: t.dailyDetails.columns.netHarvest,
         sortKey: 'totalAfterRejected',
-        sortLabel: `${t.dailyDetails.columns.netHarvest} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        sortLabel: `${t.dailyDetails.columns.netHarvest} - ${t.tableLabels.sort}`,
         defaultSortDirection: 'desc',
         sortAccessor: (row) => row.totalAfterRejected,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
@@ -241,7 +241,7 @@ export function useHarvestTableColumns({
         header: t.dailyDetails.detailsPanel.fields.rejectionRate,
         headerLabel: t.dailyDetails.detailsPanel.fields.rejectionRate,
         sortKey: 'rejectionRate',
-        sortLabel: `${t.dailyDetails.detailsPanel.fields.rejectionRate} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        sortLabel: `${t.dailyDetails.detailsPanel.fields.rejectionRate} - ${t.tableLabels.sort}`,
         defaultSortDirection: 'desc',
         sortAccessor: (row) => row.rejectionRate,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericPercent,
@@ -263,14 +263,14 @@ export function useHarvestTableColumns({
     return [
       {
         id: 'details',
-        header: lang === 'he' ? 'פרטים' : 'Details',
-        headerLabel: lang === 'he' ? 'פרטים' : 'Details',
+        header: t.tableLabels.details,
+        headerLabel: t.tableLabels.details,
         minWidth: '72px',
         gridTemplate: '72px',
         align: 'center',
         render: (row) => (
           <HarvestDetailsTriggerButton
-            ariaLabel={lang === 'he' ? 'הצגת פרטי שורת מיון' : 'Show sorting row details'}
+            ariaLabel={t.tableLabels.showSortingRowDetails}
             onClick={() => setSortingDailyDetailsRowId(row.harvestId)}
           />
         ),
@@ -280,7 +280,7 @@ export function useHarvestTableColumns({
         header: t.sortingDailyDetails.columns.dateGregorian,
         headerLabel: t.sortingDailyDetails.columns.dateGregorian,
         sortKey: 'dateGregorian',
-        sortLabel: `${t.sortingDailyDetails.columns.dateGregorian} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        sortLabel: `${t.sortingDailyDetails.columns.dateGregorian} - ${t.tableLabels.sort}`,
         defaultSortDirection: 'desc',
         sortAccessor: (row) => Date.parse(row.dateGregorian),
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.dateShort,
@@ -292,7 +292,7 @@ export function useHarvestTableColumns({
         header: t.sortingDailyDetails.columns.dateHebrew,
         headerLabel: t.sortingDailyDetails.columns.dateHebrew,
         sortKey: 'dateHebrew',
-        sortLabel: `${t.sortingDailyDetails.columns.dateHebrew} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        sortLabel: `${t.sortingDailyDetails.columns.dateHebrew} - ${t.tableLabels.sort}`,
         defaultSortDirection: 'desc',
         sortAccessor: (row) => row.dateHebrew,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.dateLong,
@@ -304,7 +304,7 @@ export function useHarvestTableColumns({
         header: t.sortingDailyDetails.columns.fieldName,
         headerLabel: t.sortingDailyDetails.columns.fieldName,
         sortKey: 'fieldName',
-        sortLabel: `${t.sortingDailyDetails.columns.fieldName} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        sortLabel: `${t.sortingDailyDetails.columns.fieldName} - ${t.tableLabels.sort}`,
         defaultSortDirection: 'asc',
         sortAccessor: (row) => row.fieldName,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.fieldName,
@@ -359,7 +359,7 @@ export function useHarvestTableColumns({
         header: t.sortingDailyDetails.columns.totalSorted,
         headerLabel: t.sortingDailyDetails.columns.totalSorted,
         sortKey: 'totalSorted',
-        sortLabel: `${t.sortingDailyDetails.columns.totalSorted} - ${lang === 'he' ? 'מיון' : 'Sort'}`,
+        sortLabel: `${t.sortingDailyDetails.columns.totalSorted} - ${t.tableLabels.sort}`,
         defaultSortDirection: 'desc',
         sortAccessor: (row) =>
           sortingDailyCategories.reduce((sum, category) => sum + (row.categoryTotals[category.key] ?? 0), 0),

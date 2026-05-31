@@ -4,12 +4,14 @@ import { GlobalDataTable, type GlobalDataTableColumn } from '../../../../compone
 import { GlobalLeftDetailsPanel } from '../../../../components/ui/GlobalLeftDetailsPanel';
 import { GlobalScopedFilters, type GlobalScopedFilterConfig } from '../../../../components/ui/GlobalScopedFilters';
 import type { HarvestFieldReportRow, HarvestSelectionSummaryLabels } from '../../harvestPage.types';
+import type { HarvestI18n } from '../../i18n';
 import { HarvestFieldReportDetailsPanel, type HarvestFieldReportDetailsData, type HarvestFieldReportDetailsPanelLabels } from './HarvestFieldReportDetailsPanel';
 import { HarvestPrintExportActions } from '../shared/HarvestPrintExportActions';
 import { HarvestSelectionSummary } from '../shared/HarvestSelectionSummary';
 
 type HarvestFieldReportSectionProps = {
   lang: 'he' | 'en';
+  t: HarvestI18n;
   description: string;
   filters: GlobalScopedFilterConfig[];
   harvestLoadError: string;
@@ -35,6 +37,7 @@ type HarvestFieldReportSectionProps = {
 
 export function HarvestFieldReportSection({
   lang,
+  t,
   description,
   filters,
   harvestLoadError,
@@ -72,12 +75,13 @@ export function HarvestFieldReportSection({
         actions={
           <HarvestPrintExportActions
             lang={lang}
+            tableActionsLabel={t.tableActionsLabel}
             onPrint={onPrintFieldReportTable}
             onExport={onExportFieldReportTableToExcel}
-            printAriaLabel={lang === 'he' ? 'הדפסת דוח השדות' : 'Print field report table'}
-            printTitle={lang === 'he' ? 'הדפסה' : 'Print'}
-            exportAriaLabel={lang === 'he' ? 'ייצוא דוח השדות לאקסל' : 'Export field report to Excel'}
-            exportTitle={lang === 'he' ? 'ייצוא לאקסל' : 'Export to Excel'}
+            printAriaLabel={t.fieldReport.printAriaLabel}
+            printTitle={t.fieldReport.printTitle}
+            exportAriaLabel={t.fieldReport.exportAriaLabel}
+            exportTitle={t.fieldReport.exportTitle}
           />
         }
       />
@@ -102,12 +106,10 @@ export function HarvestFieldReportSection({
               isOpen={fieldReportDetailsData !== null}
               title={
                 fieldReportDetailsData
-                  ? `${lang === 'he' ? 'פרטי שדה' : 'Field Details'} - ${fieldReportDetailsData.fieldName}`
-                  : lang === 'he'
-                    ? 'פרטי שדה'
-                    : 'Field Details'
+                  ? t.fieldReport.detailsTitle(fieldReportDetailsData.fieldName)
+                  : t.fieldReport.detailsTitle()
               }
-              closeLabel={lang === 'he' ? 'סגירת פרטי שדה' : 'Close field details'}
+              closeLabel={t.fieldReport.closeLabel}
               onClose={onCloseFieldReportDetails}
               headerActions={
                 <button
@@ -116,7 +118,7 @@ export function HarvestFieldReportSection({
                   onClick={onPrintFieldReportDetails}
                 >
                   <FaPrint aria-hidden="true" />
-                  <span>{lang === 'he' ? 'הדפסה' : 'Print'}</span>
+                  <span>{t.fieldReport.printLabel}</span>
                 </button>
               }
             >

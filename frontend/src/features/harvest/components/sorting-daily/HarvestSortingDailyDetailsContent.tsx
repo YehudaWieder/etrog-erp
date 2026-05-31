@@ -30,6 +30,7 @@ export type SortingDailyCategoryBreakdown = {
 
 type HarvestSortingDailyDetailsContentProps = {
   lang: 'he' | 'en';
+  t: import('../../i18n').HarvestI18n;
   data: SortingDailyDetailsData;
   categoryBreakdown: SortingDailyCategoryBreakdown[];
   isDetailRowsLoading: boolean;
@@ -46,6 +47,7 @@ type HarvestSortingDailyDetailsContentProps = {
 
 export function HarvestSortingDailyDetailsContent({
   lang,
+  t,
   data,
   categoryBreakdown,
   isDetailRowsLoading,
@@ -73,8 +75,8 @@ export function HarvestSortingDailyDetailsContent({
         <table className="harvest-daily-workspace__sheet-table" style={{ marginTop: 18 }}>
           <thead>
             <tr>
-              <th>{lang === 'he' ? 'קטגוריה' : 'Category'}</th>
-              <th>{lang === 'he' ? 'כמות' : 'Quantity'}</th>
+              <th>{t.sortingDailyDetails.table.category}</th>
+              <th>{t.sortingDailyDetails.table.quantity}</th>
             </tr>
           </thead>
           <tbody>
@@ -92,7 +94,7 @@ export function HarvestSortingDailyDetailsContent({
             )}
 
             <tr className="harvest-daily-workspace__sheet-row--summary">
-              <td>{lang === 'he' ? 'סה"כ יומי' : 'Daily Total'}</td>
+              <td>{t.sortingDailyDetails.table.dailyTotal}</td>
               <td>{numberFormatter.format(data.rowDailyTotal)}</td>
             </tr>
           </tbody>
@@ -101,7 +103,7 @@ export function HarvestSortingDailyDetailsContent({
 
       {isDetailRowsLoading ? (
         <p className="harvest-daily-workspace__details-empty" style={{ marginTop: 14 }}>
-          {lang === 'he' ? 'טוען פירוט קטגוריות...' : 'Loading category breakdown...'}
+          {t.sortingDailyDetails.table.loadingCategoryBreakdown}
         </p>
       ) : null}
 
@@ -129,13 +131,13 @@ export function HarvestSortingDailyDetailsContent({
               <table className="harvest-daily-workspace__sheet-table" style={{ marginTop: 12 }}>
                 <thead>
                   <tr>
-                    <th>{lang === 'he' ? 'דרגה' : 'Grade'}</th>
+                    <th>{t.sortingDailyDetails.table.grade}</th>
                     {category.pitamHeaders.map((header) => (
                       <th key={`sorting-details-pitam-header-${category.label}-${header.key}`}>
                         {header.label} ({numberFormatter.format(header.total)})
                       </th>
                     ))}
-                    <th>{lang === 'he' ? 'סה"כ' : 'Total'}</th>
+                    <th>{t.sortingDailyDetails.table.total}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -158,7 +160,7 @@ export function HarvestSortingDailyDetailsContent({
                   )}
 
                   <tr className="harvest-daily-workspace__sheet-row--summary">
-                    <td>{lang === 'he' ? 'סה"כ' : 'Total'}</td>
+                    <td>{t.sortingDailyDetails.table.total}</td>
                     {category.pitamHeaders.map((header) => (
                       <td key={`sorting-details-summary-${category.label}-${header.key}`}>
                         {numberFormatter.format(header.total)}
@@ -172,7 +174,7 @@ export function HarvestSortingDailyDetailsContent({
           ))
         ) : (
           <p className="harvest-daily-workspace__details-empty" style={{ marginTop: 14 }}>
-            {lang === 'he' ? 'אין פירוט קטגוריות להצגה.' : 'No category breakdown available.'}
+            {t.sortingDailyDetails.table.noCategoryBreakdown}
           </p>
         )
       ) : null}

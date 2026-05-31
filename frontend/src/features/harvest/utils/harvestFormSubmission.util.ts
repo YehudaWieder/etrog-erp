@@ -2,10 +2,12 @@ import type {
   CreateHarvestWithClassificationsPayload,
   HarvestBulkClassificationPayload,
 } from '../../../services/harvestsApi';
+import type { HarvestI18n } from '../i18n';
 import type { HarvestFormClassificationDraft } from '../harvestPage.types';
 
 type BuildHarvestFormSubmissionPayloadParams = {
   lang: 'he' | 'en';
+  t: HarvestI18n['formSubmission'];
   seasonFilterId: number | null;
   currentUserId?: number;
   form: {
@@ -28,6 +30,7 @@ type BuildHarvestFormSubmissionPayloadResult =
 
 export function buildHarvestFormSubmissionPayload({
   lang,
+  t,
   seasonFilterId,
   currentUserId,
   form,
@@ -38,31 +41,31 @@ export function buildHarvestFormSubmissionPayload({
 
   if (!seasonFilterId) {
     return {
-      error: lang === 'he' ? 'יש לבחור עונה לפני פתיחת טופס הקטיף.' : 'Select a season before creating a harvest.',
+      error: t.seasonRequired,
     };
   }
 
   if (!Number.isFinite(parsedFieldId) || parsedFieldId <= 0) {
     return {
-      error: lang === 'he' ? 'יש לבחור שדה.' : 'Please select a field.',
+      error: t.fieldRequired,
     };
   }
 
   if (!form.dateGregorian || Number.isNaN(parsedGregorianDate.getTime())) {
     return {
-      error: lang === 'he' ? 'יש להזין תאריך לועזי תקין.' : 'Please provide a valid Gregorian date.',
+      error: t.gregorianDateRequired,
     };
   }
 
   if (!trimmedHebrewDate) {
     return {
-      error: lang === 'he' ? 'יש להזין תאריך עברי.' : 'Please provide the Hebrew date.',
+      error: t.hebrewDateRequired,
     };
   }
 
   if (form.classifications.length < 1) {
     return {
-      error: lang === 'he' ? 'יש להוסיף לפחות שורת מיון אחת.' : 'At least one sorting row is required.',
+      error: t.sortingRowRequired,
     };
   }
 
@@ -74,10 +77,7 @@ export function buildHarvestFormSubmissionPayload({
 
     if (!Number.isFinite(quantity) || quantity <= 0) {
       return {
-        error:
-          lang === 'he'
-            ? `בשורת מיון ${rowNumber} חייבת להיות כמות גדולה מאפס.`
-            : `Sorting row ${rowNumber} must include a quantity greater than zero.`,
+        error: t.sortingRowQuantityRequired(rowNumber),
       };
     }
 
@@ -95,10 +95,7 @@ export function buildHarvestFormSubmissionPayload({
       const traderCategoryId = Number(draft.traderCategoryId);
       if (!Number.isFinite(traderCategoryId) || traderCategoryId <= 0) {
         return {
-          error:
-            lang === 'he'
-              ? `בשורת מיון ${rowNumber} יש לבחור קטגוריית סוחר.`
-              : `Sorting row ${rowNumber} must include a trader category.`,
+          error: t.traderCategoryRequired(rowNumber),
         };
       }
 
@@ -113,10 +110,7 @@ export function buildHarvestFormSubmissionPayload({
       const traderId = Number(draft.traderId);
       if (!Number.isFinite(traderId) || traderId <= 0) {
         return {
-          error:
-            lang === 'he'
-              ? `בשורת מיון ${rowNumber} יש לבחור סוחר.`
-              : `Sorting row ${rowNumber} must include a trader.`,
+          error: t.traderRequired(rowNumber),
         };
       }
 
@@ -129,19 +123,13 @@ export function buildHarvestFormSubmissionPayload({
 
       if (!Number.isFinite(customerId) || customerId <= 0) {
         return {
-          error:
-            lang === 'he'
-              ? `בשורת מיון ${rowNumber} יש לבחור לקוח.`
-              : `Sorting row ${rowNumber} must include a customer.`,
+          error: t.customerRequired(rowNumber),
         };
       }
 
       if (!Number.isFinite(customerCategoryId) || customerCategoryId <= 0) {
         return {
-          error:
-            lang === 'he'
-              ? `בשורת מיון ${rowNumber} יש לבחור קטגוריית לקוח.`
-              : `Sorting row ${rowNumber} must include a customer category.`,
+          error: t.customerCategoryRequired(rowNumber),
         };
       }
 

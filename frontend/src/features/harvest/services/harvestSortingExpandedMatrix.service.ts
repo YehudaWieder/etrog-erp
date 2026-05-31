@@ -6,6 +6,7 @@ import {
 } from '../../../services/classificationsApi';
 import { getDefaultTraderCategories } from '../../../services/defaultTraderCategoriesApi';
 import { getTraderCategoriesWithShares } from '../../../services/traderCategoriesApi';
+import type { HarvestI18n } from '../i18n';
 import type { SortingAssignmentFilter } from '../harvestPage.types';
 import { buildSortingCategoryDisplayLabel, matchesSortingAssignmentSelection } from '../utils/harvestPage.utils';
 
@@ -30,6 +31,7 @@ export type SortingExpandedMatrixData = {
 
 type BuildSortingDailyExpandedMatrixDataParams = {
   lang: 'he' | 'en';
+  t: HarvestI18n['sortingDailyDetails']['pitamLabels'];
   seasonFilterId: number | null;
   sortingAssignmentFilter: SortingAssignmentFilter;
   filteredSortingDailyCategories: ClassificationDailySummaryCategory[];
@@ -47,6 +49,7 @@ type BuildSortingDailyExpandedMatrixDataParams = {
 
 export async function buildSortingDailyExpandedMatrixData({
   lang,
+  t,
   seasonFilterId,
   sortingAssignmentFilter,
   filteredSortingDailyCategories,
@@ -59,9 +62,9 @@ export async function buildSortingDailyExpandedMatrixData({
 }: BuildSortingDailyExpandedMatrixDataParams): Promise<SortingExpandedMatrixData> {
   const fixedGrades = ['א', 'ב', 'ג', 'ד', 'ה', 'ו'];
   const pitamGroups = [
-    { key: 'WITH_PITAM', label: lang === 'he' ? 'פיטם' : 'With pitam' },
-    { key: 'WITHOUT_PITAM', label: lang === 'he' ? 'בל"פ' : 'Without pitam' },
-    { key: 'MIXED', label: lang === 'he' ? 'מעורב' : 'Mixed' },
+    { key: 'WITH_PITAM', label: t.withPitam },
+    { key: 'WITHOUT_PITAM', label: t.withoutPitam },
+    { key: 'MIXED', label: t.mixed },
   ] as const;
 
   const normalizePitamGroup = (pitamStatus?: string | null) => {

@@ -98,7 +98,7 @@ export function useInlineThreadCompose(params: {
 
   const handleForward = (message: Message) => {
     setInlineAction({ type: 'forward', messageId: message.id });
-    setInlineForwardContent(`\n\n--- ${lang === 'he' ? 'הודעה מקורית' : 'Original message'} ---\n${lang === 'he' ? 'מאת' : 'From'}: ${message.sender.name}\n${lang === 'he' ? 'בתאריך' : 'Date'}: ${new Date(message.createdAt).toLocaleString()}\n\n${message.content}`);
+    setInlineForwardContent(`\n\n--- ${labels.threadMeta.originalMessage} ---\n${labels.threadMeta.from}: ${message.sender.name}\n${labels.threadMeta.date}: ${new Date(message.createdAt).toLocaleString()}\n\n${message.content}`);
     setInlineForwardRecipients([]);
     setRecipientQuery('');
     setIsRecipientMenuOpen(false);

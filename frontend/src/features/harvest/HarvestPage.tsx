@@ -356,6 +356,7 @@ export function HarvestPage() {
 
   const { handleSubmitHarvestGlobalForm } = useHarvestFormSubmission({
     lang,
+    t,
     seasonFilterId,
     currentUserId: currentUser?.id,
     form: {
@@ -522,6 +523,7 @@ export function HarvestPage() {
     handleExportSortingDailyTableToExcel,
   } = createHarvestExportActions({
     lang,
+    t,
     numberFormatter,
     sortingDownloadMenuCloseTimeoutRef,
     createHarvestExportRows,
@@ -615,6 +617,7 @@ export function HarvestPage() {
     handlePrintSortingDailyDetails,
   } = useHarvestDetailsPrintActions({
     lang,
+    t,
     detailsPanelTitle: t.dailyDetails.detailsPanel.title,
     fieldReportDetailsFieldName: fieldReportDetailsData?.fieldName ?? null,
     detailsPrintRef,
@@ -671,6 +674,11 @@ export function HarvestPage() {
       {isDailyDetailsTab ? (
         <HarvestDailyDetailsSection
           lang={lang}
+          tableActionsLabel={t.tableActionsLabel}
+          printAriaLabel={t.dailyDetails.printActions.printAriaLabel}
+          printTitle={t.dailyDetails.printActions.printTitle}
+          exportAriaLabel={t.dailyDetails.printActions.exportAriaLabel}
+          exportTitle={t.dailyDetails.printActions.exportTitle}
           description={t.dailyDetails.description}
           filters={filters}
           harvestLoadError={harvestLoadError}
@@ -715,6 +723,7 @@ export function HarvestPage() {
       ) : isFieldReportTab ? (
         <HarvestFieldReportSection
           lang={lang}
+          t={t}
           description={content.description}
           filters={filters}
           harvestLoadError={harvestLoadError}
@@ -744,6 +753,7 @@ export function HarvestPage() {
       ) : isSortingDailyDetailsTab ? (
         <HarvestSortingDailySection
           lang={lang}
+          t={t}
           description={t.sortingDailyDetails.description}
           filters={filters}
           sortingDailyLoadError={sortingDailyLoadError}
@@ -796,6 +806,7 @@ export function HarvestPage() {
       <HarvestBulkFormModal
         isOpen={isHarvestFormOpen}
         lang={lang}
+        t={t}
         fields={fields}
         traders={traders}
         customers={customers}

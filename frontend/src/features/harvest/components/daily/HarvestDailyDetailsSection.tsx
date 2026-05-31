@@ -11,6 +11,11 @@ import { HarvestSelectionSummary } from '../shared/HarvestSelectionSummary';
 
 type HarvestDailyDetailsSectionProps = {
   lang: 'he' | 'en';
+  tableActionsLabel: string;
+  printAriaLabel: string;
+  printTitle: string;
+  exportAriaLabel: string;
+  exportTitle: string;
   description: string;
   filters: GlobalScopedFilterConfig[];
   harvestLoadError: string;
@@ -51,6 +56,11 @@ type HarvestDailyDetailsSectionProps = {
 
 export function HarvestDailyDetailsSection({
   lang,
+  tableActionsLabel,
+  printAriaLabel,
+  printTitle,
+  exportAriaLabel,
+  exportTitle,
   description,
   filters,
   harvestLoadError,
@@ -103,12 +113,13 @@ export function HarvestDailyDetailsSection({
         actions={
           <HarvestPrintExportActions
             lang={lang}
+            tableActionsLabel={tableActionsLabel}
             onPrint={onPrintHarvestTable}
             onExport={onExportHarvestTableToExcel}
-            printAriaLabel={lang === 'he' ? 'הדפסת טבלת הקטיפים' : 'Print harvest table'}
-            printTitle={lang === 'he' ? 'הדפסה' : 'Print'}
-            exportAriaLabel={lang === 'he' ? 'ייצוא טבלת הקטיפים לאקסל' : 'Export harvest table to Excel'}
-            exportTitle={lang === 'he' ? 'ייצוא לאקסל' : 'Export to Excel'}
+            printAriaLabel={printAriaLabel}
+            printTitle={printTitle}
+            exportAriaLabel={exportAriaLabel}
+            exportTitle={exportTitle}
           />
         }
       />

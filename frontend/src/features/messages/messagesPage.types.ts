@@ -48,7 +48,15 @@ export type MessagesListLabels = {
   empty: string;
   openThread: string;
   threadMessages: string;
+  threadViewLabel: string;
   threadCount: string;
+  threadMeta: {
+    originalMessage: string;
+    from: string;
+    date: string;
+    to: string;
+    toFallback: string;
+  };
   priority: Record<MessagePriority, string>;
   actions: {
     reply: string;

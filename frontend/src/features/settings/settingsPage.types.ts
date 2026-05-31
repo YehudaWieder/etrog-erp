@@ -19,6 +19,7 @@ export type SettingsContent = {
 };
 
 export type SettingsI18n = {
+  userNameFallback: string;
   topNav: NavItem[];
   pageTitle: string;
   save: string;

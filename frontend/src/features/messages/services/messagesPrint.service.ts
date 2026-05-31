@@ -18,7 +18,7 @@ export function printMessagesThread(params: {
 
   const renderedMessages = messages
     .map((msg) => {
-      const metaMain = buildMessageMetaMain(msg, { lang, userId, userNamesById });
+      const metaMain = buildMessageMetaMain(msg, { lang, userId, userNamesById, labels: labels.threadMeta });
       const dateText = new Date(msg.createdAt).toLocaleString();
       return `
         <article style="border:1px solid #ddd; border-radius:8px; padding:12px; margin-bottom:12px;">

@@ -97,7 +97,7 @@ export function createHarvestExportRowBuilders({
 
     const header = [
       t.dailyDetails.columns.fieldName,
-      lang === 'he' ? 'מספר קטיפים' : 'Harvest count',
+      t.fieldReport.headers.recordCount,
       t.dailyDetails.columns.totalHarvested,
       t.dailyDetails.columns.totalRejected,
       t.dailyDetails.columns.netHarvest,
@@ -108,9 +108,9 @@ export function createHarvestExportRowBuilders({
       fields.ownerAfterRejected,
       fields.ownerRejectionRate,
       values.differenceRow,
-      lang === 'he' ? 'הפרש יורדים' : 'Rejected Difference',
-      lang === 'he' ? 'הפרש נטו' : 'Net Difference',
-      lang === 'he' ? 'הפרש אחוז פסילה' : 'Rejection Rate Difference',
+      t.fieldReport.headers.differenceRejected,
+      t.fieldReport.headers.differenceNet,
+      t.fieldReport.headers.differenceRate,
       fields.classificationStatus,
     ];
 
@@ -179,6 +179,7 @@ export function createHarvestExportRowBuilders({
   const createSortingDailyExpandedMatrixData = async () => {
     return buildSortingDailyExpandedMatrixData({
       lang,
+      t: t.sortingDailyDetails.pitamLabels,
       seasonFilterId,
       sortingAssignmentFilter,
       filteredSortingDailyCategories,

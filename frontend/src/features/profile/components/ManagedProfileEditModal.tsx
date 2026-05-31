@@ -44,18 +44,16 @@ export function ManagedProfileEditModal({
       <section
         className="modal-dialog modal-dialog--form"
         onClick={(event) => event.stopPropagation()}
-        aria-label={lang === 'he' ? 'עדכון פרופיל נבחר' : 'Update selected profile'}
+        aria-label={t.managedEditProfile.ariaLabel}
       >
-        <button className="modal-close" type="button" aria-label={lang === 'he' ? 'סגירה' : 'Close'} onClick={onClose}>
+        <button className="modal-close" type="button" aria-label={t.managedEditProfile.closeLabel} onClick={onClose}>
           <FaXmark />
         </button>
-        <h2 className="modal-title">{lang === 'he' ? 'עדכון פרופיל נבחר' : 'Update Selected Profile'}</h2>
+        <h2 className="modal-title">{t.managedEditProfile.title}</h2>
         <p className="modal-message">
           {selectedManagedProfile
             ? `${selectedManagedProfile.name}${selectedManagedProfile.email ? ` (${selectedManagedProfile.email})` : ''}`
-            : lang === 'he'
-              ? 'עדכון פרופיל משתמש'
-              : 'Update user profile'}
+            : t.managedEditProfile.fallbackMessage}
         </p>
 
         {managedEditMessage ? <p className="profile-editor__message">{managedEditMessage}</p> : null}
@@ -75,10 +73,10 @@ export function ManagedProfileEditModal({
           <label className="form-group">
             <span className="form-label">{t.profileCard.fields.role}</span>
             <select className="form-input" value={managedRole} onChange={(event) => onRoleChange(event.target.value)} disabled={isUpdatingManagedProfile}>
-              <option value="WORKER">WORKER</option>
-              <option value="EDITOR">EDITOR</option>
-              <option value="MANAGER">MANAGER</option>
-              <option value="OWNER">OWNER</option>
+              <option value="WORKER">{t.managedEditProfile.roleLabels.worker}</option>
+              <option value="EDITOR">{t.managedEditProfile.roleLabels.editor}</option>
+              <option value="MANAGER">{t.managedEditProfile.roleLabels.manager}</option>
+              <option value="OWNER">{t.managedEditProfile.roleLabels.owner}</option>
             </select>
           </label>
 
@@ -98,11 +96,11 @@ export function ManagedProfileEditModal({
 
         <div className="modal-actions">
           <button className="btn" type="button" onClick={onClose} disabled={isUpdatingManagedProfile}>
-            {lang === 'he' ? 'ביטול' : 'Cancel'}
+            {t.common.cancel}
           </button>
           <button className="btn btn-primary" type="button" onClick={onUpdate} disabled={!selectedManagedProfileId || isUpdatingManagedProfile}>
             <FaFloppyDisk />
-            <span>{isUpdatingManagedProfile ? (lang === 'he' ? 'מעדכן...' : 'Updating...') : (lang === 'he' ? 'עדכון' : 'Update')}</span>
+            <span>{isUpdatingManagedProfile ? t.managedEditProfile.updating : t.managedEditProfile.update}</span>
           </button>
         </div>
       </section>

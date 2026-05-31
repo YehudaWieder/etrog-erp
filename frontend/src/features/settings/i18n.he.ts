@@ -1,0 +1,121 @@
+import type { SettingsI18n } from './settingsPage.types';
+
+export const SETTINGS_I18N_HE: SettingsI18n = {
+  userNameFallback: 'הפרופיל שלי',
+  topNav: [
+    { id: 'harvest', label: 'קטיף ומיון', icon: 'fa-leaf' },
+    { id: 'shipments', label: 'משלוחים', icon: 'fa-truck' },
+    { id: 'partners', label: 'מלאי סוחרים', icon: 'fa-handshake' },
+    { id: 'customers', label: 'מלאי לקוחות', icon: 'fa-users' },
+    { id: 'workers', label: 'עובדים', icon: 'fa-person' },
+    { id: 'payments', label: 'הוצאות ותשלומים', icon: 'fa-money-bill' },
+  ],
+  pageTitle: 'הגדרות',
+  save: 'שמירה',
+  saved: 'השינויים נשמרו',
+  reset: 'אתחול',
+  languageLabel: 'שפה',
+  languageOptions: { he: 'עברית', en: 'English' },
+  colorLabel: 'צבעים וממשק',
+  colorHint: 'בחר את צבעי הממשק שלך. הגדרות נשמרות בדפדפן.',
+  primaryColorLabel: 'צבע ראשי',
+  accentColorLabel: 'צבע accent',
+  textColorLabel: 'צבע טקסט',
+  darkModeLabel: 'מוד כהה',
+  darkModeOn: 'כהה',
+  darkModeOff: 'בהיר',
+  managerOnlyHint: 'תוכן זה זמין למנהל מערכת.',
+  sidebarWorker: [
+    {
+      id: 'site',
+      title: 'הגדרות אתר',
+      href: '/settings/site/language',
+      icon: 'fa-sliders',
+      items: [
+        { id: 'language', label: 'שפה', href: '/settings/site/language', icon: 'fa-globe' },
+        { id: 'themeColor', label: 'צבע', href: '/settings/site/theme-color', icon: 'fa-palette' },
+      ],
+    },
+  ],
+  sidebarManager: [
+    {
+      id: 'site',
+      title: 'הגדרות אתר',
+      href: '/settings/site/language',
+      icon: 'fa-sliders',
+      items: [
+        { id: 'language', label: 'שפה', href: '/settings/site/language', icon: 'fa-globe' },
+        { id: 'themeColor', label: 'צבע', href: '/settings/site/theme-color', icon: 'fa-palette' },
+      ],
+    },
+    {
+      id: 'system',
+      title: 'הגדרות מערכת',
+      href: '/settings/system/seasons',
+      icon: 'fa-cog',
+      items: [
+        { id: 'seasons', label: 'עונות', href: '/settings/system/seasons', icon: 'fa-calendar' },
+        { id: 'fields', label: 'שדות', href: '/settings/system/fields', icon: 'fa-grip' },
+      ],
+    },
+    {
+      id: 'traders',
+      title: 'הגדרות סוחרים',
+      href: '/settings/traders',
+      icon: 'fa-handshake',
+      items: [
+        { id: 'traders', label: 'סוחרים', href: '/settings/traders', icon: 'fa-handshake' },
+        { id: 'traderCategories', label: 'קטגוריות סוחרים', href: '/settings/traders/categories', icon: 'fa-tag' },
+        { id: 'defaultTraderCategories', label: 'קטגוריות סוחרים ברירת מחדל', href: '/settings/traders/default-categories', icon: 'fa-bookmark' },
+      ],
+    },
+    {
+      id: 'customers',
+      title: 'הגדרות לקוחות',
+      href: '/settings/customers',
+      icon: 'fa-users',
+      items: [
+        { id: 'customers', label: 'לקוחות', href: '/settings/customers', icon: 'fa-users' },
+        { id: 'customerCategories', label: 'קטגוריות לקוחות', href: '/settings/customers/categories', icon: 'fa-tag' },
+      ],
+    },
+  ],
+  content: {
+    language: {
+      title: 'הגדרות שפה',
+      description: 'בחר שפת ממשק. השינוי מתעדכן מיידית ונשמר בדפדפן.',
+    },
+    themeColor: {
+      title: 'הגדרות צבע',
+      description: 'בחר צבע דומיננטי. הצבע נשמר מקומית כהעדפת משתמש.',
+    },
+    seasons: {
+      title: 'ניהול עונות',
+      description: 'נהל עונות: צור עונה חדשה, בחר עונה פעילה ומחק עונות לפי הצורך.',
+    },
+    fields: {
+      title: 'ניהול שדות',
+      description: 'נהל את רשימת השדות במערכת, כולל הוספה, עריכה ומחיקה.',
+    },
+    traders: {
+      title: 'הגדרות סוחרים',
+      description: 'נהל סוחרים במערכת: הוסף, עדכן ומחק לפי הצורך.',
+    },
+    traderCategories: {
+      title: 'קטגוריות סוחרים',
+      description: 'הגדר וארגן קטגוריות לסוחרים (לדוגמה: יאנעווע, חזו"א); כל קטגוריה נוצרת לעונה הפעילה.',
+    },
+    defaultTraderCategories: {
+      title: 'קטגוריות סוחרים ברירת מחדל',
+      description: 'הגדר קטגוריות ברירת מחדל לכל העונות; הקטגוריות האלה נוצרות אוטומטית לכל עונת שנה חדשה שנוספת.',
+    },
+    customers: {
+      title: 'הגדרות לקוחות',
+      description: 'הוסף פרטי לקוח חדש למערכת.',
+    },
+    customerCategories: {
+      title: 'הגדרת קטגוריות לקוחות',
+      description: 'נהל קטגוריות לקוח לעונה הפעילה עם דרגה ומחיר.',
+    },
+  },
+};

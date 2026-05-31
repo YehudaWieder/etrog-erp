@@ -1,6 +1,7 @@
 import type { MutableRefObject } from 'react';
 import type { Row } from 'exceljs';
 import { HARVEST_PRINT_BASE_STYLE } from './harvestPrintStyles';
+import type { HarvestI18n } from '../i18n';
 import type { HarvestExportTableData } from '../harvestPage.types';
 
 type ExpandedMatrixData = {
@@ -24,6 +25,7 @@ type ExpandedMatrixData = {
 
 type HarvestExportActionsParams = {
   lang: 'he' | 'en';
+  t: HarvestI18n;
   numberFormatter: Intl.NumberFormat;
   sortingDownloadMenuCloseTimeoutRef: MutableRefObject<number | null>;
   createHarvestExportRows: () => HarvestExportTableData;
@@ -145,6 +147,7 @@ async function downloadStyledExcel({
 
 export function createHarvestExportActions({
   lang,
+  t,
   numberFormatter,
   sortingDownloadMenuCloseTimeoutRef,
   createHarvestExportRows,
@@ -168,7 +171,7 @@ export function createHarvestExportActions({
       return;
     }
 
-    const printTitle = lang === 'he' ? 'דוח קטיף לפי ימים' : 'Harvest Daily Details';
+    const printTitle = t.dailyDetails.printWindowTitle;
 
     printWindow.document.write(`
       <!doctype html>
@@ -216,7 +219,7 @@ export function createHarvestExportActions({
         rightToLeft: lang === 'he',
       });
     } catch {
-      window.alert(lang === 'he' ? 'לא ניתן לייצא כרגע לאקסל.' : 'Could not export to Excel right now.');
+      window.alert(t.dailyDetails.exportError);
     }
   };
 
@@ -236,7 +239,7 @@ export function createHarvestExportActions({
       return;
     }
 
-    const printTitle = lang === 'he' ? 'דוח קטיפים לפי שדה' : 'Harvest Field Report';
+    const printTitle = t.fieldReport.printWindowTitle;
 
     printWindow.document.write(`
       <!doctype html>
@@ -277,14 +280,14 @@ export function createHarvestExportActions({
 
     try {
       await downloadStyledExcel({
-        sheetName: lang === 'he' ? 'דוח שדות' : 'Field Report',
+        sheetName: t.fieldReport.sheetName,
         fileName: `harvest-field-report-${dateStamp}.xlsx`,
         header,
         rows,
         rightToLeft: lang === 'he',
       });
     } catch {
-      window.alert(lang === 'he' ? 'לא ניתן לייצא כרגע לאקסל.' : 'Could not export to Excel right now.');
+      window.alert(t.fieldReport.exportError);
     }
   };
 
@@ -376,7 +379,7 @@ export function createHarvestExportActions({
           })
           .join('');
       } catch {
-        window.alert(lang === 'he' ? 'לא ניתן להכין כרגע את גרסת ההדפסה המורחבת.' : 'Could not prepare the expanded print version right now.');
+        window.alert(t.sortingDailyDetails.expandedPrintError);
         return;
       }
     } else {
@@ -392,14 +395,7 @@ export function createHarvestExportActions({
       return;
     }
 
-    const printTitle =
-      variant === 'expanded'
-        ? lang === 'he'
-          ? 'דוח מיון יומי - גרסה מורחבת'
-          : 'Daily Sorting Report - Expanded'
-        : lang === 'he'
-          ? 'דוח מיון יומי'
-          : 'Daily Sorting Report';
+    const printTitle = variant === 'expanded' ? t.sortingDailyDetails.expandedPrintWindowTitle : t.sortingDailyDetails.printWindowTitle;
 
     printWindow.document.write(`
       <!doctype html>
@@ -492,7 +488,7 @@ export function createHarvestExportActions({
         const summaryRow: Array<string | number> = [lang === 'he' ? 'סה"כ' : 'Total', '', '', ...summaryValues];
 
         const workbook = new Workbook();
-        const worksheet = workbook.addWorksheet(lang === 'he' ? 'מיון מורחב' : 'Sorting Expanded');
+        const worksheet = workbook.addWorksheet(t.sortingDailyDetails.expandedSheetName);
         const excelRows = [topHeaderRow, pitamHeaderRow, gradesHeaderRow, ...bodyRows, summaryRow];
 
         for (const row of excelRows) {
@@ -627,7 +623,7 @@ export function createHarvestExportActions({
         link.remove();
         window.URL.revokeObjectURL(url);
       } catch {
-        window.alert(lang === 'he' ? 'לא ניתן להכין כרגע את גרסת הייצוא המורחבת.' : 'Could not prepare the expanded export version right now.');
+        window.alert(t.sortingDailyDetails.expandedExportError);
       }
 
       return;
@@ -638,14 +634,14 @@ export function createHarvestExportActions({
       const dateStamp = new Date().toISOString().slice(0, 10);
 
       await downloadStyledExcel({
-        sheetName: lang === 'he' ? 'מיון יומי' : 'Sorting Daily',
+        sheetName: t.sortingDailyDetails.sheetName,
         fileName: `sorting-daily-${dateStamp}.xlsx`,
         header,
         rows,
         rightToLeft: lang === 'he',
       });
     } catch {
-      window.alert(lang === 'he' ? 'לא ניתן לייצא כרגע לאקסל.' : 'Could not export to Excel right now.');
+      window.alert(t.sortingDailyDetails.exportError);
     }
   };
 

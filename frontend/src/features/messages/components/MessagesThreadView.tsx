@@ -81,7 +81,7 @@ export function MessagesThreadView(props: MessagesThreadViewProps) {
   } = props;
 
   return (
-    <section className="messages-thread" aria-label="Thread view">
+    <section className="messages-thread" aria-label={labels.threadViewLabel}>
       {selectedThreadMessages.length ? (
         <>
           <header className="messages-thread__header messages-thread__toolbar">
@@ -114,7 +114,7 @@ export function MessagesThreadView(props: MessagesThreadViewProps) {
           <div className="messages-thread__items">
             {selectedThreadMessages.map((message) => {
               const isOutgoing = userId !== undefined && message.senderId === userId;
-              const metaMain = buildMessageMetaMain(message, { lang, userId, userNamesById });
+              const metaMain = buildMessageMetaMain(message, { lang, userId, userNamesById, labels: labels.threadMeta });
 
               return (
                 <article key={message.id} className={`messages-thread__item${isOutgoing ? ' messages-thread__item--outgoing' : ''}`}>

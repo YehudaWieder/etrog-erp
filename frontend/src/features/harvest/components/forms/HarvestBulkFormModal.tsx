@@ -4,10 +4,12 @@ import type { Customer } from '../../../../services/customersApi';
 import type { CustomerCategory } from '../../../../services/customerCategoriesApi';
 import type { TraderCategoryWithShares } from '../../../../services/traderCategoriesApi';
 import type { HarvestFormClassificationDraft } from '../../harvestPage.types';
+import type { HarvestI18n } from '../../i18n';
 
 type HarvestBulkFormModalProps = {
   isOpen: boolean;
   lang: 'he' | 'en';
+  t: HarvestI18n;
   fields: Field[];
   traders: Trader[];
   customers: Customer[];
@@ -44,6 +46,7 @@ type HarvestBulkFormModalProps = {
 export function HarvestBulkFormModal({
   isOpen,
   lang,
+  t,
   fields,
   traders,
   customers,
@@ -80,34 +83,32 @@ export function HarvestBulkFormModal({
     return null;
   }
 
+  const form = t.bulkForm;
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
         className="modal-dialog modal-dialog--form harvest-bulk-form-modal"
         role="dialog"
         aria-modal="true"
-        aria-label={lang === 'he' ? 'טופס קטיף גלובלי' : 'Global harvest form'}
+        aria-label={form.ariaLabel}
         onClick={(event) => event.stopPropagation()}
       >
-        <button className="modal-close" type="button" aria-label={lang === 'he' ? 'סגירה' : 'Close'} onClick={onClose}>
+        <button className="modal-close" type="button" aria-label={form.closeLabel} onClick={onClose}>
           X
         </button>
 
-        <h3 className="modal-title">{lang === 'he' ? 'הוספת קטיף ומיון' : 'Add Harvest and Sorting'}</h3>
-        <p className="modal-message">
-          {lang === 'he'
-            ? 'בטופס זה מזינים נתוני קטיף ומיון, ונדרשת לפחות שורת מיון אחת.'
-            : 'Use this form to enter harvest and sorting data. At least one sorting row is required.'}
-        </p>
+        <h3 className="modal-title">{form.title}</h3>
+        <p className="modal-message">{form.instructions}</p>
 
         <div className="management-form-grid harvest-bulk-form-grid harvest-bulk-form-grid--primary">
           <select
             className="seasons-manager__year-input"
             value={harvestFormFieldId}
             onChange={(event) => onFieldIdChange(event.target.value)}
-            aria-label={lang === 'he' ? 'שדה' : 'Field'}
+            aria-label={form.fieldLabel}
           >
-            <option value="">{lang === 'he' ? 'בחר שדה' : 'Select field'}</option>
+            <option value="">{form.fieldPlaceholder}</option>
             {fields.map((field) => (
               <option key={`harvest-form-field-${field.id}`} value={String(field.id)}>
                 {field.name}
@@ -120,7 +121,7 @@ export function HarvestBulkFormModal({
             type="date"
             value={harvestFormDateGregorian}
             onChange={(event) => onGregorianDateChange(event.target.value)}
-            aria-label={lang === 'he' ? 'תאריך לועזי' : 'Gregorian date'}
+            aria-label={form.gregorianDateLabel}
           />
 
           <input
@@ -128,8 +129,8 @@ export function HarvestBulkFormModal({
             type="text"
             value={harvestFormDateHebrew}
             onChange={(event) => onHebrewDateChange(event.target.value)}
-            placeholder={lang === 'he' ? 'תאריך עברי' : 'Hebrew date'}
-            aria-label={lang === 'he' ? 'תאריך עברי' : 'Hebrew date'}
+            placeholder={form.hebrewDatePlaceholder}
+            aria-label={form.hebrewDateLabel}
           />
 
           <input
@@ -138,8 +139,8 @@ export function HarvestBulkFormModal({
             min="0"
             value={harvestFormTotalHarvested}
             onChange={(event) => onTotalHarvestedChange(event.target.value)}
-            placeholder={lang === 'he' ? 'סה"כ קטיף' : 'Total harvested'}
-            aria-label={lang === 'he' ? 'סה"כ קטיף' : 'Total harvested'}
+            placeholder={form.totalHarvestedPlaceholder}
+            aria-label={form.totalHarvestedPlaceholder}
           />
 
           <input
@@ -148,8 +149,8 @@ export function HarvestBulkFormModal({
             min="0"
             value={harvestFormTotalRejected}
             onChange={(event) => onTotalRejectedChange(event.target.value)}
-            placeholder={lang === 'he' ? 'סה"כ פסולים' : 'Total rejected'}
-            aria-label={lang === 'he' ? 'סה"כ פסולים' : 'Total rejected'}
+            placeholder={form.totalRejectedPlaceholder}
+            aria-label={form.totalRejectedPlaceholder}
           />
 
           <input
@@ -158,8 +159,8 @@ export function HarvestBulkFormModal({
             min="0"
             value={harvestFormOwnerHarvested}
             onChange={(event) => onOwnerHarvestedChange(event.target.value)}
-            placeholder={lang === 'he' ? 'קטיף פרנקו' : 'Franco harvested'}
-            aria-label={lang === 'he' ? 'קטיף בעלים' : 'Owner harvested'}
+            placeholder={form.ownerHarvestedPlaceholder}
+            aria-label={form.ownerHarvestedLabel}
           />
 
           <input
@@ -168,17 +169,13 @@ export function HarvestBulkFormModal({
             min="0"
             value={harvestFormOwnerRejected}
             onChange={(event) => onOwnerRejectedChange(event.target.value)}
-            placeholder={lang === 'he' ? 'פסולים פרנקו' : 'Franco rejected'}
-            aria-label={lang === 'he' ? 'פסולים בעלים' : 'Owner rejected'}
+            placeholder={form.ownerRejectedPlaceholder}
+            aria-label={form.ownerRejectedLabel}
           />
 
-          <fieldset className="harvest-bulk-form-classification-mode" aria-label={lang === 'he' ? 'סוג מיון' : 'Classification mode'}>
-            <legend>{lang === 'he' ? 'סוג מיון' : 'Classification mode'}</legend>
-            <p className="harvest-bulk-form-classification-mode__hint">
-              {lang === 'he'
-                ? 'בחר סוג מיון לדוח: מיון מלא אם כל האתרוגים מהקטיף מוינו ומעודכנים בטופס הזה, או מיון חלקי לפי נתונים זמינים.'
-                : 'Choose the sorting mode for this record: full for the whole harvest or partial for available data.'}
-            </p>
+          <fieldset className="harvest-bulk-form-classification-mode" aria-label={form.classificationModeLabel}>
+            <legend>{form.classificationModeLabel}</legend>
+            <p className="harvest-bulk-form-classification-mode__hint">{form.classificationModeHint}</p>
             <label>
               <input
                 type="radio"
@@ -186,7 +183,7 @@ export function HarvestBulkFormModal({
                 checked={!harvestFormIsPartialClassification}
                 onChange={() => onPartialClassificationChange(false)}
               />
-              <span>{lang === 'he' ? 'מיון מלא' : 'Full sorting'}</span>
+              <span>{form.fullSorting}</span>
             </label>
             <label>
               <input
@@ -195,7 +192,7 @@ export function HarvestBulkFormModal({
                 checked={harvestFormIsPartialClassification}
                 onChange={() => onPartialClassificationChange(true)}
               />
-              <span>{lang === 'he' ? 'מיון חלקי' : 'Partial sorting'}</span>
+              <span>{form.partialSorting}</span>
             </label>
           </fieldset>
 
@@ -204,16 +201,16 @@ export function HarvestBulkFormModal({
             rows={1}
             value={harvestFormNotes}
             onChange={(event) => onNotesChange(event.target.value, event.currentTarget)}
-            placeholder={lang === 'he' ? 'הערות קטיף' : 'Harvest notes'}
-            aria-label={lang === 'he' ? 'הערות קטיף' : 'Harvest notes'}
+            placeholder={form.notesPlaceholder}
+            aria-label={form.notesLabel}
           />
         </div>
 
         <div className="harvest-bulk-form-classifications">
           <div className="harvest-bulk-form-classifications__header">
-            <h4>{lang === 'he' ? 'שורות מיון' : 'Sorting rows'}</h4>
+            <h4>{form.sortingRowsTitle}</h4>
             <button type="button" className="btn btn-success" onClick={onAddClassificationDraft}>
-              {lang === 'he' ? 'הוספת שורת מיון' : 'Add sorting row'}
+              {form.addSortingRow}
             </button>
           </div>
 
@@ -225,14 +222,14 @@ export function HarvestBulkFormModal({
             return (
               <div key={draft.id} className="harvest-bulk-form-classification-row">
                 <div className="harvest-bulk-form-classification-row__head">
-                  <strong>{lang === 'he' ? `מיון ${index + 1}` : `Sorting ${index + 1}`}</strong>
+                  <strong>{form.sortingRowPrefix(index)}</strong>
                   <button
                     type="button"
                     className="btn btn-danger"
                     onClick={() => onRemoveClassificationDraft(draft.id)}
                     disabled={harvestFormClassifications.length <= 1}
                   >
-                    {lang === 'he' ? 'מחיקה' : 'Remove'}
+                    {form.removeSortingRow}
                   </button>
                 </div>
 
@@ -246,9 +243,9 @@ export function HarvestBulkFormModal({
                       })
                     }
                   >
-                    <option value="GENERAL">{lang === 'he' ? 'כללי' : 'General'}</option>
-                    <option value="TRADER">{lang === 'he' ? 'סוחר' : 'Trader'}</option>
-                    <option value="CUSTOMER">{lang === 'he' ? 'לקוח' : 'Customer'}</option>
+                    <option value="GENERAL">{form.assignmentOptions.general}</option>
+                    <option value="TRADER">{form.assignmentOptions.trader}</option>
+                    <option value="CUSTOMER">{form.assignmentOptions.customer}</option>
                   </select>
 
                   {draft.assignmentType === 'GENERAL' || draft.assignmentType === 'TRADER' ? (
@@ -257,7 +254,7 @@ export function HarvestBulkFormModal({
                       value={draft.traderCategoryId}
                       onChange={(event) => onUpdateClassificationDraft(draft.id, { traderCategoryId: event.target.value })}
                     >
-                      <option value="">{lang === 'he' ? 'בחר קטגוריית סוחר' : 'Select trader category'}</option>
+                      <option value="">{form.traderCategoryPlaceholder}</option>
                       {harvestFormTraderCategories.map((category) => (
                         <option key={`harvest-form-trader-category-${category.id}`} value={String(category.id)}>
                           {category.name}
@@ -272,7 +269,7 @@ export function HarvestBulkFormModal({
                       value={draft.traderId}
                       onChange={(event) => onUpdateClassificationDraft(draft.id, { traderId: event.target.value })}
                     >
-                      <option value="">{lang === 'he' ? 'בחר סוחר' : 'Select trader'}</option>
+                      <option value="">{form.traderPlaceholder}</option>
                       {traders.map((trader) => (
                         <option key={`harvest-form-trader-${trader.id}`} value={String(trader.id)}>
                           {trader.name}
@@ -288,7 +285,7 @@ export function HarvestBulkFormModal({
                         value={draft.customerId}
                         onChange={(event) => onUpdateClassificationDraft(draft.id, { customerId: event.target.value })}
                       >
-                        <option value="">{lang === 'he' ? 'בחר לקוח' : 'Select customer'}</option>
+                        <option value="">{form.customerPlaceholder}</option>
                         {customers.map((customer) => (
                           <option key={`harvest-form-customer-${customer.id}`} value={String(customer.id)}>
                             {customer.customerName}
@@ -302,7 +299,7 @@ export function HarvestBulkFormModal({
                         onChange={(event) => onUpdateClassificationDraft(draft.id, { customerCategoryId: event.target.value })}
                         disabled={!draft.customerId}
                       >
-                        <option value="">{lang === 'he' ? 'בחר קטגוריית לקוח' : 'Select customer category'}</option>
+                        <option value="">{form.customerCategoryPlaceholder}</option>
                         {availableCustomerCategories.map((category) => (
                           <option key={`harvest-form-customer-category-${category.id}`} value={String(category.id)}>
                             {`${category.name} (${category.grade})`}
@@ -316,7 +313,7 @@ export function HarvestBulkFormModal({
                       type="text"
                       value={draft.grade}
                       onChange={(event) => onUpdateClassificationDraft(draft.id, { grade: event.target.value })}
-                      placeholder={lang === 'he' ? 'דרגה (אופציונלי)' : 'Grade (optional)'}
+                      placeholder={form.gradePlaceholder}
                     />
                   )}
 
@@ -329,9 +326,9 @@ export function HarvestBulkFormModal({
                       })
                     }
                   >
-                    <option value="WITH_PITAM">{lang === 'he' ? 'פיטם' : 'With pitam'}</option>
-                    <option value="WITHOUT_PITAM">{lang === 'he' ? 'בל"פ' : 'Without pitam'}</option>
-                    <option value="MIXED">{lang === 'he' ? 'מעורב' : 'Mixed'}</option>
+                    <option value="WITH_PITAM">{form.pitamOptions.withPitam}</option>
+                    <option value="WITHOUT_PITAM">{form.pitamOptions.withoutPitam}</option>
+                    <option value="MIXED">{form.pitamOptions.mixed}</option>
                   </select>
 
                   <input
@@ -340,7 +337,7 @@ export function HarvestBulkFormModal({
                     min="1"
                     value={draft.quantity}
                     onChange={(event) => onUpdateClassificationDraft(draft.id, { quantity: event.target.value })}
-                    placeholder={lang === 'he' ? 'כמות' : 'Quantity'}
+                    placeholder={form.quantityPlaceholder}
                   />
 
                   <input
@@ -348,7 +345,7 @@ export function HarvestBulkFormModal({
                     type="text"
                     value={draft.notes}
                     onChange={(event) => onUpdateClassificationDraft(draft.id, { notes: event.target.value })}
-                    placeholder={lang === 'he' ? 'הערות מיון' : 'Sorting notes'}
+                    placeholder={form.sortingNotesPlaceholder}
                   />
                 </div>
               </div>
@@ -360,16 +357,10 @@ export function HarvestBulkFormModal({
 
         <div className="modal-actions">
           <button className="btn btn-danger" onClick={onClose} type="button" disabled={isSubmittingHarvestForm}>
-            {lang === 'he' ? 'ביטול' : 'Cancel'}
+            {form.cancel}
           </button>
           <button className="btn btn-success" onClick={onSubmit} type="button" disabled={isSubmittingHarvestForm}>
-            {isSubmittingHarvestForm
-              ? lang === 'he'
-                ? 'שומר...'
-                : 'Saving...'
-              : lang === 'he'
-                ? 'שמירת קטיף'
-                : 'Save harvest'}
+            {isSubmittingHarvestForm ? form.saving : form.save}
           </button>
         </div>
       </div>

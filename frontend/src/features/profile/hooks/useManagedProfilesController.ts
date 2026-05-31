@@ -32,6 +32,7 @@ export function useManagedProfilesController({
 
   const actions = useManagedProfilesActions({
     lang,
+    t,
     profile,
     setProfile,
     selectedManagedProfileId: data.selectedManagedProfileId,

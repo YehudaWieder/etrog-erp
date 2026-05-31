@@ -39,7 +39,7 @@ export function EditMyProfileModal({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <section className="modal-dialog modal-dialog--form" onClick={(event) => event.stopPropagation()} aria-label={t.editProfile.title}>
-        <button className="modal-close" type="button" aria-label={lang === 'he' ? 'סגירה' : 'Close'} onClick={onClose}>
+        <button className="modal-close" type="button" aria-label={t.editProfile.closeButtonLabel} onClick={onClose}>
           <FaXmark />
         </button>
         <h2 className="modal-title">{t.editProfile.title}</h2>
@@ -113,7 +113,7 @@ export function EditMyProfileModal({
 
         <div className="modal-actions">
           <button className="btn" type="button" onClick={onClose} disabled={isUpdatingProfile || isDeletingProfile}>
-            {lang === 'he' ? 'ביטול' : 'Cancel'}
+            {t.common.cancel}
           </button>
           <button className="btn btn-primary" type="button" onClick={onUpdate} disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}>
             <FaFloppyDisk />

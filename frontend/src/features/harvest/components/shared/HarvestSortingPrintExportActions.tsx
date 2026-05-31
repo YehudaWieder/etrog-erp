@@ -1,7 +1,11 @@
 import { FaFileArrowDown, FaPrint } from 'react-icons/fa6';
 
+import type { HarvestI18n } from '../../i18n';
+
 type HarvestSortingPrintExportActionsProps = {
   lang: 'he' | 'en';
+  tableActionsLabel: string;
+  t: HarvestI18n['sortingDailyDetails']['actions'];
   onPrintSummary: () => void;
   onExportSummary: () => void;
   onExportExpanded: () => void;
@@ -12,6 +16,8 @@ type HarvestSortingPrintExportActionsProps = {
 
 export function HarvestSortingPrintExportActions({
   lang,
+  tableActionsLabel,
+  t,
   onPrintSummary,
   onExportSummary,
   onExportExpanded,
@@ -20,13 +26,13 @@ export function HarvestSortingPrintExportActions({
   onScheduleMenuClose,
 }: HarvestSortingPrintExportActionsProps): JSX.Element {
   return (
-    <div className="global-filters-bar__icon-actions" aria-label={lang === 'he' ? 'פעולות טבלה' : 'Table actions'}>
+    <div className="global-filters-bar__icon-actions" aria-label={tableActionsLabel}>
       <button
         type="button"
         className="global-filters-bar__icon-btn"
         onClick={onPrintSummary}
-        aria-label={lang === 'he' ? 'הדפסת טבלת המיון היומי' : 'Print daily sorting table'}
-        title={lang === 'he' ? 'הדפסה' : 'Print'}
+        aria-label={t.printTableAriaLabel}
+        title={t.printTitle}
       >
         <FaPrint />
       </button>
@@ -40,8 +46,8 @@ export function HarvestSortingPrintExportActions({
       >
         <summary
           className="global-filters-bar__icon-btn"
-          aria-label={lang === 'he' ? 'יצוא טבלת המיון היומי לאקסל' : 'Export daily sorting table to Excel'}
-          title={lang === 'he' ? 'יצוא לאקסל' : 'Export to Excel'}
+          aria-label={t.exportTableAriaLabel}
+          title={t.exportTitle}
         >
           <FaFileArrowDown />
         </summary>
@@ -54,7 +60,7 @@ export function HarvestSortingPrintExportActions({
               onExportSummary();
             }}
           >
-            {lang === 'he' ? 'הורדה רגילה' : 'Standard download'}
+            {t.standardDownload}
           </button>
           <button
             type="button"
@@ -64,7 +70,7 @@ export function HarvestSortingPrintExportActions({
               onExportExpanded();
             }}
           >
-            {lang === 'he' ? 'הורדה מורחבת' : 'Expanded download'}
+            {t.expandedDownload}
           </button>
         </div>
       </details>

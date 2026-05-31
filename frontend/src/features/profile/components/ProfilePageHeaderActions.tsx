@@ -72,7 +72,7 @@ export function ProfilePageHeaderActions({
             disabled={!selectedManagedProfileId || isLoadingProfilesList || isDeletingManagedProfile || isUpdatingManagedProfile}
           >
             <FaFloppyDisk />
-            <span>{lang === 'he' ? 'עדכון פרופיל נבחר' : 'Update Selected Profile'}</span>
+            <span>{t.profilesList.selectedUpdate}</span>
           </button>
           <button
             className="settings-seasons-header-btn settings-seasons-header-btn--danger"
@@ -81,7 +81,7 @@ export function ProfilePageHeaderActions({
             disabled={!selectedManagedProfileId || isLoadingProfilesList || isDeletingManagedProfile}
           >
             <FaTrashCan />
-            <span>{lang === 'he' ? 'מחיקת פרופיל נבחר' : 'Delete Selected Profile'}</span>
+            <span>{t.profilesList.selectedDelete}</span>
           </button>
         </div>
       ) : null}
