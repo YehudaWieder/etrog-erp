@@ -3,16 +3,15 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { TradersCatService } from '../../services/traders-cat/traders-cat.service';
-import { Prisma, Role } from '@prisma/client';
+import { TraderCatShareService } from '../../services/traders-cat-share/traders-cat-share.service';
+import { Role } from '@prisma/client';
 import { Roles } from 'src/authorization/decorators/roles.decorator';
 import type { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
-import {
-  TradersCategoryUpdateSwaggerDto,
-  CreateTraderCategoryWithSharesSwaggerDto,
-  UpdateTraderCategoryWithSharesSwaggerDto,
-  TraderCategoryWithSharesResponseSwaggerDto,
-} from 'src/docs/dto/swagger-enums.dto';
+import { CreateTraderCategoryDto } from 'src/categories/services/traders-cat/dto/create-trader-category.dto';
+import { UpdateTraderCategoryDto } from 'src/categories/services/traders-cat/dto/update-trader-category.dto';
+import { CreateTraderCategoryWithSharesDto } from 'src/categories/services/traders-cat-share/dto/create-trader-category-with-shares.dto';
+import { UpdateTraderCategoryWithSharesDto } from 'src/categories/services/traders-cat-share/dto/update-trader-category-with-shares.dto';
 
 @ApiTags('Categories')
 @ApiBearerAuth('access-token')
@@ -21,7 +20,10 @@ import {
 @Roles(Role.OWNER, Role.MANAGER)
 @Controller('traders-categories')
 export class TradersCatController {
-  constructor(private readonly tradersCatService: TradersCatService) {}
+  constructor(
+    private readonly tradersCatService: TradersCatService,
+    private readonly traderCatShareService: TraderCatShareService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new trader category for the active season. Unique constraint: [name, seasonId].' })
@@ -41,22 +43,40 @@ export class TradersCatController {
   })
   @ApiResponse({ status: 201, description: 'Trader category created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate category name within the season.' })
-  create(
-    @Body('name') name: string,
-    @Body('notes') notes?: string,
-  ) {
-    return this.tradersCatService.create(name, notes);
+  create(@Body() dto: CreateTraderCategoryDto) {
+    return this.tradersCatService.create(dto);
   }
 
   @Post('with-shares')
   @ApiOperation({ summary: 'Create a trader category for a selected season with full trader distribution (total must equal 100%).' })
-  @ApiBody({ type: CreateTraderCategoryWithSharesSwaggerDto })
-  @ApiResponse({ status: 201, description: 'Trader category with shares created successfully.', type: TraderCategoryWithSharesResponseSwaggerDto })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['seasonId', 'name', 'shares'],
+      properties: {
+        seasonId: { type: 'number', example: 1 },
+        name: { type: 'string', example: 'Yanover Premium' },
+        notes: { type: 'string', nullable: true, example: 'Large-size export category' },
+        shares: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['traderId', 'percent'],
+            properties: {
+              traderId: { type: 'number', example: 3 },
+              percent: { type: 'number', example: 35.5 },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Trader category with shares created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid category or shares payload.' })
   @ApiResponse({ status: 404, description: 'Season or one or more traders not found.' })
   @ApiResponse({ status: 409, description: 'Category already exists in this season.' })
-  createWithShares(@Body() dto: CreateTraderCategoryWithSharesSwaggerDto) {
-    return this.tradersCatService.createWithShares(dto);
+  createWithShares(@Body() dto: CreateTraderCategoryWithSharesDto) {
+    return this.traderCatShareService.createWithShares(dto);
   }
 
   @Get()
@@ -73,10 +93,10 @@ export class TradersCatController {
   @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
   @ApiOperation({ summary: 'Retrieve trader categories with full shares for a selected season.' })
   @ApiQuery({ name: 'seasonId', type: Number, description: 'The season ID to load category shares from.' })
-  @ApiResponse({ status: 200, description: 'Trader categories with shares returned successfully.', type: [TraderCategoryWithSharesResponseSwaggerDto] })
+  @ApiResponse({ status: 200, description: 'Trader categories with shares returned successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid or missing seasonId query parameter.' })
   findAllWithShares(@Query('seasonId', ParseIntPipe) seasonId: number) {
-    return this.tradersCatService.findAllWithSharesBySeason(seasonId);
+    return this.traderCatShareService.findAllWithSharesBySeason(seasonId);
   }
 
   @Get('by-name')
@@ -107,7 +127,15 @@ export class TradersCatController {
   @Patch()
   @ApiOperation({ summary: 'Update a trader category by ID' })
   @ApiBody({
-    type: TradersCategoryUpdateSwaggerDto,
+    schema: {
+      type: 'object',
+      required: ['id'],
+      properties: {
+        id: { type: 'number', example: 1 },
+        name: { type: 'string', example: 'Yanover Premium Updated' },
+        notes: { type: 'string', nullable: true, example: 'Adjusted classification notes' },
+      },
+    },
     examples: {
       sample: {
         summary: 'Update a trader category by ID',
@@ -122,22 +150,41 @@ export class TradersCatController {
   @ApiResponse({ status: 200, description: 'Trader category updated successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Trader category not found.' })
-  update(
-    @Body() updateData: TradersCategoryUpdateSwaggerDto,
-  ) {
+  update(@Body() updateData: UpdateTraderCategoryDto) {
     const { id, ...data } = updateData;
-    return this.tradersCatService.update(id, data as Partial<Prisma.TradersCategoriesUpdateInput>);
+    return this.tradersCatService.update(id, data);
   }
 
   @Patch('with-shares')
   @ApiOperation({ summary: 'Update trader category details and replace full trader distribution (total must equal 100%).' })
-  @ApiBody({ type: UpdateTraderCategoryWithSharesSwaggerDto })
-  @ApiResponse({ status: 200, description: 'Trader category with shares updated successfully.', type: TraderCategoryWithSharesResponseSwaggerDto })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['id', 'shares'],
+      properties: {
+        id: { type: 'number', example: 1 },
+        name: { type: 'string', example: 'Yanover Premium Updated' },
+        notes: { type: 'string', nullable: true, example: 'Adjusted notes' },
+        shares: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['traderId', 'percent'],
+            properties: {
+              traderId: { type: 'number', example: 3 },
+              percent: { type: 'number', example: 42 },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Trader category with shares updated successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid category or shares payload.' })
   @ApiResponse({ status: 404, description: 'Category or one or more traders not found.' })
   @ApiResponse({ status: 409, description: 'Category already exists in this season.' })
-  updateWithShares(@Body() dto: UpdateTraderCategoryWithSharesSwaggerDto) {
-    return this.tradersCatService.updateWithShares(dto);
+  updateWithShares(@Body() dto: UpdateTraderCategoryWithSharesDto) {
+    return this.traderCatShareService.updateWithShares(dto);
   }
 
   @Delete(':id')

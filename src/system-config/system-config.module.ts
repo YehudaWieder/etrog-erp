@@ -4,7 +4,6 @@ import { SystemConfigService } from './services/config/config.service';
 import { SystemConfigController } from './controllers/config/config.controller';
 import { FieldService } from './services/fields/fields.service';
 import { FieldController } from './controllers/fields/fields.controller';
-import { ConfigService } from './system-config.service';
 import { SeedService } from './services/seed/seed.service';
 import { DefaultTraderCategoryService } from './services/default-trader-category/default-trader-category.service';
 import { DefaultTraderCategoryController } from './controllers/default-trader-category/default-trader-category.controller';
@@ -17,7 +16,6 @@ import { DefaultTraderCategoryController } from './controllers/default-trader-ca
   ],
   providers: [
     SystemConfigService,
-    ConfigService,
     FieldService,
     SeedService,
     DefaultTraderCategoryService,

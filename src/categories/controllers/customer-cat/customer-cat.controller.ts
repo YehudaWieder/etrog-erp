@@ -1,10 +1,11 @@
 // src/categories/controllers/customer-cat/customer-cat.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query, Req } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseEnumPipe, ParseIntPipe, Query, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
-import { CustomerCatService } from 'src/categories/services/customrs-cat/customrs-cat.service';
-import { Prisma, Grade, Currency, Role } from '@prisma/client';
-import { CustomerCategorySwaggerDto, CustomerCategoryUpdateSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+import { CustomerCatService } from 'src/categories/services/customer-cat/customer-cat.service';
+import { Grade, Currency, Role } from '@prisma/client';
+import { SetCustomerCategoryPriceDto } from 'src/categories/services/customer-cat/dto/set-customer-category-price.dto';
+import { UpdateCustomerCategoryDto } from 'src/categories/services/customer-cat/dto/update-customer-category.dto';
 import type { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { Roles } from 'src/authorization/decorators/roles.decorator';
@@ -20,17 +21,23 @@ export class CustomerCatController {
 
   @Post()
   @ApiOperation({ summary: 'Create or update a customer category with its price for a season. Unique constraint: [seasonId, customerId, name, grade].' })
-  @ApiBody({ type: CustomerCategorySwaggerDto })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['seasonId', 'customerId', 'name', 'grade'],
+      properties: {
+        seasonId: { type: 'number', example: 1 },
+        customerId: { type: 'number', example: 15 },
+        name: { type: 'string', example: 'Yanover' },
+        grade: { type: 'string', enum: Object.values(Grade) },
+        price: { type: 'number', example: 125.5 },
+        currency: { type: 'string', enum: Object.values(Currency), example: Currency.ILS },
+      },
+    },
+  })
   @ApiResponse({ status: 201, description: 'Customer category and price set successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate category for this customer and season.' })
-  setCustomerCategoryAndPrice(@Body() data: { 
-    seasonId: number; 
-    customerId: number; 
-    name: string; 
-    grade: any; 
-    price?: number; 
-    currency?: Currency 
-  }, @Req() req: Request) {
+  setCustomerCategoryAndPrice(@Body() data: SetCustomerCategoryPriceDto, @Req() req: Request) {
     return this.customerCatService.setPrice(data, req.user as AuthenticatedUser);
   }
 
@@ -62,7 +69,7 @@ export class CustomerCatController {
     @Query('customerId', ParseIntPipe) customerId: number,
     @Query('seasonId', ParseIntPipe) seasonId: number,
     @Query('name') name: string,
-    @Query('grade') grade: any,
+    @Query('grade', new ParseEnumPipe(Grade)) grade: Grade,
     @Req() req: Request,
   ) {
     return this.customerCatService.findByCustomerAndNameGrade(customerId, seasonId, name, grade, req.user as AuthenticatedUser);
@@ -91,7 +98,19 @@ export class CustomerCatController {
   @Patch()
   @ApiOperation({ summary: 'Update a customer category record by ID' })
   @ApiBody({
-    type: CustomerCategoryUpdateSwaggerDto,
+    schema: {
+      type: 'object',
+      required: ['id'],
+      properties: {
+        id: { type: 'number', example: 1 },
+        seasonId: { type: 'number', example: 2 },
+        customerId: { type: 'number', example: 15 },
+        name: { type: 'string', example: 'Yanover' },
+        grade: { type: 'string', enum: Object.values(Grade) },
+        price: { type: 'number', example: 125.5 },
+        currency: { type: 'string', enum: Object.values(Currency), example: Currency.ILS },
+      },
+    },
     examples: {
       sample: {
         summary: 'Update a customer category by ID',
@@ -110,12 +129,9 @@ export class CustomerCatController {
   @ApiResponse({ status: 200, description: 'Customer category updated successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Customer category not found.' })
-  update(
-    @Body() updateData: CustomerCategoryUpdateSwaggerDto,
-    @Req() req: Request,
-  ) {
+  update(@Body() updateData: UpdateCustomerCategoryDto, @Req() req: Request) {
     const { id, ...data } = updateData;
-    return this.customerCatService.update(id, data as Prisma.CustomerCategoriesUpdateInput, req.user as AuthenticatedUser);
+    return this.customerCatService.update(id, data, req.user as AuthenticatedUser);
   }
 
   @Delete(':id')

@@ -56,6 +56,32 @@ export type HarvestFieldReportDetailsRecord = HarvestFieldTotalsRecord & {
   rows: HarvestRecord[];
 };
 
+export type HarvestBulkClassificationPayload = {
+  assignmentType: 'GENERAL' | 'TRADER' | 'CUSTOMER';
+  traderId?: number;
+  customerId?: number;
+  traderCategoryId?: number;
+  customerCategoryId?: number;
+  grade?: string;
+  pitamStatus: 'WITH_PITAM' | 'WITHOUT_PITAM' | 'MIXED';
+  quantity: number;
+  notes?: string;
+};
+
+export type CreateHarvestWithClassificationsPayload = {
+  dateGregorian: string;
+  dateHebrew: string;
+  fieldId: number;
+  updatedById?: number;
+  totalHarvested?: number;
+  totalRejected?: number;
+  ownerHarvested?: number;
+  ownerRejected?: number;
+  notes?: string;
+  isPartialClassification?: boolean;
+  classifications: HarvestBulkClassificationPayload[];
+};
+
 export async function getHarvestsBySeason(seasonId: number): Promise<HarvestRecord[]> {
   return apiClient<HarvestRecord[]>(`/harvests?seasonId=${seasonId}`);
 }
@@ -69,4 +95,13 @@ export async function getHarvestFieldReportDetailsBySeasonAndField(
   fieldId: number,
 ): Promise<HarvestFieldReportDetailsRecord> {
   return apiClient<HarvestFieldReportDetailsRecord>(`/harvests/field-details?seasonId=${seasonId}&fieldId=${fieldId}`);
+}
+
+export async function createHarvestWithClassifications(
+  payload: CreateHarvestWithClassificationsPayload,
+): Promise<HarvestRecord> {
+  return apiClient<HarvestRecord>('/harvests/bulk-with-classifications', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }

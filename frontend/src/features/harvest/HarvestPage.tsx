@@ -17,9 +17,12 @@ import { getCurrentUser, isAuthenticated, logout } from '../../services/authServ
 import { getSeasons, type Season } from '../../services/seasonsApi';
 import { getFields, type Field } from '../../services/fieldsApi';
 import {
+  createHarvestWithClassifications,
   getHarvestFieldReportDetailsBySeasonAndField,
   getHarvestFieldTotalsBySeason,
   getHarvestsBySeason,
+  type CreateHarvestWithClassificationsPayload,
+  type HarvestBulkClassificationPayload,
   type HarvestFieldReportDetailsRecord,
   type HarvestRecord,
 } from '../../services/harvestsApi';
@@ -32,8 +35,9 @@ import {
 } from '../../services/classificationsApi';
 import { getTraders, type Trader } from '../../services/tradersApi';
 import { getCustomers, type Customer } from '../../services/customersApi';
+import { getCustomerCategoriesBySeason, type CustomerCategory } from '../../services/customerCategoriesApi';
 import { getDefaultTraderCategories } from '../../services/defaultTraderCategoriesApi';
-import { getTraderCategoriesWithShares } from '../../services/traderCategoriesApi';
+import { getTraderCategoriesWithShares, type TraderCategoryWithShares } from '../../services/traderCategoriesApi';
 import { setScopeFilter } from '../../store/globalFiltersSlice';
 import type { AppDispatch, RootState } from '../../store';
 import { HARVEST_I18N } from './i18n';
@@ -49,6 +53,19 @@ type SortingDailyNumericColumnKey = 'totalSorted' | `category:${string}`;
 type SortingAssignmentFilter = 'all' | 'trader' | 'customer' | `trader:${string}` | `customer:${string}`;
 type NumericSelectionScope = 'daily' | 'field-report' | 'sorting-daily';
 type NumericSelectableColumnKey = HarvestNumericColumnKey | FieldReportNumericColumnKey | SortingDailyNumericColumnKey;
+
+type HarvestFormClassificationDraft = {
+  id: string;
+  assignmentType: 'GENERAL' | 'TRADER' | 'CUSTOMER';
+  traderId: string;
+  customerId: string;
+  traderCategoryId: string;
+  customerCategoryId: string;
+  grade: string;
+  pitamStatus: 'WITH_PITAM' | 'WITHOUT_PITAM' | 'MIXED';
+  quantity: string;
+  notes: string;
+};
 
 type HarvestFieldReportRow = {
   id: number;
@@ -174,6 +191,22 @@ export function HarvestPage() {
   const visibleSortingDailyRowsRef = useRef<ClassificationDailySummaryRow[]>([]);
   const [isHarvestLoading, setIsHarvestLoading] = useState(false);
   const [harvestLoadError, setHarvestLoadError] = useState<string>('');
+  const [isHarvestFormOpen, setIsHarvestFormOpen] = useState(false);
+  const [isSubmittingHarvestForm, setIsSubmittingHarvestForm] = useState(false);
+  const [harvestFormError, setHarvestFormError] = useState<string>('');
+  const [harvestFormDateGregorian, setHarvestFormDateGregorian] = useState('');
+  const [harvestFormDateHebrew, setHarvestFormDateHebrew] = useState('');
+  const [harvestFormFieldId, setHarvestFormFieldId] = useState('');
+  const [harvestFormTotalHarvested, setHarvestFormTotalHarvested] = useState('');
+  const [harvestFormTotalRejected, setHarvestFormTotalRejected] = useState('');
+  const [harvestFormOwnerHarvested, setHarvestFormOwnerHarvested] = useState('');
+  const [harvestFormOwnerRejected, setHarvestFormOwnerRejected] = useState('');
+  const [harvestFormNotes, setHarvestFormNotes] = useState('');
+  const [harvestFormIsPartialClassification, setHarvestFormIsPartialClassification] = useState(false);
+  const [harvestFormClassifications, setHarvestFormClassifications] = useState<HarvestFormClassificationDraft[]>([]);
+  const [harvestFormTraderCategories, setHarvestFormTraderCategories] = useState<TraderCategoryWithShares[]>([]);
+  const [harvestFormCustomerCategories, setHarvestFormCustomerCategories] = useState<CustomerCategory[]>([]);
+  const classificationDraftCounterRef = useRef(1);
   const globalFilterValues = useSelector(
     (state: RootState) => state.globalFilters.scopes[HARVEST_DAILY_FILTER_SCOPE] ?? EMPTY_FILTERS,
   );
@@ -785,6 +818,470 @@ export function HarvestPage() {
       isMounted = false;
     };
   }, [isSortingDailyDetailsTab, seasonFilterId, t.sortingDailyDetails.loadError]);
+
+  const createEmptyHarvestClassificationDraft = (): HarvestFormClassificationDraft => {
+    const nextId = classificationDraftCounterRef.current;
+    classificationDraftCounterRef.current += 1;
+
+    return {
+      id: `draft-${nextId}`,
+      assignmentType: 'GENERAL',
+      traderId: '',
+      customerId: '',
+      traderCategoryId: '',
+      customerCategoryId: '',
+      grade: '',
+      pitamStatus: 'WITH_PITAM',
+      quantity: '',
+      notes: '',
+    };
+  };
+
+  const formatHebrewDateFromGregorianInput = (gregorianInput: string) => {
+    if (!gregorianInput) {
+      return '';
+    }
+
+    const hebrewCalendarFormatter = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+
+    const formatHebrewNumber = (value: number) => {
+      const normalizedValue = value >= 5000 ? value % 1000 : value;
+
+      if (normalizedValue <= 0) {
+        return String(value);
+      }
+
+      const parts: string[] = [];
+      let remaining = normalizedValue;
+
+      while (remaining >= 400) {
+        parts.push('ת');
+        remaining -= 400;
+      }
+
+      const hundreds = [
+        { value: 300, symbol: 'ש' },
+        { value: 200, symbol: 'ר' },
+        { value: 100, symbol: 'ק' },
+      ];
+
+      for (const { value: partValue, symbol } of hundreds) {
+        if (remaining >= partValue) {
+          parts.push(symbol);
+          remaining -= partValue;
+        }
+      }
+
+      if (remaining === 15) {
+        parts.push('טו');
+        remaining = 0;
+      } else if (remaining === 16) {
+        parts.push('טז');
+        remaining = 0;
+      }
+
+      const tens = [
+        { value: 90, symbol: 'צ' },
+        { value: 80, symbol: 'פ' },
+        { value: 70, symbol: 'ע' },
+        { value: 60, symbol: 'ס' },
+        { value: 50, symbol: 'נ' },
+        { value: 40, symbol: 'מ' },
+        { value: 30, symbol: 'ל' },
+        { value: 20, symbol: 'כ' },
+        { value: 10, symbol: 'י' },
+      ];
+
+      for (const { value: partValue, symbol } of tens) {
+        if (remaining >= partValue) {
+          parts.push(symbol);
+          remaining -= partValue;
+        }
+      }
+
+      const ones = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'];
+
+      if (remaining > 0) {
+        parts.push(ones[remaining - 1]);
+      }
+
+      return parts.join('');
+    };
+
+    const parsedDate = new Date(`${gregorianInput}T12:00:00`);
+    if (Number.isNaN(parsedDate.getTime())) {
+      return '';
+    }
+
+    const parts = hebrewCalendarFormatter.formatToParts(parsedDate);
+    const dayPart = parts.find((part) => part.type === 'day')?.value;
+    const monthPart = parts.find((part) => part.type === 'month')?.value;
+    const yearPart = parts.find((part) => part.type === 'year')?.value;
+
+    const dayNumber = dayPart ? Number(dayPart.replace(/\D/g, '')) : NaN;
+    const yearNumber = yearPart ? Number(yearPart.replace(/\D/g, '')) : NaN;
+
+    if (!monthPart || Number.isNaN(dayNumber) || Number.isNaN(yearNumber)) {
+      return hebrewCalendarFormatter.format(parsedDate);
+    }
+
+    return `${formatHebrewNumber(dayNumber)} ${monthPart} ${formatHebrewNumber(yearNumber)}`;
+  };
+
+  const handleHarvestGregorianDateChange = (nextGregorianDate: string) => {
+    setHarvestFormDateGregorian(nextGregorianDate);
+    setHarvestFormDateHebrew(formatHebrewDateFromGregorianInput(nextGregorianDate));
+  };
+
+  const handleHarvestNotesChange = (nextNotes: string, textareaElement: HTMLTextAreaElement) => {
+    setHarvestFormNotes(nextNotes);
+
+    textareaElement.style.height = 'auto';
+    textareaElement.style.height = `${Math.min(textareaElement.scrollHeight, 220)}px`;
+  };
+
+  const resetHarvestForm = () => {
+    setHarvestFormError('');
+    const localDate = new Date().toISOString().slice(0, 10);
+
+    setHarvestFormDateGregorian(localDate);
+    setHarvestFormDateHebrew(formatHebrewDateFromGregorianInput(localDate));
+    setHarvestFormFieldId(
+      fieldFilterId !== 'all' && Number(fieldFilterId) > 0
+        ? String(fieldFilterId)
+        : fields[0]
+          ? String(fields[0].id)
+          : '',
+    );
+    setHarvestFormTotalHarvested('');
+    setHarvestFormTotalRejected('');
+    setHarvestFormOwnerHarvested('');
+    setHarvestFormOwnerRejected('');
+    setHarvestFormNotes('');
+    setHarvestFormIsPartialClassification(false);
+    setHarvestFormClassifications([createEmptyHarvestClassificationDraft()]);
+  };
+
+  const openHarvestGlobalForm = () => {
+    resetHarvestForm();
+    setIsHarvestFormOpen(true);
+  };
+
+  const closeHarvestGlobalForm = () => {
+    if (isSubmittingHarvestForm) {
+      return;
+    }
+
+    setIsHarvestFormOpen(false);
+    setHarvestFormError('');
+  };
+
+  const addHarvestClassificationDraft = () => {
+    setHarvestFormClassifications((previous) => [...previous, createEmptyHarvestClassificationDraft()]);
+  };
+
+  const removeHarvestClassificationDraft = (draftId: string) => {
+    setHarvestFormClassifications((previous) => {
+      if (previous.length <= 1) {
+        return previous;
+      }
+
+      return previous.filter((draft) => draft.id !== draftId);
+    });
+  };
+
+  const updateHarvestClassificationDraft = (
+    draftId: string,
+    updater: Partial<HarvestFormClassificationDraft>,
+  ) => {
+    setHarvestFormClassifications((previous) =>
+      previous.map((draft) => {
+        if (draft.id !== draftId) {
+          return draft;
+        }
+
+        const nextDraft = {
+          ...draft,
+          ...updater,
+        };
+
+        if (updater.assignmentType === 'GENERAL') {
+          nextDraft.traderId = '';
+          nextDraft.customerId = '';
+          nextDraft.customerCategoryId = '';
+        }
+
+        if (updater.assignmentType === 'TRADER') {
+          nextDraft.customerId = '';
+          nextDraft.customerCategoryId = '';
+        }
+
+        if (updater.assignmentType === 'CUSTOMER') {
+          nextDraft.traderId = '';
+          nextDraft.traderCategoryId = '';
+          nextDraft.grade = '';
+        }
+
+        if (updater.customerId !== undefined) {
+          nextDraft.customerCategoryId = '';
+        }
+
+        return nextDraft;
+      }),
+    );
+  };
+
+  useEffect(() => {
+    if (!isHarvestFormOpen || !seasonFilterId) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadHarvestFormCategories = async () => {
+      try {
+        const [traderCategories, customerCategories] = await Promise.all([
+          getTraderCategoriesWithShares(seasonFilterId),
+          getCustomerCategoriesBySeason(seasonFilterId),
+        ]);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setHarvestFormTraderCategories(traderCategories);
+        setHarvestFormCustomerCategories(customerCategories);
+      } catch {
+        if (!isMounted) {
+          return;
+        }
+
+        setHarvestFormTraderCategories([]);
+        setHarvestFormCustomerCategories([]);
+      }
+    };
+
+    void loadHarvestFormCategories();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isHarvestFormOpen, seasonFilterId]);
+
+  const refreshHarvestWorkspaceData = async () => {
+    if (!seasonFilterId) {
+      return;
+    }
+
+    const [records, fieldTotals] = await Promise.all([
+      getHarvestsBySeason(seasonFilterId),
+      getHarvestFieldTotalsBySeason(seasonFilterId),
+    ]);
+
+    setHarvestRows(records);
+    setFieldReportRows(
+      fieldTotals.map((row) => ({
+        id: row.fieldId,
+        fieldName: row.fieldName,
+        recordCount: row.recordCount,
+        totalHarvested: row.totalHarvested,
+        totalRejected: row.totalRejected,
+        totalAfterRejected: row.totalAfterRejected,
+        classifiedTotal: row.classifiedTotal,
+        rejectionRate: row.rejectionRate,
+        ownerHarvested: row.ownerHarvested,
+        ownerRejected: row.ownerRejected,
+        ownerAfterRejected: row.ownerAfterRejected,
+        ownerRejectionRate: row.ownerRejectionRate,
+        differenceHarvested: row.differenceHarvested,
+        differenceRejected: row.differenceRejected,
+        differenceAfterRejected: row.differenceAfterRejected,
+        differenceRejectionRate: row.differenceRejectionRate,
+        hasOwnerOverrides: row.hasOwnerOverrides,
+        isPartialClassification: row.isPartialClassification,
+      })),
+    );
+
+    try {
+      const sortingSummary = await getClassificationDailySummaryBySeason(seasonFilterId);
+      setSortingDailyRows(sortingSummary.rows);
+      setSortingDailyCategories(sortingSummary.categories);
+      setSortingDailyLoadError('');
+    } catch {
+      // Keep current sorting summary when refresh fallback endpoint fails.
+    }
+  };
+
+  const handleSubmitHarvestGlobalForm = async () => {
+    const trimmedHebrewDate = harvestFormDateHebrew.trim();
+    const parsedFieldId = Number(harvestFormFieldId);
+    const parsedGregorianDate = new Date(`${harvestFormDateGregorian}T00:00:00.000Z`);
+
+    if (!seasonFilterId) {
+      setHarvestFormError(lang === 'he' ? 'יש לבחור עונה לפני פתיחת טופס הקטיף.' : 'Select a season before creating a harvest.');
+      return;
+    }
+
+    if (!Number.isFinite(parsedFieldId) || parsedFieldId <= 0) {
+      setHarvestFormError(lang === 'he' ? 'יש לבחור שדה.' : 'Please select a field.');
+      return;
+    }
+
+    if (!harvestFormDateGregorian || Number.isNaN(parsedGregorianDate.getTime())) {
+      setHarvestFormError(lang === 'he' ? 'יש להזין תאריך לועזי תקין.' : 'Please provide a valid Gregorian date.');
+      return;
+    }
+
+    if (!trimmedHebrewDate) {
+      setHarvestFormError(lang === 'he' ? 'יש להזין תאריך עברי.' : 'Please provide the Hebrew date.');
+      return;
+    }
+
+    if (harvestFormClassifications.length < 1) {
+      setHarvestFormError(lang === 'he' ? 'יש להוסיף לפחות שורת מיון אחת.' : 'At least one sorting row is required.');
+      return;
+    }
+
+    const parsedClassifications: HarvestBulkClassificationPayload[] = [];
+
+    for (const [index, draft] of harvestFormClassifications.entries()) {
+      const rowNumber = index + 1;
+      const quantity = Number(draft.quantity);
+
+      if (!Number.isFinite(quantity) || quantity <= 0) {
+        setHarvestFormError(
+          lang === 'he'
+            ? `בשורת מיון ${rowNumber} חייבת להיות כמות גדולה מאפס.`
+            : `Sorting row ${rowNumber} must include a quantity greater than zero.`,
+        );
+        return;
+      }
+
+      const classificationPayload: HarvestBulkClassificationPayload = {
+        assignmentType: draft.assignmentType,
+        pitamStatus: draft.pitamStatus,
+        quantity,
+      };
+
+      if (draft.notes.trim()) {
+        classificationPayload.notes = draft.notes.trim();
+      }
+
+      if (draft.assignmentType === 'GENERAL' || draft.assignmentType === 'TRADER') {
+        const traderCategoryId = Number(draft.traderCategoryId);
+        if (!Number.isFinite(traderCategoryId) || traderCategoryId <= 0) {
+          setHarvestFormError(
+            lang === 'he'
+              ? `בשורת מיון ${rowNumber} יש לבחור קטגוריית סוחר.`
+              : `Sorting row ${rowNumber} must include a trader category.`,
+          );
+          return;
+        }
+
+        classificationPayload.traderCategoryId = traderCategoryId;
+
+        if (draft.grade.trim()) {
+          classificationPayload.grade = draft.grade.trim();
+        }
+      }
+
+      if (draft.assignmentType === 'TRADER') {
+        const traderId = Number(draft.traderId);
+        if (!Number.isFinite(traderId) || traderId <= 0) {
+          setHarvestFormError(
+            lang === 'he'
+              ? `בשורת מיון ${rowNumber} יש לבחור סוחר.`
+              : `Sorting row ${rowNumber} must include a trader.`,
+          );
+          return;
+        }
+
+        classificationPayload.traderId = traderId;
+      }
+
+      if (draft.assignmentType === 'CUSTOMER') {
+        const customerId = Number(draft.customerId);
+        const customerCategoryId = Number(draft.customerCategoryId);
+
+        if (!Number.isFinite(customerId) || customerId <= 0) {
+          setHarvestFormError(
+            lang === 'he'
+              ? `בשורת מיון ${rowNumber} יש לבחור לקוח.`
+              : `Sorting row ${rowNumber} must include a customer.`,
+          );
+          return;
+        }
+
+        if (!Number.isFinite(customerCategoryId) || customerCategoryId <= 0) {
+          setHarvestFormError(
+            lang === 'he'
+              ? `בשורת מיון ${rowNumber} יש לבחור קטגוריית לקוח.`
+              : `Sorting row ${rowNumber} must include a customer category.`,
+          );
+          return;
+        }
+
+        classificationPayload.customerId = customerId;
+        classificationPayload.customerCategoryId = customerCategoryId;
+      }
+
+      parsedClassifications.push(classificationPayload);
+    }
+
+    const payload: CreateHarvestWithClassificationsPayload = {
+      dateGregorian: parsedGregorianDate.toISOString(),
+      dateHebrew: trimmedHebrewDate,
+      fieldId: parsedFieldId,
+      updatedById: currentUser?.id,
+      isPartialClassification: harvestFormIsPartialClassification,
+      classifications: parsedClassifications,
+    };
+
+    const totalHarvested = Number(harvestFormTotalHarvested);
+    if (Number.isFinite(totalHarvested) && totalHarvested >= 0) {
+      payload.totalHarvested = totalHarvested;
+    }
+
+    const totalRejected = Number(harvestFormTotalRejected);
+    if (Number.isFinite(totalRejected) && totalRejected >= 0) {
+      payload.totalRejected = totalRejected;
+    }
+
+    const ownerHarvested = Number(harvestFormOwnerHarvested);
+    if (Number.isFinite(ownerHarvested) && ownerHarvested >= 0) {
+      payload.ownerHarvested = ownerHarvested;
+    }
+
+    const ownerRejected = Number(harvestFormOwnerRejected);
+    if (Number.isFinite(ownerRejected) && ownerRejected >= 0) {
+      payload.ownerRejected = ownerRejected;
+    }
+
+    if (harvestFormNotes.trim()) {
+      payload.notes = harvestFormNotes.trim();
+    }
+
+    setIsSubmittingHarvestForm(true);
+    setHarvestFormError('');
+
+    try {
+      await createHarvestWithClassifications(payload);
+      await refreshHarvestWorkspaceData();
+      setIsHarvestFormOpen(false);
+    } catch (error) {
+      if (error instanceof Error && error.message.trim()) {
+        setHarvestFormError(error.message);
+      } else {
+        setHarvestFormError(lang === 'he' ? 'שמירת הקטיף נכשלה. נסה שוב.' : 'Failed to save the harvest. Please try again.');
+      }
+    } finally {
+      setIsSubmittingHarvestForm(false);
+    }
+  };
 
   const formatGregorianDate = (value: string) => {
     const date = new Date(value);
@@ -3260,6 +3757,7 @@ export function HarvestPage() {
   ]);
 
   const addActionLabel = lang === 'he' ? 'הוסף קטיף' : 'Add Harvest';
+  const addSortingActionLabel = lang === 'he' ? 'הוספת מיון' : 'Add Sorting';
   const editActionLabel = lang === 'he' ? 'עריכה' : 'Edit';
   const deleteActionLabel = lang === 'he' ? 'מחיקה' : 'Delete';
 
@@ -3268,7 +3766,7 @@ export function HarvestPage() {
       <button
         type="button"
         className="settings-seasons-header-btn settings-seasons-header-btn--success"
-        onClick={() => void 0}
+        onClick={openHarvestGlobalForm}
         aria-label={addActionLabel}
       >
         <FaCirclePlus />
@@ -3300,11 +3798,43 @@ export function HarvestPage() {
       <button
         type="button"
         className="settings-seasons-header-btn settings-seasons-header-btn--success"
-        onClick={() => void 0}
+        onClick={openHarvestGlobalForm}
         aria-label={addActionLabel}
       >
         <FaCirclePlus />
         <span>{addActionLabel}</span>
+      </button>
+    </div>
+  ) : isSortingDailyDetailsTab ? (
+    <div className="settings-seasons-header-buttons">
+      <button
+        type="button"
+        className="settings-seasons-header-btn settings-seasons-header-btn--success"
+        onClick={openHarvestGlobalForm}
+        aria-label={addSortingActionLabel}
+      >
+        <FaCirclePlus />
+        <span>{addSortingActionLabel}</span>
+      </button>
+      <button
+        type="button"
+        className="settings-seasons-header-btn settings-seasons-header-btn--success"
+        onClick={() => void 0}
+        disabled={sortingDailyDetailsRowId === null}
+        aria-label={editActionLabel}
+      >
+        <FaPenToSquare />
+        <span>{editActionLabel}</span>
+      </button>
+      <button
+        type="button"
+        className="settings-seasons-header-btn settings-seasons-header-btn--danger"
+        onClick={() => void 0}
+        disabled={sortingDailyDetailsRowId === null}
+        aria-label={deleteActionLabel}
+      >
+        <FaTrashCan />
+        <span>{deleteActionLabel}</span>
       </button>
     </div>
   ) : null;
@@ -4412,6 +4942,311 @@ export function HarvestPage() {
           <p className="shipments-empty-desc">{content.description}</p>
         </section>
       )}
+
+      {isHarvestFormOpen ? (
+        <div className="modal-overlay" onClick={closeHarvestGlobalForm}>
+          <div
+            className="modal-dialog modal-dialog--form harvest-bulk-form-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={lang === 'he' ? 'טופס קטיף גלובאלי' : 'Global harvest form'}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button className="modal-close" type="button" aria-label={lang === 'he' ? 'סגירה' : 'Close'} onClick={closeHarvestGlobalForm}>
+              X
+            </button>
+
+            <h3 className="modal-title">{lang === 'he' ? 'הוספת קטיף ומיון' : 'Add Harvest and Sorting'}</h3>
+            <p className="modal-message">
+              {lang === 'he'
+                ? 'בטופס זה מזינים נתוני קטיף ומיון, ונדרשת לפחות שורת מיון אחת.'
+                : 'Use this form to enter harvest and sorting data. At least one sorting row is required.'}
+            </p>
+
+            <div className="management-form-grid harvest-bulk-form-grid harvest-bulk-form-grid--primary">
+              <select
+                className="seasons-manager__year-input"
+                value={harvestFormFieldId}
+                onChange={(event) => setHarvestFormFieldId(event.target.value)}
+                aria-label={lang === 'he' ? 'שדה' : 'Field'}
+              >
+                <option value="">{lang === 'he' ? 'בחר שדה' : 'Select field'}</option>
+                {fields.map((field) => (
+                  <option key={`harvest-form-field-${field.id}`} value={String(field.id)}>
+                    {field.name}
+                  </option>
+                ))}
+              </select>
+
+              <input
+                className="seasons-manager__year-input"
+                type="date"
+                value={harvestFormDateGregorian}
+                onChange={(event) => handleHarvestGregorianDateChange(event.target.value)}
+                aria-label={lang === 'he' ? 'תאריך לועזי' : 'Gregorian date'}
+              />
+
+              <input
+                className="seasons-manager__year-input"
+                type="text"
+                value={harvestFormDateHebrew}
+                onChange={(event) => setHarvestFormDateHebrew(event.target.value)}
+                placeholder={lang === 'he' ? 'תאריך עברי' : 'Hebrew date'}
+                aria-label={lang === 'he' ? 'תאריך עברי' : 'Hebrew date'}
+              />
+
+              <input
+                className="seasons-manager__year-input harvest-bulk-form-number-input harvest-bulk-form-number-input--first"
+                type="number"
+                min="0"
+                value={harvestFormTotalHarvested}
+                onChange={(event) => setHarvestFormTotalHarvested(event.target.value)}
+                placeholder={lang === 'he' ? 'סה"כ קטיף' : 'Total harvested'}
+                aria-label={lang === 'he' ? 'סה"כ קטיף' : 'Total harvested'}
+              />
+
+              <input
+                className="seasons-manager__year-input harvest-bulk-form-number-input"
+                type="number"
+                min="0"
+                value={harvestFormTotalRejected}
+                onChange={(event) => setHarvestFormTotalRejected(event.target.value)}
+                placeholder={lang === 'he' ? 'סה"כ פסולים' : 'Total rejected'}
+                aria-label={lang === 'he' ? 'סה"כ פסולים' : 'Total rejected'}
+              />
+
+              <input
+                className="seasons-manager__year-input harvest-bulk-form-number-input"
+                type="number"
+                min="0"
+                value={harvestFormOwnerHarvested}
+                onChange={(event) => setHarvestFormOwnerHarvested(event.target.value)}
+                placeholder={lang === 'he' ? 'קטיף פרנקו' : 'Franco harvested'}
+                aria-label={lang === 'he' ? 'קטיף בעלים' : 'Owner harvested'}
+              />
+
+              <input
+                className="seasons-manager__year-input harvest-bulk-form-number-input"
+                type="number"
+                min="0"
+                value={harvestFormOwnerRejected}
+                onChange={(event) => setHarvestFormOwnerRejected(event.target.value)}
+                placeholder={lang === 'he' ? 'פסולים פרנקו' : 'Franco rejected'}
+                aria-label={lang === 'he' ? 'פסולים בעלים' : 'Owner rejected'}
+              />
+
+              <fieldset className="harvest-bulk-form-classification-mode" aria-label={lang === 'he' ? 'סוג מיון' : 'Classification mode'}>
+                <legend>{lang === 'he' ? 'סוג מיון' : 'Classification mode'}</legend>
+                <p className="harvest-bulk-form-classification-mode__hint">
+                  {lang === 'he'
+                    ? 'בחר סוג מיון לדוח: מיון מלא אם כל האתרוגים מהקטיף מוינו ומעודכנים בטופס הזה, או מיון חלקי לפי נתונים זמינים.'
+                    : 'Choose the sorting mode for this record: full for the whole harvest or partial for available data.'}
+                </p>
+                <label>
+                  <input
+                    type="radio"
+                    name="harvest-classification-mode"
+                    checked={!harvestFormIsPartialClassification}
+                    onChange={() => setHarvestFormIsPartialClassification(false)}
+                  />
+                  <span>{lang === 'he' ? 'מיון מלא' : 'Full sorting'}</span>
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="harvest-classification-mode"
+                    checked={harvestFormIsPartialClassification}
+                    onChange={() => setHarvestFormIsPartialClassification(true)}
+                  />
+                  <span>{lang === 'he' ? 'מיון חלקי' : 'Partial sorting'}</span>
+                </label>
+              </fieldset>
+
+              <textarea
+                className="seasons-manager__year-input harvest-bulk-form-notes harvest-bulk-form-notes--with-mode"
+                rows={1}
+                value={harvestFormNotes}
+                onChange={(event) => handleHarvestNotesChange(event.target.value, event.currentTarget)}
+                placeholder={lang === 'he' ? 'הערות קטיף' : 'Harvest notes'}
+                aria-label={lang === 'he' ? 'הערות קטיף' : 'Harvest notes'}
+              />
+            </div>
+
+            <div className="harvest-bulk-form-classifications">
+              <div className="harvest-bulk-form-classifications__header">
+                <h4>{lang === 'he' ? 'שורות מיון' : 'Sorting rows'}</h4>
+                <button type="button" className="btn btn-success" onClick={addHarvestClassificationDraft}>
+                  {lang === 'he' ? 'הוספת שורת מיון' : 'Add sorting row'}
+                </button>
+              </div>
+
+              {harvestFormClassifications.map((draft, index) => {
+                const availableCustomerCategories = harvestFormCustomerCategories.filter(
+                  (category) => String(category.customerId) === draft.customerId,
+                );
+
+                return (
+                  <div key={draft.id} className="harvest-bulk-form-classification-row">
+                    <div className="harvest-bulk-form-classification-row__head">
+                      <strong>
+                        {lang === 'he' ? `מיון ${index + 1}` : `Sorting ${index + 1}`}
+                      </strong>
+                      <button
+                        type="button"
+                        className="btn btn-danger"
+                        onClick={() => removeHarvestClassificationDraft(draft.id)}
+                        disabled={harvestFormClassifications.length <= 1}
+                      >
+                        {lang === 'he' ? 'מחיקה' : 'Remove'}
+                      </button>
+                    </div>
+
+                    <div className="management-form-grid harvest-bulk-form-grid">
+                      <select
+                        className="seasons-manager__year-input"
+                        value={draft.assignmentType}
+                        onChange={(event) =>
+                          updateHarvestClassificationDraft(draft.id, {
+                            assignmentType: event.target.value as HarvestFormClassificationDraft['assignmentType'],
+                          })
+                        }
+                      >
+                        <option value="GENERAL">{lang === 'he' ? 'כללי' : 'General'}</option>
+                        <option value="TRADER">{lang === 'he' ? 'סוחר' : 'Trader'}</option>
+                        <option value="CUSTOMER">{lang === 'he' ? 'לקוח' : 'Customer'}</option>
+                      </select>
+
+                      {(draft.assignmentType === 'GENERAL' || draft.assignmentType === 'TRADER') ? (
+                        <select
+                          className="seasons-manager__year-input"
+                          value={draft.traderCategoryId}
+                          onChange={(event) => updateHarvestClassificationDraft(draft.id, { traderCategoryId: event.target.value })}
+                        >
+                          <option value="">{lang === 'he' ? 'בחר קטגוריית סוחר' : 'Select trader category'}</option>
+                          {harvestFormTraderCategories.map((category) => (
+                            <option key={`harvest-form-trader-category-${category.id}`} value={String(category.id)}>
+                              {category.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : null}
+
+                      {draft.assignmentType === 'TRADER' ? (
+                        <select
+                          className="seasons-manager__year-input"
+                          value={draft.traderId}
+                          onChange={(event) => updateHarvestClassificationDraft(draft.id, { traderId: event.target.value })}
+                        >
+                          <option value="">{lang === 'he' ? 'בחר סוחר' : 'Select trader'}</option>
+                          {traders.map((trader) => (
+                            <option key={`harvest-form-trader-${trader.id}`} value={String(trader.id)}>
+                              {trader.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : null}
+
+                      {draft.assignmentType === 'CUSTOMER' ? (
+                        <>
+                          <select
+                            className="seasons-manager__year-input"
+                            value={draft.customerId}
+                            onChange={(event) => updateHarvestClassificationDraft(draft.id, { customerId: event.target.value })}
+                          >
+                            <option value="">{lang === 'he' ? 'בחר לקוח' : 'Select customer'}</option>
+                            {customers.map((customer) => (
+                              <option key={`harvest-form-customer-${customer.id}`} value={String(customer.id)}>
+                                {customer.customerName}
+                              </option>
+                            ))}
+                          </select>
+
+                          <select
+                            className="seasons-manager__year-input"
+                            value={draft.customerCategoryId}
+                            onChange={(event) => updateHarvestClassificationDraft(draft.id, { customerCategoryId: event.target.value })}
+                            disabled={!draft.customerId}
+                          >
+                            <option value="">{lang === 'he' ? 'בחר קטגוריית לקוח' : 'Select customer category'}</option>
+                            {availableCustomerCategories.map((category) => (
+                              <option key={`harvest-form-customer-category-${category.id}`} value={String(category.id)}>
+                                {`${category.name} (${category.grade})`}
+                              </option>
+                            ))}
+                          </select>
+                        </>
+                      ) : (
+                        <input
+                          className="seasons-manager__year-input"
+                          type="text"
+                          value={draft.grade}
+                          onChange={(event) => updateHarvestClassificationDraft(draft.id, { grade: event.target.value })}
+                          placeholder={lang === 'he' ? 'דרגה (אופציונלי)' : 'Grade (optional)'}
+                        />
+                      )}
+
+                      <select
+                        className="seasons-manager__year-input"
+                        value={draft.pitamStatus}
+                        onChange={(event) =>
+                          updateHarvestClassificationDraft(draft.id, {
+                            pitamStatus: event.target.value as HarvestFormClassificationDraft['pitamStatus'],
+                          })
+                        }
+                      >
+                        <option value="WITH_PITAM">{lang === 'he' ? 'פיטם' : 'With pitam'}</option>
+                        <option value="WITHOUT_PITAM">{lang === 'he' ? 'בל"פ' : 'Without pitam'}</option>
+                        <option value="MIXED">{lang === 'he' ? 'מעורב' : 'Mixed'}</option>
+                      </select>
+
+                      <input
+                        className="seasons-manager__year-input"
+                        type="number"
+                        min="1"
+                        value={draft.quantity}
+                        onChange={(event) => updateHarvestClassificationDraft(draft.id, { quantity: event.target.value })}
+                        placeholder={lang === 'he' ? 'כמות' : 'Quantity'}
+                      />
+
+                      <input
+                        className="seasons-manager__year-input"
+                        type="text"
+                        value={draft.notes}
+                        onChange={(event) => updateHarvestClassificationDraft(draft.id, { notes: event.target.value })}
+                        placeholder={lang === 'he' ? 'הערות מיון' : 'Sorting notes'}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {harvestFormError ? <p className="seasons-manager__error">{harvestFormError}</p> : null}
+
+            <div className="modal-actions">
+              <button className="btn btn-danger" onClick={closeHarvestGlobalForm} type="button" disabled={isSubmittingHarvestForm}>
+                {lang === 'he' ? 'ביטול' : 'Cancel'}
+              </button>
+              <button
+                className="btn btn-success"
+                onClick={() => {
+                  void handleSubmitHarvestGlobalForm();
+                }}
+                type="button"
+                disabled={isSubmittingHarvestForm}
+              >
+                {isSubmittingHarvestForm
+                  ? lang === 'he'
+                    ? 'שומר...'
+                    : 'Saving...'
+                  : lang === 'he'
+                    ? 'שמירת קטיף'
+                    : 'Save harvest'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </AppShell>
   );
 }
