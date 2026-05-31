@@ -1,12 +1,15 @@
 // src/messages/messages.controller.ts
 
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, ParseBoolPipe, Req, Query, ParseEnumPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Req, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { MessagesService } from './messages.service';
-import { Prisma, Priority } from '@prisma/client';
-import { MessageSwaggerDto, MessageFilterDto, MessageMarkAsReadSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+import { Priority } from '@prisma/client';
 import { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+import { SendMessageDto } from './dto/send-message.dto';
+import { MarkMessageReadDto } from './dto/mark-message-read.dto';
+import { MessageFilterQueryDto } from './dto/message-filter-query.dto';
+import { parseMessageFilterQuery } from './utils/messages.utils';
 
 @ApiTags('Messages')
 @ApiBearerAuth('access-token')
@@ -19,7 +22,7 @@ export class MessagesController {
   @Post()
   @ApiOperation({ summary: 'Send a new internal message from one user to another' })
   @ApiBody({
-    type: MessageSwaggerDto,
+    type: SendMessageDto,
     examples: {
       default: {
         summary: 'Send message payload',
@@ -43,7 +46,7 @@ export class MessagesController {
   })
   @ApiResponse({ status: 201, description: 'Message sent successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid message data.' })
-  sendMessage(@Body() data: Prisma.MessageUncheckedCreateInput, @Req() req: Request) {
+  sendMessage(@Body() data: SendMessageDto, @Req() req: Request) {
     return this.messagesService.sendMessage(data, req.user as AuthenticatedUser);
   }
 
@@ -78,7 +81,7 @@ export class MessagesController {
   @Patch('read')
   @ApiOperation({ summary: 'Mark a specific message as read by the authenticated user' })
   @ApiBody({
-    type: MessageMarkAsReadSwaggerDto,
+    type: MarkMessageReadDto,
     examples: {
       sample: {
         summary: 'Mark message as read payload',
@@ -89,7 +92,7 @@ export class MessagesController {
   @ApiResponse({ status: 200, description: 'Message marked as read successfully.' })
   @ApiResponse({ status: 404, description: 'Message not found.' })
   markAsRead(
-    @Body() data: MessageMarkAsReadSwaggerDto,
+    @Body() data: MarkMessageReadDto,
     @Req() req: Request,
   ) {
     return this.messagesService.markAsRead(data.id, (req.user as AuthenticatedUser).id);
@@ -105,31 +108,11 @@ export class MessagesController {
   @ApiResponse({ status: 200, description: 'Filtered messages returned successfully.' })
   getFiltered(
     @Req() req: Request,
-    @Query('senderId') senderIdRaw?: string,
-    @Query('priority') priority?: string,
-    @Query('replyToMessageId') replyToIdRaw?: string,
-    @Query('isRead') isReadRaw?: string,
-    @Query('box') box?: string,
+    @Query() query: MessageFilterQueryDto,
   ) {
     const userId = (req.user as AuthenticatedUser).id;
 
-    const senderId = senderIdRaw !== undefined ? parseInt(senderIdRaw, 10) : undefined;
-    const replyToMessageId = replyToIdRaw !== undefined
-      ? (parseInt(replyToIdRaw, 10) === 0 ? null : parseInt(replyToIdRaw, 10))
-      : undefined;
-    const isRead = isReadRaw !== undefined ? isReadRaw === 'true' : undefined;
-    const parsedPriority = priority !== undefined && Object.values(Priority).includes(priority as Priority)
-      ? (priority as Priority)
-      : undefined;
-    const parsedBox = box === 'inbox' || box === 'outbox' || box === 'all' ? box : undefined;
-
-    return this.messagesService.getFiltered(userId, {
-      senderId,
-      priority: parsedPriority,
-      replyToMessageId,
-      isRead,
-      box: parsedBox,
-    });
+    return this.messagesService.getFiltered(userId, parseMessageFilterQuery(query));
   }
 
   @Delete(':id')

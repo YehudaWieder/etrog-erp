@@ -1,36 +1,35 @@
 // src/messages/messages.service.ts
 
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from 'src/generated/prisma';
-import { Priority } from '@prisma/client';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
-
-export interface MessageFilterOptions {
-  senderId?: number;
-  priority?: Priority;
-  /** Pass null to retrieve top-level messages (no parent). Pass a number to retrieve replies of that message. */
-  replyToMessageId?: number | null;
-  isRead?: boolean;
-  /** Filter by message box: 'inbox' (received), 'outbox' (sent), or 'all' (default). */
-  box?: 'inbox' | 'outbox' | 'all';
-}
+import { SendMessageDto } from './dto/send-message.dto';
+import {
+  buildVisibleMessagesWhere,
+  MESSAGE_INCLUDE,
+  MessageFilterOptions,
+  validateSendMessageInput,
+} from './utils/messages.utils';
 
 @Injectable()
 export class MessagesService {
   constructor(private prisma: PrismaService) {}
 
   // Creates a new message in the database for the authenticated sender.
-  async sendMessage(data: Prisma.MessageUncheckedCreateInput, actor: AuthenticatedUser) {
+  async sendMessage(data: SendMessageDto, actor: AuthenticatedUser) {
+    validateSendMessageInput(data);
+
+    if (data.recipientIds.includes(actor.id)) {
+      throw new BadRequestException('You cannot send a message to yourself');
+    }
+
     return this.prisma.message.create({
       data: {
         ...data,
         senderId: actor.id,
       },
-      include: {
-        sender: { select: { id: true, name: true } },
-        replyToMessage: { select: { id: true, subject: true, senderId: true } },
-      },
+      include: MESSAGE_INCLUDE,
     });
   }
 
@@ -38,10 +37,7 @@ export class MessagesService {
   async getInbox(recipientId: number) {
     return this.prisma.message.findMany({
       where: { recipientIds: { has: recipientId } },
-      include: {
-        sender: { select: { id: true, name: true } },
-        replyToMessage: { select: { id: true, subject: true, senderId: true } },
-      },
+      include: MESSAGE_INCLUDE,
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -50,10 +46,7 @@ export class MessagesService {
   async getOutbox(senderId: number) {
     return this.prisma.message.findMany({
       where: { senderId },
-      include: {
-        sender: { select: { id: true, name: true } },
-        replyToMessage: { select: { id: true, subject: true, senderId: true } },
-      },
+      include: MESSAGE_INCLUDE,
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -67,10 +60,7 @@ export class MessagesService {
           { recipientIds: { has: userId } },
         ],
       },
-      include: {
-        sender: { select: { name: true, id: true } },
-        replyToMessage: { select: { id: true, subject: true, senderId: true } },
-      },
+      include: MESSAGE_INCLUDE,
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -108,15 +98,9 @@ export class MessagesService {
   // Returns messages visible to the user, filtered by any combination of senderId, priority,
   // replyToMessageId (null = top-level only), and read/unread status.
   async getFiltered(userId: number, filters: MessageFilterOptions) {
-    let baseWhere: Prisma.MessageWhereInput;
-    if (filters.box === 'inbox') {
-      baseWhere = { recipientIds: { has: userId } };
-    } else if (filters.box === 'outbox') {
-      baseWhere = { senderId: userId };
-    } else {
-      baseWhere = { OR: [{ senderId: userId }, { recipientIds: { has: userId } }] };
-    }
-    const where: Prisma.MessageWhereInput = { ...baseWhere };
+    const where: Prisma.MessageWhereInput = {
+      ...buildVisibleMessagesWhere(userId, filters.box),
+    };
 
     if (filters.senderId !== undefined) {
       where.senderId = filters.senderId;
@@ -140,10 +124,7 @@ export class MessagesService {
 
     return this.prisma.message.findMany({
       where,
-      include: {
-        sender: { select: { id: true, name: true } },
-        replyToMessage: { select: { id: true, subject: true, senderId: true } },
-      },
+      include: MESSAGE_INCLUDE,
       orderBy: { createdAt: 'desc' },
     });
   }
