@@ -5,7 +5,9 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedRespo
 import { Role } from '@prisma/client';
 import { SeasonsService } from './seasons.service';
 import { Roles } from 'src/authorization/decorators/roles.decorator';
-import { SeasonIdSwaggerDto, SeasonPreviewResponseSwaggerDto, SeasonYearNameSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+import { SeasonYearNameDto } from './dto/season-year-name.dto';
+import { SeasonIdDto } from './dto/season-id.dto';
+import { parseSeasonIdOrSlug } from './utils/seasons.utils';
 
 @ApiTags('Seasons')
 @ApiBearerAuth('access-token')
@@ -20,7 +22,7 @@ export class SeasonsController {
   @HttpCode(200)
   @ApiOperation({ summary: 'Preview creation of a new season including full default category/share bootstrap data.' })
   @ApiBody({
-    type: SeasonYearNameSwaggerDto,
+    type: SeasonYearNameDto,
     examples: {
       sample: {
         summary: 'Preview a new season',
@@ -33,16 +35,15 @@ export class SeasonsController {
   @ApiResponse({
     status: 200,
     description: 'Preview data returned successfully.',
-    type: SeasonPreviewResponseSwaggerDto,
   })
-  previewCreate(@Body() body: SeasonYearNameSwaggerDto) {
+  previewCreate(@Body() body: SeasonYearNameDto) {
     return this.seasonsService.previewSeasonCreation(body.yearName);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new harvest season. Unique constraint: [yearName].' })
   @ApiBody({
-    type: SeasonYearNameSwaggerDto,
+    type: SeasonYearNameDto,
     examples: {
       sample: {
         summary: 'Create a new season',
@@ -54,7 +55,7 @@ export class SeasonsController {
   })
   @ApiResponse({ status: 201, description: 'Season created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate year name.' })
-  create(@Body() body: SeasonYearNameSwaggerDto) {
+  create(@Body() body: SeasonYearNameDto) {
     return this.seasonsService.createSeason(body.yearName);
   }
 
@@ -82,14 +83,13 @@ export class SeasonsController {
   @ApiResponse({ status: 200, description: 'Season returned successfully.' })
   @ApiResponse({ status: 404, description: 'Season not found.' })
   findOne(@Param('idOrSlug') idOrSlug: string) {
-    const id = parseInt(idOrSlug);
-    return this.seasonsService.findOne(isNaN(id) ? idOrSlug : id);
+    return this.seasonsService.findOne(parseSeasonIdOrSlug(idOrSlug));
   }
 
   @Patch('set-active')
   @ApiOperation({ summary: 'Set a season as the currently active season (deactivates all others)' })
   @ApiBody({
-    type: SeasonIdSwaggerDto,
+    type: SeasonIdDto,
     examples: {
       sample: {
         summary: 'Activate a season by ID',
@@ -101,7 +101,7 @@ export class SeasonsController {
   })
   @ApiResponse({ status: 200, description: 'Season set as active successfully.' })
   @ApiResponse({ status: 404, description: 'Season not found.' })
-  setActive(@Body() body: SeasonIdSwaggerDto) {
+  setActive(@Body() body: SeasonIdDto) {
     return this.seasonsService.setActiveSeason(body.id);
   }
 
