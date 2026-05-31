@@ -5,18 +5,9 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedRespo
 import { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { ShipmentService } from '../../services/shipment/shipment.service';
-import { CreateShipmentSwaggerDto, ShipmentResponseSwaggerDto, UpdateShipmentSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
-
-type ShipmentCreateBody = {
-  shipmentNumber: number;
-  notes?: string;
-};
-
-type ShipmentUpdateBody = {
-  notes?: string | null;
-  status?: import('@prisma/client').ShipmentStatus;
-  shippedAt?: string | Date;
-};
+import { ShipmentResponseSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+import { CreateShipmentDto } from '../../services/shipment/dto/create-shipment.dto';
+import { UpdateShipmentDto } from '../../services/shipment/dto/update-shipment.dto';
 
 @ApiTags('Logistics')
 @ApiBearerAuth('access-token')
@@ -29,7 +20,7 @@ export class ShipmentController {
   @Post()
   @ApiOperation({ summary: 'Create a new shipment. ID, shipmentNumber, seasonId, totals, and slug are auto-managed by the server.' })
   @ApiBody({
-    type: CreateShipmentSwaggerDto,
+    type: CreateShipmentDto,
     examples: {
       sample: {
         summary: 'Sample shipment create payload',
@@ -42,7 +33,7 @@ export class ShipmentController {
   })
   @ApiResponse({ status: 201, description: 'Shipment created successfully.', type: ShipmentResponseSwaggerDto })
   @ApiResponse({ status: 400, description: 'Invalid input data.' })
-  create(@Body() data: ShipmentCreateBody, @Req() req: Request) {
+  create(@Body() data: CreateShipmentDto, @Req() req: Request) {
     const actor = req.user as AuthenticatedUser;
     return this.shipmentService.create(data, actor.id);
   }
@@ -81,7 +72,7 @@ export class ShipmentController {
   @Patch()
   @ApiOperation({ summary: 'Update shipment details by ID. Editable fields: status, shippedAt, notes.' })
   @ApiBody({
-    type: UpdateShipmentSwaggerDto,
+    type: UpdateShipmentDto,
     examples: {
       sample: {
         summary: 'Sample shipment update payload',
@@ -98,18 +89,18 @@ export class ShipmentController {
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Shipment not found.' })
   update(
-    @Body() updateData: UpdateShipmentSwaggerDto,
+    @Body() updateData: UpdateShipmentDto,
     @Req() req: Request,
   ) {
     const { id, ...data } = updateData;
     const actor = req.user as AuthenticatedUser;
-    return this.shipmentService.update(id, data as ShipmentUpdateBody, actor.id);
+    return this.shipmentService.update(id, data, actor.id);
   }
 
   @Patch('recalculate')
   @ApiOperation({ summary: 'Recalculate and update the total boxes and total quantity for a shipment' })
   @ApiBody({
-    type: UpdateShipmentSwaggerDto,
+    type: UpdateShipmentDto,
     examples: {
       sample: {
         summary: 'Recalculate payload',
@@ -119,7 +110,7 @@ export class ShipmentController {
   })
   @ApiResponse({ status: 200, description: 'Shipment totals recalculated successfully.' })
   @ApiResponse({ status: 404, description: 'Shipment not found.' })
-  recalculate(@Body() data: UpdateShipmentSwaggerDto) {
+  recalculate(@Body() data: UpdateShipmentDto) {
     return this.shipmentService.updateTotals(data.id);
   }
 

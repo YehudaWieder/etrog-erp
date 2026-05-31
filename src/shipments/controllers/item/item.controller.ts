@@ -6,7 +6,8 @@ import { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { ItemService } from '../../services/item/item.service';
 import { Prisma } from '@prisma/client';
-import { ShipmentItemSwaggerDto, ShipmentItemUpdateSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+import { CreateShipmentItemDto } from '../../services/item/dto/create-shipment-item.dto';
+import { UpdateShipmentItemDto } from '../../services/item/dto/update-shipment-item.dto';
 
 @ApiTags('Logistics')
 @ApiBearerAuth('access-token')
@@ -19,7 +20,7 @@ export class ItemController {
   @Post()
   @ApiOperation({ summary: 'Create a new shipment item inside a box and trigger totals recalculation for the box and shipment. Unique constraint: [seasonId, boxId, traderCategoryId, customerCategoryId, grade, pitamStatus, ownershipType, traderId, customerId].' })
   @ApiBody({
-    type: ShipmentItemSwaggerDto,
+    type: CreateShipmentItemDto,
     examples: {
       sample: {
         summary: 'Sample shipment item create payload',
@@ -36,11 +37,11 @@ export class ItemController {
       },
     },
   })
-  @ApiResponse({ status: 201, description: 'Shipment item created successfully.', type: ShipmentItemSwaggerDto })
+  @ApiResponse({ status: 201, description: 'Shipment item created successfully.', type: CreateShipmentItemDto })
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate item for this box combination.' })
-  create(@Body() data: Prisma.ShipmentItemUncheckedCreateInput, @Req() req: Request) {
+  create(@Body() data: CreateShipmentItemDto, @Req() req: Request) {
     const actor = req.user as AuthenticatedUser;
-    return this.itemService.create(data, actor.id);
+    return this.itemService.create(data as Prisma.ShipmentItemUncheckedCreateInput, actor.id);
   }
 
   @Get('box/:boxId')
@@ -55,7 +56,7 @@ export class ItemController {
   @Patch()
   @ApiOperation({ summary: 'Update a shipment item and recalculate totals for the associated box and shipment' })
   @ApiBody({
-    type: ShipmentItemUpdateSwaggerDto,
+    type: UpdateShipmentItemDto,
     examples: {
       sample: {
         summary: 'Sample shipment item update payload',
@@ -71,7 +72,7 @@ export class ItemController {
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Shipment item not found.' })
   update(
-    @Body() updateData: ShipmentItemUpdateSwaggerDto,
+    @Body() updateData: UpdateShipmentItemDto,
     @Req() req: Request,
   ) {
     const { id, ...data } = updateData;

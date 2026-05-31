@@ -5,17 +5,13 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma, ShipmentStatus } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { ShipmentsService } from '../../shipments.service';
-
-type CreateShipmentInput = {
-  shipmentNumber: number;
-  notes?: string;
-};
-
-type UpdateShipmentInput = {
-  status?: ShipmentStatus;
-  shippedAt?: Date | string;
-  notes?: string | null;
-};
+import {
+  CreateShipmentInput,
+  resolveShippedAt,
+  UpdateShipmentInput,
+  validateCreateShipmentInput,
+  validateUpdateShipmentInput,
+} from './utils/shipment.utils';
 
 @Injectable()
 export class ShipmentService {
@@ -25,81 +21,9 @@ export class ShipmentService {
     private shipmentsService: ShipmentsService,
   ) {}
 
-  private resolveShippedAt(status: ShipmentStatus | undefined, shippedAt: Date | string | null | undefined) {
-    if (status === ShipmentStatus.SHIPPED) {
-      return shippedAt ? new Date(shippedAt) : new Date();
-    }
-
-    return null;
-  }
-
-  private assertPositiveInt(value: unknown, fieldName: string) {
-    if (!Number.isInteger(value) || Number(value) <= 0) {
-      throw new BadRequestException(`${fieldName} must be a positive integer`);
-    }
-  }
-
-  private assertValidDate(value: unknown, fieldName: string) {
-    if (value === undefined || value === null) {
-      return;
-    }
-
-    const parsedDate = new Date(value as string | Date);
-    if (Number.isNaN(parsedDate.getTime())) {
-      throw new BadRequestException(`${fieldName} must be a valid date`);
-    }
-  }
-
-  private assertOnlyAllowedFields(
-    data: Record<string, unknown>,
-    allowedFields: string[],
-    blockedMessage: string,
-  ) {
-    const invalidKeys = Object.keys(data).filter((key) => !allowedFields.includes(key));
-    if (invalidKeys.length > 0) {
-      throw new BadRequestException(blockedMessage);
-    }
-  }
-
-  private validateCreateInput(data: CreateShipmentInput) {
-    this.assertOnlyAllowedFields(
-      data as Record<string, unknown>,
-      ['shipmentNumber', 'notes'],
-      'Only shipmentNumber and notes are allowed. seasonId, totals, slug, isDeleted, and updatedById are managed by the server',
-    );
-
-    this.assertPositiveInt(data.shipmentNumber, 'shipmentNumber');
-
-    if (data.notes !== undefined && typeof data.notes !== 'string') {
-      throw new BadRequestException('notes must be a string');
-    }
-  }
-
-  private validateUpdateInput(data: UpdateShipmentInput) {
-    if (Object.keys(data).length === 0) {
-      throw new BadRequestException('At least one shipment field must be provided for update');
-    }
-
-    this.assertOnlyAllowedFields(
-      data as Record<string, unknown>,
-      ['status', 'shippedAt', 'notes'],
-      'Only status, shippedAt, and notes can be updated here. updatedById is managed by the server',
-    );
-
-    if (data.status !== undefined && !Object.values(ShipmentStatus).includes(data.status as ShipmentStatus)) {
-      throw new BadRequestException('status is invalid');
-    }
-
-    this.assertValidDate(data.shippedAt, 'shippedAt');
-
-    if (data.notes !== undefined && data.notes !== null && typeof data.notes !== 'string') {
-      throw new BadRequestException('notes must be a string');
-    }
-  }
-
   // Create a new shipment shell
   async create(data: CreateShipmentInput, actorId: number) {
-    this.validateCreateInput(data);
+    validateCreateShipmentInput(data);
 
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
 
@@ -199,7 +123,7 @@ export class ShipmentService {
 
   // Update shipment status or details
   async update(id: number, data: UpdateShipmentInput, actorId: number) {
-    this.validateUpdateInput(data);
+    validateUpdateShipmentInput(data);
 
     const existing = await this.prisma.shipment.findFirst({
       where: { id, isDeleted: false },
@@ -218,7 +142,7 @@ export class ShipmentService {
     }
 
     const effectiveStatus = normalizedStatus ?? existing.status;
-    const nextShippedAt = this.resolveShippedAt(
+    const nextShippedAt = resolveShippedAt(
       effectiveStatus,
       (updatableData.shippedAt as Date | string | null | undefined) ?? existing.shippedAt,
     );

@@ -2,29 +2,15 @@
 
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { BoxOwnership, BoxStatus, BoxType, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { ShipmentsService } from '../../shipments.service';
-
-type CreateBoxInput = {
-  shipmentId: number;
-  boxNumber: number;
-  boxType: BoxType;
-  status?: BoxStatus;
-  notes?: string;
-  ownershipType?: BoxOwnership;
-  traderId?: number;
-  customerId?: number;
-};
-
-type UpdateBoxInput = {
-  boxType?: BoxType;
-  status?: BoxStatus;
-  notes?: string | null;
-  ownershipType?: BoxOwnership;
-  traderId?: number | null;
-  customerId?: number | null;
-};
+import {
+  CreateBoxInput,
+  UpdateBoxInput,
+  validateCreateBoxInput,
+  validateUpdateBoxInput,
+} from './utils/box.utils';
 
 @Injectable()
 export class BoxService {
@@ -34,102 +20,9 @@ export class BoxService {
     private shipmentsService: ShipmentsService,
   ) {}
 
-  private assertPositiveInt(value: unknown, fieldName: string) {
-    if (!Number.isInteger(value) || Number(value) <= 0) {
-      throw new BadRequestException(`${fieldName} must be a positive integer`);
-    }
-  }
-
-  private assertOnlyAllowedFields(data: Record<string, unknown>, allowedFields: string[], message: string) {
-    const invalid = Object.keys(data).filter((k) => !allowedFields.includes(k));
-    if (invalid.length > 0) {
-      throw new BadRequestException(message);
-    }
-  }
-
-  private validateOwnership(ownershipType: unknown, traderId: unknown, customerId: unknown) {
-    if (ownershipType !== undefined && !Object.values(BoxOwnership).includes(ownershipType as BoxOwnership)) {
-      throw new BadRequestException('ownershipType is invalid');
-    }
-
-    if (traderId !== undefined && traderId !== null) {
-      this.assertPositiveInt(traderId, 'traderId');
-    }
-
-    if (customerId !== undefined && customerId !== null) {
-      this.assertPositiveInt(customerId, 'customerId');
-    }
-
-    if (ownershipType === BoxOwnership.TRADER && (traderId === undefined || traderId === null)) {
-      throw new BadRequestException('traderId is required when ownershipType=TRADER');
-    }
-
-    if (ownershipType === BoxOwnership.CUSTOMER && (customerId === undefined || customerId === null)) {
-      throw new BadRequestException('customerId is required when ownershipType=CUSTOMER');
-    }
-
-    if (ownershipType !== BoxOwnership.TRADER && ownershipType !== BoxOwnership.CUSTOM && traderId !== undefined && traderId !== null) {
-      throw new BadRequestException('traderId must be empty unless ownershipType=TRADER or ownershipType=CUSTOM');
-    }
-
-    if (ownershipType !== BoxOwnership.CUSTOMER && ownershipType !== BoxOwnership.CUSTOM && customerId !== undefined && customerId !== null) {
-      throw new BadRequestException('customerId must be empty unless ownershipType=CUSTOMER or ownershipType=CUSTOM');
-    }
-  }
-
-  private validateCreateInput(data: CreateBoxInput) {
-    this.assertOnlyAllowedFields(
-      data as Record<string, unknown>,
-      ['shipmentId', 'boxNumber', 'boxType', 'status', 'notes', 'ownershipType', 'traderId', 'customerId'],
-      'Only shipmentId, boxNumber, boxType, status, notes, ownershipType, traderId, customerId are allowed on create. seasonId, totalQuantity, and updatedById are managed by the server',
-    );
-
-    this.assertPositiveInt(data.shipmentId, 'shipmentId');
-    this.assertPositiveInt(data.boxNumber, 'boxNumber');
-    if (!Object.values(BoxType).includes(data.boxType as BoxType)) {
-      throw new BadRequestException('boxType is invalid');
-    }
-
-    if (data.status !== undefined && !Object.values(BoxStatus).includes(data.status as BoxStatus)) {
-      throw new BadRequestException('status is invalid');
-    }
-
-    if (data.notes !== undefined && typeof data.notes !== 'string') {
-      throw new BadRequestException('notes must be a string');
-    }
-
-    this.validateOwnership(data.ownershipType, data.traderId, data.customerId);
-  }
-
-  private validateUpdateInput(data: UpdateBoxInput) {
-    if (Object.keys(data).length === 0) {
-      throw new BadRequestException('At least one box field must be provided for update');
-    }
-
-    this.assertOnlyAllowedFields(
-      data as Record<string, unknown>,
-      ['boxType', 'status', 'notes', 'ownershipType', 'traderId', 'customerId'],
-      'Only boxType, status, notes, ownershipType, traderId, customerId can be updated here. updatedById is managed by the server',
-    );
-
-    if (data.boxType !== undefined && !Object.values(BoxType).includes(data.boxType as BoxType)) {
-      throw new BadRequestException('boxType is invalid');
-    }
-
-    if (data.status !== undefined && !Object.values(BoxStatus).includes(data.status as BoxStatus)) {
-      throw new BadRequestException('status is invalid');
-    }
-
-    if (data.notes !== undefined && data.notes !== null && typeof data.notes !== 'string') {
-      throw new BadRequestException('notes must be a string');
-    }
-
-    this.validateOwnership(data.ownershipType, data.traderId, data.customerId);
-  }
-
   // Create a new box within a shipment
   async create(data: CreateBoxInput, actorId: number) {
-    this.validateCreateInput(data);
+    validateCreateBoxInput(data);
 
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
 
@@ -209,7 +102,7 @@ export class BoxService {
 
   // Update box details (status, type, etc.)
   async update(id: number, data: UpdateBoxInput, actorId: number) {
-    this.validateUpdateInput(data);
+    validateUpdateBoxInput(data);
 
     return this.prisma.box.update({
       where: { id },

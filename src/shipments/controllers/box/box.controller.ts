@@ -5,28 +5,9 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedRespo
 import { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { BoxService } from '../../services/box/box.service';
-import { BoxOwnership, BoxStatus, BoxType } from '@prisma/client';
-import { CreateBoxSwaggerDto, UpdateBoxSwaggerDto, BoxResponseSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
-
-type BoxCreateBody = {
-  shipmentId: number;
-  boxNumber: number;
-  boxType: BoxType;
-  status?: BoxStatus;
-  notes?: string;
-  ownershipType?: BoxOwnership;
-  traderId?: number;
-  customerId?: number;
-};
-
-type BoxUpdateBody = {
-  boxType?: BoxType;
-  status?: BoxStatus;
-  notes?: string | null;
-  ownershipType?: BoxOwnership;
-  traderId?: number | null;
-  customerId?: number | null;
-};
+import { BoxResponseSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+import { CreateBoxDto } from '../../services/box/dto/create-box.dto';
+import { UpdateBoxDto } from '../../services/box/dto/update-box.dto';
 
 @ApiTags('Logistics')
 @ApiBearerAuth('access-token')
@@ -39,7 +20,7 @@ export class BoxController {
   @Post()
   @ApiOperation({ summary: 'Create a new box within a shipment. seasonId and totalQuantity are auto-managed by the server.' })
   @ApiBody({
-    type: CreateBoxSwaggerDto,
+    type: CreateBoxDto,
     examples: {
       traderBox: {
         summary: 'Box owned by a trader',
@@ -64,7 +45,7 @@ export class BoxController {
   })
   @ApiResponse({ status: 201, description: 'Box created successfully.', type: BoxResponseSwaggerDto })
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate box number in this shipment.' })
-  create(@Body() data: BoxCreateBody, @Req() req: Request) {
+  create(@Body() data: CreateBoxDto, @Req() req: Request) {
     const actor = req.user as AuthenticatedUser;
     return this.boxService.create(data, actor.id);
   }
@@ -90,7 +71,7 @@ export class BoxController {
   @Patch()
   @ApiOperation({ summary: 'Update box details by ID. Editable fields: boxType, status, notes, ownershipType, traderId, customerId.' })
   @ApiBody({
-    type: UpdateBoxSwaggerDto,
+    type: UpdateBoxDto,
     examples: {
       closeBox: {
         summary: 'Close a box',
@@ -115,18 +96,18 @@ export class BoxController {
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Box not found.' })
   update(
-    @Body() updateData: UpdateBoxSwaggerDto,
+    @Body() updateData: UpdateBoxDto,
     @Req() req: Request,
   ) {
     const { id, ...data } = updateData;
     const actor = req.user as AuthenticatedUser;
-    return this.boxService.update(id, data as BoxUpdateBody, actor.id);
+    return this.boxService.update(id, data, actor.id);
   }
 
   @Patch('recalculate')
   @ApiOperation({ summary: 'Recalculate and update the total quantity for a box based on its items' })
   @ApiBody({
-    type: UpdateBoxSwaggerDto,
+    type: UpdateBoxDto,
     examples: {
       sample: {
         summary: 'Recalculate payload',
@@ -136,7 +117,7 @@ export class BoxController {
   })
   @ApiResponse({ status: 200, description: 'Box total recalculated successfully.' })
   @ApiResponse({ status: 404, description: 'Box not found.' })
-  recalculate(@Body() data: UpdateBoxSwaggerDto) {
+  recalculate(@Body() data: UpdateBoxDto) {
     return this.boxService.updateBoxTotal(data.id);
   }
 
