@@ -1,0 +1,173 @@
+import { useEffect, useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { addField, editField, fetchFields, removeField } from '../../../store/fieldsSlice';
+import type { AppDispatch, RootState } from '../../../store';
+import { getFieldsI18n } from '../i18n';
+import { sortFieldsByName } from '../services/fieldsSort.service';
+import type { FieldsManagementProps } from '../fieldsPage.types';
+
+export function useFieldsManagement({ onHeaderStateChange }: FieldsManagementProps) {
+  const dispatch = useDispatch<AppDispatch>();
+  const { items: fields, loading, error } = useSelector((state: RootState) => state.fields);
+  const [newFieldName, setNewFieldName] = useState('');
+  const [selectedFieldId, setSelectedFieldId] = useState<number | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [addError, setAddError] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editFieldName, setEditFieldName] = useState('');
+  const t = getFieldsI18n();
+
+  useEffect(() => {
+    dispatch(fetchFields());
+  }, [dispatch]);
+
+  const sortedFields = useMemo(() => sortFieldsByName(fields), [fields]);
+
+  useEffect(() => {
+    if (selectedFieldId && !sortedFields.some((field) => field.id === selectedFieldId)) {
+      setSelectedFieldId(null);
+    }
+  }, [sortedFields, selectedFieldId]);
+
+  const selectedField = useMemo(
+    () => sortedFields.find((field) => field.id === selectedFieldId) ?? null,
+    [sortedFields, selectedFieldId],
+  );
+
+  const handleAdd = async () => {
+    const trimmedName = newFieldName.trim();
+
+    if (!trimmedName) {
+      return;
+    }
+
+    setAddError(null);
+    const actionResult = await dispatch(addField({ name: trimmedName }));
+
+    if (addField.fulfilled.match(actionResult)) {
+      setNewFieldName('');
+      return;
+    }
+
+    const failureMessage =
+      (typeof actionResult.payload === 'string' && actionResult.payload) ||
+      actionResult.error.message ||
+      t.addFailed;
+
+    setAddError(failureMessage);
+  };
+
+  const handleOpenDeleteDialog = () => {
+    if (!selectedField) {
+      return;
+    }
+
+    setDeleteError(null);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleOpenEditDialog = () => {
+    if (!selectedField) {
+      return;
+    }
+
+    setEditError(null);
+    setEditFieldName(selectedField.name);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditField = async () => {
+    if (!selectedField) {
+      return;
+    }
+
+    const trimmedName = editFieldName.trim();
+    if (!trimmedName) {
+      setEditError(t.emptyName);
+      return;
+    }
+
+    const actionResult = await dispatch(editField({ id: selectedField.id, name: trimmedName }));
+
+    if (editField.fulfilled.match(actionResult)) {
+      setEditError(null);
+      setIsEditDialogOpen(false);
+      return;
+    }
+
+    const failureMessage =
+      (typeof actionResult.payload === 'string' && actionResult.payload) ||
+      actionResult.error.message ||
+      t.editFailed;
+
+    setEditError(failureMessage);
+  };
+
+  const handleDeleteField = async () => {
+    if (!selectedField) {
+      return;
+    }
+
+    const actionResult = await dispatch(removeField(selectedField.id));
+
+    if (removeField.fulfilled.match(actionResult)) {
+      setDeleteError(null);
+      setIsDeleteDialogOpen(false);
+      return;
+    }
+
+    const failureMessage =
+      (typeof actionResult.payload === 'string' && actionResult.payload) ||
+      actionResult.error.message ||
+      t.deleteFailed;
+
+    setDeleteError(failureMessage);
+    setIsDeleteDialogOpen(false);
+  };
+
+  const isEditDisabled = !selectedField || loading;
+  const isDeleteDisabled = !selectedField || loading;
+  const shownError = addError ?? editError ?? deleteError ?? error;
+
+  useEffect(() => {
+    if (!onHeaderStateChange) {
+      return;
+    }
+
+    onHeaderStateChange({
+      count: sortedFields.length,
+      isEditDisabled,
+      isDeleteDisabled,
+      onEdit: handleOpenEditDialog,
+      onDelete: handleOpenDeleteDialog,
+    });
+  }, [onHeaderStateChange, sortedFields.length, isEditDisabled, isDeleteDisabled, selectedField, loading]);
+
+  useEffect(() => () => {
+    onHeaderStateChange?.(null);
+  }, [onHeaderStateChange]);
+
+  return {
+    t,
+    loading,
+    shownError,
+    sortedFields,
+    newFieldName,
+    setNewFieldName,
+    selectedField,
+    selectedFieldId,
+    setSelectedFieldId,
+    isDeleteDialogOpen,
+    setIsDeleteDialogOpen,
+    isEditDialogOpen,
+    setIsEditDialogOpen,
+    editFieldName,
+    setEditFieldName,
+    editError,
+    handleAdd,
+    handleDeleteField,
+    handleEditField,
+  };
+}

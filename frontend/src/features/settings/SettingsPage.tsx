@@ -4,7 +4,7 @@ import { FaCheck, FaCirclePlus, FaPenToSquare, FaRotateLeft, FaTrashCan } from '
 import { AppShell } from '../../app/layout/AppShell';
 import type { NavItem, SidebarSection } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
-import FieldsManagement, { type FieldsHeaderState } from '../fields/FieldsManagement';
+import FieldsManagement, { type FieldsHeaderState } from '../fields/components/FieldsManagement';
 import SeasonsManagement, { type SeasonsHeaderState } from '../seasons/SeasonsManagement';
 import TradersManagement, { type TradersHeaderState } from '../traders/TradersManagement';
 import TraderCategoriesManagement, { type TraderCategoriesHeaderState } from '../traders/TraderCategoriesManagement';
