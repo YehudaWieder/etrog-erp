@@ -1,4 +1,4 @@
-import { InventoryMovementScope, InventoryOwnerScope, InventorySummaryBaseFilters } from 'src/inventory/types/inventory-query.types';
+import { InventoryMovementScope, InventoryOwnerScope, InventorySummaryBaseFilters } from 'src/inventory/services/inventory-core/types/inventory-query.types';
 
 export type CombinedMovementScope = InventoryMovementScope;
 

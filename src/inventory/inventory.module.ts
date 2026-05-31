@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { InventoryController } from './inventory.controller';
-import { InventoryService } from './inventory.service';
+import { InventoryController } from './controllers/inventory.controller';
+import { InventoryService } from './services/inventory.service';
 import { TraderStockService } from './services/trader-stock/trader-stock.service';
 import { TraderStockSummaryService } from './services/trader-stock/trader-stock-summary.service';
 import { CustomerAllocationService } from './services/customer-allocation/customer-allocation.service';

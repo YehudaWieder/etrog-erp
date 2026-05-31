@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { MovementType } from 'src/generated/prisma';
-import { CustomerGeneralAllocationRequestDto } from 'src/inventory/dto/customer-general-allocation.dto';
-import { InternalTransferRequestDto, InventoryOwnerType } from 'src/inventory/dto/internal-transfer.dto';
+import { CustomerGeneralAllocationRequestDto } from 'src/inventory/services/inventory-core/dto/customer-general-allocation.dto';
+import { InternalTransferRequestDto, InventoryOwnerType } from 'src/inventory/services/inventory-core/dto/internal-transfer.dto';
 
 export function validateInternalTransferRequest(data: InternalTransferRequestDto) {
   assertSupportedTransferType(data.type);

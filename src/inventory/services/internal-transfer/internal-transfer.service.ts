@@ -3,7 +3,7 @@ import { Grade, MovementType, PitamStatus, Prisma, SourceType } from 'src/genera
 import {
   InternalTransferRequestDto,
   InventoryOwnerType,
-} from 'src/inventory/dto/internal-transfer.dto';
+} from 'src/inventory/services/inventory-core/dto/internal-transfer.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { InventoryAvailabilityService } from '../inventory-availability.service';

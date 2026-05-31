@@ -5,14 +5,14 @@ import {
   InventorySortOrder,
   InventorySummaryBaseFilters,
   InventoryTraderSortBy,
-} from 'src/inventory/types/inventory-query.types';
+} from 'src/inventory/services/inventory-core/types/inventory-query.types';
 
 export type InventoryShipmentScope = InventoryMovementScope;
 export type InventorySortBy = InventoryTraderSortBy;
 export type {
   InventoryOwnerScope,
   InventorySortOrder,
-} from 'src/inventory/types/inventory-query.types';
+} from 'src/inventory/services/inventory-core/types/inventory-query.types';
 
 export interface InventorySummaryQuery extends InventorySummaryBaseFilters {
   ownerScope?: InventoryOwnerScope;

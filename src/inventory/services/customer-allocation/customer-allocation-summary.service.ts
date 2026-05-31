@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { InventoryMovementScope } from 'src/inventory/types/inventory-query.types';
+import { InventoryMovementScope } from 'src/inventory/services/inventory-core/types/inventory-query.types';
 import {
   CustomerInventorySortBy,
   CustomerInventorySortOrder,
@@ -11,7 +11,7 @@ import { SeasonsService } from 'src/seasons/seasons.service';
 import {
   validateCustomerSummaryQuery,
 } from 'src/inventory/services/validation/summary-query-rules';
-import { CustomerAllocationSummaryRepository } from './customer-allocation-summary.repository';
+import { CustomerAllocationSummaryRepository } from 'src/inventory/services/customer-allocation/customer-allocation-summary.repository';
 import { buildCustomerAllocationSummaryWhere } from './utils/customer-allocation-summary-query.util';
 
 @Injectable()

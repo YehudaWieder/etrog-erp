@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { InventoryMovementScope } from 'src/inventory/types/inventory-query.types';
+import { InventoryMovementScope } from 'src/inventory/services/inventory-core/types/inventory-query.types';
 import {
   InventoryOwnerScope,
   InventoryShipmentScope,
@@ -12,7 +12,7 @@ import {
 } from './dto/inventory-summary.dto';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { validateTraderSummaryQuery } from 'src/inventory/services/validation/summary-query-rules';
-import { TraderStockSummaryRepository } from './trader-stock-summary.repository';
+import { TraderStockSummaryRepository } from 'src/inventory/services/trader-stock/trader-stock-summary.repository';
 import { buildTraderStockSummaryWhere } from './utils/trader-stock-summary-query.util';
 
 @Injectable()

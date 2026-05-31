@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import {
   CombinedInventorySummaryQuery,
-} from 'src/inventory/dto/combined-inventory-summary.dto';
+} from 'src/inventory/services/inventory-core/dto/combined-inventory-summary.dto';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { validateCombinedSummaryQuery } from 'src/inventory/services/validation/summary-query-rules';
-import { CombinedSummaryRepository } from './combined-summary.repository';
+import { CombinedSummaryRepository } from 'src/inventory/services/combined-summary/combined-summary.repository';
 import {
   buildCombinedCustomerWhere,
   buildCombinedTraderWhere,

@@ -1,7 +1,7 @@
 import { Prisma } from 'src/generated/prisma';
 import { InventorySummaryQuery } from 'src/inventory/services/trader-stock/dto/inventory-summary.dto';
 import { buildMovementFilter } from 'src/inventory/services/validation/summary-query-rules';
-import { InventoryMovementScope, InventoryOwnerScope } from 'src/inventory/types/inventory-query.types';
+import { InventoryMovementScope, InventoryOwnerScope } from 'src/inventory/services/inventory-core/types/inventory-query.types';
 
 export function buildTraderStockSummaryWhere(
   query: InventorySummaryQuery,

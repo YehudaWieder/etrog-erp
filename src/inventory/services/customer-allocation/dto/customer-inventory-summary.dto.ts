@@ -4,7 +4,7 @@ import {
   InventoryMovementScope,
   InventorySortOrder,
   InventorySummaryBaseFilters,
-} from 'src/inventory/types/inventory-query.types';
+} from 'src/inventory/services/inventory-core/types/inventory-query.types';
 
 export type CustomerInventoryShipmentScope = InventoryMovementScope;
 export type CustomerInventorySortBy = InventoryCustomerSortBy;

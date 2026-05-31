@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { MovementType, Prisma, SourceType } from 'src/generated/prisma';
-import { CustomerGeneralAllocationRequestDto } from 'src/inventory/dto/customer-general-allocation.dto';
+import { CustomerGeneralAllocationRequestDto } from 'src/inventory/services/inventory-core/dto/customer-general-allocation.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { InventoryAvailabilityService } from '../inventory-availability.service';

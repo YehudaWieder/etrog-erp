@@ -15,11 +15,11 @@ import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interf
 import {
 	CombinedInventorySummaryQuery,
 	CombinedMovementScope,
-	} from './dto/combined-inventory-summary.dto';
-import { InventoryService } from './inventory.service';
+	} from 'src/inventory/services/inventory-core/dto/combined-inventory-summary.dto';
+import { InventoryService } from 'src/inventory/services/inventory.service';
 import { Grade, PitamStatus } from 'src/generated/prisma';
-import { InternalTransferRequestDto } from './dto/internal-transfer.dto';
-import { CustomerGeneralAllocationRequestDto } from './dto/customer-general-allocation.dto';
+import { InternalTransferRequestDto } from 'src/inventory/services/inventory-core/dto/internal-transfer.dto';
+import { CustomerGeneralAllocationRequestDto } from 'src/inventory/services/inventory-core/dto/customer-general-allocation.dto';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('access-token')

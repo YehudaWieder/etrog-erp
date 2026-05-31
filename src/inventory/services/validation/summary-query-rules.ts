@@ -1,9 +1,9 @@
 import { BadRequestException } from '@nestjs/common';
 import { MovementType } from 'src/generated/prisma';
-import { CombinedInventorySummaryQuery } from 'src/inventory/dto/combined-inventory-summary.dto';
+import { CombinedInventorySummaryQuery } from 'src/inventory/services/inventory-core/dto/combined-inventory-summary.dto';
 import { CustomerInventoryShipmentScope, CustomerInventorySortBy, CustomerInventorySortOrder } from 'src/inventory/services/customer-allocation/dto/customer-inventory-summary.dto';
 import { InventorySummaryQuery } from 'src/inventory/services/trader-stock/dto/inventory-summary.dto';
-import { InventoryMovementScope, InventoryOwnerScope, InventorySortOrder, InventoryTraderSortBy } from 'src/inventory/types/inventory-query.types';
+import { InventoryMovementScope, InventoryOwnerScope, InventorySortOrder, InventoryTraderSortBy } from 'src/inventory/services/inventory-core/types/inventory-query.types';
 
 export function validateTraderSummaryQuery(
   query: InventorySummaryQuery,

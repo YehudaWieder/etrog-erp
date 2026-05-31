@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { CustomerGeneralTransferService } from './services/customer-general-transfer/customer-general-transfer.service';
-import { InternalTransferRequestDto } from './dto/internal-transfer.dto';
-import { CustomerGeneralAllocationRequestDto } from './dto/customer-general-allocation.dto';
-import { InternalTransferService } from './services/internal-transfer/internal-transfer.service';
-import { CombinedInventorySummaryQuery } from './dto/combined-inventory-summary.dto';
-import { CombinedSummaryService } from './services/combined-summary/combined-summary.service';
+import { CustomerGeneralTransferService } from 'src/inventory/services/customer-general-transfer/customer-general-transfer.service';
+import { InternalTransferRequestDto } from 'src/inventory/services/inventory-core/dto/internal-transfer.dto';
+import { CustomerGeneralAllocationRequestDto } from 'src/inventory/services/inventory-core/dto/customer-general-allocation.dto';
+import { InternalTransferService } from 'src/inventory/services/internal-transfer/internal-transfer.service';
+import { CombinedInventorySummaryQuery } from 'src/inventory/services/inventory-core/dto/combined-inventory-summary.dto';
+import { CombinedSummaryService } from 'src/inventory/services/combined-summary/combined-summary.service';
 
 @Injectable()
 export class InventoryService {

@@ -1,7 +1,7 @@
 import { Prisma } from 'src/generated/prisma';
-import { CombinedInventorySummaryQuery } from 'src/inventory/dto/combined-inventory-summary.dto';
+import { CombinedInventorySummaryQuery } from 'src/inventory/services/inventory-core/dto/combined-inventory-summary.dto';
 import { buildMovementFilter } from 'src/inventory/services/validation/summary-query-rules';
-import { InventoryMovementScope, InventoryOwnerScope } from 'src/inventory/types/inventory-query.types';
+import { InventoryMovementScope, InventoryOwnerScope } from 'src/inventory/services/inventory-core/types/inventory-query.types';
 
 export function buildCombinedTraderWhere(
   query: CombinedInventorySummaryQuery,
