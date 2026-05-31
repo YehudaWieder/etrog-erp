@@ -1,0 +1,111 @@
+import { FaFloppyDisk, FaXmark } from 'react-icons/fa6';
+import type { AuthUserListItem } from '../../../services/authService';
+import type { ProfileI18nLabels, ProfileLang } from '../profilePage.types';
+
+type ManagedProfileEditModalProps = {
+  lang: ProfileLang;
+  t: ProfileI18nLabels;
+  isOpen: boolean;
+  selectedManagedProfile: AuthUserListItem | null;
+  selectedManagedProfileId: number | null;
+  managedRole: string;
+  managedIsActive: boolean;
+  managedEditMessage: string;
+  managedEditError: string;
+  isUpdatingManagedProfile: boolean;
+  onClose: () => void;
+  onUpdate: () => void;
+  onRoleChange: (role: string) => void;
+  onStatusChange: (isActive: boolean) => void;
+};
+
+export function ManagedProfileEditModal({
+  lang,
+  t,
+  isOpen,
+  selectedManagedProfile,
+  selectedManagedProfileId,
+  managedRole,
+  managedIsActive,
+  managedEditMessage,
+  managedEditError,
+  isUpdatingManagedProfile,
+  onClose,
+  onUpdate,
+  onRoleChange,
+  onStatusChange,
+}: ManagedProfileEditModalProps) {
+  if (!isOpen) {
+    return null;
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <section
+        className="modal-dialog modal-dialog--form"
+        onClick={(event) => event.stopPropagation()}
+        aria-label={lang === 'he' ? 'עדכון פרופיל נבחר' : 'Update selected profile'}
+      >
+        <button className="modal-close" type="button" aria-label={lang === 'he' ? 'סגירה' : 'Close'} onClick={onClose}>
+          <FaXmark />
+        </button>
+        <h2 className="modal-title">{lang === 'he' ? 'עדכון פרופיל נבחר' : 'Update Selected Profile'}</h2>
+        <p className="modal-message">
+          {selectedManagedProfile
+            ? `${selectedManagedProfile.name}${selectedManagedProfile.email ? ` (${selectedManagedProfile.email})` : ''}`
+            : lang === 'he'
+              ? 'עדכון פרופיל משתמש'
+              : 'Update user profile'}
+        </p>
+
+        {managedEditMessage ? <p className="profile-editor__message">{managedEditMessage}</p> : null}
+        {managedEditError ? <p className="profile-editor__error">{managedEditError}</p> : null}
+
+        <div className="profile-editor__form-grid">
+          <label className="form-group">
+            <span className="form-label">{t.profileCard.fields.name}</span>
+            <input className="form-input" value={selectedManagedProfile?.name || ''} disabled />
+          </label>
+
+          <label className="form-group">
+            <span className="form-label">{t.profileCard.fields.email}</span>
+            <input className="form-input" value={selectedManagedProfile?.email || ''} disabled />
+          </label>
+
+          <label className="form-group">
+            <span className="form-label">{t.profileCard.fields.role}</span>
+            <select className="form-input" value={managedRole} onChange={(event) => onRoleChange(event.target.value)} disabled={isUpdatingManagedProfile}>
+              <option value="WORKER">WORKER</option>
+              <option value="EDITOR">EDITOR</option>
+              <option value="MANAGER">MANAGER</option>
+              <option value="OWNER">OWNER</option>
+            </select>
+          </label>
+
+          <label className="form-group">
+            <span className="form-label">{t.profileCard.fields.status}</span>
+            <select
+              className="form-input"
+              value={managedIsActive ? 'active' : 'inactive'}
+              onChange={(event) => onStatusChange(event.target.value === 'active')}
+              disabled={isUpdatingManagedProfile}
+            >
+              <option value="active">{t.profileCard.active}</option>
+              <option value="inactive">{t.profileCard.inactive}</option>
+            </select>
+          </label>
+        </div>
+
+        <div className="modal-actions">
+          <button className="btn" type="button" onClick={onClose} disabled={isUpdatingManagedProfile}>
+            {lang === 'he' ? 'ביטול' : 'Cancel'}
+          </button>
+          <button className="btn btn-primary" type="button" onClick={onUpdate} disabled={!selectedManagedProfileId || isUpdatingManagedProfile}>
+            <FaFloppyDisk />
+            <span>{isUpdatingManagedProfile ? (lang === 'he' ? 'מעדכן...' : 'Updating...') : (lang === 'he' ? 'עדכון' : 'Update')}</span>
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
