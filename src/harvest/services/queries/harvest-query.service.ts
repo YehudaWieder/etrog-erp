@@ -1,16 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from 'src/generated/prisma';
 import { HarvestRepository } from 'src/harvest/services/harvest-core/repositories/harvest.repository';
+import { hasExplicitOwnerData } from 'src/harvest/services/harvest-core/utils/owner-fallback.util';
 import { SeasonsService } from 'src/seasons/seasons.service';
-
-type HarvestRowForOwnerFallback = {
-  totalHarvested: number;
-  totalRejected: number;
-  ownerHarvested: number;
-  ownerRejected: number;
-  ownerAfterRejected: number;
-  ownerRejectionRate: Prisma.Decimal | number | null;
-};
 
 type FieldHarvestTotalsRow = {
   fieldId: number;
@@ -65,15 +57,6 @@ export class HarvestQueryService {
     private readonly seasonsService: SeasonsService,
   ) {}
 
-  private hasExplicitOwnerData(row: HarvestRowForOwnerFallback): boolean {
-    return (
-      row.ownerHarvested > 0 ||
-      row.ownerRejected > 0 ||
-      row.ownerAfterRejected > 0 ||
-      Number(row.ownerRejectionRate ?? 0) > 0
-    );
-  }
-
   async findAllBySeason(seasonId: number) {
     await this.seasonsService.assertSeasonExists(seasonId);
     return this.harvestRepository.findAllBySeason(seasonId);
@@ -113,7 +96,7 @@ export class HarvestQueryService {
       }
 
       const target = grouped.get(fieldId)!;
-      const hasExplicitOwnerData = this.hasExplicitOwnerData({
+      const hasExplicitOwnerDataValue = hasExplicitOwnerData({
         totalHarvested: row.totalHarvested,
         totalRejected: row.totalRejected,
         ownerHarvested: row.ownerHarvested,
@@ -122,10 +105,10 @@ export class HarvestQueryService {
         ownerRejectionRate: row.ownerRejectionRate,
       });
 
-      const effectiveOwnerHarvested = hasExplicitOwnerData ? row.ownerHarvested : row.totalHarvested;
-      const effectiveOwnerRejected = hasExplicitOwnerData ? row.ownerRejected : row.totalRejected;
-      const effectiveOwnerAfterRejected = hasExplicitOwnerData ? row.ownerAfterRejected : row.totalAfterRejected;
-      const effectiveOwnerRejectionRate = hasExplicitOwnerData
+      const effectiveOwnerHarvested = hasExplicitOwnerDataValue ? row.ownerHarvested : row.totalHarvested;
+      const effectiveOwnerRejected = hasExplicitOwnerDataValue ? row.ownerRejected : row.totalRejected;
+      const effectiveOwnerAfterRejected = hasExplicitOwnerDataValue ? row.ownerAfterRejected : row.totalAfterRejected;
+      const effectiveOwnerRejectionRate = hasExplicitOwnerDataValue
         ? Number(row.ownerRejectionRate)
         : Number(row.rejectionRate);
 
@@ -138,7 +121,7 @@ export class HarvestQueryService {
       target.ownerRejected += effectiveOwnerRejected;
       target.ownerAfterRejected += effectiveOwnerAfterRejected;
       target.ownerRejectionRate += effectiveOwnerRejectionRate;
-      target.hasOwnerOverrides = target.hasOwnerOverrides || hasExplicitOwnerData;
+      target.hasOwnerOverrides = target.hasOwnerOverrides || hasExplicitOwnerDataValue;
       target.isPartialClassification = target.isPartialClassification || Boolean(row.isPartialClassification);
     }
 

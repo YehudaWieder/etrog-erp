@@ -11,6 +11,10 @@ import { AllocationRepository } from 'src/harvest/services/harvest-core/reposito
 import { ClassificationRepository } from 'src/harvest/services/harvest-core/repositories/classification.repository';
 import { assertFinalClassificationConsistency } from 'src/harvest/services/harvest-core/rules/harvest-validation.rules';
 import { calculateHarvestFields } from 'src/harvest/services/harvest-core/utils/harvest-fields.util';
+import {
+  hasExplicitOwnerData,
+  normalizeOwnerInputs,
+} from 'src/harvest/services/harvest-core/utils/owner-fallback.util';
 import { SeasonsService } from 'src/seasons/seasons.service';
 
 @Injectable()
@@ -22,43 +26,6 @@ export class HarvestCommandService {
     private readonly seasonsService: SeasonsService,
   ) {}
 
-  private hasExplicitOwnerData(row: {
-    totalHarvested: number;
-    totalRejected: number;
-    ownerHarvested: number;
-    ownerRejected: number;
-    ownerAfterRejected: number;
-    ownerRejectionRate: Prisma.Decimal | number | null;
-  }): boolean {
-    return (
-      row.ownerHarvested > 0 ||
-      row.ownerRejected > 0 ||
-      row.ownerAfterRejected > 0 ||
-      Number(row.ownerRejectionRate ?? 0) > 0
-    );
-  }
-
-  private normalizeOwnerInputs(params: {
-    totalHarvested: number;
-    totalRejected: number;
-    ownerHarvested?: number;
-    ownerRejected?: number;
-  }): { ownerHarvested: number; ownerRejected: number } {
-    const ownerProvided = params.ownerHarvested !== undefined || params.ownerRejected !== undefined;
-
-    if (!ownerProvided) {
-      return {
-        ownerHarvested: params.totalHarvested,
-        ownerRejected: params.totalRejected,
-      };
-    }
-
-    return {
-      ownerHarvested: Number(params.ownerHarvested) || 0,
-      ownerRejected: Number(params.ownerRejected) || 0,
-    };
-  }
-
   async create(data: FieldHarvestCreateDto, actorId: number) {
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
     const dateStr = new Date(data.dateGregorian).toISOString().split('T')[0];
@@ -69,7 +36,7 @@ export class HarvestCommandService {
 
     const totalHarvested = Number(data.totalHarvested) || 0;
     const totalRejected = Number(data.totalRejected) || 0;
-    const normalizedOwners = this.normalizeOwnerInputs({
+    const normalizedOwners = normalizeOwnerInputs({
       totalHarvested,
       totalRejected,
       ownerHarvested: data.ownerHarvested,
@@ -107,7 +74,7 @@ export class HarvestCommandService {
     const totalHarvested = Number(mergedData.totalHarvested) || 0;
     const totalRejected = Number(mergedData.totalRejected) || 0;
     const ownerFieldsProvided = data.ownerHarvested !== undefined || data.ownerRejected !== undefined;
-    const currentHasExplicitOwnerData = this.hasExplicitOwnerData({
+    const currentHasExplicitOwnerData = hasExplicitOwnerData({
       totalHarvested: current.totalHarvested,
       totalRejected: current.totalRejected,
       ownerHarvested: current.ownerHarvested,

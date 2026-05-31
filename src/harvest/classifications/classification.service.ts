@@ -1,8 +1,10 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { Prisma } from 'src/generated/prisma';
 import { ClassificationRepository } from 'src/harvest/services/harvest-core/repositories/classification.repository';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { buildClassificationDailySummary } from 'src/harvest/classifications/utils/classification-daily-summary.util';
+import { CreateClassificationDto } from 'src/harvest/classifications/dto/create-classification.dto';
+import { UpdateClassificationDto } from 'src/harvest/classifications/dto/update-classification.dto';
+import { throwClassificationMutationGuardError } from 'src/harvest/classifications/utils/classification-mutation-guard.util';
 
 @Injectable()
 export class ClassificationService {
@@ -12,11 +14,9 @@ export class ClassificationService {
   ) {}
 
   // Mutations are centralized under Harvest workflow.
-  async create(data: Prisma.ClassificationUncheckedCreateInput) {
+  async create(data: CreateClassificationDto) {
     void data;
-    throw new BadRequestException(
-      'Classification create is centralized under harvest workflow. Use POST /harvests/classifications with body-based harvestId and isPartialClassification.',
-    );
+    throwClassificationMutationGuardError('create');
   }
 
   // Get all classifications for a specific harvest report
@@ -43,19 +43,15 @@ export class ClassificationService {
     return record;
   }
 
-  async update(id: number, data: Prisma.ClassificationUncheckedUpdateInput) {
+  async update(id: number, data: UpdateClassificationDto) {
     void id;
     void data;
-    throw new BadRequestException(
-      'Classification update is centralized under harvest workflow. Use PATCH /harvests/classifications with body-based harvestId, classificationId, and isPartialClassification.',
-    );
+    throwClassificationMutationGuardError('update');
   }
 
   // Mutations are centralized under Harvest workflow.
   async remove(id: number) {
     void id;
-    throw new BadRequestException(
-      'Classification delete is centralized under harvest workflow. Use DELETE /harvests/classifications with body-based harvestId, classificationId, and isPartialClassification.',
-    );
+    throwClassificationMutationGuardError('delete');
   }
 }
