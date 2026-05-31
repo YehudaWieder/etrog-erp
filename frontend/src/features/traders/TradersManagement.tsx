@@ -7,7 +7,7 @@ import ManagementSelectableCard from '../../components/ui/ManagementSelectableCa
 import SettingsInnerTemplate from '../../components/ui/SettingsInnerTemplate';
 import { addTrader, editTrader, fetchTraders, removeTrader } from '../../store/tradersSlice';
 import type { AppDispatch, RootState } from '../../store';
-import { getManagementI18n, resolveAppLang } from '../settings/managementI18n';
+import { getTradersI18n } from './i18n';
 
 const MIN_PAYMENT_PERCENT = 0;
 const MAX_PAYMENT_PERCENT = 100;
@@ -47,7 +47,7 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
   const [editError, setEditError] = useState<string | null>(null);
   const [editTraderName, setEditTraderName] = useState('');
   const [editTraderPercent, setEditTraderPercent] = useState('');
-  const t = getManagementI18n(resolveAppLang()).traders;
+  const t = getTradersI18n();
 
   useEffect(() => {
     dispatch(fetchTraders());

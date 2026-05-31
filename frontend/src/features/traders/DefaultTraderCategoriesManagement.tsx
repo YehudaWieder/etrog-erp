@@ -17,7 +17,7 @@ import {
 } from '../../services/defaultTraderCategoriesApi';
 import { fetchTraders } from '../../store/tradersSlice';
 import type { AppDispatch, RootState } from '../../store';
-import { getManagementI18n, resolveAppLang } from '../settings/managementI18n';
+import { getDefaultTraderCategoriesI18n, resolveTradersAppLang } from './i18n';
 
 type ShareRow = {
   rowId: number;
@@ -63,8 +63,8 @@ type DefaultTraderCategoriesManagementProps = {
 
 const DefaultTraderCategoriesManagement: React.FC<DefaultTraderCategoriesManagementProps> = ({ onHeaderStateChange }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const appLang = resolveAppLang();
-  const t = getManagementI18n(resolveAppLang()).defaultTraderCategories;
+  const appLang = resolveTradersAppLang();
+  const t = getDefaultTraderCategoriesI18n();
   const traders = useSelector((state: RootState) => state.traders.items);
 
   const [categories, setCategories] = useState<DefaultTraderCategory[]>([]);

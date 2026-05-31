@@ -17,7 +17,7 @@ import { fetchSeasons } from '../../store/seasonsSlice';
 import { fetchTraders } from '../../store/tradersSlice';
 import { setScopeFilter } from '../../store/globalFiltersSlice';
 import type { AppDispatch, RootState } from '../../store';
-import { getManagementI18n, resolveAppLang } from '../settings/managementI18n';
+import { getTraderCategoriesI18n, resolveTradersAppLang } from './i18n';
 import {
   buildTraderCategoriesFiltersConfig,
   parseTraderCategorySeasonFilterId,
@@ -70,8 +70,8 @@ const isShareRowComplete = (row: ShareRow): boolean => {
 
 const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({ onHeaderStateChange }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const appLang = resolveAppLang();
-  const t = getManagementI18n(resolveAppLang()).traderCategories;
+  const appLang = resolveTradersAppLang();
+  const t = getTraderCategoriesI18n();
 
   const seasons = useSelector((state: RootState) => state.seasons.items);
   const activeSeasonId = useSelector((state: RootState) => state.seasons.activeSeasonId);
