@@ -9,7 +9,7 @@ import {
   ApiQuery,
   ApiParam,
 } from '@nestjs/swagger';
-import { ClassificationService } from './classification.service';
+import { ClassificationService } from 'src/harvest/classifications/classification.service';
 
 @ApiTags('Operations')
 @ApiBearerAuth('access-token')

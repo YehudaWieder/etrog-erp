@@ -1,4 +1,4 @@
-// src/harvest/harvest.utils.ts
+// src/harvest/services/harvest-core/utils/harvest-fields.util.ts
 
 export function calculateHarvestFields(data: {
   totalHarvested?: number;

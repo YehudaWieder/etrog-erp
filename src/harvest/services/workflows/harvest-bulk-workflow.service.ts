@@ -1,10 +1,10 @@
-// src/harvest/harvest-bulk.service.ts
+// src/harvest/services/workflows/harvest-bulk-workflow.service.ts
 
 import { Injectable, BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { Prisma, AssignmentType, Classification, MovementType } from '@prisma/client';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Prisma, AssignmentType, Classification } from 'src/generated/prisma';
 import { SeasonsService } from 'src/seasons/seasons.service';
-import { calculateHarvestFields } from './harvest.utils';
+import { calculateHarvestFields } from 'src/harvest/services/harvest-core/utils/harvest-fields.util';
 import {
   HarvestBulkCreateDto,
   ClassificationBulkItemDto,
@@ -12,13 +12,21 @@ import {
   UpdateHarvestClassificationDto,
   DeleteHarvestClassificationDto,
   HarvestInlineUpdateDto,
-} from 'src/docs/dto/swagger-enums.dto';
+} from 'src/harvest/services/harvest-core/dto/harvest.dto';
+import {
+  assertClassificationsMatchHarvested,
+  assertFinalClassificationConsistency,
+  assertGeneralAssignmentIds,
+  assertNoDuplicateClassifications,
+} from 'src/harvest/services/harvest-core/rules/harvest-validation.rules';
+import { HarvestAllocationService } from 'src/harvest/services/workflows/harvest-allocation.service';
 
 @Injectable()
-export class HarvestBulkService {
+export class HarvestBulkWorkflowService {
   constructor(
     private prisma: PrismaService,
     private seasonsService: SeasonsService,
+    private readonly allocationService: HarvestAllocationService,
   ) {}
 
   private mapToClassificationBulkItem(c: Classification): ClassificationBulkItemDto {
@@ -35,359 +43,8 @@ export class HarvestBulkService {
     };
   }
 
-  private validateNoDuplicateClassifications(items: ClassificationBulkItemDto[]) {
-    const seen = new Set<string>();
-
-    for (const item of items) {
-      const key = `${item.assignmentType}|${item.traderId ?? 'null'}|${item.customerId ?? 'null'}|${item.traderCategoryId ?? 'null'}|${item.customerCategoryId ?? 'null'}|${item.grade ?? 'null'}`;
-      if (seen.has(key)) {
-        throw new ConflictException(
-          'Duplicate classification found. Each combination of assignmentType, trader/customer, and category must be unique.',
-        );
-      }
-      seen.add(key);
-    }
-  }
-
-  private validateClassificationsTotalMatchesHarvested(data: HarvestBulkCreateDto) {
-    if (data.totalHarvested === undefined || data.totalHarvested === null) {
-      throw new BadRequestException('totalHarvested is required for bulk classifications validation');
-    }
-
-    const totalRejected = data.totalRejected || 0;
-    const netHarvested = Math.max((data.totalHarvested || 0) - totalRejected, 0);
-    const classificationsTotal = data.classifications.reduce(
-      (sum, item) => sum + (item.quantity || 0),
-      0,
-    );
-
-    if (classificationsTotal > netHarvested) {
-      throw new BadRequestException(
-        `Total classifications quantity (${classificationsTotal}) cannot exceed net harvested quantity (${netHarvested})`,
-      );
-    }
-
-    if (data.isPartialClassification) {
-      return;
-    }
-
-    if (classificationsTotal !== netHarvested) {
-      throw new BadRequestException(
-        `Total classifications quantity (${classificationsTotal}) must equal net harvested quantity (${netHarvested})`,
-      );
-    }
-  }
-
-  private validateAssignmentIdsForGeneral(classItem: {
-    assignmentType: AssignmentType;
-    traderId?: number | null;
-    customerId?: number | null;
-  }) {
-    if (classItem.assignmentType !== AssignmentType.GENERAL) {
-      return;
-    }
-
-    if (classItem.traderId !== undefined && classItem.traderId !== null) {
-      throw new BadRequestException(
-        'traderId cannot be provided when assignmentType is GENERAL',
-      );
-    }
-
-    if (classItem.customerId !== undefined && classItem.customerId !== null) {
-      throw new BadRequestException(
-        'customerId cannot be provided when assignmentType is GENERAL',
-      );
-    }
-  }
-
-  private async getTraderCategoryShares(tx: any, seasonId: number, traderCategoryId: number) {
-    return tx.traderCategoryShare.findMany({
-      where: {
-        seasonId,
-        traderCategoryId,
-      },
-      orderBy: { traderId: 'asc' },
-    });
-  }
-
-  private calculateShareAllocations(
-    quantity: number,
-    shares: Array<{ traderId: number; percent: Prisma.Decimal | number | string }>,
-  ) {
-    return shares.map((share) => ({
-      share,
-      quantity: Math.floor((quantity * Number(share.percent)) / 100),
-    }));
-  }
-
-  private async tryAssignFromModuloPool(
-    tx: any,
-    params: {
-      seasonId: number;
-      date: Date;
-      traderCategoryId: number;
-      grade: NonNullable<ClassificationBulkItemDto['grade']>;
-      pitamStatus: ClassificationBulkItemDto['pitamStatus'];
-      updatedById: number;
-      notes?: string;
-      movementReferenceId?: number;
-    },
-  ) {
-    const moduloBalance = await tx.traderStock.aggregate({
-      _sum: { quantity: true },
-      where: {
-        seasonId: params.seasonId,
-        traderId: null,
-        isModulo: true,
-        traderCategoryId: params.traderCategoryId,
-        grade: params.grade,
-        pitamStatus: params.pitamStatus,
-        isDeleted: false,
-      },
-    });
-
-    const availableQty = moduloBalance._sum.quantity ?? 0;
-    if (availableQty <= 0) {
-      return;
-    }
-
-    const shares = await this.getTraderCategoryShares(tx, params.seasonId, params.traderCategoryId);
-
-    if (shares.length === 0) {
-      return;
-    }
-
-    const allocations = this.calculateShareAllocations(availableQty, shares).map((allocation) => ({
-      traderId: allocation.share.traderId,
-      quantity: allocation.quantity,
-    }));
-
-    const canAssignToAll = allocations.every((allocation) => allocation.quantity > 0);
-    if (!canAssignToAll) {
-      return;
-    }
-
-    const totalAssigned = allocations.reduce((sum, allocation) => sum + allocation.quantity, 0);
-    const moduloRemainder = availableQty - totalAssigned;
-
-    if (totalAssigned <= 0) {
-      return;
-    }
-
-    if (moduloRemainder < 0) {
-      throw new BadRequestException(
-        `Invalid trader shares configuration for category ${params.traderCategoryId}: total assigned (${totalAssigned}) exceeds available modulo (${availableQty})`,
-      );
-    }
-
-    for (const allocation of allocations) {
-      await tx.traderStock.create({
-        data: {
-          seasonId: params.seasonId,
-          date: params.date,
-          traderId: allocation.traderId,
-          traderCategoryId: params.traderCategoryId,
-          grade: params.grade,
-          pitamStatus: params.pitamStatus,
-          quantity: allocation.quantity,
-          isModulo: false,
-          type: 'ASSIGNED',
-          MovementReferenceId: params.movementReferenceId,
-          updatedById: params.updatedById,
-          notes: params.notes,
-        },
-      });
-    }
-
-    // Subtract only what was actually assigned; modulo remainder stays as-is.
-    await tx.traderStock.create({
-      data: {
-        seasonId: params.seasonId,
-        date: params.date,
-        traderId: null,
-        traderCategoryId: params.traderCategoryId,
-        grade: params.grade,
-        pitamStatus: params.pitamStatus,
-        quantity: -totalAssigned,
-        isModulo: true,
-        type: 'ASSIGNED',
-        MovementReferenceId: params.movementReferenceId,
-        updatedById: params.updatedById,
-        notes: params.notes,
-      },
-    });
-  }
-
-  async processAllocationsForClassification(
-    tx: any,
-    params: {
-      seasonId: number;
-      classificationId: number;
-      classificationItem: ClassificationBulkItemDto;
-      harvestDate: Date;
-      updatedById: number;
-    },
-  ) {
-    const classItem = params.classificationItem;
-
-    // Handle allocation based on assignmentType
-    if (classItem.assignmentType === AssignmentType.CUSTOMER) {
-      // Create CustomerAllocation
-      await tx.customerAllocation.create({
-        data: {
-          seasonId: params.seasonId,
-          date: params.harvestDate,
-          dateHebrew: new Date(params.harvestDate).toLocaleDateString('he-IL'),
-          customerId: classItem.customerId!,
-          customerCategoryId: classItem.customerCategoryId!,
-          pitamStatus: classItem.pitamStatus,
-          quantity: classItem.quantity,
-          type: 'HARVEST_IN',
-          takenFrom: 'GENERAL',
-          MovementReferenceId: params.classificationId,
-          updatedById: params.updatedById,
-          notes: classItem.notes,
-        },
-      });
-    } else if (classItem.assignmentType === AssignmentType.TRADER) {
-      if (!classItem.traderId) {
-        throw new BadRequestException('traderId is required for TRADER classifications');
-      }
-
-      if (!classItem.traderCategoryId) {
-        throw new BadRequestException('traderCategoryId is required for TRADER classifications');
-      }
-
-      if (!classItem.grade) {
-        throw new BadRequestException('grade is required for TRADER classifications');
-      }
-
-      await tx.traderStock.create({
-        data: {
-          seasonId: params.seasonId,
-          date: params.harvestDate,
-          traderId: classItem.traderId,
-          traderCategoryId: classItem.traderCategoryId,
-          grade: classItem.grade,
-          pitamStatus: classItem.pitamStatus,
-          quantity: classItem.quantity,
-          isModulo: false,
-          type: 'HARVEST_IN',
-          MovementReferenceId: params.classificationId,
-          updatedById: params.updatedById,
-          notes: classItem.notes,
-        },
-      });
-    } else if (classItem.assignmentType === AssignmentType.GENERAL) {
-      if (!classItem.traderCategoryId) {
-        throw new BadRequestException('traderCategoryId is required for GENERAL classifications');
-      }
-
-      if (!classItem.grade) {
-        throw new BadRequestException('grade is required for GENERAL classifications');
-      }
-
-      // Get all traders for this category
-      const shares = await this.getTraderCategoryShares(tx, params.seasonId, classItem.traderCategoryId);
-
-      if (shares.length === 0) {
-        throw new BadRequestException(
-          `No trader shares found for category ${classItem.traderCategoryId} in season ${params.seasonId}`,
-        );
-      }
-
-      // Pre-calculate allocations; if any trader would get 0, push everything to modulo.
-      const allocations = this.calculateShareAllocations(classItem.quantity, shares);
-
-      const canDistributeToAll = allocations.every((allocation) => allocation.quantity > 0);
-      let didAddModulo = false;
-
-      if (!canDistributeToAll) {
-        await tx.traderStock.create({
-          data: {
-            seasonId: params.seasonId,
-            date: params.harvestDate,
-            traderId: null, // Modulo pool
-            traderCategoryId: classItem.traderCategoryId,
-            grade: classItem.grade,
-            pitamStatus: classItem.pitamStatus,
-            quantity: classItem.quantity,
-            isModulo: true,
-            type: 'HARVEST_IN',
-            MovementReferenceId: params.classificationId,
-            updatedById: params.updatedById,
-            notes: classItem.notes,
-          },
-        });
-        didAddModulo = true;
-      } else {
-        let totalAllocated = 0;
-
-        for (const allocation of allocations) {
-          await tx.traderStock.create({
-            data: {
-              seasonId: params.seasonId,
-              date: params.harvestDate,
-              traderId: allocation.share.traderId,
-              traderCategoryId: classItem.traderCategoryId,
-              grade: classItem.grade,
-              pitamStatus: classItem.pitamStatus,
-              quantity: allocation.quantity,
-              isModulo: false,
-              type: 'HARVEST_IN',
-              MovementReferenceId: params.classificationId,
-              updatedById: params.updatedById,
-              notes: classItem.notes,
-            },
-          });
-
-          totalAllocated += allocation.quantity;
-        }
-
-        // Handle remainder (modulo)
-        const remainder = classItem.quantity - totalAllocated;
-        if (remainder > 0) {
-          await tx.traderStock.create({
-            data: {
-              seasonId: params.seasonId,
-              date: params.harvestDate,
-              traderId: null, // Modulo pool
-              traderCategoryId: classItem.traderCategoryId,
-              grade: classItem.grade,
-              pitamStatus: classItem.pitamStatus,
-              quantity: remainder,
-              isModulo: true,
-              type: 'HARVEST_IN',
-              MovementReferenceId: params.classificationId,
-              updatedById: params.updatedById,
-              notes: classItem.notes,
-            },
-          });
-          didAddModulo = true;
-        }
-      }
-
-      if (didAddModulo) {
-        await this.tryAssignFromModuloPool(tx, {
-          seasonId: params.seasonId,
-          date: params.harvestDate,
-          traderCategoryId: classItem.traderCategoryId,
-          grade: classItem.grade,
-          pitamStatus: classItem.pitamStatus,
-          updatedById: params.updatedById,
-          notes: classItem.notes,
-          movementReferenceId: params.classificationId,
-        });
-      }
-    } else {
-      throw new BadRequestException(
-        `Unsupported assignmentType for allocation processing: ${classItem.assignmentType}`,
-      );
-    }
-  }
-
   private async createClassificationAndAllocate(
-    tx: any,
+    tx: Prisma.TransactionClient,
     params: {
       seasonId: number;
       harvestId: number;
@@ -398,7 +55,7 @@ export class HarvestBulkService {
     },
   ) {
     const classItem = params.classificationItem;
-    this.validateAssignmentIdsForGeneral(classItem);
+    assertGeneralAssignmentIds(classItem);
 
     // Create Classification
     const classSlug = `harvest-${params.harvestId}-tcat-${classItem.traderCategoryId ?? 0}-ccat-${classItem.customerCategoryId ?? 0}-g-${classItem.grade ?? 'NA'}-pitam-${classItem.pitamStatus}-a-${classItem.assignmentType}`;
@@ -418,11 +75,11 @@ export class HarvestBulkService {
         quantity: classItem.quantity,
         notes: classItem.notes,
         slug: classSlug,
-      } as any,
+      },
     });
 
     // Process allocations using reusable method
-    await this.processAllocationsForClassification(tx, {
+    await this.allocationService.processAllocationsForClassification(tx, {
       seasonId: params.seasonId,
       classificationId: classification.id,
       classificationItem: classItem,
@@ -434,7 +91,7 @@ export class HarvestBulkService {
   }
 
   private async applyHarvestInlineUpdate(
-    tx: any,
+    tx: Prisma.TransactionClient,
     harvestId: number,
     harvestUpdate?: HarvestInlineUpdateDto,
   ) {
@@ -504,7 +161,7 @@ export class HarvestBulkService {
   }
 
   private async syncHarvestClassificationProgress(
-    tx: any,
+    tx: Prisma.TransactionClient,
     harvestId: number,
     isPartialClassification: boolean,
   ) {
@@ -529,17 +186,7 @@ export class HarvestBulkService {
     const classifiedTotal = classifiedAgg._sum.quantity ?? 0;
     const totalAfterRejected = harvest.totalAfterRejected;
 
-    if (classifiedTotal > totalAfterRejected) {
-      throw new BadRequestException(
-        `Total classifications quantity (${classifiedTotal}) cannot exceed net harvested quantity (${totalAfterRejected})`,
-      );
-    }
-
-    if (!isPartialClassification && classifiedTotal !== totalAfterRejected) {
-      throw new BadRequestException(
-        `Total classifications quantity (${classifiedTotal}) must equal net harvested quantity (${totalAfterRejected}) in FINAL mode`,
-      );
-    }
+    assertFinalClassificationConsistency(classifiedTotal, totalAfterRejected, isPartialClassification);
 
     await tx.fieldHarvest.update({
       where: { id: harvestId },
@@ -560,7 +207,7 @@ export class HarvestBulkService {
       updatedById: actorId,
     };
 
-    this.validateAssignmentIdsForGeneral(createPayload);
+    assertGeneralAssignmentIds(createPayload);
 
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
 
@@ -601,10 +248,10 @@ export class HarvestBulkService {
           quantity: createPayload.quantity,
           notes: createPayload.notes,
           slug: classSlug,
-        } as any,
+        },
       });
 
-      await this.processAllocationsForClassification(tx, {
+      await this.allocationService.processAllocationsForClassification(tx, {
         seasonId,
         classificationId: classification.id,
         classificationItem: this.mapToClassificationBulkItem(classification),
@@ -629,8 +276,8 @@ export class HarvestBulkService {
     };
 
     // 1. Validate no duplicate classifications
-    this.validateNoDuplicateClassifications(bulkPayload.classifications);
-    this.validateClassificationsTotalMatchesHarvested(bulkPayload);
+    assertNoDuplicateClassifications(bulkPayload.classifications);
+    assertClassificationsMatchHarvested(bulkPayload);
 
     // 2. Get active season
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
@@ -681,7 +328,7 @@ export class HarvestBulkService {
       });
 
       // 3b. Process each classification
-      const classifications: any[] = [];
+      const classifications: Classification[] = [];
       for (const classItem of bulkPayload.classifications) {
         const classification = await this.createClassificationAndAllocate(tx, {
           seasonId,
@@ -774,22 +421,7 @@ export class HarvestBulkService {
 
     return this.prisma.$transaction(async (tx) => {
       // Delete all old movements linked to this classification
-      await tx.customerAllocation.deleteMany({
-        where: {
-          MovementReferenceId: classificationId,
-          type: MovementType.HARVEST_IN,
-          shipmentId: null,
-          boxId: null,
-        },
-      });
-      await tx.traderStock.deleteMany({
-        where: {
-          MovementReferenceId: classificationId,
-          type: { in: [MovementType.HARVEST_IN, MovementType.ASSIGNED] },
-          shipmentId: null,
-          boxId: null,
-        },
-      });
+      await this.allocationService.deleteLinkedMovements(tx, classificationId);
 
       // Get the harvest to update quantities
       const harvest = await tx.fieldHarvest.findUnique({
@@ -805,7 +437,7 @@ export class HarvestBulkService {
       const nextAssignmentType =
         updatePayload.assignmentType ?? oldClassification.assignmentType;
 
-      this.validateAssignmentIdsForGeneral({
+      assertGeneralAssignmentIds({
         assignmentType: nextAssignmentType,
         traderId: updatePayload.traderId,
         customerId: updatePayload.customerId,
@@ -841,7 +473,7 @@ export class HarvestBulkService {
       });
 
       // Recreate allocations with updated data
-      await this.processAllocationsForClassification(tx, {
+      await this.allocationService.processAllocationsForClassification(tx, {
         seasonId,
         classificationId: classificationId,
         classificationItem: this.mapToClassificationBulkItem(updatedClassification),
@@ -885,23 +517,7 @@ export class HarvestBulkService {
 
         await this.applyHarvestInlineUpdate(tx, harvestId, deletePayload.harvestUpdate);
 
-        await tx.customerAllocation.deleteMany({
-          where: {
-            MovementReferenceId: classificationId,
-            type: MovementType.HARVEST_IN,
-            shipmentId: null,
-            boxId: null,
-          },
-        });
-
-        await tx.traderStock.deleteMany({
-          where: {
-            MovementReferenceId: classificationId,
-            type: { in: [MovementType.HARVEST_IN, MovementType.ASSIGNED] },
-            shipmentId: null,
-            boxId: null,
-          },
-        });
+        await this.allocationService.deleteLinkedMovements(tx, classificationId);
 
         const deleted = await tx.classification.delete({
           where: { id: classificationId },
