@@ -1,59 +1,27 @@
 // src/partners/services/customers/customers.service.ts
 
 import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../../../prisma/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma, Role } from '@prisma/client';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
-import { isValidEmail, isValidPhone, sanitizeEmail, sanitizePhone, sanitizeText } from 'src/common/utils/input-normalization.util';
-
-type CustomerWriteInput = {
-  customerName?: string;
-  email?: string | null;
-  phone?: string | null;
-};
+import { CreateCustomerDto } from './dto/create-customer.dto';
+import { UpdateCustomerDto } from './dto/update-customer.dto';
+import {
+  createCustomerSlug,
+  CustomerWriteInput,
+  isManagerOrAbove,
+  sanitizeCustomerWriteInput,
+  validateCustomerWriteInput,
+} from './utils/customers.utils';
 
 @Injectable()
 export class CustomersService {
   constructor(private prisma: PrismaService) {}
 
-  private sanitizeCustomerWriteInput(data: CustomerWriteInput): CustomerWriteInput {
-    const sanitized: CustomerWriteInput = { ...data };
-
-    if (typeof sanitized.customerName === 'string') {
-      sanitized.customerName = sanitizeText(sanitized.customerName);
-    }
-
-    if (typeof sanitized.email === 'string') {
-      const normalizedEmail = sanitizeEmail(sanitized.email);
-      sanitized.email = normalizedEmail === '' ? null : normalizedEmail;
-    }
-
-    if (typeof sanitized.phone === 'string') {
-      const normalizedPhone = sanitizePhone(sanitized.phone);
-      sanitized.phone = normalizedPhone === '' ? null : normalizedPhone;
-    }
-
-    return sanitized;
-  }
-
-  private validateCustomerWriteInput(data: CustomerWriteInput): void {
-    if (typeof data.customerName === 'string' && data.customerName === '') {
-      throw new BadRequestException('customerName cannot be empty');
-    }
-
-    if (typeof data.email === 'string' && !isValidEmail(data.email)) {
-      throw new BadRequestException('email is not valid');
-    }
-
-    if (typeof data.phone === 'string' && !isValidPhone(data.phone)) {
-      throw new BadRequestException('phone is not valid');
-    }
-  }
-
   // Create a new customer
-  async create(data: { customerName: string; email?: string | null; phone?: string | null }) {
-    const sanitizedData = this.sanitizeCustomerWriteInput(data);
-    this.validateCustomerWriteInput(sanitizedData);
+  async create(data: CreateCustomerDto) {
+    const sanitizedData = sanitizeCustomerWriteInput(data);
+    validateCustomerWriteInput(sanitizedData);
 
     const customerName = sanitizedData.customerName;
 
@@ -71,16 +39,16 @@ export class CustomersService {
         customerName,
         email: sanitizedData.email ?? undefined,
         phone: sanitizedData.phone ?? undefined,
-        slug: customerName.toLowerCase().replace(/ /g, '-'),
+        slug: createCustomerSlug(customerName),
       },
     });
   }
 
   // Get all customers. Editor receives only id and customerName.
   async findAllByActor(actor: AuthenticatedUser) {
-    const isManagerOrAbove = actor.role === Role.MANAGER || actor.role === Role.OWNER;
+    const allowFullView = isManagerOrAbove(actor);
 
-    if (!isManagerOrAbove) {
+    if (!allowFullView) {
       return this.prisma.customer.findMany({
         select: { id: true, customerName: true },
         orderBy: { customerName: 'asc' },
@@ -94,11 +62,11 @@ export class CustomersService {
 
   // Find one by ID or Slug. Editor receives only id and customerName.
   async findOneByActor(idOrSlug: string | number, actor: AuthenticatedUser) {
-    const isManagerOrAbove = actor.role === Role.MANAGER || actor.role === Role.OWNER;
+    const allowFullView = isManagerOrAbove(actor);
 
     const customer = await this.prisma.customer.findFirst({
       where: typeof idOrSlug === 'number' ? { id: idOrSlug } : { slug: idOrSlug },
-      ...(isManagerOrAbove ? {} : { select: { id: true, customerName: true } }),
+      ...(allowFullView ? {} : { select: { id: true, customerName: true } }),
     });
 
     if (!customer) throw new NotFoundException(`Customer not found`);
@@ -106,9 +74,10 @@ export class CustomersService {
   }
 
   // Update customer details
-  async update(id: number, data: CustomerWriteInput) {
-    const sanitizedData = this.sanitizeCustomerWriteInput(data);
-    this.validateCustomerWriteInput(sanitizedData);
+  async update(data: UpdateCustomerDto) {
+    const { id, ...payload } = data;
+    const sanitizedData = sanitizeCustomerWriteInput(payload);
+    validateCustomerWriteInput(sanitizedData);
 
     const updateData: CustomerWriteInput = { ...sanitizedData };
 
@@ -119,7 +88,7 @@ export class CustomersService {
         where: { id },
         data: {
           ...updateData,
-          slug: customerName.toLowerCase().replace(/ /g, '-'),
+          slug: createCustomerSlug(customerName),
         },
       });
     }

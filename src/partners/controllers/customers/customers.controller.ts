@@ -7,7 +7,8 @@ import { Role } from '@prisma/client';
 import { Roles } from 'src/authorization/decorators/roles.decorator';
 import { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
-import { CustomerUpdateSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+import { CreateCustomerDto } from 'src/partners/services/customers/dto/create-customer.dto';
+import { UpdateCustomerDto } from 'src/partners/services/customers/dto/update-customer.dto';
 
 @ApiTags('Partners')
 @ApiBearerAuth('access-token')
@@ -20,25 +21,12 @@ export class CustomersController {
   @Post()
   @ApiOperation({ summary: 'Register a new customer. Unique constraints: [customerName], [email], [phone].' })
   @ApiBody({
-    schema: {
-      type: 'object',
-      required: ['customerName'],
-      properties: {
-        customerName: { type: 'string', description: 'The unique name of the customer.', example: 'Fresh Market Ltd' },
-        email: { type: 'string', format: 'email', description: 'Optional unique email address.', nullable: true, example: 'orders@fresh-market.co.il' },
-        phone: { type: 'string', description: 'Optional unique phone number.', nullable: true, example: '0501234567' },
-      },
-      example: {
-        customerName: 'Fresh Market Ltd',
-        email: 'orders@fresh-market.co.il',
-        phone: '0501234567',
-      },
-    },
+    type: CreateCustomerDto,
   })
   @ApiResponse({ status: 201, description: 'Customer created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate customer name/email/phone.' })
   @Roles(Role.OWNER, Role.MANAGER)
-  create(@Body() data: { customerName: string; email?: string | null; phone?: string | null }) {
+  create(@Body() data: CreateCustomerDto) {
     return this.customersService.create(data);
   }
 
@@ -62,7 +50,7 @@ export class CustomersController {
   @Patch()
   @ApiOperation({ summary: 'Update customer details by ID' })
   @ApiBody({
-    type: CustomerUpdateSwaggerDto,
+    type: UpdateCustomerDto,
     examples: {
       sample: {
         summary: 'Update a customer by ID',
@@ -79,11 +67,8 @@ export class CustomersController {
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Customer not found.' })
   @Roles(Role.OWNER, Role.MANAGER)
-  update(
-    @Body() updateData: CustomerUpdateSwaggerDto,
-  ) {
-    const { id, ...data } = updateData;
-    return this.customersService.update(id, data);
+  update(@Body() updateData: UpdateCustomerDto) {
+    return this.customersService.update(updateData);
   }
 
   @Delete(':id')

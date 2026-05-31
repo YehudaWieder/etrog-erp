@@ -3,11 +3,12 @@
 import { BadRequestException, Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { TradersService } from '../../services/traders/traders.service';
-import { Prisma, Role } from '@prisma/client';
+import { Role } from '@prisma/client';
 import { Roles } from 'src/authorization/decorators/roles.decorator';
 import { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
-import { TraderCreateSwaggerDto, TraderUpdateSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
+import { CreateTraderDto } from 'src/partners/services/traders/dto/create-trader.dto';
+import { UpdateTraderDto } from 'src/partners/services/traders/dto/update-trader.dto';
 
 @ApiTags('Partners')
 @ApiBearerAuth('access-token')
@@ -20,7 +21,7 @@ export class TradersController {
   @Post()
   @ApiOperation({ summary: 'Register a new trader. Unique constraint: [name].' })
   @ApiBody({
-    type: TraderCreateSwaggerDto,
+    type: CreateTraderDto,
     examples: {
       sample: {
         summary: 'Create a new trader',
@@ -34,15 +35,12 @@ export class TradersController {
   @ApiResponse({ status: 201, description: 'Trader created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate trader name.' })
   @Roles(Role.OWNER, Role.MANAGER)
-  create(
-    @Body('name') name: string,
-    @Body('paymentPercent') paymentPercent: number,
-  ) {
-    if (paymentPercent === undefined || paymentPercent === null) {
+  create(@Body() data: CreateTraderDto) {
+    if (data.paymentPercent === undefined || data.paymentPercent === null) {
       throw new BadRequestException('paymentPercent is required');
     }
 
-    return this.tradersService.create(name, paymentPercent);
+    return this.tradersService.create(data);
   }
 
   @Get()
@@ -65,7 +63,7 @@ export class TradersController {
   @Patch()
   @ApiOperation({ summary: 'Update trader details (name, payment percentage) by ID' })
   @ApiBody({
-    type: TraderUpdateSwaggerDto,
+    type: UpdateTraderDto,
     examples: {
       sample: {
         summary: 'Update a trader by ID',
@@ -81,15 +79,12 @@ export class TradersController {
   @ApiResponse({ status: 400, description: 'Invalid update data.' })
   @ApiResponse({ status: 404, description: 'Trader not found.' })
   @Roles(Role.OWNER, Role.MANAGER)
-  update(
-    @Body() updateData: TraderUpdateSwaggerDto,
-  ) {
+  update(@Body() updateData: UpdateTraderDto) {
     if (updateData.paymentPercent === undefined || updateData.paymentPercent === null) {
       throw new BadRequestException('paymentPercent is required');
     }
 
-    const { id, ...data } = updateData;
-    return this.tradersService.update(id, data as Partial<Prisma.TraderUpdateInput>);
+    return this.tradersService.update(updateData);
   }
 
   @Delete(':id')
