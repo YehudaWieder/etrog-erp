@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY } from '../../auth/decorators/public.decorator';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 @Injectable()
 export class ActiveGuard implements CanActivate {
@@ -30,7 +30,9 @@ export class ActiveGuard implements CanActivate {
     }
 
     if (!user.isActive) {
-      throw new ForbiddenException('Inactive users are not allowed to access this resource.');
+      throw new ForbiddenException(
+        'Inactive users are not allowed to access this resource.',
+      );
     }
 
     return true;

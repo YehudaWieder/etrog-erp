@@ -18,6 +18,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { AuthorizationModule } from './authorization/authorization.module';
 import { RolesGuard } from './authorization/guards/roles.guard';
 import { ActiveGuard } from './authorization/guards/active.guard';
+import { WorkerAccessGuard } from './authorization/guards/worker-access.guard';
 
 @Module({
   imports: [
@@ -41,6 +42,10 @@ import { ActiveGuard } from './authorization/guards/active.guard';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: WorkerAccessGuard,
     },
     {
       provide: APP_GUARD,
