@@ -29,6 +29,8 @@ const NAV_ICON_MAP: Record<string, keyof typeof FAIcons> = {
   'fa-handshake': 'FaHandshake',
   'fa-tag': 'FaTag',
   'fa-bookmark': 'FaBookmark',
+  'fa-hand': 'FaPersonRays',
+  'fa-leaf': 'FaLeaf',
 };
 
 export function resolveNavigationIcon(iconKey?: string) {

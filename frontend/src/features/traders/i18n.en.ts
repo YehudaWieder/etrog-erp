@@ -1,4 +1,58 @@
-import type { DefaultTraderCategoriesI18n, TraderCategoriesI18n, TradersI18n } from './i18n';
+import type { DefaultTraderCategoriesI18n, TraderCategoriesI18n, TradersI18n, TraderInventoryI18n } from './i18n';
+
+export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
+	userNameFallback: 'My Profile',
+	topNav: [
+		{ id: 'harvest', label: 'Harvest & Sorting', icon: 'fa-leaf' },
+		{ id: 'shipments', label: 'Shipments', icon: 'fa-truck' },
+		{ id: 'traders', label: 'Partners Inventory', icon: 'fa-handshake' },
+		{ id: 'customers', label: 'Customers Inventory', icon: 'fa-users' },
+		{ id: 'workers', label: 'Workers', icon: 'fa-person' },
+		{ id: 'payments', label: 'Expenses & Payments', icon: 'fa-money-bill' },
+	],
+	sidebar: [
+		{
+			id: 'trader-inventory',
+			title: 'Partners Inventory',
+			href: '/traders/unboxed',
+			icon: 'fa-handshake',
+			items: [
+				{ id: 'unboxed', label: 'Unboxed Inventory', href: '/traders/unboxed', icon: 'fa-inbox' },
+				{ id: 'boxed', label: 'Boxed Inventory', href: '/traders/boxed', icon: 'fa-boxes-stacked' },
+				{ id: 'shipped', label: 'Shipped Inventory', href: '/traders/shipped', icon: 'fa-truck-ramp-box' },
+				{ id: 'arrived', label: 'Arrived at Destination', href: '/traders/arrived', icon: 'fa-circle-check' },
+				{ id: 'self-pickup', label: 'Self-Pickup Inventory', href: '/traders/self-pickup', icon: 'fa-hand' },
+			],
+		},
+	],
+	pageTitle: 'Partners Inventory',
+	emptyState: {
+		unboxed: {
+			title: 'No unboxed inventory',
+			description: 'All inventory not yet boxed will appear here.',
+		},
+		boxed: {
+			title: 'No boxed inventory',
+			description: 'Inventory packed in boxes will appear here.',
+		},
+		shipped: {
+			title: 'No shipped inventory',
+			description: 'Inventory shipped for delivery will appear here.',
+		},
+		arrived: {
+			title: 'No arrived inventory',
+			description: 'Inventory that arrived at destination will appear here.',
+		},
+		'self-pickup': {
+			title: 'No self-pickup inventory',
+			description: 'Inventory collected directly by trader (without shipment) will appear here.',
+		},
+		default: {
+			title: 'No data to display',
+			description: 'Select an item from the sidebar menu to see relevant information.',
+		},
+	},
+};
 
 export const TRADERS_I18N_EN: TradersI18n = {
 	paymentRequired: 'Payment percent is required.',

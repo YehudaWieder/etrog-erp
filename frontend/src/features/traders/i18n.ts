@@ -3,14 +3,45 @@ import {
 	DEFAULT_TRADER_CATEGORIES_I18N_EN,
 	TRADER_CATEGORIES_I18N_EN,
 	TRADERS_I18N_EN,
+	TRADER_INVENTORY_I18N_EN,
 } from './i18n.en';
 import {
 	DEFAULT_TRADER_CATEGORIES_I18N_HE,
 	TRADER_CATEGORIES_I18N_HE,
 	TRADERS_I18N_HE,
+	TRADER_INVENTORY_I18N_HE,
 } from './i18n.he';
 
 export type AppLang = 'he' | 'en';
+
+export type NavItem = {
+	id: string;
+	label: string;
+	href?: string;
+	icon?: string;
+	badge?: number;
+};
+
+export type SidebarSection = {
+	id: string;
+	title: string;
+	href?: string;
+	icon?: string;
+	items: NavItem[];
+};
+
+export type TraderInventoryI18n = {
+	userNameFallback: string;
+	topNav: NavItem[];
+	sidebar: SidebarSection[];
+	pageTitle: string;
+	emptyState: Record<string, { title: string; description: string }>;
+};
+
+export const TRADER_INVENTORY_I18N = {
+	he: TRADER_INVENTORY_I18N_HE,
+	en: TRADER_INVENTORY_I18N_EN,
+} as const;
 
 export type TradersI18n = {
 	paymentRequired: string;

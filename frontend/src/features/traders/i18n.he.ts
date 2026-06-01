@@ -1,4 +1,58 @@
-import type { DefaultTraderCategoriesI18n, TraderCategoriesI18n, TradersI18n } from './i18n';
+import type { DefaultTraderCategoriesI18n, TraderCategoriesI18n, TradersI18n, TraderInventoryI18n } from './i18n';
+
+export const TRADER_INVENTORY_I18N_HE: TraderInventoryI18n = {
+	userNameFallback: 'הפרופיל שלי',
+	topNav: [
+		{ id: 'harvest', label: 'קטיף ומיון', icon: 'fa-leaf' },
+		{ id: 'shipments', label: 'משלוחים', icon: 'fa-truck' },
+		{ id: 'traders', label: 'מלאי סוחרים', icon: 'fa-handshake' },
+		{ id: 'customers', label: 'מלאי לקוחות', icon: 'fa-users' },
+		{ id: 'workers', label: 'עובדים', icon: 'fa-person' },
+		{ id: 'payments', label: 'הוצאות ותשלומים', icon: 'fa-money-bill' },
+	],
+	sidebar: [
+		{
+			id: 'trader-inventory',
+			title: 'מלאי סוחרים',
+			href: '/traders/unboxed',
+			icon: 'fa-handshake',
+			items: [
+				{ id: 'unboxed', label: 'מלאי שלא נארז', href: '/traders/unboxed', icon: 'fa-inbox' },
+				{ id: 'boxed', label: 'מלאי שנארז', href: '/traders/boxed', icon: 'fa-boxes-stacked' },
+				{ id: 'shipped', label: 'מלאי שנשלח', href: '/traders/shipped', icon: 'fa-truck-ramp-box' },
+				{ id: 'arrived', label: 'מלאי שהגיע ליעד', href: '/traders/arrived', icon: 'fa-circle-check' },
+				{ id: 'self-pickup', label: 'מלאי באיסוף עצמי', href: '/traders/self-pickup', icon: 'fa-hand' },
+			],
+		},
+	],
+	pageTitle: 'מלאי סוחרים',
+	emptyState: {
+		unboxed: {
+			title: 'אין מלאי שלא נארז להצגה',
+			description: 'כל המלאי שטרם נארז יופיע כאן.',
+		},
+		boxed: {
+			title: 'אין מלאי שנארז להצגה',
+			description: 'מלאי שנארז בקרטונים יופיע כאן.',
+		},
+		shipped: {
+			title: 'אין מלאי ששלח להצגה',
+			description: 'מלאי ששלח למשלוח יופיע כאן.',
+		},
+		arrived: {
+			title: 'אין מלאי שהגיע ליעד להצגה',
+			description: 'מלאי שהגיע ליעד יופיע כאן.',
+		},
+		'self-pickup': {
+			title: 'אין מלאי באיסוף עצמי להצגה',
+			description: 'מלאי שנאסף בישירו של סוחר (בלי משלוח) יופיע כאן.',
+		},
+		default: {
+			title: 'אין נתונים להצגה',
+			description: 'בחר פריט מהתפריט הצידי כדי לראות מידע רלוונטי.',
+		},
+	},
+};
 
 export const TRADERS_I18N_HE: TradersI18n = {
 	paymentRequired: 'אחוז התשלום הוא שדה חובה.',
