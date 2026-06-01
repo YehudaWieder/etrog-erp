@@ -1,6 +1,7 @@
 import { FaXmark } from 'react-icons/fa6';
 import type { ShareRow } from '../tradersManagement.types';
 import { DEFAULT_PERCENT_STEP } from '../utils/traderShares.util';
+import styles from './styles/TraderCategoriesShared.module.css';
 
 type TraderOption = {
   id: number;
@@ -90,9 +91,9 @@ export function TraderCategoryFormModal({
           {isAddDialogOpen ? t.addMessage : t.editMessage(selectedCategoryName)}
         </div>
 
-        <div className="default-trader-categories-manager__form-grid">
-          <div className="default-trader-categories-manager__field">
-            <label className="default-trader-categories-manager__label">{t.categoryNameLabel}</label>
+        <div className={styles.formGrid}>
+          <div className={styles.field}>
+            <label className={styles.label}>{t.categoryNameLabel}</label>
             <input
               className="seasons-manager__year-input"
               type="text"
@@ -103,8 +104,8 @@ export function TraderCategoryFormModal({
             />
           </div>
 
-          <div className="default-trader-categories-manager__field">
-            <label className="default-trader-categories-manager__label">{t.notesLabel}</label>
+          <div className={styles.field}>
+            <label className={styles.label}>{t.notesLabel}</label>
             <input
               className="seasons-manager__year-input"
               type="text"
@@ -115,14 +116,14 @@ export function TraderCategoryFormModal({
           </div>
         </div>
 
-        <p className="default-trader-categories-manager__shares-subtitle">{t.allocationSectionTitle}</p>
+        <p className={styles.sharesSubtitle}>{t.allocationSectionTitle}</p>
 
-        <div className="default-trader-categories-manager__shares-area">
+        <div className={styles.sharesArea}>
           {shareRows.map((row, index) => {
             const availableTraders = getAvailableTradersForRow(row);
 
             return (
-              <div key={row.rowId} className="default-trader-categories-manager__share-row">
+              <div key={row.rowId} className={styles.shareRow}>
                 <select
                   className="seasons-manager__year-input"
                   value={row.traderId ?? ''}
@@ -162,11 +163,11 @@ export function TraderCategoryFormModal({
             );
           })}
 
-          <div className="default-trader-categories-manager__shares-actions">
+          <div className={styles.sharesActions}>
             <button type="button" className="btn btn-primary" onClick={addShareRow}>
               {t.addRow}
             </button>
-            <strong className={`default-trader-categories-manager__total${isTotalExact ? '' : ' is-invalid'}`}>
+            <strong className={`${styles.total}${isTotalExact ? '' : ` ${styles.totalInvalid}`}`}>
               {t.totalPercentLabel}: {totalPercent.toFixed(2)}%
             </strong>
           </div>

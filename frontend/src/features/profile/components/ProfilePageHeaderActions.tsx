@@ -1,5 +1,6 @@
 import { FaFloppyDisk, FaPenToSquare, FaTrashCan } from 'react-icons/fa6';
 import type { ProfileLang, ProfileI18nLabels } from '../profilePage.types';
+import styles from '../../../components/ui/styles/HeaderActionButtons.module.css';
 
 type ProfilePageHeaderActionsProps = {
   lang: ProfileLang;
@@ -41,9 +42,9 @@ export function ProfilePageHeaderActions({
   return (
     <>
       {activeSidebarId === 'my-profile' ? (
-        <div className="settings-seasons-header-buttons">
+        <div className={styles.actions}>
           <button
-            className="settings-seasons-header-btn settings-seasons-header-btn--success"
+            className={`${styles.button} ${styles.success}`}
             type="button"
             onClick={onOpenEditProfile}
             disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
@@ -52,7 +53,7 @@ export function ProfilePageHeaderActions({
             <span>{t.editProfile.actions.update}</span>
           </button>
           <button
-            className="settings-seasons-header-btn settings-seasons-header-btn--danger"
+            className={`${styles.button} ${styles.danger}`}
             type="button"
             onClick={onOpenDeleteProfile}
             disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}
@@ -64,9 +65,9 @@ export function ProfilePageHeaderActions({
       ) : null}
 
       {isProfilesListView && canManageProfilesCurrentUser ? (
-        <div className="settings-seasons-header-buttons">
+        <div className={styles.actions}>
           <button
-            className="settings-seasons-header-btn settings-seasons-header-btn--success"
+            className={`${styles.button} ${styles.success}`}
             type="button"
             onClick={onOpenManagedProfileEdit}
             disabled={!selectedManagedProfileId || isLoadingProfilesList || isDeletingManagedProfile || isUpdatingManagedProfile}
@@ -75,7 +76,7 @@ export function ProfilePageHeaderActions({
             <span>{t.profilesList.selectedUpdate}</span>
           </button>
           <button
-            className="settings-seasons-header-btn settings-seasons-header-btn--danger"
+            className={`${styles.button} ${styles.danger}`}
             type="button"
             onClick={onOpenManagedProfileDelete}
             disabled={!selectedManagedProfileId || isLoadingProfilesList || isDeletingManagedProfile}

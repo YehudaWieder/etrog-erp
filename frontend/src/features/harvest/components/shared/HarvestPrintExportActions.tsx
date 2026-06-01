@@ -1,4 +1,5 @@
 import { FaFileArrowDown, FaPrint } from 'react-icons/fa6';
+import sharedFilterStyles from '../../../../components/ui/styles/GlobalFiltersBar.module.css';
 
 type HarvestPrintExportActionsProps = {
   lang: 'he' | 'en';
@@ -22,10 +23,10 @@ export function HarvestPrintExportActions({
   exportTitle,
 }: HarvestPrintExportActionsProps): JSX.Element {
   return (
-    <div className="global-filters-bar__icon-actions" aria-label={tableActionsLabel}>
+    <div className={`global-filters-bar__icon-actions ${sharedFilterStyles.iconActions}`} aria-label={tableActionsLabel}>
       <button
         type="button"
-        className="global-filters-bar__icon-btn"
+        className={`global-filters-bar__icon-btn ${sharedFilterStyles.iconBtn}`}
         onClick={onPrint}
         aria-label={printAriaLabel}
         title={printTitle}
@@ -34,7 +35,7 @@ export function HarvestPrintExportActions({
       </button>
       <button
         type="button"
-        className="global-filters-bar__icon-btn"
+        className={`global-filters-bar__icon-btn ${sharedFilterStyles.iconBtn}`}
         onClick={onExport}
         aria-label={exportAriaLabel}
         title={exportTitle}

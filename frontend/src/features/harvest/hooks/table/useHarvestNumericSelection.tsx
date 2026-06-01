@@ -18,6 +18,7 @@ import {
   HARVEST_NUMERIC_COLUMNS,
   SORTING_DAILY_NUMERIC_COLUMNS,
 } from '../../utils/harvestPage.utils';
+import interactiveStyles from '../../components/styles/HarvestInteractive.module.css';
 
 type UseHarvestNumericSelectionParams = {
   lang: 'he' | 'en';
@@ -105,7 +106,7 @@ export function useHarvestNumericSelection({
       return (
         <button
           type="button"
-          className={`harvest-daily-workspace__numeric-cell${isSelected ? ' is-selected' : ''}`}
+          className={`${interactiveStyles.numericCell}${isSelected ? ` ${interactiveStyles.numericCellSelected}` : ''}`}
           onPointerDown={handleNumericCellPointerDown('daily', row.id, column, value)}
           onPointerEnter={handleNumericCellPointerEnter('daily', row.id, column, value)}
           aria-pressed={isSelected}
@@ -125,7 +126,7 @@ export function useHarvestNumericSelection({
       return (
         <button
           type="button"
-          className={`harvest-daily-workspace__numeric-cell${isSelected ? ' is-selected' : ''}`}
+          className={`${interactiveStyles.numericCell}${isSelected ? ` ${interactiveStyles.numericCellSelected}` : ''}`}
           onPointerDown={handleNumericCellPointerDown('field-report', row.id, column, value)}
           onPointerEnter={handleNumericCellPointerEnter('field-report', row.id, column, value)}
           aria-pressed={isSelected}
@@ -143,15 +144,22 @@ export function useHarvestNumericSelection({
       column: SortingDailyNumericColumnKey,
       value: number,
       content?: ReactNode,
-      className = 'harvest-daily-workspace__numeric-cell',
+      className?: string,
+      selectedClassName?: string,
     ) => {
       const cellId = buildNumericCellId('sorting-daily', row.harvestId, column);
       const isSelected = selectedNumericCells[cellId] !== undefined;
+      const baseClassName = className ?? interactiveStyles.numericCell;
+      const appliedSelectedClassName = className
+        ? selectedClassName
+          ? ` ${selectedClassName}`
+          : ' is-selected'
+        : ` ${interactiveStyles.numericCellSelected}`;
 
       return (
         <button
           type="button"
-          className={`${className}${isSelected ? ' is-selected' : ''}`}
+          className={`${baseClassName}${isSelected ? appliedSelectedClassName : ''}`}
           onPointerDown={handleNumericCellPointerDown('sorting-daily', row.harvestId, column, value)}
           onPointerEnter={handleNumericCellPointerEnter('sorting-daily', row.harvestId, column, value)}
           aria-pressed={isSelected}

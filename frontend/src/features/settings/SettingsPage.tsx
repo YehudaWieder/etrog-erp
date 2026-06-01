@@ -10,6 +10,8 @@ import { useSettingsHeaderState } from './hooks/useSettingsHeaderState';
 import { useSettingsPreferences } from './hooks/useSettingsPreferences';
 import { normalizeSettingsChildId } from './utils/normalizeSettingsChildId.util';
 import { renderSettingsActiveChild } from './utils/settingsChildRenderers.util';
+import feedbackStyles from './styles/SettingsWorkspaceFeedback.module.css';
+import workspaceStyles from '../../components/ui/styles/WorkspaceSection.module.css';
 
 export default function SettingsPage(): JSX.Element {
   const navigate = useNavigate();
@@ -123,9 +125,9 @@ export default function SettingsPage(): JSX.Element {
         userName: currentUser?.name || t.userNameFallback,
       }}
     >
-      <section className="settings-workspace">
-        <p className="settings-workspace__description">{content.description}</p>
-        {saveFeedback ? <p className="settings-workspace__saved">{saveFeedback}</p> : null}
+      <section className={workspaceStyles.workspace}>
+        <p className={workspaceStyles.description}>{content.description}</p>
+        {saveFeedback ? <p className={feedbackStyles.saved}>{saveFeedback}</p> : null}
 
         <SettingsSitePreferencesPanel
           activeChildId={activeChildId}

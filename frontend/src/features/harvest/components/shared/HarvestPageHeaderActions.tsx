@@ -1,4 +1,5 @@
 import { FaCirclePlus, FaPenToSquare, FaTrashCan } from 'react-icons/fa6';
+import styles from '../../../../components/ui/styles/HeaderActionButtons.module.css';
 
 type HarvestPageHeaderActionsProps = {
   addActionLabel: string;
@@ -18,10 +19,10 @@ export function HarvestPageHeaderActions({
   deleteDisabled,
 }: HarvestPageHeaderActionsProps): JSX.Element {
   return (
-    <div className="settings-seasons-header-buttons">
+    <div className={styles.actions}>
       <button
         type="button"
-        className="settings-seasons-header-btn settings-seasons-header-btn--success"
+        className={`${styles.button} ${styles.success}`}
         onClick={onAdd}
         aria-label={addActionLabel}
       >
@@ -30,7 +31,7 @@ export function HarvestPageHeaderActions({
       </button>
       <button
         type="button"
-        className="settings-seasons-header-btn settings-seasons-header-btn--success"
+        className={`${styles.button} ${styles.success}`}
         onClick={() => void 0}
         disabled={editDisabled}
         aria-label={editActionLabel}
@@ -40,7 +41,7 @@ export function HarvestPageHeaderActions({
       </button>
       <button
         type="button"
-        className="settings-seasons-header-btn settings-seasons-header-btn--danger"
+        className={`${styles.button} ${styles.danger}`}
         onClick={() => void 0}
         disabled={deleteDisabled}
         aria-label={deleteActionLabel}

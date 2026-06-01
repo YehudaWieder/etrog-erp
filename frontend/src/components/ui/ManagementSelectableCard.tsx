@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from './styles/ManagementSelectableCard.module.css';
 
 type ManagementSelectableCardProps = {
   isSelected: boolean;
@@ -24,23 +25,23 @@ const ManagementSelectableCard: React.FC<ManagementSelectableCardProps> = ({
   return (
     <button
       type="button"
-      className={`seasons-manager__card${isSelected ? ' is-selected' : ''}${className ? ` ${className}` : ''}`}
+      className={`seasons-manager__card ${styles.card}${isSelected ? ` is-selected ${styles.cardSelected}` : ''}${className ? ` ${className}` : ''}`}
       onClick={onToggle}
     >
-      <span className="seasons-manager__card-shell">
-        <span className="seasons-manager__card-top">
+      <span className={`seasons-manager__card-shell ${styles.cardShell}`}>
+        <span className={`seasons-manager__card-top ${styles.cardTop}`}>
           {selector ?? (
-            <span className={`seasons-manager__selector${isSelected ? ' is-selected' : ''}`}>
+            <span className={`seasons-manager__selector ${styles.selector}${isSelected ? ` is-selected ${styles.selectorSelected}` : ''}`}>
               {isSelected ? '✓' : badgeLabel}
             </span>
           )}
 
-          <span className="seasons-manager__card-top-main">{topContent}</span>
+          <span className={`seasons-manager__card-top-main ${styles.cardTopMain}`}>{topContent}</span>
 
-          {topAside ? <span className="seasons-manager__card-top-aside">{topAside}</span> : null}
+          {topAside ? <span className={`seasons-manager__card-top-aside ${styles.cardTopAside}`}>{topAside}</span> : null}
         </span>
 
-        <span className="seasons-manager__card-bottom">{bottomContent ?? null}</span>
+        <span className={`seasons-manager__card-bottom ${styles.cardBottom}`}>{bottomContent ?? null}</span>
       </span>
     </button>
   );

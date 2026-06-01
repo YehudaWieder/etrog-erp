@@ -1,5 +1,6 @@
 import { FaRotateLeft } from 'react-icons/fa6';
 import type { SettingsChildKey, SettingsI18n } from '../settingsPage.types';
+import styles from './styles/SettingsSitePreferencesPanel.module.css';
 
 type SettingsSitePreferencesPanelProps = {
   activeChildId: SettingsChildKey;
@@ -34,17 +35,17 @@ export function SettingsSitePreferencesPanel({
 }: SettingsSitePreferencesPanelProps): JSX.Element | null {
   if (activeChildId === 'language') {
     return (
-      <div className="settings-panel-wide settings-panel-wide--language">
+      <div className={`${styles.panelWide} ${styles.panelWideLanguage}`}>
         <button
           type="button"
-          className={`settings-choice settings-choice--wide${selectedLanguage === 'he' ? ' is-active' : ''}`}
+          className={`${styles.choice} ${styles.choiceWide}${selectedLanguage === 'he' ? ` ${styles.choiceActive}` : ''}`}
           onClick={() => setSelectedLanguage('he')}
         >
           {t.languageOptions.he}
         </button>
         <button
           type="button"
-          className={`settings-choice settings-choice--wide${selectedLanguage === 'en' ? ' is-active' : ''}`}
+          className={`${styles.choice} ${styles.choiceWide}${selectedLanguage === 'en' ? ` ${styles.choiceActive}` : ''}`}
           onClick={() => setSelectedLanguage('en')}
         >
           {t.languageOptions.en}
@@ -58,67 +59,67 @@ export function SettingsSitePreferencesPanel({
   }
 
   return (
-    <div className="settings-panel-wide settings-panel-wide--theme">
-      <div className="settings-color-block">
-        <label className="settings-color-label">
+    <div className={`${styles.panelWide} ${styles.panelWideTheme}`}>
+      <div className={styles.colorBlock}>
+        <label className={styles.colorLabel}>
           {t.primaryColorLabel}
         </label>
-        <div className="settings-color-control">
+        <div className={styles.colorControl}>
           <input
             type="color"
             value={selectedPrimaryColor}
             onChange={(event) => setSelectedPrimaryColor(event.target.value)}
             aria-label={t.primaryColorLabel}
           />
-          <code className="settings-color-value">{selectedPrimaryColor}</code>
+          <code className={styles.colorValue}>{selectedPrimaryColor}</code>
         </div>
       </div>
 
-      <div className="settings-color-block">
-        <label className="settings-color-label">
+      <div className={styles.colorBlock}>
+        <label className={styles.colorLabel}>
           {t.accentColorLabel}
         </label>
-        <div className="settings-color-control">
+        <div className={styles.colorControl}>
           <input
             type="color"
             value={selectedAccentColor}
             onChange={(event) => setSelectedAccentColor(event.target.value)}
             aria-label={t.accentColorLabel}
           />
-          <code className="settings-color-value">{selectedAccentColor}</code>
+          <code className={styles.colorValue}>{selectedAccentColor}</code>
         </div>
       </div>
 
-      <div className="settings-color-block">
-        <label className="settings-color-label">
+      <div className={styles.colorBlock}>
+        <label className={styles.colorLabel}>
           {t.textColorLabel}
         </label>
-        <div className="settings-color-control">
+        <div className={styles.colorControl}>
           <input
             type="color"
             value={selectedTextColor}
             onChange={(event) => setSelectedTextColor(event.target.value)}
             aria-label={t.textColorLabel}
           />
-          <code className="settings-color-value">{selectedTextColor}</code>
+          <code className={styles.colorValue}>{selectedTextColor}</code>
         </div>
       </div>
 
-      <div className="settings-color-block settings-color-block--mode">
-        <label className="settings-color-label">
+      <div className={`${styles.colorBlock} ${styles.colorBlockMode}`}>
+        <label className={styles.colorLabel}>
           {t.darkModeLabel}
         </label>
-        <div className="settings-choice-list">
+        <div className={styles.choiceList}>
           <button
             type="button"
-            className={`settings-choice${!selectedDarkMode ? ' is-active' : ''}`}
+            className={`${styles.choice}${!selectedDarkMode ? ` ${styles.choiceActive}` : ''}`}
             onClick={() => setSelectedDarkMode(false)}
           >
             {t.darkModeOff}
           </button>
           <button
             type="button"
-            className={`settings-choice${selectedDarkMode ? ' is-active' : ''}`}
+            className={`${styles.choice}${selectedDarkMode ? ` ${styles.choiceActive}` : ''}`}
             onClick={() => setSelectedDarkMode(true)}
           >
             {t.darkModeOn}
@@ -126,7 +127,7 @@ export function SettingsSitePreferencesPanel({
         </div>
       </div>
 
-      <div className="settings-reset-row">
+      <div className={styles.resetRow}>
         <button
           type="button"
           className="btn btn-secondary"

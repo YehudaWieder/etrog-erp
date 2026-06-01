@@ -1,5 +1,6 @@
 import type { AuthProfile } from '../../../services/authService';
 import type { ProfileI18nLabels, ProfileRow } from '../profilePage.types';
+import styles from './styles/ProfileFeature.module.css';
 
 type ProfileOverviewSectionProps = {
   profile: AuthProfile | null;
@@ -27,56 +28,56 @@ export function ProfileOverviewSection({
   systemRows,
 }: ProfileOverviewSectionProps) {
   return (
-    <section className="profile-hub">
-      <div className="profile-hub__hero">
-        <div className="profile-hub__avatar" aria-hidden="true">
+    <section className={styles.hub}>
+      <div className={styles.hubHero}>
+        <div className={styles.hubAvatar} aria-hidden="true">
           {profileInitials || 'U'}
         </div>
-        <div className="profile-hub__hero-content">
-          <h2 className="profile-hub__name">{fullName}</h2>
-          <p className="profile-hub__subtitle">{profile?.role || t.profileCard.emptyValue}</p>
-          <p className="profile-hub__description">{t.profileCard.description}</p>
+        <div className={styles.hubHeroContent}>
+          <h2 className={styles.hubName}>{fullName}</h2>
+          <p className={styles.hubSubtitle}>{profile?.role || t.profileCard.emptyValue}</p>
+          <p className={styles.hubDescription}>{t.profileCard.description}</p>
         </div>
-        <div className="profile-hub__status" data-active={profile?.isActive ? 'true' : 'false'}>
+        <div className={styles.hubStatus} data-active={profile?.isActive ? 'true' : 'false'}>
           {profileStatus}
         </div>
       </div>
 
-      {profileError ? <p className="profile-hub__notice">{profileError}</p> : null}
-      {isLoadingProfile ? <p className="profile-hub__loading">{t.profileCard.loading}</p> : null}
+      {profileError ? <p className={styles.hubNotice}>{profileError}</p> : null}
+      {isLoadingProfile ? <p className={styles.hubLoading}>{t.profileCard.loading}</p> : null}
 
-      <div className="profile-hub__grid">
-        <article className="profile-panel">
-          <h3 className="profile-panel__title">{t.profileCard.personalSectionTitle}</h3>
-          <div className="profile-panel__list">
+      <div className={styles.hubGrid}>
+        <article className={styles.panel}>
+          <h3 className={styles.panelTitle}>{t.profileCard.personalSectionTitle}</h3>
+          <div className={styles.panelList}>
             {personalRows.map((row) => (
-              <div key={row.label} className="profile-detail-row">
-                <span className="profile-detail-row__label">{row.label}</span>
-                <strong className="profile-detail-row__value">{row.value}</strong>
+              <div key={row.label} className={styles.detailRow}>
+                <span className={styles.detailRowLabel}>{row.label}</span>
+                <strong className={styles.detailRowValue}>{row.value}</strong>
               </div>
             ))}
           </div>
         </article>
 
-        <article className="profile-panel">
-          <h3 className="profile-panel__title">{t.profileCard.accountSectionTitle}</h3>
-          <div className="profile-panel__list">
+        <article className={styles.panel}>
+          <h3 className={styles.panelTitle}>{t.profileCard.accountSectionTitle}</h3>
+          <div className={styles.panelList}>
             {accountRows.map((row) => (
-              <div key={row.label} className="profile-detail-row">
-                <span className="profile-detail-row__label">{row.label}</span>
-                <strong className="profile-detail-row__value">{row.value}</strong>
+              <div key={row.label} className={styles.detailRow}>
+                <span className={styles.detailRowLabel}>{row.label}</span>
+                <strong className={styles.detailRowValue}>{row.value}</strong>
               </div>
             ))}
           </div>
         </article>
 
-        <article className="profile-panel profile-panel--system">
-          <h3 className="profile-panel__title">{t.profileCard.systemSectionTitle}</h3>
-          <div className="profile-panel__list">
+        <article className={`${styles.panel} ${styles.panelSystem}`}>
+          <h3 className={styles.panelTitle}>{t.profileCard.systemSectionTitle}</h3>
+          <div className={styles.panelList}>
             {systemRows.map((row) => (
-              <div key={row.label} className="profile-detail-row">
-                <span className="profile-detail-row__label">{row.label}</span>
-                <strong className="profile-detail-row__value">{row.value}</strong>
+              <div key={row.label} className={styles.detailRow}>
+                <span className={styles.detailRowLabel}>{row.label}</span>
+                <strong className={styles.detailRowValue}>{row.value}</strong>
               </div>
             ))}
           </div>

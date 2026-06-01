@@ -1,5 +1,6 @@
 import { FaFloppyDisk, FaXmark } from 'react-icons/fa6';
 import type { EditProfileForm, ProfileI18nLabels, ProfileLang } from '../profilePage.types';
+import styles from './styles/ProfileFeature.module.css';
 
 type EditMyProfileModalProps = {
   lang: ProfileLang;
@@ -45,13 +46,13 @@ export function EditMyProfileModal({
         <h2 className="modal-title">{t.editProfile.title}</h2>
         <p className="modal-message">{t.editProfile.description}</p>
 
-        <p className="profile-editor__hint">{t.editProfile.permissionsHint}</p>
-        {isSelfAdmin ? <p className="profile-editor__hint profile-editor__hint--muted">{t.editProfile.cannotEditRoleStatus}</p> : null}
+        <p className={styles.editorHint}>{t.editProfile.permissionsHint}</p>
+        {isSelfAdmin ? <p className={`${styles.editorHint} ${styles.editorHintMuted}`}>{t.editProfile.cannotEditRoleStatus}</p> : null}
 
-        {editMessage ? <p className="profile-editor__message">{editMessage}</p> : null}
-        {editError ? <p className="profile-editor__error">{editError}</p> : null}
+        {editMessage ? <p className={styles.editorMessage}>{editMessage}</p> : null}
+        {editError ? <p className={styles.editorError}>{editError}</p> : null}
 
-        <div className="profile-editor__form-grid">
+        <div className={styles.editorFormGrid}>
           <label className="form-group">
             <span className="form-label">{t.editProfile.fields.name}</span>
             <input

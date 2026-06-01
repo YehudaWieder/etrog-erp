@@ -1,0 +1,19 @@
+.saved {
+  margin: 0 0 var(--space-4);
+  background: #e8f5ee;
+  border: 1px solid #b7dfc7;
+  color: #1f5a32;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.managerNote {
+  margin: var(--space-4) 0 0;
+  color: #7c5414;
+  background: #fff4dd;
+  border: 1px solid #f4ddb0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  width: fit-content;
+}

@@ -1,0 +1,113 @@
+.modal {
+  width: min(980px, 94vw);
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+.grid {
+  margin-top: 10px;
+}
+
+.gridPrimary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.numberInputFirst {
+  grid-column: 1;
+}
+
+.notes {
+  min-height: 38px;
+  resize: none;
+  grid-column: 1 / -1;
+  overflow: hidden;
+}
+
+.notesWithMode {
+  grid-column: 1 / span 2;
+  max-width: 460px;
+  justify-self: start;
+}
+
+.classificationMode {
+  min-height: 42px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  grid-column: 1 / span 2;
+  width: fit-content;
+  max-width: 100%;
+  justify-self: start;
+}
+
+.classificationMode legend {
+  width: 100%;
+  padding: 0 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #27482f;
+}
+
+.classificationModeHint {
+  margin: 0;
+  width: 100%;
+  font-size: 0.82rem;
+  color: #406247;
+  position: relative;
+  right: 8px;
+}
+
+.classificationMode label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: #27482f;
+  position: relative;
+  right: 8px;
+}
+
+.classifications {
+  margin-top: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.classificationsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.classificationsHeader h4 {
+  margin: 0;
+  color: #214f2a;
+}
+
+.classificationRow {
+  border: 1px solid #d5dfd8;
+  border-radius: 12px;
+  background: #fbfdfb;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.classificationRowHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+@media (max-width: 900px) {
+  .notesWithMode {
+    grid-column: 1 / -1;
+  }
+}

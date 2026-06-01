@@ -1,0 +1,281 @@
+.detailsEmpty {
+  margin: 2px 0 0;
+  color: var(--color-text-muted);
+}
+
+.sheetCard {
+  border: 1px solid rgba(214, 224, 216, 0.95);
+  border-radius: 14px;
+  background: linear-gradient(0deg, rgba(255, 202, 43, 0.02), rgba(255, 202, 43, 0.02)), #fff;
+  padding: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.sheetCardBorderless {
+  border: 0;
+  box-shadow: none;
+}
+
+.sheetCardCategoryBreakdown {
+  background: #fff;
+}
+
+.sheetHead {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
+  direction: ltr;
+  text-align: left;
+  color: #243f2b;
+  font-weight: 600;
+}
+
+.sheetHead p {
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  direction: inherit;
+  unicode-bidi: plaintext;
+}
+
+:global(.app-shell[data-direction='rtl']) .sheetHead {
+  direction: rtl;
+  text-align: right;
+}
+
+.sheetStatus {
+  justify-self: center;
+  border: 1px solid rgba(187, 205, 191, 0.95);
+  background: rgba(241, 248, 243, 0.98);
+  color: #1f4f29;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+.sheetTableWrap {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.sheetTable {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.84rem;
+}
+
+.sheetTable th,
+.sheetTable td {
+  border: 1px solid rgba(204, 217, 207, 0.95);
+  padding: 6px 7px;
+  text-align: center;
+  line-height: 1.15;
+  vertical-align: middle;
+}
+
+.sheetTable th {
+  background: rgba(241, 247, 243, 0.95);
+  color: #284f31;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.sheetTable th:first-child,
+.sheetTable td:first-child {
+  font-weight: 700;
+  background: rgba(246, 251, 248, 0.96);
+  min-width: 88px;
+}
+
+.sheetTable tbody tr:nth-child(even) {
+  background: rgba(248, 252, 249, 0.92);
+}
+
+.sheetRowSummary {
+  background: rgba(231, 242, 235, 0.94) !important;
+}
+
+.sheetRowSummary td {
+  font-weight: 800;
+  color: #1f4f29;
+  border-top: 2px solid rgba(150, 184, 158, 0.95);
+}
+
+.sheetNote {
+  margin: 0;
+  color: #2f4536;
+  line-height: 1.45;
+  border-top: 1px dashed rgba(208, 220, 211, 0.95);
+  padding-top: 8px;
+}
+
+.relatedSortingsCard {
+  border-radius: 14px;
+  background: #fff;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.relatedSortingsTitle {
+  margin: 0;
+  color: #214f2a;
+  font-size: 0.96rem;
+}
+
+.relatedSortingsState {
+  margin: 0;
+  color: #426049;
+}
+
+.relatedSortingsStateError {
+  color: #8f2f3a;
+}
+
+.relatedSortingsTableWrap {
+  overflow-x: auto;
+}
+
+.relatedSortingsTable {
+  width: max-content;
+  border-collapse: collapse;
+  table-layout: fixed;
+  min-width: 0;
+  font-size: 0.82rem;
+}
+
+.colAssignmentType {
+  width: 72px;
+}
+
+.colTarget {
+  width: 104px;
+}
+
+.colCategory {
+  width: 104px;
+}
+
+.colGrade {
+  width: 60px;
+}
+
+.colPitam {
+  width: 60px;
+}
+
+.colQuantity {
+  width: 60px;
+}
+
+.colUpdatedBy {
+  width: 104px;
+}
+
+.colNotes {
+  width: 56px;
+}
+
+.relatedSortingsTable th,
+.relatedSortingsTable td {
+  border: 1px solid rgba(204, 217, 207, 0.95);
+  padding: 7px 8px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.relatedSortingsTable th {
+  background: rgba(241, 247, 243, 0.95);
+  color: #284f31;
+  font-weight: 700;
+}
+
+.relatedSortingsTable tbody tr:nth-child(even) {
+  background: rgba(248, 252, 249, 0.92);
+}
+
+.relatedSortingNote {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 22px;
+  outline: none;
+}
+
+.relatedSortingNoteBubble {
+  width: 22px;
+  height: 17px;
+  border: 1px solid rgba(58, 102, 66, 0.92);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(223, 240, 226, 0.98), rgba(195, 227, 201, 0.98));
+  box-shadow: 0 2px 6px rgba(40, 76, 47, 0.26);
+  position: relative;
+}
+
+.relatedSortingNoteBubble::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  inset-inline-end: 5px;
+  width: 7px;
+  height: 7px;
+  border-inline-end: 1px solid rgba(58, 102, 66, 0.92);
+  border-bottom: 1px solid rgba(58, 102, 66, 0.92);
+  background: rgba(204, 231, 209, 0.98);
+  transform: rotate(42deg);
+}
+
+.relatedSortingNoteBubble::before {
+  content: '...';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #1f4a2a;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.relatedSortingNoteTooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  inset-inline-end: 0;
+  transform: translateY(6px);
+  min-width: 170px;
+  max-width: 260px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  border: 1px solid rgba(157, 181, 161, 0.9);
+  background: rgba(252, 255, 252, 0.98);
+  box-shadow: 0 8px 20px rgba(28, 50, 33, 0.18);
+  color: #24492c;
+  font-size: 0.76rem;
+  line-height: 1.35;
+  text-align: start;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--easing-standard), transform var(--easing-standard), visibility var(--easing-standard);
+  z-index: 6;
+}
+
+.relatedSortingNoteFirstRow .relatedSortingNoteTooltip {
+  bottom: auto;
+  top: calc(100% + 8px);
+  transform: translateY(-6px);
+}
+
+.relatedSortingNote:hover .relatedSortingNoteTooltip,
+.relatedSortingNote:focus-within .relatedSortingNoteTooltip,
+.relatedSortingNote:focus .relatedSortingNoteTooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}

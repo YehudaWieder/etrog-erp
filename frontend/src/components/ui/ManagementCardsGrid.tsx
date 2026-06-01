@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { useUniformCardMinHeight } from '../../hooks/useUniformCardMinHeight';
+import styles from './styles/ManagementCardsGrid.module.css';
 
 type ManagementCardsGridProps = {
   children: React.ReactNode;
@@ -14,7 +15,7 @@ const ManagementCardsGrid: React.FC<ManagementCardsGridProps> = ({ children, cla
   return (
     <ul
       ref={listRef}
-      className={`seasons-manager__cards seasons-manager__cards--uniform${className ? ` ${className}` : ''}`}
+      className={`seasons-manager__cards seasons-manager__cards--uniform ${styles.cards} ${styles.uniform}${className ? ` ${className}` : ''}`}
       style={style}
     >
       {children}

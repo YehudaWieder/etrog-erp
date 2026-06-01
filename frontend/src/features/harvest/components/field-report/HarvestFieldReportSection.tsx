@@ -8,6 +8,9 @@ import type { HarvestI18n } from '../../i18n';
 import { HarvestFieldReportDetailsPanel, type HarvestFieldReportDetailsData, type HarvestFieldReportDetailsPanelLabels } from './HarvestFieldReportDetailsPanel';
 import { HarvestPrintExportActions } from '../shared/HarvestPrintExportActions';
 import { HarvestSelectionSummary } from '../shared/HarvestSelectionSummary';
+import workspaceStyles from '../../../../components/ui/styles/WorkspaceSection.module.css';
+import panelStyles from '../styles/HarvestPanels.module.css';
+import sheetStyles from '../styles/HarvestDetailsSheet.module.css';
 
 type HarvestFieldReportSectionProps = {
   lang: 'he' | 'en';
@@ -61,10 +64,10 @@ export function HarvestFieldReportSection({
   onClearSelectedNumericCells,
 }: HarvestFieldReportSectionProps): JSX.Element {
   return (
-    <section className="settings-workspace harvest-daily-workspace">
-      <header className="settings-workspace__header">
+    <section className={`${workspaceStyles.workspace} ${panelStyles.workspace}`}>
+      <header className={workspaceStyles.header}>
         <div>
-          <p className="settings-workspace__description">{description}</p>
+          <p className={workspaceStyles.description}>{description}</p>
         </div>
       </header>
 
@@ -88,7 +91,7 @@ export function HarvestFieldReportSection({
 
       {harvestLoadError ? <p className="seasons-manager__error">{harvestLoadError}</p> : null}
 
-      <div className="settings-panel-wide harvest-daily-workspace__panel">
+      <div className={panelStyles.panelWide}>
         {isHarvestLoading ? <p className="seasons-manager__state">{loadingLabel}</p> : null}
 
         {!isHarvestLoading ? (
@@ -131,7 +134,7 @@ export function HarvestFieldReportSection({
                   />
                 </div>
               ) : (
-                <p className="harvest-daily-workspace__details-empty">{fieldReportDetailsEmptyLabel}</p>
+                <p className={sheetStyles.detailsEmpty}>{fieldReportDetailsEmptyLabel}</p>
               )}
             </GlobalLeftDetailsPanel>
 

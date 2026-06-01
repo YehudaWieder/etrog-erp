@@ -15,6 +15,7 @@ import type {
 } from '../../harvestPage.types';
 import { buildSortingCategoryDisplayLabel } from '../../utils/harvestPage.utils';
 import { HarvestDetailsTriggerButton } from '../../components/shared/HarvestDetailsTriggerButton';
+import interactiveStyles from '../../components/styles/HarvestInteractive.module.css';
 
 type UseHarvestTableColumnsParams = {
   lang: 'he' | 'en';
@@ -44,6 +45,7 @@ type UseHarvestTableColumnsParams = {
     value: number,
     content?: ReactNode,
     className?: string,
+    selectedClassName?: string,
   ) => ReactNode;
   isPartialClassificationFlag: (value: unknown) => boolean;
 };
@@ -156,7 +158,7 @@ export function useHarvestTableColumns({
             'classifiedTotal',
             row.classifiedTotal,
             <span
-              className={`harvest-daily-workspace__classified-total${isPartialClassificationFlag(row.isPartialClassification as unknown) ? ' harvest-daily-workspace__classified-total--partial' : ''}`}
+              className={`${interactiveStyles.classifiedTotal}${isPartialClassificationFlag(row.isPartialClassification as unknown) ? ` ${interactiveStyles.classifiedTotalPartial}` : ''}`}
             >
               {row.classifiedTotal}
             </span>,
@@ -260,6 +262,36 @@ export function useHarvestTableColumns({
   ]);
 
   const sortingDailyColumns = useMemo<GlobalDataTableColumn<ClassificationDailySummaryRow>[]>(() => {
+    const sortingCategoryColumns: GlobalDataTableColumn<ClassificationDailySummaryRow>[] = sortingDailyCategories.map(
+      (category) => {
+        const categoryLabel = buildSortingCategoryDisplayLabel(category, lang);
+        const columnKey = `category:${category.key}` as SortingDailyNumericColumnKey;
+
+        return {
+          id: `category-${category.key}`,
+          header: categoryLabel,
+          headerLabel: categoryLabel,
+          sortKey: `sortingCategory:${category.key}`,
+          sortLabel: `${categoryLabel} - ${t.tableLabels.sort}`,
+          defaultSortDirection: 'desc',
+          sortAccessor: (row) => row.categoryTotals[category.key] ?? 0,
+          minWidth: '150px',
+          gridTemplate: 'minmax(150px, 1fr)',
+          align: 'center',
+          render: (row) => {
+            const categoryTotal = row.categoryTotals[category.key] ?? 0;
+
+            return renderSortingNumericCell(
+              row,
+              columnKey,
+              categoryTotal,
+              numberFormatter.format(categoryTotal),
+            );
+          },
+        };
+      },
+    );
+
     return [
       {
         id: 'details',
@@ -311,49 +343,7 @@ export function useHarvestTableColumns({
         gridTemplate: GLOBAL_DATA_TABLE_WIDTHS.fieldName,
         render: (row) => row.fieldName,
       },
-      {
-        id: 'categories',
-        header: t.sortingDailyDetails.columns.categoriesGroup,
-        headerLabel: t.sortingDailyDetails.columns.categoriesGroup,
-        minWidth: '560px',
-        gridTemplate: 'minmax(560px, 1fr)',
-        align: 'center',
-        render: (row) => {
-          const rowCategories = sortingDailyCategories
-            .map((category) => ({
-              key: category.key,
-              label: buildSortingCategoryDisplayLabel(category, lang),
-              value: row.categoryTotals[category.key] ?? 0,
-            }))
-            .filter((category) => category.value > 0);
-
-          return (
-            <div className="harvest-sorting-daily-table__categories-cell">
-              {rowCategories.length === 0 ? (
-                <span className="harvest-sorting-daily-table__category-chip is-empty">-</span>
-              ) : (
-                rowCategories.map((category) => (
-                  <span
-                    key={`sorting-row-${row.harvestId}-${category.key}`}
-                    className="harvest-sorting-daily-table__category-chip"
-                  >
-                    <span className="harvest-sorting-daily-table__category-chip-label">{category.label}</span>
-                    {renderSortingNumericCell(
-                      row,
-                      `category:${category.key}`,
-                      category.value,
-                      <span className="harvest-sorting-daily-table__category-chip-value-text">
-                        {numberFormatter.format(category.value)}
-                      </span>,
-                      'harvest-sorting-daily-table__category-chip-value',
-                    )}
-                  </span>
-                ))
-              )}
-            </div>
-          );
-        },
-      },
+      ...sortingCategoryColumns,
       {
         id: 'totalSorted',
         header: t.sortingDailyDetails.columns.totalSorted,

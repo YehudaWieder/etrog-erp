@@ -6,6 +6,14 @@ import type { InlineAction, MessagesListLabels } from '../messagesPage.types';
 import { buildMessageMetaMain, getReplyAllRecipientIds, toPriority } from '../services/messagesThreadHelpers.service';
 import { InlineThreadCompose } from './InlineThreadCompose';
 import { MessagesThreadToolbar } from './MessagesThreadToolbar';
+import styles from './styles/MessagesFeature.module.css';
+
+const PRIORITY_CLASS_BY_VALUE = {
+  LOW: styles.priorityLow,
+  NORMAL: styles.priorityNormal,
+  HIGH: styles.priorityHigh,
+  URGENT: styles.priorityUrgent,
+} as const;
 
 type MessagesThreadViewProps = {
   selectedThreadMessages: Message[];
@@ -81,10 +89,10 @@ export function MessagesThreadView(props: MessagesThreadViewProps) {
   } = props;
 
   return (
-    <section className="messages-thread" aria-label={labels.threadViewLabel}>
+    <section className={styles.thread} aria-label={labels.threadViewLabel}>
       {selectedThreadMessages.length ? (
         <>
-          <header className="messages-thread__header messages-thread__toolbar">
+          <header className={`${styles.threadHeader} ${styles.threadToolbar}`}>
             <StickyHeaderBar
               title={selectedSubject}
               subtitle={`${selectedThreadMessages.length} ${labels.threadMessages}`}
@@ -111,35 +119,36 @@ export function MessagesThreadView(props: MessagesThreadViewProps) {
             />
           </header>
 
-          <div className="messages-thread__items">
+          <div className={styles.threadItems}>
             {selectedThreadMessages.map((message) => {
               const isOutgoing = userId !== undefined && message.senderId === userId;
               const metaMain = buildMessageMetaMain(message, { lang, userId, userNamesById, labels: labels.threadMeta });
+              const priority = toPriority(message.priority);
 
               return (
-                <article key={message.id} className={`messages-thread__item${isOutgoing ? ' messages-thread__item--outgoing' : ''}`}>
-                  <div className="messages-badges-row">
-                    <span className={`messages-priority messages-priority--${toPriority(message.priority).toLowerCase()}`}>
-                      {labels.priority[toPriority(message.priority)]}
+                <article key={message.id} className={`${styles.threadItem}${isOutgoing ? ` ${styles.threadItemOutgoing}` : ''}`}>
+                  <div className={styles.badgesRow}>
+                    <span className={`${styles.priority} ${PRIORITY_CLASS_BY_VALUE[priority]}`}>
+                      {labels.priority[priority]}
                     </span>
                     {message.recipientIds.length > 1 ? (
-                      <span className="messages-recipient-badge" title={labels.multiRecipient}>
+                      <span className={styles.recipientBadge} title={labels.multiRecipient}>
                         <FaUsers />
                         <span>{message.recipientIds.length}</span>
                       </span>
                     ) : null}
                   </div>
-                  <div className="messages-thread__meta">
+                  <div className={styles.threadMeta}>
                     {metaMain.tooltip ? (
-                      <strong className="messages-meta-tooltip" data-tooltip={metaMain.tooltip}>{metaMain.text}</strong>
+                      <strong className={styles.metaTooltip} data-tooltip={metaMain.tooltip}>{metaMain.text}</strong>
                     ) : (
                       <strong>{metaMain.text}</strong>
                     )}
-                    <div className="messages-thread__meta-right">
+                    <div className={styles.threadMetaRight}>
                       <span>{new Date(message.createdAt).toLocaleString()}</span>
                     </div>
                   </div>
-                  <p className="messages-thread__text">{message.content}</p>
+                  <p className={styles.threadText}>{message.content}</p>
 
                   {inlineAction && inlineAction.messageId === message.id ? (
                     <InlineThreadCompose
@@ -175,7 +184,7 @@ export function MessagesThreadView(props: MessagesThreadViewProps) {
           </div>
         </>
       ) : (
-        <p className="messages-thread__placeholder">{labels.openThread}</p>
+        <p className={styles.threadPlaceholder}>{labels.openThread}</p>
       )}
     </section>
   );

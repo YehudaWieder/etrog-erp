@@ -2,6 +2,7 @@ import { FaChevronDown, FaPaperPlane, FaXmark } from 'react-icons/fa6';
 import type { FormEvent, KeyboardEvent } from 'react';
 import type { ComposeFormState, RecipientOption } from '../messagesPage.types';
 import type { MessagePriority } from '../../../services/messagesApi';
+import styles from './styles/MessagesFeature.module.css';
 
 type MessagesComposeModalProps = {
   isOpen: boolean;
@@ -87,25 +88,25 @@ export function MessagesComposeModal(props: MessagesComposeModalProps) {
   }
 
   return (
-    <div className="modal-overlay messages-compose-modal-overlay" onClick={onClose}>
-      <section className="modal-dialog modal-dialog--form messages-compose-modal" aria-label={title} onClick={(event) => event.stopPropagation()}>
-        <header className="messages-compose__header">
-          <h2 className="messages-compose__title">{title}</h2>
-          <p className="messages-compose__description">{description}</p>
-          <button className="messages-compose__close" type="button" aria-label={closeLabel} onClick={onClose}>
+    <div className={`modal-overlay ${styles.composeModalOverlay}`} onClick={onClose}>
+      <section className={`modal-dialog modal-dialog--form ${styles.composeModal}`} aria-label={title} onClick={(event) => event.stopPropagation()}>
+        <header className={styles.composeHeader}>
+          <h2 className={styles.composeTitle}>{title}</h2>
+          <p className={styles.composeDescription}>{description}</p>
+          <button className={styles.composeClose} type="button" aria-label={closeLabel} onClick={onClose}>
             <FaXmark />
           </button>
         </header>
 
-        <form className="messages-compose__form" onSubmit={onSubmit}>
-          {errorText ? <p className="messages-compose__error">{errorText}</p> : null}
+        <form onSubmit={onSubmit}>
+          {errorText ? <p className={styles.composeError}>{errorText}</p> : null}
 
-          <div className="messages-compose__grid">
-            <div className="form-group messages-compose__full-width messages-compose__recipients-field">
+          <div className={styles.composeGrid}>
+            <div className={`form-group ${styles.composeFullWidth} ${styles.recipientsField}`}>
               <label className="form-label" htmlFor="messageRecipientsInput">{recipientsLabel}</label>
-              <div className="messages-compose__recipient-picker">
+              <div className={styles.recipientPicker}>
                 {selectedRecipients.map((recipient) => (
-                  <button key={recipient.id} type="button" className="messages-compose__chip" onClick={() => onRemoveRecipient(recipient.id)}>
+                  <button key={recipient.id} type="button" className={styles.chip} onClick={() => onRemoveRecipient(recipient.id)}>
                     <span>{recipient.name}</span>
                     <FaXmark />
                   </button>
@@ -113,21 +114,21 @@ export function MessagesComposeModal(props: MessagesComposeModalProps) {
                 <input
                   id="messageRecipientsInput"
                   type="text"
-                  className="messages-compose__recipient-input"
+                  className={styles.recipientInput}
                   value={recipientQuery}
                   onChange={(event) => onRecipientQueryChange(event.target.value)}
                   onKeyDown={onRecipientInputKeyDown}
                   placeholder={recipientsPlaceholder}
                 />
-                <button type="button" className="messages-compose__recipient-toggle" aria-label={toggleRecipientsLabel} onClick={onToggleRecipientsMenu}>
+                <button type="button" className={styles.recipientToggle} aria-label={toggleRecipientsLabel} onClick={onToggleRecipientsMenu}>
                   <FaChevronDown />
                 </button>
               </div>
               {showRecipientSuggestions && recipientSuggestions.length ? (
-                <ul className="messages-compose__suggestions" role="listbox" aria-label={recipientsLabel}>
+                <ul className={styles.suggestions} role="listbox" aria-label={recipientsLabel}>
                   {recipientSuggestions.map((recipient) => (
                     <li key={recipient.id}>
-                      <button type="button" className="messages-compose__suggestion" onClick={() => onAddRecipient(recipient.id)}>
+                      <button type="button" className={styles.suggestion} onClick={() => onAddRecipient(recipient.id)}>
                         {recipient.name}
                       </button>
                     </li>
@@ -155,7 +156,7 @@ export function MessagesComposeModal(props: MessagesComposeModalProps) {
               </select>
             </div>
 
-            <div className="form-group messages-compose__full-width">
+            <div className={`form-group ${styles.composeFullWidth}`}>
               <label className="form-label" htmlFor="messageSubject">{subjectLabel}</label>
               <input
                 id="messageSubject"
@@ -167,11 +168,11 @@ export function MessagesComposeModal(props: MessagesComposeModalProps) {
               />
             </div>
 
-            <div className="form-group messages-compose__full-width">
+            <div className={`form-group ${styles.composeFullWidth}`}>
               <label className="form-label" htmlFor="messageContent">{contentLabel}</label>
               <textarea
                 id="messageContent"
-                className="form-input messages-compose__content"
+                className={`form-input ${styles.composeContent}`}
                 value={composeForm.content}
                 onChange={(event) => onContentChange(event.target.value)}
                 placeholder={contentPlaceholder}
@@ -179,7 +180,7 @@ export function MessagesComposeModal(props: MessagesComposeModalProps) {
             </div>
           </div>
 
-          <div className="messages-compose__actions">
+          <div className={styles.composeActions}>
             <button type="button" className="btn" onClick={onClose}>
               {cancelLabel}
             </button>

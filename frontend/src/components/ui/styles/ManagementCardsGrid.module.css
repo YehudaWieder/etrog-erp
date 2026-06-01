@@ -1,0 +1,13 @@
+.cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  justify-items: stretch;
+  gap: var(--space-3);
+}
+
+.uniform .card {
+  min-height: var(--uniform-card-min-height, 0px);
+}

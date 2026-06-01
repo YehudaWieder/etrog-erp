@@ -1,4 +1,5 @@
 import { FaCirclePlus } from 'react-icons/fa6';
+import styles from '../../../../components/ui/styles/HeaderActionButtons.module.css';
 
 type HarvestAddHeaderActionProps = {
   label: string;
@@ -7,10 +8,10 @@ type HarvestAddHeaderActionProps = {
 
 export function HarvestAddHeaderAction({ label, onClick }: HarvestAddHeaderActionProps): JSX.Element {
   return (
-    <div className="settings-seasons-header-buttons">
+    <div className={styles.actions}>
       <button
         type="button"
-        className="settings-seasons-header-btn settings-seasons-header-btn--success"
+        className={`${styles.button} ${styles.success}`}
         onClick={onClick}
         aria-label={label}
       >

@@ -1,0 +1,24 @@
+:global(:root[data-dark-mode='true'] .app-shell__sidebar) {
+  background: var(--color-text-accent);
+  border: none;
+}
+
+:global(:root[data-dark-mode='true'] .app-shell__body) {
+  background: #1a1a1a;
+}
+
+:global(:root[data-dark-mode='true'] input[type='color']),
+:global(:root[data-dark-mode='true'] input[type='text']),
+:global(:root[data-dark-mode='true'] input[type='email']),
+:global(:root[data-dark-mode='true'] textarea),
+:global(:root[data-dark-mode='true'] select) {
+  background: #1a1a1a;
+  color: #e0e0e0;
+  border-color: #404040;
+}
+
+:global(:root[data-dark-mode='true'] button:not(.btn-primary):not(.btn-success):not(.btn-danger):not(.btn-secondary)) {
+  background: #2d2d2d;
+  color: #e0e0e0;
+  border-color: #404040;
+}

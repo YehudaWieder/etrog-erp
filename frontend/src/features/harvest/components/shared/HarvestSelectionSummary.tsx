@@ -1,4 +1,5 @@
 ﻿import type { HarvestSelectionSummaryLabels } from '../../harvestPage.types';
+import styles from '../styles/HarvestInteractive.module.css';
 
 type HarvestSelectionSummaryProps = {
   selectedCellsCount: number;
@@ -18,12 +19,12 @@ export function HarvestSelectionSummary({
   }
 
   return (
-    <div className="harvest-daily-workspace__selection-summary" role="status" aria-live="polite">
+    <div className={styles.selectionSummary} role="status" aria-live="polite">
       <span>{labels.selectedCells(selectedCellsCount)}</span>
       <span>{labels.total(formattedSelectedTotal)}</span>
       <button
         type="button"
-        className="harvest-daily-workspace__selection-clear"
+        className={styles.selectionClear}
         onClick={onClear}
       >
         {labels.clear}

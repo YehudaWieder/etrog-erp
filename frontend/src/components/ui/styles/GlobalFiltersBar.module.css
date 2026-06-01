@@ -1,0 +1,74 @@
+.root {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.actions {
+  display: inline-flex;
+  align-items: center;
+  margin-inline-start: auto;
+}
+
+.iconActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #f3c52f;
+  border-radius: 10px;
+  background: #f3c52f;
+  color: #29540f;
+  cursor: pointer;
+  transition: background var(--easing-standard), border var(--easing-standard), transform var(--easing-standard);
+}
+
+.iconBtn:hover {
+  background: #eabf2f;
+  border-color: #eabf2f;
+  transform: translateY(-1px);
+}
+
+.iconBtn svg {
+  font-size: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 220px;
+}
+
+.select {
+  width: 100%;
+}
+
+.label {
+  font-weight: 700;
+  color: #10324a;
+  font-size: 0.92rem;
+}
+
+@media (max-width: 768px) {
+  .root {
+    align-items: stretch;
+  }
+
+  .field {
+    min-width: 100%;
+  }
+
+  .actions {
+    margin-inline-start: 0;
+  }
+}

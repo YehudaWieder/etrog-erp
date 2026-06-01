@@ -2,6 +2,8 @@ import { useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaCircleUser, FaUser, FaArrowRightFromBracket, FaArrowRightToBracket, FaUserPlus } from 'react-icons/fa6';
 import { useClickOutside } from '../../hooks/useClickOutside';
+import styles from './styles/ProfileMenu.module.css';
+import navStyles from './styles/NavigationControls.module.css';
 
 export type ProfileMenuProps = {
   isAuthenticated: boolean;
@@ -57,9 +59,9 @@ export function ProfileMenu({
   };
 
   return (
-    <div className="profile-menu" ref={ref}>
+    <div className={styles.root} ref={ref}>
       <button
-        className="nav-icon-btn"
+        className={navStyles.iconButton}
         type="button"
         aria-label="User profile"
         onClick={() => setOpen((v) => !v)}
@@ -67,34 +69,34 @@ export function ProfileMenu({
         <FaCircleUser />
       </button>
       {open && (
-        <div className="profile-menu__dropdown">
-          <ul>
+        <div className={styles.dropdown}>
+          <ul className={styles.list}>
             {isAuthenticated ? (
               <>
-                <li>
-                  <button type="button" onClick={handleProfile}>
-                    <FaUser className="profile-menu__icon" />
+                <li className={styles.listItem}>
+                  <button type="button" onClick={handleProfile} className={styles.menuButton}>
+                    <FaUser className={styles.icon} />
                     <span>{userName ? userName : 'הפרופיל שלי'}</span>
                   </button>
                 </li>
-                <li>
-                  <button type="button" onClick={handleLogout}>
-                    <FaArrowRightFromBracket className="profile-menu__icon" />
+                <li className={styles.listItem}>
+                  <button type="button" onClick={handleLogout} className={styles.menuButton}>
+                    <FaArrowRightFromBracket className={styles.icon} />
                     <span>התנתקות</span>
                   </button>
                 </li>
               </>
             ) : (
               <>
-                <li>
-                  <button type="button" onClick={handleLogin}>
-                    <FaArrowRightToBracket className="profile-menu__icon" />
+                <li className={styles.listItem}>
+                  <button type="button" onClick={handleLogin} className={styles.menuButton}>
+                    <FaArrowRightToBracket className={styles.icon} />
                     <span>התחברות</span>
                   </button>
                 </li>
-                <li>
-                  <button type="button" onClick={handleRegister}>
-                    <FaUserPlus className="profile-menu__icon" />
+                <li className={styles.listItem}>
+                  <button type="button" onClick={handleRegister} className={styles.menuButton}>
+                    <FaUserPlus className={styles.icon} />
                     <span>הרשמה</span>
                   </button>
                 </li>

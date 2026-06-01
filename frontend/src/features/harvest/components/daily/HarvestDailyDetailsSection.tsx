@@ -8,6 +8,9 @@ import type { HarvestSelectionSummaryLabels } from '../../harvestPage.types';
 import { HarvestDailyDetailsContent, type DetailsSheetData, type RelatedSortingsLabels } from './HarvestDailyDetailsContent';
 import { HarvestPrintExportActions } from '../shared/HarvestPrintExportActions';
 import { HarvestSelectionSummary } from '../shared/HarvestSelectionSummary';
+import workspaceStyles from '../../../../components/ui/styles/WorkspaceSection.module.css';
+import panelStyles from '../styles/HarvestPanels.module.css';
+import sheetStyles from '../styles/HarvestDetailsSheet.module.css';
 
 type HarvestDailyDetailsSectionProps = {
   lang: 'he' | 'en';
@@ -99,10 +102,10 @@ export function HarvestDailyDetailsSection({
   onClearSelectedNumericCells,
 }: HarvestDailyDetailsSectionProps): JSX.Element {
   return (
-    <section className="settings-workspace harvest-daily-workspace">
-      <header className="settings-workspace__header">
+    <section className={`${workspaceStyles.workspace} ${panelStyles.workspace}`}>
+      <header className={workspaceStyles.header}>
         <div>
-          <p className="settings-workspace__description">{description}</p>
+          <p className={workspaceStyles.description}>{description}</p>
         </div>
       </header>
 
@@ -126,7 +129,7 @@ export function HarvestDailyDetailsSection({
 
       {harvestLoadError ? <p className="seasons-manager__error">{harvestLoadError}</p> : null}
 
-      <div className="settings-panel-wide harvest-daily-workspace__panel">
+      <div className={panelStyles.panelWide}>
         {isHarvestLoading ? <p className="seasons-manager__state">{loadingLabel}</p> : null}
 
         {!isHarvestLoading ? (
@@ -175,7 +178,7 @@ export function HarvestDailyDetailsSection({
                   />
                 </div>
               ) : (
-                <p className="harvest-daily-workspace__details-empty">{detailsEmptyLabel}</p>
+                <p className={sheetStyles.detailsEmpty}>{detailsEmptyLabel}</p>
               )}
             </GlobalLeftDetailsPanel>
 

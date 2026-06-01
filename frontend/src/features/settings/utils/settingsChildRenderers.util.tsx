@@ -7,6 +7,7 @@ import DefaultTraderCategoriesManagement, { type DefaultTraderCategoriesHeaderSt
 import TraderCategoriesManagement, { type TraderCategoriesHeaderState } from '../../traders/TraderCategoriesManagement';
 import TradersManagement, { type TradersHeaderState } from '../../traders/TradersManagement';
 import type { SettingsChildKey } from '../settingsPage.types';
+import feedbackStyles from '../styles/SettingsWorkspaceFeedback.module.css';
 
 type RenderSettingsActiveChildParams = {
   activeChildId: SettingsChildKey;
@@ -51,5 +52,5 @@ export function renderSettingsActiveChild({
     return renderChild();
   }
 
-  return isManager ? null : <p className="settings-workspace__manager-note">{managerOnlyHint}</p>;
+  return isManager ? null : <p className={feedbackStyles.managerNote}>{managerOnlyHint}</p>;
 }

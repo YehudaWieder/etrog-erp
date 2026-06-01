@@ -16,6 +16,7 @@ import { StickyHeaderBar } from '../../components/StickyHeaderBar';
 import type { ProfileMenuProps } from '../../components/navigation/ProfileMenu';
 import { directionFromLanguage, getPreferredLanguage } from '../../utils/locale';
 import brandLogo from '../../assets/logo.svg';
+import styles from './AppShell.module.css';
 
 type TopBarOptions = ProfileMenuProps & {
   alertsCount?: number;
@@ -363,10 +364,10 @@ export function AppShell({
         </div>
       </div>
       {topBarOptions.isAuthenticated && activeUrgentMessage ? (
-        <div className="urgent-message-popup" role="dialog" aria-live="assertive" aria-label={topBarLanguage === 'he' ? 'הודעה דחופה' : 'Urgent message'}>
+        <div className={styles.urgentMessagePopup} role="dialog" aria-live="assertive" aria-label={topBarLanguage === 'he' ? 'הודעה דחופה' : 'Urgent message'}>
           <button
             type="button"
-            className="urgent-message-popup__close"
+            className={styles.urgentMessagePopupClose}
             aria-label={topBarLanguage === 'he' ? 'סגירה וסימון כנקראה' : 'Close and mark as read'}
             onClick={() => {
               void handleUrgentPopupDismiss();
@@ -376,20 +377,20 @@ export function AppShell({
           </button>
           <button
             type="button"
-            className="urgent-message-popup__body"
+            className={styles.urgentMessagePopupBody}
             onClick={() => {
               void handleUrgentPopupOpenThread();
             }}
           >
-            <span className="urgent-message-popup__badge">
+            <span className={styles.urgentMessagePopupBadge}>
               <FaTriangleExclamation />
               {topBarLanguage === 'he' ? 'דחופה' : 'Urgent'}
             </span>
-            <h3 className="urgent-message-popup__subject">{activeUrgentMessage.subject}</h3>
-            <p className="urgent-message-popup__meta">
+            <h3 className={styles.urgentMessagePopupSubject}>{activeUrgentMessage.subject}</h3>
+            <p className={styles.urgentMessagePopupMeta}>
               {topBarLanguage === 'he' ? 'מאת' : 'From'}: {activeUrgentMessage.sender.name}
             </p>
-            <p className="urgent-message-popup__content">{activeUrgentMessage.content}</p>
+            <p className={styles.urgentMessagePopupContent}>{activeUrgentMessage.content}</p>
           </button>
         </div>
       ) : null}

@@ -1,4 +1,12 @@
-import './styles/globals.css';
+import './styles/design-tokens.css';
+import './styles/BaseLegacyGlobal.module.css';
+import './styles/ModalLegacyGlobal.module.css';
+import './styles/AppShellLegacyGlobal.module.css';
+import './styles/GlobalApiToastLegacyGlobal.module.css';
+import './styles/SeasonsLegacyGlobal.module.css';
+import './styles/AuthLegacyGlobal.module.css';
+import './styles/DarkModeLegacyGlobal.module.css';
+import './styles/ResponsiveLegacyGlobal.module.css';
 import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';

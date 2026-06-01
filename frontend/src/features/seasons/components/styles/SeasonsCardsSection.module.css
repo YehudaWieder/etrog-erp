@@ -1,0 +1,38 @@
+.cardStatus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  min-width: 86px;
+  border-radius: var(--radius-pill);
+  border: 1px solid #d5dde7;
+  background: #f0f3f6;
+  color: #456;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 0 14px;
+}
+
+.cardStatusActive {
+  border-color: #b7dfc7;
+  background: #e8f5ee;
+  color: #1f5a32;
+}
+
+.activeRow {
+  grid-template-columns: minmax(300px, var(--active-season-card-width, 360px));
+  width: min(100%, var(--active-season-card-width, 360px));
+  justify-content: stretch;
+  margin-right: auto;
+  margin-left: 0;
+  margin-bottom: var(--space-3);
+}
+
+:global(.app-shell[data-direction='rtl']) .activeRow {
+  margin-right: 0;
+  margin-left: auto;
+}
+
+.secondaryGrid {
+  display: grid;
+}

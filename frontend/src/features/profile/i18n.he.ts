@@ -55,7 +55,7 @@ export const PROFILE_I18N_HE: ProfileI18n = {
       newPassword: 'לפחות 8 תווים עם אותיות ומספרים',
     },
     actions: {
-      update: 'עדכון',
+      update: 'עריכה',
       updating: 'מעדכן...',
       delete: 'מחיקה',
       deleting: 'מוחק...',

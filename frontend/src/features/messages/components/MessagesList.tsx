@@ -4,6 +4,7 @@ import { useMessagesMailboxData } from '../hooks/useMessagesMailboxData';
 import { getReplyAllRecipientIds } from '../services/messagesThreadHelpers.service';
 import { MessagesThreadList } from './MessagesThreadList';
 import { MessagesThreadView } from './MessagesThreadView';
+import styles from './styles/MessagesFeature.module.css';
 
 export function MessagesList({
   filter,
@@ -112,7 +113,7 @@ export function MessagesList({
   };
 
   return (
-    <div className="messages-mailbox">
+    <div className={styles.mailbox}>
       <MessagesThreadList
         sortedThreads={sortedThreads}
         selectedRootId={selectedRootId}

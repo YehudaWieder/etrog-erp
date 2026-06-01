@@ -1,0 +1,129 @@
+.root {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + 12px);
+  inset-inline-end: 0;
+  z-index: 40;
+  width: min(360px, calc(100vw - 24px));
+  padding: var(--space-4);
+  border: 1px solid rgba(59, 108, 37, 0.14);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
+  box-shadow: 0 18px 36px rgba(27, 42, 18, 0.14);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+.summary {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: var(--space-3);
+  width: 100%;
+  margin-bottom: var(--space-3);
+}
+
+.summaryItem {
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 132px;
+  max-width: 100%;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-soft);
+}
+
+.summaryLabel {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-accent);
+}
+
+.summaryValue {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.summaryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.copyButton {
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(34, 34, 34, 0.55);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: 0 0 auto;
+  padding: 0;
+  font-size: 0.82rem;
+  transition: color var(--easing-standard), opacity var(--easing-standard);
+}
+
+.copyButton:hover {
+  background: transparent;
+  color: var(--color-primary);
+}
+
+.copyButtonCopied {
+  background: transparent;
+  color: var(--color-primary);
+}
+
+.calendar {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.panel :global(.rmdp-wrapper),
+.panel :global(.rmdp-calendar) {
+  max-width: 100%;
+}
+
+.panel :global(.rmdp-wrapper) {
+  box-shadow: none;
+  border: 0;
+  background: transparent;
+}
+
+.panel :global(.rmdp-calendar) {
+  background: transparent;
+}
+
+.panel :global(.rmdp-day),
+.panel :global(.rmdp-week-day) {
+  font-family: var(--font-family-base);
+}
+
+@media (max-width: 640px) {
+  .panel {
+    width: min(340px, calc(100vw - 16px));
+    top: calc(100% + 8px);
+  }
+}

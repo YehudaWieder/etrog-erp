@@ -6,6 +6,7 @@ import ManagementSelectableCard from '../../../components/ui/ManagementSelectabl
 import SettingsInnerTemplate from '../../../components/ui/SettingsInnerTemplate';
 import type { CustomersManagementProps } from '../customersPage.types';
 import { useCustomersManagement } from '../hooks/useCustomersManagement';
+import sharedStyles from './styles/CustomersShared.module.css';
 
 export type { CustomersHeaderState } from '../customersPage.types';
 
@@ -104,9 +105,9 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
                     </>
                   }
                   bottomContent={
-                    <span className="seasons-manager__meta customers-manager__meta">
-                      <span className="customers-manager__meta-line">{t.email}: {customer.email || '-'}</span>
-                      <span className="customers-manager__meta-line">{t.phone}: {customer.phone || '-'}</span>
+                    <span className={`seasons-manager__meta ${sharedStyles.meta}`}>
+                      <span className={sharedStyles.metaLine}>{t.email}: {customer.email || '-'}</span>
+                      <span className={sharedStyles.metaLine}>{t.phone}: {customer.phone || '-'}</span>
                     </span>
                   }
                 />

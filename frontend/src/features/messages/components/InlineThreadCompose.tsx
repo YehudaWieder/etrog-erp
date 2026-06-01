@@ -2,6 +2,7 @@ import { FaChevronDown, FaPaperPlane, FaXmark } from 'react-icons/fa6';
 import type { KeyboardEvent, RefObject } from 'react';
 import type { Message } from '../../../services/messagesApi';
 import type { MessagesListLabels, InlineAction } from '../messagesPage.types';
+import styles from './styles/MessagesFeature.module.css';
 
 type InlineThreadComposeProps = {
   message: Message;
@@ -59,11 +60,10 @@ export function InlineThreadCompose(props: InlineThreadComposeProps) {
   } = props;
 
   return (
-    <div className="messages-inline-compose" style={{ marginTop: 16, background: '#fff', borderRadius: 10, boxShadow: '0 2px 12px #0001', padding: 16 }}>
+    <div className={styles.inlineCompose}>
       <button
         type="button"
-        className="messages-inline-compose__close"
-        style={{ float: lang === 'he' ? 'left' : 'right', background: 'none', border: 'none', cursor: 'pointer' }}
+        className={`${styles.inlineComposeClose} ${lang === 'he' ? styles.inlineComposeCloseRtl : styles.inlineComposeCloseLtr}`}
         onClick={onClose}
         aria-label={labels.compose.close}
       >
@@ -81,7 +81,7 @@ export function InlineThreadCompose(props: InlineThreadComposeProps) {
             placeholder={labels.compose.replyPlaceholder}
             disabled={inlineLoading}
           />
-          {inlineError ? <div className="messages-compose__error">{inlineError}</div> : null}
+          {inlineError ? <div className={styles.composeError}>{inlineError}</div> : null}
           <button
             type="button"
             className="btn btn-success"
@@ -94,10 +94,10 @@ export function InlineThreadCompose(props: InlineThreadComposeProps) {
         </>
       ) : (
         <>
-          <div className="messages-compose__recipients-field" style={{ marginBottom: 8 }}>
-            <div className="messages-compose__recipient-picker">
+          <div className={styles.recipientsField} style={{ marginBottom: 8 }}>
+            <div className={styles.recipientPicker}>
               {selectedForwardRecipients.map((recipient) => (
-                <button key={recipient.id} type="button" className="messages-compose__chip" onClick={() => onRemoveRecipient(recipient.id)}>
+                <button key={recipient.id} type="button" className={styles.chip} onClick={() => onRemoveRecipient(recipient.id)}>
                   <span>{recipient.name}</span>
                   <FaXmark />
                 </button>
@@ -105,7 +105,7 @@ export function InlineThreadCompose(props: InlineThreadComposeProps) {
               <input
                 ref={recipientInputRef}
                 type="text"
-                className="messages-compose__recipient-input"
+                className={styles.recipientInput}
                 value={recipientQuery}
                 onChange={(event) => onRecipientQueryChange(event.target.value)}
                 onKeyDown={onRecipientKeyDown}
@@ -114,7 +114,7 @@ export function InlineThreadCompose(props: InlineThreadComposeProps) {
               />
               <button
                 type="button"
-                className="messages-compose__recipient-toggle"
+                className={styles.recipientToggle}
                 aria-label={labels.compose.forwardRecipients}
                 onClick={onToggleRecipientsMenu}
                 disabled={inlineLoading}
@@ -123,10 +123,10 @@ export function InlineThreadCompose(props: InlineThreadComposeProps) {
               </button>
             </div>
             {showRecipientSuggestions && recipientSuggestions.length ? (
-              <ul className="messages-compose__suggestions" role="listbox" aria-label={labels.compose.forwardRecipients}>
+              <ul className={styles.suggestions} role="listbox" aria-label={labels.compose.forwardRecipients}>
                 {recipientSuggestions.map((recipient) => (
                   <li key={recipient.id}>
-                    <button type="button" className="messages-compose__suggestion" onClick={() => onAddRecipient(recipient.id)} disabled={inlineLoading}>
+                    <button type="button" className={styles.suggestion} onClick={() => onAddRecipient(recipient.id)} disabled={inlineLoading}>
                       {recipient.name}
                     </button>
                   </li>
@@ -146,7 +146,7 @@ export function InlineThreadCompose(props: InlineThreadComposeProps) {
             placeholder={labels.compose.forwardPlaceholder}
             disabled={inlineLoading}
           />
-          {inlineError ? <div className="messages-compose__error">{inlineError}</div> : null}
+          {inlineError ? <div className={styles.composeError}>{inlineError}</div> : null}
           <button
             type="button"
             className="btn btn-success"

@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from './styles/GlobalFiltersBar.module.css';
 
 export type GlobalFilterOption = {
   value: string;
@@ -27,18 +28,18 @@ export const GlobalFiltersBar: React.FC<GlobalFiltersBarProps> = ({
   direction = 'rtl',
   actions,
 }) => {
-  const containerClassName = ['global-filters-bar', className].filter(Boolean).join(' ');
+  const containerClassName = ['global-filters-bar', styles.root, className].filter(Boolean).join(' ');
 
   return (
     <div className={containerClassName} dir={direction}>
       {controls.map((control) => (
-        <div className="global-filters-bar__field" key={control.id}>
-          <label className="customer-categories-manager__label" htmlFor={control.id}>
+        <div className={`global-filters-bar__field ${styles.field}`} key={control.id}>
+          <label className={styles.label} htmlFor={control.id}>
             {control.label}
           </label>
           <select
             id={control.id}
-            className="seasons-manager__year-input global-filters-bar__select"
+            className={`seasons-manager__year-input global-filters-bar__select ${styles.select}`}
             value={control.value}
             onChange={(event) => control.onChange(event.target.value)}
           >
@@ -88,7 +89,7 @@ export const GlobalFiltersBar: React.FC<GlobalFiltersBarProps> = ({
           </select>
         </div>
       ))}
-      {actions ? <div className="global-filters-bar__actions">{actions}</div> : null}
+      {actions ? <div className={`global-filters-bar__actions ${styles.actions}`}>{actions}</div> : null}
     </div>
   );
 };

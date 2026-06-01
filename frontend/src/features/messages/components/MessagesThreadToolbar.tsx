@@ -2,6 +2,7 @@ import { FaPrint, FaReply, FaShareFromSquare, FaTrashCan, FaUsers } from 'react-
 import type { Message } from '../../../services/messagesApi';
 import { getReplyAllRecipientIds } from '../services/messagesThreadHelpers.service';
 import type { MessagesListLabels } from '../messagesPage.types';
+import styles from './styles/MessagesFeature.module.css';
 
 type MessagesThreadToolbarProps = {
   message: Message;
@@ -35,7 +36,7 @@ export function MessagesThreadToolbar(props: MessagesThreadToolbarProps) {
     <>
       <button
         type="button"
-        className="messages-thread__action messages-thread__action--icon"
+        className={`${styles.threadAction} ${styles.threadActionIcon}`}
         onClick={onPrint}
         aria-label={labels.actions.print}
         title={labels.actions.print}
@@ -44,7 +45,7 @@ export function MessagesThreadToolbar(props: MessagesThreadToolbarProps) {
       </button>
       <button
         type="button"
-        className="messages-thread__action messages-thread__action--icon"
+        className={`${styles.threadAction} ${styles.threadActionIcon}`}
         onClick={() => onReply(message)}
         aria-label={labels.actions.reply}
         title={labels.actions.reply}
@@ -54,7 +55,7 @@ export function MessagesThreadToolbar(props: MessagesThreadToolbarProps) {
       {canReplyAll ? (
         <button
           type="button"
-          className="messages-thread__action messages-thread__action--icon"
+          className={`${styles.threadAction} ${styles.threadActionIcon}`}
           onClick={() => onReplyAll(message)}
           aria-label={labels.actions.replyAll}
           title={labels.actions.replyAll}
@@ -64,7 +65,7 @@ export function MessagesThreadToolbar(props: MessagesThreadToolbarProps) {
       ) : null}
       <button
         type="button"
-        className="messages-thread__action messages-thread__action--icon"
+        className={`${styles.threadAction} ${styles.threadActionIcon}`}
         onClick={() => onForward(message)}
         aria-label={labels.actions.forward}
         title={labels.actions.forward}
@@ -74,7 +75,7 @@ export function MessagesThreadToolbar(props: MessagesThreadToolbarProps) {
       {isOutgoing ? (
         <button
           type="button"
-          className="messages-thread__action messages-thread__action--icon messages-thread__action--danger"
+          className={`${styles.threadAction} ${styles.threadActionIcon} ${styles.threadActionDanger}`}
           onClick={() => onDelete(message)}
           disabled={deletingMessageId === message.id}
           aria-label={deletingMessageId === message.id ? labels.actions.deleting : labels.actions.delete}

@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from './styles/SettingsInnerTemplate.module.css';
 
 type SettingsInnerTemplateProps = {
   filters?: React.ReactNode;
@@ -20,7 +21,7 @@ const SettingsInnerTemplate: React.FC<SettingsInnerTemplateProps> = ({
   children,
 }) => {
   return (
-    <div className="seasons-manager settings-inner-template">
+    <div className={`seasons-manager ${styles.innerTemplate}`}>
       {filters}
       {toolbar}
       {info}

@@ -1,4 +1,5 @@
 import { FaFileInvoice } from 'react-icons/fa6';
+import styles from '../styles/HarvestInteractive.module.css';
 
 type HarvestDetailsTriggerButtonProps = {
   ariaLabel: string;
@@ -9,7 +10,7 @@ export function HarvestDetailsTriggerButton({ ariaLabel, onClick }: HarvestDetai
   return (
     <button
       type="button"
-      className="harvest-daily-workspace__details-trigger"
+      className={styles.detailsTrigger}
       aria-label={ariaLabel}
       onClick={onClick}
     >

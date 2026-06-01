@@ -13,6 +13,9 @@ import {
   type SortingDailyDetailsData,
 } from './HarvestSortingDailyDetailsContent';
 import { HarvestSortingPrintExportActions } from '../shared/HarvestSortingPrintExportActions';
+import workspaceStyles from '../../../../components/ui/styles/WorkspaceSection.module.css';
+import panelStyles from '../styles/HarvestPanels.module.css';
+import sheetStyles from '../styles/HarvestDetailsSheet.module.css';
 
 type HarvestSortingDailySectionProps = {
   lang: 'he' | 'en';
@@ -86,10 +89,10 @@ export function HarvestSortingDailySection({
   onClearSelectedNumericCells,
 }: HarvestSortingDailySectionProps): JSX.Element {
   return (
-    <section className="settings-workspace harvest-daily-workspace">
-      <header className="settings-workspace__header">
+    <section className={`${workspaceStyles.workspace} ${panelStyles.workspace}`}>
+      <header className={workspaceStyles.header}>
         <div>
-          <p className="settings-workspace__description">{description}</p>
+          <p className={workspaceStyles.description}>{description}</p>
         </div>
       </header>
 
@@ -114,7 +117,7 @@ export function HarvestSortingDailySection({
 
       {sortingDailyLoadError ? <p className="seasons-manager__error">{sortingDailyLoadError}</p> : null}
 
-      <div className="settings-panel-wide harvest-daily-workspace__panel">
+      <div className={panelStyles.panelWide}>
         {isSortingDailyLoading ? <p className="seasons-manager__state">{loadingLabel}</p> : null}
 
         {!isSortingDailyLoading ? (
@@ -160,7 +163,7 @@ export function HarvestSortingDailySection({
                   />
                 </div>
               ) : (
-                <p className="harvest-daily-workspace__details-empty">{emptyLabel}</p>
+                <p className={sheetStyles.detailsEmpty}>{emptyLabel}</p>
               )}
             </GlobalLeftDetailsPanel>
 

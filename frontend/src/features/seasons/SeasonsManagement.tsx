@@ -5,6 +5,7 @@ import { SeasonsCardsSection } from './components/SeasonsCardsSection';
 import { useSeasonsManagement } from './hooks/useSeasonsManagement';
 import type { SeasonsHeaderState, SeasonsManagementProps } from './seasonsManagement.types';
 import { MAX_SEASON_YEAR, MIN_SEASON_YEAR } from './utils/seasonsManagement.utils';
+import styles from './components/styles/SeasonsCardsSection.module.css';
 
 export type { SeasonsHeaderState };
 
@@ -71,7 +72,7 @@ const SeasonsManagement: React.FC<SeasonsManagementProps> = ({ onHeaderStateChan
           setSelectedSeasonId((previousSelectedId) => (previousSelectedId === seasonId ? null : seasonId));
         }}
         t={t}
-        gridClassName="seasons-manager__cards--active-row"
+        gridClassName={`${styles.activeRow} seasons-manager__cards--active-row`}
         style={
           secondaryCardWidth
             ? ({ ['--active-season-card-width' as string]: `${secondaryCardWidth}px` } as React.CSSProperties)
@@ -89,7 +90,7 @@ const SeasonsManagement: React.FC<SeasonsManagementProps> = ({ onHeaderStateChan
           setSelectedSeasonId((previousSelectedId) => (previousSelectedId === seasonId ? null : seasonId));
         }}
         t={t}
-        gridClassName="seasons-manager__cards--secondary-grid"
+        gridClassName={`${styles.secondaryGrid} seasons-manager__cards--secondary-grid`}
         statusLabel={t.inactive}
       />
 

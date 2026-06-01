@@ -1,0 +1,213 @@
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(260px, 360px));
+  justify-content: end;
+  gap: var(--space-3);
+  width: max-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-weight: 700;
+  color: #10324a;
+  font-size: 0.92rem;
+}
+
+.field :global(.seasons-manager__year-input) {
+  width: 100%;
+}
+
+.sharesArea {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: max-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.shareRow {
+  display: grid;
+  grid-template-columns: 260px 150px auto;
+  justify-content: end;
+  gap: 6px;
+  align-items: center;
+  width: max-content;
+  max-width: 100%;
+  margin-left: auto;
+}
+
+.shareRow :global(.seasons-manager__year-input) {
+  width: 100%;
+}
+
+:global(.app-shell[data-direction='ltr']) .formGrid,
+:global(.app-shell[data-direction='ltr']) .sharesArea {
+  margin-left: 0;
+  margin-right: auto;
+  justify-content: start;
+}
+
+:global(.app-shell[data-direction='ltr']) .shareRow {
+  justify-content: start;
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.sharesActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.total {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-accent);
+  font-weight: 700;
+}
+
+.totalInvalid {
+  box-shadow: none;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.rows .detailRow {
+  padding-bottom: var(--space-2);
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px dashed rgba(200, 208, 216, 0.7);
+}
+
+.detailRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.detailRowLabel {
+  color: var(--color-text-muted);
+}
+
+.detailRowValue {
+  color: #1a2440;
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+.miniCard {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(226, 230, 235, 0.95);
+  border-radius: 14px;
+  padding: var(--space-4);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+}
+
+.miniCardAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-accent);
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-primary);
+}
+
+.miniCardAvatarSelected {
+  background: var(--color-text-accent);
+  color: #fff;
+  border-color: var(--color-text-accent);
+  font-size: 1.25rem;
+}
+
+.miniCardIdentity {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.miniCardRows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.topId {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+  font-weight: 400;
+}
+
+.sharesSubtitle {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #274a62;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+.shareName {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #17384f;
+}
+
+@media (max-width: 900px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .shareRow {
+    grid-template-columns: 1fr;
+  }
+
+  .sharesActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .detailRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
+
+  .detailRowValue {
+    text-align: start;
+  }
+}

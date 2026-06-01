@@ -7,6 +7,7 @@ import type { DefaultTraderCategoriesHeaderState } from '../../traders/DefaultTr
 import type { TraderCategoriesHeaderState } from '../../traders/TraderCategoriesManagement';
 import type { TradersHeaderState } from '../../traders/TradersManagement';
 import type { SettingsChildKey } from '../settingsPage.types';
+import styles from '../../../components/ui/styles/HeaderActionButtons.module.css';
 
 type SettingsActionText = {
   activate: string;
@@ -37,10 +38,10 @@ function renderEditDeleteActions(
   actionText: SettingsActionText,
 ) {
   return (
-    <div className="settings-seasons-header-buttons">
+    <div className={styles.actions}>
       <button
         type="button"
-        className="settings-seasons-header-btn settings-seasons-header-btn--success"
+        className={`${styles.button} ${styles.success}`}
         onClick={onEdit}
         disabled={isEditDisabled}
       >
@@ -49,7 +50,7 @@ function renderEditDeleteActions(
       </button>
       <button
         type="button"
-        className="settings-seasons-header-btn settings-seasons-header-btn--danger"
+        className={`${styles.button} ${styles.danger}`}
         onClick={onDelete}
         disabled={isDeleteDisabled}
       >
@@ -70,10 +71,10 @@ function renderAddEditDeleteActions(
   actionText: SettingsActionText,
 ) {
   return (
-    <div className="settings-seasons-header-buttons">
+    <div className={styles.actions}>
       <button
         type="button"
-        className="settings-seasons-header-btn settings-seasons-header-btn--success"
+        className={`${styles.button} ${styles.success}`}
         onClick={onAdd}
         disabled={isAddDisabled}
       >
@@ -82,7 +83,7 @@ function renderAddEditDeleteActions(
       </button>
       <button
         type="button"
-        className="settings-seasons-header-btn settings-seasons-header-btn--success"
+        className={`${styles.button} ${styles.success}`}
         onClick={onEdit}
         disabled={isEditDisabled}
       >
@@ -91,7 +92,7 @@ function renderAddEditDeleteActions(
       </button>
       <button
         type="button"
-        className="settings-seasons-header-btn settings-seasons-header-btn--danger"
+        className={`${styles.button} ${styles.danger}`}
         onClick={onDelete}
         disabled={isDeleteDisabled}
       >
@@ -117,10 +118,10 @@ export function SettingsSeasonsHeaderActions({
 }: SettingsSeasonsHeaderActionsProps): JSX.Element | undefined {
   if (activeChildId === 'seasons' && seasonsHeaderState) {
     return (
-      <div className="settings-seasons-header-buttons">
+      <div className={styles.actions}>
         <button
           type="button"
-          className="settings-seasons-header-btn settings-seasons-header-btn--success"
+          className={`${styles.button} ${styles.success}`}
           onClick={seasonsHeaderState.onActivate}
           disabled={seasonsHeaderState.isActivateDisabled}
         >
@@ -129,7 +130,7 @@ export function SettingsSeasonsHeaderActions({
         </button>
         <button
           type="button"
-          className="settings-seasons-header-btn settings-seasons-header-btn--danger"
+          className={`${styles.button} ${styles.danger}`}
           onClick={seasonsHeaderState.onDelete}
           disabled={seasonsHeaderState.isDeleteDisabled}
         >
@@ -208,10 +209,10 @@ export function SettingsSeasonsHeaderActions({
 
   if (activeChildId === 'language' || activeChildId === 'themeColor') {
     return (
-      <div className="settings-seasons-header-buttons">
+      <div className={styles.actions}>
         <button
           type="button"
-          className="settings-seasons-header-btn settings-seasons-header-btn--success"
+          className={`${styles.button} ${styles.success}`}
           onClick={onSave}
         >
           <FaCheck />

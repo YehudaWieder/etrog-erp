@@ -11,6 +11,8 @@ import {
   normalizePriceValue,
   useCustomerCategoriesManagement,
 } from '../hooks/useCustomerCategoriesManagement';
+import sharedStyles from './styles/CustomersShared.module.css';
+import styles from './styles/CustomerCategoriesManagement.module.css';
 
 export type { CustomerCategoriesHeaderState } from '../customersPage.types';
 
@@ -66,11 +68,11 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
       emptyMessage={!seasonFilterId ? t.empty : seasonFilterId && filteredCategoriesCount === 0 && !loading ? t.categoryForSeasonEmpty : null}
     >
       {categoriesByCustomer.length > 0 ? (
-        <div className="customer-categories-manager__groups">
+        <div className={styles.groups}>
           {categoriesByCustomer.map((group) => (
-            <section key={group.customerId} className="customer-categories-manager__group">
+            <section key={group.customerId} className={styles.group}>
               <h4 className="seasons-manager__section-title">{group.customerName}</h4>
-              <ManagementCardsGrid className="customer-categories-manager__cards">
+              <ManagementCardsGrid className={styles.cards}>
                 {group.categories.map((category) => {
                   const isSelected = selectedCategoryId === category.id;
                   const badgeLabel = category.name.trim().slice(0, 2).toUpperCase() || '#';
@@ -92,9 +94,9 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
                           </>
                         }
                         bottomContent={
-                          <span className="seasons-manager__meta customers-manager__meta">
-                            <span className="customers-manager__meta-line">{t.customer}: {category.customerName}</span>
-                            <span className="customers-manager__meta-line">{t.price}: {normalizePriceValue(category.price)} {category.currency}</span>
+                          <span className={`seasons-manager__meta ${sharedStyles.meta}`}>
+                            <span className={sharedStyles.metaLine}>{t.customer}: {category.customerName}</span>
+                            <span className={sharedStyles.metaLine}>{t.price}: {normalizePriceValue(category.price)} {category.currency}</span>
                           </span>
                         }
                       />
@@ -144,9 +146,9 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
                 : t.editMessage(selectedCategory?.name ?? '')}
             </div>
 
-            <div className="customer-categories-manager__form-grid">
-              <div className="customer-categories-manager__field">
-                <label className="customer-categories-manager__label">{t.customerLabel}</label>
+            <div className={styles.formGrid}>
+              <div className={styles.field}>
+                <label className={styles.label}>{t.customerLabel}</label>
                 <select
                   className="seasons-manager__year-input"
                   value={formState.customerId}
@@ -168,8 +170,8 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
                 </select>
               </div>
 
-              <div className="customer-categories-manager__field">
-                <label className="customer-categories-manager__label">{t.categoryNameLabel}</label>
+              <div className={styles.field}>
+                <label className={styles.label}>{t.categoryNameLabel}</label>
                 <input
                   className="seasons-manager__year-input"
                   type="text"
@@ -185,8 +187,8 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
                 />
               </div>
 
-              <div className="customer-categories-manager__field">
-                <label className="customer-categories-manager__label">{t.gradeLabel}</label>
+              <div className={styles.field}>
+                <label className={styles.label}>{t.gradeLabel}</label>
                 <input
                   className="seasons-manager__year-input"
                   type="text"
@@ -201,8 +203,8 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
                 />
               </div>
 
-              <div className="customer-categories-manager__field">
-                <label className="customer-categories-manager__label">{t.priceLabel}</label>
+              <div className={styles.field}>
+                <label className={styles.label}>{t.priceLabel}</label>
                 <input
                   className="seasons-manager__year-input"
                   type="number"
@@ -219,8 +221,8 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
                 />
               </div>
 
-              <div className="customer-categories-manager__field">
-                <label className="customer-categories-manager__label">{t.currencyLabel}</label>
+              <div className={styles.field}>
+                <label className={styles.label}>{t.currencyLabel}</label>
                 <select
                   className="seasons-manager__year-input"
                   value={formState.currency}

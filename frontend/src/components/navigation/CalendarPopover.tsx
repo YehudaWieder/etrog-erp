@@ -3,6 +3,8 @@ import { FaCalendarDays, FaCheck, FaCopy } from 'react-icons/fa6';
 import { Calendar } from 'react-multi-date-picker';
 import { formatGregorianDate, formatHebrewDate } from './calendarDateFormatting';
 import { useClickOutside } from '../../hooks/useClickOutside';
+import styles from './styles/CalendarPopover.module.css';
+import navStyles from './styles/NavigationControls.module.css';
 
 type CalendarPopoverProps = {
   lang: 'he' | 'en';
@@ -91,9 +93,9 @@ export function CalendarPopover({ lang }: CalendarPopoverProps) {
   };
 
   return (
-    <div className="calendar-popover" ref={popoverRef}>
+    <div className={styles.root} ref={popoverRef}>
       <button
-        className={`nav-icon-btn${open ? ' is-open' : ''}`}
+        className={`${navStyles.iconButton}${open ? ` ${navStyles.iconButtonOpen}` : ''}`}
         type="button"
         aria-label={lang === 'he' ? 'לוח שנה משולב' : 'Dual calendar'}
         aria-expanded={open}
@@ -104,20 +106,20 @@ export function CalendarPopover({ lang }: CalendarPopoverProps) {
       </button>
       {open ? (
         <div
-          className="calendar-popover__panel"
+          className={styles.panel}
           id={popoverId}
           role="dialog"
           aria-label={lang === 'he' ? 'לוח שנה משולב עברי ולועזי' : 'Gregorian and Hebrew calendar'}
           dir={lang === 'he' ? 'rtl' : 'ltr'}
         >
-          <div className="calendar-popover__content">
-            <div className="calendar-popover__summary">
-              <div className="calendar-popover__summary-item">
-                <span className="calendar-popover__summary-label">{lang === 'he' ? 'לועזי' : 'Gregorian'}</span>
-                <div className="calendar-popover__summary-row">
-                  <strong className="calendar-popover__summary-value">{formattedGregorianDate}</strong>
+          <div className={styles.content}>
+            <div className={styles.summary}>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>{lang === 'he' ? 'לועזי' : 'Gregorian'}</span>
+                <div className={styles.summaryRow}>
+                  <strong className={styles.summaryValue}>{formattedGregorianDate}</strong>
                   <button
-                    className={`calendar-popover__copy-btn${copiedKey === 'gregorian' ? ' is-copied' : ''}`}
+                    className={`${styles.copyButton}${copiedKey === 'gregorian' ? ` ${styles.copyButtonCopied}` : ''}`}
                     type="button"
                     aria-label={lang === 'he' ? 'העתק תאריך לועזי' : 'Copy Gregorian date'}
                     title={lang === 'he' ? 'העתק' : 'Copy'}
@@ -127,12 +129,12 @@ export function CalendarPopover({ lang }: CalendarPopoverProps) {
                   </button>
                 </div>
               </div>
-              <div className="calendar-popover__summary-item">
-                <span className="calendar-popover__summary-label">{lang === 'he' ? 'עברי' : 'Hebrew'}</span>
-                <div className="calendar-popover__summary-row">
-                  <strong className="calendar-popover__summary-value">{formattedHebrewDate}</strong>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>{lang === 'he' ? 'עברי' : 'Hebrew'}</span>
+                <div className={styles.summaryRow}>
+                  <strong className={styles.summaryValue}>{formattedHebrewDate}</strong>
                   <button
-                    className={`calendar-popover__copy-btn${copiedKey === 'hebrew' ? ' is-copied' : ''}`}
+                    className={`${styles.copyButton}${copiedKey === 'hebrew' ? ` ${styles.copyButtonCopied}` : ''}`}
                     type="button"
                     aria-label={lang === 'he' ? 'העתק תאריך עברי' : 'Copy Hebrew date'}
                     title={lang === 'he' ? 'העתק' : 'Copy'}
@@ -143,7 +145,7 @@ export function CalendarPopover({ lang }: CalendarPopoverProps) {
                 </div>
               </div>
             </div>
-            <Calendar value={selectedDate} onChange={handleCalendarChange} className="calendar-popover__calendar" />
+            <Calendar value={selectedDate} onChange={handleCalendarChange} className={styles.calendar} />
           </div>
         </div>
       ) : null}

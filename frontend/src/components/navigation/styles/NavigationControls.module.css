@@ -1,0 +1,48 @@
+.iconGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.iconButton {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  position: relative;
+  font-size: 1.15rem;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--easing-standard), background var(--easing-standard);
+}
+
+.iconButton:hover {
+  color: var(--color-primary);
+  background: rgba(255, 202, 43, 0.015);
+}
+
+.iconButtonOpen {
+  color: var(--color-primary);
+  background: rgba(255, 202, 43, 0.08);
+}
+
+.badge {
+  position: absolute;
+  top: -5px;
+  inset-inline-end: -5px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: var(--radius-pill);
+  font-size: 0.67rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0 var(--space-1);
+  color: #fff;
+  background: var(--color-primary);
+}

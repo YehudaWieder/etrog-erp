@@ -3,6 +3,7 @@ import ManagementCardsGrid from '../../../components/ui/ManagementCardsGrid';
 import ManagementSelectableCard from '../../../components/ui/ManagementSelectableCard';
 import type { SeasonsI18n } from '../i18n';
 import type { ResolvedSeason } from '../seasonsManagement.types';
+import styles from './styles/SeasonsCardsSection.module.css';
 
 type SeasonsCardsSectionProps = {
   title: string;
@@ -51,7 +52,7 @@ export function SeasonsCardsSection({
                   </>
                 }
                 topAside={
-                  <span className={`seasons-manager__card-status${activeStatus ? ' is-active' : ''}`}>
+                  <span className={`${styles.cardStatus}${activeStatus ? ` ${styles.cardStatusActive}` : ''}`}>
                     {statusLabel}
                   </span>
                 }

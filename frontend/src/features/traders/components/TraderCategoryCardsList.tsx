@@ -1,5 +1,6 @@
 import ManagementCardsGrid from '../../../components/ui/ManagementCardsGrid';
 import ManagementSelectableCard from '../../../components/ui/ManagementSelectableCard';
+import styles from './styles/TraderCategoriesShared.module.css';
 
 type CategoryShare = {
   traderId: number;
@@ -46,36 +47,37 @@ export function TraderCategoryCardsList({
         return (
           <li key={category.id}>
             <ManagementSelectableCard
+              className={styles.miniCard}
               isSelected={isSelected}
               badgeLabel={badge}
               selector={
-                <span className={`profile-mini-card__avatar${isSelected ? ' is-selected' : ''}`}>
+                <span className={`${styles.miniCardAvatar}${isSelected ? ` ${styles.miniCardAvatarSelected}` : ''}`}>
                   {isSelected ? '✓' : badge}
                 </span>
               }
               onToggle={() => onToggleCategory(category.id)}
               topContent={
-                <span className="profile-mini-card__identity">
+                <span className={styles.miniCardIdentity}>
                   <span className="seasons-manager__year">{category.name}</span>
-                  <span className="default-trader-categories-manager__top-id">{t.categoryId}: {category.id}</span>
+                  <span className={styles.topId}>{t.categoryId}: {category.id}</span>
                 </span>
               }
               bottomContent={
-                <span className="profile-mini-card__rows default-trader-categories-manager__rows">
+                <span className={`${styles.miniCardRows} ${styles.rows}`}>
                   {category.notes ? (
-                    <span className="profile-detail-row">
-                      <span className="profile-detail-row__label">{t.notesLabel}</span>
-                      <strong className="profile-detail-row__value">{category.notes}</strong>
+                    <span className={styles.detailRow}>
+                      <span className={styles.detailRowLabel}>{t.notesLabel}</span>
+                      <strong className={styles.detailRowValue}>{category.notes}</strong>
                     </span>
                   ) : null}
 
                   {category.shares.length > 0 ? (
                     <>
-                      <span className="default-trader-categories-manager__shares-subtitle">{t.sharesDetailsTitle}</span>
+                      <span className={styles.sharesSubtitle}>{t.sharesDetailsTitle}</span>
                       {category.shares.map((share) => (
-                        <span key={`${category.id}-${share.traderId}`} className="profile-detail-row">
-                          <span className="profile-detail-row__label default-trader-categories-manager__share-name">{share.traderName}</span>
-                          <strong className="profile-detail-row__value">{share.percent}%</strong>
+                        <span key={`${category.id}-${share.traderId}`} className={styles.detailRow}>
+                          <span className={`${styles.detailRowLabel} ${styles.shareName}`}>{share.traderName}</span>
+                          <strong className={styles.detailRowValue}>{share.percent}%</strong>
                         </span>
                       ))}
                     </>

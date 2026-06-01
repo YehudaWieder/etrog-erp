@@ -5,6 +5,7 @@ import { CalendarPopover } from './CalendarPopover';
 import { ProfileMenu, type ProfileMenuProps } from './ProfileMenu';
 import { TopBar } from './TopBar';
 import { useUnreadMessagesCount } from '../../hooks/useUnreadMessagesCount';
+import navStyles from './styles/NavigationControls.module.css';
 
 type AppTopBarProps = {
   links: NavItem[];
@@ -63,16 +64,16 @@ export function AppTopBar({
         </button>
       }
       rightSlot={
-        <div className="nav-icons">
+        <div className={navStyles.iconGroup}>
           <CalendarPopover lang={lang} />
           <button
-            className="nav-icon-btn"
+            className={navStyles.iconButton}
             type="button"
             aria-label={lang === 'he' ? 'הודעות' : 'Messages'}
             onClick={onAlertsClick}
           >
             <FaEnvelope />
-            {unreadCount > 0 ? <span className="badge">{unreadCount}</span> : null}
+            {unreadCount > 0 ? <span className={navStyles.badge}>{unreadCount}</span> : null}
           </button>
           <ProfileMenu
             isAuthenticated={isAuthenticated}

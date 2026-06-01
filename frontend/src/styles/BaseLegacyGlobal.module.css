@@ -1,0 +1,30 @@
+:global(*) {
+  box-sizing: border-box;
+}
+
+:global(html),
+:global(body),
+:global(#root) {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+:global(body) {
+  font-family: var(--font-family-base);
+  color: var(--color-text-main);
+  background: linear-gradient(180deg, #f4f5f8 0%, var(--color-bg-main) 100%);
+}
+
+:global(a) {
+  color: inherit;
+}
+
+:global(button),
+:global(input),
+:global(textarea),
+:global(select) {
+  font: inherit;
+}

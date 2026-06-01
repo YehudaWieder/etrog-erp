@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import styles from './styles/GlobalDataTable.module.css';
 
 export const GLOBAL_DATA_TABLE_WIDTHS = {
   action: '72px',
@@ -87,6 +88,11 @@ export function GlobalDataTable<RowT>({
 }: GlobalDataTableProps<RowT>): JSX.Element {
   const [internalSortState, setInternalSortState] = useState<GlobalDataTableSortState | null>(defaultSortState ?? null);
   const lastSortedRowsSignatureRef = useRef<string>('');
+  const alignClassName = {
+    start: styles.cellStart,
+    center: styles.cellCenter,
+    end: styles.cellEnd,
+  } as const;
 
   const getColumnLabel = (column: GlobalDataTableColumn<RowT>): string => {
     if (column.headerLabel) {
@@ -194,12 +200,12 @@ export function GlobalDataTable<RowT>({
     return (
       <button
         type="button"
-        className={`global-data-table__sort-button${isActive ? ' is-active' : ''}`}
+        className={`global-data-table__sort-button ${styles.sortButton}${isActive ? ` is-active ${styles.sortButtonActive}` : ''}`}
         onClick={() => handleSort(column)}
         aria-label={sortButtonLabel}
       >
-        <span className="global-data-table__sort-label">{column.header}</span>
-        <span className="global-data-table__sort-indicator" aria-hidden="true">
+        <span className={`global-data-table__sort-label ${styles.sortLabel}`}>{column.header}</span>
+        <span className={`global-data-table__sort-indicator ${styles.sortIndicator}`} aria-hidden="true">
           {direction === 'asc' ? '▲' : direction === 'desc' ? '▼' : '↕'}
         </span>
       </button>
@@ -207,10 +213,10 @@ export function GlobalDataTable<RowT>({
   };
 
   return (
-    <div className={`global-data-table${className ? ` ${className}` : ''}`}>
-      <div className="global-data-table__viewport">
+    <div className={`global-data-table ${styles.root}${className ? ` ${className}` : ''}`}>
+      <div className={`global-data-table__viewport ${styles.viewport}`}>
         <div
-          className="global-data-table__header"
+          className={`global-data-table__header ${styles.header}`}
           style={{
             gridTemplateColumns: templateColumns,
             width: responsiveMinWidth,
@@ -221,7 +227,7 @@ export function GlobalDataTable<RowT>({
           {columns.map((column) => (
             <div
               key={column.id}
-              className={`global-data-table__cell global-data-table__cell--head global-data-table__cell--${column.align ?? 'center'}`}
+              className={`global-data-table__cell global-data-table__cell--head global-data-table__cell--${column.align ?? 'center'} ${styles.cell} ${styles.cellHead} ${alignClassName[column.align ?? 'center']}`}
               role="columnheader"
             >
               {renderHeaderContent(column)}
@@ -230,13 +236,13 @@ export function GlobalDataTable<RowT>({
         </div>
 
         {sortedRows.length === 0 ? (
-          <div className="global-data-table__empty">{emptyLabel}</div>
+          <div className={`global-data-table__empty ${styles.empty}`}>{emptyLabel}</div>
         ) : (
-          <div className="global-data-table__body" style={{ width: responsiveMinWidth, minWidth: responsiveMinWidth }} role="rowgroup">
+          <div className={`global-data-table__body ${styles.body}`} style={{ width: responsiveMinWidth, minWidth: responsiveMinWidth }} role="rowgroup">
             {sortedRows.map((row) => (
               <div
                 key={getRowKey(row)}
-                className="global-data-table__row"
+                className={`global-data-table__row ${styles.row}`}
                 style={{
                   gridTemplateColumns: templateColumns,
                   minWidth: responsiveMinWidth,
@@ -247,7 +253,7 @@ export function GlobalDataTable<RowT>({
                 {columns.map((column) => (
                   <div
                     key={column.id}
-                    className={`global-data-table__cell global-data-table__cell--${column.align ?? 'center'}`}
+                    className={`global-data-table__cell global-data-table__cell--${column.align ?? 'center'} ${styles.cell} ${alignClassName[column.align ?? 'center']}`}
                     data-label={getColumnLabel(column)}
                     role="cell"
                   >

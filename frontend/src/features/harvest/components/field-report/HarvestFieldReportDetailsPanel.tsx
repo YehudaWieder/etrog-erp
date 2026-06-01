@@ -1,4 +1,5 @@
 ﻿import type { HarvestRecord } from '../../../../services/harvestsApi';
+import styles from '../styles/HarvestDetailsSheet.module.css';
 
 export type HarvestFieldReportDetailsData = {
   fieldName: string;
@@ -46,8 +47,8 @@ export type HarvestFieldReportDetailsPanelLabels = {
 export function HarvestFieldReportDetailsPanel({ data, locale, labels }: HarvestFieldReportDetailsPanelProps): JSX.Element {
   return (
     <div style={{ display: 'grid', gap: 14 }}>
-      <div className="harvest-daily-workspace__sheet-card">
-        <div className="harvest-daily-workspace__sheet-head">
+      <div className={styles.sheetCard}>
+        <div className={styles.sheetHead}>
           <p>
             <strong>{labels.season}:</strong> {data.seasonName}
           </p>
@@ -59,42 +60,44 @@ export function HarvestFieldReportDetailsPanel({ data, locale, labels }: Harvest
           </p>
         </div>
 
-        <div className="harvest-daily-workspace__sheet-status">{data.summaryStatus}</div>
+        <div className={styles.sheetStatus}>{data.summaryStatus}</div>
 
-        <table className="harvest-daily-workspace__sheet-table">
-          <thead>
-            <tr>
-              <th scope="col" aria-label={labels.rowType} />
-              <th scope="col">{labels.totalHarvested}</th>
-              <th scope="col">{labels.totalRejected}</th>
-              <th scope="col">{labels.netHarvest}</th>
-              <th scope="col">{labels.classifiedTotal}</th>
-              <th scope="col">{labels.rejectionRate}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.summaryRows.map((row) => (
-              <tr key={row.key} className={row.kind === 'summary' ? 'harvest-daily-workspace__sheet-row--summary' : undefined}>
-                <td>{row.label}</td>
-                <td>{row.totalHarvested}</td>
-                <td>{row.totalRejected}</td>
-                <td>{row.totalAfterRejected}</td>
-                <td>{row.classifiedTotal}</td>
-                <td>{row.rejectionRate}</td>
+        <div className={styles.sheetTableWrap}>
+          <table className={styles.sheetTable}>
+            <thead>
+              <tr>
+                <th scope="col" aria-label={labels.rowType} />
+                <th scope="col">{labels.totalHarvested}</th>
+                <th scope="col">{labels.totalRejected}</th>
+                <th scope="col">{labels.netHarvest}</th>
+                <th scope="col">{labels.classifiedTotal}</th>
+                <th scope="col">{labels.rejectionRate}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.summaryRows.map((row) => (
+                <tr key={row.key} className={row.kind === 'summary' ? styles.sheetRowSummary : undefined}>
+                  <td>{row.label}</td>
+                  <td>{row.totalHarvested}</td>
+                  <td>{row.totalRejected}</td>
+                  <td>{row.totalAfterRejected}</td>
+                  <td>{row.classifiedTotal}</td>
+                  <td>{row.rejectionRate}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div className="harvest-daily-workspace__related-sortings-card">
-        <h4 className="harvest-daily-workspace__related-sortings-title">{labels.rowsTitle}</h4>
+      <div className={styles.relatedSortingsCard}>
+        <h4 className={styles.relatedSortingsTitle}>{labels.rowsTitle}</h4>
 
         {data.rows.length === 0 ? (
-          <p className="harvest-daily-workspace__related-sortings-state">{labels.emptyRows}</p>
+          <p className={styles.relatedSortingsState}>{labels.emptyRows}</p>
         ) : (
-          <div className="harvest-daily-workspace__related-sortings-table-wrap">
-            <table className="harvest-daily-workspace__related-sortings-table">
+          <div className={styles.relatedSortingsTableWrap}>
+            <table className={styles.relatedSortingsTable}>
               <thead>
                 <tr>
                   <th>{labels.dateGregorian}</th>
@@ -125,12 +128,12 @@ export function HarvestFieldReportDetailsPanel({ data, locale, labels }: Harvest
                       <td>
                         {note ? (
                           <span
-                            className={`harvest-daily-workspace__related-sorting-note${rowIndex === 0 ? ' is-first-row' : ''}`}
+                            className={`${styles.relatedSortingNote}${rowIndex === 0 ? ` ${styles.relatedSortingNoteFirstRow}` : ''}`}
                             tabIndex={0}
                             aria-label={note}
                           >
-                            <span className="harvest-daily-workspace__related-sorting-note-bubble" aria-hidden="true" />
-                            <span className="harvest-daily-workspace__related-sorting-note-tooltip">{note}</span>
+                            <span className={styles.relatedSortingNoteBubble} aria-hidden="true" />
+                            <span className={styles.relatedSortingNoteTooltip}>{note}</span>
                           </span>
                         ) : null}
                       </td>

@@ -1,0 +1,66 @@
+.categoriesCell {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-start;
+  white-space: nowrap;
+}
+
+.categoryChip {
+  border: 1px solid rgba(36, 71, 34, 0.26);
+  background: #ffffff;
+  color: #1f3924;
+  border-radius: 8px;
+  padding: 5px 9px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.categoryChipLabel {
+  color: #2b4531;
+}
+
+.categoryChipValue {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: cell;
+  border-radius: 6px;
+  border-inline-start: 1px solid rgba(46, 79, 50, 0.28);
+  padding-inline-start: 8px;
+  color: #1d5b29;
+  font-weight: 800;
+  min-width: 48px;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--easing-standard), box-shadow var(--easing-standard);
+  user-select: none;
+}
+
+.categoryChipValue:hover {
+  background: rgba(230, 240, 232, 0.6);
+}
+
+.categoryChipValueSelected {
+  background: rgba(198, 225, 201, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(70, 120, 78, 0.35);
+}
+
+.categoryChipValueText {
+  display: inline-block;
+  min-width: 40px;
+}
+
+.categoryChipEmpty {
+  background: rgba(244, 246, 244, 0.9);
+  color: #5f6b62;
+}

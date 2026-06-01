@@ -1,4 +1,5 @@
 import { FaFileArrowDown, FaPrint } from 'react-icons/fa6';
+import sharedFilterStyles from '../../../../components/ui/styles/GlobalFiltersBar.module.css';
 
 import type { HarvestI18n } from '../../i18n';
 
@@ -26,10 +27,10 @@ export function HarvestSortingPrintExportActions({
   onScheduleMenuClose,
 }: HarvestSortingPrintExportActionsProps): JSX.Element {
   return (
-    <div className="global-filters-bar__icon-actions" aria-label={tableActionsLabel}>
+    <div className={`global-filters-bar__icon-actions ${sharedFilterStyles.iconActions}`} aria-label={tableActionsLabel}>
       <button
         type="button"
-        className="global-filters-bar__icon-btn"
+        className={`global-filters-bar__icon-btn ${sharedFilterStyles.iconBtn}`}
         onClick={onPrintSummary}
         aria-label={t.printTableAriaLabel}
         title={t.printTitle}
@@ -45,7 +46,7 @@ export function HarvestSortingPrintExportActions({
         }}
       >
         <summary
-          className="global-filters-bar__icon-btn"
+          className={`global-filters-bar__icon-btn ${sharedFilterStyles.iconBtn}`}
           aria-label={t.exportTableAriaLabel}
           title={t.exportTitle}
         >

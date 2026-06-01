@@ -1,0 +1,119 @@
+:global(.modal-overlay) {
+  position: fixed;
+  inset: 0;
+  background: rgba(18, 28, 20, 0.2);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-3);
+  overflow-y: auto;
+}
+
+:global(.modal-dialog) {
+  position: relative;
+  background: #fff;
+  border-radius: var(--radius-md, 12px);
+  box-shadow: 0 4px 32px rgba(0,0,0,0.18);
+  padding: 2.5rem 2rem 2rem 2rem;
+  min-width: 320px;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+:global(.modal-dialog--form) {
+  width: fit-content;
+  max-width: 1120px;
+  max-width: min(1120px, 94vw);
+  padding-top: 0;
+  border: 1px solid rgba(255, 202, 43, 0.7);
+  box-shadow: 0 0 0 2px rgba(255, 202, 43, 0.14), 0 14px 34px rgba(0, 0, 0, 0.16);
+}
+
+:global(.modal-dialog--form .modal-title) {
+  margin: 0 -2rem 0;
+  padding: 1.35rem 4.5rem 0.4rem;
+  background: var(--color-text-accent);
+  color: #ffffff;
+  text-align: center;
+  border-radius: calc(var(--radius-md, 12px) - 1px) calc(var(--radius-md, 12px) - 1px) 0 0;
+}
+
+:global(.modal-dialog--form .modal-message) {
+  margin: 0 -2rem 0.25rem;
+  padding: 0 4.5rem 0;
+  color: var(--color-text-main);
+  text-align: center;
+}
+
+:global(.modal-close) {
+  position: absolute;
+  inset-inline-end: 8px;
+  top: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid #d3e8cb;
+  background: #f6fbf3;
+  color: #2f5a2b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+:global(.modal-close:hover) {
+  background: #edf6e9;
+}
+
+:global(.modal-dialog--form .modal-close) {
+  top: 12px;
+  inset-inline-end: 12px;
+  z-index: 2;
+  border-color: rgba(255, 255, 255, 0.34);
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+:global(.modal-dialog--form .modal-close:hover) {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+:global(.modal-dialog::before) {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 202, 43, 0.02);
+  pointer-events: none;
+  z-index: 0;
+}
+
+:global(.modal-dialog > *) {
+  position: relative;
+  z-index: 1;
+}
+
+:global(.modal-title) {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: var(--color-text-main);
+}
+
+:global(.modal-message) {
+  font-size: 1rem;
+  color: var(--color-text-main);
+}
+
+:global(.modal-actions) {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}

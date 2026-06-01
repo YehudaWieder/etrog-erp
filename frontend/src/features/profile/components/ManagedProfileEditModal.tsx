@@ -1,6 +1,7 @@
 import { FaFloppyDisk, FaXmark } from 'react-icons/fa6';
 import type { AuthUserListItem } from '../../../services/authService';
 import type { ProfileI18nLabels, ProfileLang } from '../profilePage.types';
+import styles from './styles/ProfileFeature.module.css';
 
 type ManagedProfileEditModalProps = {
   lang: ProfileLang;
@@ -56,10 +57,10 @@ export function ManagedProfileEditModal({
             : t.managedEditProfile.fallbackMessage}
         </p>
 
-        {managedEditMessage ? <p className="profile-editor__message">{managedEditMessage}</p> : null}
-        {managedEditError ? <p className="profile-editor__error">{managedEditError}</p> : null}
+        {managedEditMessage ? <p className={styles.editorMessage}>{managedEditMessage}</p> : null}
+        {managedEditError ? <p className={styles.editorError}>{managedEditError}</p> : null}
 
-        <div className="profile-editor__form-grid">
+        <div className={styles.editorFormGrid}>
           <label className="form-group">
             <span className="form-label">{t.profileCard.fields.name}</span>
             <input className="form-input" value={selectedManagedProfile?.name || ''} disabled />

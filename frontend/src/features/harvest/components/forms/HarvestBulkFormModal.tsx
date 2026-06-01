@@ -5,6 +5,7 @@ import type { CustomerCategory } from '../../../../services/customerCategoriesAp
 import type { TraderCategoryWithShares } from '../../../../services/traderCategoriesApi';
 import type { HarvestFormClassificationDraft } from '../../harvestPage.types';
 import type { HarvestI18n } from '../../i18n';
+import styles from './styles/HarvestBulkFormModal.module.css';
 
 type HarvestBulkFormModalProps = {
   isOpen: boolean;
@@ -88,7 +89,7 @@ export function HarvestBulkFormModal({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
-        className="modal-dialog modal-dialog--form harvest-bulk-form-modal"
+        className={`modal-dialog modal-dialog--form ${styles.modal}`}
         role="dialog"
         aria-modal="true"
         aria-label={form.ariaLabel}
@@ -101,7 +102,7 @@ export function HarvestBulkFormModal({
         <h3 className="modal-title">{form.title}</h3>
         <p className="modal-message">{form.instructions}</p>
 
-        <div className="management-form-grid harvest-bulk-form-grid harvest-bulk-form-grid--primary">
+        <div className={`management-form-grid ${styles.grid} ${styles.gridPrimary}`}>
           <select
             className="seasons-manager__year-input"
             value={harvestFormFieldId}
@@ -134,7 +135,7 @@ export function HarvestBulkFormModal({
           />
 
           <input
-            className="seasons-manager__year-input harvest-bulk-form-number-input harvest-bulk-form-number-input--first"
+            className={`seasons-manager__year-input harvest-bulk-form-number-input ${styles.numberInputFirst}`}
             type="number"
             min="0"
             value={harvestFormTotalHarvested}
@@ -173,9 +174,9 @@ export function HarvestBulkFormModal({
             aria-label={form.ownerRejectedLabel}
           />
 
-          <fieldset className="harvest-bulk-form-classification-mode" aria-label={form.classificationModeLabel}>
+          <fieldset className={styles.classificationMode} aria-label={form.classificationModeLabel}>
             <legend>{form.classificationModeLabel}</legend>
-            <p className="harvest-bulk-form-classification-mode__hint">{form.classificationModeHint}</p>
+            <p className={styles.classificationModeHint}>{form.classificationModeHint}</p>
             <label>
               <input
                 type="radio"
@@ -197,7 +198,7 @@ export function HarvestBulkFormModal({
           </fieldset>
 
           <textarea
-            className="seasons-manager__year-input harvest-bulk-form-notes harvest-bulk-form-notes--with-mode"
+            className={`seasons-manager__year-input ${styles.notes} ${styles.notesWithMode}`}
             rows={1}
             value={harvestFormNotes}
             onChange={(event) => onNotesChange(event.target.value, event.currentTarget)}
@@ -206,8 +207,8 @@ export function HarvestBulkFormModal({
           />
         </div>
 
-        <div className="harvest-bulk-form-classifications">
-          <div className="harvest-bulk-form-classifications__header">
+        <div className={styles.classifications}>
+          <div className={styles.classificationsHeader}>
             <h4>{form.sortingRowsTitle}</h4>
             <button type="button" className="btn btn-success" onClick={onAddClassificationDraft}>
               {form.addSortingRow}
@@ -220,8 +221,8 @@ export function HarvestBulkFormModal({
             );
 
             return (
-              <div key={draft.id} className="harvest-bulk-form-classification-row">
-                <div className="harvest-bulk-form-classification-row__head">
+              <div key={draft.id} className={styles.classificationRow}>
+                <div className={styles.classificationRowHead}>
                   <strong>{form.sortingRowPrefix(index)}</strong>
                   <button
                     type="button"
@@ -233,7 +234,7 @@ export function HarvestBulkFormModal({
                   </button>
                 </div>
 
-                <div className="management-form-grid harvest-bulk-form-grid">
+                <div className={`management-form-grid ${styles.grid}`}>
                   <select
                     className="seasons-manager__year-input"
                     value={draft.assignmentType}

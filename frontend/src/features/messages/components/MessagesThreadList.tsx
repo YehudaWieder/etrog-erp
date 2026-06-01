@@ -1,6 +1,14 @@
 import { FaEnvelope, FaEnvelopeOpen, FaReply, FaUsers } from 'react-icons/fa6';
 import type { ThreadSummary, MessagesListLabels } from '../messagesPage.types';
 import { buildMessageMetaMain, toPriority } from '../services/messagesThreadHelpers.service';
+import styles from './styles/MessagesFeature.module.css';
+
+const PRIORITY_CLASS_BY_VALUE = {
+  LOW: styles.priorityLow,
+  NORMAL: styles.priorityNormal,
+  HIGH: styles.priorityHigh,
+  URGENT: styles.priorityUrgent,
+} as const;
 
 type MessagesThreadListProps = {
   sortedThreads: ThreadSummary[];
@@ -16,7 +24,7 @@ export function MessagesThreadList(props: MessagesThreadListProps) {
   const { sortedThreads, selectedRootId, userId, lang, userNamesById, labels, onOpenThread } = props;
 
   return (
-    <aside className="messages-list" aria-label="Messages list">
+    <aside className={styles.list} aria-label="Messages list">
       {sortedThreads.map(({ rootId, thread, lastMessage }) => {
         const isUnread =
           userId !== undefined &&
@@ -30,31 +38,33 @@ export function MessagesThreadList(props: MessagesThreadListProps) {
           labels: labels.threadMeta,
         });
 
+        const priority = toPriority(lastMessage.priority);
+
         return (
           <button
             key={rootId}
             type="button"
-            className={`messages-list__item${isUnread ? ' messages-list__item--unread' : ''}${selectedRootId === rootId ? ' is-active' : ''}`}
+            className={`${styles.listItem}${isUnread ? ` ${styles.listItemUnread}` : ''}${selectedRootId === rootId ? ` ${styles.listItemActive}` : ''}`}
             onClick={() => onOpenThread(rootId)}
           >
-            <div className="messages-list__icon">
+            <div className={styles.listIcon}>
               {thread.length > 1 ? <FaReply /> : isUnread ? <FaEnvelope /> : <FaEnvelopeOpen />}
             </div>
-            <div className="messages-list__content">
-              <div className="messages-badges-row">
-                <span className={`messages-priority messages-priority--${toPriority(lastMessage.priority).toLowerCase()}`}>
-                  {labels.priority[toPriority(lastMessage.priority)]}
+            <div className={styles.listContent}>
+              <div className={styles.badgesRow}>
+                <span className={`${styles.priority} ${PRIORITY_CLASS_BY_VALUE[priority]}`}>
+                  {labels.priority[priority]}
                 </span>
                 {lastMessage.recipientIds.length > 1 ? (
-                  <span className="messages-recipient-badge" title={labels.multiRecipient}>
+                  <span className={styles.recipientBadge} title={labels.multiRecipient}>
                     <FaUsers />
                     <span>{lastMessage.recipientIds.length}</span>
                   </span>
                 ) : null}
               </div>
-              <div className="messages-list__meta">
+              <div className={styles.listMeta}>
                 {metaMain.tooltip ? (
-                  <span className="messages-meta-tooltip" data-tooltip={metaMain.tooltip}>
+                  <span className={styles.metaTooltip} data-tooltip={metaMain.tooltip}>
                     {metaMain.text}
                   </span>
                 ) : (
@@ -62,13 +72,13 @@ export function MessagesThreadList(props: MessagesThreadListProps) {
                 )}
                 <span>{new Date(lastMessage.createdAt).toLocaleString()}</span>
               </div>
-              <div className="messages-list__subject">{lastMessage.subject}</div>
-              <div className="messages-list__preview">
+              <div className={styles.listSubject}>{lastMessage.subject}</div>
+              <div className={styles.listPreview}>
                 {lastMessage.content.slice(0, 90)}
                 {lastMessage.content.length > 90 ? '...' : ''}
               </div>
               {thread.length > 1 ? (
-                <div className="messages-list__thread-count">
+                <div className={styles.listThreadCount}>
                   {thread.length} {labels.threadCount}
                 </div>
               ) : null}
