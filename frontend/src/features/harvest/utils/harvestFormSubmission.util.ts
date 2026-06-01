@@ -29,12 +29,26 @@ type BuildHarvestFormSubmissionPayloadResult =
   | { payload?: never; error: string };
 
 function parseNonNegativeNumber(value: string | number): number | null {
+  if (typeof value === 'string' && !value.trim()) {
+    return null;
+  }
+
   const normalized = typeof value === 'number' ? value : Number(value.trim());
   if (!Number.isFinite(normalized) || normalized < 0) {
     return null;
   }
 
   return normalized;
+}
+
+export function areHarvestSortingTotalsFilled(params: {
+  totalHarvested: string | number;
+  totalRejected: string | number;
+}) {
+  return (
+    parseNonNegativeNumber(params.totalHarvested) !== null
+    && parseNonNegativeNumber(params.totalRejected) !== null
+  );
 }
 
 export function getHarvestSortingQuantityState(params: {
@@ -154,12 +168,6 @@ export function buildHarvestFormSubmissionPayload({
     };
   }
 
-  if (form.classifications.length < 1) {
-    return {
-      error: t.sortingRowRequired,
-    };
-  }
-
   const { maxSortingQuantity, currentSortingQuantitySum } = getHarvestSortingQuantityState({
     classifications: form.classifications,
     totalHarvested,
@@ -249,6 +257,7 @@ export function buildHarvestFormSubmissionPayload({
 
   if (
     !form.isPartialClassification
+    && form.classifications.length > 0
     && maxSortingQuantity !== null
     && currentSortingQuantitySum !== maxSortingQuantity
   ) {

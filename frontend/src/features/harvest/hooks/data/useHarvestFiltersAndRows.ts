@@ -65,8 +65,8 @@ export function useHarvestFiltersAndRows({
         const [nextSeasons, nextFields, nextTraders, nextCustomers] = await Promise.all([
           getSeasons(),
           getFields(),
-          isSortingDailyDetailsTab ? getTraders() : Promise.resolve([] as Trader[]),
-          isSortingDailyDetailsTab ? getCustomers() : Promise.resolve([] as Customer[]),
+          requiresHarvestData || isSortingDailyDetailsTab ? getTraders() : Promise.resolve([] as Trader[]),
+          requiresHarvestData || isSortingDailyDetailsTab ? getCustomers() : Promise.resolve([] as Customer[]),
         ]);
 
         if (!isMounted) {

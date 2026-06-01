@@ -52,6 +52,20 @@ describe('harvest-validation rules', () => {
     ).toThrow(BadRequestException);
   });
 
+  it('allows empty classifications array when provided', () => {
+    expect(() =>
+      assertClassificationsMatchHarvested({
+        dateGregorian: new Date().toISOString(),
+        dateHebrew: 'test',
+        fieldId: 1,
+        totalHarvested: 0,
+        totalRejected: 0,
+        isPartialClassification: false,
+        classifications: [],
+      }),
+    ).not.toThrow();
+  });
+
   it('rejects trader/customer IDs on GENERAL assignment', () => {
     expect(() =>
       assertGeneralAssignmentIds({

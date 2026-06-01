@@ -6,6 +6,10 @@ import {
 } from 'src/harvest/services/harvest-core/dto/harvest.dto';
 
 export function assertNoDuplicateClassifications(items: ClassificationBulkItemDto[]) {
+  if (!items?.length) {
+    return;
+  }
+
   const seen = new Set<string>();
 
   for (const item of items) {
@@ -27,7 +31,8 @@ export function assertClassificationsMatchHarvested(data: HarvestBulkCreateDto) 
 
   const totalRejected = data.totalRejected || 0;
   const netHarvested = Math.max((data.totalHarvested || 0) - totalRejected, 0);
-  const classificationsTotal = data.classifications.reduce(
+  const classifications = data.classifications ?? [];
+  const classificationsTotal = classifications.reduce(
     (sum, item) => sum + (item.quantity || 0),
     0,
   );

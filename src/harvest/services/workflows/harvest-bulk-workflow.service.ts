@@ -272,6 +272,7 @@ export class HarvestBulkWorkflowService {
   async createHarvestWithClassifications(bulkDto: HarvestBulkCreateDto, actorId: number) {
     const bulkPayload = {
       ...bulkDto,
+      classifications: bulkDto.classifications ?? [],
       updatedById: actorId,
     };
 

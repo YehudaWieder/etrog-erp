@@ -59,6 +59,7 @@ export type HarvestI18n = {
     quantityPlaceholder: string;
     sortingNotesPlaceholder: string;
     addSortingRowBlockedError: string;
+    addSortingRowSummaryFieldsRequiredError: string;
     addSortingRowMaxReachedError: string;
     cancel: string;
     save: string;
@@ -84,6 +85,8 @@ export type HarvestI18n = {
     sortingTotalExceedsAvailable: (maxAllowed: number) => string;
     sortingTotalMustMatchAvailableForFullSorting: (requiredTotal: number) => string;
     sortingRowRequired: string;
+    addSortingRowTotalsRequiredError: string;
+    addSortingRowSummaryFieldsRequiredError: string;
     sortingRowQuantityRequired: (rowNumber: number) => string;
     traderCategoryRequired: (rowNumber: number) => string;
     gradeRequired: (rowNumber: number) => string;

@@ -198,6 +198,6 @@ export class HarvestBulkCreateDto {
   @ApiPropertyOptional({ example: true })
   isPartialClassification?: boolean;
 
-  @ApiProperty({ type: [ClassificationBulkItemDto] })
-  classifications!: ClassificationBulkItemDto[];
+  @ApiPropertyOptional({ type: [ClassificationBulkItemDto] })
+  classifications?: ClassificationBulkItemDto[];
 }

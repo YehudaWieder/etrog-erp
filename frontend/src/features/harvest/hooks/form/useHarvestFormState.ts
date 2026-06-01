@@ -73,7 +73,7 @@ export function useHarvestFormState({
     setHarvestFormOwnerRejected('');
     setHarvestFormNotes('');
     setHarvestFormIsPartialClassification(false);
-    setHarvestFormClassifications([createNextHarvestClassificationDraft()]);
+    setHarvestFormClassifications([]);
   };
 
   const openHarvestGlobalForm = () => {
@@ -96,7 +96,7 @@ export function useHarvestFormState({
 
   const removeHarvestClassificationDraft = (draftId: string) => {
     setHarvestFormClassifications((previous) => {
-      if (previous.length <= 1) {
+      if (previous.length <= 0) {
         return previous;
       }
 

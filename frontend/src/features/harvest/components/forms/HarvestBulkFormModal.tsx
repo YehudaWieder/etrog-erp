@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import type { Field } from '../../../../services/fieldsApi';
 import type { Trader } from '../../../../services/tradersApi';
 import type { Customer } from '../../../../services/customersApi';
@@ -6,7 +6,11 @@ import type { CustomerCategory } from '../../../../services/customerCategoriesAp
 import type { TraderCategoryWithShares } from '../../../../services/traderCategoriesApi';
 import type { HarvestFormClassificationDraft } from '../../harvestPage.types';
 import type { HarvestI18n } from '../../i18n';
-import { getHarvestSortingQuantityState, isHarvestClassificationDraftComplete } from '../../utils/harvestFormSubmission.util';
+import {
+  areHarvestSortingTotalsFilled,
+  getHarvestSortingQuantityState,
+  isHarvestClassificationDraftComplete,
+} from '../../utils/harvestFormSubmission.util';
 import { HARVEST_GRADE_OPTIONS } from '../../utils/harvestPage.utils';
 import styles from './styles/HarvestBulkFormModal.module.css';
 
@@ -85,19 +89,59 @@ export function HarvestBulkFormModal({
 }: HarvestBulkFormModalProps) {
   const [didTryAddSortingRow, setDidTryAddSortingRow] = useState(false);
 
+  useEffect(() => {
+    if (isOpen) {
+      setDidTryAddSortingRow(false);
+    }
+  }, [isOpen]);
+
   if (!isOpen) {
     return null;
   }
 
   const form = t.bulkForm;
   const lastSortingRowDraft = harvestFormClassifications[harvestFormClassifications.length - 1] ?? null;
+  const areTotalsFilled = areHarvestSortingTotalsFilled({
+    totalHarvested: harvestFormTotalHarvested,
+    totalRejected: harvestFormTotalRejected,
+  });
   const { reachedSortingQuantityLimit } = getHarvestSortingQuantityState({
     classifications: harvestFormClassifications,
     totalHarvested: harvestFormTotalHarvested,
     totalRejected: harvestFormTotalRejected,
   });
   const canAddSortingRow =
-    (lastSortingRowDraft ? isHarvestClassificationDraftComplete(lastSortingRowDraft) : false) && !reachedSortingQuantityLimit;
+    areTotalsFilled
+    && (lastSortingRowDraft ? isHarvestClassificationDraftComplete(lastSortingRowDraft) : true)
+    && !reachedSortingQuantityLimit;
+
+  const addSortingBlockReason = !areTotalsFilled
+    ? 'totals-missing'
+    : reachedSortingQuantityLimit
+    ? 'max-reached'
+    : lastSortingRowDraft && !isHarvestClassificationDraftComplete(lastSortingRowDraft)
+      ? 'incomplete'
+      : null;
+
+  const getAddSortingBlockMessage = (reason: 'totals-missing' | 'incomplete' | 'max-reached' | null) => {
+    if (reason === 'totals-missing') {
+      return (
+        form.addSortingRowSummaryFieldsRequiredError
+        || form.addSortingRowTotalsRequiredError
+        || form.addSortingRowBlockedError
+      );
+    }
+
+    if (reason === 'incomplete') {
+      return form.addSortingRowBlockedError;
+    }
+
+    if (reason === 'max-reached') {
+      return form.addSortingRowMaxReachedError || form.addSortingRowBlockedError;
+    }
+
+    return form.addSortingRowBlockedError;
+  };
 
   const handleAddSortingRowClick = () => {
     if (!canAddSortingRow) {
@@ -235,6 +279,11 @@ export function HarvestBulkFormModal({
         <div className={styles.classifications}>
           <div className={styles.classificationsHeader}>
             <h4>{form.sortingRowsTitle}</h4>
+            {!harvestFormClassifications.length ? (
+              <button type="button" className="btn btn-primary" onClick={handleAddSortingRowClick}>
+                {form.addSortingRow}
+              </button>
+            ) : null}
           </div>
 
           {harvestFormClassifications.map((draft, index) => {
@@ -243,7 +292,9 @@ export function HarvestBulkFormModal({
             );
             const isLastSortingRow = index === harvestFormClassifications.length - 1;
             const canAddNextSortingRow = isHarvestClassificationDraftComplete(draft);
-            const addSortingBlockReason = !canAddNextSortingRow
+            const rowAddSortingBlockReason = !areTotalsFilled
+              ? 'totals-missing'
+              : !canAddNextSortingRow
               ? 'incomplete'
               : reachedSortingQuantityLimit
                 ? 'max-reached'
@@ -270,6 +321,23 @@ export function HarvestBulkFormModal({
                     <option value="CUSTOMER">{form.assignmentOptions.customer}</option>
                   </select>
 
+                  {draft.assignmentType === 'TRADER' ? (
+                    <select
+                      className="seasons-manager__year-input"
+                      value={draft.traderId}
+                      onChange={(event) => onUpdateClassificationDraft(draft.id, { traderId: event.target.value })}
+                    >
+                      <option value="">{form.traderPlaceholder}</option>
+                      {[...traders]
+                        .sort((left, right) => left.name.localeCompare(right.name))
+                        .map((trader) => (
+                        <option key={`harvest-form-trader-${trader.id}`} value={String(trader.id)}>
+                          {trader.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : null}
+
                   {draft.assignmentType === 'GENERAL' || draft.assignmentType === 'TRADER' ? (
                     <select
                       className="seasons-manager__year-input"
@@ -280,21 +348,6 @@ export function HarvestBulkFormModal({
                       {harvestFormTraderCategories.map((category) => (
                         <option key={`harvest-form-trader-category-${category.id}`} value={String(category.id)}>
                           {category.name}
-                        </option>
-                      ))}
-                    </select>
-                  ) : null}
-
-                  {draft.assignmentType === 'TRADER' ? (
-                    <select
-                      className="seasons-manager__year-input"
-                      value={draft.traderId}
-                      onChange={(event) => onUpdateClassificationDraft(draft.id, { traderId: event.target.value })}
-                    >
-                      <option value="">{form.traderPlaceholder}</option>
-                      {traders.map((trader) => (
-                        <option key={`harvest-form-trader-${trader.id}`} value={String(trader.id)}>
-                          {trader.name}
                         </option>
                       ))}
                     </select>
@@ -396,16 +449,20 @@ export function HarvestBulkFormModal({
                   </div>
                 </div>
 
-                {isLastSortingRow && didTryAddSortingRow && addSortingBlockReason ? (
+                {isLastSortingRow && didTryAddSortingRow && rowAddSortingBlockReason ? (
                   <p className={`seasons-manager__error ${styles.classificationAddError}`}>
-                    {addSortingBlockReason === 'incomplete'
-                      ? form.addSortingRowBlockedError
-                      : form.addSortingRowMaxReachedError}
+                    {getAddSortingBlockMessage(rowAddSortingBlockReason)}
                   </p>
                 ) : null}
               </div>
             );
           })}
+
+          {!harvestFormClassifications.length && didTryAddSortingRow && addSortingBlockReason ? (
+            <p className={`seasons-manager__error ${styles.classificationAddError}`}>
+              {getAddSortingBlockMessage(addSortingBlockReason)}
+            </p>
+          ) : null}
         </div>
 
         {harvestFormError ? <p className="seasons-manager__error">{harvestFormError}</p> : null}
