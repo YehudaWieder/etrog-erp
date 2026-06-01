@@ -1,37 +1,7 @@
 import type { NavItem, SidebarSection } from '../../types/navigation';
 import * as FAIcons from 'react-icons/fa6';
 import React, { useEffect, useMemo, useState } from 'react';
-
-const iconMap: Record<string, keyof typeof FAIcons> = {
-  'fa-truck': 'FaTruck',
-  'fa-box-open': 'FaBoxOpen',
-  'fa-circle-check': 'FaCircleCheck',
-  'fa-boxes-stacked': 'FaBoxesStacked',
-  'fa-file-circle-xmark': 'FaFileCircleXmark',
-  'fa-truck-ramp-box': 'FaTruckRampBox',
-  'fa-box': 'FaBox',
-  'fa-door-open': 'FaDoorOpen',
-  'fa-lemon': 'FaLemon',
-  'fa-paper-plane': 'FaPaperPlane',
-  'fa-clock': 'FaClock',
-  'fa-id-card': 'FaIdCard',
-  'fa-user-pen': 'FaUserPen',
-  'fa-users': 'FaUsers',
-  'fa-user-check': 'FaUserCheck',
-  'fa-user-slash': 'FaUserSlash',
-  'fa-envelope': 'FaEnvelope',
-  'fa-inbox': 'FaInbox',
-  'fa-envelope-open-text': 'FaEnvelopeOpenText',
-  'fa-sliders': 'FaSliders',
-  'fa-globe': 'FaGlobe',
-  'fa-palette': 'FaPalette',
-  'fa-cog': 'FaGear',
-  'fa-calendar': 'FaCalendar',
-  'fa-grip': 'FaGripVertical',
-  'fa-handshake': 'FaHandshake',
-  'fa-tag': 'FaTag',
-  'fa-bookmark': 'FaBookmark',
-};
+import { resolveNavigationIcon } from '../../utils/navigationIcons';
 
 type SidebarProps = {
   sections: SidebarSection[];
@@ -107,7 +77,7 @@ export function Sidebar({
                 {section.icon && (
                   <>
                     {(() => {
-                      const Icon = FAIcons[iconMap[section.icon]];
+                      const Icon = resolveNavigationIcon(section.icon);
                       return Icon ? <Icon style={{ color: 'currentColor' }} /> : null;
                     })()}
                   </>
@@ -140,7 +110,7 @@ export function Sidebar({
                       {item.icon && (
                         <>
                           {(() => {
-                            const Icon = FAIcons[iconMap[item.icon]];
+                            const Icon = resolveNavigationIcon(item.icon);
                             return Icon ? <Icon style={{ color: 'currentColor' }} /> : null;
                           })()}
                         </>

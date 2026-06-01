@@ -1,11 +1,10 @@
 
-import { useEffect, useState } from 'react';
 import { FaEnvelope } from 'react-icons/fa6';
 import type { NavItem } from '../../types/navigation';
 import { CalendarPopover } from './CalendarPopover';
 import { ProfileMenu, type ProfileMenuProps } from './ProfileMenu';
 import { TopBar } from './TopBar';
-import { fetchUnreadCount } from '../../services/messagesApi';
+import { useUnreadMessagesCount } from '../../hooks/useUnreadMessagesCount';
 
 type AppTopBarProps = {
   links: NavItem[];
@@ -35,58 +34,7 @@ export function AppTopBar({
   onProfile,
   userName,
 }: AppTopBarProps) {
-  const [fetchedUnreadCount, setFetchedUnreadCount] = useState<number>(0);
-
-  const unreadCount = typeof alertsCount === 'number' ? alertsCount : fetchedUnreadCount;
-
-  useEffect(() => {
-    if (typeof alertsCount === 'number') {
-      return;
-    }
-
-    let isMounted = true;
-
-    const pollIntervalMs = 2 * 60 * 1000;
-
-    const refreshUnreadCount = async () => {
-      try {
-        const res = await fetchUnreadCount();
-        if (isMounted) {
-          setFetchedUnreadCount(res.count);
-        }
-      } catch {
-        if (isMounted) {
-          setFetchedUnreadCount(0);
-        }
-      }
-    };
-
-    void refreshUnreadCount();
-
-    const intervalId = window.setInterval(() => {
-      void refreshUnreadCount();
-    }, pollIntervalMs);
-
-    const handleWindowFocus = () => {
-      void refreshUnreadCount();
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        void refreshUnreadCount();
-      }
-    };
-
-    window.addEventListener('focus', handleWindowFocus);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      isMounted = false;
-      window.clearInterval(intervalId);
-      window.removeEventListener('focus', handleWindowFocus);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [alertsCount]);
+  const { unreadCount } = useUnreadMessagesCount(alertsCount);
 
   return (
     <TopBar

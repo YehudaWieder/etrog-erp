@@ -1,6 +1,7 @@
-import { useRef, useState, useEffect } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaCircleUser, FaUser, FaArrowRightFromBracket, FaArrowRightToBracket, FaUserPlus } from 'react-icons/fa6';
+import { useClickOutside } from '../../hooks/useClickOutside';
 
 export type ProfileMenuProps = {
   isAuthenticated: boolean;
@@ -22,20 +23,15 @@ export function ProfileMenu({
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const handleOutsideClick = useCallback(() => {
+    setOpen(false);
+  }, []);
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    }
-    if (open) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [open]);
+  useClickOutside({
+    ref,
+    enabled: open,
+    onOutsideClick: handleOutsideClick,
+  });
 
   const handleLogin = () => {
     onLogin();
