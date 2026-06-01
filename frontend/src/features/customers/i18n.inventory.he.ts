@@ -1,18 +1,22 @@
 import type { CustomerInventoryI18n } from './i18n.inventory';
 
 export const CUSTOMER_INVENTORY_I18N_HE: CustomerInventoryI18n = {
-  userNameFallback: 'משתמש',
+  userNameFallback: 'הפרופיל שלי',
   pageTitle: 'מלאי לקוחות',
   topNav: [
-    {
-      id: 'customers',
-      label: 'מלאי לקוחות',
-    },
+    { id: 'harvest', label: 'קטיף ומיון', icon: 'fa-leaf' },
+    { id: 'shipments', label: 'משלוחים', icon: 'fa-truck' },
+    { id: 'traders', label: 'מלאי סוחרים', icon: 'fa-handshake' },
+    { id: 'customers', label: 'מלאי לקוחות', icon: 'fa-users' },
+    { id: 'workers', label: 'עובדים', icon: 'fa-person' },
+    { id: 'payments', label: 'הוצאות ותשלומים', icon: 'fa-money-bill' },
   ],
   sidebar: [
     {
       id: 'customer-inventory',
       title: 'מלאי לקוחות',
+      href: '/customers/unboxed',
+      icon: 'fa-users',
       items: [
         {
           id: 'unboxed',

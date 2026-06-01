@@ -1,18 +1,22 @@
 import type { CustomerInventoryI18n } from './i18n.inventory';
 
 export const CUSTOMER_INVENTORY_I18N_EN: CustomerInventoryI18n = {
-  userNameFallback: 'User',
+  userNameFallback: 'My Profile',
   pageTitle: 'Customers Inventory',
   topNav: [
-    {
-      id: 'customers',
-      label: 'Customers Inventory',
-    },
+    { id: 'harvest', label: 'Harvest & Sorting', icon: 'fa-leaf' },
+    { id: 'shipments', label: 'Shipments', icon: 'fa-truck' },
+    { id: 'traders', label: 'Partners Inventory', icon: 'fa-handshake' },
+    { id: 'customers', label: 'Customers Inventory', icon: 'fa-users' },
+    { id: 'workers', label: 'Workers', icon: 'fa-person' },
+    { id: 'payments', label: 'Expenses & Payments', icon: 'fa-money-bill' },
   ],
   sidebar: [
     {
       id: 'customer-inventory',
       title: 'Customers Inventory',
+      href: '/customers/unboxed',
+      icon: 'fa-users',
       items: [
         {
           id: 'unboxed',
