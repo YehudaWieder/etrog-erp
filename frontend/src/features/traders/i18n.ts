@@ -35,6 +35,49 @@ export type TraderInventoryI18n = {
 	topNav: NavItem[];
 	sidebar: SidebarSection[];
 	pageTitle: string;
+	summary: {
+		description: string;
+			focusedExplanation: string;
+			filters: {
+				seasonLabel: string;
+				traderLabel: string;
+				allTradersOption: string;
+				unassignedOption: string;
+			};
+		loading: string;
+		loadFailed: string;
+		empty: string;
+		retry: string;
+		totals: {
+			totalQuantity: string;
+			traderQuantity: string;
+			moduloQuantity: string;
+		};
+		matrix: {
+			title: string;
+			grade: string;
+			total: string;
+		};
+		columns: {
+			owner: string;
+			category: string;
+			grade: string;
+			pitamStatus: string;
+			totalQuantity: string;
+			lastUpdatedAt: string;
+		};
+		values: {
+			modulo: string;
+			traderOwned: string;
+			none: string;
+			neverUpdated: string;
+			pitamStatus: {
+				WITH_PITAM: string;
+				WITHOUT_PITAM: string;
+				MIXED: string;
+			};
+		};
+	};
 	emptyState: Record<string, { title: string; description: string }>;
 };
 

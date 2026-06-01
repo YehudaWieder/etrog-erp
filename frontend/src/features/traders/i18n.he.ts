@@ -27,6 +27,49 @@ export const TRADER_INVENTORY_I18N_HE: TraderInventoryI18n = {
 		},
 	],
 	pageTitle: 'מלאי סוחרים',
+	summary: {
+		description: 'הטבלה מציגה את היתרה נטו לפי סוחר, קטגוריה, דרגה וסטטוס פיטם, כולל תנועות שליליות שמפחיתות מהמלאי.',
+		focusedExplanation: 'סיכום מלאי לפי קטגוריה, דרגה וסטטוס פיטם. הערכים מוצגים כיתרה נטו, כולל תנועות שמפחיתות מהמלאי.',
+		filters: {
+			seasonLabel: 'שנה',
+			traderLabel: 'סוחר',
+			allTradersOption: 'כל הסוחרים',
+			unassignedOption: 'לא משוייך',
+		},
+		loading: 'טוען סיכום מלאי סוחרים...',
+		loadFailed: 'טעינת סיכום מלאי הסוחרים נכשלה.',
+		empty: 'אין שורות מלאי להצגה כרגע.',
+		retry: 'נסה שוב',
+		totals: {
+			totalQuantity: 'סה"כ מלאי',
+			traderQuantity: 'סה"כ מלאי סוחרים',
+			moduloQuantity: 'מלאי לא משוייך',
+		},
+		matrix: {
+			title: 'טבלת סיכום ללא שיוך',
+			grade: 'דרגה',
+			total: 'סה"כ',
+		},
+		columns: {
+			owner: 'בעלות',
+			category: 'קטגוריה',
+			grade: 'דרגה',
+			pitamStatus: 'סטטוס פיטם',
+			totalQuantity: 'סה"כ מלאי',
+			lastUpdatedAt: 'עודכן לאחרונה',
+		},
+		values: {
+			modulo: 'מודולו',
+			traderOwned: 'סוחר',
+			none: 'ללא',
+			neverUpdated: 'לא עודכן',
+			pitamStatus: {
+				WITH_PITAM: 'עם פיטם',
+				WITHOUT_PITAM: 'בלי פיטם',
+				MIXED: 'מעורב',
+			},
+		},
+	},
 	emptyState: {
 		all: {
 			title: 'אין מלאי להצגה',

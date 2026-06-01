@@ -27,6 +27,49 @@ export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
 		},
 	],
 	pageTitle: 'Partners Inventory',
+	summary: {
+		description: 'The table shows the net balance by trader, category, grade, and pitam status, including negative movements that reduce inventory.',
+		focusedExplanation: 'Inventory summary grouped by category, grade, and pitam status. Values are shown as net balance, including reducing movements.',
+		filters: {
+			seasonLabel: 'Year',
+			traderLabel: 'Trader',
+			allTradersOption: 'All traders',
+			unassignedOption: 'Unassigned',
+		},
+		loading: 'Loading trader inventory summary...',
+		loadFailed: 'Failed to load trader inventory summary.',
+		empty: 'No inventory rows to display right now.',
+		retry: 'Retry',
+		totals: {
+			totalQuantity: 'Total Inventory',
+			traderQuantity: 'Trader Inventory Total',
+			moduloQuantity: 'Modulo Inventory Total',
+		},
+		matrix: {
+			title: 'Unassigned Summary Matrix',
+			grade: 'Grade',
+			total: 'Total',
+		},
+		columns: {
+			owner: 'Owner',
+			category: 'Category',
+			grade: 'Grade',
+			pitamStatus: 'Pitam Status',
+			totalQuantity: 'Total Inventory',
+			lastUpdatedAt: 'Last Updated',
+		},
+		values: {
+			modulo: 'Modulo',
+			traderOwned: 'Trader',
+			none: 'None',
+			neverUpdated: 'Never updated',
+			pitamStatus: {
+				WITH_PITAM: 'With pitam',
+				WITHOUT_PITAM: 'Without pitam',
+				MIXED: 'Mixed',
+			},
+		},
+	},
 	emptyState: {
 		all: {
 			title: 'No inventory to display',
