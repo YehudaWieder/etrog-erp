@@ -18,6 +18,7 @@ import {
   assertFinalClassificationConsistency,
   assertGeneralAssignmentIds,
   assertNoDuplicateClassifications,
+  buildClassificationDuplicateKey,
 } from 'src/harvest/services/harvest-core/rules/harvest-validation.rules';
 import { HarvestAllocationService } from 'src/harvest/services/workflows/harvest-allocation.service';
 
@@ -223,15 +224,30 @@ export class HarvestBulkWorkflowService {
 
       await this.applyHarvestInlineUpdate(tx, harvestId, createPayload.harvestUpdate);
 
-      const classSlug = `harvest-${harvestId}-tcat-${createPayload.traderCategoryId ?? 0}-ccat-${createPayload.customerCategoryId ?? 0}-g-${createPayload.grade ?? 'NA'}-pitam-${createPayload.pitamStatus}-a-${createPayload.assignmentType}`;
+      const duplicateKey = buildClassificationDuplicateKey(createPayload);
 
-      const existing = await tx.classification.findUnique({
-        where: { slug: classSlug },
+      const existingClassifications = await tx.classification.findMany({
+        where: { fieldHarvestId: harvestId },
+        select: {
+          assignmentType: true,
+          traderId: true,
+          customerId: true,
+          traderCategoryId: true,
+          customerCategoryId: true,
+          grade: true,
+          pitamStatus: true,
+        },
       });
 
-      if (existing) {
+      const hasDuplicate = existingClassifications.some(
+        (classification) => buildClassificationDuplicateKey(classification) === duplicateKey,
+      );
+
+      if (hasDuplicate) {
         throw new ConflictException('This classification combination already exists for this harvest');
       }
+
+      const classSlug = `harvest-${harvestId}-tcat-${createPayload.traderCategoryId ?? 0}-ccat-${createPayload.customerCategoryId ?? 0}-g-${createPayload.grade ?? 'NA'}-pitam-${createPayload.pitamStatus}-a-${createPayload.assignmentType}`;
 
       const classification = await tx.classification.create({
         data: {

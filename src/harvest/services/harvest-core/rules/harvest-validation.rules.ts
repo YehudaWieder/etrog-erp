@@ -5,6 +5,18 @@ import {
   HarvestBulkCreateDto,
 } from 'src/harvest/services/harvest-core/dto/harvest.dto';
 
+export function buildClassificationDuplicateKey(item: {
+  assignmentType: AssignmentType;
+  traderId?: number | null;
+  customerId?: number | null;
+  traderCategoryId?: number | null;
+  customerCategoryId?: number | null;
+  grade?: string | null;
+  pitamStatus?: string | null;
+}) {
+  return `${item.assignmentType}|${item.traderId ?? 'null'}|${item.customerId ?? 'null'}|${item.traderCategoryId ?? 'null'}|${item.customerCategoryId ?? 'null'}|${item.grade ?? 'null'}|${item.pitamStatus ?? 'null'}`;
+}
+
 export function assertNoDuplicateClassifications(items: ClassificationBulkItemDto[]) {
   if (!items?.length) {
     return;
@@ -13,7 +25,7 @@ export function assertNoDuplicateClassifications(items: ClassificationBulkItemDt
   const seen = new Set<string>();
 
   for (const item of items) {
-    const key = `${item.assignmentType}|${item.traderId ?? 'null'}|${item.customerId ?? 'null'}|${item.traderCategoryId ?? 'null'}|${item.customerCategoryId ?? 'null'}|${item.grade ?? 'null'}`;
+    const key = buildClassificationDuplicateKey(item);
     if (seen.has(key)) {
       throw new ConflictException(
         'Duplicate classification found. Each combination of assignmentType, trader/customer, and category must be unique.',
