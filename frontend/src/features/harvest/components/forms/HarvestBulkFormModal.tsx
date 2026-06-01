@@ -1,10 +1,13 @@
-﻿import type { Field } from '../../../../services/fieldsApi';
+﻿import { useState } from 'react';
+import type { Field } from '../../../../services/fieldsApi';
 import type { Trader } from '../../../../services/tradersApi';
 import type { Customer } from '../../../../services/customersApi';
 import type { CustomerCategory } from '../../../../services/customerCategoriesApi';
 import type { TraderCategoryWithShares } from '../../../../services/traderCategoriesApi';
 import type { HarvestFormClassificationDraft } from '../../harvestPage.types';
 import type { HarvestI18n } from '../../i18n';
+import { getHarvestSortingQuantityState, isHarvestClassificationDraftComplete } from '../../utils/harvestFormSubmission.util';
+import { HARVEST_GRADE_OPTIONS } from '../../utils/harvestPage.utils';
 import styles from './styles/HarvestBulkFormModal.module.css';
 
 type HarvestBulkFormModalProps = {
@@ -80,11 +83,31 @@ export function HarvestBulkFormModal({
   onRemoveClassificationDraft,
   onUpdateClassificationDraft,
 }: HarvestBulkFormModalProps) {
+  const [didTryAddSortingRow, setDidTryAddSortingRow] = useState(false);
+
   if (!isOpen) {
     return null;
   }
 
   const form = t.bulkForm;
+  const lastSortingRowDraft = harvestFormClassifications[harvestFormClassifications.length - 1] ?? null;
+  const { reachedSortingQuantityLimit } = getHarvestSortingQuantityState({
+    classifications: harvestFormClassifications,
+    totalHarvested: harvestFormTotalHarvested,
+    totalRejected: harvestFormTotalRejected,
+  });
+  const canAddSortingRow =
+    (lastSortingRowDraft ? isHarvestClassificationDraftComplete(lastSortingRowDraft) : false) && !reachedSortingQuantityLimit;
+
+  const handleAddSortingRowClick = () => {
+    if (!canAddSortingRow) {
+      setDidTryAddSortingRow(true);
+      return;
+    }
+
+    setDidTryAddSortingRow(false);
+    onAddClassificationDraft();
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -138,6 +161,7 @@ export function HarvestBulkFormModal({
             className={`seasons-manager__year-input harvest-bulk-form-number-input ${styles.numberInputFirst}`}
             type="number"
             min="0"
+            required
             value={harvestFormTotalHarvested}
             onChange={(event) => onTotalHarvestedChange(event.target.value)}
             placeholder={form.totalHarvestedPlaceholder}
@@ -148,6 +172,7 @@ export function HarvestBulkFormModal({
             className="seasons-manager__year-input harvest-bulk-form-number-input"
             type="number"
             min="0"
+            required
             value={harvestFormTotalRejected}
             onChange={(event) => onTotalRejectedChange(event.target.value)}
             placeholder={form.totalRejectedPlaceholder}
@@ -210,31 +235,27 @@ export function HarvestBulkFormModal({
         <div className={styles.classifications}>
           <div className={styles.classificationsHeader}>
             <h4>{form.sortingRowsTitle}</h4>
-            <button type="button" className="btn btn-success" onClick={onAddClassificationDraft}>
-              {form.addSortingRow}
-            </button>
           </div>
 
           {harvestFormClassifications.map((draft, index) => {
             const availableCustomerCategories = harvestFormCustomerCategories.filter(
               (category) => String(category.customerId) === draft.customerId,
             );
+            const isLastSortingRow = index === harvestFormClassifications.length - 1;
+            const canAddNextSortingRow = isHarvestClassificationDraftComplete(draft);
+            const addSortingBlockReason = !canAddNextSortingRow
+              ? 'incomplete'
+              : reachedSortingQuantityLimit
+                ? 'max-reached'
+                : null;
 
             return (
               <div key={draft.id} className={styles.classificationRow}>
                 <div className={styles.classificationRowHead}>
                   <strong>{form.sortingRowPrefix(index)}</strong>
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    onClick={() => onRemoveClassificationDraft(draft.id)}
-                    disabled={harvestFormClassifications.length <= 1}
-                  >
-                    {form.removeSortingRow}
-                  </button>
                 </div>
 
-                <div className={`management-form-grid ${styles.grid}`}>
+                <div className={`management-form-grid ${styles.grid} ${styles.classificationGrid}`}>
                   <select
                     className="seasons-manager__year-input"
                     value={draft.assignmentType}
@@ -309,13 +330,18 @@ export function HarvestBulkFormModal({
                       </select>
                     </>
                   ) : (
-                    <input
+                    <select
                       className="seasons-manager__year-input"
-                      type="text"
                       value={draft.grade}
                       onChange={(event) => onUpdateClassificationDraft(draft.id, { grade: event.target.value })}
-                      placeholder={form.gradePlaceholder}
-                    />
+                    >
+                      <option value="">{form.gradePlaceholder}</option>
+                      {HARVEST_GRADE_OPTIONS.map((grade) => (
+                        <option key={`harvest-form-grade-${grade}`} value={grade}>
+                          {grade}
+                        </option>
+                      ))}
+                    </select>
                   )}
 
                   <select
@@ -342,13 +368,41 @@ export function HarvestBulkFormModal({
                   />
 
                   <input
-                    className="seasons-manager__year-input"
+                    className={`seasons-manager__year-input ${styles.classificationNotes}`}
                     type="text"
                     value={draft.notes}
                     onChange={(event) => onUpdateClassificationDraft(draft.id, { notes: event.target.value })}
                     placeholder={form.sortingNotesPlaceholder}
                   />
+
+                  <div className={styles.classificationActions}>
+                    {isLastSortingRow ? (
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={handleAddSortingRowClick}
+                      >
+                        {form.addSortingRow}
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      onClick={() => onRemoveClassificationDraft(draft.id)}
+                      disabled={harvestFormClassifications.length <= 1}
+                    >
+                      {form.removeSortingRow}
+                    </button>
+                  </div>
                 </div>
+
+                {isLastSortingRow && didTryAddSortingRow && addSortingBlockReason ? (
+                  <p className={`seasons-manager__error ${styles.classificationAddError}`}>
+                    {addSortingBlockReason === 'incomplete'
+                      ? form.addSortingRowBlockedError
+                      : form.addSortingRowMaxReachedError}
+                  </p>
+                ) : null}
               </div>
             );
           })}

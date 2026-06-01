@@ -95,7 +95,7 @@
   z-index: 0;
 }
 
-:global(.modal-dialog > *) {
+:global(.modal-dialog > :not(.modal-close)) {
   position: relative;
   z-index: 1;
 }

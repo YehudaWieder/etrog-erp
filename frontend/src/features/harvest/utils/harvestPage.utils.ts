@@ -26,6 +26,8 @@ export const FIELD_REPORT_NUMERIC_COLUMNS: FieldReportNumericColumnKey[] = [
 
 export const SORTING_DAILY_NUMERIC_COLUMNS: SortingDailyNumericColumnKey[] = ['totalSorted'];
 
+export const HARVEST_GRADE_OPTIONS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו'] as const;
+
 export function parseSeasonFilterId(value: string): number | null {
   const parsedValue = Number(value);
   return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : null;

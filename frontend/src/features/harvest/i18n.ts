@@ -58,6 +58,8 @@ export type HarvestI18n = {
     };
     quantityPlaceholder: string;
     sortingNotesPlaceholder: string;
+    addSortingRowBlockedError: string;
+    addSortingRowMaxReachedError: string;
     cancel: string;
     save: string;
     saving: string;
@@ -77,9 +79,14 @@ export type HarvestI18n = {
     fieldRequired: string;
     gregorianDateRequired: string;
     hebrewDateRequired: string;
+    totalHarvestedRequired: string;
+    totalRejectedRequired: string;
+    sortingTotalExceedsAvailable: (maxAllowed: number) => string;
+    sortingTotalMustMatchAvailableForFullSorting: (requiredTotal: number) => string;
     sortingRowRequired: string;
     sortingRowQuantityRequired: (rowNumber: number) => string;
     traderCategoryRequired: (rowNumber: number) => string;
+    gradeRequired: (rowNumber: number) => string;
     traderRequired: (rowNumber: number) => string;
     customerRequired: (rowNumber: number) => string;
     customerCategoryRequired: (rowNumber: number) => string;

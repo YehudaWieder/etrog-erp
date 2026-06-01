@@ -8,7 +8,11 @@ import { getDefaultTraderCategories } from '../../../services/defaultTraderCateg
 import { getTraderCategoriesWithShares } from '../../../services/traderCategoriesApi';
 import type { HarvestI18n } from '../i18n';
 import type { SortingAssignmentFilter } from '../harvestPage.types';
-import { buildSortingCategoryDisplayLabel, matchesSortingAssignmentSelection } from '../utils/harvestPage.utils';
+import {
+  HARVEST_GRADE_OPTIONS,
+  buildSortingCategoryDisplayLabel,
+  matchesSortingAssignmentSelection,
+} from '../utils/harvestPage.utils';
 
 export type SortingExpandedMatrixData = {
   fixedHeaders: string[];
@@ -60,7 +64,7 @@ export async function buildSortingDailyExpandedMatrixData({
   fixedHeaders,
   noneLabel,
 }: BuildSortingDailyExpandedMatrixDataParams): Promise<SortingExpandedMatrixData> {
-  const fixedGrades = ['א', 'ב', 'ג', 'ד', 'ה', 'ו'];
+  const fixedGrades = [...HARVEST_GRADE_OPTIONS];
   const pitamGroups = [
     { key: 'WITH_PITAM', label: t.withPitam },
     { key: 'WITHOUT_PITAM', label: t.withoutPitam },
