@@ -55,6 +55,7 @@ export function getHarvestSortingQuantityState(params: {
   classifications: HarvestFormClassificationDraft[];
   totalHarvested: string | number;
   totalRejected: string | number;
+  isPartialClassification: boolean;
 }) {
   const parsedTotalHarvested = parseNonNegativeNumber(params.totalHarvested);
   const parsedTotalRejected = parseNonNegativeNumber(params.totalRejected);
@@ -63,6 +64,10 @@ export function getHarvestSortingQuantityState(params: {
     parsedTotalHarvested !== null && parsedTotalRejected !== null
       ? Math.max(0, parsedTotalHarvested - parsedTotalRejected)
       : null;
+  const partialSortingQuantityLimit = maxSortingQuantity !== null ? Math.max(0, maxSortingQuantity - 1) : null;
+  const effectiveSortingQuantityLimit = params.isPartialClassification
+    ? partialSortingQuantityLimit
+    : maxSortingQuantity;
 
   const currentSortingQuantitySum = params.classifications.reduce((sum, draft) => {
     const quantity = Number(draft.quantity);
@@ -71,9 +76,11 @@ export function getHarvestSortingQuantityState(params: {
 
   return {
     maxSortingQuantity,
+    partialSortingQuantityLimit,
+    effectiveSortingQuantityLimit,
     currentSortingQuantitySum,
     reachedSortingQuantityLimit:
-      maxSortingQuantity !== null && currentSortingQuantitySum >= maxSortingQuantity,
+      effectiveSortingQuantityLimit !== null && currentSortingQuantitySum >= effectiveSortingQuantityLimit,
   };
 }
 
@@ -172,6 +179,7 @@ export function buildHarvestFormSubmissionPayload({
     classifications: form.classifications,
     totalHarvested,
     totalRejected,
+    isPartialClassification: form.isPartialClassification,
   });
 
   const parsedClassifications: HarvestBulkClassificationPayload[] = [];
@@ -249,6 +257,8 @@ export function buildHarvestFormSubmissionPayload({
     parsedClassifications.push(classificationPayload);
   }
 
+  const partialSortingQuantityLimit = maxSortingQuantity !== null ? Math.max(0, maxSortingQuantity - 1) : null;
+
   if (maxSortingQuantity !== null && currentSortingQuantitySum > maxSortingQuantity) {
     return {
       error: t.sortingTotalExceedsAvailable(maxSortingQuantity),
@@ -263,6 +273,16 @@ export function buildHarvestFormSubmissionPayload({
   ) {
     return {
       error: t.sortingTotalMustMatchAvailableForFullSorting(maxSortingQuantity),
+    };
+  }
+
+  if (
+    form.isPartialClassification
+    && partialSortingQuantityLimit !== null
+    && currentSortingQuantitySum > partialSortingQuantityLimit
+  ) {
+    return {
+      error: t.sortingTotalMustBeAtMostAvailableMinusOneForPartialSorting(partialSortingQuantityLimit),
     };
   }
 

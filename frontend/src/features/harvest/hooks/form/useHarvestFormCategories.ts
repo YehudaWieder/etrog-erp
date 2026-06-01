@@ -3,20 +3,20 @@ import { getCustomerCategoriesBySeason, type CustomerCategory } from '../../../.
 import { getTraderCategoriesWithShares, type TraderCategoryWithShares } from '../../../../services/traderCategoriesApi';
 
 type UseHarvestFormCategoriesParams = {
-  isHarvestFormOpen: boolean;
+  isOpen: boolean;
   seasonFilterId: number | null;
   setHarvestFormTraderCategories: (value: TraderCategoryWithShares[]) => void;
   setHarvestFormCustomerCategories: (value: CustomerCategory[]) => void;
 };
 
 export function useHarvestFormCategories({
-  isHarvestFormOpen,
+  isOpen,
   seasonFilterId,
   setHarvestFormTraderCategories,
   setHarvestFormCustomerCategories,
 }: UseHarvestFormCategoriesParams): void {
   useEffect(() => {
-    if (!isHarvestFormOpen || !seasonFilterId) {
+    if (!isOpen || !seasonFilterId) {
       return;
     }
 
@@ -51,7 +51,7 @@ export function useHarvestFormCategories({
       isMounted = false;
     };
   }, [
-    isHarvestFormOpen,
+    isOpen,
     seasonFilterId,
     setHarvestFormCustomerCategories,
     setHarvestFormTraderCategories,

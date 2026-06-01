@@ -195,9 +195,7 @@ export function useHarvestNumericSelection({
         : isSortingDailyDetailsTab
           ? [
               ...SORTING_DAILY_NUMERIC_COLUMNS,
-              ...sortingDailyCategories.map(
-                (category) => `category:${category.key}` as SortingDailyNumericColumnKey,
-              ),
+              ...sortingDailyCategories.map((category) => `category:${category.key}` as SortingDailyNumericColumnKey),
             ]
           : [];
 

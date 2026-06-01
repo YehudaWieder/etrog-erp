@@ -9,7 +9,52 @@
 }
 
 .gridPrimary {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.selectionField {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+  align-self: start;
+}
+
+.selectionField span {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #27482f;
+}
+
+.selectionField select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.compactSelect {
+  height: 42px;
+  min-height: 42px;
+}
+
+.summaryField {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+  align-self: start;
+}
+
+.summaryField span {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #27482f;
+}
+
+.summaryField input {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .numberInputFirst {

@@ -1,4 +1,4 @@
-﻿import type { RefObject } from 'react';
+﻿import type { Dispatch, RefObject, SetStateAction } from 'react';
 import { FaPrint } from 'react-icons/fa6';
 import { GlobalDataTable, type GlobalDataTableColumn } from '../../../../components/ui/GlobalDataTable';
 import { GlobalLeftDetailsPanel } from '../../../../components/ui/GlobalLeftDetailsPanel';
@@ -28,6 +28,8 @@ type HarvestDailyDetailsSectionProps = {
   columns: GlobalDataTableColumn<HarvestRecord>[];
   filteredHarvestRows: HarvestRecord[];
   onHarvestSortedRowsChange: (rows: HarvestRecord[]) => void;
+  selectedHarvestRowId: number | null;
+  onSelectHarvestRow: Dispatch<SetStateAction<HarvestRecord | null>>;
   onPrintHarvestTable: () => void;
   onExportHarvestTableToExcel: () => void;
   detailsRecordOpen: boolean;
@@ -73,6 +75,8 @@ export function HarvestDailyDetailsSection({
   columns,
   filteredHarvestRows,
   onHarvestSortedRowsChange,
+  selectedHarvestRowId,
+  onSelectHarvestRow,
   onPrintHarvestTable,
   onExportHarvestTableToExcel,
   detailsRecordOpen,
@@ -140,6 +144,10 @@ export function HarvestDailyDetailsSection({
               getRowKey={(row) => row.id}
               emptyLabel={emptyLabel}
               defaultSortState={{ key: 'dateGregorian', direction: 'desc' }}
+              selectedRowKey={selectedHarvestRowId}
+              onRowClick={(row) => {
+                onSelectHarvestRow((previousSelectedRow) => (previousSelectedRow?.id === row.id ? null : row));
+              }}
               onSortedRowsChange={onHarvestSortedRowsChange}
             />
 

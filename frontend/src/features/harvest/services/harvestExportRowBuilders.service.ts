@@ -3,7 +3,11 @@ import type { ClassificationDailySummaryCategory, ClassificationDailySummaryRow 
 import type { HarvestRecord } from '../../../services/harvestsApi';
 import type { HarvestI18n } from '../i18n';
 import type { HarvestExportTableData, HarvestFieldReportRow, SortingAssignmentFilter } from '../harvestPage.types';
-import { buildSortingCategoryDisplayLabel } from '../utils/harvestPage.utils';
+import {
+  buildSortingCategoryDisplayLabel,
+  getSortingRowOwnerTotals,
+  resolveSortingCategoryOwnerType,
+} from '../utils/harvestPage.utils';
 import { buildSortingDailyExpandedMatrixData } from './harvestSortingExpandedMatrix.service';
 
 type CreateHarvestExportRowBuildersParams = {
@@ -148,16 +152,22 @@ export function createHarvestExportRowBuilders({
         label: buildSortingCategoryDisplayLabel(category, lang),
       }));
 
+    const hasTraderSummary = filteredSortingDailyCategories.some((category) => resolveSortingCategoryOwnerType(category) === 'TRADER');
+    const hasCustomerSummary = filteredSortingDailyCategories.some((category) => resolveSortingCategoryOwnerType(category) === 'CUSTOMER');
+
     const header = [
       t.sortingDailyDetails.columns.dateGregorian,
       t.sortingDailyDetails.columns.dateHebrew,
       t.sortingDailyDetails.columns.fieldName,
       ...exportCategories.map((category) => category.label),
+      ...(hasTraderSummary ? [t.sortingDailyDetails.columns.traderTotal] : []),
+      ...(hasCustomerSummary ? [t.sortingDailyDetails.columns.customerTotal] : []),
       t.sortingDailyDetails.columns.totalSorted,
     ];
 
     const rows = rowsSource.map((row) => {
       const categoryValues = exportCategories.map((category) => row.categoryTotals[category.key] ?? 0);
+      const { traderTotal, customerTotal } = getSortingRowOwnerTotals(row, filteredSortingDailyCategories);
 
       const rowDailyTotal = filteredSortingDailyCategories.reduce(
         (sum, category) => sum + (row.categoryTotals[category.key] ?? 0),
@@ -169,6 +179,8 @@ export function createHarvestExportRowBuilders({
         row.dateHebrew,
         row.fieldName,
         ...categoryValues,
+        ...(hasTraderSummary ? [traderTotal] : []),
+        ...(hasCustomerSummary ? [customerTotal] : []),
         rowDailyTotal,
       ];
     });

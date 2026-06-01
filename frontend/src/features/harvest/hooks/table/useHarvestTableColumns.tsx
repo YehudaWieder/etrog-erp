@@ -13,7 +13,11 @@ import type {
   HarvestNumericColumnKey,
   SortingDailyNumericColumnKey,
 } from '../../harvestPage.types';
-import { buildSortingCategoryDisplayLabel } from '../../utils/harvestPage.utils';
+import {
+  buildSortingCategoryDisplayLabel,
+  getSortingRowOwnerTotals,
+  resolveSortingCategoryOwnerType,
+} from '../../utils/harvestPage.utils';
 import { HarvestDetailsTriggerButton } from '../../components/shared/HarvestDetailsTriggerButton';
 import interactiveStyles from '../../components/styles/HarvestInteractive.module.css';
 
@@ -262,8 +266,8 @@ export function useHarvestTableColumns({
   ]);
 
   const sortingDailyColumns = useMemo<GlobalDataTableColumn<ClassificationDailySummaryRow>[]>(() => {
-    const sortingCategoryColumns: GlobalDataTableColumn<ClassificationDailySummaryRow>[] = sortingDailyCategories.map(
-      (category) => {
+    const categoryColumns: GlobalDataTableColumn<ClassificationDailySummaryRow>[] = sortingDailyCategories
+      .map((category) => {
         const categoryLabel = buildSortingCategoryDisplayLabel(category, lang);
         const columnKey = `category:${category.key}` as SortingDailyNumericColumnKey;
 
@@ -281,16 +285,68 @@ export function useHarvestTableColumns({
           render: (row) => {
             const categoryTotal = row.categoryTotals[category.key] ?? 0;
 
-            return renderSortingNumericCell(
-              row,
-              columnKey,
-              categoryTotal,
-              numberFormatter.format(categoryTotal),
-            );
+            return renderSortingNumericCell(row, columnKey, categoryTotal, numberFormatter.format(categoryTotal));
           },
         };
-      },
-    );
+      });
+
+    const hasTraderSummary = sortingDailyCategories.some((category) => resolveSortingCategoryOwnerType(category) === 'TRADER');
+    const hasCustomerSummary = sortingDailyCategories.some((category) => resolveSortingCategoryOwnerType(category) === 'CUSTOMER');
+
+    const summaryColumns: GlobalDataTableColumn<ClassificationDailySummaryRow>[] = [
+      ...(hasTraderSummary
+        ? [
+            {
+              id: 'ownerSummary:trader',
+              header: t.sortingDailyDetails.columns.traderTotal,
+              headerLabel: t.sortingDailyDetails.columns.traderTotal,
+              sortKey: 'ownerSummary:trader',
+              sortLabel: `${t.sortingDailyDetails.columns.traderTotal} - ${t.tableLabels.sort}`,
+              defaultSortDirection: 'desc',
+              sortAccessor: (row) => getSortingRowOwnerTotals(row, sortingDailyCategories).traderTotal,
+              minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
+              gridTemplate: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
+              align: 'center',
+              render: (row) => {
+                const traderTotal = getSortingRowOwnerTotals(row, sortingDailyCategories).traderTotal;
+
+                return renderSortingNumericCell(
+                  row,
+                  'ownerSummary:trader',
+                  traderTotal,
+                  <strong>{numberFormatter.format(traderTotal)}</strong>,
+                );
+              },
+            },
+          ]
+        : []),
+      ...(hasCustomerSummary
+        ? [
+            {
+              id: 'ownerSummary:customer',
+              header: t.sortingDailyDetails.columns.customerTotal,
+              headerLabel: t.sortingDailyDetails.columns.customerTotal,
+              sortKey: 'ownerSummary:customer',
+              sortLabel: `${t.sortingDailyDetails.columns.customerTotal} - ${t.tableLabels.sort}`,
+              defaultSortDirection: 'desc',
+              sortAccessor: (row) => getSortingRowOwnerTotals(row, sortingDailyCategories).customerTotal,
+              minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
+              gridTemplate: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
+              align: 'center',
+              render: (row) => {
+                const customerTotal = getSortingRowOwnerTotals(row, sortingDailyCategories).customerTotal;
+
+                return renderSortingNumericCell(
+                  row,
+                  'ownerSummary:customer',
+                  customerTotal,
+                  <strong>{numberFormatter.format(customerTotal)}</strong>,
+                );
+              },
+            },
+          ]
+        : []),
+    ];
 
     return [
       {
@@ -343,7 +399,8 @@ export function useHarvestTableColumns({
         gridTemplate: GLOBAL_DATA_TABLE_WIDTHS.fieldName,
         render: (row) => row.fieldName,
       },
-      ...sortingCategoryColumns,
+      ...categoryColumns,
+      ...summaryColumns,
       {
         id: 'totalSorted',
         header: t.sortingDailyDetails.columns.totalSorted,
@@ -351,16 +408,12 @@ export function useHarvestTableColumns({
         sortKey: 'totalSorted',
         sortLabel: `${t.sortingDailyDetails.columns.totalSorted} - ${t.tableLabels.sort}`,
         defaultSortDirection: 'desc',
-        sortAccessor: (row) =>
-          sortingDailyCategories.reduce((sum, category) => sum + (row.categoryTotals[category.key] ?? 0), 0),
+        sortAccessor: (row) => sortingDailyCategories.reduce((sum, category) => sum + (row.categoryTotals[category.key] ?? 0), 0),
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
         gridTemplate: GLOBAL_DATA_TABLE_WIDTHS.numeric,
         align: 'center',
         render: (row) => {
-          const rowDailyTotal = sortingDailyCategories.reduce(
-            (sum, category) => sum + (row.categoryTotals[category.key] ?? 0),
-            0,
-          );
+          const rowDailyTotal = sortingDailyCategories.reduce((sum, category) => sum + (row.categoryTotals[category.key] ?? 0), 0);
 
           return renderSortingNumericCell(
             row,

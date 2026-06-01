@@ -38,6 +38,8 @@ type GlobalDataTableProps<RowT> = {
   getRowKey: (row: RowT) => string | number;
   emptyLabel: string;
   className?: string;
+  selectedRowKey?: string | number | null;
+  onRowClick?: (row: RowT) => void;
   sortState?: GlobalDataTableSortState | null;
   onSort?: (key: string) => void;
   defaultSortState?: GlobalDataTableSortState | null;
@@ -81,6 +83,8 @@ export function GlobalDataTable<RowT>({
   getRowKey,
   emptyLabel,
   className,
+  selectedRowKey,
+  onRowClick,
   sortState,
   onSort,
   defaultSortState,
@@ -240,27 +244,60 @@ export function GlobalDataTable<RowT>({
         ) : (
           <div className={`global-data-table__body ${styles.body}`} style={{ width: responsiveMinWidth, minWidth: responsiveMinWidth }} role="rowgroup">
             {sortedRows.map((row) => (
-              <div
-                key={getRowKey(row)}
-                className={`global-data-table__row ${styles.row}`}
-                style={{
-                  gridTemplateColumns: templateColumns,
-                  minWidth: responsiveMinWidth,
-                  width: responsiveMinWidth,
-                }}
-                role="row"
-              >
-                {columns.map((column) => (
+              (() => {
+                const rowKey = getRowKey(row);
+                const isSelected = selectedRowKey !== undefined && selectedRowKey !== null && rowKey === selectedRowKey;
+
+                return (
                   <div
-                    key={column.id}
-                    className={`global-data-table__cell global-data-table__cell--${column.align ?? 'center'} ${styles.cell} ${alignClassName[column.align ?? 'center']}`}
-                    data-label={getColumnLabel(column)}
-                    role="cell"
+                    key={rowKey}
+                    className={`global-data-table__row ${styles.row}${onRowClick ? ` ${styles.rowClickable}` : ''}${isSelected ? ` ${styles.rowSelected}` : ''}`}
+                    onClick={(event) => {
+                      if (!onRowClick) {
+                        return;
+                      }
+
+                      const target = event.target;
+                      if (target instanceof Element && target.closest('button,a,input,select,textarea,[role="button"]')) {
+                        return;
+                      }
+
+                      onRowClick(row);
+                    }}
+                    onKeyDown={(event) => {
+                      if (!onRowClick) {
+                        return;
+                      }
+
+                      if (event.key !== 'Enter' && event.key !== ' ') {
+                        return;
+                      }
+
+                      event.preventDefault();
+                      onRowClick(row);
+                    }}
+                    aria-selected={isSelected}
+                    tabIndex={onRowClick ? 0 : undefined}
+                    style={{
+                      gridTemplateColumns: templateColumns,
+                      minWidth: responsiveMinWidth,
+                      width: responsiveMinWidth,
+                    }}
+                    role="row"
                   >
-                    {column.render(row)}
+                    {columns.map((column) => (
+                      <div
+                        key={column.id}
+                        className={`global-data-table__cell global-data-table__cell--${column.align ?? 'center'} ${styles.cell} ${alignClassName[column.align ?? 'center']}`}
+                        data-label={getColumnLabel(column)}
+                        role="cell"
+                      >
+                        {column.render(row)}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                );
+              })()
             ))}
           </div>
         )}

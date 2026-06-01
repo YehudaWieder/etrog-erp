@@ -22,6 +22,7 @@ import { setScopeFilter } from '../../store/globalFiltersSlice';
 import type { AppDispatch, RootState } from '../../store';
 import { HARVEST_I18N } from './i18n';
 import { HarvestBulkFormModal } from './components/forms/HarvestBulkFormModal';
+import { HarvestSortingFormModal } from './components/forms/HarvestSortingFormModal';
 import { HarvestDailyDetailsSection } from './components/daily/HarvestDailyDetailsSection';
 import { HarvestFieldReportSection } from './components/field-report/HarvestFieldReportSection';
 import { HarvestSortingDailySection } from './components/sorting-daily/HarvestSortingDailySection';
@@ -38,7 +39,9 @@ import { useHarvestRelatedSortings } from './hooks/details/useHarvestRelatedSort
 import { useHarvestSortingDailyRows } from './hooks/data/useHarvestSortingDailyRows';
 import { useHarvestTableColumns } from './hooks/table/useHarvestTableColumns';
 import { useHarvestFormState } from './hooks/form/useHarvestFormState';
+import { useHarvestSortingFormState } from './hooks/form/useHarvestSortingFormState';
 import { useHarvestFormSubmission } from './hooks/form/useHarvestFormSubmission';
+import { useHarvestSortingFormSubmission } from './hooks/form/useHarvestSortingFormSubmission';
 import {
   buildHarvestFieldReportDetailsLabels,
   formatHarvestGregorianDate,
@@ -59,6 +62,7 @@ import {
   parseSortingAssignmentFilter,
   resolveSortingCategoryOwnerToken,
   resolveSortingCategoryOwnerType,
+  canAttachSortingToHarvest,
 } from './utils/harvestPage.utils';
 
 const EMPTY_FILTERS: Record<string, string> = {};
@@ -76,6 +80,7 @@ export function HarvestPage() {
   const [fieldReportRows, setFieldReportRows] = useState<HarvestFieldReportRow[]>([]);
   const [fieldReportDetailsPayload, setFieldReportDetailsPayload] = useState<HarvestFieldReportDetailsRecord | null>(null);
   const [detailsRecord, setDetailsRecord] = useState<HarvestRecord | null>(null);
+  const [selectedHarvestRow, setSelectedHarvestRow] = useState<HarvestRecord | null>(null);
   const [fieldReportDetailsFieldId, setFieldReportDetailsFieldId] = useState<number | null>(null);
   const [relatedSortings, setRelatedSortings] = useState<ClassificationRecord[]>([]);
   const [isRelatedSortingsLoading, setIsRelatedSortingsLoading] = useState(false);
@@ -85,6 +90,7 @@ export function HarvestPage() {
   const [isSortingDailyLoading, setIsSortingDailyLoading] = useState(false);
   const [sortingDailyLoadError, setSortingDailyLoadError] = useState<string>('');
   const [sortingDailyDetailsRowId, setSortingDailyDetailsRowId] = useState<number | null>(null);
+  const [selectedSortingDailyRowId, setSelectedSortingDailyRowId] = useState<number | null>(null);
   const [sortingDailyDetailRows, setSortingDailyDetailRows] = useState<ClassificationRecord[]>([]);
   const [isSortingDailyDetailRowsLoading, setIsSortingDailyDetailRowsLoading] = useState(false);
   const [sortingDailyDetailRowsLoadError, setSortingDailyDetailRowsLoadError] = useState<string>('');
@@ -154,7 +160,7 @@ export function HarvestPage() {
   const isFieldReportTab = activeSidebarId === 'harvest-field-report';
   const isSortingDailyDetailsTab = activeSidebarId === 'sorting-daily-details';
   const requiresFiltersData = isDailyDetailsTab || isFieldReportTab || isSortingDailyDetailsTab;
-  const requiresHarvestData = isDailyDetailsTab || isFieldReportTab;
+  const requiresHarvestData = isDailyDetailsTab || isFieldReportTab || isSortingDailyDetailsTab;
 
   const activeSeasonId = useMemo(() => {
     return seasons.find((season) => season.isActive)?.id ?? null;
@@ -208,6 +214,39 @@ export function HarvestPage() {
     fields,
   });
 
+  const {
+    isHarvestSortingFormOpen,
+    setIsHarvestSortingFormOpen,
+    isSubmittingHarvestSortingForm,
+    setIsSubmittingHarvestSortingForm,
+    harvestSortingFormError,
+    setHarvestSortingFormError,
+    harvestSortingFormHarvestId,
+    setHarvestSortingFormHarvestId,
+    harvestSortingFormAssignmentType,
+    handleHarvestSortingAssignmentTypeChange,
+    harvestSortingFormTraderId,
+    setHarvestSortingFormTraderId,
+    harvestSortingFormCustomerId,
+    handleHarvestSortingCustomerIdChange,
+    harvestSortingFormTraderCategoryId,
+    setHarvestSortingFormTraderCategoryId,
+    harvestSortingFormCustomerCategoryId,
+    setHarvestSortingFormCustomerCategoryId,
+    harvestSortingFormGrade,
+    setHarvestSortingFormGrade,
+    harvestSortingFormPitamStatus,
+    setHarvestSortingFormPitamStatus,
+    harvestSortingFormQuantity,
+    setHarvestSortingFormQuantity,
+    harvestSortingFormNotes,
+    handleHarvestSortingNotesChange,
+    harvestSortingFormIsPartialClassification,
+    setHarvestSortingFormIsPartialClassification,
+    openHarvestSortingGlobalForm,
+    closeHarvestSortingGlobalForm,
+  } = useHarvestSortingFormState();
+
   const sortingAssignmentFilter = useMemo<SortingAssignmentFilter>(() => {
     return parseSortingAssignmentFilter(globalFilterValues.sortingAssignmentType ?? 'all');
   }, [globalFilterValues.sortingAssignmentType]);
@@ -244,7 +283,7 @@ export function HarvestPage() {
   });
 
   useHarvestFormCategories({
-    isHarvestFormOpen,
+    isOpen: isHarvestFormOpen || isHarvestSortingFormOpen,
     seasonFilterId,
     setHarvestFormTraderCategories,
     setHarvestFormCustomerCategories,
@@ -354,6 +393,24 @@ export function HarvestPage() {
     }
   }, [dispatch, globalFilterValues.sortingAssignmentType, isSortingDailyDetailsTab, sortingAssignmentFilterOptions]);
 
+  const selectedHarvestSummaryTotals = useMemo(() => {
+    const selectedHarvestId = Number(harvestSortingFormHarvestId);
+    if (!Number.isFinite(selectedHarvestId) || selectedHarvestId <= 0) {
+      return null;
+    }
+
+    const selectedHarvest = harvestRows.find((row) => row.id === selectedHarvestId);
+    if (!selectedHarvest) {
+      return null;
+    }
+
+    return {
+      totalHarvested: selectedHarvest.totalHarvested,
+      totalRejected: selectedHarvest.totalRejected,
+      classifiedTotal: selectedHarvest.classifiedTotal,
+    };
+  }, [harvestRows, harvestSortingFormHarvestId]);
+
   const { handleSubmitHarvestGlobalForm } = useHarvestFormSubmission({
     lang,
     t,
@@ -381,7 +438,52 @@ export function HarvestPage() {
     setSortingDailyLoadError,
   });
 
+  const { handleSubmitHarvestSortingGlobalForm } = useHarvestSortingFormSubmission({
+    lang,
+    t,
+    seasonFilterId,
+    selectedHarvestSummary: selectedHarvestSummaryTotals,
+    form: {
+      harvestId: harvestSortingFormHarvestId,
+      assignmentType: harvestSortingFormAssignmentType,
+      traderId: harvestSortingFormTraderId,
+      customerId: harvestSortingFormCustomerId,
+      traderCategoryId: harvestSortingFormTraderCategoryId,
+      customerCategoryId: harvestSortingFormCustomerCategoryId,
+      grade: harvestSortingFormGrade,
+      pitamStatus: harvestSortingFormPitamStatus,
+      quantity: harvestSortingFormQuantity,
+      notes: harvestSortingFormNotes,
+      isPartialClassification: harvestSortingFormIsPartialClassification,
+    },
+    setIsSubmittingHarvestSortingForm,
+    setHarvestSortingFormError,
+    setIsHarvestSortingFormOpen,
+    setHarvestRows,
+    setFieldReportRows,
+    setSortingDailyRows,
+    setSortingDailyCategories,
+    setSortingDailyLoadError,
+  });
+
   const formatGregorianDate = (value: string) => formatHarvestGregorianDate(value, lang);
+
+  const harvestSortingOptions = useMemo(() => {
+    const locale = lang === 'he' ? 'he-IL' : 'en-US';
+    const collator = new Intl.Collator(locale, { sensitivity: 'base', numeric: true });
+
+    return harvestRows
+      .filter((row) => canAttachSortingToHarvest(row))
+      .sort((left, right) => collator.compare(right.dateGregorian, left.dateGregorian) || right.id - left.id)
+      .map((row) => ({
+        value: String(row.id),
+        label: `${formatGregorianDate(row.dateGregorian)} • ${row.field?.name ?? `${t.dailyDetails.columns.fieldName} ${row.fieldId}`}`,
+      }));
+  }, [formatGregorianDate, harvestRows, lang, t.dailyDetails.columns.fieldName]);
+
+  const handleOpenSortingForm = () => {
+    openHarvestSortingGlobalForm(null);
+  };
 
   const {
     clearSelectedNumericCells,
@@ -407,6 +509,28 @@ export function HarvestPage() {
   const filteredHarvestRows = useMemo(() => {
     return harvestRows.filter((row) => (fieldFilterId === 'all' ? true : row.fieldId === fieldFilterId));
   }, [harvestRows, fieldFilterId]);
+
+  useEffect(() => {
+    if (!detailsRecord) {
+      return;
+    }
+
+    const isSelectedRowVisible = filteredHarvestRows.some((row) => row.id === detailsRecord.id);
+    if (!isSelectedRowVisible) {
+      setDetailsRecord(null);
+    }
+  }, [detailsRecord, filteredHarvestRows]);
+
+  useEffect(() => {
+    if (!selectedHarvestRow) {
+      return;
+    }
+
+    const isSelectedRowVisible = filteredHarvestRows.some((row) => row.id === selectedHarvestRow.id);
+    if (!isSelectedRowVisible) {
+      setSelectedHarvestRow(null);
+    }
+  }, [filteredHarvestRows, selectedHarvestRow]);
 
   useHarvestDetailsSideEffects({
     isFieldReportTab,
@@ -434,6 +558,28 @@ export function HarvestPage() {
     const locale = lang === 'he' ? 'he-IL' : 'en-US';
     return new Intl.NumberFormat(locale);
   }, [lang]);
+
+  const selectedHarvestSummary = useMemo(() => {
+    const selectedHarvestId = Number(harvestSortingFormHarvestId);
+    if (!Number.isFinite(selectedHarvestId) || selectedHarvestId <= 0) {
+      return null;
+    }
+
+    const selectedHarvest = harvestRows.find((row) => row.id === selectedHarvestId);
+    if (!selectedHarvest) {
+      return null;
+    }
+
+    return {
+      totalHarvestedValue: selectedHarvest.totalHarvested,
+      totalRejectedValue: selectedHarvest.totalRejected,
+      classifiedTotalValue: selectedHarvest.classifiedTotal,
+      dateGregorian: formatGregorianDate(selectedHarvest.dateGregorian),
+      totalHarvested: numberFormatter.format(selectedHarvest.totalHarvested),
+      totalRejected: numberFormatter.format(selectedHarvest.totalRejected),
+      classifiedTotal: numberFormatter.format(selectedHarvest.classifiedTotal),
+    };
+  }, [formatGregorianDate, harvestRows, harvestSortingFormHarvestId, numberFormatter]);
 
   const percentFormatter = useMemo(() => {
     const locale = lang === 'he' ? 'he-IL' : 'en-US';
@@ -489,6 +635,17 @@ export function HarvestPage() {
     filteredSortingDailyCategories,
     sortingDailyRows,
   ]);
+
+  useEffect(() => {
+    if (selectedSortingDailyRowId === null) {
+      return;
+    }
+
+    const isSelectedRowVisible = filteredSortingDailyRows.some((row) => row.harvestId === selectedSortingDailyRowId);
+    if (!isSelectedRowVisible) {
+      setSelectedSortingDailyRowId(null);
+    }
+  }, [filteredSortingDailyRows, selectedSortingDailyRowId]);
 
   const {
     createHarvestExportRows,
@@ -603,8 +760,10 @@ export function HarvestPage() {
     isFieldReportTab,
     isSortingDailyDetailsTab,
     detailsRecord,
-    sortingDailyDetailsRowId,
+    selectedHarvestRow,
+    selectedSortingDailyRowId,
     openHarvestGlobalForm,
+    openHarvestSortingGlobalForm: handleOpenSortingForm,
     activeSeasonId,
     seasons,
     fields,
@@ -687,6 +846,8 @@ export function HarvestPage() {
           emptyLabel={t.dailyDetails.empty}
           columns={columns}
           filteredHarvestRows={filteredHarvestRows}
+          selectedHarvestRowId={selectedHarvestRow?.id ?? null}
+          onSelectHarvestRow={setSelectedHarvestRow}
           onHarvestSortedRowsChange={(rows) => {
             visibleHarvestRowsRef.current = rows;
           }}
@@ -765,6 +926,8 @@ export function HarvestPage() {
           onSortingDailySortedRowsChange={(rows) => {
             visibleSortingDailyRowsRef.current = rows;
           }}
+          selectedSortingDailyRowId={selectedSortingDailyRowId}
+          onSelectSortingDailyRow={setSelectedSortingDailyRowId}
           onPrintSummary={() => {
             void handlePrintSortingDailyTable('summary');
           }}
@@ -840,6 +1003,45 @@ export function HarvestPage() {
         onAddClassificationDraft={addHarvestClassificationDraft}
         onRemoveClassificationDraft={removeHarvestClassificationDraft}
         onUpdateClassificationDraft={updateHarvestClassificationDraft}
+      />
+
+      <HarvestSortingFormModal
+        isOpen={isHarvestSortingFormOpen}
+        t={t}
+        harvestOptions={harvestSortingOptions}
+        selectedHarvestSummary={selectedHarvestSummary}
+        traders={traders}
+        customers={customers}
+        isSubmittingHarvestSortingForm={isSubmittingHarvestSortingForm}
+        harvestSortingFormError={harvestSortingFormError}
+        harvestSortingFormHarvestId={harvestSortingFormHarvestId}
+        harvestSortingFormAssignmentType={harvestSortingFormAssignmentType}
+        harvestSortingFormTraderId={harvestSortingFormTraderId}
+        harvestSortingFormCustomerId={harvestSortingFormCustomerId}
+        harvestSortingFormTraderCategoryId={harvestSortingFormTraderCategoryId}
+        harvestSortingFormCustomerCategoryId={harvestSortingFormCustomerCategoryId}
+        harvestSortingFormGrade={harvestSortingFormGrade}
+        harvestSortingFormPitamStatus={harvestSortingFormPitamStatus}
+        harvestSortingFormQuantity={harvestSortingFormQuantity}
+        harvestSortingFormNotes={harvestSortingFormNotes}
+        harvestSortingFormIsPartialClassification={harvestSortingFormIsPartialClassification}
+        harvestFormTraderCategories={harvestFormTraderCategories}
+        harvestFormCustomerCategories={harvestFormCustomerCategories}
+        onClose={closeHarvestSortingGlobalForm}
+        onSubmit={() => {
+          void handleSubmitHarvestSortingGlobalForm();
+        }}
+        onHarvestIdChange={setHarvestSortingFormHarvestId}
+        onAssignmentTypeChange={handleHarvestSortingAssignmentTypeChange}
+        onTraderIdChange={setHarvestSortingFormTraderId}
+        onCustomerIdChange={handleHarvestSortingCustomerIdChange}
+        onTraderCategoryIdChange={setHarvestSortingFormTraderCategoryId}
+        onCustomerCategoryIdChange={setHarvestSortingFormCustomerCategoryId}
+        onGradeChange={setHarvestSortingFormGrade}
+        onPitamStatusChange={setHarvestSortingFormPitamStatus}
+        onQuantityChange={setHarvestSortingFormQuantity}
+        onNotesChange={handleHarvestSortingNotesChange}
+        onPartialClassificationChange={setHarvestSortingFormIsPartialClassification}
       />
     </AppShell>
   );

@@ -82,8 +82,17 @@ export type HarvestI18n = {
     hebrewDateRequired: string;
     totalHarvestedRequired: string;
     totalRejectedRequired: string;
+    sortingHarvestRequired: string;
+    sortingQuantityRequired: string;
+    sortingTraderCategoryRequired: string;
+    sortingGradeRequired: string;
+    sortingTraderRequired: string;
+    sortingCustomerRequired: string;
+    sortingCustomerCategoryRequired: string;
     sortingTotalExceedsAvailable: (maxAllowed: number) => string;
     sortingTotalMustMatchAvailableForFullSorting: (requiredTotal: number) => string;
+    sortingTotalWithClassifiedMustMatchAvailableForFullSorting: (requiredTotal: number) => string;
+    sortingTotalMustBeAtMostAvailableMinusOneForPartialSorting: (maximumTotal: number) => string;
     sortingRowRequired: string;
     addSortingRowTotalsRequiredError: string;
     addSortingRowSummaryFieldsRequiredError: string;
@@ -93,6 +102,20 @@ export type HarvestI18n = {
     traderRequired: (rowNumber: number) => string;
     customerRequired: (rowNumber: number) => string;
     customerCategoryRequired: (rowNumber: number) => string;
+  };
+  sortingForm: {
+    ariaLabel: string;
+    closeLabel: string;
+    title: string;
+    instructions: string;
+    harvestLabel: string;
+    harvestPlaceholder: string;
+    dateGregorianLabel: string;
+    totalHarvestedLabel: string;
+    totalRejectedLabel: string;
+    classifiedTotalLabel: string;
+    save: string;
+    saving: string;
   };
   dailyDetails: {
     description: string;
@@ -254,6 +277,8 @@ export type HarvestI18n = {
       dateHebrew: string;
       fieldName: string;
       categoriesGroup: string;
+      traderTotal: string;
+      customerTotal: string;
       totalSorted: string;
     };
   };

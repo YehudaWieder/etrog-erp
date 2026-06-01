@@ -1,4 +1,4 @@
-import type { RefObject } from 'react';
+import type { Dispatch, RefObject, SetStateAction } from 'react';
 import { FaPrint } from 'react-icons/fa6';
 import { GlobalDataTable, type GlobalDataTableColumn } from '../../../../components/ui/GlobalDataTable';
 import { GlobalLeftDetailsPanel } from '../../../../components/ui/GlobalLeftDetailsPanel';
@@ -29,6 +29,8 @@ type HarvestSortingDailySectionProps = {
   sortingDailyColumns: GlobalDataTableColumn<ClassificationDailySummaryRow>[];
   filteredSortingDailyRows: ClassificationDailySummaryRow[];
   onSortingDailySortedRowsChange: (rows: ClassificationDailySummaryRow[]) => void;
+  selectedSortingDailyRowId: number | null;
+  onSelectSortingDailyRow: Dispatch<SetStateAction<number | null>>;
   onPrintSummary: () => void;
   onExportSummary: () => void;
   onExportExpanded: () => void;
@@ -67,6 +69,8 @@ export function HarvestSortingDailySection({
   sortingDailyColumns,
   filteredSortingDailyRows,
   onSortingDailySortedRowsChange,
+  selectedSortingDailyRowId,
+  onSelectSortingDailyRow,
   onPrintSummary,
   onExportSummary,
   onExportExpanded,
@@ -128,6 +132,12 @@ export function HarvestSortingDailySection({
               getRowKey={(row) => row.harvestId}
               emptyLabel={emptyLabel}
               defaultSortState={{ key: 'dateGregorian', direction: 'desc' }}
+              selectedRowKey={selectedSortingDailyRowId}
+              onRowClick={(row) => {
+                onSelectSortingDailyRow((previousSelectedRowId) =>
+                  previousSelectedRowId === row.harvestId ? null : row.harvestId,
+                );
+              }}
               onSortedRowsChange={onSortingDailySortedRowsChange}
             />
 

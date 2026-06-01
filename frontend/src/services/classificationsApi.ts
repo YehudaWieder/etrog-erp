@@ -35,6 +35,20 @@ export type ClassificationRecord = {
   updatedBy?: ClassificationUpdatedBy | null;
 };
 
+export type CreateHarvestClassificationPayload = {
+  harvestId: number;
+  isPartialClassification: boolean;
+  assignmentType: 'GENERAL' | 'TRADER' | 'CUSTOMER';
+  traderId?: number;
+  customerId?: number;
+  traderCategoryId?: number;
+  customerCategoryId?: number;
+  grade?: string;
+  pitamStatus: 'WITH_PITAM' | 'WITHOUT_PITAM' | 'MIXED';
+  quantity: number;
+  notes?: string;
+};
+
 export type ClassificationDailySummaryCategory = {
   key: string;
   label: string;
@@ -65,4 +79,13 @@ export async function getClassificationsByHarvest(harvestId: number): Promise<Cl
 
 export async function getClassificationDailySummaryBySeason(seasonId: number): Promise<ClassificationDailySummaryResponse> {
   return apiClient<ClassificationDailySummaryResponse>(`/classifications/daily-summary?seasonId=${seasonId}`);
+}
+
+export async function createHarvestClassification(
+  payload: CreateHarvestClassificationPayload,
+): Promise<ClassificationRecord> {
+  return apiClient<ClassificationRecord>('/harvests/classifications', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }

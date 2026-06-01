@@ -10,7 +10,11 @@ export type FieldReportNumericColumnKey =
   | 'totalAfterRejected'
   | 'rejectionRate';
 
-export type SortingDailyNumericColumnKey = 'totalSorted' | `category:${string}`;
+export type SortingDailyNumericColumnKey =
+  | 'totalSorted'
+  | 'ownerSummary:trader'
+  | 'ownerSummary:customer'
+  | `category:${string}`;
 
 export type SortingAssignmentFilter =
   | 'all'

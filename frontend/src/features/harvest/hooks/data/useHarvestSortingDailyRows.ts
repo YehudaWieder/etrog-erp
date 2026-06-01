@@ -6,7 +6,7 @@ import {
   type ClassificationDailySummaryCategory,
   type ClassificationDailySummaryRow,
 } from '../../../../services/classificationsApi';
-import { buildSortingCategoryDisplayLabel } from '../../utils/harvestPage.utils';
+import { buildSortingCategoryDisplayLabel, sortSortingDailyCategories } from '../../utils/harvestPage.utils';
 
 type UseHarvestSortingDailyRowsParams = {
   isSortingDailyDetailsTab: boolean;
@@ -183,7 +183,7 @@ export function useHarvestSortingDailyRows({
 
         return {
           rows,
-          categories,
+          categories: sortSortingDailyCategories(categories),
         };
       };
 
@@ -194,7 +194,7 @@ export function useHarvestSortingDailyRows({
         }
 
         setSortingDailyRows(payload.rows);
-        setSortingDailyCategories(payload.categories);
+        setSortingDailyCategories(sortSortingDailyCategories(payload.categories));
       } catch {
         try {
           const fallbackPayload = await buildFallbackFromHarvestRows();
@@ -204,7 +204,7 @@ export function useHarvestSortingDailyRows({
           }
 
           setSortingDailyRows(fallbackPayload.rows);
-          setSortingDailyCategories(fallbackPayload.categories);
+          setSortingDailyCategories(sortSortingDailyCategories(fallbackPayload.categories));
           setSortingDailyLoadError('');
         } catch {
           if (!isMounted) {

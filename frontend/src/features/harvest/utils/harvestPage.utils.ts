@@ -1,4 +1,4 @@
-import type { ClassificationDailySummaryCategory } from '../../../services/classificationsApi';
+import type { ClassificationDailySummaryCategory, ClassificationDailySummaryRow } from '../../../services/classificationsApi';
 import type {
   FieldReportNumericColumnKey,
   HarvestFormClassificationDraft,
@@ -24,7 +24,11 @@ export const FIELD_REPORT_NUMERIC_COLUMNS: FieldReportNumericColumnKey[] = [
   'rejectionRate',
 ];
 
-export const SORTING_DAILY_NUMERIC_COLUMNS: SortingDailyNumericColumnKey[] = ['totalSorted'];
+export const SORTING_DAILY_NUMERIC_COLUMNS: SortingDailyNumericColumnKey[] = [
+  'totalSorted',
+  'ownerSummary:trader',
+  'ownerSummary:customer',
+];
 
 export const HARVEST_GRADE_OPTIONS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו'] as const;
 
@@ -105,6 +109,65 @@ export function resolveSortingCategoryOwnerType(
   return 'GENERAL';
 }
 
+export function compareSortingCategoryOwnerOrder(
+  left: ClassificationDailySummaryCategory,
+  right: ClassificationDailySummaryCategory,
+): number {
+  const ownerOrder = (ownerType?: string) => {
+    if (ownerType === 'GENERAL') {
+      return 0;
+    }
+
+    if (ownerType === 'TRADER') {
+      return 1;
+    }
+
+    if (ownerType === 'CUSTOMER') {
+      return 2;
+    }
+
+    return 3;
+  };
+
+  const ownerDiff = ownerOrder(resolveSortingCategoryOwnerType(left)) - ownerOrder(resolveSortingCategoryOwnerType(right));
+  if (ownerDiff !== 0) {
+    return ownerDiff;
+  }
+
+  const leftLabel = buildSortingCategoryDisplayLabel(left, 'he');
+  const rightLabel = buildSortingCategoryDisplayLabel(right, 'he');
+
+  return leftLabel.localeCompare(rightLabel, 'he', { sensitivity: 'base', numeric: true });
+}
+
+export function sortSortingDailyCategories(categories: ClassificationDailySummaryCategory[]): ClassificationDailySummaryCategory[] {
+  return [...categories].sort(compareSortingCategoryOwnerOrder);
+}
+
+export function getSortingRowOwnerTotals(
+  row: ClassificationDailySummaryRow,
+  categories: ClassificationDailySummaryCategory[],
+): { traderTotal: number; customerTotal: number } {
+  let traderTotal = 0;
+  let customerTotal = 0;
+
+  for (const category of categories) {
+    const value = row.categoryTotals[category.key] ?? 0;
+    if (value <= 0) {
+      continue;
+    }
+
+    const ownerType = resolveSortingCategoryOwnerType(category);
+    if (ownerType === 'TRADER') {
+      traderTotal += value;
+    } else if (ownerType === 'CUSTOMER') {
+      customerTotal += value;
+    }
+  }
+
+  return { traderTotal, customerTotal };
+}
+
 export function matchesSortingAssignmentSelection(params: {
   sortingAssignmentFilter: SortingAssignmentFilter;
   ownerType: 'GENERAL' | 'TRADER' | 'CUSTOMER';
@@ -171,6 +234,10 @@ export function matchesSortingAssignmentSelection(params: {
   }
 
   return normalizeSortingAssignmentName(ownerName, lang) === normalizeSortingAssignmentName(selectedName, lang);
+}
+
+export function canAttachSortingToHarvest(row: { isPartialClassification: boolean }): boolean {
+  return row.isPartialClassification;
 }
 
 export function createEmptyHarvestClassificationDraft(id: string): HarvestFormClassificationDraft {

@@ -33,6 +33,10 @@
   min-width: 100%;
 }
 
+.rowClickable {
+  cursor: pointer;
+}
+
 .header {
   position: sticky;
   top: 0;
@@ -62,6 +66,12 @@
 
 .row:hover {
   background: rgba(232, 243, 235, 0.98);
+}
+
+.rowSelected,
+.rowSelected:hover {
+  background: rgba(225, 240, 229, 1);
+  box-shadow: inset 0 0 0 2px rgba(73, 118, 71, 0.42);
 }
 
 .row:last-child {

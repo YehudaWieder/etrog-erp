@@ -21,8 +21,10 @@ type UseHarvestPageControlsParams = {
   isFieldReportTab: boolean;
   isSortingDailyDetailsTab: boolean;
   detailsRecord: HarvestRecord | null;
-  sortingDailyDetailsRowId: number | null;
+  selectedHarvestRow: HarvestRecord | null;
+  selectedSortingDailyRowId: number | null;
   openHarvestGlobalForm: () => void;
+  openHarvestSortingGlobalForm: () => void;
   activeSeasonId: number | null;
   seasons: Season[];
   fields: Field[];
@@ -36,8 +38,10 @@ export function useHarvestPageControls({
   isFieldReportTab,
   isSortingDailyDetailsTab,
   detailsRecord,
-  sortingDailyDetailsRowId,
+  selectedHarvestRow,
+  selectedSortingDailyRowId,
   openHarvestGlobalForm,
+  openHarvestSortingGlobalForm,
   activeSeasonId,
   seasons,
   fields,
@@ -56,8 +60,8 @@ export function useHarvestPageControls({
           editActionLabel={editActionLabel}
           deleteActionLabel={deleteActionLabel}
           onAdd={openHarvestGlobalForm}
-          editDisabled={!detailsRecord}
-          deleteDisabled={!detailsRecord}
+          editDisabled={!selectedHarvestRow}
+          deleteDisabled={!selectedHarvestRow}
         />
       );
     }
@@ -72,9 +76,9 @@ export function useHarvestPageControls({
           addActionLabel={addSortingActionLabel}
           editActionLabel={editActionLabel}
           deleteActionLabel={deleteActionLabel}
-          onAdd={openHarvestGlobalForm}
-          editDisabled={sortingDailyDetailsRowId === null}
-          deleteDisabled={sortingDailyDetailsRowId === null}
+          onAdd={openHarvestSortingGlobalForm}
+          editDisabled={selectedSortingDailyRowId === null}
+          deleteDisabled={selectedSortingDailyRowId === null}
         />
       );
     }
@@ -90,7 +94,9 @@ export function useHarvestPageControls({
     isFieldReportTab,
     isSortingDailyDetailsTab,
     openHarvestGlobalForm,
-    sortingDailyDetailsRowId,
+    openHarvestSortingGlobalForm,
+    selectedHarvestRow,
+    selectedSortingDailyRowId,
   ]);
 
   const filters = useMemo<GlobalScopedFilterConfig[]>(() => {

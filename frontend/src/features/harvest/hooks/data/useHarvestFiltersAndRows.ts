@@ -148,7 +148,7 @@ export function useHarvestFiltersAndRows({
 
       try {
         const [records, fieldTotals] = await Promise.all([
-          isDailyDetailsTab ? getHarvestsBySeason(seasonFilterId) : Promise.resolve([]),
+          isDailyDetailsTab || isSortingDailyDetailsTab ? getHarvestsBySeason(seasonFilterId) : Promise.resolve([]),
           getHarvestFieldTotalsBySeason(seasonFilterId),
         ]);
 

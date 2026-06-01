@@ -109,6 +109,7 @@ export function HarvestBulkFormModal({
     classifications: harvestFormClassifications,
     totalHarvested: harvestFormTotalHarvested,
     totalRejected: harvestFormTotalRejected,
+    isPartialClassification: harvestFormIsPartialClassification,
   });
   const canAddSortingRow =
     areTotalsFilled
@@ -127,7 +128,7 @@ export function HarvestBulkFormModal({
     if (reason === 'totals-missing') {
       return (
         form.addSortingRowSummaryFieldsRequiredError
-        || form.addSortingRowTotalsRequiredError
+        || t.formSubmission.addSortingRowTotalsRequiredError
         || form.addSortingRowBlockedError
       );
     }
