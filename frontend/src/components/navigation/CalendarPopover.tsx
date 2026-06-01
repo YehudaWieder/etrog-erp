@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { FaCalendarDays, FaCheck, FaCopy } from 'react-icons/fa6';
 import { Calendar } from 'react-multi-date-picker';
-import { formatGregorianDate, formatHebrewDate } from '../../utils/dateFormatting';
+import { formatGregorianDate, formatHebrewDate } from './calendarDateFormatting';
 import { useClickOutside } from '../../hooks/useClickOutside';
 
 type CalendarPopoverProps = {

@@ -1,7 +1,7 @@
 import type { NavItem, SidebarSection } from '../../types/navigation';
 import * as FAIcons from 'react-icons/fa6';
 import React, { useEffect, useMemo, useState } from 'react';
-import { resolveNavigationIcon } from '../../utils/navigationIcons';
+import { resolveNavigationIcon } from './navigationIcons';
 
 type SidebarProps = {
   sections: SidebarSection[];

@@ -4,7 +4,7 @@ import {
   HARVEST_FIELD_REPORT_DETAILS_PRINT_EXTRA_STYLES,
   HARVEST_SORTING_DAILY_DETAILS_PRINT_EXTRA_STYLES,
 } from '../../services/harvestPrintStyles';
-import { openPrintableWindow } from '../../../../utils/printWindow';
+import { openPrintableWindow } from '../../../../services/printWindow';
 import type { HarvestI18n } from '../../i18n';
 
 type UseHarvestDetailsPrintActionsParams = {
