@@ -19,6 +19,12 @@ export const CUSTOMER_INVENTORY_I18N_EN: CustomerInventoryI18n = {
       icon: 'fa-users',
       items: [
         {
+          id: 'all',
+          label: 'All Inventory',
+          href: '/customers/all',
+          icon: 'fa-box',
+        },
+        {
           id: 'unboxed',
           label: 'Unboxed Inventory',
           href: '/customers/unboxed',
@@ -55,6 +61,10 @@ export const CUSTOMER_INVENTORY_I18N_EN: CustomerInventoryI18n = {
     default: {
       title: 'No Inventory Found',
       description: 'Select a tab to view available inventory',
+    },
+    all: {
+      title: 'No inventory to display',
+      description: 'All inventory types will appear here',
     },
     unboxed: {
       title: 'No Unboxed Inventory',

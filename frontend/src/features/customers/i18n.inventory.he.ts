@@ -19,6 +19,12 @@ export const CUSTOMER_INVENTORY_I18N_HE: CustomerInventoryI18n = {
       icon: 'fa-users',
       items: [
         {
+          id: 'all',
+          label: 'כל המלאי',
+          href: '/customers/all',
+          icon: 'fa-box',
+        },
+        {
           id: 'unboxed',
           label: 'מלאי שלא נארז',
           href: '/customers/unboxed',
@@ -55,6 +61,10 @@ export const CUSTOMER_INVENTORY_I18N_HE: CustomerInventoryI18n = {
     default: {
       title: 'לא נמצא מלאי',
       description: 'בחר טאב כדי להציג את המלאי הקיים',
+    },
+    all: {
+      title: 'אין מלאי להצגה',
+      description: 'כל סוגי המלאי יופיעו כאן',
     },
     unboxed: {
       title: 'אין מלאי שלא נארז',

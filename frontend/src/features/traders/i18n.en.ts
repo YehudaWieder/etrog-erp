@@ -17,6 +17,7 @@ export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
 			href: '/traders/unboxed',
 			icon: 'fa-handshake',
 			items: [
+				{ id: 'all', label: 'All Inventory', href: '/traders/all', icon: 'fa-box' },
 				{ id: 'unboxed', label: 'Unboxed Inventory', href: '/traders/unboxed', icon: 'fa-inbox' },
 				{ id: 'boxed', label: 'Boxed Inventory', href: '/traders/boxed', icon: 'fa-boxes-stacked' },
 				{ id: 'shipped', label: 'Shipped Inventory', href: '/traders/shipped', icon: 'fa-truck-ramp-box' },
@@ -27,6 +28,10 @@ export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
 	],
 	pageTitle: 'Partners Inventory',
 	emptyState: {
+		all: {
+			title: 'No inventory to display',
+			description: 'All inventory types will appear here.',
+		},
 		unboxed: {
 			title: 'No unboxed inventory',
 			description: 'All inventory not yet boxed will appear here.',

@@ -17,6 +17,7 @@ export const TRADER_INVENTORY_I18N_HE: TraderInventoryI18n = {
 			href: '/traders/unboxed',
 			icon: 'fa-handshake',
 			items: [
+				{ id: 'all', label: 'כל המלאי', href: '/traders/all', icon: 'fa-box' },
 				{ id: 'unboxed', label: 'מלאי שלא נארז', href: '/traders/unboxed', icon: 'fa-inbox' },
 				{ id: 'boxed', label: 'מלאי שנארז', href: '/traders/boxed', icon: 'fa-boxes-stacked' },
 				{ id: 'shipped', label: 'מלאי שנשלח', href: '/traders/shipped', icon: 'fa-truck-ramp-box' },
@@ -27,6 +28,10 @@ export const TRADER_INVENTORY_I18N_HE: TraderInventoryI18n = {
 	],
 	pageTitle: 'מלאי סוחרים',
 	emptyState: {
+		all: {
+			title: 'אין מלאי להצגה',
+			description: 'כל סוגי המלאי יופיעו כאן.',
+		},
 		unboxed: {
 			title: 'אין מלאי שלא נארז להצגה',
 			description: 'כל המלאי שטרם נארז יופיע כאן.',
