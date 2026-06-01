@@ -8,7 +8,7 @@ import { getCurrentUser, isAuthenticated, logout } from '../../services/authServ
 
 export function HomePage() {
   const navigate = useNavigate();
-  const [activeTopId, setActiveTopId] = useState('shipments');
+  const [activeTopId, setActiveTopId] = useState('home');
   const currentUser = getCurrentUser();
   const [alertsCount, setAlertsCount] = useState<number>(0);
 

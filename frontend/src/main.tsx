@@ -20,6 +20,7 @@ import { ProfileRoute } from './app/routes/ProfileRoute';
 import { MessagesRoute } from './app/routes/MessagesRoute';
 import { HarvestRoute } from './app/routes/HarvestRoute';
 import { TraderInventoryRoute } from './app/routes/TraderInventoryRoute';
+import { CustomerInventoryRoute } from './app/routes/CustomerInventoryRoute';
 import { AUTH_SESSION_EXPIRED_EVENT } from './services/apiClient';
 import SettingsPage from './features/settings/SettingsPage';
 
@@ -75,6 +76,7 @@ function AppRouter(): JSX.Element {
       <Route path="/harvest/*" element={<HarvestRoute />} />
       <Route path="/traders/*" element={<TraderInventoryRoute />} />
       <Route path="/partners/*" element={<Navigate to="/traders" replace />} />
+      <Route path="/customers/*" element={<CustomerInventoryRoute />} />
       <Route path="/shipments/*" element={<ShipmentsRoute />} />
       <Route path="/settings/*" element={<SettingsPage />} />
       {/* <Route path="/seasons" element={<Navigate to="/settings/system/seasons" replace />} /> removed as per request */}
