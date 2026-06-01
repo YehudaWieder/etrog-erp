@@ -42,6 +42,12 @@ export const CUSTOMER_INVENTORY_I18N_HE: CustomerInventoryI18n = {
           href: '/customers/arrived',
           icon: 'fa-circle-check',
         },
+        {
+          id: 'self-pickup',
+          label: 'מלאי באיסוף עצמי',
+          href: '/customers/self-pickup',
+          icon: 'fa-hand',
+        },
       ],
     },
   ],
@@ -65,6 +71,10 @@ export const CUSTOMER_INVENTORY_I18N_HE: CustomerInventoryI18n = {
     arrived: {
       title: 'אין מלאי שהגיע ליעד',
       description: 'כל המלאי הקיים טרם הגיע ליעדו',
+    },
+    'self-pickup': {
+      title: 'אין מלאי באיסוף עצמי',
+      description: 'כל המלאי הקיים טרם סומן לאיסוף עצמי',
     },
   },
 };

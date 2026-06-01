@@ -42,6 +42,12 @@ export const CUSTOMER_INVENTORY_I18N_EN: CustomerInventoryI18n = {
           href: '/customers/arrived',
           icon: 'fa-circle-check',
         },
+        {
+          id: 'self-pickup',
+          label: 'Self-Pickup Inventory',
+          href: '/customers/self-pickup',
+          icon: 'fa-hand',
+        },
       ],
     },
   ],
@@ -65,6 +71,10 @@ export const CUSTOMER_INVENTORY_I18N_EN: CustomerInventoryI18n = {
     arrived: {
       title: 'No Arrived Inventory',
       description: 'All available inventory has not yet reached its destination',
+    },
+    'self-pickup': {
+      title: 'No Self-Pickup Inventory',
+      description: 'All available inventory has not yet been marked for self-pickup',
     },
   },
 };
