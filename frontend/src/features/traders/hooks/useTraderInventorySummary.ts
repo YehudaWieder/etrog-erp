@@ -56,7 +56,7 @@ export function useTraderInventorySummary(enabled: boolean, filters: TraderInven
     return () => {
       isActive = false;
     };
-  }, [enabled, filters.ownerScope, filters.seasonId, filters.traderId, reloadKey]);
+  }, [enabled, filters.ownerScope, filters.seasonId, filters.traderId, filters.shipmentScope, reloadKey]);
 
   return {
     rows: summary.rows,

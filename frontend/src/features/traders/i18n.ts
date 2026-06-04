@@ -43,6 +43,13 @@ export type TraderInventoryI18n = {
 				traderLabel: string;
 				allTradersOption: string;
 				unassignedOption: string;
+				inventoryStatusLabel: string;
+				allInventoryOption: string;
+				unboxedOption: string;
+				boxedOption: string;
+				shippedOption: string;
+				arrivedOption: string;
+				selfPickupOption: string;
 			};
 		loading: string;
 		loadFailed: string;

@@ -62,19 +62,23 @@ export function TraderInventoryAllSection({
       <div className={styles.summaryGrid}>
         <article className={styles.summaryCard}>
           <span className={styles.summaryLabel}>{labels.totals.totalQuantity}</span>
-          <strong className={styles.summaryValue}>{numberFormatter.format(totals.totalQuantity)}</strong>
+          <strong className={styles.summaryValue}>{numberFormatter.format(Math.abs(totals.totalQuantity))}</strong>
         </article>
         <article className={styles.summaryCard}>
           <span className={styles.summaryLabel}>{labels.totals.traderQuantity}</span>
-          <strong className={styles.summaryValue}>{numberFormatter.format(totals.traderQuantity)}</strong>
+          <strong className={styles.summaryValue}>{numberFormatter.format(Math.abs(totals.traderQuantity))}</strong>
         </article>
         <article className={styles.summaryCard}>
           <span className={styles.summaryLabel}>{labels.totals.moduloQuantity}</span>
-          <strong className={styles.summaryValue}>{numberFormatter.format(totals.moduloQuantity)}</strong>
+          <strong className={styles.summaryValue}>{numberFormatter.format(Math.abs(totals.moduloQuantity))}</strong>
         </article>
       </div>
 
       {filtersBar ? <section className={styles.filtersBarSection}>{filtersBar}</section> : null}
+
+      {!isLoading && summaryMatrix.categories.length === 0 && !error ? (
+        <div className={styles.statusBox}>{labels.empty}</div>
+      ) : null}
 
       {summaryMatrix.categories.length > 0 ? (
         <section className={styles.matrixSection}>
@@ -87,7 +91,7 @@ export function TraderInventoryAllSection({
                     <th key={category.key} colSpan={4} className={styles.matrixGroupHead}>
                       <span className={styles.matrixGroupHeadInline}>
                         <span className={styles.matrixGroupHeadTitle}>{category.label}</span>
-                        <span className={styles.matrixGroupHeadTotal}>{numberFormatter.format(category.total)}</span>
+                        <span className={styles.matrixGroupHeadTotal}>{numberFormatter.format(Math.abs(category.total))}</span>
                       </span>
                     </th>
                   ))}
@@ -124,13 +128,13 @@ export function TraderInventoryAllSection({
                       const gradeCategoryTotal = gradeCell.WITH_PITAM + gradeCell.WITHOUT_PITAM + gradeCell.MIXED;
 
                       return [
-                        <td key={`${grade}:${category.key}:WITH_PITAM`}>{numberFormatter.format(gradeCell.WITH_PITAM)}</td>,
-                        <td key={`${grade}:${category.key}:WITHOUT_PITAM`}>{numberFormatter.format(gradeCell.WITHOUT_PITAM)}</td>,
-                        <td key={`${grade}:${category.key}:MIXED`}>{numberFormatter.format(gradeCell.MIXED)}</td>,
-                        <td key={`${grade}:${category.key}:TOTAL`} className={`${styles.matrixCellStrong} ${styles.matrixInnerTotalCell}`}>{numberFormatter.format(gradeCategoryTotal)}</td>,
+                        <td key={`${grade}:${category.key}:WITH_PITAM`}>{numberFormatter.format(Math.abs(gradeCell.WITH_PITAM))}</td>,
+                        <td key={`${grade}:${category.key}:WITHOUT_PITAM`}>{numberFormatter.format(Math.abs(gradeCell.WITHOUT_PITAM))}</td>,
+                        <td key={`${grade}:${category.key}:MIXED`}>{numberFormatter.format(Math.abs(gradeCell.MIXED))}</td>,
+                        <td key={`${grade}:${category.key}:TOTAL`} className={`${styles.matrixCellStrong} ${styles.matrixInnerTotalCell}`}>{numberFormatter.format(Math.abs(gradeCategoryTotal))}</td>,
                       ];
                     })}
-                    <td className={`${styles.matrixCellStrong} ${styles.matrixGrandTotalCell}`}>{numberFormatter.format(summaryMatrix.rowTotals[grade] ?? 0)}</td>
+                    <td className={`${styles.matrixCellStrong} ${styles.matrixGrandTotalCell}`}>{numberFormatter.format(Math.abs(summaryMatrix.rowTotals[grade] ?? 0))}</td>
                   </tr>
                 ))}
               </tbody>
@@ -138,12 +142,12 @@ export function TraderInventoryAllSection({
                 <tr>
                   <th className={styles.matrixGradeCell}>{labels.matrix.total}</th>
                   {summaryMatrix.categories.flatMap((category) => [
-                    <td key={`total:${category.key}:WITH_PITAM`} className={styles.matrixCellStrong}>{numberFormatter.format(category.totalsByPitamStatus.WITH_PITAM)}</td>,
-                    <td key={`total:${category.key}:WITHOUT_PITAM`} className={styles.matrixCellStrong}>{numberFormatter.format(category.totalsByPitamStatus.WITHOUT_PITAM)}</td>,
-                    <td key={`total:${category.key}:MIXED`} className={styles.matrixCellStrong}>{numberFormatter.format(category.totalsByPitamStatus.MIXED)}</td>,
-                    <td key={`total:${category.key}:TOTAL`} className={`${styles.matrixCellStrong} ${styles.matrixInnerTotalCell}`}>{numberFormatter.format(category.total)}</td>,
+                    <td key={`total:${category.key}:WITH_PITAM`} className={styles.matrixCellStrong}>{numberFormatter.format(Math.abs(category.totalsByPitamStatus.WITH_PITAM))}</td>,
+                    <td key={`total:${category.key}:WITHOUT_PITAM`} className={styles.matrixCellStrong}>{numberFormatter.format(Math.abs(category.totalsByPitamStatus.WITHOUT_PITAM))}</td>,
+                    <td key={`total:${category.key}:MIXED`} className={styles.matrixCellStrong}>{numberFormatter.format(Math.abs(category.totalsByPitamStatus.MIXED))}</td>,
+                    <td key={`total:${category.key}:TOTAL`} className={`${styles.matrixCellStrong} ${styles.matrixInnerTotalCell}`}>{numberFormatter.format(Math.abs(category.total))}</td>,
                   ])}
-                  <td className={`${styles.matrixCellStrong} ${styles.matrixGrandTotalCell}`}>{numberFormatter.format(summaryMatrix.grandTotal)}</td>
+                  <td className={`${styles.matrixCellStrong} ${styles.matrixGrandTotalCell}`}>{numberFormatter.format(Math.abs(summaryMatrix.grandTotal))}</td>
                 </tr>
               </tfoot>
             </table>

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Grade, PitamStatus } from 'src/generated/prisma';
 import { InventoryMovementScope } from 'src/inventory/services/inventory-core/types/inventory-query.types';
 import {
   InventoryOwnerScope,
@@ -40,7 +41,7 @@ export class TraderStockSummaryService {
       shipmentScope as InventoryMovementScope,
     );
 
-    const rows = await this.repository.groupSummary(where);
+    const rows = await this.repository.groupSummary(where, shipmentScope as InventoryMovementScope);
 
     const filteredRows = rows.filter((row) => (row._sum.quantity ?? 0) !== 0);
 
@@ -74,8 +75,8 @@ export class TraderStockSummaryService {
       isModulo: row.isModulo,
       traderCategoryId: row.traderCategoryId,
       traderCategoryName: categoryMap.get(row.traderCategoryId) ?? null,
-      grade: row.grade,
-      pitamStatus: row.pitamStatus,
+      grade: row.grade as Grade,
+      pitamStatus: row.pitamStatus as PitamStatus,
       quantity: row._sum.quantity ?? 0,
       lastUpdatedAt: row._max.updatedAt,
     }));

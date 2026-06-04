@@ -381,6 +381,7 @@ model TraderStock {
 
   shipmentId Int?
   boxId      Int?
+  box        Box?    @relation(fields: [boxId], references: [id])
 
   notes String?
 
@@ -507,6 +508,7 @@ model Box {
 
   // Relations: One Box -> Many Items
   items ShipmentItem[]
+  traderStocks TraderStock[]
 
   // Ownership
   ownershipType BoxOwnership @default(UNASSIGNED)

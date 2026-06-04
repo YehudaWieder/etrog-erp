@@ -11,7 +11,7 @@ import { getCurrentUser, isAuthenticated, logout } from '../../services/authServ
 import { getActiveSeason, getSeasons, type Season } from '../../services/seasonsApi';
 import { getTraders, type Trader } from '../../services/tradersApi';
 
-const DEFAULT_SIDEBAR_ITEM_ID = 'unboxed';
+const DEFAULT_SIDEBAR_ITEM_ID = 'all';
 
 export function TraderInventoryPage() {
   const navigate = useNavigate();
@@ -24,6 +24,7 @@ export function TraderInventoryPage() {
   const [filterValues, setFilterValues] = useState<Record<string, string>>({
     seasonId: '',
     traderId: 'ALL',
+    inventoryStatus: 'ALL',
   });
   const [filtersLoading, setFiltersLoading] = useState(false);
   const filtersApiRef = useRef<GlobalScopedFiltersApi | null>(null);
@@ -98,13 +99,24 @@ export function TraderInventoryPage() {
     return selectedTraderId ? 'TRADER' : 'ALL';
   }, [filterValues.traderId, selectedTraderId]);
 
+  const selectedShipmentScope = useMemo<
+    'ALL' | 'UNSHIPPED' | 'PACKED_SHIPPED' | 'SHIPPED' | 'SELF_PICKUP' | 'HARVEST_IN' | 'INTERNAL_TRANSFER' | 'OWNERSHIP_TRANSFER' | 'ASSIGNED' | 'WASTE' | 'ADJUSTMENT'
+  >(() => {
+    const status = filterValues.inventoryStatus || 'ALL';
+    if (status === 'ALL' || status === 'UNSHIPPED' || status === 'PACKED_SHIPPED' || status === 'SHIPPED' || status === 'SELF_PICKUP') {
+      return status;
+    }
+    return 'ALL';
+  }, [filterValues.inventoryStatus]);
+
   const summaryFilters = useMemo(
     () => ({
       seasonId: selectedSeasonId,
       traderId: selectedTraderId,
       ownerScope: selectedOwnerScope,
+      shipmentScope: selectedShipmentScope,
     }),
-    [selectedOwnerScope, selectedSeasonId, selectedTraderId],
+    [selectedOwnerScope, selectedSeasonId, selectedTraderId, selectedShipmentScope],
   );
 
   const traderInventorySummary = useTraderInventorySummary(isAllInventoryTab, summaryFilters);
@@ -186,6 +198,17 @@ export function TraderInventoryPage() {
     [t.summary.filters.allTradersOption, t.summary.filters.unassignedOption, traders],
   );
 
+  const inventoryStatusOptions = useMemo(
+    () => [
+      { value: 'ALL', label: t.summary.filters.allInventoryOption },
+      { value: 'UNSHIPPED', label: t.summary.filters.unboxedOption },
+      { value: 'PACKED_SHIPPED', label: t.summary.filters.boxedOption },
+      { value: 'SHIPPED', label: t.summary.filters.shippedOption },
+      { value: 'SELF_PICKUP', label: t.summary.filters.selfPickupOption },
+    ],
+    [t.summary.filters.allInventoryOption, t.summary.filters.unboxedOption, t.summary.filters.boxedOption, t.summary.filters.shippedOption, t.summary.filters.selfPickupOption],
+  );
+
   const scopedFilters = useMemo<GlobalScopedFilterConfig[]>(
     () => [
       {
@@ -200,8 +223,14 @@ export function TraderInventoryPage() {
         defaultValue: 'ALL',
         options: traderOptions,
       },
+      {
+        key: 'inventoryStatus',
+        label: t.summary.filters.inventoryStatusLabel,
+        defaultValue: 'ALL',
+        options: inventoryStatusOptions,
+      },
     ],
-    [activeSeasonId, seasonOptions, t.summary.filters.seasonLabel, t.summary.filters.traderLabel, traderOptions],
+    [activeSeasonId, seasonOptions, t.summary.filters.seasonLabel, t.summary.filters.traderLabel, traderOptions, t.summary.filters.inventoryStatusLabel, inventoryStatusOptions],
   );
 
   const filtersBar = isAllInventoryTab ? (

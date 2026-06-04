@@ -27,4 +27,5 @@ export type TraderInventorySummaryFilters = {
   seasonId: number | null;
   traderId: number | null;
   ownerScope: 'ALL' | 'TRADER' | 'MODULO';
+  shipmentScope?: 'ALL' | 'UNSHIPPED' | 'PACKED_SHIPPED' | 'SHIPPED' | 'SELF_PICKUP' | 'HARVEST_IN' | 'INTERNAL_TRANSFER' | 'OWNERSHIP_TRANSFER' | 'ASSIGNED' | 'WASTE' | 'ADJUSTMENT';
 };
