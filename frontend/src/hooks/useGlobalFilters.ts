@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo } from 'react';
+import { useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '../store';
@@ -31,6 +32,8 @@ function areFilterMapsEqual(a: Record<string, string>, b: Record<string, string>
 export function useGlobalFilters(scope: string, definitions: GlobalFilterDefinition[]): UseGlobalFiltersResult {
   const dispatch = useDispatch<AppDispatch>();
   const [searchParams, setSearchParams] = useSearchParams();
+  const resetVersion = useSelector((state: RootState) => state.globalFilters.resetVersion);
+  const lastHandledResetVersionRef = useRef<number>(resetVersion);
   const scopeFilters = useSelector(
     (state: RootState) => state.globalFilters.scopes[scope] ?? EMPTY_SCOPE_FILTERS,
   );
@@ -46,12 +49,18 @@ export function useGlobalFilters(scope: string, definitions: GlobalFilterDefinit
   }, [definitions, scopeFilters]);
 
   useEffect(() => {
+    const hasGlobalReset = resetVersion !== lastHandledResetVersionRef.current;
     const mergedValues: Record<string, string> = {};
 
     for (const definition of definitions) {
       const queryKey = definition.queryParam ?? definition.key;
       const queryValue = searchParams.get(queryKey);
       const scopeValue = scopeFilters[definition.key];
+
+      if (hasGlobalReset) {
+        mergedValues[definition.key] = definition.defaultValue;
+        continue;
+      }
 
       if (scopeValue !== undefined) {
         mergedValues[definition.key] = scopeValue;
@@ -69,7 +78,9 @@ export function useGlobalFilters(scope: string, definitions: GlobalFilterDefinit
     if (!areFilterMapsEqual(mergedValues, resolvedValues)) {
       dispatch(setScopeFilters({ scope, filters: mergedValues }));
     }
-  }, [definitions, dispatch, resolvedValues, scope, scopeFilters, searchParams]);
+
+    lastHandledResetVersionRef.current = resetVersion;
+  }, [definitions, dispatch, resetVersion, resolvedValues, scope, scopeFilters, searchParams]);
 
   useEffect(() => {
     const nextParams = new URLSearchParams(searchParams);

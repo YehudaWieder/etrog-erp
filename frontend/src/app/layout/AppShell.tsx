@@ -1,6 +1,7 @@
 import type { NavItem, SidebarSection } from '../../types/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { FaTriangleExclamation, FaXmark } from 'react-icons/fa6';
 import {
   fetchUnreadUrgentInboxMessages,
@@ -15,6 +16,7 @@ import { AppTopBar } from '../../components/navigation/AppTopBar';
 import { StickyHeaderBar } from '../../components/StickyHeaderBar';
 import type { ProfileMenuProps } from '../../components/navigation/ProfileMenu';
 import { directionFromLanguage, getPreferredLanguage } from '../../utils/locale';
+import { resetAllScopeFilters } from '../../store/globalFiltersSlice';
 import brandLogo from '../../assets/logo.svg';
 import styles from './AppShell.module.css';
 
@@ -61,6 +63,7 @@ export function AppShell({
   children,
 }: AppShellProps): JSX.Element {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const preferredLanguage = getPreferredLanguage('he');
   const resolvedDirection = direction ?? directionFromLanguage(preferredLanguage);
   const topBarLanguage: 'he' | 'en' = preferredLanguage.toLowerCase().startsWith('en') ? 'en' : 'he';
@@ -318,12 +321,20 @@ export function AppShell({
     document.documentElement.dir = resolvedDirection;
   }
 
+  const handleTopBarNavigate = (item: NavItem) => {
+    const targetPath = item.href ?? `/${item.id}`;
+    navigate(targetPath);
+    window.setTimeout(() => {
+      dispatch(resetAllScopeFilters());
+    }, 0);
+  };
+
   return (
     <div className="app-shell" data-direction={resolvedDirection}>
       <AppTopBar
         links={topNav}
         activeId={activeTopNavId}
-        onNavigate={onTopNavClick}
+        onNavigate={handleTopBarNavigate}
         brandName={brandName}
         logoSrc={logoSrc}
         lang={topBarLanguage}
