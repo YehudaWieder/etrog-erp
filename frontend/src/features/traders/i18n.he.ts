@@ -1,4 +1,4 @@
-import type { DefaultTraderCategoriesI18n, TraderCategoriesI18n, TradersI18n, TraderInventoryI18n } from './i18n';
+import type { DefaultTraderCategoriesI18n, TraderCategoriesI18n, TradersI18n, TraderInventoryI18n, TraderMovementsI18n } from './i18n';
 
 export const TRADER_INVENTORY_I18N_HE: TraderInventoryI18n = {
 	userNameFallback: 'הפרופיל שלי',
@@ -236,4 +236,50 @@ export const DEFAULT_TRADER_CATEGORIES_I18N_HE: DefaultTraderCategoriesI18n = {
 		totalReachedHundred: 'לא ניתן להוסיף שורה נוספת כי הסכום הכולל כבר הגיע ל-100%.',
 		allTradersSelected: 'לא ניתן להוסיף שורה נוספת כי כל הסוחרים כבר נבחרו.',
 	},
+};
+
+export const TRADER_MOVEMENTS_I18N_HE: TraderMovementsI18n = {
+	columns: {
+		date: 'תאריך',
+		type: 'סוג תנעה',
+		trader: 'שיוך',
+		category: 'קטגוריה',
+		grade: 'דרגה',
+		pitamStatus: 'סטטוס פיטם',
+		quantity: 'כמות',
+	},
+	filters: {
+		seasonLabel: 'שנה',
+		traderLabel: 'סוחר',
+		allTradersOption: 'כל הסוחרים',
+		unassignedOption: 'לא משוייך',
+		movementStatusLabel: 'סוג תנעה',
+		allMovementsOption: 'כל התנועות',
+		nonShipmentMovementsOption: 'ללא תנועות משלוח',
+		shipmentMovementsOption: 'תנועות משלוח בלבד',
+	},
+	movementTypes: {
+		HARVEST_IN: 'קטיף',
+		HARVEST_OUT: 'חזרה מקטיף',
+		INVENTORY_ADJUSTMENT: 'התאמת מלאי',
+		OWNERSHIP_TRANSFER: 'העברה לסוחר אחר',
+		INTERNAL_TRANSFER: 'העברה ללקוח',
+		PACKED: 'אריזה',
+		PACKED_SHIPPED: 'משלוח',
+		ASSIGNED: 'שיוך',
+		UNASSIGNED: 'ביטול שיוך',
+		RECEIVED: 'קבלה',
+	},
+	pitamStatuses: {
+		WITH_PITAM: 'עם פיטם',
+		WITHOUT_PITAM: 'בלי פיטם',
+		MIXED: 'מעורב',
+	},
+	loading: 'טוען תנועות...',
+	error: 'שגיאה בטעינת התנועות',
+	retry: 'נסה שוב',
+	empty: 'לא נמצאו תנועות במלאי.',
+	print: '🖨️ הדפס',
+	printAriaLabel: 'הדפס טבלה',
+	printTitle: 'פירוט תנועות במלאי',
 };

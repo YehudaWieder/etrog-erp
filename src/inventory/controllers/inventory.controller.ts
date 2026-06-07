@@ -259,6 +259,29 @@ export class InventoryController {
 		return this.inventoryService.updateInternalTransfer(id, updateData as InternalTransferRequestDto, actor.id);
 	}
 
+	@Get('movements')
+	@ApiOperation({
+		summary: 'Get detailed trader inventory movements (TraderStock records) filtered by season and optional criteria.',
+	})
+	@ApiQuery({ name: 'seasonId', type: Number, required: true, description: 'Season ID.' })
+	@ApiQuery({ name: 'traderId', type: Number, required: false, description: 'Filter by specific trader. Used with ownerScope=TRADER.' })
+	@ApiQuery({ name: 'ownerScope', required: false, enum: ['ALL', 'TRADER', 'MODULO'], description: 'Filter by owner scope. ALL=all traders+modulo, TRADER=specific trader, MODULO=unassigned only.' })
+	@ApiQuery({ name: 'shipmentScope', required: false, enum: ['ALL', 'UNSHIPPED', 'SHIPPED', 'PACKED_SHIPPED', 'SELF_PICKUP'], description: 'Filter by shipment status. SHIPPED=PACKED_SHIPPED+SELF_PICKUP.' })
+	@ApiResponse({ status: 200, description: 'Movements returned successfully.' })
+	getMovements(
+		@Query('seasonId') seasonId?: string,
+		@Query('traderId') traderId?: string,
+		@Query('ownerScope') ownerScope?: string,
+		@Query('shipmentScope') shipmentScope?: string,
+	) {
+		return this.inventoryService.getTraderMovements({
+			seasonId: parseOptionalInt(seasonId),
+			traderId: parseOptionalInt(traderId),
+			ownerScope: ownerScope as any,
+			shipmentScope: shipmentScope as any,
+		});
+	}
+
 	@Delete('internal-transfer/:operationId')
 	@ApiOperation({ summary: 'Soft delete internal transfer in TX on both sides.' })
 	@ApiParam({ name: 'operationId', type: Number })

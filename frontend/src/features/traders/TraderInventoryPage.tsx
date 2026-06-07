@@ -10,7 +10,7 @@ import { TraderMovementsSection } from './components/TraderMovementsSection';
 import { TraderPrintExportActions } from './components/TraderPrintExportActions';
 import { useTraderInventorySummary } from './hooks/useTraderInventorySummary';
 import { useTraderMovements } from './hooks/useTraderMovements';
-import { TRADER_INVENTORY_I18N } from './i18n';
+import { TRADER_INVENTORY_I18N, getTraderMovementsI18n } from './i18n';
 import type { NavItem } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
 import { getActiveSeason, getSeasons, type Season } from '../../services/seasonsApi';
@@ -30,6 +30,7 @@ export function TraderInventoryPage() {
     seasonId: '',
     traderId: 'ALL',
     inventoryStatus: 'ALL',
+    movementStatus: 'ALL',
   });
   const [filtersLoading, setFiltersLoading] = useState(false);
   const filtersApiRef = useRef<GlobalScopedFiltersApi | null>(null);
@@ -131,10 +132,19 @@ export function TraderInventoryPage() {
 
   const traderInventorySummary = useTraderInventorySummary(isAllInventoryTab, summaryFilters);
 
+  const selectedMovementStatus = useMemo(() => {
+    const status = filterValues.movementStatus || 'ALL';
+    if (status === 'ALL' || status === 'NON_SHIPMENT' || status === 'SHIPMENT') {
+      return status;
+    }
+    return 'ALL';
+  }, [filterValues.movementStatus]);
+
   const traderMovements = useTraderMovements(
     selectedSeasonId,
     selectedTraderId,
-    filterValues.inventoryStatus,
+    selectedMovementStatus,
+    selectedOwnerScope,
   );
 
   useEffect(() => {
@@ -239,6 +249,17 @@ export function TraderInventoryPage() {
       { value: 'SELF_PICKUP', label: t.summary.filters.selfPickupOption },
     ],
     [t.summary.filters.allInventoryOption, t.summary.filters.unboxedOption, t.summary.filters.boxedOption, t.summary.filters.shippedOption, t.summary.filters.selfPickupOption],
+  );
+
+  const movementStatusI18n = useMemo(() => getTraderMovementsI18n(), []);
+
+  const movementStatusOptions = useMemo(
+    () => [
+      { value: 'ALL', label: movementStatusI18n.filters.allMovementsOption },
+      { value: 'NON_SHIPMENT', label: movementStatusI18n.filters.nonShipmentMovementsOption },
+      { value: 'SHIPMENT', label: movementStatusI18n.filters.shipmentMovementsOption },
+    ],
+    [movementStatusI18n.filters.allMovementsOption, movementStatusI18n.filters.nonShipmentMovementsOption, movementStatusI18n.filters.shipmentMovementsOption],
   );
 
   const scopedFilters = useMemo<GlobalScopedFilterConfig[]>(
@@ -555,6 +576,15 @@ export function TraderInventoryPage() {
           isLoading={traderMovements.isLoading}
           error={traderMovements.error}
           onRetry={traderMovements.reload}
+          seasonId={filterValues.seasonId}
+          traderId={filterValues.traderId}
+          movementStatus={filterValues.movementStatus}
+          seasonOptions={seasonOptions}
+          traderOptions={traderOptions}
+          movementStatusOptions={movementStatusOptions}
+          onSeasonChange={(value) => setFilterValues((prev) => ({ ...prev, seasonId: value }))}
+          onTraderChange={(value) => setFilterValues((prev) => ({ ...prev, traderId: value }))}
+          onMovementStatusChange={(value) => setFilterValues((prev) => ({ ...prev, movementStatus: value }))}
         />
       ) : (
         <section className="shipments-empty-state">

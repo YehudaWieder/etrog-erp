@@ -4,12 +4,14 @@ import {
 	TRADER_CATEGORIES_I18N_EN,
 	TRADERS_I18N_EN,
 	TRADER_INVENTORY_I18N_EN,
+	TRADER_MOVEMENTS_I18N_EN,
 } from './i18n.en';
 import {
 	DEFAULT_TRADER_CATEGORIES_I18N_HE,
 	TRADER_CATEGORIES_I18N_HE,
 	TRADERS_I18N_HE,
 	TRADER_INVENTORY_I18N_HE,
+	TRADER_MOVEMENTS_I18N_HE,
 } from './i18n.he';
 
 export type AppLang = 'he' | 'en';
@@ -214,6 +216,37 @@ export type DefaultTraderCategoriesI18n = {
 	};
 };
 
+export type TraderMovementsI18n = {
+	columns: {
+		date: string;
+		type: string;
+		trader: string;
+		category: string;
+		grade: string;
+		pitamStatus: string;
+		quantity: string;
+	};
+	filters: {
+		seasonLabel: string;
+		traderLabel: string;
+		allTradersOption: string;
+		unassignedOption: string;
+		movementStatusLabel: string;
+		allMovementsOption: string;
+		nonShipmentMovementsOption: string;
+		shipmentMovementsOption: string;
+	};
+	movementTypes: Record<string, string>;
+	pitamStatuses: Record<string, string>;
+	loading: string;
+	error: string;
+	retry: string;
+	empty: string;
+	print: string;
+	printAriaLabel: string;
+	printTitle: string;
+};
+
 const TRADERS_I18N: Record<AppLang, TradersI18n> = {
 	he: TRADERS_I18N_HE,
 	en: TRADERS_I18N_EN,
@@ -227,6 +260,11 @@ const TRADER_CATEGORIES_I18N: Record<AppLang, TraderCategoriesI18n> = {
 const DEFAULT_TRADER_CATEGORIES_I18N: Record<AppLang, DefaultTraderCategoriesI18n> = {
 	he: DEFAULT_TRADER_CATEGORIES_I18N_HE,
 	en: DEFAULT_TRADER_CATEGORIES_I18N_EN,
+};
+
+const TRADER_MOVEMENTS_I18N: Record<AppLang, TraderMovementsI18n> = {
+	he: TRADER_MOVEMENTS_I18N_HE,
+	en: TRADER_MOVEMENTS_I18N_EN,
 };
 
 function resolveAppLang(): AppLang {
@@ -247,4 +285,8 @@ export function getTraderCategoriesI18n() {
 
 export function getDefaultTraderCategoriesI18n() {
 	return DEFAULT_TRADER_CATEGORIES_I18N[resolveAppLang()];
+}
+
+export function getTraderMovementsI18n() {
+	return TRADER_MOVEMENTS_I18N[resolveAppLang()];
 }

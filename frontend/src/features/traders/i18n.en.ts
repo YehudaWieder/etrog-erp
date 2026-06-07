@@ -1,4 +1,4 @@
-import type { DefaultTraderCategoriesI18n, TraderCategoriesI18n, TradersI18n, TraderInventoryI18n } from './i18n';
+import type { DefaultTraderCategoriesI18n, TraderCategoriesI18n, TradersI18n, TraderInventoryI18n, TraderMovementsI18n } from './i18n';
 
 export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
 	userNameFallback: 'My Profile',
@@ -236,4 +236,50 @@ export const DEFAULT_TRADER_CATEGORIES_I18N_EN: DefaultTraderCategoriesI18n = {
 		totalReachedHundred: 'Cannot add another row because total percent already reached 100%.',
 		allTradersSelected: 'Cannot add another row because all traders are already selected.',
 	},
+};
+
+export const TRADER_MOVEMENTS_I18N_EN: TraderMovementsI18n = {
+	columns: {
+		date: 'Date',
+		type: 'Movement Type',
+		trader: 'Assignment',
+		category: 'Category',
+		grade: 'Grade',
+		pitamStatus: 'Pitam Status',
+		quantity: 'Quantity',
+	},
+	filters: {
+		seasonLabel: 'Season',
+		traderLabel: 'Trader',
+		allTradersOption: 'All Traders',
+		unassignedOption: 'Unassigned',
+		movementStatusLabel: 'Movement Type',
+		allMovementsOption: 'All Movements',
+		nonShipmentMovementsOption: 'Without Shipment Movements',
+		shipmentMovementsOption: 'Shipment Movements Only',
+	},
+	movementTypes: {
+		HARVEST_IN: 'Harvest In',
+		HARVEST_OUT: 'Harvest Out',
+		INVENTORY_ADJUSTMENT: 'Inventory Adjustment',
+		OWNERSHIP_TRANSFER: 'Transfer to Another Trader',
+		INTERNAL_TRANSFER: 'Transfer to Customer',
+		PACKED: 'Packed',
+		PACKED_SHIPPED: 'Packed & Shipped',
+		ASSIGNED: 'Assigned',
+		UNASSIGNED: 'Unassigned',
+		RECEIVED: 'Received',
+	},
+	pitamStatuses: {
+		WITH_PITAM: 'With pitam',
+		WITHOUT_PITAM: 'Without pitam',
+		MIXED: 'Mixed',
+	},
+	loading: 'Loading movements...',
+	error: 'Error loading movements',
+	retry: 'Retry',
+	empty: 'No movements found.',
+	print: '🖨️ Print',
+	printAriaLabel: 'Print table',
+	printTitle: 'Inventory Movements',
 };

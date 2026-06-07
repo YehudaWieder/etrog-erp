@@ -8,9 +8,8 @@ async function bootstrap() {
   app.enableShutdownHooks();
 
   // Enable CORS – allow the Vite dev server and any configured frontend origin
-  const allowedOrigin = process.env.FRONTEND_ORIGIN ?? 'http://localhost:5173';
   app.enableCors({
-    origin: [allowedOrigin],
+    origin: true, // Allow all origins during development
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
   });
