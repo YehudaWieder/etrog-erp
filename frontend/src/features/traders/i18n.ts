@@ -236,6 +236,12 @@ export type TraderMovementsI18n = {
 		allMovementsOption: string;
 		nonShipmentMovementsOption: string;
 		shipmentMovementsOption: string;
+		categoryLabel: string;
+		allCategoriesOption: string;
+		gradeLabel: string;
+		allGradesOption: string;
+		pitamStatusLabel: string;
+		allPitamStatusesOption: string;
 	};
 	movementTypes: Record<string, string>;
 	pitamStatuses: Record<string, string>;
@@ -243,6 +249,7 @@ export type TraderMovementsI18n = {
 	error: string;
 	retry: string;
 	empty: string;
+	noMatchingFilters: string;
 	noFiltersLabel: string;
 	tableActionsLabel: string;
 	printAriaLabel: string;

@@ -31,6 +31,9 @@ export function TraderInventoryPage() {
     traderId: 'ALL',
     inventoryStatus: 'ALL',
     movementStatus: 'ALL',
+    movementCategory: 'ALL',
+    movementGrade: 'ALL',
+    movementPitamStatus: 'ALL',
   });
   const [filtersLoading, setFiltersLoading] = useState(false);
   const filtersApiRef = useRef<GlobalScopedFiltersApi | null>(null);
@@ -615,9 +618,15 @@ export function TraderInventoryPage() {
           seasonId={filterValues.seasonId}
           traderId={filterValues.traderId}
           movementStatus={filterValues.movementStatus}
+          categoryId={filterValues.movementCategory}
+          grade={filterValues.movementGrade}
+          pitamStatus={filterValues.movementPitamStatus}
           seasonOptions={seasonOptions}
           traderOptions={traderOptions}
           movementStatusOptions={movementStatusOptions}
+          onCategoryChange={(value) => setFilterValues((prev) => ({ ...prev, movementCategory: value }))}
+          onGradeChange={(value) => setFilterValues((prev) => ({ ...prev, movementGrade: value }))}
+          onPitamStatusChange={(value) => setFilterValues((prev) => ({ ...prev, movementPitamStatus: value }))}
           onSeasonChange={(value) => setFilterValues((prev) => ({ ...prev, seasonId: value }))}
           onTraderChange={(value) => setFilterValues((prev) => ({ ...prev, traderId: value }))}
           onMovementStatusChange={(value) => setFilterValues((prev) => ({ ...prev, movementStatus: value }))}
