@@ -687,6 +687,9 @@ export function HarvestPage() {
     createFieldReportExportRows,
     createSortingDailyExportRows,
     createSortingDailyExpandedMatrixData,
+    filterValues: globalFilterValues,
+    seasons,
+    fields,
   });
 
   const {

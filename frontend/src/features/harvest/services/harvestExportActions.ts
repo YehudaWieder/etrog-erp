@@ -1,8 +1,9 @@
 import type { MutableRefObject } from 'react';
-import type { Row } from 'exceljs';
 import { HARVEST_PRINT_BASE_STYLE } from './harvestPrintStyles';
 import type { HarvestI18n } from '../i18n';
 import type { HarvestExportTableData } from '../harvestPage.types';
+import type { Season, Field } from '../../../services/seasonsApi';
+import { downloadStyledExcel } from '../../../services/exportExcel';
 
 type ExpandedMatrixData = {
   fixedHeaders: string[];
@@ -32,6 +33,9 @@ type HarvestExportActionsParams = {
   createFieldReportExportRows: () => HarvestExportTableData;
   createSortingDailyExportRows: () => HarvestExportTableData;
   createSortingDailyExpandedMatrixData: () => Promise<ExpandedMatrixData>;
+  filterValues?: Record<string, string>;
+  seasons?: Season[];
+  fields?: Field[];
 };
 
 function escapeHtml(value: string) {
@@ -43,106 +47,72 @@ function escapeHtml(value: string) {
     .replace(/'/g, '&#39;');
 }
 
-async function downloadStyledExcel({
-  sheetName,
-  fileName,
-  header,
-  rows,
-  rightToLeft,
-}: {
-  sheetName: string;
-  fileName: string;
-  header: Array<string | number>;
-  rows: Array<Array<string | number>>;
-  rightToLeft: boolean;
-}) {
-  if (typeof window === 'undefined') {
-    return;
+function buildFilterDetailsHtml(
+  filterValues: Record<string, string> | undefined,
+  seasons: Season[] | undefined,
+  fields: Field[] | undefined,
+  t: HarvestI18n,
+  lang: 'he' | 'en',
+  variant: 'daily' | 'field-report' | 'sorting-daily' = 'daily',
+): string {
+  if (!filterValues) {
+    return '';
   }
 
-  const { Workbook } = await import('exceljs');
-  const workbook = new Workbook();
-  const worksheet = workbook.addWorksheet(sheetName);
+  const filters: string[] = [];
 
-  worksheet.addRow(header);
-  for (const row of rows) {
-    worksheet.addRow(row);
-  }
-
-  const headerBg = 'FF1F5A32';
-  const headerFont = 'FFFFFFFF';
-  const borderColor = 'FFCCD9CF';
-  const zebraBg = 'FFF8FCF9';
-
-  for (let rowIndex = 1; rowIndex <= worksheet.rowCount; rowIndex += 1) {
-    const row = worksheet.getRow(rowIndex);
-    for (let colIndex = 1; colIndex <= worksheet.columnCount; colIndex += 1) {
-      const cell = row.getCell(colIndex);
-      const isHeader = rowIndex === 1;
-      const isZebraDataRow = rowIndex > 1 && rowIndex % 2 === 0;
-
-      cell.alignment = {
-        horizontal: 'center',
-        vertical: 'middle',
-        wrapText: true,
-      };
-
-      cell.border = {
-        top: { style: 'thin', color: { argb: borderColor } },
-        left: { style: 'thin', color: { argb: borderColor } },
-        bottom: { style: 'thin', color: { argb: borderColor } },
-        right: { style: 'thin', color: { argb: borderColor } },
-      };
-
-      if (isHeader) {
-        cell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: headerBg },
-        };
-
-        cell.font = {
-          bold: true,
-          color: { argb: headerFont },
-        };
-      } else if (isZebraDataRow) {
-        cell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: zebraBg },
-        };
-      }
+  // Season filter
+  if (filterValues.seasonId && filterValues.seasonId !== 'undefined') {
+    const season = seasons?.find(s => String(s.id) === filterValues.seasonId);
+    const seasonLabel = season?.yearName || filterValues.seasonId;
+    const label = variant === 'sorting-daily' 
+      ? t.sortingDailyDetails.filters.seasonFilterLabel 
+      : t.dailyDetails.filters.seasonFilterLabel;
+    if (seasonLabel && seasonLabel !== 'undefined') {
+      filters.push(`${label}: ${seasonLabel}`);
     }
   }
 
-  for (let colIndex = 1; colIndex <= worksheet.columnCount; colIndex += 1) {
-    let maxLength = 0;
-
-    worksheet.eachRow((row: Row) => {
-      const rawValue = row.getCell(colIndex).value;
-      const textValue = rawValue === null || rawValue === undefined ? '' : String(rawValue);
-      if (textValue.length > maxLength) {
-        maxLength = textValue.length;
-      }
-    });
-
-    worksheet.getColumn(colIndex).width = Math.max(10, Math.min(maxLength + 2, 40));
+  // Field filter
+  if (filterValues.fieldId && filterValues.fieldId !== 'all') {
+    const field = fields?.find(f => String(f.id) === filterValues.fieldId);
+    const fieldLabel = field?.name || filterValues.fieldId;
+    const label = variant === 'sorting-daily'
+      ? t.sortingDailyDetails.filters.fieldFilterLabel
+      : t.dailyDetails.filters.fieldFilterLabel;
+    if (fieldLabel && fieldLabel !== 'undefined') {
+      filters.push(`${label}: ${fieldLabel}`);
+    }
   }
 
-  worksheet.views = [{ state: 'frozen', ySplit: 1, rightToLeft }];
+  // Sorting assignment filter (for sorting-daily only)
+  if (variant === 'sorting-daily' && filterValues.sortingAssignmentType) {
+    const assignmentType = filterValues.sortingAssignmentType;
+    let assignmentLabel = '';
+    
+    if (assignmentType === 'all') {
+      assignmentLabel = t.sortingDailyDetails.filters.assignmentOptions.all;
+    } else if (assignmentType === 'trader') {
+      assignmentLabel = t.sortingDailyDetails.filters.assignmentOptions.trader;
+    } else if (assignmentType === 'customer') {
+      assignmentLabel = t.sortingDailyDetails.filters.assignmentOptions.customer;
+    }
+    
+    if (assignmentLabel) {
+      filters.push(`${t.sortingDailyDetails.filters.assignmentFilterLabel}: ${assignmentLabel}`);
+    }
+  }
 
-  const buffer = await workbook.xlsx.writeBuffer();
-  const blob = new Blob([buffer], {
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  });
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  document.body.append(link);
-  link.click();
-  link.remove();
-  window.URL.revokeObjectURL(url);
+  if (filters.length === 0) {
+    return '';
+  }
+
+  return `
+    <div style="margin-bottom: 20px; padding: 12px; background: #f5f5f5; border-radius: 4px; font-size: 12px; border: 1px solid #ddd;">
+      <strong>${escapeHtml(lang === 'he' ? 'סינונים פעילים' : 'Active Filters')}:</strong><br/>
+      ${filters.map(f => `<div style="margin-top: 4px;">${escapeHtml(f)}</div>`).join('')}
+    </div>
+  `;
 }
 
 export function createHarvestExportActions({
@@ -154,6 +124,9 @@ export function createHarvestExportActions({
   createFieldReportExportRows,
   createSortingDailyExportRows,
   createSortingDailyExpandedMatrixData,
+  filterValues = {},
+  seasons = [],
+  fields = [],
 }: HarvestExportActionsParams) {
   const handlePrintHarvestTable = () => {
     if (typeof window === 'undefined') {
@@ -172,6 +145,7 @@ export function createHarvestExportActions({
     }
 
     const printTitle = t.dailyDetails.printWindowTitle;
+    const filterDetailsHtml = buildFilterDetailsHtml(filterValues, seasons, fields, t, lang, 'daily');
 
     printWindow.document.write(`
       <!doctype html>
@@ -184,6 +158,7 @@ export function createHarvestExportActions({
         </head>
         <body>
           <h1>${escapeHtml(printTitle)}</h1>
+          ${filterDetailsHtml}
           <table>
             <thead>
               <tr>${tableHeaderHtml}</tr>
@@ -209,14 +184,41 @@ export function createHarvestExportActions({
 
     const { header, rows } = createHarvestExportRows();
     const dateStamp = new Date().toISOString().slice(0, 10);
+    const columnCount = header.length;
+
+    // Build filter information rows (one row per filter)
+    const filterRows: Array<Array<string | number>> = [];
+    if (filterValues.seasonId && filterValues.seasonId !== 'undefined') {
+      const season = seasons.find(s => String(s.id) === filterValues.seasonId);
+      const seasonLabel = season?.yearName || filterValues.seasonId;
+      if (seasonLabel && seasonLabel !== 'undefined') {
+        const filterRow = [
+          `${t.dailyDetails.filters.seasonFilterLabel}: ${seasonLabel}`,
+          ...Array(columnCount - 1).fill(''),
+        ];
+        filterRows.push(filterRow);
+      }
+    }
+    if (filterValues.fieldId && filterValues.fieldId !== 'all') {
+      const field = fields.find(f => String(f.id) === filterValues.fieldId);
+      const fieldLabel = field?.name || filterValues.fieldId;
+      if (fieldLabel && fieldLabel !== 'undefined') {
+        const filterRow = [
+          `${t.dailyDetails.filters.fieldFilterLabel}: ${fieldLabel}`,
+          ...Array(columnCount - 1).fill(''),
+        ];
+        filterRows.push(filterRow);
+      }
+    }
 
     try {
       await downloadStyledExcel({
         sheetName: lang === 'he' ? 'קטיף יומי' : 'Harvest Daily',
         fileName: `harvest-daily-${dateStamp}.xlsx`,
         header,
-        rows,
+        rows: [...filterRows, [], ...rows],
         rightToLeft: lang === 'he',
+        filterRowCount: filterRows.length + 1,
       });
     } catch {
       window.alert(t.dailyDetails.exportError);
@@ -240,6 +242,7 @@ export function createHarvestExportActions({
     }
 
     const printTitle = t.fieldReport.printWindowTitle;
+    const filterDetailsHtml = buildFilterDetailsHtml(filterValues, seasons, fields, t, lang, 'field-report');
 
     printWindow.document.write(`
       <!doctype html>
@@ -252,6 +255,7 @@ export function createHarvestExportActions({
         </head>
         <body>
           <h1>${escapeHtml(printTitle)}</h1>
+          ${filterDetailsHtml}
           <table>
             <thead>
               <tr>${tableHeaderHtml}</tr>
@@ -277,14 +281,30 @@ export function createHarvestExportActions({
 
     const { header, rows } = createFieldReportExportRows();
     const dateStamp = new Date().toISOString().slice(0, 10);
+    const columnCount = header.length;
+
+    // Build filter information rows (one row per filter)
+    const filterRows: Array<Array<string | number>> = [];
+    if (filterValues.seasonId && filterValues.seasonId !== 'undefined') {
+      const season = seasons.find(s => String(s.id) === filterValues.seasonId);
+      const seasonLabel = season?.yearName || filterValues.seasonId;
+      if (seasonLabel && seasonLabel !== 'undefined') {
+        const filterRow = [
+          `${t.fieldReport.filters?.seasonFilterLabel || t.dailyDetails.filters.seasonFilterLabel}: ${seasonLabel}`,
+          ...Array(columnCount - 1).fill(''),
+        ];
+        filterRows.push(filterRow);
+      }
+    }
 
     try {
       await downloadStyledExcel({
         sheetName: t.fieldReport.sheetName,
         fileName: `harvest-field-report-${dateStamp}.xlsx`,
         header,
-        rows,
+        rows: [...filterRows, [], ...rows],
         rightToLeft: lang === 'he',
+        filterRowCount: filterRows.length + 1,
       });
     } catch {
       window.alert(t.fieldReport.exportError);
@@ -396,6 +416,7 @@ export function createHarvestExportActions({
     }
 
     const printTitle = variant === 'expanded' ? t.sortingDailyDetails.expandedPrintWindowTitle : t.sortingDailyDetails.printWindowTitle;
+    const filterDetailsHtml = buildFilterDetailsHtml(filterValues, seasons, fields, t, lang, 'sorting-daily');
 
     printWindow.document.write(`
       <!doctype html>
@@ -408,6 +429,7 @@ export function createHarvestExportActions({
         </head>
         <body>
           <h1>${escapeHtml(printTitle)}</h1>
+          ${filterDetailsHtml}
           <table>
             <thead>
               ${tableHeaderHtml}
@@ -632,13 +654,55 @@ export function createHarvestExportActions({
     try {
       const { header, rows } = createSortingDailyExportRows();
       const dateStamp = new Date().toISOString().slice(0, 10);
+      const columnCount = header.length;
+
+      // Build filter information rows (one row per filter)
+      const filterRows: Array<Array<string | number>> = [];
+      if (filterValues.seasonId && filterValues.seasonId !== 'undefined') {
+        const season = seasons.find(s => String(s.id) === filterValues.seasonId);
+        const seasonLabel = season?.yearName || filterValues.seasonId;
+        if (seasonLabel && seasonLabel !== 'undefined') {
+          const filterRow = [
+            `${t.sortingDailyDetails.filters.seasonFilterLabel}: ${seasonLabel}`,
+            ...Array(columnCount - 1).fill(''),
+          ];
+          filterRows.push(filterRow);
+        }
+      }
+      if (filterValues.fieldId && filterValues.fieldId !== 'all') {
+        const field = fields.find(f => String(f.id) === filterValues.fieldId);
+        const fieldLabel = field?.name || filterValues.fieldId;
+        if (fieldLabel && fieldLabel !== 'undefined') {
+          const filterRow = [
+            `${t.sortingDailyDetails.filters.fieldFilterLabel}: ${fieldLabel}`,
+            ...Array(columnCount - 1).fill(''),
+          ];
+          filterRows.push(filterRow);
+        }
+      }
+      if (filterValues.sortingAssignmentType && filterValues.sortingAssignmentType !== 'all') {
+        let assignmentLabel = '';
+        if (filterValues.sortingAssignmentType === 'trader') {
+          assignmentLabel = t.sortingDailyDetails.filters.assignmentOptions.trader;
+        } else if (filterValues.sortingAssignmentType === 'customer') {
+          assignmentLabel = t.sortingDailyDetails.filters.assignmentOptions.customer;
+        }
+        if (assignmentLabel) {
+          const filterRow = [
+            `${t.sortingDailyDetails.filters.assignmentFilterLabel}: ${assignmentLabel}`,
+            ...Array(columnCount - 1).fill(''),
+          ];
+          filterRows.push(filterRow);
+        }
+      }
 
       await downloadStyledExcel({
         sheetName: t.sortingDailyDetails.sheetName,
         fileName: `sorting-daily-${dateStamp}.xlsx`,
         header,
-        rows,
+        rows: [...filterRows, [], ...rows],
         rightToLeft: lang === 'he',
+        filterRowCount: filterRows.length + 1,
       });
     } catch {
       window.alert(t.sortingDailyDetails.exportError);

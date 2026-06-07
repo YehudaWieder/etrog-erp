@@ -290,6 +290,38 @@ export function TraderInventoryPage() {
     if (!matrixTableRef.current) {
       return;
     }
+
+    // Build filter display information
+    const seasonDisplay = filterValues.seasonId
+      ? seasons.find(s => String(s.id) === filterValues.seasonId)?.yearName || filterValues.seasonId
+      : 'N/A';
+    const traderDisplay = filterValues.traderId === 'ALL' 
+      ? t.summary.filters.allTradersOption 
+      : filterValues.traderId === 'UNASSIGNED'
+      ? t.summary.filters.unassignedOption
+      : filterValues.traderId
+      ? traders.find(tr => String(tr.id) === filterValues.traderId)?.name || filterValues.traderId
+      : 'N/A';
+
+    // Map inventory status to display label
+    const statusMap: Record<string, string> = {
+      'ALL': t.summary.filters.allInventoryOption,
+      'UNSHIPPED': t.summary.filters.unboxedOption,
+      'PACKED_SHIPPED': t.summary.filters.boxedOption,
+      'SHIPPED': t.summary.filters.shippedOption,
+      'SELF_PICKUP': t.summary.filters.selfPickupOption,
+    };
+    const statusDisplay = statusMap[filterValues.inventoryStatus] || filterValues.inventoryStatus;
+
+    const filterDetailsHtml = `
+      <div style="margin-bottom: 20px; padding: 12px; background: #f5f5f5; border-radius: 4px; font-size: 12px; border: 1px solid #ddd;">
+        <strong>${lang === 'he' ? 'סינונים פעילים' : 'Active Filters'}:</strong><br/>
+        <div style="margin-top: 4px;">${t.summary.filters.seasonLabel}: ${seasonDisplay}</div>
+        <div style="margin-top: 4px;">${t.summary.filters.traderLabel}: ${traderDisplay}</div>
+        <div style="margin-top: 4px;">${t.summary.filters.inventoryStatusLabel}: ${statusDisplay}</div>
+      </div>
+    `;
+
     const tableStyles = `
       table {
         width: 100%;
@@ -313,11 +345,11 @@ export function TraderInventoryPage() {
     openPrintableWindow({
       title: lang === 'he' ? 'מלאי סוחרים' : 'Trader Inventory',
       heading: lang === 'he' ? 'מלאי סוחרים' : 'Trader Inventory',
-      html: matrixTableRef.current.outerHTML,
+      html: filterDetailsHtml + matrixTableRef.current.outerHTML,
       direction: lang === 'he' ? 'rtl' : 'ltr',
       extraStyles: tableStyles,
     });
-  }, [lang]);
+  }, [lang, seasons, traders, filterValues, t]);
 
   const handleExportInventoryTable = useCallback(async () => {
     if (!matrixTableRef.current) {
@@ -329,12 +361,16 @@ export function TraderInventoryPage() {
     const dataRows: (string | number)[][] = [];
 
     // Build filter display information
-    const seasonDisplay = seasons.find(s => s.id === Number(filterValues.seasonId))?.yearName || 'N/A';
+    const seasonDisplay = filterValues.seasonId
+      ? seasons.find(s => String(s.id) === filterValues.seasonId)?.yearName || filterValues.seasonId
+      : 'N/A';
     const traderDisplay = filterValues.traderId === 'ALL' 
       ? t.summary.filters.allTradersOption 
       : filterValues.traderId === 'UNASSIGNED'
       ? t.summary.filters.unassignedOption
-      : traders.find(tr => tr.id === Number(filterValues.traderId))?.name || 'N/A';
+      : filterValues.traderId 
+      ? traders.find(tr => String(tr.id) === filterValues.traderId)?.name || filterValues.traderId
+      : 'N/A';
 
     // Map inventory status to display label
     const statusMap: Record<string, string> = {

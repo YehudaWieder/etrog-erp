@@ -288,6 +288,7 @@ export const HARVEST_I18N_EN: HarvestI18n = {
       mixed: 'Mixed',
     },
     filters: {
+      seasonFilterLabel: 'Filter by season',
       fieldFilterLabel: 'Filter by field',
       assignmentFilterLabel: 'Assignment type',
       allFieldsOption: 'All fields',

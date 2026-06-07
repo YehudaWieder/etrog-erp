@@ -288,6 +288,7 @@ export const HARVEST_I18N_HE: HarvestI18n = {
       mixed: 'מעורב',
     },
     filters: {
+      seasonFilterLabel: 'סינון לפי עונה',
       fieldFilterLabel: 'סינון לפי שדה',
       assignmentFilterLabel: 'סוג שיוך',
       allFieldsOption: 'כל השדות',

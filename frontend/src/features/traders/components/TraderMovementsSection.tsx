@@ -202,7 +202,7 @@ export function TraderMovementsSection({
       return String(text).replace(/[&<>"']/g, (char) => map[char]);
     };
 
-    const getFilterDetails = (): string => {
+    const getFilterDetails = (): string[] => {
       const filters: string[] = [];
 
       if (seasonId) {
@@ -220,7 +220,7 @@ export function TraderMovementsSection({
         filters.push(`${i18n.filters.movementStatusLabel}: ${escapeHtml(statusLabel)}`);
       }
 
-      return filters.length > 0 ? filters.join(' | ') : i18n.noFiltersLabel || 'ללא סינונים';
+      return filters;
     };
 
     const tableHeaderHtml = [
@@ -251,11 +251,13 @@ export function TraderMovementsSection({
       )
       .join('');
 
-    const filterDetailsHtml = `
-      <div style="margin-bottom: 20px; padding: 10px; background: #f5f5f5; border-radius: 4px; font-size: 12px;">
-        <strong>${escapeHtml(i18n.filters.title || 'סינונים פעילים')}:</strong> ${getFilterDetails()}
+    const filterDetailsArray = getFilterDetails();
+    const filterDetailsHtml = filterDetailsArray.length > 0 ? `
+      <div style="margin-bottom: 20px; padding: 12px; background: #f5f5f5; border-radius: 4px; font-size: 12px; border: 1px solid #ddd;">
+        <strong>${escapeHtml(i18n.filters.title || 'סינונים פעילים')}:</strong><br/>
+        ${filterDetailsArray.map(f => `<div style="margin-top: 4px;">${f}</div>`).join('')}
       </div>
-    `;
+    ` : '';
 
     const tableHtml = `
       ${filterDetailsHtml}
@@ -287,25 +289,52 @@ export function TraderMovementsSection({
 
   const handleExport = useCallback(async () => {
     try {
-      const getFilterDetails = (): string => {
-        const filters: string[] = [];
+      const getFilterDetails = (): Array<string[]> => {
+        const filters: Array<string[]> = [];
 
         if (seasonId) {
           const seasonLabel = seasonOptions.find((opt) => opt.value === seasonId)?.label || seasonId;
-          filters.push(`${i18n.filters.seasonLabel}: ${seasonLabel}`);
+          const filterRow = [
+            `${i18n.filters.seasonLabel}: ${seasonLabel}`,
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+          ];
+          filters.push(filterRow);
         }
 
         if (traderId && traderId !== 'ALL') {
           const traderLabel = traderOptions.find((opt) => opt.value === traderId)?.label || traderId;
-          filters.push(`${i18n.filters.traderLabel}: ${traderLabel}`);
+          const filterRow = [
+            `${i18n.filters.traderLabel}: ${traderLabel}`,
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+          ];
+          filters.push(filterRow);
         }
 
         if (movementStatus && movementStatus !== 'ALL') {
           const statusLabel = movementStatusOptions.find((opt) => opt.value === movementStatus)?.label || movementStatus;
-          filters.push(`${i18n.filters.movementStatusLabel}: ${statusLabel}`);
+          const filterRow = [
+            `${i18n.filters.movementStatusLabel}: ${statusLabel}`,
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+          ];
+          filters.push(filterRow);
         }
 
-        return filters.length > 0 ? filters.join(' | ') : i18n.noFiltersLabel || 'ללא סינונים';
+        return filters;
       };
 
       const header = [
@@ -318,18 +347,9 @@ export function TraderMovementsSection({
         i18n.columns.quantity,
       ];
 
-      const filterDetailsRow = [
-        `${i18n.filters.title || 'סינונים פעילים'}: ${getFilterDetails()}`,
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-      ];
-
+      const filterRows = getFilterDetails();
       const rows = [
-        filterDetailsRow,
+        ...filterRows,
         [],
         ...movements.map((m) => [
           formatDate(m.date),
@@ -350,6 +370,7 @@ export function TraderMovementsSection({
         header,
         rows,
         rightToLeft: lang === 'he',
+        filterRowCount: filterRows.length + 1,
       });
     } catch (error) {
       console.error('Export failed:', error);

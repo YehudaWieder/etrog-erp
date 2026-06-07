@@ -261,6 +261,7 @@ export type HarvestI18n = {
       mixed: string;
     };
     filters: {
+      seasonFilterLabel: string;
       fieldFilterLabel: string;
       assignmentFilterLabel: string;
       allFieldsOption: string;
