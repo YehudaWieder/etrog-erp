@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import type { AppLang, TraderInventoryI18n } from '../i18n';
 import type { TraderInventorySummaryRow, TraderInventorySummaryTotals } from '../traderInventory.types';
 import {
@@ -17,6 +17,7 @@ type TraderInventoryAllSectionProps = {
   isLoading: boolean;
   error: string | null;
   onRetry: () => void;
+  tableRef?: RefObject<HTMLTableElement>;
 };
 
 export function TraderInventoryAllSection({
@@ -28,6 +29,7 @@ export function TraderInventoryAllSection({
   isLoading,
   error,
   onRetry,
+  tableRef,
 }: TraderInventoryAllSectionProps) {
   const locale = lang === 'he' ? 'he-IL' : 'en-US';
 
@@ -83,7 +85,7 @@ export function TraderInventoryAllSection({
       {summaryMatrix.categories.length > 0 ? (
         <section className={styles.matrixSection}>
           <div className={styles.matrixViewport}>
-            <table className={styles.matrixTable}>
+            <table className={styles.matrixTable} ref={tableRef}>
               <thead>
                 <tr>
                   <th className={styles.matrixGradeHead}>{labels.matrix.grade}</th>

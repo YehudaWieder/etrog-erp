@@ -1,10 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from '../../app/layout/AppShell';
 import { GlobalScopedFilters, type GlobalScopedFilterConfig, type GlobalScopedFiltersApi } from '../../components/ui/GlobalScopedFilters';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
+import { openPrintableWindow } from '../../services/printWindow';
+import { downloadStyledExcel } from '../../services/exportExcel';
 import { TraderInventoryAllSection } from './components/TraderInventoryAllSection';
+import { TraderMovementsSection } from './components/TraderMovementsSection';
+import { TraderPrintExportActions } from './components/TraderPrintExportActions';
 import { useTraderInventorySummary } from './hooks/useTraderInventorySummary';
+import { useTraderMovements } from './hooks/useTraderMovements';
 import { TRADER_INVENTORY_I18N } from './i18n';
 import type { NavItem } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
@@ -28,15 +33,7 @@ export function TraderInventoryPage() {
   });
   const [filtersLoading, setFiltersLoading] = useState(false);
   const filtersApiRef = useRef<GlobalScopedFiltersApi | null>(null);
-
-  useEffect(() => {
-    // load unread messages count
-    import('../../services/messagesApi').then(({ fetchUnreadCount }) => {
-      fetchUnreadCount().then((res) => setAlertsCount(res.count)).catch(() => setAlertsCount(0));
-    });
-  }, []);
-
-  const currentUser = getCurrentUser();
+  const matrixTableRef = useRef<HTMLTableElement>(null);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -44,6 +41,18 @@ export function TraderInventoryPage() {
       navigate('/login');
     }
   }, [navigate]);
+
+  const currentUser = getCurrentUser();
+
+  useEffect(() => {
+    // load unread messages count - only if authenticated
+    if (!isAuthenticated()) {
+      return;
+    }
+    import('../../services/messagesApi').then(({ fetchUnreadCount }) => {
+      fetchUnreadCount().then((res) => setAlertsCount(res.count)).catch(() => setAlertsCount(0));
+    });
+  }, []);
 
   const handleLogin = () => navigate('/login');
   const handleRegister = () => navigate('/register');
@@ -70,6 +79,7 @@ export function TraderInventoryPage() {
 
   const t = TRADER_INVENTORY_I18N[lang];
   const isAllInventoryTab = activeSidebarId === 'all';
+  const isMovementsTab = activeSidebarId === 'movements';
   const selectedSeasonId = useMemo(() => {
     const parsed = Number.parseInt(filterValues.seasonId, 10);
     return Number.isFinite(parsed) ? parsed : null;
@@ -121,8 +131,14 @@ export function TraderInventoryPage() {
 
   const traderInventorySummary = useTraderInventorySummary(isAllInventoryTab, summaryFilters);
 
+  const traderMovements = useTraderMovements(
+    selectedSeasonId,
+    selectedTraderId,
+    filterValues.inventoryStatus,
+  );
+
   useEffect(() => {
-    if (!isAllInventoryTab) {
+    if (!isAllInventoryTab && !isMovementsTab) {
       return;
     }
 
@@ -159,7 +175,7 @@ export function TraderInventoryPage() {
     return () => {
       isActive = false;
     };
-  }, [isAllInventoryTab]);
+  }, [isAllInventoryTab, isMovementsTab]);
 
   useEffect(() => {
     if (!isAllInventoryTab || !activeSeasonId || !filtersApiRef.current) {
@@ -172,6 +188,22 @@ export function TraderInventoryPage() {
 
     filtersApiRef.current.setFilterValue('seasonId', String(activeSeasonId));
   }, [activeSeasonId, filterValues.seasonId, isAllInventoryTab]);
+
+  // For movements tab, set seasonId from activeSeasonId
+  useEffect(() => {
+    if (!isMovementsTab || !activeSeasonId) {
+      return;
+    }
+
+    if (filterValues.seasonId) {
+      return;
+    }
+
+    setFilterValues((prev) => ({
+      ...prev,
+      seasonId: String(activeSeasonId),
+    }));
+  }, [activeSeasonId, filterValues.seasonId, isMovementsTab]);
 
   const seasonOptions = useMemo(
     () =>
@@ -233,6 +265,167 @@ export function TraderInventoryPage() {
     [activeSeasonId, seasonOptions, t.summary.filters.seasonLabel, t.summary.filters.traderLabel, traderOptions, t.summary.filters.inventoryStatusLabel, inventoryStatusOptions],
   );
 
+  const handlePrintInventoryTable = useCallback(() => {
+    if (!matrixTableRef.current) {
+      return;
+    }
+    const tableStyles = `
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: center;
+      }
+      th {
+        background-color: #1f5a32;
+        color: white;
+        font-weight: bold;
+      }
+      tr:nth-child(even) {
+        background-color: #f8fcf9;
+      }
+    `;
+    openPrintableWindow({
+      title: lang === 'he' ? 'מלאי סוחרים' : 'Trader Inventory',
+      heading: lang === 'he' ? 'מלאי סוחרים' : 'Trader Inventory',
+      html: matrixTableRef.current.outerHTML,
+      direction: lang === 'he' ? 'rtl' : 'ltr',
+      extraStyles: tableStyles,
+    });
+  }, [lang]);
+
+  const handleExportInventoryTable = useCallback(async () => {
+    if (!matrixTableRef.current) {
+      return;
+    }
+
+    const table = matrixTableRef.current;
+    const headerRows: (string | number)[][] = [];
+    const dataRows: (string | number)[][] = [];
+
+    // Build filter display information
+    const seasonDisplay = seasons.find(s => s.id === Number(filterValues.seasonId))?.yearName || 'N/A';
+    const traderDisplay = filterValues.traderId === 'ALL' 
+      ? t.summary.filters.allTradersOption 
+      : filterValues.traderId === 'UNASSIGNED'
+      ? t.summary.filters.unassignedOption
+      : traders.find(tr => tr.id === Number(filterValues.traderId))?.name || 'N/A';
+
+    // Map inventory status to display label
+    const statusMap: Record<string, string> = {
+      'ALL': t.summary.filters.allInventoryOption,
+      'UNSHIPPED': t.summary.filters.unboxedOption,
+      'PACKED_SHIPPED': t.summary.filters.boxedOption,
+      'SHIPPED': t.summary.filters.shippedOption,
+      'SELF_PICKUP': t.summary.filters.selfPickupOption,
+    };
+    const statusDisplay = statusMap[filterValues.inventoryStatus] || filterValues.inventoryStatus;
+
+    // Build dynamic file name with filter details
+    const baseFileName = lang === 'he' ? 'מלאי סוחרים' : 'Trader Inventory';
+    const fileName = `${baseFileName}_${seasonDisplay}_${traderDisplay}_${statusDisplay}`;
+
+    // Add filter information rows at the beginning
+    dataRows.push(
+      [t.summary.filters.seasonLabel, seasonDisplay],
+      [t.summary.filters.traderLabel, traderDisplay],
+      [t.summary.filters.inventoryStatusLabel, statusDisplay],
+      [], // empty row for spacing
+    );
+
+    // Extract all rows from thead (headers)
+    const thead = table.querySelector('thead');
+    if (thead) {
+      const rows = thead.querySelectorAll('tr');
+      let firstRowLength = 0;
+      
+      rows.forEach((headerRow, rowIndex) => {
+        const row: (string | number)[] = [];
+        const cells = headerRow.querySelectorAll('th, td');
+        cells.forEach((cell) => {
+          // Skip aria-hidden spacer cells
+          if (cell.getAttribute('aria-hidden') === 'true') {
+            return;
+          }
+          
+          const colspan = parseInt(cell.getAttribute('colspan') || '1', 10);
+          const text = cell.textContent?.trim() || '';
+          
+          // Add the cell text
+          row.push(text);
+          
+          // For cells with colspan > 1, add empty cells to represent the span
+          for (let i = 1; i < colspan; i++) {
+            row.push('');
+          }
+        });
+        if (row.length > 0) {
+          // If this is the first header row, save its length
+          if (rowIndex === 0) {
+            firstRowLength = row.length;
+          } else if (rowIndex === 1) {
+            // For the second header row, prepend one empty cell to align sub-headers
+            row.unshift('');
+          }
+          headerRows.push(row);
+        }
+      });
+    }
+
+    // Extract rows from tbody
+    const tbody = table.querySelector('tbody');
+    if (tbody) {
+      tbody.querySelectorAll('tr').forEach((tr) => {
+        const row: (string | number)[] = [];
+        tr.querySelectorAll('td, th').forEach((td) => {
+          // Skip aria-hidden spacer cells
+          if (td.getAttribute('aria-hidden') === 'true') {
+            return;
+          }
+          row.push(td.textContent?.trim() || '');
+        });
+        if (row.length > 0) {
+          dataRows.push(row);
+        }
+      });
+    }
+
+    // Extract rows from tfoot
+    const tfoot = table.querySelector('tfoot');
+    if (tfoot) {
+      tfoot.querySelectorAll('tr').forEach((tr) => {
+        const row: (string | number)[] = [];
+        tr.querySelectorAll('td, th').forEach((td) => {
+          // Skip aria-hidden spacer cells
+          if (td.getAttribute('aria-hidden') === 'true') {
+            return;
+          }
+          row.push(td.textContent?.trim() || '');
+        });
+        if (row.length > 0) {
+          dataRows.push(row);
+        }
+      });
+    }
+
+    if (headerRows.length === 0 || dataRows.length === 0) {
+      return;
+    }
+
+    await downloadStyledExcel({
+      fileName,
+      sheetName: lang === 'he' ? 'מלאי סוחרים' : 'Trader Inventory',
+      header: headerRows,
+      rows: dataRows,
+      rightToLeft: lang === 'he',
+      filterRowCount: 4, // 3 filter info rows + 1 empty row
+    });
+  }, [lang, seasons, traders, filterValues, t]);
+
   const filtersBar = isAllInventoryTab ? (
     <GlobalScopedFilters
       scope="trader-inventory-summary"
@@ -242,7 +435,22 @@ export function TraderInventoryPage() {
       onApiReady={(api) => {
         filtersApiRef.current = api;
       }}
-      actions={filtersLoading ? <span>{t.summary.loading}</span> : null}
+      actions={
+        filtersLoading ? (
+          <span>{t.summary.loading}</span>
+        ) : (
+          <TraderPrintExportActions
+            lang={lang}
+            tableActionsLabel={lang === 'he' ? 'פעולות טבלה' : 'Table Actions'}
+            onPrint={handlePrintInventoryTable}
+            onExport={handleExportInventoryTable}
+            printAriaLabel={lang === 'he' ? 'הדפס טבלה' : 'Print table'}
+            printTitle={lang === 'he' ? 'הדפסה' : 'Print'}
+            exportAriaLabel={lang === 'he' ? 'ייצא טבלה ל-Excel' : 'Export table to Excel'}
+            exportTitle={lang === 'he' ? 'ייצוא ל-Excel' : 'Export to Excel'}
+          />
+        )
+      }
     />
   ) : null;
 
@@ -272,7 +480,18 @@ export function TraderInventoryPage() {
   };
 
   const handleSidebarClick = (item: NavItem) => {
-    navigate(item.href || `/traders/${item.id}`);
+    // If clicking on "all inventory", reset filters and navigate without query params
+    if (item.id === 'all') {
+      // Reset filters through the API to update Redux and URL
+      if (filtersApiRef.current) {
+        filtersApiRef.current.setFilterValue('seasonId', '');
+        filtersApiRef.current.setFilterValue('traderId', 'ALL');
+        filtersApiRef.current.setFilterValue('inventoryStatus', 'ALL');
+      }
+      navigate('/traders/all');
+    } else {
+      navigate(item.href || `/traders/${item.id}`);
+    }
   };
 
   return (
@@ -327,6 +546,15 @@ export function TraderInventoryPage() {
           isLoading={traderInventorySummary.isLoading}
           error={traderInventorySummary.error}
           onRetry={traderInventorySummary.reload}
+          tableRef={matrixTableRef}
+        />
+      ) : isMovementsTab ? (
+        <TraderMovementsSection
+          lang={lang}
+          movements={traderMovements.rows}
+          isLoading={traderMovements.isLoading}
+          error={traderMovements.error}
+          onRetry={traderMovements.reload}
         />
       ) : (
         <section className="shipments-empty-state">

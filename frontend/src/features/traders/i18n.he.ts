@@ -20,11 +20,20 @@ export const TRADER_INVENTORY_I18N_HE: TraderInventoryI18n = {
 				{ id: 'all', label: 'כל המלאי', href: '/traders/all', icon: 'fa-box' },
 			],
 		},
+		{
+			id: 'movements-details',
+			title: 'פירוט תנועות במלאי',
+			href: '/traders/movements',
+			icon: 'fa-arrows-spin',
+			items: [
+				{ id: 'movements', label: 'כל התנועות במלאי', href: '/traders/movements', icon: 'fa-list' },
+			],
+		},
 	],
 	pageTitle: 'מלאי סוחרים',
 	summary: {
 		description: 'הטבלה מציגה את היתרה נטו לפי סוחר, קטגוריה, דרגה וסטטוס פיטם, כולל תנועות שליליות שמפחיתות מהמלאי.',
-		focusedExplanation: 'סיכום מלאי לפי קטגוריה, דרגה וסטטוס פיטם. הערכים מוצגים כיתרה נטו, כולל תנועות שמפחיתות מהמלאי.',
+		focusedExplanation: 'סיכום מלאי לפי קטגוריה, דרגה וסטטוס פיטם.',
 		filters: {
 			seasonLabel: 'שנה',
 			traderLabel: 'סוחר',
@@ -40,7 +49,7 @@ export const TRADER_INVENTORY_I18N_HE: TraderInventoryI18n = {
 		},
 		loading: 'טוען סיכום מלאי סוחרים...',
 		loadFailed: 'טעינת סיכום מלאי הסוחרים נכשלה.',
-		empty: 'אין שורות מלאי להצגה כרגע.',
+		empty: 'לא נמצאו מלאי לסיכום בעת זו.',
 		retry: 'נסה שוב',
 		totals: {
 			totalQuantity: 'סה"כ מלאי',
@@ -96,6 +105,10 @@ export const TRADER_INVENTORY_I18N_HE: TraderInventoryI18n = {
 		'self-pickup': {
 			title: 'אין מלאי באיסוף עצמי להצגה',
 			description: 'מלאי שנאסף בישירו של סוחר (בלי משלוח) יופיע כאן.',
+		},
+		movements: {
+			title: 'אין תנועות להצגה',
+			description: 'פירוט התנועות במלאי יופיע כאן.',
 		},
 		default: {
 			title: 'אין נתונים להצגה',

@@ -20,11 +20,20 @@ export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
 				{ id: 'all', label: 'All Inventory', href: '/traders/all', icon: 'fa-box' },
 			],
 		},
+		{
+			id: 'movements-details',
+			title: 'Inventory Movements Details',
+			href: '/traders/movements',
+			icon: 'fa-arrows-spin',
+			items: [
+				{ id: 'movements', label: 'All Inventory Movements', href: '/traders/movements', icon: 'fa-list' },
+			],
+		},
 	],
 	pageTitle: 'Partners Inventory',
 	summary: {
 		description: 'The table shows the net balance by trader, category, grade, and pitam status, including negative movements that reduce inventory.',
-		focusedExplanation: 'Inventory summary grouped by category, grade, and pitam status. Values are shown as net balance, including reducing movements.',
+		focusedExplanation: 'Inventory summary grouped by category, grade, and pitam status.',
 		filters: {
 			seasonLabel: 'Year',
 			traderLabel: 'Trader',
@@ -40,7 +49,7 @@ export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
 		},
 		loading: 'Loading trader inventory summary...',
 		loadFailed: 'Failed to load trader inventory summary.',
-		empty: 'No inventory rows to display right now.',
+		empty: 'No inventory found to display at this time.',
 		retry: 'Retry',
 		totals: {
 			totalQuantity: 'Total Inventory',
@@ -96,6 +105,10 @@ export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
 		'self-pickup': {
 			title: 'No self-pickup inventory',
 			description: 'Inventory collected directly by trader (without shipment) will appear here.',
+		},
+		movements: {
+			title: 'No movements to display',
+			description: 'Inventory movements details will appear here.',
 		},
 		default: {
 			title: 'No data to display',
