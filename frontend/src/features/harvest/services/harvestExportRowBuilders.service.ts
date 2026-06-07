@@ -144,31 +144,30 @@ export function createHarvestExportRowBuilders({
 
   const createSortingDailyExportRows = (): HarvestExportTableData => {
     const rowsSource = getCurrentSortingDailyExportRows();
+    const visibleSortingDailyCategories = filteredSortingDailyCategories.filter(
+      (category) => resolveSortingCategoryOwnerType(category) === 'GENERAL',
+    );
 
-    const exportCategories = filteredSortingDailyCategories
+    const exportCategories = visibleSortingDailyCategories
       .filter((category) => rowsSource.some((row) => (row.categoryTotals[category.key] ?? 0) > 0))
       .map((category) => ({
         key: category.key,
         label: buildSortingCategoryDisplayLabel(category, lang),
       }));
 
-    const hasTraderSummary = filteredSortingDailyCategories.some((category) => resolveSortingCategoryOwnerType(category) === 'TRADER');
-    const hasCustomerSummary = filteredSortingDailyCategories.some((category) => resolveSortingCategoryOwnerType(category) === 'CUSTOMER');
-
     const header = [
       t.sortingDailyDetails.columns.dateGregorian,
       t.sortingDailyDetails.columns.dateHebrew,
       t.sortingDailyDetails.columns.fieldName,
       ...exportCategories.map((category) => category.label),
-      ...(hasTraderSummary ? [t.sortingDailyDetails.columns.traderTotal] : []),
-      ...(hasCustomerSummary ? [t.sortingDailyDetails.columns.customerTotal] : []),
+      t.sortingDailyDetails.columns.traderTotal,
+      t.sortingDailyDetails.columns.customerTotal,
       t.sortingDailyDetails.columns.totalSorted,
     ];
 
     const rows = rowsSource.map((row) => {
       const categoryValues = exportCategories.map((category) => row.categoryTotals[category.key] ?? 0);
       const { traderTotal, customerTotal } = getSortingRowOwnerTotals(row, filteredSortingDailyCategories);
-
       const rowDailyTotal = filteredSortingDailyCategories.reduce(
         (sum, category) => sum + (row.categoryTotals[category.key] ?? 0),
         0,
@@ -179,8 +178,8 @@ export function createHarvestExportRowBuilders({
         row.dateHebrew,
         row.fieldName,
         ...categoryValues,
-        ...(hasTraderSummary ? [traderTotal] : []),
-        ...(hasCustomerSummary ? [customerTotal] : []),
+        traderTotal,
+        customerTotal,
         rowDailyTotal,
       ];
     });
@@ -195,6 +194,7 @@ export function createHarvestExportRowBuilders({
       seasonFilterId,
       sortingAssignmentFilter,
       filteredSortingDailyCategories,
+      visibleCategoryOwnerTypes: ['GENERAL'],
       rowsSource: getCurrentSortingDailyExportRows(),
       traderNameById,
       customerNameById,

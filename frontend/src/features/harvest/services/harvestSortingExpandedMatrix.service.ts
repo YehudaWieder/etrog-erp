@@ -29,6 +29,8 @@ export type SortingExpandedMatrixData = {
     dateGregorian: string;
     dateHebrew: string;
     fieldName: string;
+    traderTotal: number;
+    customerTotal: number;
     values: Record<string, number>;
   }>;
 };
@@ -39,6 +41,7 @@ type BuildSortingDailyExpandedMatrixDataParams = {
   seasonFilterId: number | null;
   sortingAssignmentFilter: SortingAssignmentFilter;
   filteredSortingDailyCategories: ClassificationDailySummaryCategory[];
+  visibleCategoryOwnerTypes?: Array<'GENERAL' | 'TRADER' | 'CUSTOMER'>;
   rowsSource: ClassificationDailySummaryRow[];
   traderNameById: Map<string, string>;
   customerNameById: Map<string, string>;
@@ -57,6 +60,7 @@ export async function buildSortingDailyExpandedMatrixData({
   seasonFilterId,
   sortingAssignmentFilter,
   filteredSortingDailyCategories,
+  visibleCategoryOwnerTypes,
   rowsSource,
   traderNameById,
   customerNameById,
@@ -116,6 +120,12 @@ export async function buildSortingDailyExpandedMatrixData({
   };
 
   const categoryOwnerTypeMap = new Map<string, ClassificationDailySummaryCategory['ownerType']>();
+  const allowedOwnerTypes = new Set<'GENERAL' | 'TRADER' | 'CUSTOMER'>(
+    visibleCategoryOwnerTypes && visibleCategoryOwnerTypes.length > 0
+      ? visibleCategoryOwnerTypes
+      : ['GENERAL', 'TRADER', 'CUSTOMER'],
+  );
+
   for (const category of filteredSortingDailyCategories) {
     categoryOwnerTypeMap.set(
       buildSortingCategoryDisplayLabel(category, lang),
@@ -243,11 +253,15 @@ export async function buildSortingDailyExpandedMatrixData({
     dateGregorian: string;
     dateHebrew: string;
     fieldName: string;
+    traderTotal: number;
+    customerTotal: number;
     values: Record<string, number>;
   }> = [];
 
   for (const { row, details } of detailsByHarvest) {
     const dayValues: Record<string, number> = {};
+    let dayTraderTotal = 0;
+    let dayCustomerTotal = 0;
 
     for (const detail of details) {
       const { categoryLabel, ownerType: resolvedOwnerType, ownerName } = getCategoryContextFromDetail(detail);
@@ -280,6 +294,18 @@ export async function buildSortingDailyExpandedMatrixData({
       const valueKey = `${categoryLabel}::${pitamGroup}::${grade}`;
 
       if (quantity > 0) {
+        if (resolvedOwnerType === 'TRADER') {
+          dayTraderTotal += quantity;
+        } else if (resolvedOwnerType === 'CUSTOMER') {
+          dayCustomerTotal += quantity;
+        }
+      }
+
+      if (!allowedOwnerTypes.has(resolvedOwnerType)) {
+        continue;
+      }
+
+      if (quantity > 0) {
         dayValues[valueKey] = (dayValues[valueKey] ?? 0) + quantity;
 
         const ownerType = categoryOwnerTypeMap.get(categoryLabel) ?? detectedCategoryOwnerType.get(categoryLabel);
@@ -306,6 +332,8 @@ export async function buildSortingDailyExpandedMatrixData({
       dateGregorian: formatGregorianDate(row.dateGregorian),
       dateHebrew: row.dateHebrew,
       fieldName: row.fieldName,
+      traderTotal: dayTraderTotal,
+      customerTotal: dayCustomerTotal,
       values: dayValues,
     });
   }

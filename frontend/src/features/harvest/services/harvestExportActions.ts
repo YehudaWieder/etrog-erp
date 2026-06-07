@@ -21,6 +21,8 @@ type ExpandedMatrixData = {
     dateGregorian: string;
     dateHebrew: string;
     fieldName: string;
+    traderTotal: number;
+    customerTotal: number;
     values: Record<string, number>;
   }>;
 };
@@ -408,6 +410,9 @@ export function createHarvestExportActions({
             const groupColumnCount = group.pitamGroups.reduce((sum, pitamGroup) => sum + pitamGroup.grades.length, 0);
             return `<th colspan="${groupColumnCount}">${escapeHtml(group.categoryLabel)} (${escapeHtml(numberFormatter.format(group.total))})</th>`;
           }),
+          `<th rowspan="3">${escapeHtml(t.sortingDailyDetails.columns.traderTotal)}</th>`,
+          `<th rowspan="3">${escapeHtml(t.sortingDailyDetails.columns.customerTotal)}</th>`,
+          `<th rowspan="3">${escapeHtml(t.sortingDailyDetails.columns.totalSorted)}</th>`,
         ].join('');
 
         const pitamHeader = groups
@@ -445,7 +450,15 @@ export function createHarvestExportActions({
               )
               .join('');
 
-            return `<tr>${fixedCells}${valueCells}</tr>`;
+            const rowDailyTotal = Object.values(row.values).reduce((sum, value) => sum + (Number(value) || 0), 0) + row.traderTotal + row.customerTotal;
+
+            const summaryCells = [
+              `<td><strong>${escapeHtml(numberFormatter.format(row.traderTotal))}</strong></td>`,
+              `<td><strong>${escapeHtml(numberFormatter.format(row.customerTotal))}</strong></td>`,
+              `<td><strong>${escapeHtml(numberFormatter.format(rowDailyTotal))}</strong></td>`,
+            ].join('');
+
+            return `<tr>${fixedCells}${valueCells}${summaryCells}</tr>`;
           })
           .join('');
       } catch {
@@ -519,6 +532,9 @@ export function createHarvestExportActions({
               ),
             ),
           ),
+          t.sortingDailyDetails.columns.traderTotal,
+          t.sortingDailyDetails.columns.customerTotal,
+          t.sortingDailyDetails.columns.totalSorted,
         ];
 
         const pitamHeaderRow: Array<string | number> = [
@@ -530,6 +546,8 @@ export function createHarvestExportActions({
               pitamGroup.grades.map((_, gradeIndex) => (gradeIndex === 0 ? pitamGroup.label : '')),
             ),
           ),
+          '',
+          '',
         ];
 
         const gradesHeaderRow: Array<string | number> = [
@@ -537,6 +555,8 @@ export function createHarvestExportActions({
           '',
           '',
           ...groups.flatMap((group) => group.pitamGroups.flatMap((pitamGroup) => pitamGroup.grades)),
+          '',
+          '',
         ];
 
         const bodyRows = matrix.rows.map((row) => {
@@ -549,14 +569,15 @@ export function createHarvestExportActions({
             ),
           );
 
-          return [row.dateGregorian, row.dateHebrew, row.fieldName, ...valueColumns];
+          const rowDailyTotal = valueColumns.reduce((sum, value) => sum + (Number(value) || 0), 0) + row.traderTotal + row.customerTotal;
+          return [row.dateGregorian, row.dateHebrew, row.fieldName, ...valueColumns, row.traderTotal, row.customerTotal, rowDailyTotal];
         });
 
         const numericColumnCount = bodyRows[0]?.length ? Math.max(0, bodyRows[0].length - 3) : 0;
         const summaryValues = Array.from({ length: numericColumnCount }, (_, index) =>
           bodyRows.reduce((sum, row) => sum + (Number(row[index + 3]) || 0), 0),
         );
-        const summaryRow: Array<string | number> = [lang === 'he' ? 'סה"כ' : 'Total', '', '', ...summaryValues];
+        const summaryRow: Array<string | number> = [t.sortingDailyDetails.table.total, '', '', ...summaryValues];
 
         const filterRows = buildSortingDailyFilterRows(filterValues, seasons, fields, t, numericColumnCount + 3);
         const dateStamp = new Date().toISOString().slice(0, 10);
