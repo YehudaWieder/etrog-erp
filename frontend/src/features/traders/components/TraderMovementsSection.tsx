@@ -1,10 +1,12 @@
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import type { AppLang } from '../i18n';
 import { getTraderMovementsI18n } from '../i18n';
 import type { TraderMovement } from '../hooks/useTraderMovements';
 import { GlobalDataTable, type GlobalDataTableColumn, GLOBAL_DATA_TABLE_WIDTHS } from '../../../components/ui/GlobalDataTable';
 import { GlobalFiltersBar, type GlobalFilterControl } from '../../../components/ui/GlobalFiltersBar';
 import { openPrintableWindow } from '../../../services/printWindow';
+import { downloadStyledExcel } from '../../../services/exportExcel';
+import { TraderMovementsPrintExportActions } from './TraderMovementsPrintExportActions';
 import styles from './styles/TraderMovementsSection.module.css';
 
 type FilterOption = {
@@ -45,7 +47,6 @@ export function TraderMovementsSection({
   onTraderChange,
   onMovementStatusChange,
 }: TraderMovementsSectionProps) {
-  const tableRef = useRef<HTMLDivElement>(null);
   const i18n = getTraderMovementsI18n();
 
   const filterControls = useMemo<GlobalFilterControl[]>(() => {
@@ -190,50 +191,194 @@ export function TraderMovementsSection({
   }, [lang, i18n]);
 
   const handlePrint = useCallback(() => {
-    if (!tableRef.current) return;
-    
-    const printableHTML = `
-      <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+    const escapeHtml = (text: string): string => {
+      const map: Record<string, string> = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;',
+      };
+      return String(text).replace(/[&<>"']/g, (char) => map[char]);
+    };
+
+    const getFilterDetails = (): string => {
+      const filters: string[] = [];
+
+      if (seasonId) {
+        const seasonLabel = seasonOptions.find((opt) => opt.value === seasonId)?.label || seasonId;
+        filters.push(`${i18n.filters.seasonLabel}: ${escapeHtml(seasonLabel)}`);
+      }
+
+      if (traderId && traderId !== 'ALL') {
+        const traderLabel = traderOptions.find((opt) => opt.value === traderId)?.label || traderId;
+        filters.push(`${i18n.filters.traderLabel}: ${escapeHtml(traderLabel)}`);
+      }
+
+      if (movementStatus && movementStatus !== 'ALL') {
+        const statusLabel = movementStatusOptions.find((opt) => opt.value === movementStatus)?.label || movementStatus;
+        filters.push(`${i18n.filters.movementStatusLabel}: ${escapeHtml(statusLabel)}`);
+      }
+
+      return filters.length > 0 ? filters.join(' | ') : i18n.noFiltersLabel || 'ללא סינונים';
+    };
+
+    const tableHeaderHtml = [
+      i18n.columns.date,
+      i18n.columns.type,
+      i18n.columns.trader,
+      i18n.columns.category,
+      i18n.columns.grade,
+      i18n.columns.pitamStatus,
+      i18n.columns.quantity,
+    ]
+      .map((label) => `<th>${escapeHtml(label)}</th>`)
+      .join('');
+
+    const tableRowsHtml = movements
+      .map(
+        (m) => `
+        <tr>
+          <td>${escapeHtml(formatDate(m.date))}</td>
+          <td>${escapeHtml(getMovementTypeLabel(m.type))}</td>
+          <td>${escapeHtml(m.isModulo ? 'כללי' : m.traderName || '—')}</td>
+          <td>${escapeHtml(m.categoryName)}</td>
+          <td>${escapeHtml(m.grade)}</td>
+          <td>${escapeHtml(getPitamStatusLabel(m.pitamStatus))}</td>
+          <td>${escapeHtml(String(m.quantity))}</td>
+        </tr>
+      `
+      )
+      .join('');
+
+    const filterDetailsHtml = `
+      <div style="margin-bottom: 20px; padding: 10px; background: #f5f5f5; border-radius: 4px; font-size: 12px;">
+        <strong>${escapeHtml(i18n.filters.title || 'סינונים פעילים')}:</strong> ${getFilterDetails()}
+      </div>
+    `;
+
+    const tableHtml = `
+      ${filterDetailsHtml}
+      <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
         <thead>
-          <tr>
-            <th style="background: #1f5a32; color: white; padding: 10px; border: 1px solid #ccc; text-align: center;">${i18n.columns.date}</th>
-            <th style="background: #1f5a32; color: white; padding: 10px; border: 1px solid #ccc; text-align: center;">${i18n.columns.type}</th>
-            <th style="background: #1f5a32; color: white; padding: 10px; border: 1px solid #ccc; text-align: center;">${i18n.columns.trader}</th>
-            <th style="background: #1f5a32; color: white; padding: 10px; border: 1px solid #ccc; text-align: center;">${i18n.columns.category}</th>
-            <th style="background: #1f5a32; color: white; padding: 10px; border: 1px solid #ccc; text-align: center;">${i18n.columns.grade}</th>
-            <th style="background: #1f5a32; color: white; padding: 10px; border: 1px solid #ccc; text-align: center;">${i18n.columns.pitamStatus}</th>
-            <th style="background: #1f5a32; color: white; padding: 10px; border: 1px solid #ccc; text-align: center;">${i18n.columns.quantity}</th>
-          </tr>
+          <tr>${tableHeaderHtml}</tr>
         </thead>
         <tbody>
-          ${movements.map((m) => `
-            <tr style="background: ${movements.indexOf(m) % 2 === 0 ? '#f8fcf9' : 'white'};">
-              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${formatDate(m.date)}</td>
-              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${getMovementTypeLabel(m.type)}</td>
-              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${m.isModulo ? 'כללי' : m.traderName || '—'}</td>
-              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${m.categoryName}</td>
-              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${m.grade}</td>
-              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${getPitamStatusLabel(m.pitamStatus)}</td>
-              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${m.quantity}</td>
-            </tr>
-          `).join('')}
+          ${tableRowsHtml}
         </tbody>
       </table>
+    `;
+
+    const tableStyles = `
+      table { width: 100%; border-collapse: collapse; }
+      th, td { border: 1px solid #ccd9cf; padding: 8px; text-align: center; }
+      th { background: #1f5a32; color: #fff; font-weight: 700; }
+      tbody tr:nth-child(even) { background: #f8fcf9; }
     `;
 
     openPrintableWindow({
       title: i18n.printTitle,
       heading: i18n.printTitle,
-      html: printableHTML,
+      html: tableHtml,
       direction: lang === 'he' ? 'rtl' : 'ltr',
+      extraStyles: tableStyles,
     });
-  }, [lang, movements, i18n]);
+  }, [lang, movements, i18n, seasonId, traderId, movementStatus, seasonOptions, traderOptions, movementStatusOptions]);
+
+  const handleExport = useCallback(async () => {
+    try {
+      const getFilterDetails = (): string => {
+        const filters: string[] = [];
+
+        if (seasonId) {
+          const seasonLabel = seasonOptions.find((opt) => opt.value === seasonId)?.label || seasonId;
+          filters.push(`${i18n.filters.seasonLabel}: ${seasonLabel}`);
+        }
+
+        if (traderId && traderId !== 'ALL') {
+          const traderLabel = traderOptions.find((opt) => opt.value === traderId)?.label || traderId;
+          filters.push(`${i18n.filters.traderLabel}: ${traderLabel}`);
+        }
+
+        if (movementStatus && movementStatus !== 'ALL') {
+          const statusLabel = movementStatusOptions.find((opt) => opt.value === movementStatus)?.label || movementStatus;
+          filters.push(`${i18n.filters.movementStatusLabel}: ${statusLabel}`);
+        }
+
+        return filters.length > 0 ? filters.join(' | ') : i18n.noFiltersLabel || 'ללא סינונים';
+      };
+
+      const header = [
+        i18n.columns.date,
+        i18n.columns.type,
+        i18n.columns.trader,
+        i18n.columns.category,
+        i18n.columns.grade,
+        i18n.columns.pitamStatus,
+        i18n.columns.quantity,
+      ];
+
+      const filterDetailsRow = [
+        `${i18n.filters.title || 'סינונים פעילים'}: ${getFilterDetails()}`,
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+      ];
+
+      const rows = [
+        filterDetailsRow,
+        [],
+        ...movements.map((m) => [
+          formatDate(m.date),
+          getMovementTypeLabel(m.type),
+          m.isModulo ? 'כללי' : m.traderName || '—',
+          m.categoryName,
+          m.grade,
+          getPitamStatusLabel(m.pitamStatus),
+          m.quantity,
+        ]),
+      ];
+
+      const dateStamp = new Date().toISOString().slice(0, 10);
+
+      await downloadStyledExcel({
+        sheetName: lang === 'he' ? 'תנועות' : 'Movements',
+        fileName: `trader-movements-${dateStamp}.xlsx`,
+        header,
+        rows,
+        rightToLeft: lang === 'he',
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+      window.alert(lang === 'he' ? 'לא ניתן לייצא כעת' : 'Could not export right now');
+    }
+  }, [lang, movements, i18n, seasonId, traderId, movementStatus, seasonOptions, traderOptions, movementStatusOptions]);
 
   const renderFiltersBar = () => {
     if (filterControls.length === 0) return null;
+    
+    const actions = movements.length > 0 ? (
+      <TraderMovementsPrintExportActions
+        onPrint={handlePrint}
+        onExport={handleExport}
+        printAriaLabel={i18n.printAriaLabel}
+        printTitle={i18n.printTitle}
+        exportAriaLabel={i18n.exportAriaLabel}
+        exportTitle={i18n.exportTitle}
+        tableActionsLabel={i18n.tableActionsLabel}
+      />
+    ) : null;
+
     return (
       <section className={styles.filtersBarSection}>
-        <GlobalFiltersBar controls={filterControls} direction={lang === 'he' ? 'rtl' : 'ltr'} />
+        <GlobalFiltersBar 
+          controls={filterControls} 
+          direction={lang === 'he' ? 'rtl' : 'ltr'} 
+          actions={actions}
+        />
       </section>
     );
   };
@@ -258,26 +403,13 @@ export function TraderMovementsSection({
       )}
 
       {!isLoading && !error && movements && movements.length > 0 && (
-        <>
-          <button
-            type="button"
-            onClick={handlePrint}
-            title={i18n.printAriaLabel}
-            aria-label={i18n.printAriaLabel}
-            className={styles.printButton}
-          >
-            {i18n.print}
-          </button>
-          <div ref={tableRef}>
-            <GlobalDataTable
-              columns={columns}
-              rows={movements}
-              getRowKey={(row) => row.id}
-              emptyLabel={i18n.empty}
-              defaultSortState={{ key: 'date', direction: 'desc' }}
-            />
-          </div>
-        </>
+        <GlobalDataTable
+          columns={columns}
+          rows={movements}
+          getRowKey={(row) => row.id}
+          emptyLabel={i18n.empty}
+          defaultSortState={{ key: 'date', direction: 'desc' }}
+        />
       )}
     </section>
   );

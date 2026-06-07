@@ -249,6 +249,7 @@ export const TRADER_MOVEMENTS_I18N_HE: TraderMovementsI18n = {
 		quantity: 'כמות',
 	},
 	filters: {
+		title: 'סינונים פעילים',
 		seasonLabel: 'שנה',
 		traderLabel: 'סוחר',
 		allTradersOption: 'כל הסוחרים',
@@ -279,7 +280,10 @@ export const TRADER_MOVEMENTS_I18N_HE: TraderMovementsI18n = {
 	error: 'שגיאה בטעינת התנועות',
 	retry: 'נסה שוב',
 	empty: 'לא נמצאו תנועות במלאי.',
-	print: '🖨️ הדפס',
+	noFiltersLabel: 'ללא סינונים',
+	tableActionsLabel: 'פעולות',
 	printAriaLabel: 'הדפס טבלה',
-	printTitle: 'פירוט תנועות במלאי',
+	printTitle: 'הדפסה',
+	exportAriaLabel: 'הורד לאקסל',
+	exportTitle: 'הורדה לאקסל',
 };

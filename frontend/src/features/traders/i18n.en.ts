@@ -249,6 +249,7 @@ export const TRADER_MOVEMENTS_I18N_EN: TraderMovementsI18n = {
 		quantity: 'Quantity',
 	},
 	filters: {
+		title: 'Active Filters',
 		seasonLabel: 'Season',
 		traderLabel: 'Trader',
 		allTradersOption: 'All Traders',
@@ -279,7 +280,10 @@ export const TRADER_MOVEMENTS_I18N_EN: TraderMovementsI18n = {
 	error: 'Error loading movements',
 	retry: 'Retry',
 	empty: 'No movements found.',
-	print: '🖨️ Print',
+	noFiltersLabel: 'No filters applied',
+	tableActionsLabel: 'Actions',
 	printAriaLabel: 'Print table',
-	printTitle: 'Inventory Movements',
+	printTitle: 'Print',
+	exportAriaLabel: 'Download to Excel',
+	exportTitle: 'Download to Excel',
 };

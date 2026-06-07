@@ -227,6 +227,7 @@ export type TraderMovementsI18n = {
 		quantity: string;
 	};
 	filters: {
+		title: string;
 		seasonLabel: string;
 		traderLabel: string;
 		allTradersOption: string;
@@ -242,9 +243,12 @@ export type TraderMovementsI18n = {
 	error: string;
 	retry: string;
 	empty: string;
-	print: string;
+	noFiltersLabel: string;
+	tableActionsLabel: string;
 	printAriaLabel: string;
 	printTitle: string;
+	exportAriaLabel: string;
+	exportTitle: string;
 };
 
 const TRADERS_I18N: Record<AppLang, TradersI18n> = {
