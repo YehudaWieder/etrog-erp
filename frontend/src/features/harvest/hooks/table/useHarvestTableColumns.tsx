@@ -266,7 +266,11 @@ export function useHarvestTableColumns({
   ]);
 
   const sortingDailyColumns = useMemo<GlobalDataTableColumn<ClassificationDailySummaryRow>[]>(() => {
-    const categoryColumns: GlobalDataTableColumn<ClassificationDailySummaryRow>[] = sortingDailyCategories
+    const visibleSortingDailyCategories = sortingDailyCategories.filter(
+      (category) => resolveSortingCategoryOwnerType(category) === 'GENERAL',
+    );
+
+    const categoryColumns: GlobalDataTableColumn<ClassificationDailySummaryRow>[] = visibleSortingDailyCategories
       .map((category) => {
         const categoryLabel = buildSortingCategoryDisplayLabel(category, lang);
         const columnKey = `category:${category.key}` as SortingDailyNumericColumnKey;
@@ -401,28 +405,6 @@ export function useHarvestTableColumns({
       },
       ...categoryColumns,
       ...summaryColumns,
-      {
-        id: 'totalSorted',
-        header: t.sortingDailyDetails.columns.totalSorted,
-        headerLabel: t.sortingDailyDetails.columns.totalSorted,
-        sortKey: 'totalSorted',
-        sortLabel: `${t.sortingDailyDetails.columns.totalSorted} - ${t.tableLabels.sort}`,
-        defaultSortDirection: 'desc',
-        sortAccessor: (row) => sortingDailyCategories.reduce((sum, category) => sum + (row.categoryTotals[category.key] ?? 0), 0),
-        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
-        gridTemplate: GLOBAL_DATA_TABLE_WIDTHS.numeric,
-        align: 'center',
-        render: (row) => {
-          const rowDailyTotal = sortingDailyCategories.reduce((sum, category) => sum + (row.categoryTotals[category.key] ?? 0), 0);
-
-          return renderSortingNumericCell(
-            row,
-            'totalSorted',
-            rowDailyTotal,
-            <strong>{numberFormatter.format(rowDailyTotal)}</strong>,
-          );
-        },
-      },
     ];
   }, [
     formatGregorianDate,

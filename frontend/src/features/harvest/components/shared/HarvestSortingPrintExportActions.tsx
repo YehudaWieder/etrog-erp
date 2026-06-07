@@ -39,23 +39,23 @@ export function HarvestSortingPrintExportActions({
       </button>
 
       <details
-        className="global-filters-bar__icon-menu"
+        className={`global-filters-bar__icon-menu ${sharedFilterStyles.iconMenu}`}
         onMouseEnter={onCancelMenuClose}
         onMouseLeave={(event) => {
           onScheduleMenuClose(event.currentTarget);
         }}
       >
         <summary
-          className={`global-filters-bar__icon-btn ${sharedFilterStyles.iconBtn}`}
+          className={`global-filters-bar__icon-btn ${sharedFilterStyles.iconBtn} ${sharedFilterStyles.iconMenuSummary}`}
           aria-label={t.exportTableAriaLabel}
           title={t.exportTitle}
         >
           <FaFileArrowDown />
         </summary>
-        <div className="global-filters-bar__menu-list" role="menu">
+        <div className={`global-filters-bar__menu-list ${sharedFilterStyles.menuList}`} role="menu">
           <button
             type="button"
-            className="global-filters-bar__menu-item"
+            className={`global-filters-bar__menu-item ${sharedFilterStyles.menuItem}`}
             onClick={(event) => {
               onCloseMenuFromTarget(event.currentTarget);
               onExportSummary();
@@ -65,7 +65,7 @@ export function HarvestSortingPrintExportActions({
           </button>
           <button
             type="button"
-            className="global-filters-bar__menu-item"
+            className={`global-filters-bar__menu-item ${sharedFilterStyles.menuItem}`}
             onClick={(event) => {
               onCloseMenuFromTarget(event.currentTarget);
               onExportExpanded();
