@@ -63,6 +63,8 @@ export function HarvestFieldReportSection({
   selectionLabels,
   onClearSelectedNumericCells,
 }: HarvestFieldReportSectionProps): JSX.Element {
+  const hasRows = fieldReportRows.length > 0;
+
   return (
     <section className={`${workspaceStyles.workspace} ${panelStyles.workspace}`}>
       <header className={workspaceStyles.header}>
@@ -75,7 +77,7 @@ export function HarvestFieldReportSection({
         scope="harvest-daily-details"
         filters={filters}
         direction={lang === 'he' ? 'rtl' : 'ltr'}
-        actions={
+        actions={hasRows ? (
           <HarvestPrintExportActions
             lang={lang}
             tableActionsLabel={t.tableActionsLabel}
@@ -86,7 +88,7 @@ export function HarvestFieldReportSection({
             exportAriaLabel={t.fieldReport.exportAriaLabel}
             exportTitle={t.fieldReport.exportTitle}
           />
-        }
+        ) : undefined}
       />
 
       {harvestLoadError ? <p className="seasons-manager__error">{harvestLoadError}</p> : null}
@@ -96,54 +98,60 @@ export function HarvestFieldReportSection({
 
         {!isHarvestLoading ? (
           <>
-            <GlobalDataTable
-              columns={fieldReportColumns}
-              rows={fieldReportRows}
-              getRowKey={(row) => row.id}
-              emptyLabel={emptyLabel}
-              defaultSortState={{ key: 'fieldName', direction: 'asc' }}
-              onSortedRowsChange={onFieldReportSortedRowsChange}
-            />
+            {hasRows ? (
+              <>
+                <GlobalDataTable
+                  columns={fieldReportColumns}
+                  rows={fieldReportRows}
+                  getRowKey={(row) => row.id}
+                  emptyLabel={emptyLabel}
+                  defaultSortState={{ key: 'fieldName', direction: 'asc' }}
+                  onSortedRowsChange={onFieldReportSortedRowsChange}
+                />
 
-            <GlobalLeftDetailsPanel
-              isOpen={fieldReportDetailsData !== null}
-              title={
-                fieldReportDetailsData
-                  ? t.fieldReport.detailsTitle(fieldReportDetailsData.fieldName)
-                  : t.fieldReport.detailsTitle()
-              }
-              closeLabel={t.fieldReport.closeLabel}
-              onClose={onCloseFieldReportDetails}
-              headerActions={
-                <button
-                  type="button"
-                  className="global-left-details-panel__print"
-                  onClick={onPrintFieldReportDetails}
+                <GlobalLeftDetailsPanel
+                  isOpen={fieldReportDetailsData !== null}
+                  title={
+                    fieldReportDetailsData
+                      ? t.fieldReport.detailsTitle(fieldReportDetailsData.fieldName)
+                      : t.fieldReport.detailsTitle()
+                  }
+                  closeLabel={t.fieldReport.closeLabel}
+                  onClose={onCloseFieldReportDetails}
+                  headerActions={
+                    <button
+                      type="button"
+                      className="global-left-details-panel__print"
+                      onClick={onPrintFieldReportDetails}
+                    >
+                      <FaPrint aria-hidden="true" />
+                      <span>{t.fieldReport.printLabel}</span>
+                    </button>
+                  }
                 >
-                  <FaPrint aria-hidden="true" />
-                  <span>{t.fieldReport.printLabel}</span>
-                </button>
-              }
-            >
-              {fieldReportDetailsData ? (
-                <div ref={fieldReportDetailsPrintRef} className="harvest-daily-workspace__print-content">
-                  <HarvestFieldReportDetailsPanel
-                    data={fieldReportDetailsData}
-                    locale={lang === 'he' ? 'he-IL' : 'en-GB'}
-                    labels={fieldReportDetailsLabels}
-                  />
-                </div>
-              ) : (
-                <p className={sheetStyles.detailsEmpty}>{fieldReportDetailsEmptyLabel}</p>
-              )}
-            </GlobalLeftDetailsPanel>
+                  {fieldReportDetailsData ? (
+                    <div ref={fieldReportDetailsPrintRef} className="harvest-daily-workspace__print-content">
+                      <HarvestFieldReportDetailsPanel
+                        data={fieldReportDetailsData}
+                        locale={lang === 'he' ? 'he-IL' : 'en-GB'}
+                        labels={fieldReportDetailsLabels}
+                      />
+                    </div>
+                  ) : (
+                    <p className={sheetStyles.detailsEmpty}>{fieldReportDetailsEmptyLabel}</p>
+                  )}
+                </GlobalLeftDetailsPanel>
 
-            <HarvestSelectionSummary
-              selectedCellsCount={selectedCellsCount}
-              formattedSelectedTotal={formattedSelectedTotal}
-              labels={selectionLabels}
-              onClear={onClearSelectedNumericCells}
-            />
+                <HarvestSelectionSummary
+                  selectedCellsCount={selectedCellsCount}
+                  formattedSelectedTotal={formattedSelectedTotal}
+                  labels={selectionLabels}
+                  onClear={onClearSelectedNumericCells}
+                />
+              </>
+            ) : (
+              <p className="seasons-manager__state">{emptyLabel}</p>
+            )}
           </>
         ) : null}
       </div>

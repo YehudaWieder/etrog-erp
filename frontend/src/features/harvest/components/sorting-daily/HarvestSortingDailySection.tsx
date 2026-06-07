@@ -92,6 +92,8 @@ export function HarvestSortingDailySection({
   selectionLabels,
   onClearSelectedNumericCells,
 }: HarvestSortingDailySectionProps): JSX.Element {
+  const hasRows = filteredSortingDailyRows.length > 0;
+
   return (
     <section className={`${workspaceStyles.workspace} ${panelStyles.workspace}`}>
       <header className={workspaceStyles.header}>
@@ -104,7 +106,7 @@ export function HarvestSortingDailySection({
         scope="harvest-daily-details"
         filters={filters}
         direction={lang === 'he' ? 'rtl' : 'ltr'}
-        actions={
+        actions={hasRows ? (
           <HarvestSortingPrintExportActions
             lang={lang}
             tableActionsLabel={t.tableActionsLabel}
@@ -116,7 +118,7 @@ export function HarvestSortingDailySection({
             onCancelMenuClose={onCancelMenuClose}
             onScheduleMenuClose={onScheduleMenuClose}
           />
-        }
+        ) : undefined}
       />
 
       {sortingDailyLoadError ? <p className="seasons-manager__error">{sortingDailyLoadError}</p> : null}
@@ -126,63 +128,69 @@ export function HarvestSortingDailySection({
 
         {!isSortingDailyLoading ? (
           <>
-            <GlobalDataTable
-              columns={sortingDailyColumns}
-              rows={filteredSortingDailyRows}
-              getRowKey={(row) => row.harvestId}
-              emptyLabel={emptyLabel}
-              defaultSortState={{ key: 'dateGregorian', direction: 'desc' }}
-              selectedRowKey={selectedSortingDailyRowId}
-              onRowClick={(row) => {
-                onSelectSortingDailyRow((previousSelectedRowId) =>
-                  previousSelectedRowId === row.harvestId ? null : row.harvestId,
-                );
-              }}
-              onSortedRowsChange={onSortingDailySortedRowsChange}
-            />
+            {hasRows ? (
+              <>
+                <GlobalDataTable
+                  columns={sortingDailyColumns}
+                  rows={filteredSortingDailyRows}
+                  getRowKey={(row) => row.harvestId}
+                  emptyLabel={emptyLabel}
+                  defaultSortState={{ key: 'dateGregorian', direction: 'desc' }}
+                  selectedRowKey={selectedSortingDailyRowId}
+                  onRowClick={(row) => {
+                    onSelectSortingDailyRow((previousSelectedRowId) =>
+                      previousSelectedRowId === row.harvestId ? null : row.harvestId,
+                    );
+                  }}
+                  onSortedRowsChange={onSortingDailySortedRowsChange}
+                />
 
-            <GlobalLeftDetailsPanel
-              isOpen={sortingDailyDetailsData !== null}
-              title={t.sortingDailyDetails.title}
-              closeLabel={t.sortingDailyDetails.closeLabel}
-              onClose={onCloseSortingDailyDetails}
-              headerActions={
-                <button
-                  type="button"
-                  className="global-left-details-panel__print"
-                  onClick={onPrintSortingDailyDetails}
+                <GlobalLeftDetailsPanel
+                  isOpen={sortingDailyDetailsData !== null}
+                  title={t.sortingDailyDetails.title}
+                  closeLabel={t.sortingDailyDetails.closeLabel}
+                  onClose={onCloseSortingDailyDetails}
+                  headerActions={
+                    <button
+                      type="button"
+                      className="global-left-details-panel__print"
+                      onClick={onPrintSortingDailyDetails}
+                    >
+                      <FaPrint aria-hidden="true" />
+                      <span>{t.sortingDailyDetails.print}</span>
+                    </button>
+                  }
                 >
-                  <FaPrint aria-hidden="true" />
-                  <span>{t.sortingDailyDetails.print}</span>
-                </button>
-              }
-            >
-              {sortingDailyDetailsData ? (
-                <div className="harvest-daily-workspace__print-content" ref={sortingDailyDetailsPrintRef}>
-                  <HarvestSortingDailyDetailsContent
-                    lang={lang}
-                    t={t}
-                    data={sortingDailyDetailsData}
-                    categoryBreakdown={sortingDailyCategoryBreakdown}
-                    isDetailRowsLoading={isSortingDailyDetailRowsLoading}
-                    detailRowsLoadError={sortingDailyDetailRowsLoadError}
-                    emptyLabel={emptyLabel}
-                    formatGregorianDate={formatGregorianDate}
-                    numberFormatter={numberFormatter}
-                    labels={sortingDailyDetailsLabels}
-                  />
-                </div>
-              ) : (
-                <p className={sheetStyles.detailsEmpty}>{emptyLabel}</p>
-              )}
-            </GlobalLeftDetailsPanel>
+                  {sortingDailyDetailsData ? (
+                    <div className="harvest-daily-workspace__print-content" ref={sortingDailyDetailsPrintRef}>
+                      <HarvestSortingDailyDetailsContent
+                        lang={lang}
+                        t={t}
+                        data={sortingDailyDetailsData}
+                        categoryBreakdown={sortingDailyCategoryBreakdown}
+                        isDetailRowsLoading={isSortingDailyDetailRowsLoading}
+                        detailRowsLoadError={sortingDailyDetailRowsLoadError}
+                        emptyLabel={emptyLabel}
+                        formatGregorianDate={formatGregorianDate}
+                        numberFormatter={numberFormatter}
+                        labels={sortingDailyDetailsLabels}
+                      />
+                    </div>
+                  ) : (
+                    <p className={sheetStyles.detailsEmpty}>{emptyLabel}</p>
+                  )}
+                </GlobalLeftDetailsPanel>
 
-            <HarvestSelectionSummary
-              selectedCellsCount={selectedCellsCount}
-              formattedSelectedTotal={formattedSelectedTotal}
-              labels={selectionLabels}
-              onClear={onClearSelectedNumericCells}
-            />
+                <HarvestSelectionSummary
+                  selectedCellsCount={selectedCellsCount}
+                  formattedSelectedTotal={formattedSelectedTotal}
+                  labels={selectionLabels}
+                  onClear={onClearSelectedNumericCells}
+                />
+              </>
+            ) : (
+              <p className="seasons-manager__state">{emptyLabel}</p>
+            )}
           </>
         ) : null}
       </div>

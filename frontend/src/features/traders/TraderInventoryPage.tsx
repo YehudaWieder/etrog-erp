@@ -134,6 +134,7 @@ export function TraderInventoryPage() {
   );
 
   const traderInventorySummary = useTraderInventorySummary(isAllInventoryTab, summaryFilters);
+  const hasInventoryRows = traderInventorySummary.rows.length > 0;
 
   const selectedMovementStatus = useMemo(() => {
     const status = filterValues.movementStatus || 'ALL';
@@ -498,7 +499,7 @@ export function TraderInventoryPage() {
       actions={
         filtersLoading ? (
           <span>{t.summary.loading}</span>
-        ) : (
+        ) : hasInventoryRows ? (
           <TraderPrintExportActions
             lang={lang}
             tableActionsLabel={lang === 'he' ? 'פעולות טבלה' : 'Table Actions'}
@@ -509,7 +510,7 @@ export function TraderInventoryPage() {
             exportAriaLabel={lang === 'he' ? 'ייצא טבלה ל-Excel' : 'Export table to Excel'}
             exportTitle={lang === 'he' ? 'ייצוא ל-Excel' : 'Export to Excel'}
           />
-        )
+        ) : undefined
       }
     />
   ) : null;
