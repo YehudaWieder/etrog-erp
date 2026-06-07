@@ -11,20 +11,20 @@ export const SHIPMENTS_I18N_HE = {
   sidebar: [
     {
       id: 'all-shipments',
-      title: 'כל המשלוחים',
-      href: '/shipments/all-shipments',
+      title: 'משלוחים',
       icon: 'fa-truck',
       items: [
+        { id: 'all-shipments', label: 'כל המשלוחים', href: '/shipments/all-shipments', icon: 'fa-truck' },
         { id: 'packaging', label: 'משלוחים באריזה', badge: 2, href: '/shipments/packaging', icon: 'fa-box-open' },
         { id: 'completed', label: 'משלוחים שהושלמו', href: '/shipments/completed', icon: 'fa-circle-check' },
       ],
     },
     {
       id: 'all-boxes',
-      title: 'כל הקרטונים',
-      href: '/shipments/all-boxes',
+      title: 'קרטונים',
       icon: 'fa-boxes-stacked',
       items: [
+        { id: 'all-boxes', label: 'כל הקרטונים', href: '/shipments/all-boxes', icon: 'fa-boxes-stacked' },
         { id: 'not-sent-boxes', label: 'קרטונים שלא נשלחו', href: '/shipments/not-sent-boxes', icon: 'fa-file-circle-xmark' },
         { id: 'sent-boxes', label: 'קרטונים שנשלחו', href: '/shipments/sent-boxes', icon: 'fa-truck-ramp-box' },
         { id: 'closed-boxes', label: 'קרטונים סגורים', href: '/shipments/closed-boxes', icon: 'fa-box' },
@@ -33,18 +33,30 @@ export const SHIPMENTS_I18N_HE = {
     },
     {
       id: 'shipment-items',
-      title: 'כל פריטי המשלוחים',
-      href: '/shipments/shipment-items',
+      title: 'פריטים',
       icon: 'fa-lemon',
       items: [
+        { id: 'shipment-items', label: 'כל פריטי המשלוחים', href: '/shipments/shipment-items', icon: 'fa-lemon' },
         { id: 'sent-items', label: 'פריטים שנשלחו', href: '/shipments/sent-items', icon: 'fa-paper-plane' },
         { id: 'pending-items', label: 'פריטים שלא נשלחו', href: '/shipments/pending-items', icon: 'fa-clock' },
       ],
     },
   ],
-  pageTitle: 'כל המשלוחים',
+  pageTitle: 'משלוחים',
   actionSelected: (label: string) => `נבחרה פעולה: ${label}`,
   emptyState: {
+    'all-shipments': {
+      title: 'כל המשלוחים',
+      description: 'כאן מוצגים כל המשלוחים במערכת.',
+    },
+    'all-boxes': {
+      title: 'כל הקרטונים',
+      description: 'כאן מוצגים כל הקרטונים במערכת.',
+    },
+    'shipment-items': {
+      title: 'כל פריטי המשלוחים',
+      description: 'כאן מוצגים כל פריטי המשלוחים במערכת.',
+    },
     packaging: {
       title: 'אין משלוחים באריזה להצגה',
       description: 'לחץ על "משלוח חדש" כדי להתחיל להוסיף משלוחים.',
@@ -86,4 +98,29 @@ export const SHIPMENTS_I18N_HE = {
   addBox: 'קרטון חדש',
   addShipment: 'משלוח חדש',
   settings: 'הגדרות',
+  tableLabels: {
+    title: 'כל המשלוחים',
+    description: 'תצוגה של כל המשלוחים עם כמות קרטונים, כמות אתרוגים ותאריך משלוח.',
+    seasonFilterLabel: 'עונה',
+    statusFilterLabel: 'סטטוס משלוח',
+    allStatusesOption: 'כל הסטטוסים',
+    activeSeasonBadge: 'פעילה',
+    noActiveSeason: 'אין עונה זמינה',
+    colDetails: 'פרטים',
+    colShipmentNumber: 'מס\' משלוח',
+    colBoxCount: 'כמות קרטונים',
+    colQuantity: 'כמות אתרוגים',
+    colStatus: 'סטטוס',
+    colShippedAt: 'תאריך משלוח',
+    detailsButtonAriaLabel: 'פתיחת פרטי משלוח',
+    empty: 'אין משלוחים להצגה',
+    loading: 'טוען משלוחים...',
+    error: 'שגיאה בטעינת המשלוחים',
+    statusLabels: {
+      PREPARING: 'בהכנה',
+      SHIPPED: 'נשלח',
+      DELIVERED: 'נמסר',
+      CANCELLED: 'בוטל',
+    },
+  },
 };

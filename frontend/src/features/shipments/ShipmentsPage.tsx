@@ -6,6 +6,7 @@ import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import { SHIPMENTS_I18N } from './i18n';
 import type { NavItem } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
+import { AllShipmentsTable } from './components/AllShipmentsTable';
 
 const DEFAULT_SIDEBAR_ITEM_ID = 'packaging';
 
@@ -59,13 +60,13 @@ export function ShipmentsPage() {
 
   const pageTitle = useMemo(() => {
     for (const section of t.sidebar) {
-      if (section.id === activeSidebarId) {
-        return section.title;
-      }
-
       const activeItem = section.items.find((item) => item.id === activeSidebarId);
       if (activeItem) {
         return activeItem.label;
+      }
+
+      if (section.id === activeSidebarId) {
+        return section.title;
       }
     }
 
@@ -160,11 +161,15 @@ export function ShipmentsPage() {
         </button>
       }
     >
-      <section className="shipments-empty-state">
-        <h2 className="shipments-empty-title">{content.title}</h2>
-        <p className="shipments-empty-desc">{content.description}</p>
-        {lastActionText ? <p className="shipments-last-action">{lastActionText}</p> : null}
-      </section>
+      {activeSidebarId === 'all-shipments' ? (
+        <AllShipmentsTable labels={t.tableLabels} />
+      ) : (
+        <section className="shipments-empty-state">
+          <h2 className="shipments-empty-title">{content.title}</h2>
+          <p className="shipments-empty-desc">{content.description}</p>
+          {lastActionText ? <p className="shipments-last-action">{lastActionText}</p> : null}
+        </section>
+      )}
     </AppShell>
   );
 }

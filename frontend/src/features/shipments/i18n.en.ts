@@ -11,18 +11,18 @@ export const SHIPMENTS_I18N_EN = {
   sidebar: [
     {
       id: 'all-shipments',
-      title: 'All Shipments',
-      href: '/shipments/all-shipments',
+      title: 'Shipments',
       items: [
+        { id: 'all-shipments', label: 'All Shipments', href: '/shipments/all-shipments' },
         { id: 'packaging', label: 'Shipments In Packaging', badge: 2, href: '/shipments/packaging' },
         { id: 'completed', label: 'Completed Shipments', href: '/shipments/completed' },
       ],
     },
     {
       id: 'all-boxes',
-      title: 'All Boxes',
-      href: '/shipments/all-boxes',
+      title: 'Boxes',
       items: [
+        { id: 'all-boxes', label: 'All Boxes', href: '/shipments/all-boxes' },
         { id: 'not-sent-boxes', label: 'Boxes Not Sent', href: '/shipments/not-sent-boxes' },
         { id: 'sent-boxes', label: 'Sent Boxes', href: '/shipments/sent-boxes' },
         { id: 'closed-boxes', label: 'Closed Boxes', href: '/shipments/closed-boxes' },
@@ -31,17 +31,29 @@ export const SHIPMENTS_I18N_EN = {
     },
     {
       id: 'shipment-items',
-      title: 'Shipment Items',
-      href: '/shipments/shipment-items',
+      title: 'Items',
       items: [
+        { id: 'shipment-items', label: 'All Shipment Items', href: '/shipments/shipment-items' },
         { id: 'sent-items', label: 'Sent Items', href: '/shipments/sent-items' },
         { id: 'pending-items', label: 'Items Not Sent', href: '/shipments/pending-items' },
       ],
     },
   ],
-  pageTitle: 'All Shipments',
+  pageTitle: 'Shipments',
   actionSelected: (label: string) => `Action selected: ${label}`,
   emptyState: {
+    'all-shipments': {
+      title: 'All Shipments',
+      description: 'All shipments in the system are displayed here.',
+    },
+    'all-boxes': {
+      title: 'All Boxes',
+      description: 'All boxes in the system are displayed here.',
+    },
+    'shipment-items': {
+      title: 'All Shipment Items',
+      description: 'All shipment items in the system are displayed here.',
+    },
     packaging: {
       title: 'No shipments in packaging',
       description: 'Click "New Shipment" to add shipments.',
@@ -83,4 +95,29 @@ export const SHIPMENTS_I18N_EN = {
   addBox: 'Add Box',
   addShipment: 'Add Shipment',
   settings: 'Settings',
+  tableLabels: {
+    title: 'All Shipments',
+    description: 'Global overview of all shipments with boxes, etrog quantity, and shipped date.',
+    seasonFilterLabel: 'Season',
+    statusFilterLabel: 'Shipment Status',
+    allStatusesOption: 'All statuses',
+    activeSeasonBadge: 'Active',
+    noActiveSeason: 'No seasons available',
+    colDetails: 'Details',
+    colShipmentNumber: 'Shipment #',
+    colBoxCount: 'Boxes',
+    colQuantity: 'Quantity',
+    colStatus: 'Status',
+    colShippedAt: 'Shipped At',
+    detailsButtonAriaLabel: 'Open shipment details',
+    empty: 'No shipments to display',
+    loading: 'Loading shipments...',
+    error: 'Failed to load shipments',
+    statusLabels: {
+      PREPARING: 'Preparing',
+      SHIPPED: 'Shipped',
+      DELIVERED: 'Delivered',
+      CANCELLED: 'Cancelled',
+    },
+  },
 };
