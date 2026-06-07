@@ -23,12 +23,18 @@ type TraderMovementsSectionProps = {
   seasonId?: string;
   traderId?: string;
   movementStatus?: string;
+  categoryId?: string;
+  grade?: string;
+  pitamStatus?: string;
   seasonOptions?: FilterOption[];
   traderOptions?: FilterOption[];
   movementStatusOptions?: FilterOption[];
   onSeasonChange?: (seasonId: string) => void;
   onTraderChange?: (traderId: string) => void;
   onMovementStatusChange?: (status: string) => void;
+  onCategoryChange?: (categoryId: string) => void;
+  onGradeChange?: (grade: string) => void;
+  onPitamStatusChange?: (pitamStatus: string) => void;
 };
 
 export function TraderMovementsSection({
@@ -40,14 +46,79 @@ export function TraderMovementsSection({
   seasonId = '',
   traderId = 'ALL',
   movementStatus = 'ALL',
+  categoryId = 'ALL',
+  grade = 'ALL',
+  pitamStatus = 'ALL',
   seasonOptions = [],
   traderOptions = [],
   movementStatusOptions = [],
   onSeasonChange,
   onTraderChange,
   onMovementStatusChange,
+  onCategoryChange,
+  onGradeChange,
+  onPitamStatusChange,
 }: TraderMovementsSectionProps) {
   const i18n = getTraderMovementsI18n();
+
+  const categoryOptions = useMemo<FilterOption[]>(() => {
+    const uniqueCategories = Array.from(new Set(movements.map((movement) => movement.categoryName).filter(Boolean))).sort((left, right) =>
+      left.localeCompare(right, lang === 'he' ? 'he' : 'en', { sensitivity: 'base' }),
+    );
+
+    return [
+      { value: 'ALL', label: i18n.filters.allCategoriesOption },
+      ...uniqueCategories.map((value) => ({ value, label: value })),
+    ];
+  }, [i18n.filters.allCategoriesOption, lang, movements]);
+
+  const gradeOptions = useMemo<FilterOption[]>(() => {
+    const uniqueGrades = Array.from(new Set(movements.map((movement) => movement.grade).filter(Boolean))).sort((left, right) =>
+      left.localeCompare(right, lang === 'he' ? 'he' : 'en', { sensitivity: 'base' }),
+    );
+
+    return [
+      { value: 'ALL', label: i18n.filters.allGradesOption },
+      ...uniqueGrades.map((value) => ({ value, label: value })),
+    ];
+  }, [i18n.filters.allGradesOption, lang, movements]);
+
+  const pitamStatusOptions = useMemo<FilterOption[]>(() => {
+    const defaultPitamStatuses = ['WITH_PITAM', 'WITHOUT_PITAM', 'MIXED'];
+    const dataPitamStatuses = Array.from(new Set(movements.map((movement) => movement.pitamStatus).filter(Boolean)));
+    const extraPitamStatuses = dataPitamStatuses
+      .filter((status) => !defaultPitamStatuses.includes(status))
+      .sort((left, right) => {
+        const leftLabel = i18n.pitamStatuses[left as keyof typeof i18n.pitamStatuses] || left;
+        const rightLabel = i18n.pitamStatuses[right as keyof typeof i18n.pitamStatuses] || right;
+        return leftLabel.localeCompare(rightLabel, lang === 'he' ? 'he' : 'en', { sensitivity: 'base' });
+      });
+
+    const uniquePitamStatuses = [...defaultPitamStatuses, ...extraPitamStatuses];
+
+    return [
+      { value: 'ALL', label: i18n.filters.allPitamStatusesOption },
+      ...uniquePitamStatuses.map((value) => ({ value, label: i18n.pitamStatuses[value as keyof typeof i18n.pitamStatuses] || value })),
+    ];
+  }, [i18n.filters.allPitamStatusesOption, i18n.pitamStatuses, lang, movements]);
+
+  const filteredMovements = useMemo(() => {
+    return movements.filter((movement) => {
+      if (categoryId !== 'ALL' && movement.categoryName !== categoryId) {
+        return false;
+      }
+
+      if (grade !== 'ALL' && movement.grade !== grade) {
+        return false;
+      }
+
+      if (pitamStatus !== 'ALL' && movement.pitamStatus !== pitamStatus) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [categoryId, grade, movements, pitamStatus]);
 
   const filterControls = useMemo<GlobalFilterControl[]>(() => {
     const controls: GlobalFilterControl[] = [];
@@ -82,6 +153,36 @@ export function TraderMovementsSection({
       });
     }
 
+    if (categoryOptions.length > 0) {
+      controls.push({
+        id: 'movements-category',
+        label: i18n.filters.categoryLabel,
+        value: categoryId || 'ALL',
+        options: categoryOptions.map((opt) => ({ value: opt.value, label: opt.label })),
+        onChange: (value) => onCategoryChange?.(value),
+      });
+    }
+
+    if (gradeOptions.length > 0) {
+      controls.push({
+        id: 'movements-grade',
+        label: i18n.filters.gradeLabel,
+        value: grade || 'ALL',
+        options: gradeOptions.map((opt) => ({ value: opt.value, label: opt.label })),
+        onChange: (value) => onGradeChange?.(value),
+      });
+    }
+
+    if (pitamStatusOptions.length > 0) {
+      controls.push({
+        id: 'movements-pitamStatus',
+        label: i18n.filters.pitamStatusLabel,
+        value: pitamStatus || 'ALL',
+        options: pitamStatusOptions.map((opt) => ({ value: opt.value, label: opt.label })),
+        onChange: (value) => onPitamStatusChange?.(value),
+      });
+    }
+
     return controls;
   }, [
     seasonId,
@@ -90,12 +191,24 @@ export function TraderMovementsSection({
     traderOptions,
     movementStatus,
     movementStatusOptions,
+    categoryId,
+    grade,
+    pitamStatus,
+    categoryOptions,
+    gradeOptions,
+    pitamStatusOptions,
     i18n.filters.seasonLabel,
     i18n.filters.traderLabel,
     i18n.filters.movementStatusLabel,
+    i18n.filters.categoryLabel,
+    i18n.filters.gradeLabel,
+    i18n.filters.pitamStatusLabel,
     onSeasonChange,
     onTraderChange,
     onMovementStatusChange,
+    onCategoryChange,
+    onGradeChange,
+    onPitamStatusChange,
   ]);
 
   const formatDate = (dateStr: string) => {
@@ -220,6 +333,19 @@ export function TraderMovementsSection({
         filters.push(`${i18n.filters.movementStatusLabel}: ${escapeHtml(statusLabel)}`);
       }
 
+      if (categoryId && categoryId !== 'ALL') {
+        filters.push(`${i18n.filters.categoryLabel}: ${escapeHtml(categoryId)}`);
+      }
+
+      if (grade && grade !== 'ALL') {
+        filters.push(`${i18n.filters.gradeLabel}: ${escapeHtml(grade)}`);
+      }
+
+      if (pitamStatus && pitamStatus !== 'ALL') {
+        const pitamLabel = pitamStatusOptions.find((opt) => opt.value === pitamStatus)?.label || pitamStatus;
+        filters.push(`${i18n.filters.pitamStatusLabel}: ${escapeHtml(pitamLabel)}`);
+      }
+
       return filters;
     };
 
@@ -235,7 +361,7 @@ export function TraderMovementsSection({
       .map((label) => `<th>${escapeHtml(label)}</th>`)
       .join('');
 
-    const tableRowsHtml = movements
+    const tableRowsHtml = filteredMovements
       .map(
         (m) => `
         <tr>
@@ -285,7 +411,7 @@ export function TraderMovementsSection({
       direction: lang === 'he' ? 'rtl' : 'ltr',
       extraStyles: tableStyles,
     });
-  }, [lang, movements, i18n, seasonId, traderId, movementStatus, seasonOptions, traderOptions, movementStatusOptions]);
+  }, [lang, filteredMovements, i18n, seasonId, traderId, movementStatus, categoryId, grade, pitamStatus, seasonOptions, traderOptions, movementStatusOptions, pitamStatusOptions]);
 
   const handleExport = useCallback(async () => {
     try {
@@ -334,6 +460,19 @@ export function TraderMovementsSection({
           filters.push(filterRow);
         }
 
+        if (categoryId && categoryId !== 'ALL') {
+          filters.push([`${i18n.filters.categoryLabel}: ${categoryId}`, '', '', '', '', '', '']);
+        }
+
+        if (grade && grade !== 'ALL') {
+          filters.push([`${i18n.filters.gradeLabel}: ${grade}`, '', '', '', '', '', '']);
+        }
+
+        if (pitamStatus && pitamStatus !== 'ALL') {
+          const pitamLabel = pitamStatusOptions.find((opt) => opt.value === pitamStatus)?.label || pitamStatus;
+          filters.push([`${i18n.filters.pitamStatusLabel}: ${pitamLabel}`, '', '', '', '', '', '']);
+        }
+
         return filters;
       };
 
@@ -351,7 +490,7 @@ export function TraderMovementsSection({
       const rows = [
         ...filterRows,
         [],
-        ...movements.map((m) => [
+        ...filteredMovements.map((m) => [
           formatDate(m.date),
           getMovementTypeLabel(m.type),
           m.isModulo ? 'כללי' : m.traderName || '—',
@@ -376,12 +515,12 @@ export function TraderMovementsSection({
       console.error('Export failed:', error);
       window.alert(lang === 'he' ? 'לא ניתן לייצא כעת' : 'Could not export right now');
     }
-  }, [lang, movements, i18n, seasonId, traderId, movementStatus, seasonOptions, traderOptions, movementStatusOptions]);
+  }, [lang, filteredMovements, i18n, seasonId, traderId, movementStatus, categoryId, grade, pitamStatus, seasonOptions, traderOptions, movementStatusOptions, pitamStatusOptions]);
 
   const renderFiltersBar = () => {
     if (filterControls.length === 0) return null;
     
-    const actions = movements.length > 0 ? (
+    const actions = filteredMovements.length > 0 ? (
       <TraderMovementsPrintExportActions
         onPrint={handlePrint}
         onExport={handleExport}
@@ -423,10 +562,14 @@ export function TraderMovementsSection({
         <div className={styles.statusBox}>{i18n.empty}</div>
       )}
 
-      {!isLoading && !error && movements && movements.length > 0 && (
+      {!isLoading && !error && movements && movements.length > 0 && filteredMovements.length === 0 && (
+        <div className={styles.statusBox}>{i18n.noMatchingFilters}</div>
+      )}
+
+      {!isLoading && !error && filteredMovements && filteredMovements.length > 0 && (
         <GlobalDataTable
           columns={columns}
-          rows={movements}
+          rows={filteredMovements}
           getRowKey={(row) => row.id}
           emptyLabel={i18n.empty}
           defaultSortState={{ key: 'date', direction: 'desc' }}
