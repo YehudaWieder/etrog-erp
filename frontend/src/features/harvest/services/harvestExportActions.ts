@@ -2,7 +2,8 @@ import type { MutableRefObject } from 'react';
 import { HARVEST_PRINT_BASE_STYLE } from './harvestPrintStyles';
 import type { HarvestI18n } from '../i18n';
 import type { HarvestExportTableData } from '../harvestPage.types';
-import type { Season, Field } from '../../../services/seasonsApi';
+import type { Season } from '../../../services/seasonsApi';
+import type { Field } from '../../../services/fieldsApi';
 import { downloadStyledExcel } from '../../../services/exportExcel';
 
 type ExpandedMatrixData = {
@@ -37,6 +38,55 @@ type HarvestExportActionsParams = {
   seasons?: Season[];
   fields?: Field[];
 };
+
+function buildSortingDailyFilterRows(
+  filterValues: Record<string, string> | undefined,
+  seasons: Season[] | undefined,
+  fields: Field[] | undefined,
+  t: HarvestI18n,
+  columnCount: number,
+): Array<Array<string | number>> {
+  const filterRows: Array<Array<string | number>> = [];
+
+  if (filterValues?.seasonId && filterValues.seasonId !== 'undefined') {
+    const season = seasons?.find(s => String(s.id) === filterValues.seasonId);
+    const seasonLabel = season?.yearName || filterValues.seasonId;
+    if (seasonLabel && seasonLabel !== 'undefined') {
+      filterRows.push([
+        `${t.sortingDailyDetails.filters.seasonFilterLabel}: ${seasonLabel}`,
+        ...Array(columnCount - 1).fill(''),
+      ]);
+    }
+  }
+
+  if (filterValues?.fieldId && filterValues.fieldId !== 'all') {
+    const field = fields?.find(f => String(f.id) === filterValues.fieldId);
+    const fieldLabel = field?.name || filterValues.fieldId;
+    if (fieldLabel && fieldLabel !== 'undefined') {
+      filterRows.push([
+        `${t.sortingDailyDetails.filters.fieldFilterLabel}: ${fieldLabel}`,
+        ...Array(columnCount - 1).fill(''),
+      ]);
+    }
+  }
+
+  if (filterValues?.sortingAssignmentType && filterValues.sortingAssignmentType !== 'all') {
+    let assignmentLabel = '';
+    if (filterValues.sortingAssignmentType === 'trader') {
+      assignmentLabel = t.sortingDailyDetails.filters.assignmentOptions.trader;
+    } else if (filterValues.sortingAssignmentType === 'customer') {
+      assignmentLabel = t.sortingDailyDetails.filters.assignmentOptions.customer;
+    }
+    if (assignmentLabel) {
+      filterRows.push([
+        `${t.sortingDailyDetails.filters.assignmentFilterLabel}: ${assignmentLabel}`,
+        ...Array(columnCount - 1).fill(''),
+      ]);
+    }
+  }
+
+  return filterRows;
+}
 
 function escapeHtml(value: string) {
   return value
@@ -290,7 +340,7 @@ export function createHarvestExportActions({
       const seasonLabel = season?.yearName || filterValues.seasonId;
       if (seasonLabel && seasonLabel !== 'undefined') {
         const filterRow = [
-          `${t.fieldReport.filters?.seasonFilterLabel || t.dailyDetails.filters.seasonFilterLabel}: ${seasonLabel}`,
+          `${t.dailyDetails.filters.seasonFilterLabel}: ${seasonLabel}`,
           ...Array(columnCount - 1).fill(''),
         ];
         filterRows.push(filterRow);
@@ -455,7 +505,6 @@ export function createHarvestExportActions({
 
     if (variant === 'expanded') {
       try {
-        const { Workbook } = await import('exceljs');
         const matrix = await createSortingDailyExpandedMatrixData();
         const groups = matrix.groups.filter(
           (group) => group.pitamGroups.reduce((sum, pitamGroup) => sum + pitamGroup.grades.length, 0) > 0,
@@ -509,141 +558,18 @@ export function createHarvestExportActions({
         );
         const summaryRow: Array<string | number> = [lang === 'he' ? 'סה"כ' : 'Total', '', '', ...summaryValues];
 
-        const workbook = new Workbook();
-        const worksheet = workbook.addWorksheet(t.sortingDailyDetails.expandedSheetName);
-        const excelRows = [topHeaderRow, pitamHeaderRow, gradesHeaderRow, ...bodyRows, summaryRow];
-
-        for (const row of excelRows) {
-          worksheet.addRow(row);
-        }
-
-        const headerBg = 'FF1F5A32';
-        const headerFont = 'FFFFFFFF';
-        const borderColor = 'FFCCD9CF';
-        const zebraBg = 'FFF8FCF9';
-        const summaryBg = 'FFE7F2EB';
-
-        for (let fixedCol = 1; fixedCol <= matrix.fixedHeaders.length; fixedCol += 1) {
-          worksheet.mergeCells(1, fixedCol, 3, fixedCol);
-        }
-
-        let currentCol = matrix.fixedHeaders.length + 1;
-
-        for (const group of groups) {
-          const groupColumns = group.pitamGroups.reduce((sum, pitamGroup) => sum + pitamGroup.grades.length, 0);
-          if (groupColumns <= 0) {
-            continue;
-          }
-
-          worksheet.mergeCells(1, currentCol, 1, currentCol + groupColumns - 1);
-
-          for (const pitamGroup of group.pitamGroups) {
-            const pitamColumns = pitamGroup.grades.length;
-            if (pitamColumns <= 0) {
-              continue;
-            }
-
-            worksheet.mergeCells(2, currentCol, 2, currentCol + pitamColumns - 1);
-            currentCol += pitamColumns;
-          }
-        }
-
-        const maxCol = worksheet.columnCount;
-        const bodyStartRow = 4;
-        const summaryRowIndex = bodyStartRow + bodyRows.length;
-        for (let rowIndex = 1; rowIndex <= worksheet.rowCount; rowIndex += 1) {
-          const row = worksheet.getRow(rowIndex);
-          for (let colIndex = 1; colIndex <= maxCol; colIndex += 1) {
-            const cell = row.getCell(colIndex);
-            const isHeader = rowIndex <= 3;
-            const isSummary = rowIndex === summaryRowIndex;
-            const isZebraDataRow = rowIndex >= bodyStartRow && rowIndex < summaryRowIndex && rowIndex % 2 === 0;
-
-            cell.alignment = {
-              horizontal: 'center',
-              vertical: 'middle',
-              wrapText: true,
-            };
-
-            cell.border = {
-              top: { style: 'thin', color: { argb: borderColor } },
-              left: { style: 'thin', color: { argb: borderColor } },
-              bottom: { style: 'thin', color: { argb: borderColor } },
-              right: { style: 'thin', color: { argb: borderColor } },
-            };
-
-            if (isHeader) {
-              cell.fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: headerBg },
-              };
-
-              cell.font = {
-                bold: true,
-                color: { argb: headerFont },
-              };
-            } else if (isSummary) {
-              cell.fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: summaryBg },
-              };
-
-              cell.font = {
-                bold: true,
-                color: { argb: 'FF1F4F29' },
-              };
-            } else if (isZebraDataRow) {
-              cell.fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: zebraBg },
-              };
-
-              cell.font = {
-                color: { argb: 'FF1F2A22' },
-              };
-            } else {
-              cell.font = {
-                color: { argb: 'FF1F2A22' },
-              };
-            }
-          }
-        }
-
-        const minimumWidths = [14, 14, 20];
-        for (let colIndex = 1; colIndex <= worksheet.columnCount; colIndex += 1) {
-          let maxLength = 0;
-
-          worksheet.eachRow((row: Row) => {
-            const rawValue = row.getCell(colIndex).value;
-            const textValue = rawValue === null || rawValue === undefined ? '' : String(rawValue);
-            if (textValue.length > maxLength) {
-              maxLength = textValue.length;
-            }
-          });
-
-          const minWidth = minimumWidths[colIndex - 1] ?? 8;
-          worksheet.getColumn(colIndex).width = Math.max(minWidth, Math.min(maxLength + 2, 36));
-        }
-
-        worksheet.views = [{ state: 'frozen', xSplit: 3, ySplit: 3, rightToLeft: lang === 'he' }];
-
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], {
-          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-
+        const filterRows = buildSortingDailyFilterRows(filterValues, seasons, fields, t, numericColumnCount + 3);
         const dateStamp = new Date().toISOString().slice(0, 10);
-        link.href = url;
-        link.download = `sorting-daily-expanded-${dateStamp}.xlsx`;
-        document.body.append(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(url);
+        const emptyRowAfterFilters = filterRows.length > 0 ? [[]] : [];
+        
+        await downloadStyledExcel({
+          sheetName: t.sortingDailyDetails.expandedSheetName,
+          fileName: `sorting-daily-expanded-${dateStamp}.xlsx`,
+          header: [topHeaderRow, pitamHeaderRow, gradesHeaderRow],
+          rows: [...filterRows, ...emptyRowAfterFilters, ...bodyRows, summaryRow],
+          rightToLeft: lang === 'he',
+          filterRowCount: filterRows.length + emptyRowAfterFilters.length,
+        });
       } catch {
         window.alert(t.sortingDailyDetails.expandedExportError);
       }
@@ -656,45 +582,7 @@ export function createHarvestExportActions({
       const dateStamp = new Date().toISOString().slice(0, 10);
       const columnCount = header.length;
 
-      // Build filter information rows (one row per filter)
-      const filterRows: Array<Array<string | number>> = [];
-      if (filterValues.seasonId && filterValues.seasonId !== 'undefined') {
-        const season = seasons.find(s => String(s.id) === filterValues.seasonId);
-        const seasonLabel = season?.yearName || filterValues.seasonId;
-        if (seasonLabel && seasonLabel !== 'undefined') {
-          const filterRow = [
-            `${t.sortingDailyDetails.filters.seasonFilterLabel}: ${seasonLabel}`,
-            ...Array(columnCount - 1).fill(''),
-          ];
-          filterRows.push(filterRow);
-        }
-      }
-      if (filterValues.fieldId && filterValues.fieldId !== 'all') {
-        const field = fields.find(f => String(f.id) === filterValues.fieldId);
-        const fieldLabel = field?.name || filterValues.fieldId;
-        if (fieldLabel && fieldLabel !== 'undefined') {
-          const filterRow = [
-            `${t.sortingDailyDetails.filters.fieldFilterLabel}: ${fieldLabel}`,
-            ...Array(columnCount - 1).fill(''),
-          ];
-          filterRows.push(filterRow);
-        }
-      }
-      if (filterValues.sortingAssignmentType && filterValues.sortingAssignmentType !== 'all') {
-        let assignmentLabel = '';
-        if (filterValues.sortingAssignmentType === 'trader') {
-          assignmentLabel = t.sortingDailyDetails.filters.assignmentOptions.trader;
-        } else if (filterValues.sortingAssignmentType === 'customer') {
-          assignmentLabel = t.sortingDailyDetails.filters.assignmentOptions.customer;
-        }
-        if (assignmentLabel) {
-          const filterRow = [
-            `${t.sortingDailyDetails.filters.assignmentFilterLabel}: ${assignmentLabel}`,
-            ...Array(columnCount - 1).fill(''),
-          ];
-          filterRows.push(filterRow);
-        }
-      }
+      const filterRows = buildSortingDailyFilterRows(filterValues, seasons, fields, t, columnCount);
 
       await downloadStyledExcel({
         sheetName: t.sortingDailyDetails.sheetName,
