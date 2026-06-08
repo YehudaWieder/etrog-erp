@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FaPlus } from 'react-icons/fa6';
+import { FaCirclePlus } from 'react-icons/fa6';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from '../../app/layout/AppShell';
 import {
@@ -582,7 +582,7 @@ export function CustomerInventoryPage() {
         isMovementsTab ? (
           <div className="action-buttons">
             <button className="btn btn-primary" type="button">
-              <FaPlus />
+              <FaCirclePlus />
               <span>{t.movements.addMovementButton}</span>
             </button>
           </div>

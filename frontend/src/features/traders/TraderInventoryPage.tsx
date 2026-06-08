@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { FaPlus } from 'react-icons/fa6';
+import { FaCirclePlus } from 'react-icons/fa6';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from '../../app/layout/AppShell';
 import { GlobalScopedFilters, type GlobalScopedFilterConfig, type GlobalScopedFiltersApi } from '../../components/ui/GlobalScopedFilters';
@@ -566,7 +566,7 @@ export function TraderInventoryPage() {
         isMovementsTab ? (
           <div className="action-buttons">
             <button className="btn btn-primary" type="button">
-              <FaPlus />
+              <FaCirclePlus />
               <span>{movementStatusI18n.addMovementButton}</span>
             </button>
           </div>
