@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { FaPlus } from 'react-icons/fa6';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from '../../app/layout/AppShell';
 import { GlobalScopedFilters, type GlobalScopedFilterConfig, type GlobalScopedFiltersApi } from '../../components/ui/GlobalScopedFilters';
@@ -224,9 +225,9 @@ export function TraderInventoryPage() {
         .sort((left, right) => right.yearName - left.yearName)
         .map((season) => ({
           value: String(season.id),
-          label: String(season.yearName),
+          label: `${season.yearName}${season.id === activeSeasonId ? ` (${lang === 'he' ? 'פעילה' : 'Active'})` : ''}`,
         })),
-    [seasons],
+    [activeSeasonId, lang, seasons],
   );
 
   const traderOptions = useMemo(
@@ -561,6 +562,16 @@ export function TraderInventoryPage() {
       pageTitle={pageTitle}
       topNav={t.topNav}
       activeTopNavId={activeTopId}
+      pageHeaderActions={
+        isMovementsTab ? (
+          <div className="action-buttons">
+            <button className="btn btn-primary" type="button">
+              <FaPlus />
+              <span>{movementStatusI18n.addMovementButton}</span>
+            </button>
+          </div>
+        ) : null
+      }
       sidebarSections={t.sidebar}
       activeSidebarItemId={activeSidebarId}
       onTopNavClick={handleTopNavClick}

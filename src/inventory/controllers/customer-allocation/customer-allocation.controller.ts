@@ -15,6 +15,7 @@ import { Prisma, PitamStatus } from 'src/generated/prisma';
 import { CreateCustomerAllocationDto } from '../../services/customer-allocation/dto/create-customer-allocation.dto';
 import { UpdateCustomerAllocationAdjustmentDto } from '../../services/customer-allocation/dto/update-customer-allocation-adjustment.dto';
 import { buildCustomerAllocationSummaryQuery } from '../../services/customer-allocation/utils/customer-allocation-query-parse.util';
+import { parseOptionalInt } from 'src/inventory/services/inventory-core/utils/inventory-query-parse.util';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('access-token')
@@ -151,6 +152,27 @@ export class CustomerAllocationController {
         sortOrder,
       }),
     );
+  }
+
+  @Get('movements')
+  @ApiOperation({
+    summary:
+      'Get detailed customer inventory movements filtered by season and optional customer/shipment scope.',
+  })
+  @ApiQuery({ name: 'seasonId', type: Number, required: false, description: 'Optional season ID. Defaults to active season.' })
+  @ApiQuery({ name: 'customerId', type: Number, required: false, description: 'Optional customer ID filter.' })
+  @ApiQuery({ name: 'shipmentScope', required: false, enum: ['ALL', 'SHIPPED', 'UNSHIPPED', 'PACKED_SHIPPED', 'SELF_PICKUP', 'HARVEST_IN', 'INTERNAL_TRANSFER', 'OWNERSHIP_TRANSFER', 'ASSIGNED', 'WASTE', 'ADJUSTMENT'], description: 'Filter by movement type scope.' })
+  @ApiResponse({ status: 200, description: 'Detailed customer inventory movements returned successfully.' })
+  getMovements(
+    @Query('seasonId') seasonId?: string,
+    @Query('customerId') customerId?: string,
+    @Query('shipmentScope') shipmentScope?: CustomerInventoryShipmentScope,
+  ) {
+    return this.allocationService.getMovements({
+      seasonId: parseOptionalInt(seasonId),
+      customerId: parseOptionalInt(customerId),
+      shipmentScope,
+    });
   }
 
   @Patch()

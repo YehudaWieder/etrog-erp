@@ -239,6 +239,7 @@ export const DEFAULT_TRADER_CATEGORIES_I18N_HE: DefaultTraderCategoriesI18n = {
 };
 
 export const TRADER_MOVEMENTS_I18N_HE: TraderMovementsI18n = {
+	addMovementButton: 'הוספת תנועה',
 	columns: {
 		date: 'תאריך',
 		type: 'סוג תנעה',

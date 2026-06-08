@@ -217,6 +217,7 @@ export type DefaultTraderCategoriesI18n = {
 };
 
 export type TraderMovementsI18n = {
+	addMovementButton: string;
 	columns: {
 		date: string;
 		type: string;

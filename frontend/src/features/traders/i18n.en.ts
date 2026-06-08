@@ -239,6 +239,7 @@ export const DEFAULT_TRADER_CATEGORIES_I18N_EN: DefaultTraderCategoriesI18n = {
 };
 
 export const TRADER_MOVEMENTS_I18N_EN: TraderMovementsI18n = {
+	addMovementButton: 'Add Movement',
 	columns: {
 		date: 'Date',
 		type: 'Movement Type',

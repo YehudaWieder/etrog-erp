@@ -23,6 +23,80 @@ export type CustomerInventoryI18n = {
   topNav: NavItem[];
   sidebar: SidebarSection[];
   pageTitle: string;
+  summary: {
+    focusedExplanation: string;
+    filters: {
+      seasonLabel: string;
+      customerLabel: string;
+      allCustomersOption: string;
+      inventoryStatusLabel: string;
+      allInventoryOption: string;
+      unboxedOption: string;
+      boxedOption: string;
+      shippedOption: string;
+      arrivedOption: string;
+      selfPickupOption: string;
+    };
+    loading: string;
+    loadFailed: string;
+    empty: string;
+    retry: string;
+    totals: {
+      totalQuantity: string;
+    };
+    matrix: {
+      grade: string;
+      total: string;
+    };
+    values: {
+      none: string;
+      pitamStatus: {
+        WITH_PITAM: string;
+        WITHOUT_PITAM: string;
+        MIXED: string;
+      };
+    };
+  };
+  movements: {
+    addMovementButton: string;
+    columns: {
+      date: string;
+      type: string;
+      customer: string;
+      category: string;
+      grade: string;
+      pitamStatus: string;
+      quantity: string;
+    };
+    filters: {
+      title: string;
+      seasonLabel: string;
+      customerLabel: string;
+      allCustomersOption: string;
+      movementStatusLabel: string;
+      allMovementsOption: string;
+      nonShipmentMovementsOption: string;
+      shipmentMovementsOption: string;
+      categoryLabel: string;
+      allCategoriesOption: string;
+      gradeLabel: string;
+      allGradesOption: string;
+      pitamStatusLabel: string;
+      allPitamStatusesOption: string;
+    };
+    movementTypes: Record<string, string>;
+    pitamStatuses: Record<string, string>;
+    loading: string;
+    error: string;
+    retry: string;
+    empty: string;
+    noMatchingFilters: string;
+    tableActionsLabel: string;
+    printAriaLabel: string;
+    printTitle: string;
+    exportAriaLabel: string;
+    exportTitle: string;
+  };
   emptyState: Record<string, { title: string; description: string }>;
 };
 

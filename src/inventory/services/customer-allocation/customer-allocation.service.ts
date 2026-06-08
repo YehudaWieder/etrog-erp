@@ -7,6 +7,7 @@ import { SeasonsService } from 'src/seasons/seasons.service';
 import { InventoryAvailabilityService } from '../inventory-availability.service';
 import { CustomerInventorySummaryQuery } from './dto/customer-inventory-summary.dto';
 import { CustomerAllocationSummaryService } from './customer-allocation-summary.service';
+import { validateCustomerSummaryQuery, buildMovementFilter } from 'src/inventory/services/validation/summary-query-rules';
 import {
   normalizeAdjustmentQuantity,
   requireAdjustmentQuantity,
@@ -110,6 +111,43 @@ export class CustomerAllocationService {
 
   async getInventorySummary(query: CustomerInventorySummaryQuery) {
     return this.customerAllocationSummaryService.getSummary(query);
+  }
+
+  async getMovements(query: {
+    seasonId?: number;
+    customerId?: number;
+    shipmentScope?: CustomerInventorySummaryQuery['shipmentScope'];
+  }) {
+    const seasonId = query.seasonId ?? (await this.seasonsService.findActiveSeason()).id;
+    await this.seasonsService.assertSeasonExists(seasonId);
+
+    const shipmentScope = query.shipmentScope ?? 'ALL';
+    validateCustomerSummaryQuery(shipmentScope, 'updatedAt', 'desc');
+
+    const typeFilter = buildMovementFilter(shipmentScope);
+
+    return this.prisma.customerAllocation.findMany({
+      where: {
+        seasonId,
+        isDeleted: false,
+        customerId: query.customerId,
+        ...(typeFilter !== undefined ? { type: typeFilter } : {}),
+      },
+      include: {
+        customer: {
+          select: {
+            customerName: true,
+          },
+        },
+        customerCategory: {
+          select: {
+            name: true,
+            grade: true,
+          },
+        },
+      },
+      orderBy: [{ date: 'desc' }, { id: 'desc' }],
+    });
   }
 
   async createAdjustment(data: Prisma.CustomerAllocationUncheckedCreateInput, actorId: number) {

@@ -1,0 +1,40 @@
+.section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.filtersBarSection {
+  padding: 6px 0 4px;
+}
+
+.statusBox {
+  border-radius: 16px;
+  border: 1px solid rgba(204, 219, 208, 0.95);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 10px 24px rgba(20, 56, 35, 0.06);
+  padding: 24px;
+  color: var(--color-text-main, #333);
+  text-align: center;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.retryButton {
+  padding: 8px 16px;
+  background: var(--color-primary, #2d5a27);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.retryButton:hover {
+  opacity: 0.9;
+}
