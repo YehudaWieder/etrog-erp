@@ -1,4 +1,5 @@
 import type { ShipmentStatus } from '../shipments.types';
+import type { BoxStatus } from '../../../services/boxesApi';
 
 export const SHIPMENT_STATUS_CSS_CLASS: Record<ShipmentStatus, string> = {
   PREPARING: 'status-preparing',
@@ -9,6 +10,16 @@ export const SHIPMENT_STATUS_CSS_CLASS: Record<ShipmentStatus, string> = {
 
 export function resolveShipmentStatusClass(status: ShipmentStatus): string {
   return SHIPMENT_STATUS_CSS_CLASS[status] ?? 'status-preparing';
+}
+
+export const BOX_STATUS_CSS_CLASS: Record<BoxStatus, string> = {
+  OPEN: 'box-open',
+  CLOSED: 'box-closed',
+  SHIPPED: 'box-shipped',
+};
+
+export function resolveBoxStatusClass(status: BoxStatus): string {
+  return BOX_STATUS_CSS_CLASS[status] ?? 'box-open';
 }
 
 export function parseShipmentSeasonFilterId(value: string): number | null {

@@ -2,37 +2,45 @@ import { useEffect } from 'react';
 import { GlobalScopedFilters } from '../../../components/ui/GlobalScopedFilters';
 import { GlobalDataTable } from '../../../components/ui/GlobalDataTable';
 import workspaceStyles from '../../../components/ui/styles/WorkspaceSection.module.css';
-import type { ShipmentRecord, ShipmentsTableLabels } from '../shipments.types';
-import { useAllShipmentsFilters } from '../hooks/useAllShipmentsFilters';
-import { useAllShipmentsTable } from '../hooks/useAllShipmentsTable';
+import type { BoxesTableLabels, BoxesTableRow } from '../shipments.types';
+import { useAllBoxesFilters } from '../hooks/useAllBoxesFilters';
+import { useAllBoxesTable } from '../hooks/useAllBoxesTable';
 import styles from './styles/AllShipmentsTable.module.css';
 
-type AllShipmentsTableProps = {
-  labels: ShipmentsTableLabels;
-  selectedShipmentId: number | null;
-  onSelectShipment: (row: ShipmentRecord | null) => void;
+type AllBoxesTableProps = {
+  labels: BoxesTableLabels;
+  selectedBoxId: number | null;
+  onSelectBox: (row: BoxesTableRow | null) => void;
 };
 
-export function AllShipmentsTable({ labels, selectedShipmentId, onSelectShipment }: AllShipmentsTableProps): JSX.Element {
+export function AllBoxesTable({ labels, selectedBoxId, onSelectBox }: AllBoxesTableProps): JSX.Element {
   const {
     filters,
     selectedSeasonId,
+    selectedShipmentNumber,
     selectedStatus,
+    selectedOwnership,
     handleFilterValuesChange,
     handleFiltersApiReady,
-  } = useAllShipmentsFilters(labels);
-  const { rows, columns, isLoading, error } = useAllShipmentsTable(labels, selectedSeasonId, selectedStatus);
+  } = useAllBoxesFilters(labels);
+  const { rows, columns, isLoading, error } = useAllBoxesTable(
+    labels,
+    selectedSeasonId,
+    selectedShipmentNumber,
+    selectedStatus,
+    selectedOwnership,
+  );
 
   useEffect(() => {
-    if (selectedShipmentId === null) {
+    if (selectedBoxId === null) {
       return;
     }
 
-    const selectedExists = rows.some((row) => row.id === selectedShipmentId);
+    const selectedExists = rows.some((row) => row.id === selectedBoxId);
     if (!selectedExists) {
-      onSelectShipment(null);
+      onSelectBox(null);
     }
-  }, [onSelectShipment, rows, selectedShipmentId]);
+  }, [onSelectBox, rows, selectedBoxId]);
 
   return (
     <section className={workspaceStyles.workspace}>
@@ -44,7 +52,7 @@ export function AllShipmentsTable({ labels, selectedShipmentId, onSelectShipment
 
       <GlobalScopedFilters
         className={styles.filtersSection}
-        scope="shipments-all-shipments"
+        scope="shipments-all-boxes"
         filters={filters}
         onValuesChange={handleFilterValuesChange}
         onApiReady={handleFiltersApiReady}
@@ -58,14 +66,14 @@ export function AllShipmentsTable({ labels, selectedShipmentId, onSelectShipment
         <p className={`${styles.stateMessage} ${styles.contentSection}`}>{labels.empty}</p>
       ) : (
         <div className={styles.contentSection}>
-          <GlobalDataTable<ShipmentRecord>
+          <GlobalDataTable<BoxesTableRow>
             columns={columns}
             rows={rows}
             getRowKey={(row) => row.id}
             emptyLabel={labels.empty}
-            selectedRowKey={selectedShipmentId}
-            onRowClick={onSelectShipment}
-            defaultSortState={{ key: 'shipmentNumber', direction: 'desc' }}
+            selectedRowKey={selectedBoxId}
+            onRowClick={onSelectBox}
+            defaultSortState={{ key: 'boxNumber', direction: 'desc' }}
           />
         </div>
       )}

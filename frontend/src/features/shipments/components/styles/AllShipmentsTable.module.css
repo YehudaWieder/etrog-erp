@@ -71,3 +71,18 @@
   background: rgba(220, 53, 69, 0.12);
   color: #842029;
 }
+
+:global(.shipments-status-badge--box-open) {
+  background: rgba(255, 193, 7, 0.15);
+  color: #856404;
+}
+
+:global(.shipments-status-badge--box-closed) {
+  background: rgba(108, 117, 125, 0.14);
+  color: #3f444a;
+}
+
+:global(.shipments-status-badge--box-shipped) {
+  background: rgba(13, 110, 253, 0.12);
+  color: #0a3f8a;
+}
