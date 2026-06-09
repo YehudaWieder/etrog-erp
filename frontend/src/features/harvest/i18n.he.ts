@@ -337,6 +337,11 @@ export const HARVEST_I18N_HE: HarvestI18n = {
       differenceNet: 'הפרש נטו',
       differenceRate: 'הפרש אחוז פסילה',
     },
+    summary: {
+      totalHarvested: 'סה"כ קטיף',
+      totalNet: 'סה"כ נטו',
+      avgRejectionRate: 'ממוצע אחוז יורדים',
+    },
   },
   emptyState: {
     'harvest-daily-details': {

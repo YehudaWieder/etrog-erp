@@ -283,6 +283,11 @@ export const TRADER_MOVEMENTS_I18N_HE: TraderMovementsI18n = {
 		WITHOUT_PITAM: 'בלי פיטם',
 		MIXED: 'מעורב',
 	},
+	summary: {
+		totalInventory: 'סה"כ מלאי',
+		notPacked: 'סה"כ מלאי שלא נארז',
+		packed: 'סה"כ נארז',
+	},
 	loading: 'טוען תנועות...',
 	error: 'שגיאה בטעינת התנועות',
 	retry: 'נסה שוב',

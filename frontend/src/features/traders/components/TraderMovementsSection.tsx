@@ -7,7 +7,9 @@ import { GlobalFiltersBar, type GlobalFilterControl } from '../../../components/
 import { openPrintableWindow } from '../../../services/printWindow';
 import { downloadStyledExcel } from '../../../services/exportExcel';
 import { TraderMovementsPrintExportActions } from './TraderMovementsPrintExportActions';
+import { buildTraderMovementsSummaryTotals } from '../services/traderMovementsSummary.service';
 import styles from './styles/TraderMovementsSection.module.css';
+import summaryStyles from './styles/TraderInventoryAllSection.module.css';
 
 type FilterOption = {
   value: string;
@@ -119,6 +121,16 @@ export function TraderMovementsSection({
       return true;
     });
   }, [categoryId, grade, movements, pitamStatus]);
+
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(lang === 'he' ? 'he-IL' : 'en-US'),
+    [lang],
+  );
+
+  const summaryTotals = useMemo(
+    () => buildTraderMovementsSummaryTotals(filteredMovements),
+    [filteredMovements],
+  );
 
   const filterControls = useMemo<GlobalFilterControl[]>(() => {
     const controls: GlobalFilterControl[] = [];
@@ -545,8 +557,25 @@ export function TraderMovementsSection({
 
   return (
     <section className={styles.section}>
+      {!isLoading && !error && filteredMovements.length > 0 && (
+        <div className={summaryStyles.summaryGrid}>
+          <article className={summaryStyles.summaryCard}>
+            <span className={summaryStyles.summaryLabel}>{i18n.summary.totalInventory}</span>
+            <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.totalInventory)}</strong>
+          </article>
+          <article className={summaryStyles.summaryCard}>
+            <span className={summaryStyles.summaryLabel}>{i18n.summary.notPacked}</span>
+            <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.notPacked)}</strong>
+          </article>
+          <article className={summaryStyles.summaryCard}>
+            <span className={summaryStyles.summaryLabel}>{i18n.summary.packed}</span>
+            <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.packed)}</strong>
+          </article>
+        </div>
+      )}
+
       {renderFiltersBar()}
-      
+
       {isLoading && <div className={styles.statusBox}>{i18n.loading}</div>}
 
       {error && (

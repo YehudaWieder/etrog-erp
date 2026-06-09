@@ -541,22 +541,9 @@ export function TraderInventoryPage() {
     navigate(`/${item.id}`);
   };
 
-  const resetAllTraderFilters = useCallback(() => {
-    setFilterValues(DEFAULT_FILTER_VALUES);
-
-    if (!filtersApiRef.current) {
-      return;
-    }
-
-    // Keep global filter state + URL in sync when switching trader tabs.
-    filtersApiRef.current.setFilterValue('seasonId', '');
-    filtersApiRef.current.setFilterValue('traderId', 'ALL');
-    filtersApiRef.current.setFilterValue('inventoryStatus', 'ALL');
-  }, []);
-
   const handleSidebarClick = (item: NavItem) => {
-    resetAllTraderFilters();
-    navigate(item.href || `/traders/${item.id}`);
+    const targetPath = item.href || `/traders/${item.id}`;
+    navigate(targetPath);
   };
 
   return (

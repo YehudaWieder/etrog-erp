@@ -57,9 +57,9 @@ export function ShipmentItemsTable({ lang, labels, selectedItemId, onSelectItem 
       <ShipmentsSummaryCards
         lang={lang}
         cards={[
-          { key: 'total-items', label: labels.summary.totalItems, value: summaryTotals.totalItems },
           { key: 'total-quantity', label: labels.summary.totalQuantity, value: summaryTotals.totalQuantity },
-          { key: 'total-boxes', label: labels.summary.totalBoxes, value: summaryTotals.totalBoxes },
+          { key: 'trader-general', label: labels.summary.traderAndGeneralQuantity, value: summaryTotals.traderAndGeneralQuantity },
+          { key: 'customer', label: labels.summary.customerQuantity, value: summaryTotals.customerQuantity },
         ]}
       />
 

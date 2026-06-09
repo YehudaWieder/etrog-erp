@@ -117,6 +117,11 @@ export const CUSTOMER_INVENTORY_I18N_HE: CustomerInventoryI18n = {
       WITHOUT_PITAM: 'בלי פיטם',
       MIXED: 'מעורב',
     },
+    summary: {
+      totalInventory: 'סה"כ מלאי',
+      notPacked: 'סה"כ מלאי שלא נארז',
+      packed: 'סה"כ נארז',
+    },
     loading: 'טוען תנועות לקוחות...',
     error: 'שגיאה בטעינת תנועות לקוחות.',
     retry: 'נסה שוב',

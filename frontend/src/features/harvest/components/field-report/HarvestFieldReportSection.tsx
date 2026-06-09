@@ -1,16 +1,19 @@
-﻿import type { RefObject } from 'react';
+﻿import { useMemo } from 'react';
+import type { RefObject } from 'react';
 import { FaPrint } from 'react-icons/fa6';
 import { GlobalDataTable, type GlobalDataTableColumn } from '../../../../components/ui/GlobalDataTable';
 import { GlobalLeftDetailsPanel } from '../../../../components/ui/GlobalLeftDetailsPanel';
 import { GlobalScopedFilters, type GlobalScopedFilterConfig } from '../../../../components/ui/GlobalScopedFilters';
 import type { HarvestFieldReportRow, HarvestSelectionSummaryLabels } from '../../harvestPage.types';
 import type { HarvestI18n } from '../../i18n';
+import { buildHarvestFieldReportSummaryTotals } from '../../services/harvestFieldReportSummary.service';
 import { HarvestFieldReportDetailsPanel, type HarvestFieldReportDetailsData, type HarvestFieldReportDetailsPanelLabels } from './HarvestFieldReportDetailsPanel';
 import { HarvestPrintExportActions } from '../shared/HarvestPrintExportActions';
 import { HarvestSelectionSummary } from '../shared/HarvestSelectionSummary';
 import workspaceStyles from '../../../../components/ui/styles/WorkspaceSection.module.css';
 import panelStyles from '../styles/HarvestPanels.module.css';
 import sheetStyles from '../styles/HarvestDetailsSheet.module.css';
+import summaryStyles from '../styles/HarvestDailyDetailsSummary.module.css';
 
 type HarvestFieldReportSectionProps = {
   lang: 'he' | 'en';
@@ -36,6 +39,9 @@ type HarvestFieldReportSectionProps = {
   formattedSelectedTotal: string;
   selectionLabels: HarvestSelectionSummaryLabels;
   onClearSelectedNumericCells: () => void;
+  summaryLabels: HarvestI18n['fieldReport']['summary'];
+  numberFormatter: Intl.NumberFormat;
+  formatRate: (value: number | string) => string;
 };
 
 export function HarvestFieldReportSection({
@@ -62,8 +68,16 @@ export function HarvestFieldReportSection({
   formattedSelectedTotal,
   selectionLabels,
   onClearSelectedNumericCells,
+  summaryLabels,
+  numberFormatter,
+  formatRate,
 }: HarvestFieldReportSectionProps): JSX.Element {
   const hasRows = fieldReportRows.length > 0;
+
+  const summaryTotals = useMemo(
+    () => buildHarvestFieldReportSummaryTotals(fieldReportRows),
+    [fieldReportRows],
+  );
 
   return (
     <section className={`${workspaceStyles.workspace} ${panelStyles.workspace}`}>
@@ -72,6 +86,21 @@ export function HarvestFieldReportSection({
           <p className={workspaceStyles.description}>{description}</p>
         </div>
       </header>
+
+      <div className={summaryStyles.summaryGrid}>
+        <article className={summaryStyles.summaryCard}>
+          <span className={summaryStyles.summaryLabel}>{summaryLabels.totalHarvested}</span>
+          <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.totalHarvested)}</strong>
+        </article>
+        <article className={summaryStyles.summaryCard}>
+          <span className={summaryStyles.summaryLabel}>{summaryLabels.totalNet}</span>
+          <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.totalNet)}</strong>
+        </article>
+        <article className={summaryStyles.summaryCard}>
+          <span className={summaryStyles.summaryLabel}>{summaryLabels.avgRejectionRate}</span>
+          <strong className={summaryStyles.summaryValue}>{formatRate(summaryTotals.avgRejectionRate)}</strong>
+        </article>
+      </div>
 
       <GlobalScopedFilters
         scope="harvest-daily-details"

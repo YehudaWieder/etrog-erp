@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { FaFileInvoice } from 'react-icons/fa6';
 import { type GlobalDataTableColumn } from '../../../components/ui/GlobalDataTable';
 import { getBoxesByShipment } from '../../../services/boxesApi';
-import { getShipmentItemsByBox, type ItemOwnership, type ShipmentItemRecord } from '../../../services/shipmentItemsApi';
+import { getShipmentItemsByBox, type ShipmentItemRecord } from '../../../services/shipmentItemsApi';
 import { getShipmentsBySeason } from '../../../services/shipmentsApi';
 import type { ShipmentItemsTableLabels, ShipmentItemsTableRow } from '../shipments.types';
 import styles from '../components/styles/AllShipmentsTable.module.css';
@@ -45,7 +45,7 @@ export function useShipmentItemsTable(
   shipmentNumber: 'all' | number,
   ownership: 'all' | string,
 ): UseShipmentItemsTableResult {
-  const [rawRows, setRawRows] = useState<(ShipmentItemsTableRow & { ownershipType: ItemOwnership })[]>([]);
+  const [rawRows, setRawRows] = useState<ShipmentItemsTableRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -133,7 +133,7 @@ export function useShipmentItemsTable(
 
         return row.ownership === ownership;
       })
-      .map(({ ownershipType: _ownershipType, ...row }) => row);
+      .map((row) => row);
   }, [boxNumber, ownership, rawRows, shipmentNumber]);
 
   const columns = useMemo<GlobalDataTableColumn<ShipmentItemsTableRow>[]>(() => [

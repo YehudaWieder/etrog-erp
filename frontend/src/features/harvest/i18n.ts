@@ -310,6 +310,11 @@ export type HarvestI18n = {
       differenceNet: string;
       differenceRate: string;
     };
+    summary: {
+      totalHarvested: string;
+      totalNet: string;
+      avgRejectionRate: string;
+    };
   };
   emptyState: Record<string, EmptyStateContent>;
 };

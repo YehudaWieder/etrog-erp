@@ -283,6 +283,11 @@ export const TRADER_MOVEMENTS_I18N_EN: TraderMovementsI18n = {
 		WITHOUT_PITAM: 'Without pitam',
 		MIXED: 'Mixed',
 	},
+	summary: {
+		totalInventory: 'Total Inventory',
+		notPacked: 'Total Unpacked',
+		packed: 'Total Packed',
+	},
 	loading: 'Loading movements...',
 	error: 'Error loading movements',
 	retry: 'Retry',

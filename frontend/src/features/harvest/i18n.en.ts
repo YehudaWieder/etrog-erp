@@ -337,6 +337,11 @@ export const HARVEST_I18N_EN: HarvestI18n = {
       differenceNet: 'Net Difference',
       differenceRate: 'Rejection Rate Difference',
     },
+    summary: {
+      totalHarvested: 'Total Harvested',
+      totalNet: 'Total Net',
+      avgRejectionRate: 'Avg. Rejection Rate',
+    },
   },
   emptyState: {
     'harvest-daily-details': {

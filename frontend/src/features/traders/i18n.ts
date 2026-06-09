@@ -246,6 +246,11 @@ export type TraderMovementsI18n = {
 	};
 	movementTypes: Record<string, string>;
 	pitamStatuses: Record<string, string>;
+	summary: {
+		totalInventory: string;
+		notPacked: string;
+		packed: string;
+	};
 	loading: string;
 	error: string;
 	retry: string;

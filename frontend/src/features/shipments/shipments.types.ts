@@ -2,6 +2,8 @@ import type { ShipmentStatus } from '../../services/shipmentsApi';
 import type { BoxOwnership, BoxStatus } from '../../services/boxesApi';
 import type { ItemOwnership } from '../../services/shipmentItemsApi';
 
+export type { ItemOwnership };
+
 export type { ShipmentRecord } from '../../services/shipmentsApi';
 export type { ShipmentStatus };
 
@@ -21,6 +23,7 @@ export type ShipmentItemsTableRow = {
   category: string;
   quantity: number;
   ownership: string;
+  ownershipType: ItemOwnership;
 };
 
 export type ShipmentsTableLabels = {
@@ -75,8 +78,8 @@ export type BoxesTableLabels = {
   error: string;
   summary: {
     totalBoxes: string;
-    totalQuantity: string;
-    totalShipments: string;
+    notShipped: string;
+    shipped: string;
   };
   statusLabels: Record<BoxStatus, string>;
   ownershipLabels: Record<BoxOwnership, string>;
@@ -108,9 +111,9 @@ export type ShipmentItemsTableLabels = {
   loading: string;
   error: string;
   summary: {
-    totalItems: string;
     totalQuantity: string;
-    totalBoxes: string;
+    traderAndGeneralQuantity: string;
+    customerQuantity: string;
   };
   ownershipLabels: Record<ItemOwnership, string>;
 };

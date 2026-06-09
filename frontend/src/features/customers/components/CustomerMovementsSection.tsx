@@ -5,8 +5,10 @@ import { downloadStyledExcel } from '../../../services/exportExcel';
 import { openPrintableWindow } from '../../../services/printWindow';
 import type { CustomerInventoryI18n } from '../i18n.inventory';
 import type { CustomerMovement } from '../hooks/useCustomerMovements';
+import { buildCustomerMovementsSummaryTotals } from '../services/customerMovementsSummary.service';
 import { CustomerMovementsPrintExportActions } from './CustomerMovementsPrintExportActions';
 import styles from './styles/CustomerMovementsSection.module.css';
+import summaryStyles from '../../traders/components/styles/TraderInventoryAllSection.module.css';
 
 type AppLang = 'he' | 'en';
 
@@ -127,6 +129,16 @@ export function CustomerMovementsSection({
       return true;
     });
   }, [categoryId, grade, movements, pitamStatus]);
+
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(lang === 'he' ? 'he-IL' : 'en-US'),
+    [lang],
+  );
+
+  const summaryTotals = useMemo(
+    () => buildCustomerMovementsSummaryTotals(filteredMovements),
+    [filteredMovements],
+  );
 
   const filterControls = useMemo<GlobalFilterControl[]>(() => {
     const controls: GlobalFilterControl[] = [];
@@ -527,6 +539,23 @@ export function CustomerMovementsSection({
 
   return (
     <section className={styles.section}>
+      {!isLoading && !error && filteredMovements.length > 0 && (
+        <div className={summaryStyles.summaryGrid}>
+          <article className={summaryStyles.summaryCard}>
+            <span className={summaryStyles.summaryLabel}>{labels.summary.totalInventory}</span>
+            <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.totalInventory)}</strong>
+          </article>
+          <article className={summaryStyles.summaryCard}>
+            <span className={summaryStyles.summaryLabel}>{labels.summary.notPacked}</span>
+            <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.notPacked)}</strong>
+          </article>
+          <article className={summaryStyles.summaryCard}>
+            <span className={summaryStyles.summaryLabel}>{labels.summary.packed}</span>
+            <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.packed)}</strong>
+          </article>
+        </div>
+      )}
+
       {filterControls.length > 0 ? (
         <section className={styles.filtersBarSection}>
           <GlobalFiltersBar

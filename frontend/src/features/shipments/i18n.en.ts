@@ -115,8 +115,8 @@ export const SHIPMENTS_I18N_EN = {
     error: 'Failed to load boxes',
     summary: {
       totalBoxes: 'Total Boxes',
-      totalQuantity: 'Total Etrogs',
-      totalShipments: 'Active Shipments',
+      notShipped: 'Not Shipped',
+      shipped: 'Shipped',
     },
     statusLabels: {
       OPEN: 'Open',
@@ -157,9 +157,9 @@ export const SHIPMENTS_I18N_EN = {
     loading: 'Loading shipment items...',
     error: 'Failed to load shipment items',
     summary: {
-      totalItems: 'Total Items',
-      totalQuantity: 'Total Quantity',
-      totalBoxes: 'Boxes Involved',
+      totalQuantity: 'Total Etrogs',
+      traderAndGeneralQuantity: 'Total General & Traders',
+      customerQuantity: 'Total Customers',
     },
     ownershipLabels: {
       TRADER: 'Trader',

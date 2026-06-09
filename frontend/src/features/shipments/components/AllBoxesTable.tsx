@@ -58,8 +58,8 @@ export function AllBoxesTable({ lang, labels, selectedBoxId, onSelectBox }: AllB
         lang={lang}
         cards={[
           { key: 'total-boxes', label: labels.summary.totalBoxes, value: summaryTotals.totalBoxes },
-          { key: 'total-quantity', label: labels.summary.totalQuantity, value: summaryTotals.totalQuantity },
-          { key: 'total-shipments', label: labels.summary.totalShipments, value: summaryTotals.totalShipments },
+          { key: 'not-shipped', label: labels.summary.notShipped, value: summaryTotals.notShipped },
+          { key: 'shipped', label: labels.summary.shipped, value: summaryTotals.shipped },
         ]}
       />
 

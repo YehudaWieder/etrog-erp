@@ -1,5 +1,10 @@
 import type { BoxesTableRow, ShipmentItemsTableRow, ShipmentRecord } from '../shipments.types';
 
+function toSafeNumber(value: unknown): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 export type AllShipmentsSummaryTotals = {
   totalShipments: number;
   totalBoxes: number;
@@ -8,14 +13,14 @@ export type AllShipmentsSummaryTotals = {
 
 export type AllBoxesSummaryTotals = {
   totalBoxes: number;
-  totalQuantity: number;
-  totalShipments: number;
+  notShipped: number;
+  shipped: number;
 };
 
 export type ShipmentItemsSummaryTotals = {
-  totalItems: number;
   totalQuantity: number;
-  totalBoxes: number;
+  traderAndGeneralQuantity: number;
+  customerQuantity: number;
 };
 
 export function buildAllShipmentsSummaryTotals(rows: ShipmentRecord[]): AllShipmentsSummaryTotals {
@@ -23,8 +28,8 @@ export function buildAllShipmentsSummaryTotals(rows: ShipmentRecord[]): AllShipm
   let totalQuantity = 0;
 
   for (const row of rows) {
-    totalBoxes += row.boxCount;
-    totalQuantity += row.totalQuantity;
+    totalBoxes += toSafeNumber(row.totalBoxes);
+    totalQuantity += toSafeNumber(row.totalQuantity);
   }
 
   return {
@@ -35,33 +40,36 @@ export function buildAllShipmentsSummaryTotals(rows: ShipmentRecord[]): AllShipm
 }
 
 export function buildAllBoxesSummaryTotals(rows: BoxesTableRow[]): AllBoxesSummaryTotals {
-  let totalQuantity = 0;
-  const shipmentIds = new Set<number>();
+  let shipped = 0;
 
   for (const row of rows) {
-    totalQuantity += row.totalQuantity;
-    shipmentIds.add(row.shipmentNumber);
+    if (row.status === 'SHIPPED') {
+      shipped++;
+    }
   }
 
   return {
     totalBoxes: rows.length,
-    totalQuantity,
-    totalShipments: shipmentIds.size,
+    notShipped: rows.length - shipped,
+    shipped,
   };
 }
 
 export function buildShipmentItemsSummaryTotals(rows: ShipmentItemsTableRow[]): ShipmentItemsSummaryTotals {
   let totalQuantity = 0;
-  const boxNumbers = new Set<number>();
+  let traderAndGeneralQuantity = 0;
+  let customerQuantity = 0;
 
   for (const row of rows) {
-    totalQuantity += row.quantity;
-    boxNumbers.add(row.boxNumber);
+    const qty = toSafeNumber(row.quantity);
+    totalQuantity += qty;
+
+    if (row.ownershipType === 'CUSTOMER') {
+      customerQuantity += qty;
+    } else {
+      traderAndGeneralQuantity += qty;
+    }
   }
 
-  return {
-    totalItems: rows.length,
-    totalQuantity,
-    totalBoxes: boxNumbers.size,
-  };
+  return { totalQuantity, traderAndGeneralQuantity, customerQuantity };
 }

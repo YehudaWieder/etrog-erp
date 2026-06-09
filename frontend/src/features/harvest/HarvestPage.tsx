@@ -914,6 +914,9 @@ export function HarvestPage() {
           formattedSelectedTotal={formattedSelectedTotal}
           selectionLabels={t.dailyDetails.selection}
           onClearSelectedNumericCells={clearSelectedNumericCells}
+          summaryLabels={t.fieldReport.summary}
+          numberFormatter={numberFormatter}
+          formatRate={formatRate}
         />
       ) : isSortingDailyDetailsTab ? (
         <HarvestSortingDailySection

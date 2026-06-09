@@ -117,6 +117,11 @@ export const CUSTOMER_INVENTORY_I18N_EN: CustomerInventoryI18n = {
       WITHOUT_PITAM: 'Without pitam',
       MIXED: 'Mixed',
     },
+    summary: {
+      totalInventory: 'Total Inventory',
+      notPacked: 'Total Unpacked',
+      packed: 'Total Packed',
+    },
     loading: 'Loading customer movements...',
     error: 'Error loading customer movements.',
     retry: 'Retry',
