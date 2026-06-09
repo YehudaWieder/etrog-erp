@@ -37,7 +37,7 @@ export function useLoginPage() {
     submitLabel: a.loginSubmit,
   };
 
-  const handleLogin = () => navigate('/shipments');
+  const handleLogin = () => navigate('/home');
   const handleRegister = () => navigate('/register');
   const handleLogout = async () => {
     await logout();
@@ -63,7 +63,7 @@ export function useLoginPage() {
       setIsSubmitting(true);
       setError('');
       await login({ email: formData.email, password: formData.password });
-      navigate('/shipments');
+      navigate('/home');
     } catch (submitError) {
       if (submitError instanceof ApiError && submitError.status === 404) {
         setError(authMessages.notFound);

@@ -21,6 +21,8 @@ import { MessagesRoute } from './app/routes/MessagesRoute';
 import { HarvestRoute } from './app/routes/HarvestRoute';
 import { TraderInventoryRoute } from './app/routes/TraderInventoryRoute';
 import { CustomerInventoryRoute } from './app/routes/CustomerInventoryRoute';
+import { WorkersRoute } from './app/routes/WorkersRoute';
+import { PaymentsRoute } from './app/routes/PaymentsRoute';
 import { AUTH_SESSION_EXPIRED_EVENT } from './services/apiClient';
 import SettingsPage from './features/settings/SettingsPage';
 
@@ -78,6 +80,8 @@ function AppRouter(): JSX.Element {
       <Route path="/partners/*" element={<Navigate to="/traders" replace />} />
       <Route path="/customers/*" element={<CustomerInventoryRoute />} />
       <Route path="/shipments/*" element={<ShipmentsRoute />} />
+      <Route path="/workers/*" element={<WorkersRoute />} />
+      <Route path="/payments/*" element={<PaymentsRoute />} />
       <Route path="/settings/*" element={<SettingsPage />} />
       {/* <Route path="/seasons" element={<Navigate to="/settings/system/seasons" replace />} /> removed as per request */}
       <Route path="*" element={<Navigate to="/home" replace />} />

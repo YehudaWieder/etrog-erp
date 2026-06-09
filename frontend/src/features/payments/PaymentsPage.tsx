@@ -2,24 +2,21 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from '../../app/layout/AppShell';
 import { SHIPMENTS_I18N } from '../shipments/i18n';
-import { HOME_I18N } from './i18n';
 import type { NavItem } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
 
-export function HomePage() {
+export function PaymentsPage() {
   const navigate = useNavigate();
-  const [activeTopId, setActiveTopId] = useState('home');
+  const [activeTopId, setActiveTopId] = useState('payments');
   const currentUser = getCurrentUser();
   const [alertsCount, setAlertsCount] = useState<number>(0);
 
   useEffect(() => {
-    // טען כמות הודעות שלא נקראו
     import('../../services/messagesApi').then(({ fetchUnreadCount }) => {
       fetchUnreadCount().then((res) => setAlertsCount(res.count)).catch(() => setAlertsCount(0));
     });
   }, []);
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!isAuthenticated()) {
       navigate('/login');
@@ -34,7 +31,6 @@ export function HomePage() {
     return 'he';
   }, []);
   const t = SHIPMENTS_I18N[lang];
-  const home = HOME_I18N[lang];
 
   const handleTopNavClick = (item: NavItem) => {
     setActiveTopId(item.id);
@@ -49,7 +45,7 @@ export function HomePage() {
       topNav={t.topNav}
       activeTopNavId={activeTopId}
       sidebarSections={t.sidebar}
-      activeSidebarItemId="packaging"
+      activeSidebarItemId=""
       onTopNavClick={handleTopNavClick}
       onSidebarClick={() => {}}
       onBrandClick={() => navigate('/home')}
