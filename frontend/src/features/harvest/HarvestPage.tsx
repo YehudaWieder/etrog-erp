@@ -883,6 +883,7 @@ export function HarvestPage() {
           formattedSelectedTotal={formattedSelectedTotal}
           selectionLabels={t.dailyDetails.selection}
           onClearSelectedNumericCells={clearSelectedNumericCells}
+          summaryLabels={t.dailyDetails.summary}
         />
       ) : isFieldReportTab ? (
         <HarvestFieldReportSection
@@ -926,6 +927,7 @@ export function HarvestPage() {
           emptyLabel={t.sortingDailyDetails.empty}
           sortingDailyColumns={sortingDailyColumns}
           filteredSortingDailyRows={filteredSortingDailyRows}
+          filteredSortingDailyCategories={filteredSortingDailyCategories}
           onSortingDailySortedRowsChange={(rows) => {
             visibleSortingDailyRowsRef.current = rows;
           }}
@@ -961,6 +963,7 @@ export function HarvestPage() {
           formattedSelectedTotal={formattedSelectedTotal}
           selectionLabels={t.dailyDetails.selection}
           onClearSelectedNumericCells={clearSelectedNumericCells}
+          summaryLabels={t.sortingDailyDetails.summary}
         />
       ) : (
         <section className="shipments-empty-state">

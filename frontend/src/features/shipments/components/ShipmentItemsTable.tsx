@@ -1,19 +1,22 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { GlobalScopedFilters } from '../../../components/ui/GlobalScopedFilters';
 import { GlobalDataTable } from '../../../components/ui/GlobalDataTable';
 import workspaceStyles from '../../../components/ui/styles/WorkspaceSection.module.css';
 import type { ShipmentItemsTableLabels, ShipmentItemsTableRow } from '../shipments.types';
 import { useShipmentItemsFilters } from '../hooks/useShipmentItemsFilters';
 import { useShipmentItemsTable } from '../hooks/useShipmentItemsTable';
+import { ShipmentsSummaryCards } from './shared/ShipmentsSummaryCards';
+import { buildShipmentItemsSummaryTotals } from '../services/shipmentsSummary.service';
 import styles from './styles/AllShipmentsTable.module.css';
 
 type ShipmentItemsTableProps = {
+  lang: 'he' | 'en';
   labels: ShipmentItemsTableLabels;
   selectedItemId: number | null;
   onSelectItem: (row: ShipmentItemsTableRow | null) => void;
 };
 
-export function ShipmentItemsTable({ labels, selectedItemId, onSelectItem }: ShipmentItemsTableProps): JSX.Element {
+export function ShipmentItemsTable({ lang, labels, selectedItemId, onSelectItem }: ShipmentItemsTableProps): JSX.Element {
   const {
     filters,
     selectedSeasonId,
@@ -30,6 +33,7 @@ export function ShipmentItemsTable({ labels, selectedItemId, onSelectItem }: Shi
     selectedShipmentNumber,
     selectedOwnership,
   );
+  const summaryTotals = useMemo(() => buildShipmentItemsSummaryTotals(rows), [rows]);
 
   useEffect(() => {
     if (selectedItemId === null) {
@@ -49,6 +53,15 @@ export function ShipmentItemsTable({ labels, selectedItemId, onSelectItem }: Shi
           <p className={`${workspaceStyles.description} ${styles.description}`}>{labels.description}</p>
         </div>
       </header>
+
+      <ShipmentsSummaryCards
+        lang={lang}
+        cards={[
+          { key: 'total-items', label: labels.summary.totalItems, value: summaryTotals.totalItems },
+          { key: 'total-quantity', label: labels.summary.totalQuantity, value: summaryTotals.totalQuantity },
+          { key: 'total-boxes', label: labels.summary.totalBoxes, value: summaryTotals.totalBoxes },
+        ]}
+      />
 
       <GlobalScopedFilters
         className={styles.filtersSection}

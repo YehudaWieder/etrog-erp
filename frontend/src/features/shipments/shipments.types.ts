@@ -41,6 +41,11 @@ export type ShipmentsTableLabels = {
   empty: string;
   loading: string;
   error: string;
+  summary: {
+    totalShipments: string;
+    totalBoxes: string;
+    totalQuantity: string;
+  };
   statusLabels: Record<ShipmentStatus, string>;
 };
 
@@ -68,6 +73,11 @@ export type BoxesTableLabels = {
   empty: string;
   loading: string;
   error: string;
+  summary: {
+    totalBoxes: string;
+    totalQuantity: string;
+    totalShipments: string;
+  };
   statusLabels: Record<BoxStatus, string>;
   ownershipLabels: Record<BoxOwnership, string>;
 };
@@ -97,5 +107,10 @@ export type ShipmentItemsTableLabels = {
   empty: string;
   loading: string;
   error: string;
+  summary: {
+    totalItems: string;
+    totalQuantity: string;
+    totalBoxes: string;
+  };
   ownershipLabels: Record<ItemOwnership, string>;
 };

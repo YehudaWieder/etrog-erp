@@ -1,19 +1,22 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { GlobalScopedFilters } from '../../../components/ui/GlobalScopedFilters';
 import { GlobalDataTable } from '../../../components/ui/GlobalDataTable';
 import workspaceStyles from '../../../components/ui/styles/WorkspaceSection.module.css';
 import type { ShipmentRecord, ShipmentsTableLabels } from '../shipments.types';
 import { useAllShipmentsFilters } from '../hooks/useAllShipmentsFilters';
 import { useAllShipmentsTable } from '../hooks/useAllShipmentsTable';
+import { ShipmentsSummaryCards } from './shared/ShipmentsSummaryCards';
+import { buildAllShipmentsSummaryTotals } from '../services/shipmentsSummary.service';
 import styles from './styles/AllShipmentsTable.module.css';
 
 type AllShipmentsTableProps = {
+  lang: 'he' | 'en';
   labels: ShipmentsTableLabels;
   selectedShipmentId: number | null;
   onSelectShipment: (row: ShipmentRecord | null) => void;
 };
 
-export function AllShipmentsTable({ labels, selectedShipmentId, onSelectShipment }: AllShipmentsTableProps): JSX.Element {
+export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectShipment }: AllShipmentsTableProps): JSX.Element {
   const {
     filters,
     selectedSeasonId,
@@ -22,6 +25,7 @@ export function AllShipmentsTable({ labels, selectedShipmentId, onSelectShipment
     handleFiltersApiReady,
   } = useAllShipmentsFilters(labels);
   const { rows, columns, isLoading, error } = useAllShipmentsTable(labels, selectedSeasonId, selectedStatus);
+  const summaryTotals = useMemo(() => buildAllShipmentsSummaryTotals(rows), [rows]);
 
   useEffect(() => {
     if (selectedShipmentId === null) {
@@ -41,6 +45,15 @@ export function AllShipmentsTable({ labels, selectedShipmentId, onSelectShipment
           <p className={`${workspaceStyles.description} ${styles.description}`}>{labels.description}</p>
         </div>
       </header>
+
+      <ShipmentsSummaryCards
+        lang={lang}
+        cards={[
+          { key: 'total-shipments', label: labels.summary.totalShipments, value: summaryTotals.totalShipments },
+          { key: 'total-boxes', label: labels.summary.totalBoxes, value: summaryTotals.totalBoxes },
+          { key: 'total-quantity', label: labels.summary.totalQuantity, value: summaryTotals.totalQuantity },
+        ]}
+      />
 
       <GlobalScopedFilters
         className={styles.filtersSection}

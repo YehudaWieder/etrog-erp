@@ -77,6 +77,11 @@ export const SHIPMENTS_I18N_EN = {
     empty: 'No shipments to display',
     loading: 'Loading shipments...',
     error: 'Failed to load shipments',
+    summary: {
+      totalShipments: 'Total Shipments',
+      totalBoxes: 'Total Boxes',
+      totalQuantity: 'Total Etrogs',
+    },
     statusLabels: {
       PREPARING: 'Preparing',
       SHIPPED: 'Shipped',
@@ -108,6 +113,11 @@ export const SHIPMENTS_I18N_EN = {
     empty: 'No boxes to display',
     loading: 'Loading boxes...',
     error: 'Failed to load boxes',
+    summary: {
+      totalBoxes: 'Total Boxes',
+      totalQuantity: 'Total Etrogs',
+      totalShipments: 'Active Shipments',
+    },
     statusLabels: {
       OPEN: 'Open',
       CLOSED: 'Closed',
@@ -146,6 +156,11 @@ export const SHIPMENTS_I18N_EN = {
     empty: 'No shipment items to display',
     loading: 'Loading shipment items...',
     error: 'Failed to load shipment items',
+    summary: {
+      totalItems: 'Total Items',
+      totalQuantity: 'Total Quantity',
+      totalBoxes: 'Boxes Involved',
+    },
     ownershipLabels: {
       TRADER: 'Trader',
       CUSTOMER: 'Customer',

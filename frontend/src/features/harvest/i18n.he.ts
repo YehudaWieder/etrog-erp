@@ -172,6 +172,11 @@ export const HARVEST_I18N_HE: HarvestI18n = {
       total: (value) => `סה"כ: ${value}`,
       clear: 'נקה בחירה',
     },
+    summary: {
+      totalHarvested: 'סה"כ קטיף',
+      totalRejected: 'סה"כ יורדים',
+      totalNet: 'סה"כ נטו',
+    },
     detailsPanel: {
       openDetails: 'הצגת פרטים מלאים',
       title: 'פרטי קטיף מלאים',
@@ -299,6 +304,11 @@ export const HARVEST_I18N_HE: HarvestI18n = {
         traderPrefix: 'סוחר:',
         customerPrefix: 'לקוח:',
       },
+    },
+    summary: {
+      totalSorted: 'סה"כ מיון',
+      traderTotal: 'סה"כ מיון סוחרים',
+      customerTotal: 'סה"כ מיון לקוחות',
     },
     columns: {
       dateGregorian: 'תאריך קטיף לועזי',

@@ -229,18 +229,21 @@ export function ShipmentsPage() {
     >
       {activeSidebarId === 'all-shipments' ? (
         <AllShipmentsTable
+          lang={lang}
           labels={t.tableLabels}
           selectedShipmentId={selectedShipmentRow?.id ?? null}
           onSelectShipment={handleShipmentRowSelect}
         />
       ) : activeSidebarId === 'all-boxes' ? (
         <AllBoxesTable
+          lang={lang}
           labels={t.boxesTableLabels}
           selectedBoxId={selectedBoxRow?.id ?? null}
           onSelectBox={handleBoxRowSelect}
         />
       ) : activeSidebarId === 'shipment-items' ? (
         <ShipmentItemsTable
+          lang={lang}
           labels={t.shipmentItemsTableLabels}
           selectedItemId={selectedItemRow?.id ?? null}
           onSelectItem={handleItemRowSelect}

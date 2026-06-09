@@ -80,6 +80,11 @@ export const SHIPMENTS_I18N_HE = {
     empty: 'אין משלוחים להצגה',
     loading: 'טוען משלוחים...',
     error: 'שגיאה בטעינת המשלוחים',
+    summary: {
+      totalShipments: 'סה"כ משלוחים',
+      totalBoxes: 'סה"כ קרטונים',
+      totalQuantity: 'סה"כ אתרוגים',
+    },
     statusLabels: {
       PREPARING: 'בהכנה',
       SHIPPED: 'נשלח',
@@ -111,6 +116,11 @@ export const SHIPMENTS_I18N_HE = {
     empty: 'אין קרטונים להצגה',
     loading: 'טוען קרטונים...',
     error: 'שגיאה בטעינת הקרטונים',
+    summary: {
+      totalBoxes: 'סה"כ קרטונים',
+      totalQuantity: 'סה"כ אתרוגים',
+      totalShipments: 'משלוחים פעילים',
+    },
     statusLabels: {
       OPEN: 'פתוח',
       CLOSED: 'סגור',
@@ -149,6 +159,11 @@ export const SHIPMENTS_I18N_HE = {
     empty: 'אין פריטי משלוחים להצגה',
     loading: 'טוען פריטי משלוחים...',
     error: 'שגיאה בטעינת פריטי המשלוחים',
+    summary: {
+      totalItems: 'סה"כ פריטים',
+      totalQuantity: 'סה"כ כמות',
+      totalBoxes: 'קרטונים מעורבים',
+    },
     ownershipLabels: {
       TRADER: 'סוחר',
       CUSTOMER: 'לקוח',

@@ -172,6 +172,11 @@ export const HARVEST_I18N_EN: HarvestI18n = {
       total: (value) => `Total: ${value}`,
       clear: 'Clear selection',
     },
+    summary: {
+      totalHarvested: 'Total Harvested',
+      totalRejected: 'Total Rejected',
+      totalNet: 'Total Net',
+    },
     detailsPanel: {
       openDetails: 'Show full details',
       title: 'Full Harvest Details',
@@ -299,6 +304,11 @@ export const HARVEST_I18N_EN: HarvestI18n = {
         traderPrefix: 'Trader:',
         customerPrefix: 'Customer:',
       },
+    },
+    summary: {
+      totalSorted: 'Total Sorted',
+      traderTotal: 'Trader Sorted Total',
+      customerTotal: 'Customer Sorted Total',
     },
     columns: {
       dateGregorian: 'Harvest Gregorian Date',

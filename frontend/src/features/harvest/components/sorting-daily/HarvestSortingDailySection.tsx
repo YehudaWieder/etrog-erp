@@ -1,9 +1,10 @@
+import { useMemo } from 'react';
 import type { Dispatch, RefObject, SetStateAction } from 'react';
 import { FaPrint } from 'react-icons/fa6';
 import { GlobalDataTable, type GlobalDataTableColumn } from '../../../../components/ui/GlobalDataTable';
 import { GlobalLeftDetailsPanel } from '../../../../components/ui/GlobalLeftDetailsPanel';
 import { GlobalScopedFilters, type GlobalScopedFilterConfig } from '../../../../components/ui/GlobalScopedFilters';
-import type { ClassificationDailySummaryRow } from '../../../../services/classificationsApi';
+import type { ClassificationDailySummaryCategory, ClassificationDailySummaryRow } from '../../../../services/classificationsApi';
 import type { HarvestSelectionSummaryLabels } from '../../harvestPage.types';
 import type { HarvestI18n } from '../../i18n';
 import { HarvestSelectionSummary } from '../shared/HarvestSelectionSummary';
@@ -13,9 +14,11 @@ import {
   type SortingDailyDetailsData,
 } from './HarvestSortingDailyDetailsContent';
 import { HarvestSortingPrintExportActions } from '../shared/HarvestSortingPrintExportActions';
+import { buildHarvestSortingDailySummaryTotals } from '../../services/harvestSortingDailySummary.service';
 import workspaceStyles from '../../../../components/ui/styles/WorkspaceSection.module.css';
 import panelStyles from '../styles/HarvestPanels.module.css';
 import sheetStyles from '../styles/HarvestDetailsSheet.module.css';
+import summaryStyles from '../styles/HarvestSortingDailySummary.module.css';
 
 type HarvestSortingDailySectionProps = {
   lang: 'he' | 'en';
@@ -28,6 +31,7 @@ type HarvestSortingDailySectionProps = {
   emptyLabel: string;
   sortingDailyColumns: GlobalDataTableColumn<ClassificationDailySummaryRow>[];
   filteredSortingDailyRows: ClassificationDailySummaryRow[];
+  filteredSortingDailyCategories: ClassificationDailySummaryCategory[];
   onSortingDailySortedRowsChange: (rows: ClassificationDailySummaryRow[]) => void;
   selectedSortingDailyRowId: number | null;
   onSelectSortingDailyRow: Dispatch<SetStateAction<number | null>>;
@@ -55,6 +59,11 @@ type HarvestSortingDailySectionProps = {
   formattedSelectedTotal: string;
   selectionLabels: HarvestSelectionSummaryLabels;
   onClearSelectedNumericCells: () => void;
+  summaryLabels: {
+    totalSorted: string;
+    traderTotal: string;
+    customerTotal: string;
+  };
 };
 
 export function HarvestSortingDailySection({
@@ -68,6 +77,7 @@ export function HarvestSortingDailySection({
   emptyLabel,
   sortingDailyColumns,
   filteredSortingDailyRows,
+  filteredSortingDailyCategories,
   onSortingDailySortedRowsChange,
   selectedSortingDailyRowId,
   onSelectSortingDailyRow,
@@ -91,8 +101,18 @@ export function HarvestSortingDailySection({
   formattedSelectedTotal,
   selectionLabels,
   onClearSelectedNumericCells,
+  summaryLabels,
 }: HarvestSortingDailySectionProps): JSX.Element {
   const hasRows = filteredSortingDailyRows.length > 0;
+
+  const summaryTotals = useMemo(
+    () =>
+      buildHarvestSortingDailySummaryTotals({
+        rows: filteredSortingDailyRows,
+        categories: filteredSortingDailyCategories,
+      }),
+    [filteredSortingDailyCategories, filteredSortingDailyRows],
+  );
 
   return (
     <section className={`${workspaceStyles.workspace} ${panelStyles.workspace}`}>
@@ -101,6 +121,21 @@ export function HarvestSortingDailySection({
           <p className={workspaceStyles.description}>{description}</p>
         </div>
       </header>
+
+      <div className={summaryStyles.summaryGrid}>
+        <article className={summaryStyles.summaryCard}>
+          <span className={summaryStyles.summaryLabel}>{summaryLabels.totalSorted}</span>
+          <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.totalSorted)}</strong>
+        </article>
+        <article className={summaryStyles.summaryCard}>
+          <span className={summaryStyles.summaryLabel}>{summaryLabels.traderTotal}</span>
+          <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.traderTotal)}</strong>
+        </article>
+        <article className={summaryStyles.summaryCard}>
+          <span className={summaryStyles.summaryLabel}>{summaryLabels.customerTotal}</span>
+          <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.customerTotal)}</strong>
+        </article>
+      </div>
 
       <GlobalScopedFilters
         scope="harvest-daily-details"

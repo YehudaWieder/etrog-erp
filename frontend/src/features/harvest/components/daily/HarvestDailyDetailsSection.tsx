@@ -1,4 +1,5 @@
-﻿import type { Dispatch, RefObject, SetStateAction } from 'react';
+﻿import { useMemo } from 'react';
+import type { Dispatch, RefObject, SetStateAction } from 'react';
 import { FaPrint } from 'react-icons/fa6';
 import { GlobalDataTable, type GlobalDataTableColumn } from '../../../../components/ui/GlobalDataTable';
 import { GlobalLeftDetailsPanel } from '../../../../components/ui/GlobalLeftDetailsPanel';
@@ -8,9 +9,11 @@ import type { HarvestSelectionSummaryLabels } from '../../harvestPage.types';
 import { HarvestDailyDetailsContent, type DetailsSheetData, type RelatedSortingsLabels } from './HarvestDailyDetailsContent';
 import { HarvestPrintExportActions } from '../shared/HarvestPrintExportActions';
 import { HarvestSelectionSummary } from '../shared/HarvestSelectionSummary';
+import { buildHarvestDailySummaryTotals } from '../../services/harvestDailySummary.service';
 import workspaceStyles from '../../../../components/ui/styles/WorkspaceSection.module.css';
 import panelStyles from '../styles/HarvestPanels.module.css';
 import sheetStyles from '../styles/HarvestDetailsSheet.module.css';
+import summaryStyles from '../styles/HarvestDailyDetailsSummary.module.css';
 
 type HarvestDailyDetailsSectionProps = {
   lang: 'he' | 'en';
@@ -57,6 +60,11 @@ type HarvestDailyDetailsSectionProps = {
   formattedSelectedTotal: string;
   selectionLabels: HarvestSelectionSummaryLabels;
   onClearSelectedNumericCells: () => void;
+  summaryLabels: {
+    totalHarvested: string;
+    totalRejected: string;
+    totalNet: string;
+  };
 };
 
 export function HarvestDailyDetailsSection({
@@ -104,8 +112,14 @@ export function HarvestDailyDetailsSection({
   formattedSelectedTotal,
   selectionLabels,
   onClearSelectedNumericCells,
+  summaryLabels,
 }: HarvestDailyDetailsSectionProps): JSX.Element {
   const hasRows = filteredHarvestRows.length > 0;
+
+  const summaryTotals = useMemo(
+    () => buildHarvestDailySummaryTotals(filteredHarvestRows),
+    [filteredHarvestRows],
+  );
 
   return (
     <section className={`${workspaceStyles.workspace} ${panelStyles.workspace}`}>
@@ -114,6 +128,21 @@ export function HarvestDailyDetailsSection({
           <p className={workspaceStyles.description}>{description}</p>
         </div>
       </header>
+
+      <div className={summaryStyles.summaryGrid}>
+        <article className={summaryStyles.summaryCard}>
+          <span className={summaryStyles.summaryLabel}>{summaryLabels.totalHarvested}</span>
+          <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.totalHarvested)}</strong>
+        </article>
+        <article className={summaryStyles.summaryCard}>
+          <span className={summaryStyles.summaryLabel}>{summaryLabels.totalRejected}</span>
+          <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.totalRejected)}</strong>
+        </article>
+        <article className={summaryStyles.summaryCard}>
+          <span className={summaryStyles.summaryLabel}>{summaryLabels.totalNet}</span>
+          <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.totalNet)}</strong>
+        </article>
+      </div>
 
       <GlobalScopedFilters
         scope="harvest-daily-details"

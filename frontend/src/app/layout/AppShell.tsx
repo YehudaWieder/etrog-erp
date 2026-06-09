@@ -324,6 +324,9 @@ export function AppShell({
   const handleTopBarNavigate = (item: NavItem) => {
     const targetPath = item.href ?? `/${item.id}`;
     navigate(targetPath);
+
+    // Run global reset after navigation starts to avoid URL param sync races
+    // from the current page's filter hooks.
     window.setTimeout(() => {
       dispatch(resetAllScopeFilters());
     }, 0);

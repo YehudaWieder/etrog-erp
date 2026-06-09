@@ -145,6 +145,11 @@ export type HarvestI18n = {
       total: (value: string) => string;
       clear: string;
     };
+    summary: {
+      totalHarvested: string;
+      totalRejected: string;
+      totalNet: string;
+    };
     detailsPanel: {
       openDetails: string;
       title: string;
@@ -272,6 +277,11 @@ export type HarvestI18n = {
         traderPrefix: string;
         customerPrefix: string;
       };
+    };
+    summary: {
+      totalSorted: string;
+      traderTotal: string;
+      customerTotal: string;
     };
     columns: {
       dateGregorian: string;
