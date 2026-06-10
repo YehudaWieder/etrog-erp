@@ -2,7 +2,7 @@
 
 import { BadRequestException, Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Prisma, ShipmentStatus } from '@prisma/client';
+import { BoxType, Prisma, ShipmentStatus } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { ShipmentsService } from '../../shipments.service';
 import {
@@ -165,12 +165,52 @@ export class ShipmentService {
     // If marking as SHIPPED, update all boxes to SHIPPED in the same transaction
     if (effectiveStatus === ShipmentStatus.SHIPPED) {
       return this.prisma.$transaction(async (tx) => {
-        // Update all boxes in this shipment to SHIPPED
         await tx.box.updateMany({
           where: { shipmentId: id, status: { not: 'SHIPPED' }, isDeleted: false },
           data: { status: 'SHIPPED' },
         });
-        // Update the shipment itself
+        return tx.shipment.update({
+          where: { id },
+          data: {
+            ...updatableData,
+            ...(newSlug !== undefined ? { slug: newSlug } : {}),
+            updatedById: actorId,
+            status: effectiveStatus,
+            shippedAt: nextShippedAt,
+          },
+        });
+      });
+    }
+
+    // If reverting to PREPARING, restore each box status based on fill level
+    if (effectiveStatus === ShipmentStatus.PREPARING) {
+      return this.prisma.$transaction(async (tx) => {
+        const systemConfig = await tx.systemConfig.findFirst({
+          where: { seasonId: existing.seasonId },
+          select: { smallBoxCapacity: true, mediumBoxCapacity: true, largeBoxCapacity: true },
+        });
+
+        const capacityMap: Record<string, number | null | undefined> = {
+          [BoxType.SMALL]: systemConfig?.smallBoxCapacity,
+          [BoxType.MEDIUM]: systemConfig?.mediumBoxCapacity,
+          [BoxType.LARGE]: systemConfig?.largeBoxCapacity,
+        };
+
+        const boxes = await tx.box.findMany({
+          where: { shipmentId: id, isDeleted: false },
+          select: { id: true, boxType: true, totalQuantity: true },
+        });
+
+        for (const box of boxes) {
+          const capacity = capacityMap[box.boxType];
+          // CUSTOM boxes or boxes without a defined capacity → always OPEN
+          const isFull = capacity != null && (box.totalQuantity ?? 0) >= capacity;
+          await tx.box.update({
+            where: { id: box.id },
+            data: { status: isFull ? 'CLOSED' : 'OPEN' },
+          });
+        }
+
         return tx.shipment.update({
           where: { id },
           data: {
