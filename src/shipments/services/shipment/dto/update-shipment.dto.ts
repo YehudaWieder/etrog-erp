@@ -5,6 +5,9 @@ export class UpdateShipmentDto {
   @ApiProperty({ description: 'Shipment ID to update.', example: 42 })
   id!: number;
 
+  @ApiPropertyOptional({ description: 'Updated shipment number. Must be unique within the active season.', example: 110 })
+  shipmentNumber?: number;
+
   @ApiPropertyOptional({
     enum: ShipmentStatus,
     enumName: 'ShipmentStatus',

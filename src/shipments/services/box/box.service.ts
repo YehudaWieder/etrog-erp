@@ -1,8 +1,7 @@
 // src/shipments/services/box/box.service.ts
 
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { ShipmentsService } from '../../shipments.service';
 import {
@@ -104,12 +103,54 @@ export class BoxService {
   async update(id: number, data: UpdateBoxInput, actorId: number) {
     validateUpdateBoxInput(data);
 
-    return this.prisma.box.update({
-      where: { id },
-      data: {
-        ...data,
-        updatedById: actorId,
-      },
+    return this.prisma.$transaction(async (tx) => {
+      const current = await tx.box.findFirst({
+        where: { id, isDeleted: false },
+        select: { id: true, shipmentId: true, seasonId: true, boxNumber: true },
+      });
+
+      if (!current) {
+        throw new NotFoundException(`Box #${id} not found`);
+      }
+
+      const targetShipmentId = data.shipmentId ?? current.shipmentId;
+
+      if (data.shipmentId !== undefined && data.shipmentId !== current.shipmentId) {
+        const newShipment = await tx.shipment.findFirst({
+          where: { id: data.shipmentId, seasonId: current.seasonId, isDeleted: false },
+          select: { id: true },
+        });
+        if (!newShipment) {
+          throw new NotFoundException(`Shipment ${data.shipmentId} not found in current season`);
+        }
+      }
+
+      if (data.boxNumber !== undefined && data.boxNumber !== current.boxNumber) {
+        const existing = await tx.box.findFirst({
+          where: { seasonId: current.seasonId, boxNumber: data.boxNumber, NOT: { id } },
+          select: { id: true },
+        });
+        if (existing) {
+          throw new ConflictException(`Box #${data.boxNumber} already exists in the active season`);
+        }
+      }
+
+      const { shipmentId: _shipmentId, ...restData } = data;
+      const updatedBox = await tx.box.update({
+        where: { id },
+        data: {
+          ...restData,
+          ...(data.shipmentId !== undefined ? { shipmentId: data.shipmentId } : {}),
+          updatedById: actorId,
+        },
+      });
+
+      await this.shipmentsService.syncShipmentTotals(tx, targetShipmentId);
+      if (data.shipmentId !== undefined && data.shipmentId !== current.shipmentId) {
+        await this.shipmentsService.syncShipmentTotals(tx, current.shipmentId);
+      }
+
+      return updatedBox;
     });
   }
 
@@ -157,30 +198,34 @@ export class BoxService {
     });
   }
 
-  // Hard (permanent) delete – removes all items in the box first, then the box itself
+  // Hard (permanent) delete – blocked if any related records exist
   async removeHard(id: number) {
-    try {
-      return await this.prisma.$transaction(async (tx) => {
-        const box = await tx.box.findFirst({
-          where: { id },
-          select: { id: true, shipmentId: true },
-        });
-
-        if (!box) throw new NotFoundException(`Box #${id} not found`);
-
-        await tx.shipmentItem.deleteMany({ where: { boxId: id } });
-        await tx.box.delete({ where: { id } });
-
-        await this.shipmentsService.syncShipmentTotals(tx, box.shipmentId);
-
-        return { deleted: true, id };
+    return this.prisma.$transaction(async (tx) => {
+      const box = await tx.box.findFirst({
+        where: { id },
+        select: { id: true, shipmentId: true },
       });
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
-        throw new ConflictException('Cannot delete box because related records exist in the system.');
+
+      if (!box) throw new NotFoundException(`Box #${id} not found`);
+
+      const itemCount = await tx.shipmentItem.count({ where: { boxId: id } });
+      if (itemCount > 0) {
+        throw new ConflictException(
+          `Cannot delete box #${id} — it has ${itemCount} associated item${itemCount === 1 ? '' : 's'}. Remove them first.`,
+        );
       }
 
-      throw error;
-    }
+      const stockCount = await tx.traderStock.count({ where: { boxId: id } });
+      if (stockCount > 0) {
+        throw new ConflictException(
+          `Cannot delete box #${id} — it has ${stockCount} linked trader stock record${stockCount === 1 ? '' : 's'}.`,
+        );
+      }
+
+      await tx.box.delete({ where: { id } });
+      await this.shipmentsService.syncShipmentTotals(tx, box.shipmentId);
+
+      return { deleted: true, id };
+    });
   }
 }

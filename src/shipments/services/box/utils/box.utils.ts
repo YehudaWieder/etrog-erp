@@ -13,6 +13,8 @@ export type CreateBoxInput = {
 };
 
 export type UpdateBoxInput = {
+  shipmentId?: number;
+  boxNumber?: number;
   boxType?: BoxType;
   status?: BoxStatus;
   notes?: string | null;
@@ -104,9 +106,17 @@ export function validateUpdateBoxInput(data: UpdateBoxInput): void {
 
   assertOnlyAllowedFields(
     data as Record<string, unknown>,
-    ['boxType', 'status', 'notes', 'ownershipType', 'traderId', 'customerId'],
-    'Only boxType, status, notes, ownershipType, traderId, customerId can be updated here. updatedById is managed by the server',
+    ['shipmentId', 'boxNumber', 'boxType', 'status', 'notes', 'ownershipType', 'traderId', 'customerId'],
+    'Only shipmentId, boxNumber, boxType, status, notes, ownershipType, traderId, customerId can be updated here.',
   );
+
+  if (data.shipmentId !== undefined) {
+    assertPositiveInt(data.shipmentId, 'shipmentId');
+  }
+
+  if (data.boxNumber !== undefined) {
+    assertPositiveInt(data.boxNumber, 'boxNumber');
+  }
 
   if (data.boxType !== undefined && !Object.values(BoxType).includes(data.boxType as BoxType)) {
     throw new BadRequestException('boxType is invalid');

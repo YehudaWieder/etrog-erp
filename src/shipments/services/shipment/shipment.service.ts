@@ -127,7 +127,7 @@ export class ShipmentService {
 
     const existing = await this.prisma.shipment.findFirst({
       where: { id, isDeleted: false },
-      select: { id: true, status: true, shippedAt: true },
+      select: { id: true, status: true, shippedAt: true, seasonId: true, shipmentNumber: true },
     });
 
     if (!existing) {
@@ -135,6 +135,21 @@ export class ShipmentService {
     }
 
     const updatableData = { ...data };
+    let newSlug: string | undefined;
+
+    if (data.shipmentNumber !== undefined && data.shipmentNumber !== existing.shipmentNumber) {
+      const conflict = await this.prisma.shipment.findFirst({
+        where: { seasonId: existing.seasonId, shipmentNumber: data.shipmentNumber, isDeleted: false, NOT: { id } },
+        select: { id: true },
+      });
+
+      if (conflict) {
+        throw new BadRequestException(`Shipment number ${data.shipmentNumber} already exists in this season`);
+      }
+
+      const year = new Date().getFullYear();
+      newSlug = `SHP-${year}-${data.shipmentNumber}`;
+    }
 
     let normalizedStatus = updatableData.status as ShipmentStatus | undefined;
     if (!normalizedStatus && updatableData.shippedAt) {
@@ -160,6 +175,7 @@ export class ShipmentService {
           where: { id },
           data: {
             ...updatableData,
+            ...(newSlug !== undefined ? { slug: newSlug } : {}),
             updatedById: actorId,
             status: effectiveStatus,
             shippedAt: nextShippedAt,
@@ -173,6 +189,7 @@ export class ShipmentService {
       where: { id },
       data: {
         ...updatableData,
+        ...(newSlug !== undefined ? { slug: newSlug } : {}),
         updatedById: actorId,
         status: effectiveStatus,
         shippedAt: nextShippedAt,
@@ -205,6 +222,16 @@ export class ShipmentService {
         });
 
         if (!shipment) throw new NotFoundException(`Shipment #${id} not found`);
+
+        const boxCount = await tx.box.count({ where: { shipmentId: id, isDeleted: false } });
+        if (boxCount > 0) {
+          throw new BadRequestException(`Cannot delete shipment #${id} — it has ${boxCount} associated box${boxCount === 1 ? '' : 'es'}. Remove them first.`);
+        }
+
+        const itemCount = await tx.shipmentItem.count({ where: { shipmentId: id, isDeleted: false } });
+        if (itemCount > 0) {
+          throw new BadRequestException(`Cannot delete shipment #${id} — it has ${itemCount} associated item${itemCount === 1 ? '' : 's'}. Remove them first.`);
+        }
 
         await tx.shipmentItem.deleteMany({ where: { shipmentId: id } });
         await tx.box.deleteMany({ where: { shipmentId: id } });

@@ -7,6 +7,7 @@ export type CreateShipmentInput = {
 };
 
 export type UpdateShipmentInput = {
+  shipmentNumber?: number;
   status?: ShipmentStatus;
   shippedAt?: Date | string;
   notes?: string | null;
@@ -72,9 +73,13 @@ export function validateUpdateShipmentInput(data: UpdateShipmentInput): void {
 
   assertOnlyAllowedFields(
     data as Record<string, unknown>,
-    ['status', 'shippedAt', 'notes'],
-    'Only status, shippedAt, and notes can be updated here. updatedById is managed by the server',
+    ['shipmentNumber', 'status', 'shippedAt', 'notes'],
+    'Only shipmentNumber, status, shippedAt, and notes can be updated here. updatedById is managed by the server',
   );
+
+  if (data.shipmentNumber !== undefined) {
+    assertPositiveInt(data.shipmentNumber, 'shipmentNumber');
+  }
 
   if (data.status !== undefined && !Object.values(ShipmentStatus).includes(data.status as ShipmentStatus)) {
     throw new BadRequestException('status is invalid');

@@ -5,6 +5,12 @@ export class UpdateBoxDto {
   @ApiProperty({ description: 'Box ID to update.', example: 101 })
   id!: number;
 
+  @ApiPropertyOptional({ description: 'Move box to a different shipment (must belong to the same season).', example: 16 })
+  shipmentId?: number;
+
+  @ApiPropertyOptional({ description: 'New box number. Must be unique within the season.', example: 5 })
+  boxNumber?: number;
+
   @ApiPropertyOptional({ enum: BoxType, enumName: 'BoxType', description: 'Updated physical box type.', example: 'LARGE' })
   boxType?: BoxType;
 
