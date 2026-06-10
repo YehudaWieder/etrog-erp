@@ -60,6 +60,10 @@ export default function SettingsPage(): JSX.Element {
     setSeasonsHeaderState,
     fieldsHeaderState,
     setFieldsHeaderState,
+    cartonsHeaderState,
+    setCartonsHeaderState,
+    pricingHeaderState,
+    setPricingHeaderState,
     tradersHeaderState,
     setTradersHeaderState,
     traderCategoriesHeaderState,
@@ -91,6 +95,8 @@ export default function SettingsPage(): JSX.Element {
       onSave={handleUpdateSettings}
       seasonsHeaderState={seasonsHeaderState}
       fieldsHeaderState={fieldsHeaderState}
+      cartonsHeaderState={cartonsHeaderState}
+      pricingHeaderState={pricingHeaderState}
       tradersHeaderState={tradersHeaderState}
       traderCategoriesHeaderState={traderCategoriesHeaderState}
       defaultTraderCategoriesHeaderState={defaultTraderCategoriesHeaderState}
@@ -149,8 +155,11 @@ export default function SettingsPage(): JSX.Element {
           activeChildId,
           isManager,
           managerOnlyHint: t.managerOnlyHint,
+          lang,
           setSeasonsHeaderState,
           setFieldsHeaderState,
+          setCartonsHeaderState,
+          setPricingHeaderState,
           setTradersHeaderState,
           setTraderCategoriesHeaderState,
           setDefaultTraderCategoriesHeaderState,

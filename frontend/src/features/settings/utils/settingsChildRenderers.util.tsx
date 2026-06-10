@@ -6,15 +6,20 @@ import SeasonsManagement, { type SeasonsHeaderState } from '../../seasons/Season
 import DefaultTraderCategoriesManagement, { type DefaultTraderCategoriesHeaderState } from '../../traders/DefaultTraderCategoriesManagement';
 import TraderCategoriesManagement, { type TraderCategoriesHeaderState } from '../../traders/TraderCategoriesManagement';
 import TradersManagement, { type TradersHeaderState } from '../../traders/TradersManagement';
-import type { SettingsChildKey } from '../settingsPage.types';
+import SystemConfigManagement from '../../system-config/components/SystemConfigManagement';
+import PricingManagement from '../../system-config/components/PricingManagement';
+import type { Lang, SettingsChildKey } from '../settingsPage.types';
 import feedbackStyles from '../styles/SettingsWorkspaceFeedback.module.css';
 
 type RenderSettingsActiveChildParams = {
   activeChildId: SettingsChildKey;
   isManager: boolean;
   managerOnlyHint: string;
+  lang: Lang;
   setSeasonsHeaderState: Dispatch<SetStateAction<SeasonsHeaderState | null>>;
   setFieldsHeaderState: Dispatch<SetStateAction<FieldsHeaderState | null>>;
+  setCartonsHeaderState: Dispatch<SetStateAction<import('../../system-config/components/SystemConfigManagement').CartonsHeaderState | null>>;
+  setPricingHeaderState: Dispatch<SetStateAction<import('../../system-config/components/PricingManagement').PricingHeaderState | null>>;
   setTradersHeaderState: Dispatch<SetStateAction<TradersHeaderState | null>>;
   setTraderCategoriesHeaderState: Dispatch<SetStateAction<TraderCategoriesHeaderState | null>>;
   setDefaultTraderCategoriesHeaderState: Dispatch<SetStateAction<DefaultTraderCategoriesHeaderState | null>>;
@@ -26,7 +31,10 @@ export function renderSettingsActiveChild({
   activeChildId,
   isManager,
   managerOnlyHint,
+  lang,
   setSeasonsHeaderState,
+  setCartonsHeaderState,
+  setPricingHeaderState,
   setFieldsHeaderState,
   setTradersHeaderState,
   setTraderCategoriesHeaderState,
@@ -37,6 +45,8 @@ export function renderSettingsActiveChild({
   const childRenderers: Partial<Record<SettingsChildKey, () => JSX.Element | null>> = {
     seasons: () => <SeasonsManagement onHeaderStateChange={setSeasonsHeaderState} />,
     fields: () => <FieldsManagement onHeaderStateChange={setFieldsHeaderState} />,
+    cartons: () => <SystemConfigManagement lang={lang} onHeaderStateChange={setCartonsHeaderState} />,
+    pricing: () => <PricingManagement lang={lang} onHeaderStateChange={setPricingHeaderState} />,
     traders: () => <TradersManagement onHeaderStateChange={setTradersHeaderState} />,
     traderCategories: () => <TraderCategoriesManagement onHeaderStateChange={setTraderCategoriesHeaderState} />,
     defaultTraderCategories: () => (

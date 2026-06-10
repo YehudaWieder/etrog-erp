@@ -3,6 +3,8 @@ import type { CustomersHeaderState } from '../../customers/components/CustomersM
 import type { CustomerCategoriesHeaderState } from '../../customers/components/CustomerCategoriesManagement';
 import type { FieldsHeaderState } from '../../fields/components/FieldsManagement';
 import type { SeasonsHeaderState } from '../../seasons/SeasonsManagement';
+import type { CartonsHeaderState } from '../../system-config/components/SystemConfigManagement';
+import type { PricingHeaderState } from '../../system-config/components/PricingManagement';
 import type { DefaultTraderCategoriesHeaderState } from '../../traders/DefaultTraderCategoriesManagement';
 import type { TraderCategoriesHeaderState } from '../../traders/TraderCategoriesManagement';
 import type { TradersHeaderState } from '../../traders/TradersManagement';
@@ -23,6 +25,8 @@ type SettingsSeasonsHeaderActionsProps = {
   onSave: () => void;
   seasonsHeaderState: SeasonsHeaderState | null;
   fieldsHeaderState: FieldsHeaderState | null;
+  cartonsHeaderState: CartonsHeaderState | null;
+  pricingHeaderState: PricingHeaderState | null;
   tradersHeaderState: TradersHeaderState | null;
   traderCategoriesHeaderState: TraderCategoriesHeaderState | null;
   defaultTraderCategoriesHeaderState: DefaultTraderCategoriesHeaderState | null;
@@ -110,6 +114,8 @@ export function SettingsSeasonsHeaderActions({
   onSave,
   seasonsHeaderState,
   fieldsHeaderState,
+  cartonsHeaderState,
+  pricingHeaderState,
   tradersHeaderState,
   traderCategoriesHeaderState,
   defaultTraderCategoriesHeaderState,
@@ -148,6 +154,38 @@ export function SettingsSeasonsHeaderActions({
       fieldsHeaderState.onDelete,
       fieldsHeaderState.isDeleteDisabled,
       actionText,
+    );
+  }
+
+  if (activeChildId === 'cartons' && cartonsHeaderState) {
+    return (
+      <div className={styles.actions}>
+        <button
+          type="button"
+          className={`${styles.button} ${styles.success}`}
+          onClick={cartonsHeaderState.onEdit}
+          disabled={cartonsHeaderState.isEditDisabled}
+        >
+          <FaPenToSquare />
+          <span>{actionText.edit}</span>
+        </button>
+      </div>
+    );
+  }
+
+  if (activeChildId === 'pricing' && pricingHeaderState) {
+    return (
+      <div className={styles.actions}>
+        <button
+          type="button"
+          className={`${styles.button} ${styles.success}`}
+          onClick={pricingHeaderState.onEdit}
+          disabled={pricingHeaderState.isEditDisabled}
+        >
+          <FaPenToSquare />
+          <span>{actionText.edit}</span>
+        </button>
+      </div>
     );
   }
 

@@ -7,6 +7,8 @@ export function normalizeSettingsChildId(pathname: string, isManager: boolean): 
   if (path.includes('/site/language')) return 'language';
   if (path.includes('/system/seasons')) return isManager ? 'seasons' : 'language';
   if (path.includes('/system/fields')) return isManager ? 'fields' : 'language';
+  if (path.includes('/system/cartons')) return isManager ? 'cartons' : 'language';
+  if (path.includes('/system/pricing')) return isManager ? 'pricing' : 'language';
   if (path.includes('/traders/default-categories')) return isManager ? 'defaultTraderCategories' : 'language';
   if (path.includes('/traders/categories')) return isManager ? 'traderCategories' : 'language';
   if (path.includes('/traders')) return isManager ? 'traders' : 'language';

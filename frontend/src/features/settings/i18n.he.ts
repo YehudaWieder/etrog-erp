@@ -56,6 +56,8 @@ export const SETTINGS_I18N_HE: SettingsI18n = {
       items: [
         { id: 'seasons', label: 'עונות', href: '/settings/system/seasons', icon: 'fa-calendar' },
         { id: 'fields', label: 'שדות', href: '/settings/system/fields', icon: 'fa-grip' },
+        { id: 'cartons', label: 'קרטונים', href: '/settings/system/cartons', icon: 'fa-box' },
+        { id: 'pricing', label: 'מחירים', href: '/settings/system/pricing', icon: 'fa-money-bill' },
       ],
     },
     {
@@ -96,6 +98,14 @@ export const SETTINGS_I18N_HE: SettingsI18n = {
     fields: {
       title: 'ניהול שדות',
       description: 'נהל את רשימת השדות במערכת, כולל הוספה, עריכה ומחיקה.',
+    },
+    cartons: {
+      title: 'הגדרות קרטונים',
+      description: 'הגדר את קיבולת הקרטונים: קטן (S), בינוני (M), גדול (L).',
+    },
+    pricing: {
+      title: 'הגדרות מחיר',
+      description: 'הגדר מטבע ומחיר אתרוג לכל עונה.',
     },
     traders: {
       title: 'הגדרות סוחרים',

@@ -62,7 +62,7 @@ export class SystemConfigService {
     return this.prisma.systemConfig.create({ data: createData });
   }
 
-  // Get config
+  // Get config — returns DB record or schema defaults when none exists yet
   async getConfig(seasonId: number) {
     await this.assertSeasonExists(seasonId);
 
@@ -71,7 +71,17 @@ export class SystemConfigService {
     });
 
     if (!config) {
-      throw new NotFoundException(`Configuration for season ${seasonId} was not found.`);
+      return {
+        id: null,
+        seasonId,
+        currency: null,
+        unitPrice: null,
+        smallBoxCapacity: 50,
+        mediumBoxCapacity: 30,
+        largeBoxCapacity: 24,
+        createdAt: null,
+        updatedAt: null,
+      };
     }
 
     return config;
@@ -83,18 +93,23 @@ export class SystemConfigService {
     currency: Currency,
     unitPrice: number,
   ) {
-    const config = await this.getConfig(seasonId);
+    await this.assertSeasonExists(seasonId);
 
-    return this.prisma.systemConfig.update({
-      where: { id: config.id },
-      data: {
-        currency,
-        unitPrice,
-      },
+    const existing = await this.prisma.systemConfig.findFirst({ where: { seasonId } });
+
+    if (existing) {
+      return this.prisma.systemConfig.update({
+        where: { id: existing.id },
+        data: { currency, unitPrice },
+      });
+    }
+
+    return this.prisma.systemConfig.create({
+      data: { seasonId, currency, unitPrice },
     });
   }
 
-  // Generic update
+  // Generic update — upserts if no config exists yet for the season
   async updateConfig(
     seasonId: number,
     data: Prisma.SystemConfigUpdateInput,
@@ -109,11 +124,26 @@ export class SystemConfigService {
       largeBoxCapacity: data.largeBoxCapacity as number | undefined,
     });
 
-    const config = await this.getConfig(seasonId);
+    await this.assertSeasonExists(seasonId);
 
-    return this.prisma.systemConfig.update({
-      where: { id: config.id },
-      data,
+    const existing = await this.prisma.systemConfig.findFirst({ where: { seasonId } });
+
+    if (existing) {
+      return this.prisma.systemConfig.update({
+        where: { id: existing.id },
+        data,
+      });
+    }
+
+    return this.prisma.systemConfig.create({
+      data: {
+        seasonId,
+        smallBoxCapacity: (data.smallBoxCapacity as number | undefined) ?? 50,
+        mediumBoxCapacity: (data.mediumBoxCapacity as number | undefined) ?? 30,
+        largeBoxCapacity: (data.largeBoxCapacity as number | undefined) ?? 24,
+        ...(data.currency !== undefined && { currency: data.currency as Currency }),
+        ...(data.unitPrice !== undefined && { unitPrice: data.unitPrice as Prisma.Decimal }),
+      },
     });
   }
 }

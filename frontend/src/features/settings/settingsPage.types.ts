@@ -7,6 +7,8 @@ export type SettingsChildKey =
   | 'themeColor'
   | 'seasons'
   | 'fields'
+  | 'cartons'
+  | 'pricing'
   | 'traders'
   | 'traderCategories'
   | 'defaultTraderCategories'

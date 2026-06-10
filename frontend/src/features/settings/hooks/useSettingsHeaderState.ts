@@ -3,6 +3,8 @@ import type { CustomersHeaderState } from '../../customers/components/CustomersM
 import type { CustomerCategoriesHeaderState } from '../../customers/components/CustomerCategoriesManagement';
 import type { FieldsHeaderState } from '../../fields/components/FieldsManagement';
 import type { SeasonsHeaderState } from '../../seasons/SeasonsManagement';
+import type { CartonsHeaderState } from '../../system-config/components/SystemConfigManagement';
+import type { PricingHeaderState } from '../../system-config/components/PricingManagement';
 import type { DefaultTraderCategoriesHeaderState } from '../../traders/DefaultTraderCategoriesManagement';
 import type { TraderCategoriesHeaderState } from '../../traders/TraderCategoriesManagement';
 import type { TradersHeaderState } from '../../traders/TradersManagement';
@@ -17,6 +19,8 @@ type UseSettingsHeaderStateParams = {
 export function useSettingsHeaderState({ contentTitle, activeChildId }: UseSettingsHeaderStateParams) {
   const [seasonsHeaderState, setSeasonsHeaderState] = useState<SeasonsHeaderState | null>(null);
   const [fieldsHeaderState, setFieldsHeaderState] = useState<FieldsHeaderState | null>(null);
+  const [cartonsHeaderState, setCartonsHeaderState] = useState<CartonsHeaderState | null>(null);
+  const [pricingHeaderState, setPricingHeaderState] = useState<PricingHeaderState | null>(null);
   const [tradersHeaderState, setTradersHeaderState] = useState<TradersHeaderState | null>(null);
   const [traderCategoriesHeaderState, setTraderCategoriesHeaderState] = useState<TraderCategoriesHeaderState | null>(null);
   const [defaultTraderCategoriesHeaderState, setDefaultTraderCategoriesHeaderState] = useState<DefaultTraderCategoriesHeaderState | null>(null);
@@ -32,6 +36,7 @@ export function useSettingsHeaderState({ contentTitle, activeChildId }: UseSetti
     customers: customersHeaderState,
     customerCategories: customerCategoriesHeaderState,
   });
+  // cartonsHeaderState has no count, excluded from title resolution
 
   return {
     pageTitle,
@@ -39,6 +44,10 @@ export function useSettingsHeaderState({ contentTitle, activeChildId }: UseSetti
     setSeasonsHeaderState,
     fieldsHeaderState,
     setFieldsHeaderState,
+    cartonsHeaderState,
+    setCartonsHeaderState,
+    pricingHeaderState,
+    setPricingHeaderState,
     tradersHeaderState,
     setTradersHeaderState,
     traderCategoriesHeaderState,
