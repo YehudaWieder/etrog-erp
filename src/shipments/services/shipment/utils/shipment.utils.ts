@@ -21,6 +21,10 @@ export function resolveShippedAt(
     return shippedAt ? new Date(shippedAt) : new Date();
   }
 
+  if (status === ShipmentStatus.DELIVERED) {
+    return shippedAt ? new Date(shippedAt) : null;
+  }
+
   return null;
 }
 

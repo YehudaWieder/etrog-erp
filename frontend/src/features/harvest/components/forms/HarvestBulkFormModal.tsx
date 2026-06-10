@@ -171,78 +171,100 @@ export function HarvestBulkFormModal({
         <p className="modal-message">{form.instructions}</p>
 
         <div className={`management-form-grid ${styles.grid} ${styles.gridPrimary}`}>
-          <select
-            className="seasons-manager__year-input"
-            value={harvestFormFieldId}
-            onChange={(event) => onFieldIdChange(event.target.value)}
-            aria-label={form.fieldLabel}
-          >
-            <option value="">{form.fieldPlaceholder}</option>
-            {fields.map((field) => (
-              <option key={`harvest-form-field-${field.id}`} value={String(field.id)}>
-                {field.name}
-              </option>
-            ))}
-          </select>
+          <label className={styles.selectionField}>
+            <span>{form.fieldLabel}</span>
+            <select
+              className="seasons-manager__year-input"
+              value={harvestFormFieldId}
+              onChange={(event) => onFieldIdChange(event.target.value)}
+              aria-label={form.fieldLabel}
+              autoFocus
+            >
+              <option value="">{form.fieldPlaceholder}</option>
+              {fields.map((field) => (
+                <option key={`harvest-form-field-${field.id}`} value={String(field.id)}>
+                  {field.name}
+                </option>
+              ))}
+            </select>
+          </label>
 
-          <input
-            className="seasons-manager__year-input"
-            type="date"
-            value={harvestFormDateGregorian}
-            onChange={(event) => onGregorianDateChange(event.target.value)}
-            aria-label={form.gregorianDateLabel}
-          />
+          <label className={styles.summaryField}>
+            <span>{form.gregorianDateLabel}</span>
+            <input
+              className="seasons-manager__year-input"
+              type="date"
+              value={harvestFormDateGregorian}
+              onChange={(event) => onGregorianDateChange(event.target.value)}
+              aria-label={form.gregorianDateLabel}
+            />
+          </label>
 
-          <input
-            className="seasons-manager__year-input"
-            type="text"
-            value={harvestFormDateHebrew}
-            onChange={(event) => onHebrewDateChange(event.target.value)}
-            placeholder={form.hebrewDatePlaceholder}
-            aria-label={form.hebrewDateLabel}
-          />
+          <label className={styles.summaryField}>
+            <span>{form.hebrewDateLabel}</span>
+            <input
+              className="seasons-manager__year-input"
+              type="text"
+              value={harvestFormDateHebrew}
+              onChange={(event) => onHebrewDateChange(event.target.value)}
+              placeholder={form.hebrewDatePlaceholder}
+              aria-label={form.hebrewDateLabel}
+            />
+          </label>
 
-          <input
-            className={`seasons-manager__year-input harvest-bulk-form-number-input ${styles.numberInputFirst}`}
-            type="number"
-            min="0"
-            required
-            value={harvestFormTotalHarvested}
-            onChange={(event) => onTotalHarvestedChange(event.target.value)}
-            placeholder={form.totalHarvestedPlaceholder}
-            aria-label={form.totalHarvestedPlaceholder}
-          />
+          <label className={`${styles.summaryField} ${styles.numberInputFirst}`}>
+            <span>{form.totalHarvestedPlaceholder}</span>
+            <input
+              className="seasons-manager__year-input harvest-bulk-form-number-input"
+              type="number"
+              min="0"
+              required
+              value={harvestFormTotalHarvested}
+              onChange={(event) => onTotalHarvestedChange(event.target.value)}
+              placeholder={form.totalHarvestedPlaceholder}
+              aria-label={form.totalHarvestedPlaceholder}
+            />
+          </label>
 
-          <input
-            className="seasons-manager__year-input harvest-bulk-form-number-input"
-            type="number"
-            min="0"
-            required
-            value={harvestFormTotalRejected}
-            onChange={(event) => onTotalRejectedChange(event.target.value)}
-            placeholder={form.totalRejectedPlaceholder}
-            aria-label={form.totalRejectedPlaceholder}
-          />
+          <label className={styles.summaryField}>
+            <span>{form.totalRejectedPlaceholder}</span>
+            <input
+              className="seasons-manager__year-input harvest-bulk-form-number-input"
+              type="number"
+              min="0"
+              required
+              value={harvestFormTotalRejected}
+              onChange={(event) => onTotalRejectedChange(event.target.value)}
+              placeholder={form.totalRejectedPlaceholder}
+              aria-label={form.totalRejectedPlaceholder}
+            />
+          </label>
 
-          <input
-            className="seasons-manager__year-input harvest-bulk-form-number-input"
-            type="number"
-            min="0"
-            value={harvestFormOwnerHarvested}
-            onChange={(event) => onOwnerHarvestedChange(event.target.value)}
-            placeholder={form.ownerHarvestedPlaceholder}
-            aria-label={form.ownerHarvestedLabel}
-          />
+          <label className={styles.summaryField}>
+            <span>{form.ownerHarvestedLabel}</span>
+            <input
+              className="seasons-manager__year-input harvest-bulk-form-number-input"
+              type="number"
+              min="0"
+              value={harvestFormOwnerHarvested}
+              onChange={(event) => onOwnerHarvestedChange(event.target.value)}
+              placeholder={form.ownerHarvestedPlaceholder}
+              aria-label={form.ownerHarvestedLabel}
+            />
+          </label>
 
-          <input
-            className="seasons-manager__year-input harvest-bulk-form-number-input"
-            type="number"
-            min="0"
-            value={harvestFormOwnerRejected}
-            onChange={(event) => onOwnerRejectedChange(event.target.value)}
-            placeholder={form.ownerRejectedPlaceholder}
-            aria-label={form.ownerRejectedLabel}
-          />
+          <label className={styles.summaryField}>
+            <span>{form.ownerRejectedLabel}</span>
+            <input
+              className="seasons-manager__year-input harvest-bulk-form-number-input"
+              type="number"
+              min="0"
+              value={harvestFormOwnerRejected}
+              onChange={(event) => onOwnerRejectedChange(event.target.value)}
+              placeholder={form.ownerRejectedPlaceholder}
+              aria-label={form.ownerRejectedLabel}
+            />
+          </label>
 
           <fieldset className={styles.classificationMode} aria-label={form.classificationModeLabel}>
             <legend>{form.classificationModeLabel}</legend>
@@ -267,14 +289,17 @@ export function HarvestBulkFormModal({
             </label>
           </fieldset>
 
-          <textarea
-            className={`seasons-manager__year-input ${styles.notes} ${styles.notesWithMode}`}
-            rows={1}
-            value={harvestFormNotes}
-            onChange={(event) => onNotesChange(event.target.value, event.currentTarget)}
-            placeholder={form.notesPlaceholder}
-            aria-label={form.notesLabel}
-          />
+          <label className={`${styles.summaryField} ${styles.notesWithMode}`}>
+            <span>{form.notesLabel}</span>
+            <textarea
+              className={`seasons-manager__year-input ${styles.notes}`}
+              rows={1}
+              value={harvestFormNotes}
+              onChange={(event) => onNotesChange(event.target.value, event.currentTarget)}
+              placeholder={form.notesPlaceholder}
+              aria-label={form.notesLabel}
+            />
+          </label>
         </div>
 
         <div className={styles.classifications}>

@@ -26,6 +26,7 @@ type EditShipmentFormModalProps = {
   onStatusChange: (v: ShipmentStatus) => void;
   shippedAt: string;
   onShippedAtChange: (v: string) => void;
+  isShippedAtDisabled: boolean;
   notes: string;
   onNotesChange: (v: string) => void;
   isSubmitting: boolean;
@@ -44,6 +45,7 @@ export function EditShipmentFormModal({
   onStatusChange,
   shippedAt,
   onShippedAtChange,
+  isShippedAtDisabled,
   notes,
   onNotesChange,
   isSubmitting,
@@ -92,15 +94,17 @@ export function EditShipmentFormModal({
             </select>
           </div>
 
-          <div className={styles.field}>
-            <label className={styles.label}>{t.shippedAtLabel}</label>
-            <input
-              className="seasons-manager__year-input"
-              type="date"
-              value={shippedAt}
-              onChange={(e) => onShippedAtChange(e.target.value)}
-            />
-          </div>
+          {!isShippedAtDisabled && (
+            <div className={styles.field}>
+              <label className={styles.label}>{t.shippedAtLabel}</label>
+              <input
+                className="seasons-manager__year-input"
+                type="date"
+                value={shippedAt}
+                onChange={(e) => onShippedAtChange(e.target.value)}
+              />
+            </div>
+          )}
 
           <div className={styles.field}>
             <label className={styles.label}>{t.notesLabel}</label>

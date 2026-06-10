@@ -247,7 +247,7 @@ export class HarvestBulkWorkflowService {
         throw new ConflictException('This classification combination already exists for this harvest');
       }
 
-      const classSlug = `harvest-${harvestId}-tcat-${createPayload.traderCategoryId ?? 0}-ccat-${createPayload.customerCategoryId ?? 0}-g-${createPayload.grade ?? 'NA'}-pitam-${createPayload.pitamStatus}-a-${createPayload.assignmentType}`;
+      const classSlug = `harvest-${harvestId}-t-${createPayload.traderId ?? 0}-c-${createPayload.customerId ?? 0}-tcat-${createPayload.traderCategoryId ?? 0}-ccat-${createPayload.customerCategoryId ?? 0}-g-${createPayload.grade ?? 'NA'}-pitam-${createPayload.pitamStatus}-a-${createPayload.assignmentType}`;
 
       const classification = await tx.classification.create({
         data: {

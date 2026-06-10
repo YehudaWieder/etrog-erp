@@ -401,9 +401,10 @@ export function ShipmentsPage() {
         onShipmentNumberChange={editShipmentForm.setShipmentNumber}
         t={t.editShipmentModal}
         status={editShipmentForm.status}
-        onStatusChange={editShipmentForm.setStatus}
+        onStatusChange={editShipmentForm.handleStatusChange}
         shippedAt={editShipmentForm.shippedAt}
         onShippedAtChange={editShipmentForm.setShippedAt}
+        isShippedAtDisabled={editShipmentForm.status !== 'SHIPPED'}
         notes={editShipmentForm.notes}
         onNotesChange={editShipmentForm.setNotes}
         isSubmitting={editShipmentForm.isSubmitting}

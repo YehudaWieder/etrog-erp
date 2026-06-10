@@ -106,9 +106,9 @@ export const SHIPMENTS_I18N_HE = {
     duplicateBoxNumber: 'מספר קרטון זה כבר קיים בעונה הפעילה',
     genericError: 'אירעה שגיאה. נסה שוב.',
     boxTypeOptions: {
-      SMALL: 'קטן',
-      MEDIUM: 'בינוני',
-      LARGE: 'גדול',
+      SMALL: 'S',
+      MEDIUM: 'M',
+      LARGE: 'L',
       CUSTOM: 'מותאם אישית',
     },
     ownershipTypeOptions: {
@@ -150,9 +150,9 @@ export const SHIPMENTS_I18N_HE = {
       SHIPPED: 'נשלח',
     },
     boxTypeOptions: {
-      SMALL: 'קטן',
-      MEDIUM: 'בינוני',
-      LARGE: 'גדול',
+      SMALL: 'S',
+      MEDIUM: 'M',
+      LARGE: 'L',
       CUSTOM: 'מותאם אישית',
     },
     ownershipTypeOptions: {
@@ -187,6 +187,7 @@ export const SHIPMENTS_I18N_HE = {
     duplicateShipmentNumber: 'מספר משלוח זה כבר קיים בעונה הפעילה',
     statusLabel: 'סטטוס',
     shippedAtLabel: 'תאריך משלוח',
+    shippedAtRequired: 'יש לבחור תאריך משלוח כאשר הסטטוס הוא "נשלח"',
     notesLabel: 'הערות',
     notesPlaceholder: 'הערות אופציונליות...',
     save: 'שמור שינויים',
@@ -246,7 +247,7 @@ export const SHIPMENTS_I18N_HE = {
     colDetails: 'פרטים',
     colBoxNumber: 'מס\' קרטון',
     colShipmentNumber: 'מס\' משלוח',
-    colBoxType: 'סוג קרטון',
+    colBoxType: 'גודל אתרוגים',
     colQuantity: 'כמות אתרוגים',
     colStatus: 'סטטוס קרטון',
     colOwnership: 'בעלות',
@@ -265,9 +266,9 @@ export const SHIPMENTS_I18N_HE = {
       SHIPPED: 'נשלח',
     },
     boxTypeLabels: {
-      SMALL: 'קטן',
-      MEDIUM: 'בינוני',
-      LARGE: 'גדול',
+      SMALL: 'S',
+      MEDIUM: 'M',
+      LARGE: 'L',
       CUSTOM: 'מותאם אישית',
     },
     ownershipLabels: {

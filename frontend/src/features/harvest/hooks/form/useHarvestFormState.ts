@@ -63,9 +63,7 @@ export function useHarvestFormState({
     setHarvestFormFieldId(
       fieldFilterId !== 'all' && Number(fieldFilterId) > 0
         ? String(fieldFilterId)
-        : fields[0]
-          ? String(fields[0].id)
-          : '',
+        : '',
     );
     setHarvestFormTotalHarvested('');
     setHarvestFormTotalRejected('');

@@ -103,9 +103,9 @@ export const SHIPMENTS_I18N_EN = {
     duplicateBoxNumber: 'This box number already exists in the active season',
     genericError: 'An error occurred. Please try again.',
     boxTypeOptions: {
-      SMALL: 'Small',
-      MEDIUM: 'Medium',
-      LARGE: 'Large',
+      SMALL: 'S',
+      MEDIUM: 'M',
+      LARGE: 'L',
       CUSTOM: 'Custom',
     },
     ownershipTypeOptions: {
@@ -147,9 +147,9 @@ export const SHIPMENTS_I18N_EN = {
       SHIPPED: 'Shipped',
     },
     boxTypeOptions: {
-      SMALL: 'Small',
-      MEDIUM: 'Medium',
-      LARGE: 'Large',
+      SMALL: 'S',
+      MEDIUM: 'M',
+      LARGE: 'L',
       CUSTOM: 'Custom',
     },
     ownershipTypeOptions: {
@@ -184,6 +184,7 @@ export const SHIPMENTS_I18N_EN = {
     duplicateShipmentNumber: 'This shipment number already exists in the active season',
     statusLabel: 'Status',
     shippedAtLabel: 'Shipped Date',
+    shippedAtRequired: 'A shipped date is required when status is "Shipped"',
     notesLabel: 'Notes',
     notesPlaceholder: 'Optional notes...',
     save: 'Save Changes',
@@ -262,9 +263,9 @@ export const SHIPMENTS_I18N_EN = {
       SHIPPED: 'Shipped',
     },
     boxTypeLabels: {
-      SMALL: 'Small',
-      MEDIUM: 'Medium',
-      LARGE: 'Large',
+      SMALL: 'S',
+      MEDIUM: 'M',
+      LARGE: 'L',
       CUSTOM: 'Custom',
     },
     ownershipLabels: {

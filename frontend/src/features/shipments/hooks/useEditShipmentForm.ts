@@ -5,6 +5,7 @@ import { updateShipment, type ShipmentRecord, type ShipmentStatus } from '../../
 type EditShipmentFormText = {
   shipmentNumberRequired: string;
   shipmentNumberInvalid: string;
+  shippedAtRequired: string;
   duplicateShipmentNumber: string;
   genericError: string;
 };
@@ -20,7 +21,7 @@ type UseEditShipmentFormResult = {
   shipmentNumber: string;
   setShipmentNumber: (v: string) => void;
   status: ShipmentStatus;
-  setStatus: (v: ShipmentStatus) => void;
+  handleStatusChange: (v: ShipmentStatus) => void;
   shippedAt: string;
   setShippedAt: (v: string) => void;
   notes: string;
@@ -49,11 +50,16 @@ export function useEditShipmentForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const handleStatusChange = useCallback((v: ShipmentStatus) => {
+    setStatus(v);
+    if (v === 'PREPARING' || v === 'CANCELLED') setShippedAt('');
+  }, []);
+
   useEffect(() => {
     if (!shipment) return;
     setShipmentNumber(String(shipment.shipmentNumber));
     setStatus(shipment.status);
-    setShippedAt(toDateInputValue(shipment.shippedAt));
+    setShippedAt(shipment.status === 'PREPARING' || shipment.status === 'CANCELLED' ? '' : toDateInputValue(shipment.shippedAt));
     setNotes(shipment.notes ?? '');
     setError(null);
   }, [shipment]);
@@ -74,6 +80,11 @@ export function useEditShipmentForm({
     const numValue = Number(shipmentNumber);
     if (!Number.isInteger(numValue) || numValue <= 0) {
       setError(t.shipmentNumberInvalid);
+      return;
+    }
+
+    if (status === 'SHIPPED' && !shippedAt) {
+      setError(t.shippedAtRequired);
       return;
     }
 
@@ -105,7 +116,7 @@ export function useEditShipmentForm({
     shipmentNumber,
     setShipmentNumber,
     status,
-    setStatus,
+    handleStatusChange,
     shippedAt,
     setShippedAt,
     notes,
