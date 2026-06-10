@@ -11,6 +11,7 @@ export type BoxesTableRow = {
   id: number;
   boxNumber: number;
   shipmentNumber: number;
+  boxType: string;
   totalQuantity: number;
   status: BoxStatus;
   ownership: string;
@@ -69,9 +70,11 @@ export type BoxesTableLabels = {
   colDetails: string;
   colBoxNumber: string;
   colShipmentNumber: string;
+  colBoxType: string;
   colQuantity: string;
   colStatus: string;
   colOwnership: string;
+  boxTypeLabels: Record<string, string>;
   detailsButtonAriaLabel: string;
   empty: string;
   loading: string;

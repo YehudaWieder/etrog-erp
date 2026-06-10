@@ -23,6 +23,7 @@ const RESOURCE_LABELS: Record<string, ResourceLabel> = {
   customerCategory: { he: 'קטגוריית הלקוח', en: 'Customer category' },
   message: { he: 'ההודעה', en: 'Message' },
   user: { he: 'המשתמש', en: 'User' },
+  shipment: { he: 'המשלוח', en: 'Shipment' },
 };
 
 function getCurrentLanguage(): 'he' | 'en' {
@@ -67,6 +68,7 @@ function resolveResourceKey(path: string): keyof typeof RESOURCE_LABELS | null {
   if (first === 'customers') return 'customer';
   if (first === 'messages') return 'message';
   if (first === 'users') return 'user';
+  if (first === 'shipments') return 'shipment';
 
   return null;
 }

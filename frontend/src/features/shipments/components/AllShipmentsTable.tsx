@@ -14,9 +14,10 @@ type AllShipmentsTableProps = {
   labels: ShipmentsTableLabels;
   selectedShipmentId: number | null;
   onSelectShipment: (row: ShipmentRecord | null) => void;
+  refreshKey?: number;
 };
 
-export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectShipment }: AllShipmentsTableProps): JSX.Element {
+export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectShipment, refreshKey }: AllShipmentsTableProps): JSX.Element {
   const {
     filters,
     selectedSeasonId,
@@ -24,7 +25,7 @@ export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectSh
     handleFilterValuesChange,
     handleFiltersApiReady,
   } = useAllShipmentsFilters(labels);
-  const { rows, columns, isLoading, error } = useAllShipmentsTable(labels, selectedSeasonId, selectedStatus);
+  const { rows, columns, isLoading, error } = useAllShipmentsTable(labels, selectedSeasonId, selectedStatus, refreshKey);
   const summaryTotals = useMemo(() => buildAllShipmentsSummaryTotals(rows), [rows]);
 
   useEffect(() => {

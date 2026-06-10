@@ -1,4 +1,4 @@
-import { apiClient } from './apiClient';
+import { apiClient, type ApiClientInit } from './apiClient';
 
 export type BoxStatus = 'OPEN' | 'CLOSED' | 'SHIPPED';
 export type BoxOwnership = 'TRADER' | 'CUSTOMER' | 'SHARED' | 'UNASSIGNED' | 'CUSTOM';
@@ -21,6 +21,64 @@ export type BoxRecord = {
   notes: string | null;
 };
 
+export type CreateBoxPayload = {
+  shipmentId: number;
+  boxNumber: number;
+  boxType: 'SMALL' | 'MEDIUM' | 'LARGE' | 'CUSTOM';
+  ownershipType?: BoxOwnership;
+  traderId?: number;
+  customerId?: number;
+  notes?: string;
+};
+
+export type UpdateBoxPayload = {
+  id: number;
+  shipmentId?: number;
+  boxNumber?: number;
+  boxType?: 'SMALL' | 'MEDIUM' | 'LARGE' | 'CUSTOM';
+  status?: BoxStatus;
+  notes?: string | null;
+  ownershipType?: BoxOwnership;
+  traderId?: number | null;
+  customerId?: number | null;
+};
+
+export async function getBoxById(id: number): Promise<BoxRecord> {
+  return apiClient<BoxRecord>(`/boxes/${id}`);
+}
+
+export async function updateBox(
+  payload: UpdateBoxPayload,
+  init?: Pick<ApiClientInit, 'suppressGlobalFeedback'>,
+): Promise<BoxRecord> {
+  return apiClient<BoxRecord>('/boxes', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+    ...init,
+  });
+}
+
+export async function deleteBox(
+  id: number,
+  init?: Pick<ApiClientInit, 'suppressGlobalFeedback'>,
+): Promise<void> {
+  return apiClient<void>(`/boxes/${id}`, {
+    method: 'DELETE',
+    ...init,
+  });
+}
+
 export async function getBoxesByShipment(shipmentId: number): Promise<BoxRecord[]> {
   return apiClient<BoxRecord[]>(`/boxes/shipment/${shipmentId}`);
+}
+
+export async function createBox(
+  payload: CreateBoxPayload,
+  init?: Pick<ApiClientInit, 'suppressGlobalFeedback'>,
+): Promise<BoxRecord> {
+  return apiClient<BoxRecord>('/boxes', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    ...init,
+  });
 }

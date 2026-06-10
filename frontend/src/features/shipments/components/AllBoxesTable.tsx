@@ -14,9 +14,10 @@ type AllBoxesTableProps = {
   labels: BoxesTableLabels;
   selectedBoxId: number | null;
   onSelectBox: (row: BoxesTableRow | null) => void;
+  refreshKey?: number;
 };
 
-export function AllBoxesTable({ lang, labels, selectedBoxId, onSelectBox }: AllBoxesTableProps): JSX.Element {
+export function AllBoxesTable({ lang, labels, selectedBoxId, onSelectBox, refreshKey }: AllBoxesTableProps): JSX.Element {
   const {
     filters,
     selectedSeasonId,
@@ -32,6 +33,7 @@ export function AllBoxesTable({ lang, labels, selectedBoxId, onSelectBox }: AllB
     selectedShipmentNumber,
     selectedStatus,
     selectedOwnership,
+    refreshKey,
   );
   const summaryTotals = useMemo(() => buildAllBoxesSummaryTotals(rows), [rows]);
 

@@ -17,6 +17,7 @@ export function useAllShipmentsTable(
   labels: ShipmentsTableLabels,
   seasonId: number | null,
   statusFilter: 'all' | import('../shipments.types').ShipmentStatus,
+  refreshKey?: number,
 ): UseAllShipmentsTableResult {
   const [rows, setRows] = useState<ShipmentRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,7 +67,7 @@ export function useAllShipmentsTable(
     return () => {
       isMounted = false;
     };
-  }, [labels.error, seasonId]);
+  }, [labels.error, refreshKey, seasonId]);
 
   const filteredRows = useMemo(() => {
     if (statusFilter === 'all') {

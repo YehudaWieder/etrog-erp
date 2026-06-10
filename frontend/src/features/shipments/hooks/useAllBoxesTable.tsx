@@ -32,6 +32,7 @@ export function useAllBoxesTable(
   shipmentNumber: 'all' | number,
   status: 'all' | BoxStatus,
   ownership: 'all' | string,
+  refreshKey?: number,
 ): UseAllBoxesTableResult {
   const [rawRows, setRawRows] = useState<(BoxesTableRow & { ownershipType: BoxOwnership })[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -60,6 +61,7 @@ export function useAllBoxesTable(
               id: box.id,
               boxNumber: box.boxNumber,
               shipmentNumber: shipment.shipmentNumber,
+              boxType: box.boxType,
               totalQuantity: box.totalQuantity,
               status: box.status,
               ownership: resolveOwnershipLabel(box, labels),
@@ -92,7 +94,7 @@ export function useAllBoxesTable(
     return () => {
       isMounted = false;
     };
-  }, [labels, seasonId]);
+  }, [labels, refreshKey, seasonId]);
 
   const rows = useMemo<BoxesTableRow[]>(() => {
     return rawRows
@@ -146,6 +148,15 @@ export function useAllBoxesTable(
       sortAccessor: (row) => row.shipmentNumber,
       align: 'center',
       render: (row) => row.shipmentNumber,
+    },
+    {
+      id: 'boxType',
+      header: labels.colBoxType,
+      headerLabel: labels.colBoxType,
+      sortKey: 'boxType',
+      sortAccessor: (row) => row.boxType,
+      align: 'center',
+      render: (row) => labels.boxTypeLabels[row.boxType] ?? row.boxType,
     },
     {
       id: 'totalQuantity',
