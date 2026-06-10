@@ -152,6 +152,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
                 <select
                   className="seasons-manager__year-input"
                   value={formState.customerId}
+                  disabled={isEditDialogOpen}
                   onChange={(event) => {
                     setFormState((previous) => ({
                       ...previous,
