@@ -8,6 +8,6 @@
   gap: var(--space-3);
 }
 
-.uniform .card {
+.uniform :global(.seasons-manager__card) {
   min-height: var(--uniform-card-min-height, 0px);
 }

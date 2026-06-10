@@ -54,8 +54,6 @@ export class InventoryService {
 		ownerScope?: string;
 		shipmentScope?: string;
 	}) {
-		console.log('[getTraderMovements] Received params:', params);
-		
 		const where: any = {
 			isDeleted: false,
 		};
@@ -78,21 +76,16 @@ export class InventoryService {
 			});
 			
 			if (moduloTrader) {
-				console.log(`[getTraderMovements] Found כללי trader with ID ${moduloTrader.id}`);
 				// Filter for movements from כללי trader OR with traderId=null
 				where.OR = [
 					{ traderId: moduloTrader.id },
 					{ traderId: null },
 				];
 			} else {
-				// If כללי trader doesn't exist, just filter for traderId=null
-				console.log('[getTraderMovements] כללי trader not found, filtering for traderId=null only');
 				where.traderId = null;
 			}
 		}
 		// If ownerScope is 'ALL' or not provided, show all movements (no additional filter)
-
-		console.log('[getTraderMovements] Query where clause:', JSON.stringify(where, null, 2));
 
 		// Handle shipmentScope filtering
 		if (params.shipmentScope === 'SHIPPED') {
@@ -119,8 +112,6 @@ export class InventoryService {
 				date: 'desc',
 			},
 		});
-
-		console.log(`[getTraderMovements] Query returned ${movements.length} movements`);
 
 		return movements.map((movement) => ({
 			id: movement.id,

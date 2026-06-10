@@ -23,15 +23,12 @@ export function useAllShipmentsTable(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const dateFormatter = useMemo(
-    () =>
-      new Intl.DateTimeFormat(undefined, {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      }),
-    [],
-  );
+  const formatDate = (date: Date) => {
+    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const y = date.getFullYear();
+    return `${d}.${m}.${y}`;
+  };
 
   useEffect(() => {
     if (!seasonId) {
@@ -137,9 +134,9 @@ export function useAllShipmentsTable(
       sortKey: 'shippedAt',
       sortAccessor: (row) => (row.shippedAt ? new Date(row.shippedAt).getTime() : 0),
       align: 'center',
-      render: (row) => (row.shippedAt ? dateFormatter.format(new Date(row.shippedAt)) : '—'),
+      render: (row) => (row.shippedAt ? formatDate(new Date(row.shippedAt)) : '—'),
     },
-  ], [dateFormatter, labels]);
+  ], [labels]);
 
   return { rows: filteredRows, columns, isLoading, error };
 }

@@ -47,7 +47,6 @@ export function TraderCategoryCardsList({
         return (
           <li key={category.id}>
             <ManagementSelectableCard
-              className={styles.miniCard}
               isSelected={isSelected}
               badgeLabel={badge}
               selector={

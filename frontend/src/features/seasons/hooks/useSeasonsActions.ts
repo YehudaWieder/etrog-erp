@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+import { useCallback, type Dispatch, type SetStateAction } from 'react';
 import { addSeason, activateSeason, removeSeason } from '../../../store/seasonsSlice';
 import type { AppDispatch } from '../../../store';
 import type { ResolvedSeason } from '../seasonsManagement.types';
@@ -29,7 +29,7 @@ export function useSeasonsActions({
   setDeleteError,
   setIsDeleteDialogOpen,
 }: UseSeasonsActionsParams) {
-  const handleAdd = async () => {
+  const handleAdd = useCallback(async () => {
     const parsedYear = Number(newSeasonYear);
 
     if (!isSeasonYearInAllowedRange(newSeasonYear)) {
@@ -46,18 +46,18 @@ export function useSeasonsActions({
 
     const failureMessage = toSeasonFailureMessage(actionResult.payload, actionResult.error.message, t.addFailed);
     setAddError(failureMessage);
-  };
+  }, [dispatch, newSeasonYear, setAddError, setNewSeasonYear, t.addFailed]);
 
-  const handleActivate = async () => {
+  const handleActivate = useCallback(async () => {
     if (!selectedSeason || selectedSeason.isActive) {
       return;
     }
 
     setDeleteError(null);
     await dispatch(activateSeason(selectedSeason.id));
-  };
+  }, [dispatch, selectedSeason, setDeleteError]);
 
-  const handleOpenDeleteDialog = () => {
+  const handleOpenDeleteDialog = useCallback(() => {
     if (!selectedSeason) {
       return;
     }
@@ -69,9 +69,9 @@ export function useSeasonsActions({
 
     setDeleteError(null);
     setIsDeleteDialogOpen(true);
-  };
+  }, [selectedSeason, setDeleteError, setIsDeleteDialogOpen, t.activeSeasonDeleteBlocked]);
 
-  const handleDeleteSeason = async () => {
+  const handleDeleteSeason = useCallback(async () => {
     if (!selectedSeason) {
       return;
     }
@@ -87,7 +87,7 @@ export function useSeasonsActions({
     const failureMessage = toSeasonFailureMessage(actionResult.payload, actionResult.error.message, t.deleteFailed);
     setDeleteError(failureMessage);
     setIsDeleteDialogOpen(false);
-  };
+  }, [dispatch, selectedSeason, setDeleteError, setIsDeleteDialogOpen, t.deleteFailed]);
 
   return {
     handleAdd,
