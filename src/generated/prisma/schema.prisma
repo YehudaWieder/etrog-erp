@@ -344,7 +344,7 @@ model Classification {
 
   isDeleted Boolean @default(false)
 
-  @@unique([fieldHarvestId, traderCategoryId, customerCategoryId, grade, assignmentType])
+  @@unique([fieldHarvestId, traderId, customerId, traderCategoryId, customerCategoryId, grade, assignmentType])
   @@index([seasonId])
   @@index([seasonId, fieldHarvestId])
   @@index([seasonId, assignmentType])

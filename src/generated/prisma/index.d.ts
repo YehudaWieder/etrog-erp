@@ -29388,7 +29388,7 @@ export namespace Prisma {
   export type ClassificationWhereUniqueInput = Prisma.AtLeast<{
     id?: number
     slug?: string
-    fieldHarvestId_traderCategoryId_customerCategoryId_grade_assignmentType?: ClassificationFieldHarvestIdTraderCategoryIdCustomerCategoryIdGradeAssignmentTypeCompoundUniqueInput
+    fieldHarvestId_traderId_customerId_traderCategoryId_customerCategoryId_grade_assignmentType?: ClassificationFieldHarvestIdTraderIdCustomerIdTraderCategoryIdCustomerCategoryIdGradeAssignmentTypeCompoundUniqueInput
     AND?: ClassificationWhereInput | ClassificationWhereInput[]
     OR?: ClassificationWhereInput[]
     NOT?: ClassificationWhereInput | ClassificationWhereInput[]
@@ -29414,7 +29414,7 @@ export namespace Prisma {
     customer?: XOR<CustomerNullableScalarRelationFilter, CustomerWhereInput> | null
     traderCategory?: XOR<TradersCategoriesNullableScalarRelationFilter, TradersCategoriesWhereInput> | null
     customerCategory?: XOR<CustomerCategoriesNullableScalarRelationFilter, CustomerCategoriesWhereInput> | null
-  }, "id" | "slug" | "fieldHarvestId_traderCategoryId_customerCategoryId_grade_assignmentType">
+  }, "id" | "slug" | "fieldHarvestId_traderId_customerId_traderCategoryId_customerCategoryId_grade_assignmentType">
 
   export type ClassificationOrderByWithAggregationInput = {
     id?: SortOrder
@@ -33162,8 +33162,10 @@ export namespace Prisma {
     isNot?: CustomerCategoriesWhereInput | null
   }
 
-  export type ClassificationFieldHarvestIdTraderCategoryIdCustomerCategoryIdGradeAssignmentTypeCompoundUniqueInput = {
+  export type ClassificationFieldHarvestIdTraderIdCustomerIdTraderCategoryIdCustomerCategoryIdGradeAssignmentTypeCompoundUniqueInput = {
     fieldHarvestId: number
+    traderId: number
+    customerId: number
     traderCategoryId: number
     customerCategoryId: number
     grade: $Enums.Grade
