@@ -564,11 +564,12 @@ model ShipmentItem {
   notes String?
 
   // Ownership
-  ownershipType ItemOwnership @default(UNASSIGNED)
-  traderId      Int? // optional, if ownershipType = TRADER
-  trader        Trader?       @relation(fields: [traderId], references: [id])
-  customerId    Int? // optional, if ownershipType = CUSTOMER
-  customer      Customer?     @relation(fields: [customerId], references: [id])
+  ownershipType      ItemOwnership @default(UNASSIGNED)
+  traderId           Int? // optional, if ownershipType = TRADER
+  trader             Trader?       @relation(fields: [traderId], references: [id])
+  customerId         Int? // optional, if ownershipType = CUSTOMER
+  customer           Customer?     @relation(fields: [customerId], references: [id])
+  isPrivateSelection Boolean       @default(false) // true = packed from trader's PRIVATE_SELECTION stock
 
   updatedById Int
   updatedBy   User @relation(fields: [updatedById], references: [id])
@@ -578,7 +579,7 @@ model ShipmentItem {
 
   isDeleted Boolean @default(false)
 
-  @@unique([seasonId, boxId, traderCategoryId, customerCategoryId, grade, pitamStatus, ownershipType, traderId, customerId])
+  @@unique([seasonId, boxId, traderCategoryId, customerCategoryId, grade, pitamStatus, ownershipType, traderId, customerId, isPrivateSelection])
   @@index([shipmentId])
   @@index([boxId])
   @@index([seasonId])
@@ -666,6 +667,7 @@ enum MovementType {
   INTERNAL_TRANSFER // Transfer between Trader <-> Customer
   OWNERSHIP_TRANSFER // Transfer between Trader <-> Trader
   ASSIGNED // Assigned from general pool (Modulo) to trader
+  PRIVATE_SELECTION // Trader personally selected specific etrogs for themselves (not from general distribution)
 
   // --- Physical Outbound Operations ---
   PACKED_SHIPPED // Goods physically left the warehouse via shipment (Negative)

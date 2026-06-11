@@ -176,6 +176,7 @@ export const MovementType: {
   INTERNAL_TRANSFER: 'INTERNAL_TRANSFER',
   OWNERSHIP_TRANSFER: 'OWNERSHIP_TRANSFER',
   ASSIGNED: 'ASSIGNED',
+  PRIVATE_SELECTION: 'PRIVATE_SELECTION',
   PACKED_SHIPPED: 'PACKED_SHIPPED',
   SELF_PICKUP: 'SELF_PICKUP',
   WASTE: 'WASTE',
@@ -25118,6 +25119,7 @@ export namespace Prisma {
     ownershipType: $Enums.ItemOwnership | null
     traderId: number | null
     customerId: number | null
+    isPrivateSelection: boolean | null
     updatedById: number | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -25138,6 +25140,7 @@ export namespace Prisma {
     ownershipType: $Enums.ItemOwnership | null
     traderId: number | null
     customerId: number | null
+    isPrivateSelection: boolean | null
     updatedById: number | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -25158,6 +25161,7 @@ export namespace Prisma {
     ownershipType: number
     traderId: number
     customerId: number
+    isPrivateSelection: number
     updatedById: number
     createdAt: number
     updatedAt: number
@@ -25206,6 +25210,7 @@ export namespace Prisma {
     ownershipType?: true
     traderId?: true
     customerId?: true
+    isPrivateSelection?: true
     updatedById?: true
     createdAt?: true
     updatedAt?: true
@@ -25226,6 +25231,7 @@ export namespace Prisma {
     ownershipType?: true
     traderId?: true
     customerId?: true
+    isPrivateSelection?: true
     updatedById?: true
     createdAt?: true
     updatedAt?: true
@@ -25246,6 +25252,7 @@ export namespace Prisma {
     ownershipType?: true
     traderId?: true
     customerId?: true
+    isPrivateSelection?: true
     updatedById?: true
     createdAt?: true
     updatedAt?: true
@@ -25353,6 +25360,7 @@ export namespace Prisma {
     ownershipType: $Enums.ItemOwnership
     traderId: number | null
     customerId: number | null
+    isPrivateSelection: boolean
     updatedById: number
     createdAt: Date
     updatedAt: Date
@@ -25392,6 +25400,7 @@ export namespace Prisma {
     ownershipType?: boolean
     traderId?: boolean
     customerId?: boolean
+    isPrivateSelection?: boolean
     updatedById?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -25420,6 +25429,7 @@ export namespace Prisma {
     ownershipType?: boolean
     traderId?: boolean
     customerId?: boolean
+    isPrivateSelection?: boolean
     updatedById?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -25448,6 +25458,7 @@ export namespace Prisma {
     ownershipType?: boolean
     traderId?: boolean
     customerId?: boolean
+    isPrivateSelection?: boolean
     updatedById?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -25476,13 +25487,14 @@ export namespace Prisma {
     ownershipType?: boolean
     traderId?: boolean
     customerId?: boolean
+    isPrivateSelection?: boolean
     updatedById?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     isDeleted?: boolean
   }
 
-  export type ShipmentItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "shipmentId" | "boxId" | "seasonId" | "traderCategoryId" | "customerCategoryId" | "grade" | "pitamStatus" | "quantity" | "notes" | "ownershipType" | "traderId" | "customerId" | "updatedById" | "createdAt" | "updatedAt" | "isDeleted", ExtArgs["result"]["shipmentItem"]>
+  export type ShipmentItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "shipmentId" | "boxId" | "seasonId" | "traderCategoryId" | "customerCategoryId" | "grade" | "pitamStatus" | "quantity" | "notes" | "ownershipType" | "traderId" | "customerId" | "isPrivateSelection" | "updatedById" | "createdAt" | "updatedAt" | "isDeleted", ExtArgs["result"]["shipmentItem"]>
   export type ShipmentItemInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     shipment?: boolean | ShipmentDefaultArgs<ExtArgs>
     box?: boolean | BoxDefaultArgs<ExtArgs>
@@ -25540,6 +25552,7 @@ export namespace Prisma {
       ownershipType: $Enums.ItemOwnership
       traderId: number | null
       customerId: number | null
+      isPrivateSelection: boolean
       updatedById: number
       createdAt: Date
       updatedAt: Date
@@ -25988,6 +26001,7 @@ export namespace Prisma {
     readonly ownershipType: FieldRef<"ShipmentItem", 'ItemOwnership'>
     readonly traderId: FieldRef<"ShipmentItem", 'Int'>
     readonly customerId: FieldRef<"ShipmentItem", 'Int'>
+    readonly isPrivateSelection: FieldRef<"ShipmentItem", 'Boolean'>
     readonly updatedById: FieldRef<"ShipmentItem", 'Int'>
     readonly createdAt: FieldRef<"ShipmentItem", 'DateTime'>
     readonly updatedAt: FieldRef<"ShipmentItem", 'DateTime'>
@@ -28011,6 +28025,7 @@ export namespace Prisma {
     ownershipType: 'ownershipType',
     traderId: 'traderId',
     customerId: 'customerId',
+    isPrivateSelection: 'isPrivateSelection',
     updatedById: 'updatedById',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
@@ -29987,6 +30002,7 @@ export namespace Prisma {
     ownershipType?: EnumItemOwnershipFilter<"ShipmentItem"> | $Enums.ItemOwnership
     traderId?: IntNullableFilter<"ShipmentItem"> | number | null
     customerId?: IntNullableFilter<"ShipmentItem"> | number | null
+    isPrivateSelection?: BoolFilter<"ShipmentItem"> | boolean
     updatedById?: IntFilter<"ShipmentItem"> | number
     createdAt?: DateTimeFilter<"ShipmentItem"> | Date | string
     updatedAt?: DateTimeFilter<"ShipmentItem"> | Date | string
@@ -30015,6 +30031,7 @@ export namespace Prisma {
     ownershipType?: SortOrder
     traderId?: SortOrderInput | SortOrder
     customerId?: SortOrderInput | SortOrder
+    isPrivateSelection?: SortOrder
     updatedById?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -30031,7 +30048,7 @@ export namespace Prisma {
 
   export type ShipmentItemWhereUniqueInput = Prisma.AtLeast<{
     id?: number
-    seasonId_boxId_traderCategoryId_customerCategoryId_grade_pitamStatus_ownershipType_traderId_customerId?: ShipmentItemSeasonIdBoxIdTraderCategoryIdCustomerCategoryIdGradePitamStatusOwnershipTypeTraderIdCustomerIdCompoundUniqueInput
+    seasonId_boxId_traderCategoryId_customerCategoryId_grade_pitamStatus_ownershipType_traderId_customerId_isPrivateSelection?: ShipmentItemSeasonIdBoxIdTraderCategoryIdCustomerCategoryIdGradePitamStatusOwnershipTypeTraderIdCustomerIdIsPrivateSelectionCompoundUniqueInput
     AND?: ShipmentItemWhereInput | ShipmentItemWhereInput[]
     OR?: ShipmentItemWhereInput[]
     NOT?: ShipmentItemWhereInput | ShipmentItemWhereInput[]
@@ -30047,6 +30064,7 @@ export namespace Prisma {
     ownershipType?: EnumItemOwnershipFilter<"ShipmentItem"> | $Enums.ItemOwnership
     traderId?: IntNullableFilter<"ShipmentItem"> | number | null
     customerId?: IntNullableFilter<"ShipmentItem"> | number | null
+    isPrivateSelection?: BoolFilter<"ShipmentItem"> | boolean
     updatedById?: IntFilter<"ShipmentItem"> | number
     createdAt?: DateTimeFilter<"ShipmentItem"> | Date | string
     updatedAt?: DateTimeFilter<"ShipmentItem"> | Date | string
@@ -30059,7 +30077,7 @@ export namespace Prisma {
     trader?: XOR<TraderNullableScalarRelationFilter, TraderWhereInput> | null
     customer?: XOR<CustomerNullableScalarRelationFilter, CustomerWhereInput> | null
     updatedBy?: XOR<UserScalarRelationFilter, UserWhereInput>
-  }, "id" | "seasonId_boxId_traderCategoryId_customerCategoryId_grade_pitamStatus_ownershipType_traderId_customerId">
+  }, "id" | "seasonId_boxId_traderCategoryId_customerCategoryId_grade_pitamStatus_ownershipType_traderId_customerId_isPrivateSelection">
 
   export type ShipmentItemOrderByWithAggregationInput = {
     id?: SortOrder
@@ -30075,6 +30093,7 @@ export namespace Prisma {
     ownershipType?: SortOrder
     traderId?: SortOrderInput | SortOrder
     customerId?: SortOrderInput | SortOrder
+    isPrivateSelection?: SortOrder
     updatedById?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -30103,6 +30122,7 @@ export namespace Prisma {
     ownershipType?: EnumItemOwnershipWithAggregatesFilter<"ShipmentItem"> | $Enums.ItemOwnership
     traderId?: IntNullableWithAggregatesFilter<"ShipmentItem"> | number | null
     customerId?: IntNullableWithAggregatesFilter<"ShipmentItem"> | number | null
+    isPrivateSelection?: BoolWithAggregatesFilter<"ShipmentItem"> | boolean
     updatedById?: IntWithAggregatesFilter<"ShipmentItem"> | number
     createdAt?: DateTimeWithAggregatesFilter<"ShipmentItem"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ShipmentItem"> | Date | string
@@ -31906,6 +31926,7 @@ export namespace Prisma {
     quantity: number
     notes?: string | null
     ownershipType?: $Enums.ItemOwnership
+    isPrivateSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     isDeleted?: boolean
@@ -31933,6 +31954,7 @@ export namespace Prisma {
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
+    isPrivateSelection?: boolean
     updatedById: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -31945,6 +31967,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -31972,6 +31995,7 @@ export namespace Prisma {
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     updatedById?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -31992,6 +32016,7 @@ export namespace Prisma {
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
+    isPrivateSelection?: boolean
     updatedById: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -32004,6 +32029,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -32023,6 +32049,7 @@ export namespace Prisma {
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     updatedById?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -33804,7 +33831,7 @@ export namespace Prisma {
     isNot?: BoxWhereInput
   }
 
-  export type ShipmentItemSeasonIdBoxIdTraderCategoryIdCustomerCategoryIdGradePitamStatusOwnershipTypeTraderIdCustomerIdCompoundUniqueInput = {
+  export type ShipmentItemSeasonIdBoxIdTraderCategoryIdCustomerCategoryIdGradePitamStatusOwnershipTypeTraderIdCustomerIdIsPrivateSelectionCompoundUniqueInput = {
     seasonId: number
     boxId: number
     traderCategoryId: number
@@ -33814,6 +33841,7 @@ export namespace Prisma {
     ownershipType: $Enums.ItemOwnership
     traderId: number
     customerId: number
+    isPrivateSelection: boolean
   }
 
   export type ShipmentItemCountOrderByAggregateInput = {
@@ -33830,6 +33858,7 @@ export namespace Prisma {
     ownershipType?: SortOrder
     traderId?: SortOrder
     customerId?: SortOrder
+    isPrivateSelection?: SortOrder
     updatedById?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -33863,6 +33892,7 @@ export namespace Prisma {
     ownershipType?: SortOrder
     traderId?: SortOrder
     customerId?: SortOrder
+    isPrivateSelection?: SortOrder
     updatedById?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -33883,6 +33913,7 @@ export namespace Prisma {
     ownershipType?: SortOrder
     traderId?: SortOrder
     customerId?: SortOrder
+    isPrivateSelection?: SortOrder
     updatedById?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -38027,6 +38058,7 @@ export namespace Prisma {
     quantity: number
     notes?: string | null
     ownershipType?: $Enums.ItemOwnership
+    isPrivateSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     isDeleted?: boolean
@@ -38052,6 +38084,7 @@ export namespace Prisma {
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
+    isPrivateSelection?: boolean
     updatedById: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -38429,6 +38462,7 @@ export namespace Prisma {
     ownershipType?: EnumItemOwnershipFilter<"ShipmentItem"> | $Enums.ItemOwnership
     traderId?: IntNullableFilter<"ShipmentItem"> | number | null
     customerId?: IntNullableFilter<"ShipmentItem"> | number | null
+    isPrivateSelection?: BoolFilter<"ShipmentItem"> | boolean
     updatedById?: IntFilter<"ShipmentItem"> | number
     createdAt?: DateTimeFilter<"ShipmentItem"> | Date | string
     updatedAt?: DateTimeFilter<"ShipmentItem"> | Date | string
@@ -38735,6 +38769,7 @@ export namespace Prisma {
     quantity: number
     notes?: string | null
     ownershipType?: $Enums.ItemOwnership
+    isPrivateSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     isDeleted?: boolean
@@ -38761,6 +38796,7 @@ export namespace Prisma {
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
+    isPrivateSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     isDeleted?: boolean
@@ -39204,6 +39240,7 @@ export namespace Prisma {
     quantity: number
     notes?: string | null
     ownershipType?: $Enums.ItemOwnership
+    isPrivateSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     isDeleted?: boolean
@@ -39229,6 +39266,7 @@ export namespace Prisma {
     notes?: string | null
     ownershipType?: $Enums.ItemOwnership
     customerId?: number | null
+    isPrivateSelection?: boolean
     updatedById: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -39545,6 +39583,7 @@ export namespace Prisma {
     quantity: number
     notes?: string | null
     ownershipType?: $Enums.ItemOwnership
+    isPrivateSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     isDeleted?: boolean
@@ -39570,6 +39609,7 @@ export namespace Prisma {
     notes?: string | null
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
+    isPrivateSelection?: boolean
     updatedById: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -39837,6 +39877,7 @@ export namespace Prisma {
     quantity: number
     notes?: string | null
     ownershipType?: $Enums.ItemOwnership
+    isPrivateSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     isDeleted?: boolean
@@ -39862,6 +39903,7 @@ export namespace Prisma {
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
+    isPrivateSelection?: boolean
     updatedById: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -40168,6 +40210,7 @@ export namespace Prisma {
     quantity: number
     notes?: string | null
     ownershipType?: $Enums.ItemOwnership
+    isPrivateSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     isDeleted?: boolean
@@ -40193,6 +40236,7 @@ export namespace Prisma {
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
+    isPrivateSelection?: boolean
     updatedById: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -42347,6 +42391,7 @@ export namespace Prisma {
     quantity: number
     notes?: string | null
     ownershipType?: $Enums.ItemOwnership
+    isPrivateSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     isDeleted?: boolean
@@ -42372,6 +42417,7 @@ export namespace Prisma {
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
+    isPrivateSelection?: boolean
     updatedById: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -42648,6 +42694,7 @@ export namespace Prisma {
     quantity: number
     notes?: string | null
     ownershipType?: $Enums.ItemOwnership
+    isPrivateSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     isDeleted?: boolean
@@ -42673,6 +42720,7 @@ export namespace Prisma {
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
+    isPrivateSelection?: boolean
     updatedById: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -44231,6 +44279,7 @@ export namespace Prisma {
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
+    isPrivateSelection?: boolean
     updatedById: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -44721,6 +44770,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -44746,6 +44796,7 @@ export namespace Prisma {
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     updatedById?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -44765,6 +44816,7 @@ export namespace Prisma {
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     updatedById?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -44900,6 +44952,7 @@ export namespace Prisma {
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
+    isPrivateSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     isDeleted?: boolean
@@ -45270,6 +45323,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -45296,6 +45350,7 @@ export namespace Prisma {
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -45315,6 +45370,7 @@ export namespace Prisma {
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -45461,6 +45517,7 @@ export namespace Prisma {
     notes?: string | null
     ownershipType?: $Enums.ItemOwnership
     customerId?: number | null
+    isPrivateSelection?: boolean
     updatedById: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -45753,6 +45810,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -45778,6 +45836,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     updatedById?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -45797,6 +45856,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     updatedById?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -45884,6 +45944,7 @@ export namespace Prisma {
     notes?: string | null
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
+    isPrivateSelection?: boolean
     updatedById: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -46106,6 +46167,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -46131,6 +46193,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     updatedById?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46150,6 +46213,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     updatedById?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46217,6 +46281,7 @@ export namespace Prisma {
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
+    isPrivateSelection?: boolean
     updatedById: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -46370,6 +46435,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -46395,6 +46461,7 @@ export namespace Prisma {
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     updatedById?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46414,6 +46481,7 @@ export namespace Prisma {
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     updatedById?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46473,6 +46541,7 @@ export namespace Prisma {
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
+    isPrivateSelection?: boolean
     updatedById: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -46603,6 +46672,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -46628,6 +46698,7 @@ export namespace Prisma {
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     updatedById?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46647,6 +46718,7 @@ export namespace Prisma {
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     updatedById?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46758,6 +46830,7 @@ export namespace Prisma {
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
+    isPrivateSelection?: boolean
     updatedById: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -46824,6 +46897,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -46849,6 +46923,7 @@ export namespace Prisma {
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     updatedById?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46868,6 +46943,7 @@ export namespace Prisma {
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     updatedById?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46887,6 +46963,7 @@ export namespace Prisma {
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
+    isPrivateSelection?: boolean
     updatedById: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -46919,6 +46996,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
@@ -46944,6 +47022,7 @@ export namespace Prisma {
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     updatedById?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46963,6 +47042,7 @@ export namespace Prisma {
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
+    isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     updatedById?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
