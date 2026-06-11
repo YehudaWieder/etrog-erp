@@ -31,4 +31,7 @@ export class CreateShipmentItemDto {
 
   @ApiPropertyOptional({ description: 'Customer ID when ownership is customer-based.' })
   customerId?: number;
+
+  @ApiPropertyOptional({ description: 'When true, item is packed from the trader\'s PRIVATE_SELECTION stock rather than general inventory.' })
+  isPrivateSelection?: boolean;
 }

@@ -59,6 +59,13 @@ export class BoxController {
     return this.boxService.findByShipment(shipmentId);
   }
 
+  @Get('open')
+  @ApiOperation({ summary: 'Retrieve all OPEN boxes for the active season, including shipment, trader and customer info' })
+  @ApiResponse({ status: 200, description: 'List of open boxes returned successfully.' })
+  findOpen() {
+    return this.boxService.findOpenForActiveSeason();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Retrieve a single box by ID, including its items' })
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the box.' })

@@ -140,6 +140,7 @@ export class ItemService {
       traderCategoryId: params.traderCategoryId,
       grade: params.grade,
       pitamStatus: params.pitamStatus,
+      excludePrivateSelection: true,
     });
   }
 
@@ -258,15 +259,10 @@ export class ItemService {
     },
   ): Promise<{
     traderDeductions: Array<{ traderId: number; quantity: number }>;
-    moduloPackedDeduction: number;
-    traderToModuloAssignments: Array<{ traderId: number; quantity: number }>;
+    moduloDeduction: number;
   }> {
-
     const shares = await tx.traderCategoryShare.findMany({
-      where: {
-        seasonId: params.seasonId,
-        traderCategoryId: params.traderCategoryId,
-      },
+      where: { seasonId: params.seasonId, traderCategoryId: params.traderCategoryId },
       select: { traderId: true, percent: true },
       orderBy: { traderId: 'asc' },
     });
@@ -276,64 +272,11 @@ export class ItemService {
     }
 
     const positiveShares = shares
-      .map((share) => ({ traderId: share.traderId, percent: Number(share.percent), percentText: share.percent.toString() }))
-      .filter((share) => share.percent > 0);
+      .map((s) => ({ traderId: s.traderId, percent: Number(s.percent) }))
+      .filter((s) => s.percent > 0);
 
     if (positiveShares.length === 0) {
       throw new BadRequestException('All configured trader shares are zero or negative for this category');
-    }
-    const totalPercent = positiveShares.reduce((sum, share) => sum + share.percent, 0);
-    const canUseExactShareGross = Math.abs(totalPercent - 100) <= 1e-9;
-
-    // --- Allocation: integer-only by exact ratio blocks; remainder goes to modulo ---
-    let baseAllocations: Array<{ traderId: number; percent: number; quantity: number }>;
-    let remainder: number;
-
-    if (canUseExactShareGross) {
-      const grossForTraders = this.calculateLargestExactShareGross(
-        params.quantity,
-        positiveShares.map((share) => share.percentText),
-      );
-
-      baseAllocations = positiveShares.map((share) => ({
-        traderId: share.traderId,
-        percent: share.percent,
-        quantity: this.calculateExactShareQuantity(grossForTraders, share.percentText),
-      }));
-
-      remainder = params.quantity - grossForTraders;
-    } else {
-      // Fallback for misconfigured shares that do not sum to 100.
-      baseAllocations = positiveShares.map((share) => ({
-        traderId: share.traderId,
-        percent: share.percent,
-        quantity: Math.floor((params.quantity * share.percent) / 100),
-      }));
-
-      const traderBaseTotal = baseAllocations.reduce((sum, a) => sum + a.quantity, 0);
-      remainder = params.quantity - traderBaseTotal;
-    }
-
-    // 2. No distribution of remainder to traders, all goes to modulo
-    const traderDeductions = baseAllocations.filter(a => a.quantity > 0).map(a => ({ traderId: a.traderId, quantity: a.quantity }));
-    const moduloPackedDeduction = remainder; // All remainder goes to modulo
-
-    const moduloAvailable = await this.inventoryAvailabilityService.getTraderUnshippedBalance(tx, {
-      seasonId: params.seasonId,
-      traderId: null,
-      traderCategoryId: params.traderCategoryId,
-      grade: params.grade,
-      pitamStatus: params.pitamStatus,
-      isModulo: true,
-    });
-
-    const deficitAfterModulo = Math.max(0, moduloPackedDeduction - moduloAvailable);
-    if (deficitAfterModulo <= 0) {
-      return {
-        traderDeductions,
-        moduloPackedDeduction,
-        traderToModuloAssignments: [],
-      };
     }
 
     const availabilityRows = await this.getTraderAvailabilityForDistribution(tx, {
@@ -342,95 +285,88 @@ export class ItemService {
       grade: params.grade,
       pitamStatus: params.pitamStatus,
     });
+    const availability = new Map(availabilityRows.map((r) => [r.traderId, r.available]));
 
-    const remainingAvailabilityByTrader = new Map<number, number>();
-    for (const row of availabilityRows) {
-      remainingAvailabilityByTrader.set(row.traderId, row.available);
+    const totalPercent = positiveShares.reduce((sum, s) => sum + s.percent, 0);
+
+    // Floor-based initial allocation proportional to shares; pool holds the rounding remainder.
+    const committed = new Map<number, number>();
+    let pool = params.quantity;
+    for (const s of positiveShares) {
+      const qty = Math.floor((params.quantity * s.percent) / totalPercent);
+      committed.set(s.traderId, qty);
+      pool -= qty;
     }
 
-    for (const deduction of traderDeductions) {
-      const current = remainingAvailabilityByTrader.get(deduction.traderId) ?? 0;
-      remainingAvailabilityByTrader.set(deduction.traderId, Math.max(0, current - deduction.quantity));
-    }
+    // Traders who still have capacity to absorb more than their current committed amount.
+    const active = new Set(positiveShares.map((s) => s.traderId));
 
-    if (canUseExactShareGross) {
-      const grossFromTraders = this.calculateMinimalGrossByShares(
-        deficitAfterModulo,
-        positiveShares.map((share) => share.percentText),
+    // Distribute the pool proportionally among active traders (floor + round-robin for remainder).
+    const distributePool = () => {
+      if (pool === 0 || active.size === 0) return;
+
+      const activeShares = positiveShares.filter((s) => active.has(s.traderId));
+      const totalActivePercent = activeShares.reduce((sum, s) => sum + s.percent, 0);
+
+      let distributed = 0;
+      const extras = new Map<number, number>();
+      for (const s of activeShares) {
+        const extra = Math.floor((pool * s.percent) / totalActivePercent);
+        extras.set(s.traderId, extra);
+        distributed += extra;
+      }
+
+      // Distribute leftover integers by highest share first.
+      let roundingRemainder = pool - distributed;
+      const sorted = [...activeShares].sort((a, b) =>
+        b.percent !== a.percent ? b.percent - a.percent : a.traderId - b.traderId,
       );
-
-      const proportionalAssignments = positiveShares
-        .map((share) => ({
-          traderId: share.traderId,
-          quantity: this.calculateExactShareQuantity(grossFromTraders, share.percentText),
-        }))
-        .filter((allocation) => allocation.quantity > 0);
-
-      const hasEnoughForAll = proportionalAssignments.every((allocation) => {
-        const available = remainingAvailabilityByTrader.get(allocation.traderId) ?? 0;
-        return available >= allocation.quantity;
-      });
-
-      if (hasEnoughForAll) {
-        return {
-          traderDeductions,
-          moduloPackedDeduction,
-          traderToModuloAssignments: proportionalAssignments,
-        };
-      }
-    }
-
-    // Fund any modulo deficit from trader stocks, prioritizing higher percent first.
-    const fundingOrder = [...positiveShares].sort((left, right) => {
-      if (right.percent !== left.percent) {
-        return right.percent - left.percent;
-      }
-      return left.traderId - right.traderId;
-    });
-
-    const roundRobinAssignments = new Map<number, number>();
-    let remainingDeficit = deficitAfterModulo;
-
-    while (remainingDeficit > 0) {
-      let assignedInRound = false;
-
-      for (const share of fundingOrder) {
-        if (remainingDeficit <= 0) {
-          break;
-        }
-
-        const alreadyAssigned = roundRobinAssignments.get(share.traderId) ?? 0;
-        const available = remainingAvailabilityByTrader.get(share.traderId) ?? 0;
-        if (available - alreadyAssigned <= 0) {
-          continue;
-        }
-
-        roundRobinAssignments.set(share.traderId, alreadyAssigned + 1);
-        remainingDeficit -= 1;
-        assignedInRound = true;
+      for (const s of sorted) {
+        if (roundingRemainder <= 0) break;
+        extras.set(s.traderId, (extras.get(s.traderId) ?? 0) + 1);
+        roundingRemainder--;
       }
 
-      if (!assignedInRound) {
-        break;
+      for (const [traderId, extra] of extras) {
+        committed.set(traderId, (committed.get(traderId) ?? 0) + extra);
       }
-    }
-
-    if (remainingDeficit > 0) {
-      throw new BadRequestException(
-        `Packing UNASSIGNED item: insufficient unshipped trader stock to cover modulo remainder. Required=${deficitAfterModulo}, available=${deficitAfterModulo - remainingDeficit}`,
-      );
-    }
-
-    const traderToModuloAssignments = Array.from(roundRobinAssignments.entries())
-      .map(([traderId, quantity]) => ({ traderId, quantity }))
-      .filter((allocation) => allocation.quantity > 0)
-      .sort((left, right) => left.traderId - right.traderId);
-
-    return {
-      traderDeductions,
-      moduloPackedDeduction,
-      traderToModuloAssignments,
+      pool = 0;
     };
+
+    // Cap over-allocated traders at their available stock; excess goes back to pool.
+    // Exhausted traders are removed from active so subsequent rounds skip them.
+    const capAndCollect = (): boolean => {
+      let changed = false;
+      for (const traderId of [...active]) {
+        const avail = availability.get(traderId) ?? 0;
+        const alloc = committed.get(traderId) ?? 0;
+        if (alloc > avail) {
+          pool += alloc - avail;
+          committed.set(traderId, avail);
+          active.delete(traderId);
+          changed = true;
+        }
+      }
+      return changed;
+    };
+
+    // Iterate: distribute pool → cap → repeat until stable or all traders exhausted.
+    // Guaranteed to terminate: each iteration removes at least one trader from `active`.
+    for (let i = 0; i <= positiveShares.length; i++) {
+      distributePool();
+      const changed = capAndCollect();
+      if (!changed) break;
+    }
+
+    // Anything left in pool after all traders are exhausted falls back to modulo.
+    const moduloDeduction = pool;
+
+    const traderDeductions = [...committed.entries()]
+      .filter(([, qty]) => qty > 0)
+      .map(([traderId, quantity]) => ({ traderId, quantity }))
+      .sort((a, b) => a.traderId - b.traderId);
+
+    return { traderDeductions, moduloDeduction };
   }
 
   private async ensureEnoughAvailableStock(
@@ -446,6 +382,7 @@ export class ItemService {
       grade: Grade | null;
       pitamStatus: PitamStatus;
       quantity: number;
+      isPrivateSelection?: boolean;
     },
   ) {
     if (params.boxOwnership === BoxOwnership.CUSTOM || params.itemOwnership === ItemOwnership.CUSTOM) {
@@ -466,6 +403,8 @@ export class ItemService {
         isModulo: false,
         requiredQuantity: params.quantity,
         contextLabel: 'Packing TRADER item',
+        onlyPrivateSelection: params.isPrivateSelection === true,
+        excludePrivateSelection: params.isPrivateSelection === false,
       });
 
       return;
@@ -493,23 +432,8 @@ export class ItemService {
         throw new BadRequestException('Unassigned packed items require traderCategoryId and grade');
       }
 
-      if (params.boxOwnership === BoxOwnership.SHARED) {
-        await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
-          seasonId: params.seasonId,
-          traderId: null,
-          traderCategoryId: params.traderCategoryId,
-          grade: params.grade,
-          pitamStatus: params.pitamStatus,
-          isModulo: true,
-          requiredQuantity: params.quantity,
-          contextLabel: 'Packing UNASSIGNED item from SHARED box',
-        });
-
-        return;
-      }
-
-      if (params.boxOwnership === BoxOwnership.UNASSIGNED) {
-        const { traderDeductions, moduloPackedDeduction, traderToModuloAssignments } = await this.buildUnassignedTraderDeductions(tx, {
+      if (params.boxOwnership === BoxOwnership.SHARED || params.boxOwnership === BoxOwnership.UNASSIGNED) {
+        const { traderDeductions, moduloDeduction } = await this.buildUnassignedTraderDeductions(tx, {
           seasonId: params.seasonId,
           traderCategoryId: params.traderCategoryId,
           grade: params.grade,
@@ -517,14 +441,7 @@ export class ItemService {
           quantity: params.quantity,
         });
 
-        const assignmentByTrader = new Map<number, number>();
-        for (const assignment of traderToModuloAssignments) {
-          assignmentByTrader.set(assignment.traderId, (assignmentByTrader.get(assignment.traderId) ?? 0) + assignment.quantity);
-        }
-
-        // Check each trader has enough stock for base packed deduction and any trader->modulo assignment.
         for (const deduction of traderDeductions) {
-          const assignment = assignmentByTrader.get(deduction.traderId) ?? 0;
           await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
             seasonId: params.seasonId,
             traderId: deduction.traderId,
@@ -532,30 +449,13 @@ export class ItemService {
             grade: params.grade,
             pitamStatus: params.pitamStatus,
             isModulo: false,
-            requiredQuantity: deduction.quantity + assignment,
-            contextLabel: `Packing UNASSIGNED item (trader share portion)`,
+            requiredQuantity: deduction.quantity,
+            contextLabel: 'Packing UNASSIGNED item (trader portion)',
+            excludePrivateSelection: true,
           });
         }
 
-        for (const assignment of traderToModuloAssignments) {
-          if (traderDeductions.some((deduction) => deduction.traderId === assignment.traderId)) {
-            continue;
-          }
-
-          await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
-            seasonId: params.seasonId,
-            traderId: assignment.traderId,
-            traderCategoryId: params.traderCategoryId,
-            grade: params.grade,
-            pitamStatus: params.pitamStatus,
-            isModulo: false,
-            requiredQuantity: assignment.quantity,
-            contextLabel: `Packing UNASSIGNED item (trader round-robin funding)`,
-          });
-        }
-
-        if (moduloPackedDeduction > 0) {
-          const moduloCredit = traderToModuloAssignments.reduce((sum, assignment) => sum + assignment.quantity, 0);
+        if (moduloDeduction > 0) {
           await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
             seasonId: params.seasonId,
             traderId: null,
@@ -563,9 +463,8 @@ export class ItemService {
             grade: params.grade,
             pitamStatus: params.pitamStatus,
             isModulo: true,
-            requiredQuantity: moduloPackedDeduction,
-            creditQuantity: moduloCredit,
-            contextLabel: 'Packing UNASSIGNED item (modulo remainder)',
+            requiredQuantity: moduloDeduction,
+            contextLabel: 'Packing UNASSIGNED item (modulo fallback)',
           });
         }
 
@@ -678,30 +577,8 @@ export class ItemService {
         throw new BadRequestException('Unassigned packed movement requires traderCategoryId and grade');
       }
 
-      if (params.boxOwnership === BoxOwnership.SHARED) {
-        await tx.traderStock.create({
-          data: {
-            seasonId: params.seasonId,
-            date: new Date(),
-            traderId: null,
-            traderCategoryId: params.traderCategoryId,
-            grade: params.grade,
-            pitamStatus: params.pitamStatus,
-            quantity: -Math.abs(params.quantity),
-            isModulo: true,
-            type: MovementType.PACKED_SHIPPED,
-            MovementReferenceId: params.itemId,
-            shipmentId: params.shipmentId,
-            boxId: params.boxId,
-            notes: `Packed from modulo for shipment item #${params.itemId} [packing-movement]`,
-            updatedById: params.updatedById,
-          },
-        });
-        return;
-      }
-
-      if (params.boxOwnership === BoxOwnership.UNASSIGNED) {
-        const { traderDeductions, moduloPackedDeduction, traderToModuloAssignments } = await this.buildUnassignedTraderDeductions(tx, {
+      if (params.boxOwnership === BoxOwnership.SHARED || params.boxOwnership === BoxOwnership.UNASSIGNED) {
+        const { traderDeductions, moduloDeduction } = await this.buildUnassignedTraderDeductions(tx, {
           seasonId: params.seasonId,
           traderCategoryId: params.traderCategoryId,
           grade: params.grade,
@@ -709,7 +586,6 @@ export class ItemService {
           quantity: params.quantity,
         });
 
-        // Deduct from each trader's individual stock (their share portion)
         for (const deduction of traderDeductions) {
           await tx.traderStock.create({
             data: {
@@ -731,30 +607,7 @@ export class ItemService {
           });
         }
 
-        // If modulo doesn't have enough for remainder, fund it from traders first.
-        for (const assignment of traderToModuloAssignments) {
-          await tx.traderStock.create({
-            data: {
-              seasonId: params.seasonId,
-              date: new Date(),
-              traderId: assignment.traderId,
-              traderCategoryId: params.traderCategoryId,
-              grade: params.grade,
-              pitamStatus: params.pitamStatus,
-              quantity: -Math.abs(assignment.quantity),
-              isModulo: false,
-              type: MovementType.ASSIGNED,
-              MovementReferenceId: params.itemId,
-              shipmentId: params.shipmentId,
-              boxId: params.boxId,
-              notes: `Assigned to modulo for shipment item #${params.itemId} [packing-movement]`,
-              updatedById: params.updatedById,
-            },
-          });
-        }
-
-        const totalModuloFunding = traderToModuloAssignments.reduce((sum, assignment) => sum + assignment.quantity, 0);
-        if (totalModuloFunding > 0) {
+        if (moduloDeduction > 0) {
           await tx.traderStock.create({
             data: {
               seasonId: params.seasonId,
@@ -763,34 +616,13 @@ export class ItemService {
               traderCategoryId: params.traderCategoryId,
               grade: params.grade,
               pitamStatus: params.pitamStatus,
-              quantity: totalModuloFunding,
-              isModulo: true,
-              type: MovementType.ASSIGNED,
-              MovementReferenceId: params.itemId,
-              shipmentId: params.shipmentId,
-              boxId: params.boxId,
-              notes: `Funded modulo for shipment item #${params.itemId} [packing-movement]`,
-              updatedById: params.updatedById,
-            },
-          });
-        }
-
-        if (moduloPackedDeduction > 0) {
-          await tx.traderStock.create({
-            data: {
-              seasonId: params.seasonId,
-              date: new Date(),
-              traderId: null,
-              traderCategoryId: params.traderCategoryId,
-              grade: params.grade,
-              pitamStatus: params.pitamStatus,
-              quantity: -Math.abs(moduloPackedDeduction),
+              quantity: -Math.abs(moduloDeduction),
               isModulo: true,
               type: MovementType.PACKED_SHIPPED,
               MovementReferenceId: params.itemId,
               shipmentId: params.shipmentId,
               boxId: params.boxId,
-              notes: `Packed from modulo remainder for shipment item #${params.itemId} [packing-movement]`,
+              notes: `Packed from modulo (fallback) for shipment item #${params.itemId} [packing-movement]`,
               updatedById: params.updatedById,
             },
           });
@@ -877,6 +709,7 @@ export class ItemService {
         grade: createPayload.grade ?? null,
         pitamStatus: createPayload.pitamStatus,
         quantity: createPayload.quantity,
+        isPrivateSelection: createPayload.isPrivateSelection ?? false,
       });
 
       // 1. Check for duplicate based on the complex unique constraint
@@ -1029,6 +862,10 @@ export class ItemService {
 
       await this.deletePackedMovementsByItemId(tx, currentItem.id);
 
+      const nextIsPrivateSelection = Object.prototype.hasOwnProperty.call(updatePayload, 'isPrivateSelection')
+        ? Boolean(updatePayload.isPrivateSelection)
+        : Boolean((currentItem as any).isPrivateSelection ?? false);
+
       await this.ensureEnoughAvailableStock(tx, {
         seasonId: currentItem.seasonId,
         boxOwnership: targetBox.ownershipType,
@@ -1040,6 +877,7 @@ export class ItemService {
         grade: nextGrade,
         pitamStatus: nextPitamStatus,
         quantity: nextQuantity,
+        isPrivateSelection: nextIsPrivateSelection,
       });
 
       const updatedItem = await tx.shipmentItem.update({

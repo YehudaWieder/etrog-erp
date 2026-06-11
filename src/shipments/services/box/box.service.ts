@@ -184,6 +184,43 @@ export class BoxService {
     });
   }
 
+  // Get all OPEN boxes for the active season (for item creation form)
+  async findOpenForActiveSeason() {
+    const { id: seasonId } = await this.seasonsService.findActiveSeason();
+
+    const [boxes, systemConfig] = await Promise.all([
+      this.prisma.box.findMany({
+        where: { seasonId, status: 'OPEN', isDeleted: false },
+        select: {
+          id: true,
+          boxNumber: true,
+          boxType: true,
+          totalQuantity: true,
+          ownershipType: true,
+          traderId: true,
+          customerId: true,
+          trader: { select: { name: true } },
+          customer: { select: { customerName: true } },
+          shipment: { select: { id: true, shipmentNumber: true } },
+        },
+        orderBy: [{ shipmentId: 'asc' }, { boxNumber: 'asc' }],
+      }),
+      this.prisma.systemConfig.findFirst({ where: { seasonId } }),
+    ]);
+
+    const capacityMap: Record<string, number | null> = {
+      SMALL: systemConfig?.smallBoxCapacity ?? null,
+      MEDIUM: systemConfig?.mediumBoxCapacity ?? null,
+      LARGE: systemConfig?.largeBoxCapacity ?? null,
+      CUSTOM: null,
+    };
+
+    return boxes.map((box) => ({
+      ...box,
+      capacity: capacityMap[box.boxType] ?? null,
+    }));
+  }
+
   // Soft delete
   async remove(id: number) {
     return this.prisma.$transaction(async (tx) => {
