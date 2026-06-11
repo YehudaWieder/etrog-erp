@@ -52,6 +52,7 @@ export type TraderInventoryI18n = {
 				shippedOption: string;
 				arrivedOption: string;
 				selfPickupOption: string;
+				privateSelectionOption: string;
 			};
 		loading: string;
 		loadFailed: string;

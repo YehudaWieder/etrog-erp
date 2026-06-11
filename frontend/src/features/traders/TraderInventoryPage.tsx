@@ -116,10 +116,10 @@ export function TraderInventoryPage() {
   }, [filterValues.traderId, selectedTraderId]);
 
   const selectedShipmentScope = useMemo<
-    'ALL' | 'UNSHIPPED' | 'PACKED_SHIPPED' | 'SHIPPED' | 'SELF_PICKUP' | 'HARVEST_IN' | 'INTERNAL_TRANSFER' | 'OWNERSHIP_TRANSFER' | 'ASSIGNED' | 'WASTE' | 'ADJUSTMENT'
+    'ALL' | 'UNSHIPPED' | 'PACKED_SHIPPED' | 'SHIPPED' | 'SELF_PICKUP' | 'PRIVATE_SELECTION' | 'HARVEST_IN' | 'INTERNAL_TRANSFER' | 'OWNERSHIP_TRANSFER' | 'ASSIGNED' | 'WASTE' | 'ADJUSTMENT'
   >(() => {
     const status = filterValues.inventoryStatus || 'ALL';
-    if (status === 'ALL' || status === 'UNSHIPPED' || status === 'PACKED_SHIPPED' || status === 'SHIPPED' || status === 'SELF_PICKUP') {
+    if (status === 'ALL' || status === 'UNSHIPPED' || status === 'PACKED_SHIPPED' || status === 'SHIPPED' || status === 'SELF_PICKUP' || status === 'PRIVATE_SELECTION') {
       return status;
     }
     return 'ALL';
@@ -252,8 +252,9 @@ export function TraderInventoryPage() {
       { value: 'PACKED_SHIPPED', label: t.summary.filters.boxedOption },
       { value: 'SHIPPED', label: t.summary.filters.shippedOption },
       { value: 'SELF_PICKUP', label: t.summary.filters.selfPickupOption },
+      { value: 'PRIVATE_SELECTION', label: t.summary.filters.privateSelectionOption },
     ],
-    [t.summary.filters.allInventoryOption, t.summary.filters.unboxedOption, t.summary.filters.boxedOption, t.summary.filters.shippedOption, t.summary.filters.selfPickupOption],
+    [t.summary.filters.allInventoryOption, t.summary.filters.unboxedOption, t.summary.filters.boxedOption, t.summary.filters.shippedOption, t.summary.filters.selfPickupOption, t.summary.filters.privateSelectionOption],
   );
 
   const movementStatusI18n = useMemo(() => getTraderMovementsI18n(), []);
@@ -315,6 +316,7 @@ export function TraderInventoryPage() {
       'PACKED_SHIPPED': t.summary.filters.boxedOption,
       'SHIPPED': t.summary.filters.shippedOption,
       'SELF_PICKUP': t.summary.filters.selfPickupOption,
+      'PRIVATE_SELECTION': t.summary.filters.privateSelectionOption,
     };
     const statusDisplay = statusMap[filterValues.inventoryStatus] || filterValues.inventoryStatus;
 
@@ -384,6 +386,7 @@ export function TraderInventoryPage() {
       'PACKED_SHIPPED': t.summary.filters.boxedOption,
       'SHIPPED': t.summary.filters.shippedOption,
       'SELF_PICKUP': t.summary.filters.selfPickupOption,
+      'PRIVATE_SELECTION': t.summary.filters.privateSelectionOption,
     };
     const statusDisplay = statusMap[filterValues.inventoryStatus] || filterValues.inventoryStatus;
 

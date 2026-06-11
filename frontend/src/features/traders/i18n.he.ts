@@ -46,6 +46,7 @@ export const TRADER_INVENTORY_I18N_HE: TraderInventoryI18n = {
 			shippedOption: 'שנשלח',
 			arrivedOption: 'שהגיע ליעד',
 			selfPickupOption: 'באיסוף עצמי',
+			privateSelectionOption: 'מיון פרטי',
 		},
 		loading: 'טוען סיכום מלאי סוחרים...',
 		loadFailed: 'טעינת סיכום מלאי הסוחרים נכשלה.',
@@ -105,6 +106,10 @@ export const TRADER_INVENTORY_I18N_HE: TraderInventoryI18n = {
 		'self-pickup': {
 			title: 'אין מלאי באיסוף עצמי להצגה',
 			description: 'מלאי שנאסף בישירו של סוחר (בלי משלוח) יופיע כאן.',
+		},
+		'private-selection': {
+			title: 'אין מיון פרטי להצגה',
+			description: 'אתרוגים שנבחרו במיוחד על ידי הסוחר עבור עצמו יופיעו כאן.',
 		},
 		movements: {
 			title: 'אין תנועות להצגה',
@@ -242,7 +247,7 @@ export const TRADER_MOVEMENTS_I18N_HE: TraderMovementsI18n = {
 	addMovementButton: 'הוספת תנועה',
 	columns: {
 		date: 'תאריך',
-		type: 'סוג תנעה',
+		type: 'סוג תנועה',
 		trader: 'שיוך',
 		category: 'קטגוריה',
 		grade: 'דרגה',
@@ -255,7 +260,7 @@ export const TRADER_MOVEMENTS_I18N_HE: TraderMovementsI18n = {
 		traderLabel: 'סוחר',
 		allTradersOption: 'כל הסוחרים',
 		unassignedOption: 'לא משוייך',
-		movementStatusLabel: 'סוג תנעה',
+		movementStatusLabel: 'סוג תנועה',
 		allMovementsOption: 'כל התנועות',
 		nonShipmentMovementsOption: 'ללא תנועות משלוח',
 		shipmentMovementsOption: 'תנועות משלוח בלבד',
@@ -277,6 +282,10 @@ export const TRADER_MOVEMENTS_I18N_HE: TraderMovementsI18n = {
 		ASSIGNED: 'שיוך',
 		UNASSIGNED: 'ביטול שיוך',
 		RECEIVED: 'קבלה',
+		PRIVATE_SELECTION: 'מיון פרטי',
+		SELF_PICKUP: 'איסוף עצמי',
+		WASTE: 'פחת',
+		ADJUSTMENT: 'התאמה ידנית',
 	},
 	pitamStatuses: {
 		WITH_PITAM: 'עם פיטם',

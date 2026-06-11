@@ -14,9 +14,10 @@ type ShipmentItemsTableProps = {
   labels: ShipmentItemsTableLabels;
   selectedItemId: number | null;
   onSelectItem: (row: ShipmentItemsTableRow | null) => void;
+  refreshKey?: number;
 };
 
-export function ShipmentItemsTable({ lang, labels, selectedItemId, onSelectItem }: ShipmentItemsTableProps): JSX.Element {
+export function ShipmentItemsTable({ lang, labels, selectedItemId, onSelectItem, refreshKey }: ShipmentItemsTableProps): JSX.Element {
   const {
     filters,
     selectedSeasonId,
@@ -32,6 +33,7 @@ export function ShipmentItemsTable({ lang, labels, selectedItemId, onSelectItem 
     selectedBoxNumber,
     selectedShipmentNumber,
     selectedOwnership,
+    refreshKey,
   );
   const summaryTotals = useMemo(() => buildShipmentItemsSummaryTotals(rows), [rows]);
 

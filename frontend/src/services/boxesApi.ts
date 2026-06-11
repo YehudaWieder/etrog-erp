@@ -3,6 +3,20 @@ import { apiClient, type ApiClientInit } from './apiClient';
 export type BoxStatus = 'OPEN' | 'CLOSED' | 'SHIPPED';
 export type BoxOwnership = 'TRADER' | 'CUSTOMER' | 'SHARED' | 'UNASSIGNED' | 'CUSTOM';
 
+export type OpenBoxRecord = {
+  id: number;
+  boxNumber: number;
+  boxType: 'SMALL' | 'MEDIUM' | 'LARGE' | 'CUSTOM';
+  totalQuantity: number;
+  capacity: number | null;
+  ownershipType: BoxOwnership;
+  traderId: number | null;
+  customerId: number | null;
+  trader: { name: string } | null;
+  customer: { customerName: string } | null;
+  shipment: { id: number; shipmentNumber: number };
+};
+
 export type BoxRecord = {
   id: number;
   shipmentId: number;
@@ -42,6 +56,10 @@ export type UpdateBoxPayload = {
   traderId?: number | null;
   customerId?: number | null;
 };
+
+export async function getOpenBoxes(): Promise<OpenBoxRecord[]> {
+  return apiClient<OpenBoxRecord[]>('/boxes/open');
+}
 
 export async function getBoxById(id: number): Promise<BoxRecord> {
   return apiClient<BoxRecord>(`/boxes/${id}`);

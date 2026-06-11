@@ -46,6 +46,7 @@ export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
 			shippedOption: 'Shipped',
 			arrivedOption: 'Arrived',
 			selfPickupOption: 'Self-Pickup',
+				privateSelectionOption: 'Private Selection',
 		},
 		loading: 'Loading trader inventory summary...',
 		loadFailed: 'Failed to load trader inventory summary.',
@@ -105,6 +106,10 @@ export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
 		'self-pickup': {
 			title: 'No self-pickup inventory',
 			description: 'Inventory collected directly by trader (without shipment) will appear here.',
+		},
+		'private-selection': {
+			title: 'No private selection inventory',
+			description: 'Etrogs specially selected by the trader for themselves will appear here.',
 		},
 		movements: {
 			title: 'No movements to display',
@@ -277,6 +282,10 @@ export const TRADER_MOVEMENTS_I18N_EN: TraderMovementsI18n = {
 		ASSIGNED: 'Assigned',
 		UNASSIGNED: 'Unassigned',
 		RECEIVED: 'Received',
+		PRIVATE_SELECTION: 'Private Selection',
+		SELF_PICKUP: 'Self-Pickup',
+		WASTE: 'Waste',
+		ADJUSTMENT: 'Manual Adjustment',
 	},
 	pitamStatuses: {
 		WITH_PITAM: 'With pitam',

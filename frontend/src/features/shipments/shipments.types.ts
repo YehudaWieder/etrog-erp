@@ -25,6 +25,7 @@ export type ShipmentItemsTableRow = {
   quantity: number;
   ownership: string;
   ownershipType: ItemOwnership;
+  isPrivateSelection: boolean;
 };
 
 export type ShipmentsTableLabels = {
@@ -108,6 +109,8 @@ export type ShipmentItemsTableLabels = {
   colCategory: string;
   colQuantity: string;
   colOwnership: string;
+  colStockSource: string;
+  stockSourceLabels: { GENERAL: string; PRIVATE_SELECTION: string };
   detailsButtonAriaLabel: string;
   uncategorized: string;
   empty: string;

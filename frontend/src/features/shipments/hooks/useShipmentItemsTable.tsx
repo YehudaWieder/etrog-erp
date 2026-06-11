@@ -44,6 +44,7 @@ export function useShipmentItemsTable(
   boxNumber: 'all' | number,
   shipmentNumber: 'all' | number,
   ownership: 'all' | string,
+  refreshKey?: number,
 ): UseShipmentItemsTableResult {
   const [rawRows, setRawRows] = useState<ShipmentItemsTableRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -80,6 +81,7 @@ export function useShipmentItemsTable(
                   quantity: item.quantity,
                   ownership: resolveOwnershipLabel(item, labels),
                   ownershipType: item.ownershipType,
+                  isPrivateSelection: item.isPrivateSelection,
                 }));
               }),
             );
@@ -112,7 +114,7 @@ export function useShipmentItemsTable(
     return () => {
       isMounted = false;
     };
-  }, [labels, seasonId]);
+  }, [labels, seasonId, refreshKey]);
 
   const rows = useMemo<ShipmentItemsTableRow[]>(() => {
     return rawRows
@@ -193,6 +195,20 @@ export function useShipmentItemsTable(
       sortAccessor: (row) => row.ownership,
       align: 'center',
       render: (row) => row.ownership,
+    },
+    {
+      id: 'stockSource',
+      header: labels.colStockSource,
+      headerLabel: labels.colStockSource,
+      sortKey: 'stockSource',
+      sortAccessor: (row) => (row.isPrivateSelection ? 1 : 0),
+      align: 'center',
+      render: (row) =>
+        row.ownershipType === 'TRADER'
+          ? (row.isPrivateSelection
+              ? labels.stockSourceLabels.PRIVATE_SELECTION
+              : labels.stockSourceLabels.GENERAL)
+          : '—',
     },
   ], [labels]);
 

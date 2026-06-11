@@ -11,10 +11,12 @@ import { ShipmentItemsTable } from './components/ShipmentItemsTable';
 import { ShipmentsPageHeaderActions } from './components/shared/ShipmentsPageHeaderActions';
 import { NewShipmentFormModal } from './components/NewShipmentFormModal';
 import { NewBoxFormModal } from './components/NewBoxFormModal';
+import { NewShipmentItemFormModal } from './components/NewShipmentItemFormModal';
 import { EditBoxFormModal } from './components/EditBoxFormModal';
 import { EditShipmentFormModal } from './components/EditShipmentFormModal';
 import { useNewShipmentForm } from './hooks/useNewShipmentForm';
 import { useNewBoxForm } from './hooks/useNewBoxForm';
+import { useNewShipmentItemForm } from './hooks/useNewShipmentItemForm';
 import { useEditBoxForm } from './hooks/useEditBoxForm';
 import { useEditShipmentForm } from './hooks/useEditShipmentForm';
 import { useDeleteShipmentDialog } from './hooks/useDeleteShipmentDialog';
@@ -36,10 +38,12 @@ export function ShipmentsPage() {
   const [selectedItemRow, setSelectedItemRow] = useState<ShipmentItemsTableRow | null>(null);
   const [isNewShipmentModalOpen, setIsNewShipmentModalOpen] = useState(false);
   const [isNewBoxModalOpen, setIsNewBoxModalOpen] = useState(false);
+  const [isNewItemModalOpen, setIsNewItemModalOpen] = useState(false);
   const [isEditShipmentModalOpen, setIsEditShipmentModalOpen] = useState(false);
   const [isEditBoxModalOpen, setIsEditBoxModalOpen] = useState(false);
   const [shipmentsRefreshKey, setShipmentsRefreshKey] = useState(0);
   const [boxesRefreshKey, setBoxesRefreshKey] = useState(0);
+  const [itemsRefreshKey, setItemsRefreshKey] = useState(0);
 
   useEffect(() => {
     // טען כמות הודעות שלא נקראו
@@ -171,6 +175,10 @@ export function ShipmentsPage() {
     setBoxesRefreshKey((k) => k + 1);
   }, []);
 
+  const handleItemsRefresh = useCallback(() => {
+    setItemsRefreshKey((k) => k + 1);
+  }, []);
+
   const newShipmentForm = useNewShipmentForm({
     t: t.newShipmentModal,
     onSuccess: handleShipmentsRefresh,
@@ -182,6 +190,13 @@ export function ShipmentsPage() {
     t: t.newBoxModal,
     onSuccess: handleBoxesRefresh,
     onClose: () => setIsNewBoxModalOpen(false),
+  });
+
+  const newShipmentItemForm = useNewShipmentItemForm({
+    isOpen: isNewItemModalOpen,
+    t: t.newShipmentItemModal,
+    onSuccess: handleItemsRefresh,
+    onClose: () => setIsNewItemModalOpen(false),
   });
 
   const editBoxForm = useEditBoxForm({
@@ -221,6 +236,8 @@ export function ShipmentsPage() {
       setIsNewShipmentModalOpen(true);
     } else if (activeSidebarId === 'all-boxes') {
       setIsNewBoxModalOpen(true);
+    } else if (activeSidebarId === 'shipment-items') {
+      setIsNewItemModalOpen(true);
     } else {
       handleCreateAction(addActionLabel);
     }
@@ -354,6 +371,49 @@ export function ShipmentsPage() {
         onClose={editBoxForm.handleClose}
       />
 
+      <NewShipmentItemFormModal
+        isOpen={isNewItemModalOpen}
+        t={t.newShipmentItemModal}
+        openBoxes={newShipmentItemForm.openBoxes}
+        availableTradersFromInventory={newShipmentItemForm.availableTradersFromInventory}
+        availableCustomersFromInventory={newShipmentItemForm.availableCustomersFromInventory}
+        availableTraderCategories={newShipmentItemForm.availableTraderCategories}
+        availableCustomerCategories={newShipmentItemForm.availableCustomerCategories}
+        availableGrades={newShipmentItemForm.availableGrades}
+        availablePitamStatuses={newShipmentItemForm.availablePitamStatuses}
+        availableQuantity={newShipmentItemForm.availableQuantity}
+        remainingCapacity={newShipmentItemForm.remainingCapacity}
+        isLoadingOptions={newShipmentItemForm.isLoadingOptions}
+        isLoadingInventory={newShipmentItemForm.isLoadingInventory}
+        selectedBoxId={newShipmentItemForm.selectedBoxId}
+        onBoxIdChange={newShipmentItemForm.setSelectedBoxId}
+        selectedBox={newShipmentItemForm.selectedBox}
+        itemOwnership={newShipmentItemForm.itemOwnership}
+        onItemOwnershipChange={newShipmentItemForm.setItemOwnership}
+        stockSource={newShipmentItemForm.stockSource}
+        onStockSourceChange={newShipmentItemForm.setStockSource}
+        traderId={newShipmentItemForm.traderId}
+        onTraderIdChange={newShipmentItemForm.setTraderId}
+        customerId={newShipmentItemForm.customerId}
+        onCustomerIdChange={newShipmentItemForm.setCustomerId}
+        traderCategoryId={newShipmentItemForm.traderCategoryId}
+        onTraderCategoryIdChange={newShipmentItemForm.setTraderCategoryId}
+        customerCategoryId={newShipmentItemForm.customerCategoryId}
+        onCustomerCategoryIdChange={newShipmentItemForm.setCustomerCategoryId}
+        grade={newShipmentItemForm.grade}
+        onGradeChange={newShipmentItemForm.setGrade}
+        pitamStatus={newShipmentItemForm.pitamStatus}
+        onPitamStatusChange={newShipmentItemForm.setPitamStatus}
+        quantity={newShipmentItemForm.quantity}
+        onQuantityChange={newShipmentItemForm.setQuantity}
+        notes={newShipmentItemForm.notes}
+        onNotesChange={newShipmentItemForm.setNotes}
+        isSubmitting={newShipmentItemForm.isSubmitting}
+        error={newShipmentItemForm.error}
+        onSave={newShipmentItemForm.handleSave}
+        onClose={newShipmentItemForm.handleClose}
+      />
+
       <NewBoxFormModal
         isOpen={isNewBoxModalOpen}
         t={t.newBoxModal}
@@ -463,6 +523,7 @@ export function ShipmentsPage() {
           labels={t.shipmentItemsTableLabels}
           selectedItemId={selectedItemRow?.id ?? null}
           onSelectItem={handleItemRowSelect}
+          refreshKey={itemsRefreshKey}
         />
       ) : (
         <section className="shipments-empty-state">
