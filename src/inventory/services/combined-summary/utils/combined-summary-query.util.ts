@@ -22,6 +22,10 @@ export function buildCombinedTraderWhere(
     traderWhere.type = typeFilter;
   }
 
+  if (query.excludePrivateSelection) {
+    applyExcludePrivateSelection(traderWhere);
+  }
+
   return traderWhere;
 }
 
@@ -68,4 +72,26 @@ function applyOwnerScope(
     where.isModulo = false;
     where.traderId = traderId;
   }
+}
+
+function applyExcludePrivateSelection(where: Prisma.TraderStockWhereInput) {
+  const existing = where.type as Prisma.EnumMovementTypeFilter | string | undefined;
+
+  if (!existing) {
+    where.type = { not: 'PRIVATE_SELECTION' } as Prisma.EnumMovementTypeFilter;
+    return;
+  }
+
+  if (typeof existing === 'object' && 'notIn' in existing && Array.isArray(existing.notIn)) {
+    if (!(existing.notIn as string[]).includes('PRIVATE_SELECTION')) {
+      (existing.notIn as string[]).push('PRIVATE_SELECTION');
+    }
+    return;
+  }
+
+  if (typeof existing === 'object' && 'not' in existing) {
+    where.type = { notIn: [existing.not as string, 'PRIVATE_SELECTION'] } as Prisma.EnumMovementTypeFilter;
+    return;
+  }
+  // exact-match string scope (e.g. 'HARVEST_IN') already excludes PRIVATE_SELECTION — nothing to do
 }

@@ -11,6 +11,7 @@ export type InventoryMovementScope =
   | 'INTERNAL_TRANSFER'
   | 'OWNERSHIP_TRANSFER'
   | 'ASSIGNED'
+  | 'PRIVATE_SELECTION'
   | 'WASTE'
   | 'ADJUSTMENT';
 export type InventoryTraderSortBy =

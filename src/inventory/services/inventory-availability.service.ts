@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Grade, PitamStatus, Prisma } from 'src/generated/prisma';
+import { Grade, MovementType, PitamStatus, Prisma } from 'src/generated/prisma';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 type LedgerClient = Prisma.TransactionClient | PrismaService;
@@ -15,8 +15,16 @@ export class InventoryAvailabilityService {
       grade: Grade;
       pitamStatus: PitamStatus;
       isModulo: boolean;
+      excludePrivateSelection?: boolean;
+      onlyPrivateSelection?: boolean;
     },
   ) {
+    const typeFilter = query.onlyPrivateSelection
+      ? { type: MovementType.PRIVATE_SELECTION }
+      : query.excludePrivateSelection
+        ? { type: { not: MovementType.PRIVATE_SELECTION } }
+        : {};
+
     const aggregation = await client.traderStock.aggregate({
       where: {
         seasonId: query.seasonId,
@@ -26,6 +34,7 @@ export class InventoryAvailabilityService {
         grade: query.grade,
         pitamStatus: query.pitamStatus,
         isModulo: query.isModulo,
+        ...typeFilter,
       },
       _sum: { quantity: true },
     });
@@ -63,6 +72,7 @@ export class InventoryAvailabilityService {
       traderCategoryId: number;
       grade: Grade;
       pitamStatus: PitamStatus;
+      excludePrivateSelection?: boolean;
     },
   ) {
     const grouped = await client.traderStock.groupBy({
@@ -75,6 +85,7 @@ export class InventoryAvailabilityService {
         pitamStatus: query.pitamStatus,
         traderId: { not: null },
         isModulo: false,
+        ...(query.excludePrivateSelection ? { type: { not: MovementType.PRIVATE_SELECTION } } : {}),
       },
       _sum: { quantity: true },
     });
@@ -100,6 +111,8 @@ export class InventoryAvailabilityService {
       requiredQuantity: number;
       creditQuantity?: number;
       contextLabel: string;
+      excludePrivateSelection?: boolean;
+      onlyPrivateSelection?: boolean;
     },
   ) {
     const available = await this.getTraderUnshippedBalance(client, {
@@ -109,6 +122,8 @@ export class InventoryAvailabilityService {
       grade: params.grade,
       pitamStatus: params.pitamStatus,
       isModulo: params.isModulo,
+      excludePrivateSelection: params.excludePrivateSelection,
+      onlyPrivateSelection: params.onlyPrivateSelection,
     });
 
     const effectiveAvailable = available + (params.creditQuantity ?? 0);

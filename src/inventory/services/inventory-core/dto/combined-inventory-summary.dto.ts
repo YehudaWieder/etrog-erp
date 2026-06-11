@@ -5,4 +5,5 @@ export type CombinedMovementScope = InventoryMovementScope;
 export interface CombinedInventorySummaryQuery extends InventorySummaryBaseFilters {
   ownerScope?: InventoryOwnerScope;
   movementScope?: CombinedMovementScope;
+  excludePrivateSelection?: boolean;
 }

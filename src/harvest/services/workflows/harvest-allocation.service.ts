@@ -179,7 +179,7 @@ export class HarvestAllocationService {
           pitamStatus: classItem.pitamStatus,
           quantity: classItem.quantity,
           isModulo: false,
-          type: MovementType.HARVEST_IN,
+          type: MovementType.PRIVATE_SELECTION,
           MovementReferenceId: params.classificationId,
           updatedById: params.updatedById,
           notes: classItem.notes,
@@ -304,7 +304,7 @@ export class HarvestAllocationService {
     await tx.traderStock.deleteMany({
       where: {
         MovementReferenceId: classificationId,
-        type: { in: [MovementType.HARVEST_IN, MovementType.ASSIGNED] },
+        type: { in: [MovementType.HARVEST_IN, MovementType.ASSIGNED, MovementType.PRIVATE_SELECTION] },
         shipmentId: null,
         boxId: null,
       },

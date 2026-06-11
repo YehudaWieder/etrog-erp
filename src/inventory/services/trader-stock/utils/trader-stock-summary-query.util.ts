@@ -89,6 +89,11 @@ function applyNonBoxTypeFilters(
     return;
   }
 
+  if (shipmentScope === 'PRIVATE_SELECTION') {
+    where.type = 'PRIVATE_SELECTION';
+    return;
+  }
+
   if (shipmentScope === 'WASTE') {
     where.type = 'WASTE';
     return;

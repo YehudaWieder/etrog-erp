@@ -26,12 +26,13 @@ export function validateTraderSummaryQuery(
     'INTERNAL_TRANSFER',
     'OWNERSHIP_TRANSFER',
     'ASSIGNED',
+    'PRIVATE_SELECTION',
     'WASTE',
     'ADJUSTMENT',
   ];
   if (!validShipmentScopes.includes(shipmentScope)) {
     throw new BadRequestException(
-      'shipmentScope must be one of: ALL, SHIPPED, UNSHIPPED, PACKED_SHIPPED, SELF_PICKUP, HARVEST_IN, INTERNAL_TRANSFER, OWNERSHIP_TRANSFER, ASSIGNED, WASTE, ADJUSTMENT',
+      'shipmentScope must be one of: ALL, SHIPPED, UNSHIPPED, PACKED_SHIPPED, SELF_PICKUP, HARVEST_IN, INTERNAL_TRANSFER, OWNERSHIP_TRANSFER, ASSIGNED, PRIVATE_SELECTION, WASTE, ADJUSTMENT',
     );
   }
 
@@ -67,12 +68,13 @@ export function validateCustomerSummaryQuery(
     'INTERNAL_TRANSFER',
     'OWNERSHIP_TRANSFER',
     'ASSIGNED',
+    'PRIVATE_SELECTION',
     'WASTE',
     'ADJUSTMENT',
   ];
   if (!validShipmentScopes.includes(shipmentScope)) {
     throw new BadRequestException(
-      'shipmentScope must be one of: ALL, SHIPPED, UNSHIPPED, PACKED_SHIPPED, SELF_PICKUP, HARVEST_IN, INTERNAL_TRANSFER, OWNERSHIP_TRANSFER, ASSIGNED, WASTE, ADJUSTMENT',
+      'shipmentScope must be one of: ALL, SHIPPED, UNSHIPPED, PACKED_SHIPPED, SELF_PICKUP, HARVEST_IN, INTERNAL_TRANSFER, OWNERSHIP_TRANSFER, ASSIGNED, PRIVATE_SELECTION, WASTE, ADJUSTMENT',
     );
   }
 
@@ -104,6 +106,7 @@ export function validateCombinedSummaryQuery(
     'INTERNAL_TRANSFER',
     'OWNERSHIP_TRANSFER',
     'ASSIGNED',
+    'PRIVATE_SELECTION',
     'WASTE',
     'ADJUSTMENT',
   ];
@@ -132,6 +135,7 @@ export function buildMovementFilter(scope: InventoryMovementScope) {
     INTERNAL_TRANSFER: MovementType.INTERNAL_TRANSFER,
     OWNERSHIP_TRANSFER: MovementType.OWNERSHIP_TRANSFER,
     ASSIGNED: MovementType.ASSIGNED,
+    PRIVATE_SELECTION: MovementType.PRIVATE_SELECTION,
     WASTE: MovementType.WASTE,
     ADJUSTMENT: MovementType.ADJUSTMENT,
   };

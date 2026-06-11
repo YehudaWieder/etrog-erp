@@ -43,6 +43,7 @@ export class InventoryController {
 	@ApiQuery({ name: 'grade', enum: Grade, enumName: 'Grade', required: false, description: 'Trader side only.' })
 	@ApiQuery({ name: 'customerId', type: Number, required: false, description: 'Customer side only.' })
 	@ApiQuery({ name: 'customerCategoryId', type: Number, required: false, description: 'Customer side only.' })
+	@ApiQuery({ name: 'excludePrivateSelection', type: Boolean, required: false, description: 'When true, excludes PRIVATE_SELECTION movements from trader stock totals.' })
 	@ApiResponse({ status: 200, description: 'Combined inventory summary returned successfully.' })
 	getCombinedSummary(
 		@Query('seasonId') seasonId?: string,
@@ -54,6 +55,7 @@ export class InventoryController {
 		@Query('grade') grade?: Grade,
 		@Query('customerId') customerId?: string,
 		@Query('customerCategoryId') customerCategoryId?: string,
+		@Query('excludePrivateSelection') excludePrivateSelection?: string,
 	) {
 		return this.inventoryService.getCombinedSummary({
 			seasonId: parseOptionalInt(seasonId),
@@ -65,6 +67,7 @@ export class InventoryController {
 			grade,
 			customerId: parseOptionalInt(customerId),
 			customerCategoryId: parseOptionalInt(customerCategoryId),
+			excludePrivateSelection: excludePrivateSelection === 'true',
 		});
 	}
 
