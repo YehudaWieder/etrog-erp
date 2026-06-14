@@ -139,6 +139,7 @@ export const SHIPMENTS_I18N_HE = {
     save: 'שמור שינויים',
     cancel: 'ביטול',
     ownershipLockedHint: 'לא ניתן לשנות שיוך כל עוד יש פריטים בקרטון',
+    shipmentFrozenHint: 'לא ניתן לשנות סטטוס קרטון כאשר המשלוח כבר נשלח או נמסר',
     validationBoxNumberRequired: 'מספר קרטון נדרש',
     validationBoxNumberPositive: 'מספר קרטון חייב להיות מספר שלם חיובי',
     validationTraderRequired: 'יש לבחור סוחר',
@@ -179,6 +180,14 @@ export const SHIPMENTS_I18N_HE = {
     confirm: 'מחק',
     cancel: 'ביטול',
     conflictError: 'לא ניתן למחוק את המשלוח — קיימים קשרים תלויים.',
+    genericError: 'אירעה שגיאה במחיקה. נסה שוב.',
+  },
+  deleteShipmentItemDialog: {
+    title: (id: number) => `מחיקת פריט ${id}`,
+    message: (id: number) => `האם אתה בטוח שברצונך למחוק את פריט ${id}? פעולה זו אינה ניתנת לביטול.`,
+    confirm: 'מחק',
+    cancel: 'ביטול',
+    conflictError: 'לא ניתן למחוק את הפריט — קיימות רשומות מקושרות.',
     genericError: 'אירעה שגיאה במחיקה. נסה שוב.',
   },
   newShipmentItemModal: {

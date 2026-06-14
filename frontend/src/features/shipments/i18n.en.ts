@@ -136,6 +136,7 @@ export const SHIPMENTS_I18N_EN = {
     save: 'Save Changes',
     cancel: 'Cancel',
     ownershipLockedHint: 'Cannot change ownership while the box has items',
+    shipmentFrozenHint: 'Cannot change box status when the shipment has already been shipped or delivered',
     validationBoxNumberRequired: 'Box number is required',
     validationBoxNumberPositive: 'Box number must be a positive integer',
     validationTraderRequired: 'Please select a trader',
@@ -176,6 +177,14 @@ export const SHIPMENTS_I18N_EN = {
     confirm: 'Delete',
     cancel: 'Cancel',
     conflictError: 'Cannot delete this shipment — dependent records exist.',
+    genericError: 'An error occurred while deleting. Please try again.',
+  },
+  deleteShipmentItemDialog: {
+    title: (id: number) => `Delete Item ${id}`,
+    message: (id: number) => `Are you sure you want to delete Item ${id}? This action cannot be undone.`,
+    confirm: 'Delete',
+    cancel: 'Cancel',
+    conflictError: 'Cannot delete this item — related records exist.',
     genericError: 'An error occurred while deleting. Please try again.',
   },
   newShipmentItemModal: {

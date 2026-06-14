@@ -23,6 +23,7 @@ import { useEditBoxForm } from './hooks/useEditBoxForm';
 import { useEditShipmentForm } from './hooks/useEditShipmentForm';
 import { useDeleteShipmentDialog } from './hooks/useDeleteShipmentDialog';
 import { useDeleteBoxDialog } from './hooks/useDeleteBoxDialog';
+import { useDeleteShipmentItemDialog } from './hooks/useDeleteShipmentItemDialog';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import type { BoxesTableRow, ShipmentItemsTableRow, ShipmentRecord } from './shipments.types';
 
@@ -241,6 +242,15 @@ export function ShipmentsPage() {
     },
   });
 
+  const deleteShipmentItemDialog = useDeleteShipmentItemDialog({
+    item: selectedItemRow,
+    t: t.deleteShipmentItemDialog,
+    onSuccess: () => {
+      setSelectedItemRow(null);
+      handleItemsRefresh();
+    },
+  });
+
   const handleAddAction = useCallback(() => {
     if (activeSidebarId === 'all-shipments') {
       setIsNewShipmentModalOpen(true);
@@ -307,6 +317,8 @@ export function ShipmentsPage() {
               deleteShipmentDialog.handleOpen();
             } else if (isBoxesTableActive && selectedBoxRow) {
               deleteBoxDialog.handleOpen();
+            } else if (isShipmentItemsTableActive && selectedItemRow) {
+              deleteShipmentItemDialog.handleOpen();
             } else {
               handleCreateAction(t.pageControls.delete);
             }
@@ -404,6 +416,7 @@ export function ShipmentsPage() {
         notes={editBoxForm.notes}
         onNotesChange={editBoxForm.setNotes}
         isShipped={editBoxForm.isShipped}
+        isShipmentFrozen={editBoxForm.isShipmentFrozen}
         isSubmitting={editBoxForm.isSubmitting}
         error={editBoxForm.error}
         onSave={editBoxForm.handleSave}
@@ -537,6 +550,20 @@ export function ShipmentsPage() {
       >
         {deleteBoxDialog.error ? (
           <p className="seasons-manager__error">{deleteBoxDialog.error}</p>
+        ) : null}
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={deleteShipmentItemDialog.isOpen}
+        title={t.deleteShipmentItemDialog.title(selectedItemRow?.id ?? 0)}
+        message={t.deleteShipmentItemDialog.message(selectedItemRow?.id ?? 0)}
+        confirmLabel={t.deleteShipmentItemDialog.confirm}
+        cancelLabel={t.deleteShipmentItemDialog.cancel}
+        onConfirm={deleteShipmentItemDialog.handleConfirm}
+        onCancel={deleteShipmentItemDialog.handleCancel}
+      >
+        {deleteShipmentItemDialog.error ? (
+          <p className="seasons-manager__error">{deleteShipmentItemDialog.error}</p>
         ) : null}
       </ConfirmDialog>
 
