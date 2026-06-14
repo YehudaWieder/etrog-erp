@@ -19,6 +19,7 @@ export type BoxesTableRow = {
 
 export type ShipmentItemsTableRow = {
   id: number;
+  boxId: number;
   boxNumber: number;
   shipmentNumber: number;
   category: string;
@@ -26,6 +27,7 @@ export type ShipmentItemsTableRow = {
   ownership: string;
   ownershipType: ItemOwnership;
   isPrivateSelection: boolean;
+  customGrade: string | null;
 };
 
 export type ShipmentsTableLabels = {

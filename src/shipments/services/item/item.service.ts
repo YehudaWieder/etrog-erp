@@ -476,21 +476,24 @@ export class ItemService {
   }
 
   private async deletePackedMovementsByItemId(tx: Prisma.TransactionClient, itemId: number) {
-    // Only delete movements with the unique shipment item marker in notes
     const noteMarker = `shipment item #${itemId}`;
     await Promise.all([
       tx.traderStock.deleteMany({
         where: {
-          MovementReferenceId: itemId,
           type: { in: [MovementType.PACKED_SHIPPED, MovementType.ASSIGNED] },
-          notes: { contains: noteMarker },
+          OR: [
+            { MovementReferenceId: itemId },
+            { MovementReferenceId: null, notes: { contains: noteMarker } },
+          ],
         },
       }),
       tx.customerAllocation.deleteMany({
         where: {
-          MovementReferenceId: itemId,
           type: MovementType.PACKED_SHIPPED,
-          notes: { contains: noteMarker },
+          OR: [
+            { MovementReferenceId: itemId },
+            { MovementReferenceId: null, notes: { contains: noteMarker } },
+          ],
         },
       }),
     ]);
@@ -830,7 +833,7 @@ export class ItemService {
       let nextShipmentId = currentItem.shipmentId;
       let targetBox = await tx.box.findFirst({
         where: { id: nextBoxId, seasonId: currentItem.seasonId, isDeleted: false },
-        select: { id: true, shipmentId: true, ownershipType: true, traderId: true, customerId: true },
+        select: { id: true, shipmentId: true, ownershipType: true, traderId: true, customerId: true, boxType: true, totalQuantity: true },
       });
 
       if (updatePayload.boxId) {
@@ -843,6 +846,25 @@ export class ItemService {
 
       if (!targetBox) {
         throw new NotFoundException(`Box ${nextBoxId} not found in active season`);
+      }
+
+      // Enforce box capacity on quantity change (skip for CUSTOM box type)
+      if (targetBox.boxType !== 'CUSTOM') {
+        const systemConfig = await tx.systemConfig.findFirst({ where: { seasonId: currentItem.seasonId } });
+        const capacityMap: Record<string, number | null | undefined> = {
+          SMALL: systemConfig?.smallBoxCapacity,
+          MEDIUM: systemConfig?.mediumBoxCapacity,
+          LARGE: systemConfig?.largeBoxCapacity,
+        };
+        const capacity = capacityMap[targetBox.boxType];
+        if (capacity != null) {
+          const newTotal = targetBox.totalQuantity - currentItem.quantity + nextQuantity;
+          if (newTotal > capacity) {
+            throw new BadRequestException(
+              `Box capacity exceeded: box can hold ${capacity} items, current total is ${targetBox.totalQuantity}, changing quantity from ${currentItem.quantity} to ${nextQuantity} would bring total to ${newTotal}`,
+            );
+          }
+        }
       }
 
       const normalizedOwnership = this.normalizeItemOwnershipForBox({
@@ -866,19 +888,21 @@ export class ItemService {
         ? Boolean(updatePayload.isPrivateSelection)
         : Boolean((currentItem as any).isPrivateSelection ?? false);
 
-      await this.ensureEnoughAvailableStock(tx, {
-        seasonId: currentItem.seasonId,
-        boxOwnership: targetBox.ownershipType,
-        itemOwnership: normalizedOwnership.ownershipType,
-        itemTraderId: normalizedOwnership.traderId,
-        itemCustomerId: normalizedOwnership.customerId,
-        traderCategoryId: nextTraderCategoryId,
-        customerCategoryId: nextCustomerCategoryId,
-        grade: nextGrade,
-        pitamStatus: nextPitamStatus,
-        quantity: nextQuantity,
-        isPrivateSelection: nextIsPrivateSelection,
-      });
+      if (currentItem.ownershipType !== ItemOwnership.CUSTOM) {
+        await this.ensureEnoughAvailableStock(tx, {
+          seasonId: currentItem.seasonId,
+          boxOwnership: targetBox.ownershipType,
+          itemOwnership: normalizedOwnership.ownershipType,
+          itemTraderId: normalizedOwnership.traderId,
+          itemCustomerId: normalizedOwnership.customerId,
+          traderCategoryId: nextTraderCategoryId,
+          customerCategoryId: nextCustomerCategoryId,
+          grade: nextGrade,
+          pitamStatus: nextPitamStatus,
+          quantity: nextQuantity,
+          isPrivateSelection: nextIsPrivateSelection,
+        });
+      }
 
       const updatedItem = await tx.shipmentItem.update({
         where: { id },
@@ -917,6 +941,145 @@ export class ItemService {
 
       return updatedItem;
     });
+  }
+
+  // Returns the maximum quantity constraints for editing a shipment item.
+  async getItemEditLimits(itemId: number) {
+    const item = await this.prisma.shipmentItem.findFirst({
+      where: { id: itemId, isDeleted: false },
+      select: {
+        id: true,
+        seasonId: true,
+        boxId: true,
+        quantity: true,
+        ownershipType: true,
+        traderId: true,
+        customerId: true,
+        traderCategoryId: true,
+        customerCategoryId: true,
+        grade: true,
+        pitamStatus: true,
+        isPrivateSelection: true,
+      },
+    });
+
+    if (!item) {
+      throw new NotFoundException(`Shipment item #${itemId} not found`);
+    }
+
+    const box = await this.prisma.box.findFirst({
+      where: { id: item.boxId, isDeleted: false },
+      select: { boxType: true, totalQuantity: true },
+    });
+
+    if (!box) {
+      throw new NotFoundException(`Box not found for item #${itemId}`);
+    }
+
+    // Actual free space in the box right now (null = unlimited / CUSTOM box)
+    let boxSpaceFree: number | null = null;
+    let boxMaxQuantity: number | null = null;
+    if (box.boxType !== 'CUSTOM') {
+      const systemConfig = await this.prisma.systemConfig.findFirst({ where: { seasonId: item.seasonId } });
+      const capacityMap: Record<string, number | null | undefined> = {
+        SMALL: systemConfig?.smallBoxCapacity,
+        MEDIUM: systemConfig?.mediumBoxCapacity,
+        LARGE: systemConfig?.largeBoxCapacity,
+      };
+      const capacity = capacityMap[box.boxType];
+      if (capacity != null) {
+        boxSpaceFree = capacity - box.totalQuantity;
+        // When editing, the current item's quantity is freed first, so max = currentQuantity + freeSpace
+        boxMaxQuantity = item.quantity + boxSpaceFree;
+      }
+    }
+
+    // How much inventory will actually be freed when this item's packed movements are deleted.
+    // Cannot assume item.quantity — the packed movement may not exist (CUSTOM path, old data, etc.).
+    const noteMarker = `shipment item #${item.id}`;
+    const [traderFreedAgg, customerFreedAgg] = await Promise.all([
+      this.prisma.traderStock.aggregate({
+        where: {
+          type: { in: [MovementType.PACKED_SHIPPED, MovementType.ASSIGNED] },
+          OR: [
+            { MovementReferenceId: item.id },
+            { MovementReferenceId: null, notes: { contains: noteMarker } },
+          ],
+        },
+        _sum: { quantity: true },
+      }),
+      this.prisma.customerAllocation.aggregate({
+        where: {
+          type: MovementType.PACKED_SHIPPED,
+          OR: [
+            { MovementReferenceId: item.id },
+            { MovementReferenceId: null, notes: { contains: noteMarker } },
+          ],
+        },
+        _sum: { quantity: true },
+      }),
+    ]);
+    // Packed movements are stored as negative quantities; negate to get the freed amount.
+    const freedQuantity = Math.abs((traderFreedAgg._sum.quantity ?? 0) + (customerFreedAgg._sum.quantity ?? 0));
+
+    // Inventory availability: net balance (inventory minus already packed) — for display
+    // maxInventory: balance + freedQuantity — the actual amount available after freeing this item
+    let inventoryAvailable: number | null = null;
+    let maxInventory: number | null = null;
+    if (item.ownershipType === ItemOwnership.TRADER && item.traderId && item.traderCategoryId && item.grade && item.pitamStatus) {
+      const balance = await this.inventoryAvailabilityService.getTraderUnshippedBalance(this.prisma, {
+        seasonId: item.seasonId,
+        traderId: item.traderId,
+        traderCategoryId: item.traderCategoryId,
+        grade: item.grade as Grade,
+        pitamStatus: item.pitamStatus as PitamStatus,
+        isModulo: false,
+        onlyPrivateSelection: item.isPrivateSelection === true,
+        excludePrivateSelection: item.isPrivateSelection === false,
+      });
+      inventoryAvailable = balance;
+      maxInventory = balance + freedQuantity;
+    } else if (item.ownershipType === ItemOwnership.CUSTOMER && item.customerId && item.customerCategoryId && item.pitamStatus) {
+      const balance = await this.inventoryAvailabilityService.getCustomerUnshippedBalance(this.prisma, {
+        seasonId: item.seasonId,
+        customerId: item.customerId,
+        customerCategoryId: item.customerCategoryId,
+        pitamStatus: item.pitamStatus as PitamStatus,
+      });
+      inventoryAvailable = balance;
+      maxInventory = balance + freedQuantity;
+    } else if (item.ownershipType === ItemOwnership.UNASSIGNED && item.traderCategoryId && item.grade && item.pitamStatus) {
+      const [traderAvailabilities, moduloBalance] = await Promise.all([
+        this.inventoryAvailabilityService.getTraderUnshippedAvailabilityByCategory(this.prisma, {
+          seasonId: item.seasonId,
+          traderCategoryId: item.traderCategoryId,
+          grade: item.grade as Grade,
+          pitamStatus: item.pitamStatus as PitamStatus,
+          excludePrivateSelection: true,
+        }),
+        this.inventoryAvailabilityService.getTraderUnshippedBalance(this.prisma, {
+          seasonId: item.seasonId,
+          traderId: null,
+          traderCategoryId: item.traderCategoryId,
+          grade: item.grade as Grade,
+          pitamStatus: item.pitamStatus as PitamStatus,
+          isModulo: true,
+        }),
+      ]);
+      const balance = traderAvailabilities.reduce((sum, t) => sum + t.available, 0) + moduloBalance;
+      inventoryAvailable = balance;
+      maxInventory = balance + freedQuantity;
+    }
+
+    const limits = [boxMaxQuantity, maxInventory].filter((v): v is number => v !== null);
+    const maxQuantity = limits.length > 0 ? Math.max(1, Math.min(...limits)) : null;
+
+    return {
+      currentQuantity: item.quantity,
+      maxQuantity,
+      boxSpaceFree,
+      inventoryAvailable,
+    };
   }
 
   // Hard deletes an item and updates totals accordingly.

@@ -10,6 +10,8 @@ export type ShipmentItemRecord = {
   traderCategoryId: number | null;
   customerCategoryId: number | null;
   quantity: number;
+  pitamStatus: string | null;
+  grade: string | null;
   ownershipType: ItemOwnership;
   traderId: number | null;
   customerId: number | null;
@@ -21,8 +23,39 @@ export type ShipmentItemRecord = {
   createdAt: string;
   updatedAt: string;
   notes: string | null;
+  customLabel: string | null;
+  customGrade: string | null;
 };
 
 export async function getShipmentItemsByBox(boxId: number): Promise<ShipmentItemRecord[]> {
   return apiClient<ShipmentItemRecord[]>(`/shipment-items/box/${boxId}`);
+}
+
+export type UpdateShipmentItemPayload = {
+  id: number;
+  quantity?: number;
+  pitamStatus?: string;
+  notes?: string | null;
+};
+
+export type ShipmentItemEditLimits = {
+  currentQuantity: number;
+  maxQuantity: number | null;
+  boxSpaceFree: number | null;
+  inventoryAvailable: number | null;
+};
+
+export async function getShipmentItemEditLimits(itemId: number): Promise<ShipmentItemEditLimits> {
+  return apiClient<ShipmentItemEditLimits>(`/shipment-items/${itemId}/edit-limits`);
+}
+
+export async function updateShipmentItem(
+  payload: UpdateShipmentItemPayload,
+  options?: { suppressGlobalFeedback?: boolean },
+): Promise<ShipmentItemRecord> {
+  return apiClient<ShipmentItemRecord>('/shipment-items', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+    suppressGlobalFeedback: options?.suppressGlobalFeedback,
+  });
 }

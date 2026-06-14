@@ -503,8 +503,8 @@ export function useNewShipmentItemForm({
         if (!grade) { setError(t.validationGradeRequired); return; }
       }
     } else {
+      // CUSTOM free-text: only category label is required; grade is optional
       if (!traderCategoryId.trim()) { setError(t.validationCategoryRequired); return; }
-      if (!grade.trim()) { setError(t.validationGradeRequired); return; }
     }
 
     if (!pitamStatus) { setError(t.validationPitamRequired); return; }
@@ -537,8 +537,8 @@ export function useNewShipmentItemForm({
       };
 
       if (isCustomFreeText) {
-        payload.customCategory = traderCategoryId.trim();
-        payload.grade = grade.trim();
+        payload.customLabel = traderCategoryId.trim();
+        if (grade.trim()) payload.customGrade = grade.trim();
         if (isSharedCustomItem) payload.ownershipType = 'CUSTOM';
       } else if (isUnassignedBox || isSharedUnassigned) {
         payload.traderCategoryId = Number(traderCategoryId);

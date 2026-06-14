@@ -561,7 +561,9 @@ model ShipmentItem {
   pitamStatus PitamStatus
   quantity    Int
 
-  notes String?
+  notes       String?
+  customLabel String? // free-text category label for CUSTOM ownership items (no FK category)
+  customGrade String? // free-text grade for CUSTOM ownership items
 
   // Ownership
   ownershipType       ItemOwnership @default(UNASSIGNED)

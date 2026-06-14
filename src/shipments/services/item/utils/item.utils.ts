@@ -75,6 +75,14 @@ export function validateCreateShipmentItemInput(data: Prisma.ShipmentItemUncheck
     throw new BadRequestException('notes must be a string');
   }
 
+  if ((data as any).customLabel !== undefined && typeof (data as any).customLabel !== 'string') {
+    throw new BadRequestException('customLabel must be a string');
+  }
+
+  if ((data as any).customGrade !== undefined && typeof (data as any).customGrade !== 'string') {
+    throw new BadRequestException('customGrade must be a string');
+  }
+
   if (data.ownershipType !== undefined) {
     validateItemOwnership(data.ownershipType, data.traderId, data.customerId);
   }

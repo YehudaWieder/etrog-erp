@@ -362,6 +362,8 @@ exports.Prisma.ShipmentItemScalarFieldEnum = {
   pitamStatus: 'pitamStatus',
   quantity: 'quantity',
   notes: 'notes',
+  customLabel: 'customLabel',
+  customGrade: 'customGrade',
   ownershipType: 'ownershipType',
   traderId: 'traderId',
   customerId: 'customerId',

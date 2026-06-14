@@ -44,6 +44,15 @@ export class ItemController {
     return this.itemService.create(data as Prisma.ShipmentItemUncheckedCreateInput, actor.id);
   }
 
+  @Get(':id/edit-limits')
+  @ApiOperation({ summary: 'Get the maximum quantity constraints for editing a shipment item (inventory available + box remaining capacity)' })
+  @ApiParam({ name: 'id', type: Number, description: 'The shipment item ID.' })
+  @ApiResponse({ status: 200, description: 'Edit limits returned successfully.' })
+  @ApiResponse({ status: 404, description: 'Shipment item not found.' })
+  getEditLimits(@Param('id', ParseIntPipe) id: number) {
+    return this.itemService.getItemEditLimits(id);
+  }
+
   @Get('box/:boxId')
   @ApiOperation({ summary: 'Retrieve all active (non-deleted) items in a specific box, including trader and customer details' })
   @ApiParam({ name: 'boxId', type: Number, description: 'The ID of the box to retrieve items from.' })

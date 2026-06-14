@@ -1,6 +1,6 @@
 // src/shipments/services/box/box.service.ts
 
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { ShipmentsService } from '../../shipments.service';
@@ -106,11 +106,25 @@ export class BoxService {
     return this.prisma.$transaction(async (tx) => {
       const current = await tx.box.findFirst({
         where: { id, isDeleted: false },
-        select: { id: true, shipmentId: true, seasonId: true, boxNumber: true },
+        select: { id: true, shipmentId: true, seasonId: true, boxNumber: true, ownershipType: true, traderId: true, customerId: true },
       });
 
       if (!current) {
         throw new NotFoundException(`Box #${id} not found`);
+      }
+
+      const ownershipFieldsChanged =
+        (data.ownershipType !== undefined && data.ownershipType !== current.ownershipType) ||
+        (data.traderId !== undefined && data.traderId !== current.traderId) ||
+        (data.customerId !== undefined && data.customerId !== current.customerId);
+
+      if (ownershipFieldsChanged) {
+        const itemCount = await tx.shipmentItem.count({ where: { boxId: id, isDeleted: false } });
+        if (itemCount > 0) {
+          throw new BadRequestException(
+            `Cannot change box ownership type or owner while the box has ${itemCount} item(s). Remove all items first.`,
+          );
+        }
       }
 
       const targetShipmentId = data.shipmentId ?? current.shipmentId;

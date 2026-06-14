@@ -3,6 +3,7 @@ import { ApiError } from '../../../services/apiClient';
 import { getBoxById, updateBox, type BoxStatus } from '../../../services/boxesApi';
 import { getActiveSeason } from '../../../services/seasonsApi';
 import { getShipmentsBySeason, type ShipmentRecord } from '../../../services/shipmentsApi';
+import { getShipmentItemsByBox } from '../../../services/shipmentItemsApi';
 import { getTraders, type Trader } from '../../../services/tradersApi';
 import { getCustomers, type Customer } from '../../../services/customersApi';
 import type { BoxesTableRow } from '../shipments.types';
@@ -13,6 +14,7 @@ type EditBoxFormText = {
   validationTraderRequired: string;
   validationCustomerRequired: string;
   duplicateBoxNumber: string;
+  errorOwnershipLocked: string;
   genericError: string;
 };
 
@@ -28,6 +30,7 @@ type UseEditBoxFormResult = {
   traders: Trader[];
   customers: Customer[];
   isLoadingOptions: boolean;
+  hasItems: boolean;
   selectedShipmentId: string;
   setSelectedShipmentId: (v: string) => void;
   boxNumber: string;
@@ -65,6 +68,7 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
   const [traderId, setTraderId] = useState('');
   const [customerId, setCustomerId] = useState('');
   const [notes, setNotes] = useState('');
+  const [hasItems, setHasItems] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,13 +80,15 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
 
     let isMounted = true;
     setIsLoadingOptions(true);
+    setHasItems(false);
     setError(null);
 
     const load = async () => {
       try {
         const activeSeason = await getActiveSeason();
-        const [fullBox, nextShipments, nextTraders, nextCustomers] = await Promise.all([
+        const [fullBox, boxItems, nextShipments, nextTraders, nextCustomers] = await Promise.all([
           getBoxById(boxRow.id),
+          getShipmentItemsByBox(boxRow.id),
           getShipmentsBySeason(activeSeason.id),
           getTraders(),
           getCustomers(),
@@ -95,6 +101,7 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
         setShipments(nextShipments);
         setTraders(nextTraders);
         setCustomers(nextCustomers);
+        setHasItems(boxItems.length > 0);
 
         setSelectedShipmentId(String(fullBox.shipmentId));
         setBoxNumber(String(fullBox.boxNumber));
@@ -178,8 +185,17 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
       onSuccess();
       onClose();
     } catch (err) {
-      const status = err instanceof ApiError ? err.status : 0;
-      setError(status === 409 ? t.duplicateBoxNumber : t.genericError);
+      if (err instanceof ApiError) {
+        if (err.status === 409) {
+          setError(t.duplicateBoxNumber);
+        } else if (err.status === 400 && err.message.toLowerCase().includes('ownership')) {
+          setError(t.errorOwnershipLocked);
+        } else {
+          setError(t.genericError);
+        }
+      } else {
+        setError(t.genericError);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -190,6 +206,7 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
     traders,
     customers,
     isLoadingOptions,
+    hasItems,
     selectedShipmentId,
     setSelectedShipmentId,
     boxNumber,

@@ -12,11 +12,13 @@ import { ShipmentsPageHeaderActions } from './components/shared/ShipmentsPageHea
 import { NewShipmentFormModal } from './components/NewShipmentFormModal';
 import { NewBoxFormModal } from './components/NewBoxFormModal';
 import { NewShipmentItemFormModal } from './components/NewShipmentItemFormModal';
+import { EditShipmentItemFormModal } from './components/EditShipmentItemFormModal';
 import { EditBoxFormModal } from './components/EditBoxFormModal';
 import { EditShipmentFormModal } from './components/EditShipmentFormModal';
 import { useNewShipmentForm } from './hooks/useNewShipmentForm';
 import { useNewBoxForm } from './hooks/useNewBoxForm';
 import { useNewShipmentItemForm } from './hooks/useNewShipmentItemForm';
+import { useEditShipmentItemForm } from './hooks/useEditShipmentItemForm';
 import { useEditBoxForm } from './hooks/useEditBoxForm';
 import { useEditShipmentForm } from './hooks/useEditShipmentForm';
 import { useDeleteShipmentDialog } from './hooks/useDeleteShipmentDialog';
@@ -41,6 +43,7 @@ export function ShipmentsPage() {
   const [isNewItemModalOpen, setIsNewItemModalOpen] = useState(false);
   const [isEditShipmentModalOpen, setIsEditShipmentModalOpen] = useState(false);
   const [isEditBoxModalOpen, setIsEditBoxModalOpen] = useState(false);
+  const [isEditItemModalOpen, setIsEditItemModalOpen] = useState(false);
   const [shipmentsRefreshKey, setShipmentsRefreshKey] = useState(0);
   const [boxesRefreshKey, setBoxesRefreshKey] = useState(0);
   const [itemsRefreshKey, setItemsRefreshKey] = useState(0);
@@ -199,6 +202,13 @@ export function ShipmentsPage() {
     onClose: () => setIsNewItemModalOpen(false),
   });
 
+  const editShipmentItemForm = useEditShipmentItemForm({
+    itemRow: isEditItemModalOpen ? selectedItemRow : null,
+    t: t.editShipmentItemModal,
+    onSuccess: handleItemsRefresh,
+    onClose: () => setIsEditItemModalOpen(false),
+  });
+
   const editBoxForm = useEditBoxForm({
     boxRow: isEditBoxModalOpen ? selectedBoxRow : null,
     t: t.editBoxModal,
@@ -286,6 +296,8 @@ export function ShipmentsPage() {
               setIsEditShipmentModalOpen(true);
             } else if (isBoxesTableActive && selectedBoxRow) {
               setIsEditBoxModalOpen(true);
+            } else if (isShipmentItemsTableActive && selectedItemRow) {
+              setIsEditItemModalOpen(true);
             } else {
               handleCreateAction(t.pageControls.edit);
             }
@@ -340,6 +352,32 @@ export function ShipmentsPage() {
         </button>
       }
     >
+      <EditShipmentItemFormModal
+        isOpen={isEditItemModalOpen}
+        t={t.editShipmentItemModal}
+        itemId={selectedItemRow?.id ?? 0}
+        boxNumber={selectedItemRow?.boxNumber ?? 0}
+        boxType={editShipmentItemForm.boxType}
+        boxTotalQuantity={editShipmentItemForm.boxTotalQuantity}
+        category={selectedItemRow?.category ?? ''}
+        ownership={selectedItemRow?.ownership ?? ''}
+        grade={editShipmentItemForm.grade}
+        isPrivateSelection={editShipmentItemForm.isPrivateSelection}
+        pitamStatus={editShipmentItemForm.pitamStatus}
+        maxQuantity={editShipmentItemForm.maxQuantity}
+        inventoryAvailable={editShipmentItemForm.inventoryAvailable}
+        boxSpaceFree={editShipmentItemForm.boxSpaceFree}
+        quantity={editShipmentItemForm.quantity}
+        onQuantityChange={editShipmentItemForm.setQuantity}
+        notes={editShipmentItemForm.notes}
+        onNotesChange={editShipmentItemForm.setNotes}
+        isLoading={editShipmentItemForm.isLoading}
+        isSubmitting={editShipmentItemForm.isSubmitting}
+        error={editShipmentItemForm.error}
+        onSave={editShipmentItemForm.handleSave}
+        onClose={editShipmentItemForm.handleClose}
+      />
+
       <EditBoxFormModal
         isOpen={isEditBoxModalOpen}
         originalBoxNumber={selectedBoxRow?.boxNumber ?? 0}
@@ -348,6 +386,7 @@ export function ShipmentsPage() {
         traders={editBoxForm.traders}
         customers={editBoxForm.customers}
         isLoadingOptions={editBoxForm.isLoadingOptions}
+        hasItems={editBoxForm.hasItems}
         selectedShipmentId={editBoxForm.selectedShipmentId}
         onShipmentIdChange={editBoxForm.setSelectedShipmentId}
         boxNumber={editBoxForm.boxNumber}

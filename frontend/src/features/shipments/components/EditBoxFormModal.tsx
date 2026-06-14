@@ -5,6 +5,18 @@ import type { Trader } from '../../../services/tradersApi';
 import type { Customer } from '../../../services/customersApi';
 import styles from './styles/NewBoxFormModal.module.css';
 
+const infoStyle: React.CSSProperties = {
+  width: 240,
+  maxWidth: '100%',
+  minHeight: 42,
+  padding: '0.4rem 0.6rem',
+  background: 'var(--color-bg-subtle, #f5f5f5)',
+  borderRadius: 4,
+  fontSize: '0.9rem',
+  display: 'flex',
+  alignItems: 'center',
+};
+
 type BoxType = 'SMALL' | 'MEDIUM' | 'LARGE' | 'CUSTOM';
 type BoxOwnership = 'UNASSIGNED' | 'TRADER' | 'CUSTOMER' | 'SHARED' | 'CUSTOM';
 
@@ -19,6 +31,7 @@ type EditBoxFormModalText = {
   boxTypePlaceholder: string;
   ownershipTypeLabel: string;
   ownershipTypePlaceholder: string;
+  ownershipLockedHint: string;
   traderLabel: string;
   traderPlaceholder: string;
   customerLabel: string;
@@ -40,6 +53,7 @@ type EditBoxFormModalProps = {
   traders: Trader[];
   customers: Customer[];
   isLoadingOptions: boolean;
+  hasItems: boolean;
   selectedShipmentId: string;
   onShipmentIdChange: (v: string) => void;
   boxNumber: string;
@@ -75,6 +89,7 @@ export function EditBoxFormModal({
   traders,
   customers,
   isLoadingOptions,
+  hasItems,
   selectedShipmentId,
   onShipmentIdChange,
   boxNumber,
@@ -175,57 +190,86 @@ export function EditBoxFormModal({
                 </select>
               </div>
 
+              <p
+                className="seasons-manager__hint"
+                style={{
+                  gridColumn: '1 / -1',
+                  visibility: !isLoadingOptions && hasItems ? 'visible' : 'hidden',
+                  margin: 0,
+                }}
+              >
+                {t.ownershipLockedHint}
+              </p>
+
               <div className={styles.field}>
                 <label className={styles.label}>{t.ownershipTypeLabel}</label>
-                <select
-                  className="seasons-manager__year-input"
-                  value={ownershipType}
-                  onChange={(e) => onOwnershipTypeChange(e.target.value)}
-                >
-                  <option value="">{t.ownershipTypePlaceholder}</option>
-                  {OWNERSHIP_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {t.ownershipTypeOptions[type]}
-                    </option>
-                  ))}
-                </select>
+                {hasItems ? (
+                  <div style={infoStyle}>
+                    {t.ownershipTypeOptions[ownershipType as BoxOwnership] || ownershipType || '—'}
+                  </div>
+                ) : (
+                  <select
+                    className="seasons-manager__year-input"
+                    value={ownershipType}
+                    onChange={(e) => onOwnershipTypeChange(e.target.value)}
+                  >
+                    <option value="">{t.ownershipTypePlaceholder}</option>
+                    {OWNERSHIP_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {t.ownershipTypeOptions[type]}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               {ownershipType === 'TRADER' ? (
                 <div className={styles.field}>
                   <label className={styles.label}>{t.traderLabel}</label>
-                  <select
-                    className="seasons-manager__year-input"
-                    value={traderId}
-                    onChange={(e) => onTraderIdChange(e.target.value)}
-                    disabled={isLoadingOptions}
-                  >
-                    <option value="">{t.traderPlaceholder}</option>
-                    {traders.map((trader) => (
-                      <option key={trader.id} value={String(trader.id)}>
-                        {trader.name}
-                      </option>
-                    ))}
-                  </select>
+                  {hasItems ? (
+                    <div style={infoStyle}>
+                      {traders.find((tr) => String(tr.id) === traderId)?.name || traderId || '—'}
+                    </div>
+                  ) : (
+                    <select
+                      className="seasons-manager__year-input"
+                      value={traderId}
+                      onChange={(e) => onTraderIdChange(e.target.value)}
+                      disabled={isLoadingOptions}
+                    >
+                      <option value="">{t.traderPlaceholder}</option>
+                      {traders.map((trader) => (
+                        <option key={trader.id} value={String(trader.id)}>
+                          {trader.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               ) : null}
 
               {ownershipType === 'CUSTOMER' ? (
                 <div className={styles.field}>
                   <label className={styles.label}>{t.customerLabel}</label>
-                  <select
-                    className="seasons-manager__year-input"
-                    value={customerId}
-                    onChange={(e) => onCustomerIdChange(e.target.value)}
-                    disabled={isLoadingOptions}
-                  >
-                    <option value="">{t.customerPlaceholder}</option>
-                    {customers.map((customer) => (
-                      <option key={customer.id} value={String(customer.id)}>
-                        {customer.customerName}
-                      </option>
-                    ))}
-                  </select>
+                  {hasItems ? (
+                    <div style={infoStyle}>
+                      {customers.find((c) => String(c.id) === customerId)?.customerName || customerId || '—'}
+                    </div>
+                  ) : (
+                    <select
+                      className="seasons-manager__year-input"
+                      value={customerId}
+                      onChange={(e) => onCustomerIdChange(e.target.value)}
+                      disabled={isLoadingOptions}
+                    >
+                      <option value="">{t.customerPlaceholder}</option>
+                      {customers.map((customer) => (
+                        <option key={customer.id} value={String(customer.id)}>
+                          {customer.customerName}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               ) : null}
             </>

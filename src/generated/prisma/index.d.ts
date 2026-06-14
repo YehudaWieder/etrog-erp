@@ -25116,6 +25116,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus | null
     quantity: number | null
     notes: string | null
+    customLabel: string | null
+    customGrade: string | null
     ownershipType: $Enums.ItemOwnership | null
     traderId: number | null
     customerId: number | null
@@ -25137,6 +25139,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus | null
     quantity: number | null
     notes: string | null
+    customLabel: string | null
+    customGrade: string | null
     ownershipType: $Enums.ItemOwnership | null
     traderId: number | null
     customerId: number | null
@@ -25158,6 +25162,8 @@ export namespace Prisma {
     pitamStatus: number
     quantity: number
     notes: number
+    customLabel: number
+    customGrade: number
     ownershipType: number
     traderId: number
     customerId: number
@@ -25207,6 +25213,8 @@ export namespace Prisma {
     pitamStatus?: true
     quantity?: true
     notes?: true
+    customLabel?: true
+    customGrade?: true
     ownershipType?: true
     traderId?: true
     customerId?: true
@@ -25228,6 +25236,8 @@ export namespace Prisma {
     pitamStatus?: true
     quantity?: true
     notes?: true
+    customLabel?: true
+    customGrade?: true
     ownershipType?: true
     traderId?: true
     customerId?: true
@@ -25249,6 +25259,8 @@ export namespace Prisma {
     pitamStatus?: true
     quantity?: true
     notes?: true
+    customLabel?: true
+    customGrade?: true
     ownershipType?: true
     traderId?: true
     customerId?: true
@@ -25357,6 +25369,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes: string | null
+    customLabel: string | null
+    customGrade: string | null
     ownershipType: $Enums.ItemOwnership
     traderId: number | null
     customerId: number | null
@@ -25397,6 +25411,8 @@ export namespace Prisma {
     pitamStatus?: boolean
     quantity?: boolean
     notes?: boolean
+    customLabel?: boolean
+    customGrade?: boolean
     ownershipType?: boolean
     traderId?: boolean
     customerId?: boolean
@@ -25426,6 +25442,8 @@ export namespace Prisma {
     pitamStatus?: boolean
     quantity?: boolean
     notes?: boolean
+    customLabel?: boolean
+    customGrade?: boolean
     ownershipType?: boolean
     traderId?: boolean
     customerId?: boolean
@@ -25455,6 +25473,8 @@ export namespace Prisma {
     pitamStatus?: boolean
     quantity?: boolean
     notes?: boolean
+    customLabel?: boolean
+    customGrade?: boolean
     ownershipType?: boolean
     traderId?: boolean
     customerId?: boolean
@@ -25484,6 +25504,8 @@ export namespace Prisma {
     pitamStatus?: boolean
     quantity?: boolean
     notes?: boolean
+    customLabel?: boolean
+    customGrade?: boolean
     ownershipType?: boolean
     traderId?: boolean
     customerId?: boolean
@@ -25494,7 +25516,7 @@ export namespace Prisma {
     isDeleted?: boolean
   }
 
-  export type ShipmentItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "shipmentId" | "boxId" | "seasonId" | "traderCategoryId" | "customerCategoryId" | "grade" | "pitamStatus" | "quantity" | "notes" | "ownershipType" | "traderId" | "customerId" | "isPrivateSelection" | "updatedById" | "createdAt" | "updatedAt" | "isDeleted", ExtArgs["result"]["shipmentItem"]>
+  export type ShipmentItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "shipmentId" | "boxId" | "seasonId" | "traderCategoryId" | "customerCategoryId" | "grade" | "pitamStatus" | "quantity" | "notes" | "customLabel" | "customGrade" | "ownershipType" | "traderId" | "customerId" | "isPrivateSelection" | "updatedById" | "createdAt" | "updatedAt" | "isDeleted", ExtArgs["result"]["shipmentItem"]>
   export type ShipmentItemInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     shipment?: boolean | ShipmentDefaultArgs<ExtArgs>
     box?: boolean | BoxDefaultArgs<ExtArgs>
@@ -25549,6 +25571,8 @@ export namespace Prisma {
       pitamStatus: $Enums.PitamStatus
       quantity: number
       notes: string | null
+      customLabel: string | null
+      customGrade: string | null
       ownershipType: $Enums.ItemOwnership
       traderId: number | null
       customerId: number | null
@@ -25998,6 +26022,8 @@ export namespace Prisma {
     readonly pitamStatus: FieldRef<"ShipmentItem", 'PitamStatus'>
     readonly quantity: FieldRef<"ShipmentItem", 'Int'>
     readonly notes: FieldRef<"ShipmentItem", 'String'>
+    readonly customLabel: FieldRef<"ShipmentItem", 'String'>
+    readonly customGrade: FieldRef<"ShipmentItem", 'String'>
     readonly ownershipType: FieldRef<"ShipmentItem", 'ItemOwnership'>
     readonly traderId: FieldRef<"ShipmentItem", 'Int'>
     readonly customerId: FieldRef<"ShipmentItem", 'Int'>
@@ -28022,6 +28048,8 @@ export namespace Prisma {
     pitamStatus: 'pitamStatus',
     quantity: 'quantity',
     notes: 'notes',
+    customLabel: 'customLabel',
+    customGrade: 'customGrade',
     ownershipType: 'ownershipType',
     traderId: 'traderId',
     customerId: 'customerId',
@@ -29999,6 +30027,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFilter<"ShipmentItem"> | $Enums.PitamStatus
     quantity?: IntFilter<"ShipmentItem"> | number
     notes?: StringNullableFilter<"ShipmentItem"> | string | null
+    customLabel?: StringNullableFilter<"ShipmentItem"> | string | null
+    customGrade?: StringNullableFilter<"ShipmentItem"> | string | null
     ownershipType?: EnumItemOwnershipFilter<"ShipmentItem"> | $Enums.ItemOwnership
     traderId?: IntNullableFilter<"ShipmentItem"> | number | null
     customerId?: IntNullableFilter<"ShipmentItem"> | number | null
@@ -30028,6 +30058,8 @@ export namespace Prisma {
     pitamStatus?: SortOrder
     quantity?: SortOrder
     notes?: SortOrderInput | SortOrder
+    customLabel?: SortOrderInput | SortOrder
+    customGrade?: SortOrderInput | SortOrder
     ownershipType?: SortOrder
     traderId?: SortOrderInput | SortOrder
     customerId?: SortOrderInput | SortOrder
@@ -30061,6 +30093,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFilter<"ShipmentItem"> | $Enums.PitamStatus
     quantity?: IntFilter<"ShipmentItem"> | number
     notes?: StringNullableFilter<"ShipmentItem"> | string | null
+    customLabel?: StringNullableFilter<"ShipmentItem"> | string | null
+    customGrade?: StringNullableFilter<"ShipmentItem"> | string | null
     ownershipType?: EnumItemOwnershipFilter<"ShipmentItem"> | $Enums.ItemOwnership
     traderId?: IntNullableFilter<"ShipmentItem"> | number | null
     customerId?: IntNullableFilter<"ShipmentItem"> | number | null
@@ -30090,6 +30124,8 @@ export namespace Prisma {
     pitamStatus?: SortOrder
     quantity?: SortOrder
     notes?: SortOrderInput | SortOrder
+    customLabel?: SortOrderInput | SortOrder
+    customGrade?: SortOrderInput | SortOrder
     ownershipType?: SortOrder
     traderId?: SortOrderInput | SortOrder
     customerId?: SortOrderInput | SortOrder
@@ -30119,6 +30155,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusWithAggregatesFilter<"ShipmentItem"> | $Enums.PitamStatus
     quantity?: IntWithAggregatesFilter<"ShipmentItem"> | number
     notes?: StringNullableWithAggregatesFilter<"ShipmentItem"> | string | null
+    customLabel?: StringNullableWithAggregatesFilter<"ShipmentItem"> | string | null
+    customGrade?: StringNullableWithAggregatesFilter<"ShipmentItem"> | string | null
     ownershipType?: EnumItemOwnershipWithAggregatesFilter<"ShipmentItem"> | $Enums.ItemOwnership
     traderId?: IntNullableWithAggregatesFilter<"ShipmentItem"> | number | null
     customerId?: IntNullableWithAggregatesFilter<"ShipmentItem"> | number | null
@@ -31925,6 +31963,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     isPrivateSelection?: boolean
     createdAt?: Date | string
@@ -31951,6 +31991,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
@@ -31966,6 +32008,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -31992,6 +32036,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -32013,6 +32059,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
@@ -32028,6 +32076,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -32046,6 +32096,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -33855,6 +33907,8 @@ export namespace Prisma {
     pitamStatus?: SortOrder
     quantity?: SortOrder
     notes?: SortOrder
+    customLabel?: SortOrder
+    customGrade?: SortOrder
     ownershipType?: SortOrder
     traderId?: SortOrder
     customerId?: SortOrder
@@ -33889,6 +33943,8 @@ export namespace Prisma {
     pitamStatus?: SortOrder
     quantity?: SortOrder
     notes?: SortOrder
+    customLabel?: SortOrder
+    customGrade?: SortOrder
     ownershipType?: SortOrder
     traderId?: SortOrder
     customerId?: SortOrder
@@ -33910,6 +33966,8 @@ export namespace Prisma {
     pitamStatus?: SortOrder
     quantity?: SortOrder
     notes?: SortOrder
+    customLabel?: SortOrder
+    customGrade?: SortOrder
     ownershipType?: SortOrder
     traderId?: SortOrder
     customerId?: SortOrder
@@ -38057,6 +38115,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     isPrivateSelection?: boolean
     createdAt?: Date | string
@@ -38081,6 +38141,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
@@ -38459,6 +38521,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFilter<"ShipmentItem"> | $Enums.PitamStatus
     quantity?: IntFilter<"ShipmentItem"> | number
     notes?: StringNullableFilter<"ShipmentItem"> | string | null
+    customLabel?: StringNullableFilter<"ShipmentItem"> | string | null
+    customGrade?: StringNullableFilter<"ShipmentItem"> | string | null
     ownershipType?: EnumItemOwnershipFilter<"ShipmentItem"> | $Enums.ItemOwnership
     traderId?: IntNullableFilter<"ShipmentItem"> | number | null
     customerId?: IntNullableFilter<"ShipmentItem"> | number | null
@@ -38768,6 +38832,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     isPrivateSelection?: boolean
     createdAt?: Date | string
@@ -38793,6 +38859,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
@@ -39239,6 +39307,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     isPrivateSelection?: boolean
     createdAt?: Date | string
@@ -39264,6 +39334,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     customerId?: number | null
     isPrivateSelection?: boolean
@@ -39582,6 +39654,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     isPrivateSelection?: boolean
     createdAt?: Date | string
@@ -39607,6 +39681,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     isPrivateSelection?: boolean
@@ -39876,6 +39952,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     isPrivateSelection?: boolean
     createdAt?: Date | string
@@ -39900,6 +39978,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
@@ -40209,6 +40289,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     isPrivateSelection?: boolean
     createdAt?: Date | string
@@ -40233,6 +40315,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
@@ -42390,6 +42474,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     isPrivateSelection?: boolean
     createdAt?: Date | string
@@ -42414,6 +42500,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
@@ -42693,6 +42781,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     isPrivateSelection?: boolean
     createdAt?: Date | string
@@ -42717,6 +42807,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
@@ -44276,6 +44368,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
@@ -44769,6 +44863,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -44793,6 +44889,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -44813,6 +44911,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -44949,6 +45049,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
@@ -45322,6 +45424,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -45347,6 +45451,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -45367,6 +45473,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -45515,6 +45623,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     customerId?: number | null
     isPrivateSelection?: boolean
@@ -45809,6 +45919,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -45834,6 +45946,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
@@ -45854,6 +45968,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
@@ -45942,6 +46058,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     isPrivateSelection?: boolean
@@ -46166,6 +46284,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46191,6 +46311,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
@@ -46211,6 +46333,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
@@ -46278,6 +46402,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
@@ -46434,6 +46560,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46458,6 +46586,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -46478,6 +46608,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -46538,6 +46670,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
@@ -46671,6 +46805,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46695,6 +46831,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -46715,6 +46853,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -46827,6 +46967,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
@@ -46896,6 +47038,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46920,6 +47064,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -46940,6 +47086,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -46960,6 +47108,8 @@ export namespace Prisma {
     pitamStatus: $Enums.PitamStatus
     quantity: number
     notes?: string | null
+    customLabel?: string | null
+    customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
     traderId?: number | null
     customerId?: number | null
@@ -46995,6 +47145,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -47019,6 +47171,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -47039,6 +47193,8 @@ export namespace Prisma {
     pitamStatus?: EnumPitamStatusFieldUpdateOperationsInput | $Enums.PitamStatus
     quantity?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customLabel?: NullableStringFieldUpdateOperationsInput | string | null
+    customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null

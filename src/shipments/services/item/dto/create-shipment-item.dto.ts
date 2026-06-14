@@ -34,4 +34,10 @@ export class CreateShipmentItemDto {
 
   @ApiPropertyOptional({ description: 'When true, item is packed from the trader\'s PRIVATE_SELECTION stock rather than general inventory.' })
   isPrivateSelection?: boolean;
+
+  @ApiPropertyOptional({ description: 'Free-text label for CUSTOM ownership items where no FK category applies.' })
+  customLabel?: string;
+
+  @ApiPropertyOptional({ description: 'Free-text grade for CUSTOM ownership items.' })
+  customGrade?: string;
 }

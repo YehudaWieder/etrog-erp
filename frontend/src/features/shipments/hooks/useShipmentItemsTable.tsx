@@ -35,6 +35,10 @@ function resolveCategoryLabel(item: ShipmentItemRecord, labels: ShipmentItemsTab
     return item.customerCategory.name;
   }
 
+  if (item.customLabel) {
+    return item.customLabel;
+  }
+
   return labels.uncategorized;
 }
 
@@ -75,6 +79,7 @@ export function useShipmentItemsTable(
                 const items = await getShipmentItemsByBox(box.id);
                 return items.map((item) => ({
                   id: item.id,
+                  boxId: box.id,
                   boxNumber: box.boxNumber,
                   shipmentNumber: shipment.shipmentNumber,
                   category: resolveCategoryLabel(item, labels),
@@ -82,6 +87,7 @@ export function useShipmentItemsTable(
                   ownership: resolveOwnershipLabel(item, labels),
                   ownershipType: item.ownershipType,
                   isPrivateSelection: item.isPrivateSelection,
+                  customGrade: item.customGrade ?? null,
                 }));
               }),
             );
