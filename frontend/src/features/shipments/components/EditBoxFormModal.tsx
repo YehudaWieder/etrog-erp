@@ -32,6 +32,7 @@ type EditBoxFormModalText = {
   ownershipTypeLabel: string;
   ownershipTypePlaceholder: string;
   ownershipLockedHint: string;
+  shipmentFrozenHint: string;
   traderLabel: string;
   traderPlaceholder: string;
   customerLabel: string;
@@ -71,6 +72,7 @@ type EditBoxFormModalProps = {
   notes: string;
   onNotesChange: (v: string) => void;
   isShipped: boolean;
+  isShipmentFrozen: boolean;
   isSubmitting: boolean;
   error: string | null;
   onSave: () => void;
@@ -107,6 +109,7 @@ export function EditBoxFormModal({
   notes,
   onNotesChange,
   isShipped,
+  isShipmentFrozen,
   isSubmitting,
   error,
   onSave,
@@ -157,19 +160,29 @@ export function EditBoxFormModal({
             />
           </div>
 
+          {isShipmentFrozen ? (
+            <p className="seasons-manager__hint" style={{ gridColumn: '1 / -1', margin: 0 }}>
+              {t.shipmentFrozenHint}
+            </p>
+          ) : null}
+
           <div className={styles.field}>
             <label className={styles.label}>{t.statusLabel}</label>
-            <select
-              className="seasons-manager__year-input"
-              value={status}
-              onChange={(e) => onStatusChange(e.target.value as BoxStatus)}
-            >
-              {BOX_STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {t.statusOptions[s]}
-                </option>
-              ))}
-            </select>
+            {isShipmentFrozen ? (
+              <div style={infoStyle}>{t.statusOptions[status]}</div>
+            ) : (
+              <select
+                className="seasons-manager__year-input"
+                value={status}
+                onChange={(e) => onStatusChange(e.target.value as BoxStatus)}
+              >
+                {BOX_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {t.statusOptions[s]}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {!isShipped ? (

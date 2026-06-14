@@ -87,7 +87,7 @@ export function useNewBoxForm({ isOpen, t, onSuccess, onClose }: UseNewBoxFormPr
           return;
         }
 
-        setShipments(nextShipments);
+        setShipments(nextShipments.filter((s) => s.status !== 'SHIPPED' && s.status !== 'DELIVERED'));
         setTraders(nextTraders);
         setCustomers(nextCustomers);
       } catch {
