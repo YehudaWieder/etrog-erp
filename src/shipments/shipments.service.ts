@@ -24,14 +24,36 @@ export class ShipmentsService {
   }
 
   async syncBoxAndShipmentTotals(tx: Prisma.TransactionClient, boxId: number, shipmentId: number) {
-    const boxSum = await tx.shipmentItem.aggregate({
-      where: { boxId, isDeleted: false },
-      _sum: { quantity: true },
-    });
+    const [boxSum, box] = await Promise.all([
+      tx.shipmentItem.aggregate({
+        where: { boxId, isDeleted: false },
+        _sum: { quantity: true },
+      }),
+      tx.box.findUnique({
+        where: { id: boxId },
+        select: { boxType: true, seasonId: true, status: true },
+      }),
+    ]);
+
+    const newTotal = boxSum._sum.quantity || 0;
+    const updateData: Prisma.BoxUpdateInput = { totalQuantity: newTotal };
+
+    if (box && box.status === 'OPEN' && box.boxType !== 'CUSTOM') {
+      const systemConfig = await tx.systemConfig.findFirst({ where: { seasonId: box.seasonId } });
+      const capacityMap: Record<string, number | null | undefined> = {
+        SMALL: systemConfig?.smallBoxCapacity,
+        MEDIUM: systemConfig?.mediumBoxCapacity,
+        LARGE: systemConfig?.largeBoxCapacity,
+      };
+      const capacity = capacityMap[box.boxType];
+      if (capacity != null && newTotal >= capacity) {
+        updateData.status = 'CLOSED';
+      }
+    }
 
     await tx.box.update({
       where: { id: boxId },
-      data: { totalQuantity: boxSum._sum.quantity || 0 },
+      data: updateData,
     });
 
     await this.syncShipmentTotals(tx, shipmentId);

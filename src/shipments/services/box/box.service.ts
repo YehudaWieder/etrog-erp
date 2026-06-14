@@ -27,11 +27,15 @@ export class BoxService {
 
     const shipment = await this.prisma.shipment.findFirst({
       where: { id: data.shipmentId, seasonId, isDeleted: false },
-      select: { id: true },
+      select: { id: true, status: true },
     });
 
     if (!shipment) {
       throw new NotFoundException(`Shipment ${data.shipmentId} not found in active season`);
+    }
+
+    if (shipment.status === 'SHIPPED' || shipment.status === 'DELIVERED') {
+      throw new BadRequestException('Cannot add a box to a shipment that has already been shipped or delivered');
     }
 
     // Check if boxNumber already exists in the active season.
@@ -111,6 +115,17 @@ export class BoxService {
 
       if (!current) {
         throw new NotFoundException(`Box #${id} not found`);
+      }
+
+      if (data.status !== undefined) {
+        const shipment = await tx.shipment.findUnique({
+          where: { id: current.shipmentId },
+          select: { status: true },
+        });
+
+        if (shipment?.status === 'SHIPPED' || shipment?.status === 'DELIVERED') {
+          throw new BadRequestException('Cannot change box status when the shipment has already been shipped or delivered');
+        }
       }
 
       const ownershipFieldsChanged =
