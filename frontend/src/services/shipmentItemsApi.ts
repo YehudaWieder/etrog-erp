@@ -59,3 +59,13 @@ export async function updateShipmentItem(
     suppressGlobalFeedback: options?.suppressGlobalFeedback,
   });
 }
+
+export async function deleteShipmentItem(
+  id: number,
+  options?: { suppressGlobalFeedback?: boolean },
+): Promise<ShipmentItemRecord> {
+  return apiClient<ShipmentItemRecord>(`/shipment-items/${id}`, {
+    method: 'DELETE',
+    suppressGlobalFeedback: options?.suppressGlobalFeedback,
+  });
+}
