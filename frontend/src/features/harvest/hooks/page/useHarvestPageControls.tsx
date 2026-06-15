@@ -20,6 +20,7 @@ type UseHarvestPageControlsParams = {
   isDailyDetailsTab: boolean;
   isFieldReportTab: boolean;
   isSortingDailyDetailsTab: boolean;
+  isSortingSummaryTab: boolean;
   detailsRecord: HarvestRecord | null;
   selectedHarvestRow: HarvestRecord | null;
   selectedSortingDailyRowId: number | null;
@@ -37,6 +38,7 @@ export function useHarvestPageControls({
   isDailyDetailsTab,
   isFieldReportTab,
   isSortingDailyDetailsTab,
+  isSortingSummaryTab,
   detailsRecord,
   selectedHarvestRow,
   selectedSortingDailyRowId,
@@ -83,6 +85,10 @@ export function useHarvestPageControls({
       );
     }
 
+    if (isSortingSummaryTab) {
+      return <HarvestAddHeaderAction label={addSortingActionLabel} onClick={openHarvestSortingGlobalForm} />;
+    }
+
     return null;
   }, [
     addActionLabel,
@@ -93,6 +99,7 @@ export function useHarvestPageControls({
     isDailyDetailsTab,
     isFieldReportTab,
     isSortingDailyDetailsTab,
+    isSortingSummaryTab,
     openHarvestGlobalForm,
     openHarvestSortingGlobalForm,
     selectedHarvestRow,

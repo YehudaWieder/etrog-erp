@@ -88,9 +88,15 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     {
       id: 'sortings',
       title: 'Sortings',
-      href: '/harvest/sorting-daily-details',
+      href: '/harvest/sorting-summary',
       icon: 'fa-grip',
       items: [
+        {
+          id: 'sorting-summary',
+          label: 'Sorting Summary',
+          href: '/harvest/sorting-summary',
+          icon: 'fa-chart-bar',
+        },
         {
           id: 'sorting-daily-details',
           label: 'Daily Breakdown',
@@ -351,6 +357,10 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     'harvest-field-report': {
       title: 'Harvest report by field will appear here',
       description: 'Use this view to compare harvest performance across fields.',
+    },
+    'sorting-summary': {
+      title: 'Sorting summary will appear here',
+      description: 'An overview of all sortings by category and season will be shown here.',
     },
     'sorting-daily-details': {
       title: 'Daily sorting breakdown will appear here',

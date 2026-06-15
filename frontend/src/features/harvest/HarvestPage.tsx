@@ -26,6 +26,7 @@ import { HarvestSortingFormModal } from './components/forms/HarvestSortingFormMo
 import { HarvestDailyDetailsSection } from './components/daily/HarvestDailyDetailsSection';
 import { HarvestFieldReportSection } from './components/field-report/HarvestFieldReportSection';
 import { HarvestSortingDailySection } from './components/sorting-daily/HarvestSortingDailySection';
+import { HarvestSortingSummarySection } from './components/sorting-summary/HarvestSortingSummarySection';
 import { useHarvestPageLifecycle } from './hooks/page/useHarvestPageLifecycle';
 import { useHarvestFiltersAndRows } from './hooks/data/useHarvestFiltersAndRows';
 import { useHarvestFormCategories } from './hooks/form/useHarvestFormCategories';
@@ -159,6 +160,7 @@ export function HarvestPage() {
   const isDailyDetailsTab = activeSidebarId === 'harvest-daily-details';
   const isFieldReportTab = activeSidebarId === 'harvest-field-report';
   const isSortingDailyDetailsTab = activeSidebarId === 'sorting-daily-details';
+  const isSortingSummaryTab = activeSidebarId === 'sorting-summary';
   const requiresFiltersData = isDailyDetailsTab || isFieldReportTab || isSortingDailyDetailsTab;
   const requiresHarvestData = isDailyDetailsTab || isFieldReportTab || isSortingDailyDetailsTab;
 
@@ -762,6 +764,7 @@ export function HarvestPage() {
     isDailyDetailsTab,
     isFieldReportTab,
     isSortingDailyDetailsTab,
+    isSortingSummaryTab,
     detailsRecord,
     selectedHarvestRow,
     selectedSortingDailyRowId,
@@ -967,6 +970,12 @@ export function HarvestPage() {
           selectionLabels={t.dailyDetails.selection}
           onClearSelectedNumericCells={clearSelectedNumericCells}
           summaryLabels={t.sortingDailyDetails.summary}
+        />
+      ) : isSortingSummaryTab ? (
+        <HarvestSortingSummarySection
+          lang={lang}
+          title={t.emptyState['sorting-summary']?.title ?? ''}
+          description={t.emptyState['sorting-summary']?.description ?? ''}
         />
       ) : (
         <section className="shipments-empty-state">

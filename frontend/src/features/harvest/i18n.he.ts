@@ -88,9 +88,15 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     {
       id: 'sortings',
       title: 'מיונים',
-      href: '/harvest/sorting-daily-details',
+      href: '/harvest/sorting-summary',
       icon: 'fa-grip',
       items: [
+        {
+          id: 'sorting-summary',
+          label: 'סיכום מיונים',
+          href: '/harvest/sorting-summary',
+          icon: 'fa-chart-bar',
+        },
         {
           id: 'sorting-daily-details',
           label: 'פירוט לפי ימים',
@@ -351,6 +357,10 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     'harvest-field-report': {
       title: 'דוח קטיפים לפי שדה יוצג כאן',
       description: 'כאן תוכל לראות פילוח ביצועי קטיף לפי שדות.',
+    },
+    'sorting-summary': {
+      title: 'סיכום מיונים יוצג כאן',
+      description: 'כאן יוצג סיכום כלל המיונים לפי קטגוריות ועונות.',
     },
     'sorting-daily-details': {
       title: 'פירוט מיונים לפי ימים יוצג כאן',
