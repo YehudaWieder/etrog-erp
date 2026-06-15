@@ -66,6 +66,14 @@ export const CUSTOMER_INVENTORY_I18N_HE: CustomerInventoryI18n = {
       grade: 'דרגה',
       total: 'סה"כ',
     },
+    columns: {
+      customer: 'לקוח',
+    },
+    breakdown: {
+      showBreakdown: 'הצג פירוט לפי קטגוריה',
+      hideBreakdown: 'הסתר פירוט',
+      breakdownTitle: 'פירוט לפי לקוח וקטגוריה',
+    },
     values: {
       none: 'ללא',
       pitamStatus: {

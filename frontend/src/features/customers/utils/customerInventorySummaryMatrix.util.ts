@@ -21,6 +21,27 @@ export type CustomerInventorySummaryMatrix = {
   grandTotal: number;
 };
 
+export type CustomerInventorySummaryMatrixCustomer = {
+  customerId: number;
+  customerName: string;
+  totalsByPitamStatus: Record<CustomerInventoryPitamStatus, number>;
+  total: number;
+  categories: {
+    key: string;
+    label: string;
+    totalsByPitamStatus: Record<CustomerInventoryPitamStatus, number>;
+    total: number;
+  }[];
+};
+
+export type CustomerInventorySummaryMatrixByCustomer = {
+  customers: CustomerInventorySummaryMatrixCustomer[];
+  grades: string[];
+  gradeValues: Record<string, Record<string, MatrixGradeCell>>;
+  grandTotalByPitamStatus: Record<CustomerInventoryPitamStatus, number>;
+  grandTotal: number;
+};
+
 const EMPTY_PITAM_TOTALS: Record<CustomerInventoryPitamStatus, number> = {
   WITH_PITAM: 0,
   WITHOUT_PITAM: 0,
@@ -120,4 +141,78 @@ export function buildCustomerInventorySummaryMatrix(
     grandTotalByPitamStatus,
     grandTotal,
   };
+}
+
+export function buildCustomerInventorySummaryMatrixByCustomer(
+  rows: CustomerInventorySummaryRow[],
+  fallbackLabel: string,
+): CustomerInventorySummaryMatrixByCustomer {
+  const customerMap = new Map<number, CustomerInventorySummaryMatrixCustomer>();
+  const categoryDataMap = new Map<string, { key: string; label: string; totalsByPitamStatus: Record<CustomerInventoryPitamStatus, number>; total: number; customerId: number }>();
+  const gradeValues: Record<string, Record<string, MatrixGradeCell>> = {};
+  const grandTotalByPitamStatus = { ...EMPTY_PITAM_TOTALS };
+
+  for (const row of rows) {
+    const customerId = row.customerId;
+    const customerName = row.customerName?.trim() || fallbackLabel;
+    const categoryKey = `${row.customerId}:${row.customerCategoryId}`;
+    const categoryLabel = row.customerCategoryName?.trim() || fallbackLabel;
+    const gradeKey = getGradeKey(row);
+
+    if (!customerMap.has(customerId)) {
+      customerMap.set(customerId, {
+        customerId,
+        customerName,
+        totalsByPitamStatus: { ...EMPTY_PITAM_TOTALS },
+        total: 0,
+        categories: [],
+      });
+    }
+
+    if (!categoryDataMap.has(categoryKey)) {
+      categoryDataMap.set(categoryKey, {
+        key: categoryKey,
+        label: categoryLabel,
+        totalsByPitamStatus: { ...EMPTY_PITAM_TOTALS },
+        total: 0,
+        customerId,
+      });
+    }
+
+    if (!gradeValues[gradeKey]) gradeValues[gradeKey] = {};
+    if (!gradeValues[gradeKey][categoryKey]) gradeValues[gradeKey][categoryKey] = createEmptyGradeCell();
+    gradeValues[gradeKey][categoryKey][row.pitamStatus] += row.quantity;
+
+    const categoryData = categoryDataMap.get(categoryKey)!;
+    categoryData.totalsByPitamStatus[row.pitamStatus] += row.quantity;
+    categoryData.total += row.quantity;
+
+    const customerData = customerMap.get(customerId)!;
+    customerData.totalsByPitamStatus[row.pitamStatus] += row.quantity;
+    customerData.total += row.quantity;
+
+    grandTotalByPitamStatus[row.pitamStatus] += row.quantity;
+  }
+
+  const customers = Array.from(customerMap.values()).sort((a, b) =>
+    a.customerName.localeCompare(b.customerName, 'he', { sensitivity: 'base', numeric: true }),
+  );
+
+  for (const customer of customers) {
+    customer.categories = Array.from(categoryDataMap.values())
+      .filter((c) => c.customerId === customer.customerId)
+      .sort((a, b) => a.label.localeCompare(b.label, 'he', { sensitivity: 'base', numeric: true }))
+      .map(({ key, label, totalsByPitamStatus, total }) => ({ key, label, totalsByPitamStatus, total }));
+  }
+
+  const seenGrades = new Set(Object.keys(gradeValues));
+  const orderedKnownGrades = GRADE_ORDER.filter((g) => seenGrades.has(g));
+  const otherGrades = Array.from(seenGrades)
+    .filter((g) => !GRADE_ORDER.includes(g))
+    .sort((a, b) => a.localeCompare(b, 'he', { sensitivity: 'base', numeric: true }));
+  const grades = [...orderedKnownGrades, ...otherGrades];
+
+  const grandTotal = Object.values(grandTotalByPitamStatus).reduce((acc, v) => acc + v, 0);
+
+  return { customers, grades, gradeValues, grandTotalByPitamStatus, grandTotal };
 }

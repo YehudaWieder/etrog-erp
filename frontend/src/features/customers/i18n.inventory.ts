@@ -48,6 +48,14 @@ export type CustomerInventoryI18n = {
       grade: string;
       total: string;
     };
+    columns: {
+      customer: string;
+    };
+    breakdown: {
+      showBreakdown: string;
+      hideBreakdown: string;
+      breakdownTitle: string;
+    };
     values: {
       none: string;
       pitamStatus: {

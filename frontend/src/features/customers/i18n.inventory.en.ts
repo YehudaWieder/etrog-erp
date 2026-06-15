@@ -66,6 +66,14 @@ export const CUSTOMER_INVENTORY_I18N_EN: CustomerInventoryI18n = {
       grade: 'Grade',
       total: 'Total',
     },
+    columns: {
+      customer: 'Customer',
+    },
+    breakdown: {
+      showBreakdown: 'Show breakdown by category',
+      hideBreakdown: 'Hide breakdown',
+      breakdownTitle: 'Breakdown by customer and category',
+    },
     values: {
       none: 'None',
       pitamStatus: {

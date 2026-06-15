@@ -14,7 +14,8 @@ import { CustomerMovementsSection } from './components/CustomerMovementsSection'
 import { useCustomerInventorySummary } from './hooks/useCustomerInventorySummary';
 import { useCustomerMovements } from './hooks/useCustomerMovements';
 import { openPrintableWindow } from '../../services/printWindow';
-import { downloadStyledExcel } from '../../services/exportExcel';
+import { exportCustomerInventoryExcel } from './services/customerInventoryExport.service';
+import { buildCustomerInventorySummaryMatrixByCustomer } from './utils/customerInventorySummaryMatrix.util';
 import { TraderPrintExportActions } from '../traders/components/TraderPrintExportActions';
 import type { NavItem } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
@@ -381,44 +382,64 @@ export function CustomerInventoryPage() {
     `;
 
     const tableStyles = `
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 12px;
-      }
-      th, td {
-        border: 1px solid #ccc;
-        padding: 10px;
-        text-align: center;
-      }
-      th {
-        background-color: #1f5a32;
-        color: white;
-        font-weight: bold;
-      }
-      tr:nth-child(even) {
-        background-color: #f8fcf9;
-      }
+      @page { size: landscape; margin: 10mm; }
+      @media print { html, body { width: 297mm; min-height: 210mm; } }
+      table { width: 100%; border-collapse: collapse; font-size: 12px; break-inside: avoid; page-break-inside: avoid; }
+      tr { break-inside: avoid; page-break-inside: avoid; }
+      th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+      thead th { background-color: #1f5a32; color: white; font-weight: bold; }
+      tbody th { background-color: #f0f6f1; font-weight: bold; text-align: start; }
+      tbody tr:nth-child(odd) { background-color: #fafcfa; }
+      tbody tr:nth-child(even) { background-color: #f3f8f4; }
+      td:last-child, tbody th:last-child { background-color: #e4f0e7; font-weight: bold; }
+      tfoot th, tfoot td { background-color: #e1f0e5; font-weight: bold; border-top: 2px solid #8cb494; }
+      .customer-block { break-inside: avoid; page-break-inside: avoid; margin-top: 28px; }
+      .customer-block h3 { font-size: 12px; font-weight: bold; margin: 0 0 8px; color: #1f5a32; border-bottom: 2px solid #8cb494; padding-bottom: 4px; }
+      .category-block { break-inside: avoid; page-break-inside: avoid; margin-top: 16px; }
+      .category-block h4 { break-after: avoid; page-break-after: avoid; margin: 0 0 6px; font-size: 11px; font-weight: bold; }
     `;
+
+    const locale = lang === 'he' ? 'he-IL' : 'en-US';
+    const fmt = (n: number) => new Intl.NumberFormat(locale).format(Math.abs(n));
+
+    const summaryMatrix = buildCustomerInventorySummaryMatrixByCustomer(customerInventorySummary.rows, t.summary.values.none);
+    const pitamWith = t.summary.values.pitamStatus.WITH_PITAM;
+    const pitamWithout = t.summary.values.pitamStatus.WITHOUT_PITAM;
+    const pitamMixed = t.summary.values.pitamStatus.MIXED;
+    const totalLabel = t.summary.matrix.total;
+    const gradeLabel = t.summary.matrix.grade;
+
+    let breakdownHtml = `<h2 style="margin-top:32px;margin-bottom:16px;font-size:13px;font-weight:bold;text-align:center;">${t.summary.breakdown.breakdownTitle}</h2>`;
+    for (const customer of summaryMatrix.customers) {
+      breakdownHtml += '<div class="customer-block">';
+      breakdownHtml += `<h3>${customer.customerName}</h3>`;
+      for (const category of customer.categories) {
+        breakdownHtml += '<div class="category-block">';
+        breakdownHtml += `<h4>${category.label}</h4>`;
+        breakdownHtml += `<table><thead><tr><th>${gradeLabel}</th><th>${pitamWith}</th><th>${pitamWithout}</th><th>${pitamMixed}</th><th>${totalLabel}</th></tr></thead><tbody>`;
+        for (const grade of summaryMatrix.grades) {
+          const cell = summaryMatrix.gradeValues[grade]?.[category.key] ?? { WITH_PITAM: 0, WITHOUT_PITAM: 0, MIXED: 0 };
+          const gradeTotal = cell.WITH_PITAM + cell.WITHOUT_PITAM + cell.MIXED;
+          breakdownHtml += `<tr><th>${grade}</th><td>${fmt(cell.WITH_PITAM)}</td><td>${fmt(cell.WITHOUT_PITAM)}</td><td>${fmt(cell.MIXED)}</td><td>${fmt(gradeTotal)}</td></tr>`;
+        }
+        breakdownHtml += `</tbody><tfoot><tr><th>${totalLabel}</th><td>${fmt(category.totalsByPitamStatus.WITH_PITAM)}</td><td>${fmt(category.totalsByPitamStatus.WITHOUT_PITAM)}</td><td>${fmt(category.totalsByPitamStatus.MIXED)}</td><td>${fmt(category.total)}</td></tr></tfoot></table>`;
+        breakdownHtml += '</div>';
+      }
+      breakdownHtml += '</div>';
+    }
 
     openPrintableWindow({
       title: lang === 'he' ? 'מלאי לקוחות' : 'Customer Inventory',
       heading: lang === 'he' ? 'מלאי לקוחות' : 'Customer Inventory',
-      html: filterDetailsHtml + matrixTableRef.current.outerHTML,
+      html: filterDetailsHtml + matrixTableRef.current.outerHTML + breakdownHtml,
       direction: lang === 'he' ? 'rtl' : 'ltr',
+      width: 1280,
+      height: 900,
       extraStyles: tableStyles,
     });
-  }, [customers, filterValues, lang, seasons, t]);
+  }, [customers, filterValues, lang, seasons, t, customerInventorySummary.rows]);
 
   const handleExportInventoryTable = useCallback(async () => {
-    if (!matrixTableRef.current) {
-      return;
-    }
-
-    const table = matrixTableRef.current;
-    const headerRows: (string | number)[][] = [];
-    const dataRows: (string | number)[][] = [];
-
     const seasonDisplay = filterValues.seasonId
       ? seasons.find((s) => String(s.id) === filterValues.seasonId)?.yearName || filterValues.seasonId
       : 'N/A';
@@ -438,91 +459,23 @@ export function CustomerInventoryPage() {
       SELF_PICKUP: t.summary.filters.selfPickupOption,
     };
     const statusDisplay = statusMap[filterValues.inventoryStatus] || filterValues.inventoryStatus;
-
     const baseFileName = lang === 'he' ? 'מלאי לקוחות' : 'Customer Inventory';
-    const fileName = `${baseFileName}_${seasonDisplay}_${customerDisplay}_${statusDisplay}`;
 
-    dataRows.push(
-      [t.summary.filters.seasonLabel, seasonDisplay],
-      [t.summary.filters.customerLabel, customerDisplay],
-      [t.summary.filters.inventoryStatusLabel, statusDisplay],
-      [],
-    );
+    const summaryMatrix = buildCustomerInventorySummaryMatrixByCustomer(customerInventorySummary.rows, t.summary.values.none);
 
-    const thead = table.querySelector('thead');
-    if (thead) {
-      const rows = thead.querySelectorAll('tr');
-      rows.forEach((headerRow, rowIndex) => {
-        const row: (string | number)[] = [];
-        const cells = headerRow.querySelectorAll('th, td');
-        cells.forEach((cell) => {
-          if (cell.getAttribute('aria-hidden') === 'true') {
-            return;
-          }
-
-          const colspan = parseInt(cell.getAttribute('colspan') || '1', 10);
-          const text = cell.textContent?.trim() || '';
-          row.push(text);
-
-          for (let i = 1; i < colspan; i++) {
-            row.push('');
-          }
-        });
-
-        if (row.length > 0) {
-          if (rowIndex === 1) {
-            row.unshift('');
-          }
-          headerRows.push(row);
-        }
-      });
-    }
-
-    const tbody = table.querySelector('tbody');
-    if (tbody) {
-      tbody.querySelectorAll('tr').forEach((tr) => {
-        const row: (string | number)[] = [];
-        tr.querySelectorAll('td, th').forEach((td) => {
-          if (td.getAttribute('aria-hidden') === 'true') {
-            return;
-          }
-          row.push(td.textContent?.trim() || '');
-        });
-        if (row.length > 0) {
-          dataRows.push(row);
-        }
-      });
-    }
-
-    const tfoot = table.querySelector('tfoot');
-    if (tfoot) {
-      tfoot.querySelectorAll('tr').forEach((tr) => {
-        const row: (string | number)[] = [];
-        tr.querySelectorAll('td, th').forEach((td) => {
-          if (td.getAttribute('aria-hidden') === 'true') {
-            return;
-          }
-          row.push(td.textContent?.trim() || '');
-        });
-        if (row.length > 0) {
-          dataRows.push(row);
-        }
-      });
-    }
-
-    if (headerRows.length === 0 || dataRows.length === 0) {
-      return;
-    }
-
-    await downloadStyledExcel({
-      fileName,
+    await exportCustomerInventoryExcel({
+      fileName: `${baseFileName}_${seasonDisplay}_${customerDisplay}_${statusDisplay}`,
       sheetName: lang === 'he' ? 'מלאי לקוחות' : 'Customer Inventory',
-      header: headerRows,
-      rows: dataRows,
+      filterRows: [
+        [t.summary.filters.seasonLabel, seasonDisplay],
+        [t.summary.filters.customerLabel, customerDisplay],
+        [t.summary.filters.inventoryStatusLabel, statusDisplay],
+      ],
+      summaryMatrix,
+      labels: t.summary,
       rightToLeft: lang === 'he',
-      filterRowCount: 4,
     });
-  }, [customers, filterValues, lang, seasons, t]);
+  }, [customers, filterValues, lang, seasons, t, customerInventorySummary.rows]);
 
   const filtersBar = isInventoryTab ? (
     <GlobalScopedFilters
