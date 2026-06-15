@@ -18,7 +18,11 @@ export type AllBoxesSummaryTotals = {
 };
 
 export type ShipmentItemsSummaryTotals = {
+  totalShipments: number;
+  totalBoxes: number;
   totalQuantity: number;
+  generalQuantity: number;
+  privateSelectionQuantity: number;
   traderAndGeneralQuantity: number;
   customerQuantity: number;
 };
@@ -57,19 +61,34 @@ export function buildAllBoxesSummaryTotals(rows: BoxesTableRow[]): AllBoxesSumma
 
 export function buildShipmentItemsSummaryTotals(rows: ShipmentItemsTableRow[]): ShipmentItemsSummaryTotals {
   let totalQuantity = 0;
-  let traderAndGeneralQuantity = 0;
+  let generalQuantity = 0;
+  let privateSelectionQuantity = 0;
   let customerQuantity = 0;
+  const shipmentNumbers = new Set<number>();
+  const boxIds = new Set<number>();
 
   for (const row of rows) {
     const qty = toSafeNumber(row.quantity);
     totalQuantity += qty;
+    shipmentNumbers.add(row.shipmentNumber);
+    boxIds.add(row.boxId);
 
     if (row.ownershipType === 'CUSTOMER') {
       customerQuantity += qty;
+    } else if (row.isPrivateSelection) {
+      privateSelectionQuantity += qty;
     } else {
-      traderAndGeneralQuantity += qty;
+      generalQuantity += qty;
     }
   }
 
-  return { totalQuantity, traderAndGeneralQuantity, customerQuantity };
+  return {
+    totalShipments: shipmentNumbers.size,
+    totalBoxes: boxIds.size,
+    totalQuantity,
+    generalQuantity,
+    privateSelectionQuantity,
+    traderAndGeneralQuantity: generalQuantity + privateSelectionQuantity,
+    customerQuantity,
+  };
 }

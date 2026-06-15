@@ -103,6 +103,8 @@ export type ShipmentItemsTableLabels = {
   allOwnershipOption: string;
   allTradersOption: string;
   allCustomersOption: string;
+  tradersGroupLabel: string;
+  customersGroupLabel: string;
   activeSeasonBadge: string;
   noActiveSeason: string;
   colDetails: string;
@@ -119,9 +121,32 @@ export type ShipmentItemsTableLabels = {
   loading: string;
   error: string;
   summary: {
+    totalShipments: string;
+    totalBoxes: string;
     totalQuantity: string;
+    generalQuantity: string;
+    privateSelectionQuantity: string;
     traderAndGeneralQuantity: string;
     customerQuantity: string;
+    total: string;
+  };
+  summaryMatrix: {
+    title: string;
+    categoriesTitle: string;
+    privateSelectionTitle: string;
+    customersTitle: string;
+    showBreakdown: string;
+    hideBreakdown: string;
+    typeColumnLabel: string;
+    privateSelectionLabel: string;
+    customersLabel: string;
+    grandTotalLabel: string;
+  };
+  perShipmentTable: {
+    title: string;
+    rowBoxes: string;
+    rowStatus: string;
+    statusLabels: Record<ShipmentStatus, string>;
   };
   ownershipLabels: Record<ItemOwnership, string>;
 };

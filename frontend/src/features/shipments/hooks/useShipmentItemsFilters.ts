@@ -69,7 +69,8 @@ export function useShipmentItemsFilters(labels: ShipmentItemsTableLabels): UseSh
   const [activeSeasonId, setActiveSeasonId] = useState<number | null>(null);
   const [boxNumbers, setBoxNumbers] = useState<number[]>([]);
   const [shipmentNumbers, setShipmentNumbers] = useState<number[]>([]);
-  const [ownershipOptions, setOwnershipOptions] = useState<string[]>([]);
+  const [traderOptions, setTraderOptions] = useState<string[]>([]);
+  const [customerOptions, setCustomerOptions] = useState<string[]>([]);
   const [filterValues, setFilterValues] = useState<ShipmentItemsFilterValues>({
     seasonId: '',
     boxNumber: 'all',
@@ -125,7 +126,8 @@ export function useShipmentItemsFilters(labels: ShipmentItemsTableLabels): UseSh
     if (!selectedSeasonId) {
       setBoxNumbers([]);
       setShipmentNumbers([]);
-      setOwnershipOptions([]);
+      setTraderOptions([]);
+      setCustomerOptions([]);
       return;
     }
 
@@ -157,10 +159,17 @@ export function useShipmentItemsFilters(labels: ShipmentItemsTableLabels): UseSh
           return;
         }
 
-        const uniqueOwnerships = Array.from(
-          new Set(itemsByBox.flat().map((item) => resolveOwnershipLabel(item, labels))),
-        ).sort((a, b) => a.localeCompare(b));
-        setOwnershipOptions(uniqueOwnerships);
+        const traders = new Set<string>();
+        const customers = new Set<string>();
+        for (const item of itemsByBox.flat()) {
+          if (item.ownershipType === 'TRADER') {
+            traders.add(resolveOwnershipLabel(item, labels));
+          } else if (item.ownershipType === 'CUSTOMER') {
+            customers.add(resolveOwnershipLabel(item, labels));
+          }
+        }
+        setTraderOptions(Array.from(traders).sort((a, b) => a.localeCompare(b)));
+        setCustomerOptions(Array.from(customers).sort((a, b) => a.localeCompare(b)));
       } catch {
         if (!isMounted) {
           return;
@@ -168,7 +177,8 @@ export function useShipmentItemsFilters(labels: ShipmentItemsTableLabels): UseSh
 
         setBoxNumbers([]);
         setShipmentNumbers([]);
-        setOwnershipOptions([]);
+        setTraderOptions([]);
+        setCustomerOptions([]);
       }
     };
 
@@ -227,16 +237,14 @@ export function useShipmentItemsFilters(labels: ShipmentItemsTableLabels): UseSh
         queryParam: 'shItemsOwnership',
         options: [
           { value: 'all', label: labels.allOwnershipOption },
-          { value: OWNERSHIP_GROUP_TRADERS, label: labels.allTradersOption },
-          { value: OWNERSHIP_GROUP_CUSTOMERS, label: labels.allCustomersOption },
-          ...ownershipOptions.map((ownership) => ({
-            value: ownership,
-            label: ownership,
-          })),
+          { value: OWNERSHIP_GROUP_TRADERS, label: labels.allTradersOption, group: labels.tradersGroupLabel },
+          ...traderOptions.map((o) => ({ value: o, label: o, group: labels.tradersGroupLabel })),
+          { value: OWNERSHIP_GROUP_CUSTOMERS, label: labels.allCustomersOption, group: labels.customersGroupLabel },
+          ...customerOptions.map((o) => ({ value: o, label: o, group: labels.customersGroupLabel })),
         ],
       },
     ];
-  }, [activeSeasonId, boxNumbers, labels, ownershipOptions, seasons, shipmentNumbers]);
+  }, [activeSeasonId, boxNumbers, customerOptions, labels, seasons, shipmentNumbers, traderOptions]);
 
   const handleFilterValuesChange = useCallback((values: Record<string, string>) => {
     setFilterValues({
@@ -259,8 +267,8 @@ export function useShipmentItemsFilters(labels: ShipmentItemsTableLabels): UseSh
   );
 
   const selectedOwnership = useMemo(
-    () => parseOwnershipFilter(filterValues.ownership, ownershipOptions),
-    [filterValues.ownership, ownershipOptions],
+    () => parseOwnershipFilter(filterValues.ownership, [...traderOptions, ...customerOptions]),
+    [customerOptions, filterValues.ownership, traderOptions],
   );
 
   return {

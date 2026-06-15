@@ -2,13 +2,21 @@ export const SHIPMENTS_I18N_EN = {
   userNameFallback: 'My Profile',
   topNav: [
     { id: 'harvest', label: 'Harvest & Sorting' },
-    { id: 'shipments', label: 'Shipments' },
+    { id: 'shipments', label: 'Shipments', href: '/shipments/shipment-items-summary' },
     { id: 'partners', label: 'Partners Inventory' },
     { id: 'customers', label: 'Customers Inventory' },
     { id: 'workers', label: 'Workers' },
     { id: 'payments', label: 'Expenses & Payments' },
   ],
   sidebar: [
+    {
+      id: 'shipment-items-summary',
+      title: 'Shipments Summary',
+      icon: 'fa-chart-bar',
+      items: [
+        { id: 'shipment-items-summary', label: 'Shipments Summary', href: '/shipments/shipment-items-summary', icon: 'fa-chart-bar' },
+      ],
+    },
     {
       id: 'all-shipments',
       title: 'Shipments',
@@ -27,7 +35,7 @@ export const SHIPMENTS_I18N_EN = {
       id: 'shipment-items',
       title: 'Items',
       items: [
-        { id: 'shipment-items', label: 'All Shipment Items', href: '/shipments/shipment-items' },
+        { id: 'shipment-items', label: 'All Items', href: '/shipments/shipment-items' },
       ],
     },
   ],
@@ -49,8 +57,12 @@ export const SHIPMENTS_I18N_EN = {
       title: 'All Boxes',
       description: 'All boxes in the system are displayed here.',
     },
+    'shipment-items-summary': {
+      title: 'Shipment Items Summary',
+      description: 'An overview of shipment items by category and shipment will be shown here.',
+    },
     'shipment-items': {
-      title: 'All Shipment Items',
+      title: 'Items Movement List',
       description: 'All shipment items in the system are displayed here.',
     },
     default: {
@@ -408,6 +420,8 @@ export const SHIPMENTS_I18N_EN = {
     allOwnershipOption: 'All ownership types',
     allTradersOption: 'All traders',
     allCustomersOption: 'All customers',
+    tradersGroupLabel: 'Traders',
+    customersGroupLabel: 'Customers',
     activeSeasonBadge: 'Active',
     noActiveSeason: 'No seasons available',
     colDetails: 'Details',
@@ -427,15 +441,43 @@ export const SHIPMENTS_I18N_EN = {
     loading: 'Loading shipment items...',
     error: 'Failed to load shipment items',
     summary: {
+      totalShipments: 'Total Shipments',
+      totalBoxes: 'Total Boxes',
       totalQuantity: 'Total Etrogs',
+      generalQuantity: 'Total General Etrogs',
+      privateSelectionQuantity: 'Total Private Etrogs',
+      customerQuantity: 'Total Customer Etrogs',
       traderAndGeneralQuantity: 'Total General & Traders',
-      customerQuantity: 'Total Customers',
+      total: 'Total',
     },
     ownershipLabels: {
       TRADER: 'Trader',
       CUSTOMER: 'Customer',
       UNASSIGNED: 'Unassigned',
       CUSTOM: 'Custom',
+    },
+    summaryMatrix: {
+      title: 'General Summary',
+      categoriesTitle: 'Breakdown by Owner',
+      privateSelectionTitle: 'Private Selection Breakdown',
+      customersTitle: 'Customer Breakdown',
+      showBreakdown: 'Show Breakdown',
+      hideBreakdown: 'Hide Breakdown',
+      typeColumnLabel: 'Type',
+      privateSelectionLabel: 'Private Selection',
+      customersLabel: 'Customers',
+      grandTotalLabel: 'Total',
+    },
+    perShipmentTable: {
+      title: 'Shipments Summary',
+      rowBoxes: 'Box Count',
+      rowStatus: 'Status',
+      statusLabels: {
+        PREPARING: 'Preparing',
+        SHIPPED: 'Shipped',
+        DELIVERED: 'Delivered',
+        CANCELLED: 'Cancelled',
+      },
     },
   },
 };

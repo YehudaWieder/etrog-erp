@@ -2,13 +2,21 @@ export const SHIPMENTS_I18N_HE = {
   userNameFallback: 'הפרופיל שלי',
   topNav: [
     { id: 'harvest', label: 'קטיף ומיון', icon: 'fa-leaf' },
-    { id: 'shipments', label: 'משלוחים', icon: 'fa-truck' },
+    { id: 'shipments', label: 'משלוחים', icon: 'fa-truck', href: '/shipments/shipment-items-summary' },
     { id: 'partners', label: 'מלאי סוחרים', icon: 'fa-handshake' },
     { id: 'customers', label: 'מלאי לקוחות', icon: 'fa-users' },
     { id: 'workers', label: 'עובדים', icon: 'fa-person' },
     { id: 'payments', label: 'הוצאות ותשלומים', icon: 'fa-money-bill' },
   ],
   sidebar: [
+    {
+      id: 'shipment-items-summary',
+      title: 'סיכום משלוחים',
+      icon: 'fa-chart-bar',
+      items: [
+        { id: 'shipment-items-summary', label: 'סיכום משלוחים', href: '/shipments/shipment-items-summary', icon: 'fa-chart-bar' },
+      ],
+    },
     {
       id: 'all-shipments',
       title: 'משלוחים',
@@ -30,7 +38,7 @@ export const SHIPMENTS_I18N_HE = {
       title: 'פריטים',
       icon: 'fa-lemon',
       items: [
-        { id: 'shipment-items', label: 'כל פריטי המשלוחים', href: '/shipments/shipment-items', icon: 'fa-lemon' },
+        { id: 'shipment-items', label: 'כל הפריטים', href: '/shipments/shipment-items', icon: 'fa-lemon' },
       ],
     },
   ],
@@ -52,8 +60,12 @@ export const SHIPMENTS_I18N_HE = {
       title: 'כל הקרטונים',
       description: 'כאן מוצגים כל הקרטונים במערכת.',
     },
+    'shipment-items-summary': {
+      title: 'סיכום פריטי משלוח',
+      description: 'כאן יוצג סיכום פריטי המשלוחים לפי קטגוריות ומשלוחים.',
+    },
     'shipment-items': {
-      title: 'כל פריטי המשלוחים',
+      title: 'רשימת תנועות פריטים',
       description: 'כאן מוצגים כל פריטי המשלוחים במערכת.',
     },
     default: {
@@ -411,6 +423,8 @@ export const SHIPMENTS_I18N_HE = {
     allOwnershipOption: 'כל סוגי הבעלות',
     allTradersOption: 'כל הסוחרים',
     allCustomersOption: 'כל הלקוחות',
+    tradersGroupLabel: 'סוחרים',
+    customersGroupLabel: 'לקוחות',
     activeSeasonBadge: 'פעילה',
     noActiveSeason: 'אין עונה זמינה',
     colDetails: 'פרטים',
@@ -430,15 +444,43 @@ export const SHIPMENTS_I18N_HE = {
     loading: 'טוען פריטי משלוחים...',
     error: 'שגיאה בטעינת פריטי המשלוחים',
     summary: {
+      totalShipments: 'סה"כ משלוחים',
+      totalBoxes: 'סה"כ קרטונים',
       totalQuantity: 'סה"כ אתרוגים',
+      generalQuantity: 'סה"כ אתרוגים כללי',
+      privateSelectionQuantity: 'סה"כ אתרוגים פרטי',
+      customerQuantity: 'סה"כ אתרוגים לקוחות',
       traderAndGeneralQuantity: 'סה"כ כללי וסוחרים',
-      customerQuantity: 'סה"כ לקוחות',
+      total: 'סה"כ',
     },
     ownershipLabels: {
       TRADER: 'סוחר',
       CUSTOMER: 'לקוח',
       UNASSIGNED: 'לא משויך',
       CUSTOM: 'מותאם אישית',
+    },
+    summaryMatrix: {
+      title: 'סיכום כללי',
+      categoriesTitle: 'פירוט לפי בעלים',
+      privateSelectionTitle: 'פירוט מיון פרטי',
+      customersTitle: 'פירוט לקוחות',
+      showBreakdown: 'הצג פירוט',
+      hideBreakdown: 'הסתר פירוט',
+      typeColumnLabel: 'סוג',
+      privateSelectionLabel: 'מיון פרטי',
+      customersLabel: 'לקוחות',
+      grandTotalLabel: 'סה"כ',
+    },
+    perShipmentTable: {
+      title: 'סיכום משלוחים',
+      rowBoxes: 'כמות קרטונים',
+      rowStatus: 'סטטוס',
+      statusLabels: {
+        PREPARING: 'בהכנה',
+        SHIPPED: 'נשלח',
+        DELIVERED: 'נמסר',
+        CANCELLED: 'בוטל',
+      },
     },
   },
 };

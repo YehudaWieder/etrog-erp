@@ -8,6 +8,7 @@ import { getCurrentUser, isAuthenticated, logout } from '../../services/authServ
 import { AllShipmentsTable } from './components/AllShipmentsTable';
 import { AllBoxesTable } from './components/AllBoxesTable';
 import { ShipmentItemsTable } from './components/ShipmentItemsTable';
+import { ShipmentItemsSummary } from './components/ShipmentItemsSummary';
 import { ShipmentsPageHeaderActions } from './components/shared/ShipmentsPageHeaderActions';
 import { NewShipmentFormModal } from './components/NewShipmentFormModal';
 import { NewBoxFormModal } from './components/NewBoxFormModal';
@@ -114,7 +115,7 @@ export function ShipmentsPage() {
       return t.pageControls.addBox;
     }
 
-    if (activeSidebarId === 'shipment-items') {
+    if (activeSidebarId === 'shipment-items' || activeSidebarId === 'shipment-items-summary') {
       return t.pageControls.addItem;
     }
 
@@ -124,6 +125,7 @@ export function ShipmentsPage() {
   const isShipmentTableActive = activeSidebarId === 'all-shipments';
   const isBoxesTableActive = activeSidebarId === 'all-boxes';
   const isShipmentItemsTableActive = activeSidebarId === 'shipment-items';
+  const isShipmentItemsSummaryActive = activeSidebarId === 'shipment-items-summary';
   const areRowActionsDisabled = useMemo(() => {
     if (isShipmentTableActive) {
       return selectedShipmentRow === null;
@@ -160,7 +162,7 @@ export function ShipmentsPage() {
 
   const handleTopNavClick = (item: NavItem) => {
     setActiveTopId(item.id);
-    navigate(`/${item.id}`);
+    navigate(item.href || `/${item.id}`);
   };
 
   const handleSidebarClick = (item: NavItem) => {
@@ -256,7 +258,7 @@ export function ShipmentsPage() {
       setIsNewShipmentModalOpen(true);
     } else if (activeSidebarId === 'all-boxes') {
       setIsNewBoxModalOpen(true);
-    } else if (activeSidebarId === 'shipment-items') {
+    } else if (activeSidebarId === 'shipment-items' || activeSidebarId === 'shipment-items-summary') {
       setIsNewItemModalOpen(true);
     } else {
       handleCreateAction(addActionLabel);
@@ -300,6 +302,7 @@ export function ShipmentsPage() {
           addActionLabel={addActionLabel}
           editActionLabel={t.pageControls.edit}
           deleteActionLabel={t.pageControls.delete}
+          showRowActions={!isShipmentItemsSummaryActive}
           onAdd={handleAddAction}
           onEdit={() => {
             if (isShipmentTableActive && selectedShipmentRow) {
@@ -325,6 +328,10 @@ export function ShipmentsPage() {
           }}
           editDisabled={areRowActionsDisabled}
           deleteDisabled={areRowActionsDisabled}
+          extraActions={isShipmentItemsSummaryActive ? [
+            { label: t.pageControls.addShipment, onClick: () => setIsNewShipmentModalOpen(true) },
+            { label: t.pageControls.addBox, onClick: () => setIsNewBoxModalOpen(true) },
+          ] : undefined}
         />
       }
       topNav={t.topNav}
@@ -582,6 +589,12 @@ export function ShipmentsPage() {
           selectedBoxId={selectedBoxRow?.id ?? null}
           onSelectBox={handleBoxRowSelect}
           refreshKey={boxesRefreshKey}
+        />
+      ) : isShipmentItemsSummaryActive ? (
+        <ShipmentItemsSummary
+          lang={lang}
+          labels={t.shipmentItemsTableLabels}
+          description={content.description}
         />
       ) : activeSidebarId === 'shipment-items' ? (
         <ShipmentItemsTable

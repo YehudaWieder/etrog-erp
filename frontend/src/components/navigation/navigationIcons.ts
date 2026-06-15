@@ -33,6 +33,7 @@ const NAV_ICON_MAP: Record<string, keyof typeof FAIcons> = {
   'fa-leaf': 'FaLeaf',
   'fa-money-bill': 'FaMoneyBill',
   'fa-person': 'FaPerson',
+  'fa-chart-bar': 'FaChartBar',
 };
 
 export function resolveNavigationIcon(iconKey?: string) {
