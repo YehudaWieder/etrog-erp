@@ -58,9 +58,14 @@ export const TRADER_INVENTORY_I18N_HE: TraderInventoryI18n = {
 			moduloQuantity: 'מלאי לא משוייך',
 		},
 		matrix: {
-			title: 'טבלת סיכום ללא שיוך',
+			title: 'סיכום מלאי לפי קטגוריה',
 			grade: 'דרגה',
 			total: 'סה"כ',
+		},
+		breakdown: {
+			showBreakdown: 'הצג פירוט לפי דרגות',
+			hideBreakdown: 'הסתר פירוט',
+			breakdownTitle: 'פירוט לפי קטגוריות ודרגות',
 		},
 		columns: {
 			owner: 'בעלות',

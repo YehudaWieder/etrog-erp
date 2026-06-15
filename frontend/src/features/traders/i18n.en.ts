@@ -58,9 +58,14 @@ export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
 			moduloQuantity: 'Modulo Inventory Total',
 		},
 		matrix: {
-			title: 'Unassigned Summary Matrix',
+			title: 'Inventory Summary by Category',
 			grade: 'Grade',
 			total: 'Total',
+		},
+		breakdown: {
+			showBreakdown: 'Show grade breakdown',
+			hideBreakdown: 'Hide breakdown',
+			breakdownTitle: 'Breakdown by categories and grades',
 		},
 		columns: {
 			owner: 'Owner',

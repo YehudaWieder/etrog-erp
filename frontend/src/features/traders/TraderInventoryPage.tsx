@@ -5,13 +5,15 @@ import { AppShell } from '../../app/layout/AppShell';
 import { GlobalScopedFilters, type GlobalScopedFilterConfig, type GlobalScopedFiltersApi } from '../../components/ui/GlobalScopedFilters';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import { openPrintableWindow } from '../../services/printWindow';
-import { downloadStyledExcel } from '../../services/exportExcel';
+import { exportTraderInventoryExcel } from './services/traderInventoryExport.service';
 import { TraderInventoryAllSection } from './components/TraderInventoryAllSection';
 import { TraderMovementsSection } from './components/TraderMovementsSection';
 import { TraderPrintExportActions } from './components/TraderPrintExportActions';
 import { useTraderInventorySummary } from './hooks/useTraderInventorySummary';
 import { useTraderMovements } from './hooks/useTraderMovements';
 import { TRADER_INVENTORY_I18N, getTraderMovementsI18n } from './i18n';
+import { buildTraderInventorySummaryMatrix } from './utils/traderInventorySummaryMatrix.util';
+import { getTraderInventoryPitamStatusLabel } from './utils/traderInventorySummary.util';
 import type { NavItem } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
 import { getActiveSeason, getSeasons, type Season } from '../../services/seasonsApi';
@@ -330,56 +332,118 @@ export function TraderInventoryPage() {
     `;
 
     const tableStyles = `
+      @page {
+        size: landscape;
+        margin: 10mm;
+      }
+      @media print {
+        html, body {
+          width: 297mm;
+          min-height: 210mm;
+        }
+      }
       table {
         width: 100%;
         border-collapse: collapse;
         font-size: 12px;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      tr {
+        break-inside: avoid;
+        page-break-inside: avoid;
       }
       th, td {
         border: 1px solid #ccc;
         padding: 10px;
         text-align: center;
       }
-      th {
+      thead th {
         background-color: #1f5a32;
         color: white;
         font-weight: bold;
       }
-      tr:nth-child(even) {
-        background-color: #f8fcf9;
+      tbody th {
+        background-color: #f0f6f1;
+        font-weight: bold;
+        text-align: start;
+      }
+      tbody tr:nth-child(odd) {
+        background-color: #fafcfa;
+      }
+      tbody tr:nth-child(even) {
+        background-color: #f3f8f4;
+      }
+      td:last-child, tbody th:last-child {
+        background-color: #e4f0e7;
+        font-weight: bold;
+      }
+      tfoot th, tfoot td {
+        background-color: #e1f0e5;
+        font-weight: bold;
+        border-top: 2px solid #8cb494;
+      }
+      .category-block {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        margin-top: 20px;
+      }
+      .category-block h3 {
+        break-after: avoid;
+        page-break-after: avoid;
+        margin: 0 0 6px;
+        font-size: 11px;
+        font-weight: bold;
       }
     `;
+    const locale = lang === 'he' ? 'he-IL' : 'en-US';
+    const fmt = (n: number) => new Intl.NumberFormat(locale).format(Math.abs(n));
+
+    const summaryMatrix = buildTraderInventorySummaryMatrix(traderInventorySummary.rows, t.summary.values.none);
+    const pitamWith = getTraderInventoryPitamStatusLabel('WITH_PITAM', t.summary);
+    const pitamWithout = getTraderInventoryPitamStatusLabel('WITHOUT_PITAM', t.summary);
+    const pitamMixed = getTraderInventoryPitamStatusLabel('MIXED', t.summary);
+    const totalLabel = t.summary.matrix.total;
+    const gradeLabel = t.summary.matrix.grade;
+
+    let breakdownHtml = `<h2 style="margin-top:32px;margin-bottom:16px;font-size:13px;font-weight:bold;text-align:center;">${t.summary.breakdown.breakdownTitle}</h2>`;
+    for (const category of summaryMatrix.categories) {
+      breakdownHtml += '<div class="category-block">';
+      breakdownHtml += `<h3>${category.label}</h3>`;
+      breakdownHtml += '<table><thead><tr>';
+      breakdownHtml += `<th>${gradeLabel}</th><th>${pitamWith}</th><th>${pitamWithout}</th><th>${pitamMixed}</th><th>${totalLabel}</th>`;
+      breakdownHtml += '</tr></thead><tbody>';
+      for (const grade of summaryMatrix.grades) {
+        const cell = summaryMatrix.gradeValues[grade]?.[category.key] ?? { WITH_PITAM: 0, WITHOUT_PITAM: 0, MIXED: 0 };
+        const gradeTotal = cell.WITH_PITAM + cell.WITHOUT_PITAM + cell.MIXED;
+        breakdownHtml += `<tr><th>${grade}</th><td>${fmt(cell.WITH_PITAM)}</td><td>${fmt(cell.WITHOUT_PITAM)}</td><td>${fmt(cell.MIXED)}</td><td>${fmt(gradeTotal)}</td></tr>`;
+      }
+      breakdownHtml += `</tbody><tfoot><tr><th>${totalLabel}</th><td>${fmt(category.totalsByPitamStatus.WITH_PITAM)}</td><td>${fmt(category.totalsByPitamStatus.WITHOUT_PITAM)}</td><td>${fmt(category.totalsByPitamStatus.MIXED)}</td><td>${fmt(category.total)}</td></tr></tfoot></table>`;
+      breakdownHtml += '</div>';
+    }
+
     openPrintableWindow({
       title: lang === 'he' ? 'מלאי סוחרים' : 'Trader Inventory',
       heading: lang === 'he' ? 'מלאי סוחרים' : 'Trader Inventory',
-      html: filterDetailsHtml + matrixTableRef.current.outerHTML,
+      html: filterDetailsHtml + matrixTableRef.current.outerHTML + breakdownHtml,
       direction: lang === 'he' ? 'rtl' : 'ltr',
+      width: 1280,
+      height: 900,
       extraStyles: tableStyles,
     });
-  }, [lang, seasons, traders, filterValues, t]);
+  }, [lang, seasons, traders, filterValues, t, traderInventorySummary.rows]);
 
   const handleExportInventoryTable = useCallback(async () => {
-    if (!matrixTableRef.current) {
-      return;
-    }
-
-    const table = matrixTableRef.current;
-    const headerRows: (string | number)[][] = [];
-    const dataRows: (string | number)[][] = [];
-
-    // Build filter display information
     const seasonDisplay = filterValues.seasonId
       ? seasons.find(s => String(s.id) === filterValues.seasonId)?.yearName || filterValues.seasonId
       : 'N/A';
-    const traderDisplay = filterValues.traderId === 'ALL' 
-      ? t.summary.filters.allTradersOption 
+    const traderDisplay = filterValues.traderId === 'ALL'
+      ? t.summary.filters.allTradersOption
       : filterValues.traderId === 'UNASSIGNED'
       ? t.summary.filters.unassignedOption
-      : filterValues.traderId 
+      : filterValues.traderId
       ? traders.find(tr => String(tr.id) === filterValues.traderId)?.name || filterValues.traderId
       : 'N/A';
-
-    // Map inventory status to display label
     const statusMap: Record<string, string> = {
       'ALL': t.summary.filters.allInventoryOption,
       'UNSHIPPED': t.summary.filters.unboxedOption,
@@ -389,107 +453,23 @@ export function TraderInventoryPage() {
       'PRIVATE_SELECTION': t.summary.filters.privateSelectionOption,
     };
     const statusDisplay = statusMap[filterValues.inventoryStatus] || filterValues.inventoryStatus;
-
-    // Build dynamic file name with filter details
     const baseFileName = lang === 'he' ? 'מלאי סוחרים' : 'Trader Inventory';
-    const fileName = `${baseFileName}_${seasonDisplay}_${traderDisplay}_${statusDisplay}`;
 
-    // Add filter information rows at the beginning
-    dataRows.push(
-      [t.summary.filters.seasonLabel, seasonDisplay],
-      [t.summary.filters.traderLabel, traderDisplay],
-      [t.summary.filters.inventoryStatusLabel, statusDisplay],
-      [], // empty row for spacing
-    );
+    const summaryMatrix = buildTraderInventorySummaryMatrix(traderInventorySummary.rows, t.summary.values.none);
 
-    // Extract all rows from thead (headers)
-    const thead = table.querySelector('thead');
-    if (thead) {
-      const rows = thead.querySelectorAll('tr');
-      let firstRowLength = 0;
-      
-      rows.forEach((headerRow, rowIndex) => {
-        const row: (string | number)[] = [];
-        const cells = headerRow.querySelectorAll('th, td');
-        cells.forEach((cell) => {
-          // Skip aria-hidden spacer cells
-          if (cell.getAttribute('aria-hidden') === 'true') {
-            return;
-          }
-          
-          const colspan = parseInt(cell.getAttribute('colspan') || '1', 10);
-          const text = cell.textContent?.trim() || '';
-          
-          // Add the cell text
-          row.push(text);
-          
-          // For cells with colspan > 1, add empty cells to represent the span
-          for (let i = 1; i < colspan; i++) {
-            row.push('');
-          }
-        });
-        if (row.length > 0) {
-          // If this is the first header row, save its length
-          if (rowIndex === 0) {
-            firstRowLength = row.length;
-          } else if (rowIndex === 1) {
-            // For the second header row, prepend one empty cell to align sub-headers
-            row.unshift('');
-          }
-          headerRows.push(row);
-        }
-      });
-    }
-
-    // Extract rows from tbody
-    const tbody = table.querySelector('tbody');
-    if (tbody) {
-      tbody.querySelectorAll('tr').forEach((tr) => {
-        const row: (string | number)[] = [];
-        tr.querySelectorAll('td, th').forEach((td) => {
-          // Skip aria-hidden spacer cells
-          if (td.getAttribute('aria-hidden') === 'true') {
-            return;
-          }
-          row.push(td.textContent?.trim() || '');
-        });
-        if (row.length > 0) {
-          dataRows.push(row);
-        }
-      });
-    }
-
-    // Extract rows from tfoot
-    const tfoot = table.querySelector('tfoot');
-    if (tfoot) {
-      tfoot.querySelectorAll('tr').forEach((tr) => {
-        const row: (string | number)[] = [];
-        tr.querySelectorAll('td, th').forEach((td) => {
-          // Skip aria-hidden spacer cells
-          if (td.getAttribute('aria-hidden') === 'true') {
-            return;
-          }
-          row.push(td.textContent?.trim() || '');
-        });
-        if (row.length > 0) {
-          dataRows.push(row);
-        }
-      });
-    }
-
-    if (headerRows.length === 0 || dataRows.length === 0) {
-      return;
-    }
-
-    await downloadStyledExcel({
-      fileName,
+    await exportTraderInventoryExcel({
+      fileName: `${baseFileName}_${seasonDisplay}_${traderDisplay}_${statusDisplay}`,
       sheetName: lang === 'he' ? 'מלאי סוחרים' : 'Trader Inventory',
-      header: headerRows,
-      rows: dataRows,
+      filterRows: [
+        [t.summary.filters.seasonLabel, seasonDisplay],
+        [t.summary.filters.traderLabel, traderDisplay],
+        [t.summary.filters.inventoryStatusLabel, statusDisplay],
+      ],
+      summaryMatrix,
+      labels: t.summary,
       rightToLeft: lang === 'he',
-      filterRowCount: 4, // 3 filter info rows + 1 empty row
     });
-  }, [lang, seasons, traders, filterValues, t]);
+  }, [lang, seasons, traders, filterValues, t, traderInventorySummary.rows]);
 
   const filtersBar = isAllInventoryTab ? (
     <GlobalScopedFilters

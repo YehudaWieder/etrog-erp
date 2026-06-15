@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { ReactNode, RefObject } from 'react';
 import type { AppLang, TraderInventoryI18n } from '../i18n';
 import type { TraderInventorySummaryRow, TraderInventorySummaryTotals } from '../traderInventory.types';
@@ -34,11 +34,14 @@ export function TraderInventoryAllSection({
   const locale = lang === 'he' ? 'he-IL' : 'en-US';
 
   const numberFormatter = useMemo(() => new Intl.NumberFormat(locale), [locale]);
+  const fmt = (n: number) => numberFormatter.format(Math.abs(n));
 
   const summaryMatrix = useMemo(
     () => buildTraderInventorySummaryMatrix(rows, labels.values.none),
     [labels.values.none, rows],
   );
+
+  const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
 
   if (isLoading && rows.length === 0) {
     return <div className={styles.statusBox}>{labels.loading}</div>;
@@ -83,78 +86,108 @@ export function TraderInventoryAllSection({
       ) : null}
 
       {summaryMatrix.categories.length > 0 ? (
-        <section className={styles.matrixSection}>
-          <div className={styles.matrixViewport}>
-            <table className={styles.matrixTable} ref={tableRef}>
-              <thead>
-                <tr>
-                  <th className={styles.matrixGradeHead}>{labels.matrix.grade}</th>
-                  {summaryMatrix.categories.map((category) => (
-                    <th key={category.key} colSpan={4} className={styles.matrixGroupHead}>
-                      <span className={styles.matrixGroupHeadInline}>
-                        <span className={styles.matrixGroupHeadTitle}>{category.label}</span>
-                        <span className={styles.matrixGroupHeadTotal}>{numberFormatter.format(Math.abs(category.total))}</span>
-                      </span>
-                    </th>
-                  ))}
-                  <th className={styles.matrixGrandTotalHead}>{labels.matrix.total}</th>
-                </tr>
-                <tr>
-                  <th aria-hidden="true" className={`${styles.matrixGradeHead} ${styles.matrixSubHeadSpacer}`} />
-                  {summaryMatrix.categories.flatMap((category) => {
-                    return (['WITH_PITAM', 'WITHOUT_PITAM', 'MIXED'] as const)
-                      .map((pitamStatus) => (
-                        <th key={`${category.key}:${pitamStatus}`}>
-                          <span className={styles.matrixSubHeadLabel}>{getTraderInventoryPitamStatusLabel(pitamStatus, labels)}</span>
-                        </th>
-                      ))
-                      .concat(
-                        <th key={`${category.key}:total`} className={styles.matrixInnerTotalHead}>
-                          <span className={styles.matrixSubHeadLabel}>{labels.matrix.total}</span>
-                        </th>,
-                      );
-                  })}
-                  <th aria-hidden="true" className={`${styles.matrixGrandTotalHead} ${styles.matrixSubHeadSpacer}`} />
-                </tr>
-              </thead>
-              <tbody>
-                {summaryMatrix.grades.map((grade) => (
-                  <tr key={grade}>
-                    <th className={styles.matrixGradeCell}>{grade}</th>
-                    {summaryMatrix.categories.flatMap((category) => {
-                      const gradeCell = summaryMatrix.gradeValues[grade]?.[category.key] ?? {
-                        WITH_PITAM: 0,
-                        WITHOUT_PITAM: 0,
-                        MIXED: 0,
-                      };
-                      const gradeCategoryTotal = gradeCell.WITH_PITAM + gradeCell.WITHOUT_PITAM + gradeCell.MIXED;
-
-                      return [
-                        <td key={`${grade}:${category.key}:WITH_PITAM`}>{numberFormatter.format(Math.abs(gradeCell.WITH_PITAM))}</td>,
-                        <td key={`${grade}:${category.key}:WITHOUT_PITAM`}>{numberFormatter.format(Math.abs(gradeCell.WITHOUT_PITAM))}</td>,
-                        <td key={`${grade}:${category.key}:MIXED`}>{numberFormatter.format(Math.abs(gradeCell.MIXED))}</td>,
-                        <td key={`${grade}:${category.key}:TOTAL`} className={`${styles.matrixCellStrong} ${styles.matrixInnerTotalCell}`}>{numberFormatter.format(Math.abs(gradeCategoryTotal))}</td>,
-                      ];
-                    })}
-                    <td className={`${styles.matrixCellStrong} ${styles.matrixGrandTotalCell}`}>{numberFormatter.format(Math.abs(summaryMatrix.rowTotals[grade] ?? 0))}</td>
+        <>
+          <section className={styles.matrixSection}>
+            <h3 className={styles.matrixTitle}>{labels.matrix.title}</h3>
+            <div className={styles.matrixViewport}>
+              <table className={styles.matrixTable} ref={tableRef}>
+                <thead>
+                  <tr>
+                    <th className={styles.matrixTypeHead}>{labels.columns.category}</th>
+                    <th>{getTraderInventoryPitamStatusLabel('WITH_PITAM', labels)}</th>
+                    <th>{getTraderInventoryPitamStatusLabel('WITHOUT_PITAM', labels)}</th>
+                    <th>{getTraderInventoryPitamStatusLabel('MIXED', labels)}</th>
+                    <th className={styles.matrixTotalHead}>{labels.matrix.total}</th>
                   </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <th className={styles.matrixGradeCell}>{labels.matrix.total}</th>
-                  {summaryMatrix.categories.flatMap((category) => [
-                    <td key={`total:${category.key}:WITH_PITAM`} className={styles.matrixCellStrong}>{numberFormatter.format(Math.abs(category.totalsByPitamStatus.WITH_PITAM))}</td>,
-                    <td key={`total:${category.key}:WITHOUT_PITAM`} className={styles.matrixCellStrong}>{numberFormatter.format(Math.abs(category.totalsByPitamStatus.WITHOUT_PITAM))}</td>,
-                    <td key={`total:${category.key}:MIXED`} className={styles.matrixCellStrong}>{numberFormatter.format(Math.abs(category.totalsByPitamStatus.MIXED))}</td>,
-                    <td key={`total:${category.key}:TOTAL`} className={`${styles.matrixCellStrong} ${styles.matrixInnerTotalCell}`}>{numberFormatter.format(Math.abs(category.total))}</td>,
-                  ])}
-                  <td className={`${styles.matrixCellStrong} ${styles.matrixGrandTotalCell}`}>{numberFormatter.format(Math.abs(summaryMatrix.grandTotal))}</td>
-                </tr>
-              </tfoot>
-            </table>
+                </thead>
+                <tbody>
+                  {summaryMatrix.categories.map((category) => (
+                    <tr key={category.key}>
+                      <th className={styles.matrixTypeCell}>{category.label}</th>
+                      <td>{fmt(category.totalsByPitamStatus.WITH_PITAM)}</td>
+                      <td>{fmt(category.totalsByPitamStatus.WITHOUT_PITAM)}</td>
+                      <td>{fmt(category.totalsByPitamStatus.MIXED)}</td>
+                      <td className={styles.matrixTotalCell}>{fmt(category.total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <th className={styles.matrixTypeCell}>{labels.matrix.total}</th>
+                    <td>{fmt(summaryMatrix.grandTotalByPitamStatus.WITH_PITAM)}</td>
+                    <td>{fmt(summaryMatrix.grandTotalByPitamStatus.WITHOUT_PITAM)}</td>
+                    <td>{fmt(summaryMatrix.grandTotalByPitamStatus.MIXED)}</td>
+                    <td className={styles.matrixTotalCell}>{fmt(summaryMatrix.grandTotal)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </section>
+
+          <div className={styles.breakdownPanel}>
+            <button
+              type="button"
+              className={`${styles.breakdownToggle}${isBreakdownOpen ? ` ${styles.breakdownToggleOpen}` : ''}`}
+              onClick={() => setIsBreakdownOpen((o) => !o)}
+            >
+              {isBreakdownOpen ? labels.breakdown.hideBreakdown : labels.breakdown.showBreakdown}
+              <span className={`${styles.breakdownArrow}${isBreakdownOpen ? ` ${styles.breakdownArrowOpen}` : ''}`}>▼</span>
+            </button>
+            {isBreakdownOpen && (
+              <div className={styles.breakdownContent}>
+                <h3 className={styles.breakdownTitle}>{labels.breakdown.breakdownTitle}</h3>
+                <div className={styles.categoryTablesStack}>
+                  {summaryMatrix.categories.map((category) => (
+                    <div key={category.key} className={styles.tableSection}>
+                      <h4 className={styles.tableTitle}>{category.label}</h4>
+                      <div className={styles.matrixViewport}>
+                        <table className={styles.matrixTable}>
+                          <thead>
+                            <tr>
+                              <th className={styles.matrixTypeHead}>{labels.matrix.grade}</th>
+                              <th>{getTraderInventoryPitamStatusLabel('WITH_PITAM', labels)}</th>
+                              <th>{getTraderInventoryPitamStatusLabel('WITHOUT_PITAM', labels)}</th>
+                              <th>{getTraderInventoryPitamStatusLabel('MIXED', labels)}</th>
+                              <th className={styles.matrixTotalHead}>{labels.matrix.total}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {summaryMatrix.grades.map((grade) => {
+                              const cell = summaryMatrix.gradeValues[grade]?.[category.key] ?? {
+                                WITH_PITAM: 0,
+                                WITHOUT_PITAM: 0,
+                                MIXED: 0,
+                              };
+                              const gradeTotal = cell.WITH_PITAM + cell.WITHOUT_PITAM + cell.MIXED;
+                              return (
+                                <tr key={grade}>
+                                  <th className={styles.matrixTypeCell}>{grade}</th>
+                                  <td>{fmt(cell.WITH_PITAM)}</td>
+                                  <td>{fmt(cell.WITHOUT_PITAM)}</td>
+                                  <td>{fmt(cell.MIXED)}</td>
+                                  <td className={styles.matrixTotalCell}>{fmt(gradeTotal)}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                          <tfoot>
+                            <tr>
+                              <th className={styles.matrixTypeCell}>{labels.matrix.total}</th>
+                              <td>{fmt(category.totalsByPitamStatus.WITH_PITAM)}</td>
+                              <td>{fmt(category.totalsByPitamStatus.WITHOUT_PITAM)}</td>
+                              <td>{fmt(category.totalsByPitamStatus.MIXED)}</td>
+                              <td className={styles.matrixTotalCell}>{fmt(category.total)}</td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        </section>
+        </>
       ) : null}
 
       {error ? (

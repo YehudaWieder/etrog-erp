@@ -68,6 +68,11 @@ export type TraderInventoryI18n = {
 			grade: string;
 			total: string;
 		};
+		breakdown: {
+			showBreakdown: string;
+			hideBreakdown: string;
+			breakdownTitle: string;
+		};
 		columns: {
 			owner: string;
 			category: string;
