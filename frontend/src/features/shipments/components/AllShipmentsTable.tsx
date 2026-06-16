@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { GlobalScopedFilters } from '../../../components/ui/GlobalScopedFilters';
 import { GlobalDataTable } from '../../../components/ui/GlobalDataTable';
 import workspaceStyles from '../../../components/ui/styles/WorkspaceSection.module.css';
@@ -15,9 +15,10 @@ type AllShipmentsTableProps = {
   selectedShipmentId: number | null;
   onSelectShipment: (row: ShipmentRecord | null) => void;
   refreshKey?: number;
+  onRowCountChange?: (count: number) => void;
 };
 
-export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectShipment, refreshKey }: AllShipmentsTableProps): JSX.Element {
+export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectShipment, refreshKey, onRowCountChange }: AllShipmentsTableProps): JSX.Element {
   const {
     filters,
     selectedSeasonId,
@@ -27,6 +28,14 @@ export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectSh
   } = useAllShipmentsFilters(labels);
   const { rows, columns, isLoading, error } = useAllShipmentsTable(labels, selectedSeasonId, selectedStatus, refreshKey);
   const summaryTotals = useMemo(() => buildAllShipmentsSummaryTotals(rows), [rows]);
+  const onRowCountChangeRef = useRef(onRowCountChange);
+  onRowCountChangeRef.current = onRowCountChange;
+
+  useEffect(() => {
+    if (!isLoading) {
+      onRowCountChangeRef.current?.(rows.length);
+    }
+  }, [rows.length, isLoading]);
 
   useEffect(() => {
     if (selectedShipmentId === null) {

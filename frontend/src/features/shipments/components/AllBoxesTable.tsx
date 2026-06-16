@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { GlobalScopedFilters } from '../../../components/ui/GlobalScopedFilters';
 import { GlobalDataTable } from '../../../components/ui/GlobalDataTable';
 import workspaceStyles from '../../../components/ui/styles/WorkspaceSection.module.css';
@@ -15,9 +15,10 @@ type AllBoxesTableProps = {
   selectedBoxId: number | null;
   onSelectBox: (row: BoxesTableRow | null) => void;
   refreshKey?: number;
+  onRowCountChange?: (count: number) => void;
 };
 
-export function AllBoxesTable({ lang, labels, selectedBoxId, onSelectBox, refreshKey }: AllBoxesTableProps): JSX.Element {
+export function AllBoxesTable({ lang, labels, selectedBoxId, onSelectBox, refreshKey, onRowCountChange }: AllBoxesTableProps): JSX.Element {
   const {
     filters,
     selectedSeasonId,
@@ -36,6 +37,14 @@ export function AllBoxesTable({ lang, labels, selectedBoxId, onSelectBox, refres
     refreshKey,
   );
   const summaryTotals = useMemo(() => buildAllBoxesSummaryTotals(rows), [rows]);
+  const onRowCountChangeRef = useRef(onRowCountChange);
+  onRowCountChangeRef.current = onRowCountChange;
+
+  useEffect(() => {
+    if (!isLoading) {
+      onRowCountChangeRef.current?.(rows.length);
+    }
+  }, [rows.length, isLoading]);
 
   useEffect(() => {
     if (selectedBoxId === null) {

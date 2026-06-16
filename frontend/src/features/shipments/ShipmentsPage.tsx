@@ -49,6 +49,7 @@ export function ShipmentsPage() {
   const [shipmentsRefreshKey, setShipmentsRefreshKey] = useState(0);
   const [boxesRefreshKey, setBoxesRefreshKey] = useState(0);
   const [itemsRefreshKey, setItemsRefreshKey] = useState(0);
+  const [tableRowCount, setTableRowCount] = useState<number | null>(null);
 
   useEffect(() => {
     // טען כמות הודעות שלא נקראו
@@ -104,6 +105,18 @@ export function ShipmentsPage() {
 
     return t.pageTitle;
   }, [activeSidebarId, t.sidebar, t.pageTitle]);
+
+  const pageTitleWithCount = useMemo(() => {
+    const showCount = activeSidebarId === 'all-shipments' || activeSidebarId === 'all-boxes' || activeSidebarId === 'shipment-items';
+    if (showCount && tableRowCount !== null) {
+      return `${pageTitle} (${tableRowCount})`;
+    }
+    return pageTitle;
+  }, [activeSidebarId, pageTitle, tableRowCount]);
+
+  useEffect(() => {
+    setTableRowCount(null);
+  }, [activeSidebarId]);
 
   const content = useMemo(() => {
     const state = t.emptyState as Record<string, { title: string; description: string }>;
@@ -296,7 +309,7 @@ export function ShipmentsPage() {
     <AppShell
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
-      pageTitle={pageTitle}
+      pageTitle={pageTitleWithCount}
       pageHeaderActions={
         <ShipmentsPageHeaderActions
           addActionLabel={addActionLabel}
@@ -581,6 +594,7 @@ export function ShipmentsPage() {
           selectedShipmentId={selectedShipmentRow?.id ?? null}
           onSelectShipment={handleShipmentRowSelect}
           refreshKey={shipmentsRefreshKey}
+          onRowCountChange={setTableRowCount}
         />
       ) : activeSidebarId === 'all-boxes' ? (
         <AllBoxesTable
@@ -589,6 +603,7 @@ export function ShipmentsPage() {
           selectedBoxId={selectedBoxRow?.id ?? null}
           onSelectBox={handleBoxRowSelect}
           refreshKey={boxesRefreshKey}
+          onRowCountChange={setTableRowCount}
         />
       ) : isShipmentItemsSummaryActive ? (
         <ShipmentItemsSummary
@@ -603,6 +618,7 @@ export function ShipmentsPage() {
           selectedItemId={selectedItemRow?.id ?? null}
           onSelectItem={handleItemRowSelect}
           refreshKey={itemsRefreshKey}
+          onRowCountChange={setTableRowCount}
         />
       ) : (
         <section className="shipments-empty-state">
