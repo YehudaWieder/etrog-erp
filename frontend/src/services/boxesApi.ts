@@ -30,6 +30,7 @@ export type BoxRecord = {
   customerId: number | null;
   trader?: { name: string } | null;
   customer?: { customerName: string } | null;
+  updatedBy?: { name: string } | null;
   createdAt: string;
   updatedAt: string;
   notes: string | null;

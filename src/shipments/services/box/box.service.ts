@@ -83,6 +83,7 @@ export class BoxService {
       include: {
         trader: { select: { name: true } },
         customer: { select: { customerName: true } },
+        updatedBy: { select: { name: true } },
         _count: { select: { items: true } }
       },
       orderBy: { boxNumber: 'asc' },

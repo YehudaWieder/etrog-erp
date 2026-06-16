@@ -11,6 +11,7 @@ type AllShipmentsFilterValues = {
 
 type UseAllShipmentsFiltersResult = {
   filters: GlobalScopedFilterConfig[];
+  seasons: Season[];
   selectedSeasonId: number | null;
   selectedStatus: 'all' | ShipmentStatus;
   handleFilterValuesChange: (values: Record<string, string>) => void;
@@ -115,6 +116,7 @@ export function useAllShipmentsFilters(labels: ShipmentsTableLabels): UseAllShip
 
   return {
     filters,
+    seasons,
     selectedSeasonId,
     selectedStatus,
     handleFilterValuesChange,

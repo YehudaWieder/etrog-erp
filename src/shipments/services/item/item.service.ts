@@ -779,6 +779,7 @@ export class ItemService {
         customer: { select: { customerName: true } },
         traderCategory: { select: { name: true } },
         customerCategory: { select: { name: true } },
+        updatedBy: { select: { name: true } },
       },
     });
   }

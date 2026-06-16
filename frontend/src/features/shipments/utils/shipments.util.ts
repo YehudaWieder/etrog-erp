@@ -27,6 +27,13 @@ export function parseShipmentSeasonFilterId(value: string): number | null {
   return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : null;
 }
 
+export function formatShipmentDate(date: Date): string {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}.${month}.${year}`;
+}
+
 export function parseShipmentStatusFilter(value: string): 'all' | ShipmentStatus {
   if (value === 'all') {
     return 'all';

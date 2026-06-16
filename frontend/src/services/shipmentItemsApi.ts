@@ -19,6 +19,7 @@ export type ShipmentItemRecord = {
   customer?: { customerName: string } | null;
   traderCategory?: { name: string } | null;
   customerCategory?: { name: string } | null;
+  updatedBy?: { name: string } | null;
   isPrivateSelection: boolean;
   createdAt: string;
   updatedAt: string;

@@ -49,6 +49,7 @@ export function useShipmentItemsTable(
   shipmentNumber: 'all' | number,
   ownership: 'all' | string,
   refreshKey?: number,
+  onOpenDetails?: (row: ShipmentItemsTableRow) => void,
 ): UseShipmentItemsTableResult {
   const [rawRows, setRawRows] = useState<ShipmentItemsTableRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -87,7 +88,11 @@ export function useShipmentItemsTable(
                   ownership: resolveOwnershipLabel(item, labels),
                   ownershipType: item.ownershipType,
                   isPrivateSelection: item.isPrivateSelection,
+                  grade: item.grade ?? null,
                   customGrade: item.customGrade ?? null,
+                  pitamStatus: item.pitamStatus ?? null,
+                  notes: item.notes ?? null,
+                  updatedByName: item.updatedBy?.name ?? '—',
                 }));
               }),
             );
@@ -150,8 +155,13 @@ export function useShipmentItemsTable(
       header: labels.colDetails,
       headerLabel: labels.colDetails,
       align: 'center',
-      render: () => (
-        <button type="button" className={styles.detailsTrigger} aria-label={labels.detailsButtonAriaLabel}>
+      render: (row) => (
+        <button
+          type="button"
+          className={styles.detailsTrigger}
+          aria-label={labels.detailsButtonAriaLabel}
+          onClick={() => onOpenDetails?.(row)}
+        >
           <FaFileInvoice />
         </button>
       ),
@@ -216,7 +226,7 @@ export function useShipmentItemsTable(
               : labels.stockSourceLabels.GENERAL)
           : '—',
     },
-  ], [labels]);
+  ], [labels, onOpenDetails]);
 
   return { rows, columns, isLoading, error };
 }

@@ -15,6 +15,8 @@ export type BoxesTableRow = {
   totalQuantity: number;
   status: BoxStatus;
   ownership: string;
+  updatedByName: string;
+  notes: string | null;
 };
 
 export type ShipmentItemsTableRow = {
@@ -27,7 +29,11 @@ export type ShipmentItemsTableRow = {
   ownership: string;
   ownershipType: ItemOwnership;
   isPrivateSelection: boolean;
+  grade: string | null;
   customGrade: string | null;
+  pitamStatus: string | null;
+  notes: string | null;
+  updatedByName: string;
 };
 
 export type ShipmentsTableLabels = {
@@ -45,6 +51,46 @@ export type ShipmentsTableLabels = {
   colStatus: string;
   colShippedAt: string;
   detailsButtonAriaLabel: string;
+  detailsPanelTitle: (shipmentNumber?: number) => string;
+  detailsPanelCloseLabel: string;
+  detailsPrintLabel: string;
+  detailsUpdatedByLabel: string;
+  detailsNotesLabel: string;
+  detailsBoxesSummary: {
+    title: string;
+    boxTypeLabels: Record<'SMALL' | 'MEDIUM' | 'LARGE' | 'CUSTOM', string>;
+    generalRowLabel: string;
+    customRowLabel: string;
+    totalRowLabel: string;
+    totalColumnLabel: string;
+    loading: string;
+    error: string;
+    empty: string;
+  };
+  detailsEtrogSummary: {
+    title: string;
+    pitamStatusLabels: Record<'WITH_PITAM' | 'WITHOUT_PITAM' | 'MIXED', string>;
+    customRowLabel: string;
+    totalRowLabel: string;
+    totalColumnLabel: string;
+    loading: string;
+    error: string;
+    empty: string;
+  };
+  detailsItemsTable: {
+    title: string;
+    colBoxNumber: string;
+    colOwnership: string;
+    colStockSource: string;
+    colCategory: string;
+    colGrade: string;
+    colQuantity: string;
+    colNotes: string;
+    ownershipLabels: Record<'TRADER' | 'CUSTOMER' | 'UNASSIGNED' | 'CUSTOM', string>;
+    stockSourceLabels: Record<'GENERAL' | 'PRIVATE_SELECTION', string>;
+    uncategorized: string;
+    noGrade: string;
+  };
   empty: string;
   loading: string;
   error: string;
@@ -79,6 +125,15 @@ export type BoxesTableLabels = {
   colOwnership: string;
   boxTypeLabels: Record<string, string>;
   detailsButtonAriaLabel: string;
+  detailsPanelTitle: (boxNumber?: number) => string;
+  detailsPanelCloseLabel: string;
+  detailsPrintLabel: string;
+  detailsUpdatedByLabel: string;
+  detailsNotesLabel: string;
+  detailsItemsTable: ShipmentsTableLabels['detailsItemsTable'];
+  detailsItemsLoading: string;
+  detailsItemsError: string;
+  detailsItemsEmpty: string;
   empty: string;
   loading: string;
   error: string;
@@ -116,6 +171,16 @@ export type ShipmentItemsTableLabels = {
   colStockSource: string;
   stockSourceLabels: { GENERAL: string; PRIVATE_SELECTION: string };
   detailsButtonAriaLabel: string;
+  detailsPanelTitle: (itemId?: number) => string;
+  detailsPanelCloseLabel: string;
+  detailsPrintLabel: string;
+  detailsUpdatedByLabel: string;
+  detailsNotesLabel: string;
+  colGrade: string;
+  colPitamStatus: string;
+  pitamStatusLabels: Record<string, string>;
+  noGrade: string;
+  noPitamStatus: string;
   uncategorized: string;
   empty: string;
   loading: string;

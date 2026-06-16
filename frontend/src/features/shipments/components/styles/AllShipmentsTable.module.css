@@ -16,6 +16,210 @@
   text-align: center;
 }
 
+.detailsBody {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.detailsCard {
+  border: 1px solid rgba(214, 224, 216, 0.95);
+  border-radius: 14px;
+  background: linear-gradient(0deg, rgba(255, 202, 43, 0.02), rgba(255, 202, 43, 0.02)), #fff;
+  padding: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.detailsCardHead {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
+  direction: ltr;
+  text-align: left;
+  color: #243f2b;
+  font-weight: 600;
+}
+
+.detailsCardHead p {
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  direction: inherit;
+  unicode-bidi: plaintext;
+}
+
+:global(.app-shell[data-direction='rtl']) .detailsCardHead {
+  direction: rtl;
+  text-align: right;
+}
+
+.detailsCardNote {
+  margin: 0;
+  color: #2f4536;
+  line-height: 1.45;
+  border-top: 1px dashed rgba(208, 220, 211, 0.95);
+  padding-top: 8px;
+}
+
+.detailsSummaryState {
+  margin: 0;
+  color: #426049;
+}
+
+.detailsSummaryStateError {
+  color: #8f2f3a;
+}
+
+.detailsSummaryCard {
+  border-radius: 14px;
+  background: #fff;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.detailsSummaryTitle {
+  margin: 0;
+  color: #214f2a;
+  font-size: 0.96rem;
+}
+
+.detailsSummaryTableWrap {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.detailsSummaryTable {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.84rem;
+}
+
+.detailsSummaryTable th,
+.detailsSummaryTable td {
+  border: 1px solid rgba(204, 217, 207, 0.95);
+  padding: 6px 7px;
+  text-align: center;
+  line-height: 1.15;
+  vertical-align: middle;
+}
+
+.detailsSummaryTable th {
+  background: rgba(241, 247, 243, 0.95);
+  color: #284f31;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.detailsSummaryRowLabel {
+  font-weight: 700;
+  background: rgba(246, 251, 248, 0.96);
+  min-width: 96px;
+}
+
+.detailsSummaryTable tbody tr:nth-child(even) {
+  background: rgba(248, 252, 249, 0.92);
+}
+
+.detailsSummaryRowTotal {
+  background: rgba(231, 242, 235, 0.94) !important;
+}
+
+.detailsSummaryRowTotal td {
+  font-weight: 800;
+  color: #1f4f29;
+  border-top: 2px solid rgba(150, 184, 158, 0.95);
+}
+
+.detailsItemsNotePrintText {
+  display: none;
+}
+
+.detailsItemsNote {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 22px;
+  outline: none;
+}
+
+.detailsItemsNoteBubble {
+  width: 22px;
+  height: 17px;
+  border: 1px solid rgba(58, 102, 66, 0.92);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(223, 240, 226, 0.98), rgba(195, 227, 201, 0.98));
+  box-shadow: 0 2px 6px rgba(40, 76, 47, 0.26);
+  position: relative;
+}
+
+.detailsItemsNoteBubble::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  inset-inline-end: 5px;
+  width: 7px;
+  height: 7px;
+  border-inline-end: 1px solid rgba(58, 102, 66, 0.92);
+  border-bottom: 1px solid rgba(58, 102, 66, 0.92);
+  background: rgba(204, 231, 209, 0.98);
+  transform: rotate(42deg);
+}
+
+.detailsItemsNoteBubble::before {
+  content: '...';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #1f4a2a;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.detailsItemsNoteTooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  inset-inline-end: 0;
+  transform: translateY(6px);
+  min-width: 170px;
+  max-width: 260px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  border: 1px solid rgba(157, 181, 161, 0.9);
+  background: rgba(252, 255, 252, 0.98);
+  box-shadow: 0 8px 20px rgba(28, 50, 33, 0.18);
+  color: #24492c;
+  font-size: 0.76rem;
+  line-height: 1.35;
+  text-align: start;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--easing-standard), transform var(--easing-standard), visibility var(--easing-standard);
+  z-index: 6;
+}
+
+.detailsItemsNoteFirstRow .detailsItemsNoteTooltip {
+  bottom: auto;
+  top: calc(100% + 8px);
+  transform: translateY(-6px);
+}
+
+.detailsItemsNote:hover .detailsItemsNoteTooltip,
+.detailsItemsNote:focus-within .detailsItemsNoteTooltip,
+.detailsItemsNote:focus .detailsItemsNoteTooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
 .detailsTrigger {
   border: 1px solid rgba(194, 211, 198, 0.9);
   background: rgba(247, 251, 248, 0.92);

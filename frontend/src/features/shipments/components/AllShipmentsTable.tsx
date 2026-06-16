@@ -1,12 +1,25 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { FaPrint } from 'react-icons/fa6';
 import { GlobalScopedFilters } from '../../../components/ui/GlobalScopedFilters';
 import { GlobalDataTable } from '../../../components/ui/GlobalDataTable';
+import { GlobalLeftDetailsPanel } from '../../../components/ui/GlobalLeftDetailsPanel';
 import workspaceStyles from '../../../components/ui/styles/WorkspaceSection.module.css';
 import type { ShipmentRecord, ShipmentsTableLabels } from '../shipments.types';
 import { useAllShipmentsFilters } from '../hooks/useAllShipmentsFilters';
 import { useAllShipmentsTable } from '../hooks/useAllShipmentsTable';
+import { useShipmentDetailsBoxes } from '../hooks/useShipmentDetailsBoxes';
+import { useShipmentDetailsItems } from '../hooks/useShipmentDetailsItems';
 import { ShipmentsSummaryCards } from './shared/ShipmentsSummaryCards';
+import { ShipmentBoxesSummaryTable } from './ShipmentBoxesSummaryTable';
+import { ShipmentEtrogSummaryTable } from './ShipmentEtrogSummaryTable';
+import { ShipmentItemsDetailTable } from './ShipmentItemsDetailTable';
 import { buildAllShipmentsSummaryTotals } from '../services/shipmentsSummary.service';
+import { buildShipmentBoxesSummary } from '../services/shipmentBoxesSummary.service';
+import { buildShipmentEtrogSummary } from '../services/shipmentEtrogSummary.service';
+import { buildShipmentItemsDetailRows } from '../services/shipmentItemsDetailRows.service';
+import { SHIPMENT_DETAILS_PRINT_EXTRA_STYLES } from '../services/shipmentDetailsPrintStyles';
+import { openPrintableWindow } from '../../../services/printWindow';
+import { formatShipmentDate } from '../utils/shipments.util';
 import styles from './styles/AllShipmentsTable.module.css';
 
 type AllShipmentsTableProps = {
@@ -21,15 +34,64 @@ type AllShipmentsTableProps = {
 export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectShipment, refreshKey, onRowCountChange }: AllShipmentsTableProps): JSX.Element {
   const {
     filters,
+    seasons,
     selectedSeasonId,
     selectedStatus,
     handleFilterValuesChange,
     handleFiltersApiReady,
   } = useAllShipmentsFilters(labels);
-  const { rows, columns, isLoading, error } = useAllShipmentsTable(labels, selectedSeasonId, selectedStatus, refreshKey);
+  const [detailsRow, setDetailsRow] = useState<ShipmentRecord | null>(null);
+  const detailsSeasonName = useMemo(
+    () => (detailsRow ? seasons.find((season) => season.id === detailsRow.seasonId)?.yearName ?? null : null),
+    [detailsRow, seasons],
+  );
+  const { rows, columns, isLoading, error } = useAllShipmentsTable(labels, selectedSeasonId, selectedStatus, refreshKey, setDetailsRow);
   const summaryTotals = useMemo(() => buildAllShipmentsSummaryTotals(rows), [rows]);
+  const {
+    boxes: detailsBoxes,
+    isLoading: isDetailsBoxesLoading,
+    error: detailsBoxesError,
+  } = useShipmentDetailsBoxes(detailsRow?.id ?? null, labels.detailsBoxesSummary.error);
+  const detailsBoxesSummary = useMemo(
+    () => buildShipmentBoxesSummary(
+      detailsBoxes,
+      labels.detailsBoxesSummary.generalRowLabel,
+      labels.detailsBoxesSummary.customRowLabel,
+    ),
+    [detailsBoxes, labels.detailsBoxesSummary.customRowLabel, labels.detailsBoxesSummary.generalRowLabel],
+  );
+  const {
+    items: detailsItems,
+    isLoading: isDetailsItemsLoading,
+    error: detailsItemsError,
+  } = useShipmentDetailsItems(detailsBoxes, !isDetailsBoxesLoading, labels.detailsEtrogSummary.error);
+  const detailsEtrogSummary = useMemo(
+    () => buildShipmentEtrogSummary(detailsItems, labels.detailsEtrogSummary.customRowLabel),
+    [detailsItems, labels.detailsEtrogSummary.customRowLabel],
+  );
+  const detailsItemsRows = useMemo(
+    () => buildShipmentItemsDetailRows(detailsItems, detailsBoxes, labels.detailsItemsTable),
+    [detailsItems, detailsBoxes, labels.detailsItemsTable],
+  );
+  const detailsPrintRef = useRef<HTMLDivElement>(null);
   const onRowCountChangeRef = useRef(onRowCountChange);
   onRowCountChangeRef.current = onRowCountChange;
+
+  const handlePrintDetails = () => {
+    const printableNode = detailsPrintRef.current;
+    if (!printableNode) {
+      return;
+    }
+
+    const heading = labels.detailsPanelTitle(detailsRow?.shipmentNumber);
+    openPrintableWindow({
+      title: heading,
+      heading,
+      direction: lang === 'he' ? 'rtl' : 'ltr',
+      html: printableNode.outerHTML,
+      extraStyles: SHIPMENT_DETAILS_PRINT_EXTRA_STYLES,
+    });
+  };
 
   useEffect(() => {
     if (!isLoading) {
@@ -47,6 +109,17 @@ export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectSh
       onSelectShipment(null);
     }
   }, [onSelectShipment, rows, selectedShipmentId]);
+
+  useEffect(() => {
+    if (detailsRow === null) {
+      return;
+    }
+
+    const detailsRowExists = rows.some((row) => row.id === detailsRow.id);
+    if (!detailsRowExists) {
+      setDetailsRow(null);
+    }
+  }, [detailsRow, rows]);
 
   return (
     <section className={workspaceStyles.workspace}>
@@ -90,6 +163,83 @@ export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectSh
             onRowClick={onSelectShipment}
             defaultSortState={{ key: 'shipmentNumber', direction: 'desc' }}
           />
+
+          <GlobalLeftDetailsPanel
+            isOpen={detailsRow !== null}
+            title={labels.detailsPanelTitle(detailsRow?.shipmentNumber)}
+            closeLabel={labels.detailsPanelCloseLabel}
+            onClose={() => setDetailsRow(null)}
+            headerActions={
+              <button
+                type="button"
+                className="global-left-details-panel__print"
+                onClick={handlePrintDetails}
+              >
+                <FaPrint aria-hidden="true" />
+                <span>{labels.detailsPrintLabel}</span>
+              </button>
+            }
+          >
+            {detailsRow ? (
+              <div ref={detailsPrintRef} className={`shipment-details-print__content ${styles.detailsBody}`}>
+                <div className={`shipment-details-print__card ${styles.detailsCard}`}>
+                  <div className={`shipment-details-print__card-head ${styles.detailsCardHead}`}>
+                    <p>
+                      <strong>{labels.seasonFilterLabel}:</strong> {detailsSeasonName ?? '—'}
+                    </p>
+                    <p>
+                      <strong>{labels.colShipmentNumber}:</strong> {detailsRow.shipmentNumber}
+                    </p>
+                    <p>
+                      <strong>{labels.statusFilterLabel}:</strong> {labels.statusLabels[detailsRow.status]}
+                    </p>
+                    <p>
+                      <strong>{labels.colShippedAt}:</strong>{' '}
+                      {detailsRow.shippedAt ? formatShipmentDate(new Date(detailsRow.shippedAt)) : '—'}
+                    </p>
+                    <p>
+                      <strong>{labels.colBoxCount}:</strong> {detailsRow.totalBoxes}
+                    </p>
+                    <p>
+                      <strong>{labels.colQuantity}:</strong> {detailsRow.totalQuantity.toLocaleString()}
+                    </p>
+                    <p>
+                      <strong>{labels.detailsUpdatedByLabel}:</strong> {detailsRow.updatedBy?.name ?? '—'}
+                    </p>
+                  </div>
+
+                  {detailsRow.notes ? (
+                    <p className={`shipment-details-print__card-note ${styles.detailsCardNote}`}>
+                      <strong>{labels.detailsNotesLabel}:</strong> {detailsRow.notes}
+                    </p>
+                  ) : null}
+                </div>
+
+                {isDetailsBoxesLoading ? (
+                  <p className={styles.detailsSummaryState}>{labels.detailsBoxesSummary.loading}</p>
+                ) : detailsBoxesError ? (
+                  <p className={`${styles.detailsSummaryState} ${styles.detailsSummaryStateError}`}>{detailsBoxesError}</p>
+                ) : detailsBoxes.length === 0 ? (
+                  <p className={styles.detailsSummaryState}>{labels.detailsBoxesSummary.empty}</p>
+                ) : (
+                  <ShipmentBoxesSummaryTable summary={detailsBoxesSummary} labels={labels.detailsBoxesSummary} />
+                )}
+
+                {isDetailsItemsLoading ? (
+                  <p className={styles.detailsSummaryState}>{labels.detailsEtrogSummary.loading}</p>
+                ) : detailsItemsError ? (
+                  <p className={`${styles.detailsSummaryState} ${styles.detailsSummaryStateError}`}>{detailsItemsError}</p>
+                ) : detailsItems.length === 0 ? (
+                  <p className={styles.detailsSummaryState}>{labels.detailsEtrogSummary.empty}</p>
+                ) : (
+                  <>
+                    <ShipmentEtrogSummaryTable summary={detailsEtrogSummary} labels={labels.detailsEtrogSummary} />
+                    <ShipmentItemsDetailTable rows={detailsItemsRows} labels={labels.detailsItemsTable} />
+                  </>
+                )}
+              </div>
+            ) : null}
+          </GlobalLeftDetailsPanel>
         </div>
       )}
     </section>

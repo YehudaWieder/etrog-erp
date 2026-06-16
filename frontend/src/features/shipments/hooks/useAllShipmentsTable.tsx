@@ -3,7 +3,7 @@ import { FaFileInvoice } from 'react-icons/fa6';
 import { type GlobalDataTableColumn } from '../../../components/ui/GlobalDataTable';
 import { getShipmentsBySeason } from '../../../services/shipmentsApi';
 import type { ShipmentRecord, ShipmentsTableLabels } from '../shipments.types';
-import { resolveShipmentStatusClass } from '../utils/shipments.util';
+import { formatShipmentDate, resolveShipmentStatusClass } from '../utils/shipments.util';
 import styles from '../components/styles/AllShipmentsTable.module.css';
 
 type UseAllShipmentsTableResult = {
@@ -18,17 +18,11 @@ export function useAllShipmentsTable(
   seasonId: number | null,
   statusFilter: 'all' | import('../shipments.types').ShipmentStatus,
   refreshKey?: number,
+  onOpenDetails?: (row: ShipmentRecord) => void,
 ): UseAllShipmentsTableResult {
   const [rows, setRows] = useState<ShipmentRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-
-  const formatDate = (date: Date) => {
-    const d = String(date.getDate()).padStart(2, '0');
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const y = date.getFullYear();
-    return `${d}.${m}.${y}`;
-  };
 
   useEffect(() => {
     if (!seasonId) {
@@ -80,8 +74,13 @@ export function useAllShipmentsTable(
       header: labels.colDetails,
       headerLabel: labels.colDetails,
       align: 'center',
-      render: () => (
-        <button type="button" className={styles.detailsTrigger} aria-label={labels.detailsButtonAriaLabel}>
+      render: (row) => (
+        <button
+          type="button"
+          className={styles.detailsTrigger}
+          aria-label={labels.detailsButtonAriaLabel}
+          onClick={() => onOpenDetails?.(row)}
+        >
           <FaFileInvoice />
         </button>
       ),
@@ -134,9 +133,9 @@ export function useAllShipmentsTable(
       sortKey: 'shippedAt',
       sortAccessor: (row) => (row.shippedAt ? new Date(row.shippedAt).getTime() : 0),
       align: 'center',
-      render: (row) => (row.shippedAt ? formatDate(new Date(row.shippedAt)) : '—'),
+      render: (row) => (row.shippedAt ? formatShipmentDate(new Date(row.shippedAt)) : '—'),
     },
-  ], [labels]);
+  ], [labels, onOpenDetails]);
 
   return { rows: filteredRows, columns, isLoading, error };
 }

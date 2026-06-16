@@ -33,6 +33,7 @@ export function useAllBoxesTable(
   status: 'all' | BoxStatus,
   ownership: 'all' | string,
   refreshKey?: number,
+  onOpenDetails?: (row: BoxesTableRow) => void,
 ): UseAllBoxesTableResult {
   const [rawRows, setRawRows] = useState<(BoxesTableRow & { ownershipType: BoxOwnership })[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,6 +67,8 @@ export function useAllBoxesTable(
               status: box.status,
               ownership: resolveOwnershipLabel(box, labels),
               ownershipType: box.ownershipType,
+              updatedByName: box.updatedBy?.name ?? '—',
+              notes: box.notes,
             }));
           }),
         );
@@ -124,8 +127,13 @@ export function useAllBoxesTable(
       header: labels.colDetails,
       headerLabel: labels.colDetails,
       align: 'center',
-      render: () => (
-        <button type="button" className={styles.detailsTrigger} aria-label={labels.detailsButtonAriaLabel}>
+      render: (row) => (
+        <button
+          type="button"
+          className={styles.detailsTrigger}
+          aria-label={labels.detailsButtonAriaLabel}
+          onClick={() => onOpenDetails?.(row)}
+        >
           <FaFileInvoice />
         </button>
       ),
@@ -189,7 +197,7 @@ export function useAllBoxesTable(
       align: 'center',
       render: (row) => row.ownership,
     },
-  ], [labels]);
+  ], [labels, onOpenDetails]);
 
   return { rows, columns, isLoading, error };
 }
