@@ -150,7 +150,7 @@ export function HarvestPage() {
 
   const handleTopNavClick = (item: NavItem) => {
     setActiveTopId(item.id);
-    navigate(`/${item.id}`);
+    navigate(item.href || `/${item.id}`);
   };
 
   const handleSidebarClick = (item: NavItem) => {

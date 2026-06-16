@@ -4,7 +4,7 @@ export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
 	userNameFallback: 'My Profile',
 	topNav: [
 		{ id: 'harvest', label: 'Harvest & Sorting', icon: 'fa-leaf' },
-		{ id: 'shipments', label: 'Shipments', icon: 'fa-truck' },
+		{ id: 'shipments', label: 'Shipments', icon: 'fa-truck', href: '/shipments/shipment-items-summary' },
 		{ id: 'traders', label: 'Partners Inventory', icon: 'fa-handshake' },
 		{ id: 'customers', label: 'Customers Inventory', icon: 'fa-users' },
 		{ id: 'workers', label: 'Workers', icon: 'fa-person' },

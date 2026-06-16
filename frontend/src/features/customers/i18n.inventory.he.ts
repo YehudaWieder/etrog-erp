@@ -5,7 +5,7 @@ export const CUSTOMER_INVENTORY_I18N_HE: CustomerInventoryI18n = {
   pageTitle: 'מלאי לקוחות',
   topNav: [
     { id: 'harvest', label: 'קטיף ומיון', icon: 'fa-leaf' },
-    { id: 'shipments', label: 'משלוחים', icon: 'fa-truck' },
+    { id: 'shipments', label: 'משלוחים', icon: 'fa-truck', href: '/shipments/shipment-items-summary' },
     { id: 'traders', label: 'מלאי סוחרים', icon: 'fa-handshake' },
     { id: 'customers', label: 'מלאי לקוחות', icon: 'fa-users' },
     { id: 'workers', label: 'עובדים', icon: 'fa-person' },

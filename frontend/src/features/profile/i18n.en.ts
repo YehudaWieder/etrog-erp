@@ -7,7 +7,7 @@ export const PROFILE_I18N_EN: ProfileI18n = {
   },
   topNav: [
     { id: 'harvest', label: 'Harvest & Sorting' },
-    { id: 'shipments', label: 'Shipments' },
+    { id: 'shipments', label: 'Shipments', href: '/shipments/shipment-items-summary' },
     { id: 'partners', label: 'Partners Inventory' },
     { id: 'customers', label: 'Customers Inventory' },
     { id: 'workers', label: 'Workers' },

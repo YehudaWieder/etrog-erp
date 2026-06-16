@@ -58,7 +58,7 @@ export const HARVEST_I18N_EN: HarvestI18n = {
   },
   topNav: [
     { id: 'harvest', label: 'Harvest & Sorting' },
-    { id: 'shipments', label: 'Shipments' },
+    { id: 'shipments', label: 'Shipments', href: '/shipments/shipment-items-summary' },
     { id: 'partners', label: 'Trader Inventory' },
     { id: 'customers', label: 'Customer Inventory' },
     { id: 'workers', label: 'Workers' },

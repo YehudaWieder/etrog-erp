@@ -80,7 +80,7 @@ export default function SettingsPage(): JSX.Element {
   });
 
   const handleTopNavClick = (item: NavItem) => {
-    navigate(`/${item.id}`);
+    navigate(item.href || `/${item.id}`);
   };
 
   const handleSidebarClick = (item: NavItem) => {

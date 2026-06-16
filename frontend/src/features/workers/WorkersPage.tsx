@@ -34,7 +34,7 @@ export function WorkersPage() {
 
   const handleTopNavClick = (item: NavItem) => {
     setActiveTopId(item.id);
-    navigate(`/${item.id}`);
+    navigate(item.href || `/${item.id}`);
   };
 
   return (
