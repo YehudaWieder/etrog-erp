@@ -15,6 +15,7 @@ export type CreateTraderAdjustmentPayload = {
   quantity: number;
   isModulo?: boolean;
   type: TraderAdjustmentMovementType;
+  stockSource?: 'GENERAL' | 'PRIVATE_SELECTION';
   notes?: string | null;
 };
 
@@ -31,7 +32,7 @@ export enum InventoryOwnerType {
   MODULO = 'MODULO',
 }
 
-export type InternalTransferMovementType = 'OWNERSHIP_TRANSFER' | 'INTERNAL_TRANSFER' | 'ASSIGNED';
+export type InternalTransferMovementType = 'OWNERSHIP_TRANSFER' | 'INTERNAL_TRANSFER' | 'ASSIGNED' | 'PRIVATE_SELECTION';
 
 export type CreateInternalTransferPayload = {
   type: InternalTransferMovementType;
@@ -55,11 +56,33 @@ export type CreateInternalTransferPayload = {
   toOwnerType: InventoryOwnerType;
   toTraderId?: number;
   toCustomerId?: number;
+  stockSource?: 'GENERAL' | 'PRIVATE_SELECTION';
   notes?: string | null;
 };
 
 export async function createInternalTransfer(payload: CreateInternalTransferPayload) {
   return apiClient('/inventory/internal-transfer', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export type CustomerAdjustmentMovementType = 'WASTE' | 'SELF_PICKUP' | 'ADJUSTMENT';
+
+export type CreateCustomerAdjustmentPayload = {
+  date: string;
+  dateHebrew?: string;
+  customerId: number;
+  customerCategoryId: number;
+  pitamStatus: PitamStatus;
+  quantity: number;
+  type: CustomerAdjustmentMovementType;
+  takenFrom?: 'GENERAL' | 'TRADER';
+  notes?: string | null;
+};
+
+export async function createCustomerAdjustmentMovement(payload: CreateCustomerAdjustmentPayload) {
+  return apiClient('/customer-allocations/adjustments', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

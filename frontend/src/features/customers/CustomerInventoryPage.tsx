@@ -21,6 +21,10 @@ import type { NavItem } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
 import { getActiveSeason, getSeasons, type Season } from '../../services/seasonsApi';
 import { getCustomers, type Customer } from '../../services/customersApi';
+import { getTraders, type Trader } from '../../services/tradersApi';
+import { getTraderCategoriesWithShares, type TraderCategoryWithShares } from '../../services/traderCategoriesApi';
+import { getCustomerCategoriesBySeason, type CustomerCategory } from '../../services/customerCategoriesApi';
+import { AddCustomerMovementModal } from './components/AddCustomerMovementModal';
 
 const DEFAULT_SIDEBAR_ITEM_ID = 'all';
 
@@ -31,7 +35,11 @@ export function CustomerInventoryPage() {
   const [alertsCount, setAlertsCount] = useState<number>(0);
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [traders, setTraders] = useState<Trader[]>([]);
+  const [traderCategories, setTraderCategories] = useState<TraderCategoryWithShares[]>([]);
+  const [customerCategories, setCustomerCategories] = useState<CustomerCategory[]>([]);
   const [activeSeasonId, setActiveSeasonId] = useState<number | null>(null);
+  const [isAddMovementModalOpen, setIsAddMovementModalOpen] = useState(false);
   const [filtersLoading, setFiltersLoading] = useState(false);
   const [filterValues, setFilterValues] = useState<Record<string, string>>({
     seasonId: '',
@@ -177,8 +185,8 @@ export function CustomerInventoryPage() {
     let isActive = true;
     setFiltersLoading(true);
 
-    Promise.all([getSeasons(), getActiveSeason(), getCustomers()])
-      .then(([nextSeasons, nextActiveSeason, nextCustomers]) => {
+    Promise.all([getSeasons(), getActiveSeason(), getCustomers(), getTraders()])
+      .then(([nextSeasons, nextActiveSeason, nextCustomers, nextTraders]) => {
         if (!isActive) {
           return;
         }
@@ -186,6 +194,20 @@ export function CustomerInventoryPage() {
         setSeasons(nextSeasons);
         setActiveSeasonId(nextActiveSeason.id);
         setCustomers(nextCustomers);
+        setTraders(nextTraders);
+
+        Promise.all([
+          getTraderCategoriesWithShares(nextActiveSeason.id),
+          getCustomerCategoriesBySeason(nextActiveSeason.id),
+        ]).then(([nextTraderCategories, nextCustomerCategories]) => {
+          if (!isActive) return;
+          setTraderCategories(nextTraderCategories);
+          setCustomerCategories(nextCustomerCategories);
+        }).catch(() => {
+          if (!isActive) return;
+          setTraderCategories([]);
+          setCustomerCategories([]);
+        });
       })
       .catch(() => {
         if (!isActive) {
@@ -195,6 +217,7 @@ export function CustomerInventoryPage() {
         setSeasons([]);
         setActiveSeasonId(null);
         setCustomers([]);
+        setTraders([]);
       })
       .finally(() => {
         if (!isActive) {
@@ -525,6 +548,7 @@ export function CustomerInventoryPage() {
   };
 
   return (
+    <>
     <AppShell
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
@@ -532,9 +556,9 @@ export function CustomerInventoryPage() {
       topNav={t.topNav}
       activeTopNavId={activeTopId}
       pageHeaderActions={
-        isMovementsTab ? (
+        isInventoryTab || isMovementsTab ? (
           <div className="action-buttons">
-            <button className="btn btn-primary" type="button">
+            <button className="btn btn-primary" type="button" onClick={() => setIsAddMovementModalOpen(true)}>
               <FaCirclePlus />
               <span>{t.movements.addMovementButton}</span>
             </button>
@@ -623,5 +647,20 @@ export function CustomerInventoryPage() {
         </section>
       )}
     </AppShell>
+    <AddCustomerMovementModal
+      lang={lang}
+      isOpen={isAddMovementModalOpen}
+      seasonId={selectedSeasonId ?? activeSeasonId}
+      customers={customers}
+      customerCategories={customerCategories}
+      traders={traders}
+      traderCategories={traderCategories}
+      onClose={() => setIsAddMovementModalOpen(false)}
+      onSaved={() => {
+        setIsAddMovementModalOpen(false);
+        customerMovements.reload();
+      }}
+    />
+    </>
   );
 }
