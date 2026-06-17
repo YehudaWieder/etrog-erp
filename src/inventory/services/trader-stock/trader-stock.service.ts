@@ -115,10 +115,14 @@ export class TraderStockService {
         return this.traderStockSummaryService.getSummary(query);
     }
 
-    async createAdjustment(data: Prisma.TraderStockUncheckedCreateInput, actorId: number) {
+    async createAdjustment(data: Prisma.TraderStockUncheckedCreateInput & { stockSource?: 'GENERAL' | 'PRIVATE_SELECTION' }, actorId: number) {
+        const { stockSource, ...rest } = data as typeof data & { stockSource?: 'GENERAL' | 'PRIVATE_SELECTION' };
+        const isFromPrivateSelection = stockSource === 'PRIVATE_SELECTION';
+
         const createPayload: Prisma.TraderStockUncheckedCreateInput = {
-            ...data,
+            ...rest,
             updatedById: actorId,
+            isFromPrivateSelection,
         };
 
         validateAdjustmentType(createPayload.type);
@@ -132,7 +136,7 @@ export class TraderStockService {
                 ...createPayload,
                 seasonId,
                 quantity: normalizedQuantity,
-            });
+            }, 0, stockSource);
 
             return tx.traderStock.create({
                 data: {
@@ -245,6 +249,7 @@ export class TraderStockService {
             quantity?: number;
         },
         creditQuantity: number = 0,
+        stockSource?: 'GENERAL' | 'PRIVATE_SELECTION',
     ) {
         const quantity = Number(data.quantity ?? 0);
         if (!Number.isFinite(quantity) || quantity >= 0) {
@@ -274,6 +279,8 @@ export class TraderStockService {
             requiredQuantity: Math.abs(quantity),
             creditQuantity,
             contextLabel: 'Trader movement validation',
+            onlyPrivateSelection: stockSource === 'PRIVATE_SELECTION',
+            excludePrivateSelection: !isModulo && stockSource === 'GENERAL',
         });
     }
 

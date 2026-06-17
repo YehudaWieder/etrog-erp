@@ -516,6 +516,7 @@ export class ItemService {
       grade: Grade | null;
       itemOwnership: ItemOwnership;
       updatedById: number;
+      isPrivateSelection?: boolean;
     },
   ): Promise<Array<{ traderId: number | null; traderName: string | null; quantity: number }> | null> {
     if (params.boxOwnership === BoxOwnership.CUSTOM || params.itemOwnership === ItemOwnership.CUSTOM) {
@@ -537,6 +538,7 @@ export class ItemService {
           pitamStatus: params.pitamStatus,
           quantity: -Math.abs(params.quantity),
           isModulo: false,
+          isFromPrivateSelection: params.isPrivateSelection === true,
           type: MovementType.PACKED_SHIPPED,
           MovementReferenceId: params.itemId,
           shipmentId: params.shipmentId,
@@ -778,6 +780,7 @@ export class ItemService {
         grade: newItem.grade,
         itemOwnership: newItem.ownershipType,
         updatedById: newItem.updatedById,
+        isPrivateSelection: Boolean(createPayload.isPrivateSelection),
       });
 
       if (generalSourceBreakdown !== null) {
@@ -951,6 +954,7 @@ export class ItemService {
         grade: updatedItem.grade,
         itemOwnership: updatedItem.ownershipType,
         updatedById: nextUpdatedById,
+        isPrivateSelection: nextIsPrivateSelection,
       });
 
       if (generalSourceBreakdown !== null) {

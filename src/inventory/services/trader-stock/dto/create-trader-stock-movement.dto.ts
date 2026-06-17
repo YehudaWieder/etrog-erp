@@ -35,4 +35,7 @@ export class CreateTraderStockMovementDto {
 
   @ApiPropertyOptional({ description: 'Optional movement notes.', example: 'Inbound from sorting line' })
   notes?: string | null;
+
+  @ApiPropertyOptional({ description: 'Stock pool the movement draws from. Required for WASTE/SELF_PICKUP against a trader when stockSource enforcement is needed.', enum: ['GENERAL', 'PRIVATE_SELECTION'] })
+  stockSource?: 'GENERAL' | 'PRIVATE_SELECTION';
 }

@@ -30,4 +30,5 @@ export class InternalTransferRequestDto {
   toTraderId?: number;
   toCustomerId?: number;
   notes?: string;
+  stockSource?: 'GENERAL' | 'PRIVATE_SELECTION';
 }

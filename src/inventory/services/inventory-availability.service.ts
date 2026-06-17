@@ -19,10 +19,13 @@ export class InventoryAvailabilityService {
       onlyPrivateSelection?: boolean;
     },
   ) {
+    // A "private selection pool" record is either:
+    //   (a) a positive entry from harvest allocation (type = PRIVATE_SELECTION), or
+    //   (b) a negative deduction explicitly tagged as taken from that pool.
     const typeFilter = query.onlyPrivateSelection
-      ? { type: MovementType.PRIVATE_SELECTION }
+      ? { OR: [{ type: MovementType.PRIVATE_SELECTION }, { isFromPrivateSelection: true }] }
       : query.excludePrivateSelection
-        ? { type: { not: MovementType.PRIVATE_SELECTION } }
+        ? { type: { not: MovementType.PRIVATE_SELECTION }, isFromPrivateSelection: false }
         : {};
 
     const aggregation = await client.traderStock.aggregate({

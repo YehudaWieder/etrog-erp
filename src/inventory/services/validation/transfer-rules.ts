@@ -19,10 +19,6 @@ export function validateInternalTransferRequest(data: InternalTransferRequestDto
     throw new BadRequestException('fromTraderId must be empty when fromOwnerType is MODULO');
   }
 
-  if (data.toOwnerType === InventoryOwnerType.MODULO) {
-    throw new BadRequestException('toOwnerType MODULO is not supported for transfer target');
-  }
-
   if (data.fromOwnerType === InventoryOwnerType.TRADER && !data.fromTraderId) {
     throw new BadRequestException('fromTraderId is required when fromOwnerType=TRADER');
   }
@@ -79,6 +75,7 @@ function assertSupportedTransferType(type: MovementType) {
     case MovementType.INTERNAL_TRANSFER:
     case MovementType.OWNERSHIP_TRANSFER:
     case MovementType.ASSIGNED:
+    case MovementType.PRIVATE_SELECTION:
       return;
     default:
       throw new BadRequestException(`Unsupported transfer type: ${type}`);
@@ -89,10 +86,18 @@ function assertOwnerFlow(data: InternalTransferRequestDto) {
   if (data.type === MovementType.INTERNAL_TRANSFER) {
     const valid =
       (data.fromOwnerType === InventoryOwnerType.TRADER && data.toOwnerType === InventoryOwnerType.CUSTOMER) ||
-      (data.fromOwnerType === InventoryOwnerType.CUSTOMER && data.toOwnerType === InventoryOwnerType.TRADER);
+      (data.fromOwnerType === InventoryOwnerType.CUSTOMER && data.toOwnerType === InventoryOwnerType.TRADER) ||
+      (data.fromOwnerType === InventoryOwnerType.CUSTOMER && data.toOwnerType === InventoryOwnerType.MODULO);
 
     if (!valid) {
-      throw new BadRequestException('INTERNAL_TRANSFER must be between TRADER and CUSTOMER');
+      throw new BadRequestException('INTERNAL_TRANSFER must be TRADER↔CUSTOMER or CUSTOMER→MODULO');
+    }
+    return;
+  }
+
+  if (data.type === MovementType.PRIVATE_SELECTION) {
+    if (data.fromOwnerType !== InventoryOwnerType.CUSTOMER || data.toOwnerType !== InventoryOwnerType.TRADER) {
+      throw new BadRequestException('PRIVATE_SELECTION transfer must be CUSTOMER -> TRADER');
     }
     return;
   }

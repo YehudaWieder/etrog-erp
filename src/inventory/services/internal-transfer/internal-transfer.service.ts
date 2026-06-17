@@ -164,6 +164,9 @@ export class InternalTransferService {
           quantity: signedQuantity,
           isModulo: ownerType === InventoryOwnerType.MODULO,
           type: data.type,
+          isFromPrivateSelection:
+            (side === 'from' && data.stockSource === 'PRIVATE_SELECTION') ||
+            (side === 'to' && data.type === 'PRIVATE_SELECTION'),
           shipmentId: null,
           boxId: null,
           notes: data.notes,
@@ -177,7 +180,7 @@ export class InternalTransferService {
       payload: {
         seasonId,
         date: new Date(data.date),
-        dateHebrew: data.dateHebrew!,
+        dateHebrew: data.dateHebrew ?? new Date(data.date).toLocaleDateString('he-IL'),
         customerId:
           side === 'from' ? data.fromCustomerId! : data.toCustomerId!,
         customerCategoryId: sideSpec.customerCategoryId!,
@@ -497,6 +500,8 @@ export class InternalTransferService {
         requiredQuantity,
         creditQuantity,
         contextLabel: 'Inventory transfer source check',
+        onlyPrivateSelection: payload.isFromPrivateSelection === true,
+        excludePrivateSelection: payload.isFromPrivateSelection === false && !Boolean(payload.isModulo),
       });
       return;
     }
