@@ -285,6 +285,7 @@ exports.Prisma.TraderStockScalarFieldEnum = {
   quantity: 'quantity',
   isModulo: 'isModulo',
   type: 'type',
+  isFromPrivateSelection: 'isFromPrivateSelection',
   MovementReferenceId: 'MovementReferenceId',
   shipmentId: 'shipmentId',
   boxId: 'boxId',

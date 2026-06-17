@@ -377,6 +377,8 @@ model TraderStock {
 
   type MovementType @default(HARVEST_IN)
 
+  isFromPrivateSelection Boolean @default(false)
+
   MovementReferenceId Int? // classificationId, shipmentItemId or customerAllocationsId
 
   shipmentId Int?

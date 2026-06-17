@@ -19710,6 +19710,7 @@ export namespace Prisma {
     quantity: number | null
     isModulo: boolean | null
     type: $Enums.MovementType | null
+    isFromPrivateSelection: boolean | null
     MovementReferenceId: number | null
     shipmentId: number | null
     boxId: number | null
@@ -19731,6 +19732,7 @@ export namespace Prisma {
     quantity: number | null
     isModulo: boolean | null
     type: $Enums.MovementType | null
+    isFromPrivateSelection: boolean | null
     MovementReferenceId: number | null
     shipmentId: number | null
     boxId: number | null
@@ -19752,6 +19754,7 @@ export namespace Prisma {
     quantity: number
     isModulo: number
     type: number
+    isFromPrivateSelection: number
     MovementReferenceId: number
     shipmentId: number
     boxId: number
@@ -19799,6 +19802,7 @@ export namespace Prisma {
     quantity?: true
     isModulo?: true
     type?: true
+    isFromPrivateSelection?: true
     MovementReferenceId?: true
     shipmentId?: true
     boxId?: true
@@ -19820,6 +19824,7 @@ export namespace Prisma {
     quantity?: true
     isModulo?: true
     type?: true
+    isFromPrivateSelection?: true
     MovementReferenceId?: true
     shipmentId?: true
     boxId?: true
@@ -19841,6 +19846,7 @@ export namespace Prisma {
     quantity?: true
     isModulo?: true
     type?: true
+    isFromPrivateSelection?: true
     MovementReferenceId?: true
     shipmentId?: true
     boxId?: true
@@ -19949,6 +19955,7 @@ export namespace Prisma {
     quantity: number
     isModulo: boolean
     type: $Enums.MovementType
+    isFromPrivateSelection: boolean
     MovementReferenceId: number | null
     shipmentId: number | null
     boxId: number | null
@@ -19989,6 +19996,7 @@ export namespace Prisma {
     quantity?: boolean
     isModulo?: boolean
     type?: boolean
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: boolean
     shipmentId?: boolean
     boxId?: boolean
@@ -20015,6 +20023,7 @@ export namespace Prisma {
     quantity?: boolean
     isModulo?: boolean
     type?: boolean
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: boolean
     shipmentId?: boolean
     boxId?: boolean
@@ -20041,6 +20050,7 @@ export namespace Prisma {
     quantity?: boolean
     isModulo?: boolean
     type?: boolean
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: boolean
     shipmentId?: boolean
     boxId?: boolean
@@ -20067,6 +20077,7 @@ export namespace Prisma {
     quantity?: boolean
     isModulo?: boolean
     type?: boolean
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: boolean
     shipmentId?: boolean
     boxId?: boolean
@@ -20077,7 +20088,7 @@ export namespace Prisma {
     isDeleted?: boolean
   }
 
-  export type TraderStockOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "seasonId" | "date" | "traderId" | "traderCategoryId" | "grade" | "pitamStatus" | "quantity" | "isModulo" | "type" | "MovementReferenceId" | "shipmentId" | "boxId" | "notes" | "updatedById" | "createdAt" | "updatedAt" | "isDeleted", ExtArgs["result"]["traderStock"]>
+  export type TraderStockOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "seasonId" | "date" | "traderId" | "traderCategoryId" | "grade" | "pitamStatus" | "quantity" | "isModulo" | "type" | "isFromPrivateSelection" | "MovementReferenceId" | "shipmentId" | "boxId" | "notes" | "updatedById" | "createdAt" | "updatedAt" | "isDeleted", ExtArgs["result"]["traderStock"]>
   export type TraderStockInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     season?: boolean | SeasonDefaultArgs<ExtArgs>
     trader?: boolean | TraderStock$traderArgs<ExtArgs>
@@ -20120,6 +20131,7 @@ export namespace Prisma {
       quantity: number
       isModulo: boolean
       type: $Enums.MovementType
+      isFromPrivateSelection: boolean
       MovementReferenceId: number | null
       shipmentId: number | null
       boxId: number | null
@@ -20566,6 +20578,7 @@ export namespace Prisma {
     readonly quantity: FieldRef<"TraderStock", 'Int'>
     readonly isModulo: FieldRef<"TraderStock", 'Boolean'>
     readonly type: FieldRef<"TraderStock", 'MovementType'>
+    readonly isFromPrivateSelection: FieldRef<"TraderStock", 'Boolean'>
     readonly MovementReferenceId: FieldRef<"TraderStock", 'Int'>
     readonly shipmentId: FieldRef<"TraderStock", 'Int'>
     readonly boxId: FieldRef<"TraderStock", 'Int'>
@@ -27968,6 +27981,7 @@ export namespace Prisma {
     quantity: 'quantity',
     isModulo: 'isModulo',
     type: 'type',
+    isFromPrivateSelection: 'isFromPrivateSelection',
     MovementReferenceId: 'MovementReferenceId',
     shipmentId: 'shipmentId',
     boxId: 'boxId',
@@ -29562,6 +29576,7 @@ export namespace Prisma {
     quantity?: IntFilter<"TraderStock"> | number
     isModulo?: BoolFilter<"TraderStock"> | boolean
     type?: EnumMovementTypeFilter<"TraderStock"> | $Enums.MovementType
+    isFromPrivateSelection?: BoolFilter<"TraderStock"> | boolean
     MovementReferenceId?: IntNullableFilter<"TraderStock"> | number | null
     shipmentId?: IntNullableFilter<"TraderStock"> | number | null
     boxId?: IntNullableFilter<"TraderStock"> | number | null
@@ -29588,6 +29603,7 @@ export namespace Prisma {
     quantity?: SortOrder
     isModulo?: SortOrder
     type?: SortOrder
+    isFromPrivateSelection?: SortOrder
     MovementReferenceId?: SortOrderInput | SortOrder
     shipmentId?: SortOrderInput | SortOrder
     boxId?: SortOrderInput | SortOrder
@@ -29617,6 +29633,7 @@ export namespace Prisma {
     quantity?: IntFilter<"TraderStock"> | number
     isModulo?: BoolFilter<"TraderStock"> | boolean
     type?: EnumMovementTypeFilter<"TraderStock"> | $Enums.MovementType
+    isFromPrivateSelection?: BoolFilter<"TraderStock"> | boolean
     MovementReferenceId?: IntNullableFilter<"TraderStock"> | number | null
     shipmentId?: IntNullableFilter<"TraderStock"> | number | null
     boxId?: IntNullableFilter<"TraderStock"> | number | null
@@ -29643,6 +29660,7 @@ export namespace Prisma {
     quantity?: SortOrder
     isModulo?: SortOrder
     type?: SortOrder
+    isFromPrivateSelection?: SortOrder
     MovementReferenceId?: SortOrderInput | SortOrder
     shipmentId?: SortOrderInput | SortOrder
     boxId?: SortOrderInput | SortOrder
@@ -29672,6 +29690,7 @@ export namespace Prisma {
     quantity?: IntWithAggregatesFilter<"TraderStock"> | number
     isModulo?: BoolWithAggregatesFilter<"TraderStock"> | boolean
     type?: EnumMovementTypeWithAggregatesFilter<"TraderStock"> | $Enums.MovementType
+    isFromPrivateSelection?: BoolWithAggregatesFilter<"TraderStock"> | boolean
     MovementReferenceId?: IntNullableWithAggregatesFilter<"TraderStock"> | number | null
     shipmentId?: IntNullableWithAggregatesFilter<"TraderStock"> | number | null
     boxId?: IntNullableWithAggregatesFilter<"TraderStock"> | number | null
@@ -31487,6 +31506,7 @@ export namespace Prisma {
     quantity?: number
     isModulo?: boolean
     type?: $Enums.MovementType
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: number | null
     shipmentId?: number | null
     notes?: string | null
@@ -31511,6 +31531,7 @@ export namespace Prisma {
     quantity?: number
     isModulo?: boolean
     type?: $Enums.MovementType
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: number | null
     shipmentId?: number | null
     boxId?: number | null
@@ -31528,6 +31549,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     isModulo?: BoolFieldUpdateOperationsInput | boolean
     type?: EnumMovementTypeFieldUpdateOperationsInput | $Enums.MovementType
+    isFromPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     MovementReferenceId?: NullableIntFieldUpdateOperationsInput | number | null
     shipmentId?: NullableIntFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -31552,6 +31574,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     isModulo?: BoolFieldUpdateOperationsInput | boolean
     type?: EnumMovementTypeFieldUpdateOperationsInput | $Enums.MovementType
+    isFromPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     MovementReferenceId?: NullableIntFieldUpdateOperationsInput | number | null
     shipmentId?: NullableIntFieldUpdateOperationsInput | number | null
     boxId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -31573,6 +31596,7 @@ export namespace Prisma {
     quantity?: number
     isModulo?: boolean
     type?: $Enums.MovementType
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: number | null
     shipmentId?: number | null
     boxId?: number | null
@@ -31590,6 +31614,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     isModulo?: BoolFieldUpdateOperationsInput | boolean
     type?: EnumMovementTypeFieldUpdateOperationsInput | $Enums.MovementType
+    isFromPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     MovementReferenceId?: NullableIntFieldUpdateOperationsInput | number | null
     shipmentId?: NullableIntFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -31609,6 +31634,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     isModulo?: BoolFieldUpdateOperationsInput | boolean
     type?: EnumMovementTypeFieldUpdateOperationsInput | $Enums.MovementType
+    isFromPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     MovementReferenceId?: NullableIntFieldUpdateOperationsInput | number | null
     shipmentId?: NullableIntFieldUpdateOperationsInput | number | null
     boxId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -33464,6 +33490,7 @@ export namespace Prisma {
     quantity?: SortOrder
     isModulo?: SortOrder
     type?: SortOrder
+    isFromPrivateSelection?: SortOrder
     MovementReferenceId?: SortOrder
     shipmentId?: SortOrder
     boxId?: SortOrder
@@ -33497,6 +33524,7 @@ export namespace Prisma {
     quantity?: SortOrder
     isModulo?: SortOrder
     type?: SortOrder
+    isFromPrivateSelection?: SortOrder
     MovementReferenceId?: SortOrder
     shipmentId?: SortOrder
     boxId?: SortOrder
@@ -33518,6 +33546,7 @@ export namespace Prisma {
     quantity?: SortOrder
     isModulo?: SortOrder
     type?: SortOrder
+    isFromPrivateSelection?: SortOrder
     MovementReferenceId?: SortOrder
     shipmentId?: SortOrder
     boxId?: SortOrder
@@ -38053,6 +38082,7 @@ export namespace Prisma {
     quantity?: number
     isModulo?: boolean
     type?: $Enums.MovementType
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: number | null
     shipmentId?: number | null
     notes?: string | null
@@ -38075,6 +38105,7 @@ export namespace Prisma {
     quantity?: number
     isModulo?: boolean
     type?: $Enums.MovementType
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: number | null
     shipmentId?: number | null
     boxId?: number | null
@@ -38496,6 +38527,7 @@ export namespace Prisma {
     quantity?: IntFilter<"TraderStock"> | number
     isModulo?: BoolFilter<"TraderStock"> | boolean
     type?: EnumMovementTypeFilter<"TraderStock"> | $Enums.MovementType
+    isFromPrivateSelection?: BoolFilter<"TraderStock"> | boolean
     MovementReferenceId?: IntNullableFilter<"TraderStock"> | number | null
     shipmentId?: IntNullableFilter<"TraderStock"> | number | null
     boxId?: IntNullableFilter<"TraderStock"> | number | null
@@ -38773,6 +38805,7 @@ export namespace Prisma {
     quantity?: number
     isModulo?: boolean
     type?: $Enums.MovementType
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: number | null
     shipmentId?: number | null
     notes?: string | null
@@ -38796,6 +38829,7 @@ export namespace Prisma {
     quantity?: number
     isModulo?: boolean
     type?: $Enums.MovementType
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: number | null
     shipmentId?: number | null
     boxId?: number | null
@@ -39293,6 +39327,7 @@ export namespace Prisma {
     quantity?: number
     isModulo?: boolean
     type?: $Enums.MovementType
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: number | null
     shipmentId?: number | null
     notes?: string | null
@@ -39315,6 +39350,7 @@ export namespace Prisma {
     quantity?: number
     isModulo?: boolean
     type?: $Enums.MovementType
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: number | null
     shipmentId?: number | null
     boxId?: number | null
@@ -40040,6 +40076,7 @@ export namespace Prisma {
     quantity?: number
     isModulo?: boolean
     type?: $Enums.MovementType
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: number | null
     shipmentId?: number | null
     notes?: string | null
@@ -40062,6 +40099,7 @@ export namespace Prisma {
     quantity?: number
     isModulo?: boolean
     type?: $Enums.MovementType
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: number | null
     shipmentId?: number | null
     boxId?: number | null
@@ -42979,6 +43017,7 @@ export namespace Prisma {
     quantity?: number
     isModulo?: boolean
     type?: $Enums.MovementType
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: number | null
     shipmentId?: number | null
     notes?: string | null
@@ -43002,6 +43041,7 @@ export namespace Prisma {
     quantity?: number
     isModulo?: boolean
     type?: $Enums.MovementType
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: number | null
     shipmentId?: number | null
     notes?: string | null
@@ -44438,6 +44478,7 @@ export namespace Prisma {
     quantity?: number
     isModulo?: boolean
     type?: $Enums.MovementType
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: number | null
     shipmentId?: number | null
     boxId?: number | null
@@ -44787,6 +44828,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     isModulo?: BoolFieldUpdateOperationsInput | boolean
     type?: EnumMovementTypeFieldUpdateOperationsInput | $Enums.MovementType
+    isFromPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     MovementReferenceId?: NullableIntFieldUpdateOperationsInput | number | null
     shipmentId?: NullableIntFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -44809,6 +44851,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     isModulo?: BoolFieldUpdateOperationsInput | boolean
     type?: EnumMovementTypeFieldUpdateOperationsInput | $Enums.MovementType
+    isFromPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     MovementReferenceId?: NullableIntFieldUpdateOperationsInput | number | null
     shipmentId?: NullableIntFieldUpdateOperationsInput | number | null
     boxId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -44829,6 +44872,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     isModulo?: BoolFieldUpdateOperationsInput | boolean
     type?: EnumMovementTypeFieldUpdateOperationsInput | $Enums.MovementType
+    isFromPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     MovementReferenceId?: NullableIntFieldUpdateOperationsInput | number | null
     shipmentId?: NullableIntFieldUpdateOperationsInput | number | null
     boxId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -45123,6 +45167,7 @@ export namespace Prisma {
     quantity?: number
     isModulo?: boolean
     type?: $Enums.MovementType
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: number | null
     shipmentId?: number | null
     boxId?: number | null
@@ -45352,6 +45397,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     isModulo?: BoolFieldUpdateOperationsInput | boolean
     type?: EnumMovementTypeFieldUpdateOperationsInput | $Enums.MovementType
+    isFromPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     MovementReferenceId?: NullableIntFieldUpdateOperationsInput | number | null
     shipmentId?: NullableIntFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -45375,6 +45421,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     isModulo?: BoolFieldUpdateOperationsInput | boolean
     type?: EnumMovementTypeFieldUpdateOperationsInput | $Enums.MovementType
+    isFromPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     MovementReferenceId?: NullableIntFieldUpdateOperationsInput | number | null
     shipmentId?: NullableIntFieldUpdateOperationsInput | number | null
     boxId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -45395,6 +45442,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     isModulo?: BoolFieldUpdateOperationsInput | boolean
     type?: EnumMovementTypeFieldUpdateOperationsInput | $Enums.MovementType
+    isFromPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     MovementReferenceId?: NullableIntFieldUpdateOperationsInput | number | null
     shipmentId?: NullableIntFieldUpdateOperationsInput | number | null
     boxId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -45715,6 +45763,7 @@ export namespace Prisma {
     quantity?: number
     isModulo?: boolean
     type?: $Enums.MovementType
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: number | null
     shipmentId?: number | null
     boxId?: number | null
@@ -45898,6 +45947,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     isModulo?: BoolFieldUpdateOperationsInput | boolean
     type?: EnumMovementTypeFieldUpdateOperationsInput | $Enums.MovementType
+    isFromPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     MovementReferenceId?: NullableIntFieldUpdateOperationsInput | number | null
     shipmentId?: NullableIntFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -45920,6 +45970,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     isModulo?: BoolFieldUpdateOperationsInput | boolean
     type?: EnumMovementTypeFieldUpdateOperationsInput | $Enums.MovementType
+    isFromPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     MovementReferenceId?: NullableIntFieldUpdateOperationsInput | number | null
     shipmentId?: NullableIntFieldUpdateOperationsInput | number | null
     boxId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -45940,6 +45991,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     isModulo?: BoolFieldUpdateOperationsInput | boolean
     type?: EnumMovementTypeFieldUpdateOperationsInput | $Enums.MovementType
+    isFromPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     MovementReferenceId?: NullableIntFieldUpdateOperationsInput | number | null
     shipmentId?: NullableIntFieldUpdateOperationsInput | number | null
     boxId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -46541,6 +46593,7 @@ export namespace Prisma {
     quantity?: number
     isModulo?: boolean
     type?: $Enums.MovementType
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: number | null
     shipmentId?: number | null
     boxId?: number | null
@@ -46663,6 +46716,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     isModulo?: BoolFieldUpdateOperationsInput | boolean
     type?: EnumMovementTypeFieldUpdateOperationsInput | $Enums.MovementType
+    isFromPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     MovementReferenceId?: NullableIntFieldUpdateOperationsInput | number | null
     shipmentId?: NullableIntFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -46685,6 +46739,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     isModulo?: BoolFieldUpdateOperationsInput | boolean
     type?: EnumMovementTypeFieldUpdateOperationsInput | $Enums.MovementType
+    isFromPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     MovementReferenceId?: NullableIntFieldUpdateOperationsInput | number | null
     shipmentId?: NullableIntFieldUpdateOperationsInput | number | null
     boxId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -46705,6 +46760,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     isModulo?: BoolFieldUpdateOperationsInput | boolean
     type?: EnumMovementTypeFieldUpdateOperationsInput | $Enums.MovementType
+    isFromPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     MovementReferenceId?: NullableIntFieldUpdateOperationsInput | number | null
     shipmentId?: NullableIntFieldUpdateOperationsInput | number | null
     boxId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -47303,6 +47359,7 @@ export namespace Prisma {
     quantity?: number
     isModulo?: boolean
     type?: $Enums.MovementType
+    isFromPrivateSelection?: boolean
     MovementReferenceId?: number | null
     shipmentId?: number | null
     notes?: string | null
@@ -47387,6 +47444,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     isModulo?: BoolFieldUpdateOperationsInput | boolean
     type?: EnumMovementTypeFieldUpdateOperationsInput | $Enums.MovementType
+    isFromPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     MovementReferenceId?: NullableIntFieldUpdateOperationsInput | number | null
     shipmentId?: NullableIntFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -47410,6 +47468,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     isModulo?: BoolFieldUpdateOperationsInput | boolean
     type?: EnumMovementTypeFieldUpdateOperationsInput | $Enums.MovementType
+    isFromPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     MovementReferenceId?: NullableIntFieldUpdateOperationsInput | number | null
     shipmentId?: NullableIntFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -47430,6 +47489,7 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
     isModulo?: BoolFieldUpdateOperationsInput | boolean
     type?: EnumMovementTypeFieldUpdateOperationsInput | $Enums.MovementType
+    isFromPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     MovementReferenceId?: NullableIntFieldUpdateOperationsInput | number | null
     shipmentId?: NullableIntFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
