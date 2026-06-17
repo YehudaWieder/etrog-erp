@@ -360,7 +360,7 @@ export function NewShipmentItemFormModal({
                   <option value="">{isInventoryLoading ? t.loadingInventory : t.categoryPlaceholder}</option>
                   {availableCustomerCategories.map((cat) => (
                     <option key={cat.id} value={String(cat.id)}>
-                      {cat.name}
+                      {cat.name} - {cat.grade}
                     </option>
                   ))}
                 </select>

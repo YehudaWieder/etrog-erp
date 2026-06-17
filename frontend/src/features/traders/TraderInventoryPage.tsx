@@ -268,7 +268,7 @@ export function TraderInventoryPage() {
   );
 
   useEffect(() => {
-    if (!isMovementsTab || !activeSeasonId) {
+    if ((!isMovementsTab && !isAllInventoryTab) || !activeSeasonId) {
       return;
     }
 
@@ -295,7 +295,7 @@ export function TraderInventoryPage() {
     return () => {
       isActive = false;
     };
-  }, [isMovementsTab, activeSeasonId]);
+  }, [isMovementsTab, isAllInventoryTab, activeSeasonId]);
 
   const movementStatusI18n = useMemo(() => getTraderMovementsI18n(), []);
 
@@ -575,7 +575,7 @@ export function TraderInventoryPage() {
       topNav={t.topNav}
       activeTopNavId={activeTopId}
       pageHeaderActions={
-        isMovementsTab ? (
+        isMovementsTab || isAllInventoryTab ? (
           <div className="action-buttons">
             <button className="btn btn-primary" type="button" onClick={() => setIsAddMovementModalOpen(true)}>
               <FaCirclePlus />

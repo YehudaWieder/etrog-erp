@@ -38,6 +38,11 @@ export function useGlobalFilters(scope: string, definitions: GlobalFilterDefinit
     (state: RootState) => state.globalFilters.scopes[scope] ?? EMPTY_SCOPE_FILTERS,
   );
 
+  // Tracks the URL values we intentionally set via the second effect.
+  // A URL param that differs from this was set by external navigation (deep link / browser back).
+  // undefined = key not yet synced, null = key intentionally removed (value equals default).
+  const syncedUrlValuesRef = useRef<Record<string, string | null | undefined>>({});
+
   const resolvedValues = useMemo(() => {
     const next: Record<string, string> = {};
 
@@ -62,6 +67,17 @@ export function useGlobalFilters(scope: string, definitions: GlobalFilterDefinit
         continue;
       }
 
+      // A URL param is "external" (deep link / browser navigation) when it differs from what
+      // we last wrote to the URL via the sync effect. External URL params win over Redux state
+      // so that shared links and direct navigation always apply the intended filters.
+      const isExternalUrlParam =
+        queryValue !== null && syncedUrlValuesRef.current[queryKey] !== queryValue;
+
+      if (isExternalUrlParam) {
+        mergedValues[definition.key] = queryValue;
+        continue;
+      }
+
       if (scopeValue !== undefined) {
         mergedValues[definition.key] = scopeValue;
         continue;
@@ -72,7 +88,7 @@ export function useGlobalFilters(scope: string, definitions: GlobalFilterDefinit
         continue;
       }
 
-      mergedValues[definition.key] = scopeFilters[definition.key] ?? definition.defaultValue;
+      mergedValues[definition.key] = definition.defaultValue;
     }
 
     if (!areFilterMapsEqual(mergedValues, resolvedValues)) {
@@ -90,6 +106,10 @@ export function useGlobalFilters(scope: string, definitions: GlobalFilterDefinit
       const queryKey = definition.queryParam ?? definition.key;
       const value = resolvedValues[definition.key] ?? definition.defaultValue;
       const existing = nextParams.get(queryKey);
+
+      // Always record what URL value we intend so the first effect can distinguish
+      // our own URL updates from external navigation.
+      syncedUrlValuesRef.current[queryKey] = value === definition.defaultValue ? null : value;
 
       if (value === definition.defaultValue) {
         if (existing !== null) {
