@@ -33,12 +33,12 @@ export function validateItemOwnership(
     throw new BadRequestException('customerId is required when ownershipType=CUSTOMER');
   }
 
-  if (ownershipType === ItemOwnership.UNASSIGNED && (traderId !== undefined && traderId !== null)) {
-    throw new BadRequestException('traderId must be empty when ownershipType=UNASSIGNED');
+  if (ownershipType === ItemOwnership.GENERAL && (traderId !== undefined && traderId !== null)) {
+    throw new BadRequestException('traderId must be empty when ownershipType=GENERAL');
   }
 
-  if (ownershipType === ItemOwnership.UNASSIGNED && (customerId !== undefined && customerId !== null)) {
-    throw new BadRequestException('customerId must be empty when ownershipType=UNASSIGNED');
+  if (ownershipType === ItemOwnership.GENERAL && (customerId !== undefined && customerId !== null)) {
+    throw new BadRequestException('customerId must be empty when ownershipType=GENERAL');
   }
 
   if (ownershipType !== ItemOwnership.TRADER && ownershipType !== ItemOwnership.CUSTOM && traderId !== undefined && traderId !== null) {

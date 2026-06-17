@@ -9,6 +9,7 @@ import { exportTraderInventoryExcel } from './services/traderInventoryExport.ser
 import { TraderInventoryAllSection } from './components/TraderInventoryAllSection';
 import { TraderMovementsSection } from './components/TraderMovementsSection';
 import { TraderPrintExportActions } from './components/TraderPrintExportActions';
+import { AddTraderMovementModal } from './components/AddTraderMovementModal';
 import { useTraderInventorySummary } from './hooks/useTraderInventorySummary';
 import { useTraderMovements } from './hooks/useTraderMovements';
 import { TRADER_INVENTORY_I18N, getTraderMovementsI18n } from './i18n';
@@ -18,6 +19,9 @@ import type { NavItem } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
 import { getActiveSeason, getSeasons, type Season } from '../../services/seasonsApi';
 import { getTraders, type Trader } from '../../services/tradersApi';
+import { getTraderCategoriesWithShares, type TraderCategoryWithShares } from '../../services/traderCategoriesApi';
+import { getCustomers, type Customer } from '../../services/customersApi';
+import { getCustomerCategoriesBySeason, type CustomerCategory } from '../../services/customerCategoriesApi';
 
 const DEFAULT_SIDEBAR_ITEM_ID = 'all';
 const DEFAULT_FILTER_VALUES: Record<string, string> = {
@@ -42,6 +46,10 @@ export function TraderInventoryPage() {
   const [filtersLoading, setFiltersLoading] = useState(false);
   const filtersApiRef = useRef<GlobalScopedFiltersApi | null>(null);
   const matrixTableRef = useRef<HTMLTableElement>(null);
+  const [isAddMovementModalOpen, setIsAddMovementModalOpen] = useState(false);
+  const [traderCategories, setTraderCategories] = useState<TraderCategoryWithShares[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customerCategories, setCustomerCategories] = useState<CustomerCategory[]>([]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -258,6 +266,36 @@ export function TraderInventoryPage() {
     ],
     [t.summary.filters.allInventoryOption, t.summary.filters.unboxedOption, t.summary.filters.boxedOption, t.summary.filters.shippedOption, t.summary.filters.selfPickupOption, t.summary.filters.privateSelectionOption],
   );
+
+  useEffect(() => {
+    if (!isMovementsTab || !activeSeasonId) {
+      return;
+    }
+
+    let isActive = true;
+
+    Promise.all([
+      getTraderCategoriesWithShares(activeSeasonId),
+      getCustomers(),
+      getCustomerCategoriesBySeason(activeSeasonId),
+    ])
+      .then(([nextTraderCategories, nextCustomers, nextCustomerCategories]) => {
+        if (!isActive) return;
+        setTraderCategories(nextTraderCategories);
+        setCustomers(nextCustomers);
+        setCustomerCategories(nextCustomerCategories);
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setTraderCategories([]);
+        setCustomers([]);
+        setCustomerCategories([]);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [isMovementsTab, activeSeasonId]);
 
   const movementStatusI18n = useMemo(() => getTraderMovementsI18n(), []);
 
@@ -539,7 +577,7 @@ export function TraderInventoryPage() {
       pageHeaderActions={
         isMovementsTab ? (
           <div className="action-buttons">
-            <button className="btn btn-primary" type="button">
+            <button className="btn btn-primary" type="button" onClick={() => setIsAddMovementModalOpen(true)}>
               <FaCirclePlus />
               <span>{movementStatusI18n.addMovementButton}</span>
             </button>
@@ -622,6 +660,22 @@ export function TraderInventoryPage() {
           <p className="shipments-empty-desc">{content.description}</p>
         </section>
       )}
+
+      <AddTraderMovementModal
+        lang={lang}
+        isOpen={isAddMovementModalOpen}
+        seasonId={activeSeasonId}
+        traders={traders}
+        customers={customers}
+        traderCategories={traderCategories}
+        customerCategories={customerCategories}
+        onClose={() => setIsAddMovementModalOpen(false)}
+        onSaved={() => {
+          setIsAddMovementModalOpen(false);
+          traderMovements.reload();
+          traderInventorySummary.reload();
+        }}
+      />
     </AppShell>
   );
 }

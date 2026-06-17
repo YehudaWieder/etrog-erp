@@ -97,7 +97,7 @@ type NewShipmentItemFormModalProps = {
   onClose: () => void;
 };
 
-const ITEM_OWNERSHIP_OPTIONS = ['TRADER', 'CUSTOMER', 'UNASSIGNED', 'CUSTOM'] as const;
+const ITEM_OWNERSHIP_OPTIONS = ['TRADER', 'CUSTOMER', 'GENERAL', 'CUSTOM'] as const;
 
 export function NewShipmentItemFormModal({
   isOpen,
@@ -150,9 +150,9 @@ export function NewShipmentItemFormModal({
     boxOwnership === 'CUSTOMER' || (boxOwnership === 'SHARED' && itemOwnership === 'CUSTOMER');
   const isSharedBox = boxOwnership === 'SHARED';
   const isCustomBox = boxOwnership === 'CUSTOM';
-  const isUnassignedBox = boxOwnership === 'UNASSIGNED';
+  const isUnassignedBox = boxOwnership === 'GENERAL';
   const isSharedCustomItem = isSharedBox && itemOwnership === 'CUSTOM';
-  const isSharedUnassignedItem = isSharedBox && itemOwnership === 'UNASSIGNED';
+  const isSharedUnassignedItem = isSharedBox && itemOwnership === 'GENERAL';
   const isCustomFreeText = isCustomBox || isSharedCustomItem;
 
   // Group boxes by shipment for display

@@ -511,7 +511,7 @@ model Box {
   traderStocks TraderStock[]
 
   // Ownership
-  ownershipType BoxOwnership @default(UNASSIGNED)
+  ownershipType BoxOwnership @default(GENERAL)
   traderId      Int? // optional, if ownershipType = TRADER
   trader        Trader?      @relation(fields: [traderId], references: [id])
   customerId    Int? // optional, if ownershipType = CUSTOMER
@@ -566,7 +566,8 @@ model ShipmentItem {
   customGrade String? // free-text grade for CUSTOM ownership items
 
   // Ownership
-  ownershipType       ItemOwnership @default(UNASSIGNED)
+  ownershipType           ItemOwnership @default(GENERAL)
+  generalSourceBreakdown  Json?         // populated for GENERAL items: [{traderId, traderName, quantity}], traderId null = modulo
   traderId            Int? // optional, if ownershipType = TRADER
   trader              Trader?       @relation(fields: [traderId], references: [id])
   customerId          Int? // optional, if ownershipType = CUSTOMER
@@ -704,14 +705,14 @@ enum BoxOwnership {
   TRADER
   CUSTOMER
   SHARED
-  UNASSIGNED
+  GENERAL
   CUSTOM
 }
 
 enum ItemOwnership {
   TRADER
   CUSTOMER
-  UNASSIGNED
+  GENERAL
   CUSTOM
 }
 

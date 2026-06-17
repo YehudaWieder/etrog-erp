@@ -1,5 +1,5 @@
 import type { BoxRecord } from '../../../services/boxesApi';
-import type { ShipmentItemRecord } from '../../../services/shipmentItemsApi';
+import type { GeneralSourceBreakdownEntry, ShipmentItemRecord } from '../../../services/shipmentItemsApi';
 import type { ShipmentsTableLabels } from '../shipments.types';
 
 export type ShipmentItemDetailRow = {
@@ -11,6 +11,7 @@ export type ShipmentItemDetailRow = {
   grade: string;
   quantity: number;
   notes: string;
+  generalSourceBreakdown: GeneralSourceBreakdownEntry[] | null;
 };
 
 export function buildShipmentItemsDetailRows(
@@ -50,6 +51,7 @@ export function buildShipmentItemsDetailRows(
       grade,
       quantity: item.quantity,
       notes: item.notes?.trim() ?? '',
+      generalSourceBreakdown: item.generalSourceBreakdown ?? null,
     };
   });
 
@@ -88,6 +90,7 @@ export function buildBoxItemsDetailRows(
       grade,
       quantity: item.quantity,
       notes: item.notes?.trim() ?? '',
+      generalSourceBreakdown: item.generalSourceBreakdown ?? null,
     };
   });
 }

@@ -219,7 +219,7 @@ export const BoxOwnership: {
   TRADER: 'TRADER',
   CUSTOMER: 'CUSTOMER',
   SHARED: 'SHARED',
-  UNASSIGNED: 'UNASSIGNED',
+  GENERAL: 'GENERAL',
   CUSTOM: 'CUSTOM'
 };
 
@@ -229,7 +229,7 @@ export type BoxOwnership = (typeof BoxOwnership)[keyof typeof BoxOwnership]
 export const ItemOwnership: {
   TRADER: 'TRADER',
   CUSTOMER: 'CUSTOMER',
-  UNASSIGNED: 'UNASSIGNED',
+  GENERAL: 'GENERAL',
   CUSTOM: 'CUSTOM'
 };
 
@@ -25165,6 +25165,7 @@ export namespace Prisma {
     customLabel: number
     customGrade: number
     ownershipType: number
+    generalSourceBreakdown: number
     traderId: number
     customerId: number
     isPrivateSelection: number
@@ -25262,6 +25263,7 @@ export namespace Prisma {
     customLabel?: true
     customGrade?: true
     ownershipType?: true
+    generalSourceBreakdown?: true
     traderId?: true
     customerId?: true
     isPrivateSelection?: true
@@ -25372,6 +25374,7 @@ export namespace Prisma {
     customLabel: string | null
     customGrade: string | null
     ownershipType: $Enums.ItemOwnership
+    generalSourceBreakdown: JsonValue | null
     traderId: number | null
     customerId: number | null
     isPrivateSelection: boolean
@@ -25414,6 +25417,7 @@ export namespace Prisma {
     customLabel?: boolean
     customGrade?: boolean
     ownershipType?: boolean
+    generalSourceBreakdown?: boolean
     traderId?: boolean
     customerId?: boolean
     isPrivateSelection?: boolean
@@ -25445,6 +25449,7 @@ export namespace Prisma {
     customLabel?: boolean
     customGrade?: boolean
     ownershipType?: boolean
+    generalSourceBreakdown?: boolean
     traderId?: boolean
     customerId?: boolean
     isPrivateSelection?: boolean
@@ -25476,6 +25481,7 @@ export namespace Prisma {
     customLabel?: boolean
     customGrade?: boolean
     ownershipType?: boolean
+    generalSourceBreakdown?: boolean
     traderId?: boolean
     customerId?: boolean
     isPrivateSelection?: boolean
@@ -25507,6 +25513,7 @@ export namespace Prisma {
     customLabel?: boolean
     customGrade?: boolean
     ownershipType?: boolean
+    generalSourceBreakdown?: boolean
     traderId?: boolean
     customerId?: boolean
     isPrivateSelection?: boolean
@@ -25516,7 +25523,7 @@ export namespace Prisma {
     isDeleted?: boolean
   }
 
-  export type ShipmentItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "shipmentId" | "boxId" | "seasonId" | "traderCategoryId" | "customerCategoryId" | "grade" | "pitamStatus" | "quantity" | "notes" | "customLabel" | "customGrade" | "ownershipType" | "traderId" | "customerId" | "isPrivateSelection" | "updatedById" | "createdAt" | "updatedAt" | "isDeleted", ExtArgs["result"]["shipmentItem"]>
+  export type ShipmentItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "shipmentId" | "boxId" | "seasonId" | "traderCategoryId" | "customerCategoryId" | "grade" | "pitamStatus" | "quantity" | "notes" | "customLabel" | "customGrade" | "ownershipType" | "generalSourceBreakdown" | "traderId" | "customerId" | "isPrivateSelection" | "updatedById" | "createdAt" | "updatedAt" | "isDeleted", ExtArgs["result"]["shipmentItem"]>
   export type ShipmentItemInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     shipment?: boolean | ShipmentDefaultArgs<ExtArgs>
     box?: boolean | BoxDefaultArgs<ExtArgs>
@@ -25574,6 +25581,7 @@ export namespace Prisma {
       customLabel: string | null
       customGrade: string | null
       ownershipType: $Enums.ItemOwnership
+      generalSourceBreakdown: Prisma.JsonValue | null
       traderId: number | null
       customerId: number | null
       isPrivateSelection: boolean
@@ -26025,6 +26033,7 @@ export namespace Prisma {
     readonly customLabel: FieldRef<"ShipmentItem", 'String'>
     readonly customGrade: FieldRef<"ShipmentItem", 'String'>
     readonly ownershipType: FieldRef<"ShipmentItem", 'ItemOwnership'>
+    readonly generalSourceBreakdown: FieldRef<"ShipmentItem", 'Json'>
     readonly traderId: FieldRef<"ShipmentItem", 'Int'>
     readonly customerId: FieldRef<"ShipmentItem", 'Int'>
     readonly isPrivateSelection: FieldRef<"ShipmentItem", 'Boolean'>
@@ -28051,6 +28060,7 @@ export namespace Prisma {
     customLabel: 'customLabel',
     customGrade: 'customGrade',
     ownershipType: 'ownershipType',
+    generalSourceBreakdown: 'generalSourceBreakdown',
     traderId: 'traderId',
     customerId: 'customerId',
     isPrivateSelection: 'isPrivateSelection',
@@ -28086,6 +28096,14 @@ export namespace Prisma {
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+  export const NullableJsonNullValueInput: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull
+  };
+
+  export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
   export const NullsOrder: {
     first: 'first',
     last: 'last'
@@ -28100,6 +28118,15 @@ export namespace Prisma {
   };
 
   export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+  export const JsonNullValueFilter: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull,
+    AnyNull: typeof AnyNull
+  };
+
+  export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
   /**
@@ -28335,6 +28362,20 @@ export namespace Prisma {
    * Reference to a field of type 'ItemOwnership[]'
    */
   export type ListEnumItemOwnershipFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ItemOwnership[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Json'
+   */
+  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+  /**
+   * Reference to a field of type 'QueryMode'
+   */
+  export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 
@@ -30030,6 +30071,7 @@ export namespace Prisma {
     customLabel?: StringNullableFilter<"ShipmentItem"> | string | null
     customGrade?: StringNullableFilter<"ShipmentItem"> | string | null
     ownershipType?: EnumItemOwnershipFilter<"ShipmentItem"> | $Enums.ItemOwnership
+    generalSourceBreakdown?: JsonNullableFilter<"ShipmentItem">
     traderId?: IntNullableFilter<"ShipmentItem"> | number | null
     customerId?: IntNullableFilter<"ShipmentItem"> | number | null
     isPrivateSelection?: BoolFilter<"ShipmentItem"> | boolean
@@ -30061,6 +30103,7 @@ export namespace Prisma {
     customLabel?: SortOrderInput | SortOrder
     customGrade?: SortOrderInput | SortOrder
     ownershipType?: SortOrder
+    generalSourceBreakdown?: SortOrderInput | SortOrder
     traderId?: SortOrderInput | SortOrder
     customerId?: SortOrderInput | SortOrder
     isPrivateSelection?: SortOrder
@@ -30096,6 +30139,7 @@ export namespace Prisma {
     customLabel?: StringNullableFilter<"ShipmentItem"> | string | null
     customGrade?: StringNullableFilter<"ShipmentItem"> | string | null
     ownershipType?: EnumItemOwnershipFilter<"ShipmentItem"> | $Enums.ItemOwnership
+    generalSourceBreakdown?: JsonNullableFilter<"ShipmentItem">
     traderId?: IntNullableFilter<"ShipmentItem"> | number | null
     customerId?: IntNullableFilter<"ShipmentItem"> | number | null
     isPrivateSelection?: BoolFilter<"ShipmentItem"> | boolean
@@ -30127,6 +30171,7 @@ export namespace Prisma {
     customLabel?: SortOrderInput | SortOrder
     customGrade?: SortOrderInput | SortOrder
     ownershipType?: SortOrder
+    generalSourceBreakdown?: SortOrderInput | SortOrder
     traderId?: SortOrderInput | SortOrder
     customerId?: SortOrderInput | SortOrder
     isPrivateSelection?: SortOrder
@@ -30158,6 +30203,7 @@ export namespace Prisma {
     customLabel?: StringNullableWithAggregatesFilter<"ShipmentItem"> | string | null
     customGrade?: StringNullableWithAggregatesFilter<"ShipmentItem"> | string | null
     ownershipType?: EnumItemOwnershipWithAggregatesFilter<"ShipmentItem"> | $Enums.ItemOwnership
+    generalSourceBreakdown?: JsonNullableWithAggregatesFilter<"ShipmentItem">
     traderId?: IntNullableWithAggregatesFilter<"ShipmentItem"> | number | null
     customerId?: IntNullableWithAggregatesFilter<"ShipmentItem"> | number | null
     isPrivateSelection?: BoolWithAggregatesFilter<"ShipmentItem"> | boolean
@@ -31966,6 +32012,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     isPrivateSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -31994,6 +32041,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: number | null
     customerId?: number | null
     isPrivateSelection?: boolean
@@ -32011,6 +32059,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -32039,6 +32088,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
@@ -32062,6 +32112,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: number | null
     customerId?: number | null
     isPrivateSelection?: boolean
@@ -32079,6 +32130,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -32099,6 +32151,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
@@ -33877,6 +33930,29 @@ export namespace Prisma {
     notIn?: $Enums.ItemOwnership[] | ListEnumItemOwnershipFieldRefInput<$PrismaModel>
     not?: NestedEnumItemOwnershipFilter<$PrismaModel> | $Enums.ItemOwnership
   }
+  export type JsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type BoxScalarRelationFilter = {
     is?: BoxWhereInput
@@ -33910,6 +33986,7 @@ export namespace Prisma {
     customLabel?: SortOrder
     customGrade?: SortOrder
     ownershipType?: SortOrder
+    generalSourceBreakdown?: SortOrder
     traderId?: SortOrder
     customerId?: SortOrder
     isPrivateSelection?: SortOrder
@@ -33999,6 +34076,32 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumItemOwnershipFilter<$PrismaModel>
     _max?: NestedEnumItemOwnershipFilter<$PrismaModel>
+  }
+  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedJsonNullableFilter<$PrismaModel>
+    _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
   export type IntNullableListFilter<$PrismaModel = never> = {
@@ -37305,6 +37408,29 @@ export namespace Prisma {
     _min?: NestedEnumItemOwnershipFilter<$PrismaModel>
     _max?: NestedEnumItemOwnershipFilter<$PrismaModel>
   }
+  export type NestedJsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type NestedEnumPriorityFilter<$PrismaModel = never> = {
     equals?: $Enums.Priority | EnumPriorityFieldRefInput<$PrismaModel>
@@ -38118,6 +38244,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     isPrivateSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -38144,6 +38271,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: number | null
     customerId?: number | null
     isPrivateSelection?: boolean
@@ -38524,6 +38652,7 @@ export namespace Prisma {
     customLabel?: StringNullableFilter<"ShipmentItem"> | string | null
     customGrade?: StringNullableFilter<"ShipmentItem"> | string | null
     ownershipType?: EnumItemOwnershipFilter<"ShipmentItem"> | $Enums.ItemOwnership
+    generalSourceBreakdown?: JsonNullableFilter<"ShipmentItem">
     traderId?: IntNullableFilter<"ShipmentItem"> | number | null
     customerId?: IntNullableFilter<"ShipmentItem"> | number | null
     isPrivateSelection?: BoolFilter<"ShipmentItem"> | boolean
@@ -38835,6 +38964,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     isPrivateSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -38862,6 +38992,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: number | null
     customerId?: number | null
     isPrivateSelection?: boolean
@@ -39310,6 +39441,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     isPrivateSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -39337,6 +39469,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     customerId?: number | null
     isPrivateSelection?: boolean
     updatedById: number
@@ -39657,6 +39790,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     isPrivateSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -39684,6 +39818,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: number | null
     isPrivateSelection?: boolean
     updatedById: number
@@ -39955,6 +40090,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     isPrivateSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -39981,6 +40117,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: number | null
     customerId?: number | null
     isPrivateSelection?: boolean
@@ -40292,6 +40429,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     isPrivateSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -40318,6 +40456,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: number | null
     customerId?: number | null
     isPrivateSelection?: boolean
@@ -42477,6 +42616,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     isPrivateSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -42503,6 +42643,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: number | null
     customerId?: number | null
     isPrivateSelection?: boolean
@@ -42784,6 +42925,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     isPrivateSelection?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -42810,6 +42952,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: number | null
     customerId?: number | null
     isPrivateSelection?: boolean
@@ -44371,6 +44514,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: number | null
     customerId?: number | null
     isPrivateSelection?: boolean
@@ -44866,6 +45010,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -44892,6 +45037,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
@@ -44914,6 +45060,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
@@ -45052,6 +45199,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: number | null
     customerId?: number | null
     isPrivateSelection?: boolean
@@ -45427,6 +45575,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -45454,6 +45603,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
@@ -45476,6 +45626,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
@@ -45626,6 +45777,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     customerId?: number | null
     isPrivateSelection?: boolean
     updatedById: number
@@ -45922,6 +46074,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -45949,6 +46102,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     updatedById?: IntFieldUpdateOperationsInput | number
@@ -45971,6 +46125,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     updatedById?: IntFieldUpdateOperationsInput | number
@@ -46061,6 +46216,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: number | null
     isPrivateSelection?: boolean
     updatedById: number
@@ -46287,6 +46443,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46314,6 +46471,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     updatedById?: IntFieldUpdateOperationsInput | number
@@ -46336,6 +46494,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     updatedById?: IntFieldUpdateOperationsInput | number
@@ -46405,6 +46564,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: number | null
     customerId?: number | null
     isPrivateSelection?: boolean
@@ -46563,6 +46723,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46589,6 +46750,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
@@ -46611,6 +46773,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
@@ -46673,6 +46836,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: number | null
     customerId?: number | null
     isPrivateSelection?: boolean
@@ -46808,6 +46972,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46834,6 +46999,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
@@ -46856,6 +47022,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
@@ -46970,6 +47137,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: number | null
     customerId?: number | null
     isPrivateSelection?: boolean
@@ -47041,6 +47209,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -47067,6 +47236,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
@@ -47089,6 +47259,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
@@ -47111,6 +47282,7 @@ export namespace Prisma {
     customLabel?: string | null
     customGrade?: string | null
     ownershipType?: $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: number | null
     customerId?: number | null
     isPrivateSelection?: boolean
@@ -47148,6 +47320,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -47174,6 +47347,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean
@@ -47196,6 +47370,7 @@ export namespace Prisma {
     customLabel?: NullableStringFieldUpdateOperationsInput | string | null
     customGrade?: NullableStringFieldUpdateOperationsInput | string | null
     ownershipType?: EnumItemOwnershipFieldUpdateOperationsInput | $Enums.ItemOwnership
+    generalSourceBreakdown?: NullableJsonNullValueInput | InputJsonValue
     traderId?: NullableIntFieldUpdateOperationsInput | number | null
     customerId?: NullableIntFieldUpdateOperationsInput | number | null
     isPrivateSelection?: BoolFieldUpdateOperationsInput | boolean

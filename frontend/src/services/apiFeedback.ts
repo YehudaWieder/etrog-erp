@@ -1,3 +1,5 @@
+import { translateApiErrorMessage } from './apiErrorTranslations';
+
 export const API_FEEDBACK_EVENT = 'app:api-feedback';
 
 export type ApiFeedbackVariant = 'success' | 'error';
@@ -139,7 +141,9 @@ export function buildSafeErrorMessage(status: number, serverMessage?: string, ex
   }
 
   if (status === 400 || status === 422) {
-    return serverMessage || (getCurrentLanguage() === 'en' ? 'Missing or invalid input.' : 'יש נתונים חסרים או לא תקינים.');
+    const lang = getCurrentLanguage();
+    const translatedServerMessage = serverMessage ? translateApiErrorMessage(serverMessage, lang) : undefined;
+    return translatedServerMessage || (lang === 'en' ? 'Missing or invalid input.' : 'יש נתונים חסרים או לא תקינים.');
   }
 
   if (status === 401) {
@@ -151,7 +155,9 @@ export function buildSafeErrorMessage(status: number, serverMessage?: string, ex
   }
 
   if (status === 404) {
-    return serverMessage || (getCurrentLanguage() === 'en' ? 'Requested resource was not found.' : 'המידע המבוקש לא נמצא.');
+    const lang = getCurrentLanguage();
+    const translatedServerMessage = serverMessage ? translateApiErrorMessage(serverMessage, lang) : undefined;
+    return translatedServerMessage || (lang === 'en' ? 'Requested resource was not found.' : 'המידע המבוקש לא נמצא.');
   }
 
   if (status >= 500) {
@@ -160,7 +166,9 @@ export function buildSafeErrorMessage(status: number, serverMessage?: string, ex
       : 'לא הצלחנו להשלים את הבקשה כרגע. נסה שוב.';
   }
 
-  return serverMessage || (getCurrentLanguage() === 'en' ? 'Operation failed. Please try again.' : 'הפעולה נכשלה. נסה שוב.');
+  const lang = getCurrentLanguage();
+  const translatedServerMessage = serverMessage ? translateApiErrorMessage(serverMessage, lang) : undefined;
+  return translatedServerMessage || (lang === 'en' ? 'Operation failed. Please try again.' : 'הפעולה נכשלה. נסה שוב.');
 }
 
 export function buildNetworkErrorMessage(explicitMessage?: string): string {

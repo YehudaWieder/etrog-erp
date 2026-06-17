@@ -511,7 +511,7 @@ model Box {
   traderStocks TraderStock[]
 
   // Ownership
-  ownershipType BoxOwnership @default(UNASSIGNED)
+  ownershipType BoxOwnership @default(GENERAL)
   traderId      Int? // optional, if ownershipType = TRADER
   trader        Trader?      @relation(fields: [traderId], references: [id])
   customerId    Int? // optional, if ownershipType = CUSTOMER
@@ -566,12 +566,13 @@ model ShipmentItem {
   customGrade String? // free-text grade for CUSTOM ownership items
 
   // Ownership
-  ownershipType      ItemOwnership @default(UNASSIGNED)
-  traderId           Int? // optional, if ownershipType = TRADER
-  trader             Trader?       @relation(fields: [traderId], references: [id])
-  customerId         Int? // optional, if ownershipType = CUSTOMER
-  customer           Customer?     @relation(fields: [customerId], references: [id])
-  isPrivateSelection Boolean       @default(false) // true = packed from trader's PRIVATE_SELECTION stock
+  ownershipType          ItemOwnership @default(GENERAL)
+  generalSourceBreakdown Json? // populated for GENERAL items: [{traderId, traderName, quantity}], traderId null = modulo
+  traderId               Int? // optional, if ownershipType = TRADER
+  trader                 Trader?       @relation(fields: [traderId], references: [id])
+  customerId             Int? // optional, if ownershipType = CUSTOMER
+  customer               Customer?     @relation(fields: [customerId], references: [id])
+  isPrivateSelection     Boolean       @default(false) // true = packed from trader's PRIVATE_SELECTION stock
 
   updatedById Int
   updatedBy   User @relation(fields: [updatedById], references: [id])
@@ -704,14 +705,14 @@ enum BoxOwnership {
   TRADER
   CUSTOMER
   SHARED
-  UNASSIGNED
+  GENERAL
   CUSTOM
 }
 
 enum ItemOwnership {
   TRADER
   CUSTOMER
-  UNASSIGNED
+  GENERAL
   CUSTOM
 }
 

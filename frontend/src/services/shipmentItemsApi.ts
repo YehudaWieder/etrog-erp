@@ -1,6 +1,12 @@
 import { apiClient } from './apiClient';
 
-export type ItemOwnership = 'TRADER' | 'CUSTOMER' | 'UNASSIGNED' | 'CUSTOM';
+export type ItemOwnership = 'TRADER' | 'CUSTOMER' | 'GENERAL' | 'CUSTOM';
+
+export type GeneralSourceBreakdownEntry = {
+  traderId: number | null;
+  traderName: string | null;
+  quantity: number;
+};
 
 export type ShipmentItemRecord = {
   id: number;
@@ -13,6 +19,7 @@ export type ShipmentItemRecord = {
   pitamStatus: string | null;
   grade: string | null;
   ownershipType: ItemOwnership;
+  generalSourceBreakdown: GeneralSourceBreakdownEntry[] | null;
   traderId: number | null;
   customerId: number | null;
   trader?: { name: string } | null;

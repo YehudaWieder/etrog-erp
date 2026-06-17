@@ -20,7 +20,7 @@ export class CreateBoxDto {
   @ApiPropertyOptional({
     enum: BoxOwnership,
     enumName: 'BoxOwnership',
-    description: 'Ownership model. Defaults to UNASSIGNED. TRADER requires traderId, CUSTOMER requires customerId.',
+    description: 'Ownership model. Defaults to GENERAL. TRADER requires traderId, CUSTOMER requires customerId.',
     example: 'TRADER',
   })
   ownershipType?: BoxOwnership;

@@ -93,6 +93,7 @@ export function useShipmentItemsTable(
                   pitamStatus: item.pitamStatus ?? null,
                   notes: item.notes ?? null,
                   updatedByName: item.updatedBy?.name ?? '—',
+                  generalSourceBreakdown: item.generalSourceBreakdown ?? null,
                 }));
               }),
             );

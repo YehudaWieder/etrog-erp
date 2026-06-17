@@ -56,6 +56,7 @@ export function ShipmentItemsDetailTable({ rows, labels, showBoxNumber = true }:
               <th scope="col">{labels.colCategory}</th>
               <th scope="col">{labels.colGrade}</th>
               <th scope="col">{labels.colQuantity}</th>
+              <th scope="col">{labels.colGeneralSourceBreakdown}</th>
               <th scope="col">{labels.colNotes}</th>
             </tr>
           </thead>
@@ -74,6 +75,15 @@ export function ShipmentItemsDetailTable({ rows, labels, showBoxNumber = true }:
                 <td>{row.category}</td>
                 <td>{row.grade}</td>
                 <td>{row.quantity.toLocaleString()}</td>
+                <td>
+                  {row.generalSourceBreakdown && row.generalSourceBreakdown.length > 0 ? (
+                    <ul style={{ margin: 0, paddingInlineStart: '16px' }}>
+                      {row.generalSourceBreakdown.map((entry, i) => (
+                        <li key={i}>{entry.traderName ?? labels.generalSourceModuloLabel}: {entry.quantity}</li>
+                      ))}
+                    </ul>
+                  ) : '—'}
+                </td>
                 <td>
                   {row.notes ? (
                     <>

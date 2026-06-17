@@ -11,7 +11,7 @@ import {
 import { getTraders, type Trader } from '../../../services/tradersApi';
 import { getCustomers, type Customer } from '../../../services/customersApi';
 
-export type ItemOwnership = 'TRADER' | 'CUSTOMER' | 'UNASSIGNED';
+export type ItemOwnership = 'TRADER' | 'CUSTOMER' | 'GENERAL';
 
 type NewShipmentItemFormText = {
   validationBoxRequired: string;
@@ -175,7 +175,7 @@ export function useNewShipmentItemForm({
 
   // Load all trader inventory once when any SHARED box is selected (for trader picker)
   useEffect(() => {
-    if (!isOpen || !selectedBox || (selectedBox.ownershipType !== 'SHARED' && selectedBox.ownershipType !== 'UNASSIGNED')) {
+    if (!isOpen || !selectedBox || (selectedBox.ownershipType !== 'SHARED' && selectedBox.ownershipType !== 'GENERAL')) {
       setAllTraderInventory([]);
       return;
     }
@@ -239,7 +239,7 @@ export function useNewShipmentItemForm({
   // Derived: available trader categories (unique by id)
   // For UNASSIGNED boxes or SHARED+UNASSIGNED items, aggregated from allTraderInventory; otherwise from trader-specific inventory
   const availableTraderCategories = useMemo(() => {
-    const useAllTraders = selectedBox?.ownershipType === 'UNASSIGNED' || (selectedBox?.ownershipType === 'SHARED' && itemOwnership === 'UNASSIGNED');
+    const useAllTraders = selectedBox?.ownershipType === 'GENERAL' || (selectedBox?.ownershipType === 'SHARED' && itemOwnership === 'GENERAL');
     const source = useAllTraders ? allTraderInventory : traderInventory;
     const seen = new Map<number, string>();
     for (const row of source) {
@@ -268,7 +268,7 @@ export function useNewShipmentItemForm({
   // For UNASSIGNED boxes or SHARED+UNASSIGNED items, aggregated from allTraderInventory; otherwise from trader-specific inventory
   const availableGrades = useMemo(() => {
     if (!traderCategoryId) return [];
-    const useAllTraders = selectedBox?.ownershipType === 'UNASSIGNED' || (selectedBox?.ownershipType === 'SHARED' && itemOwnership === 'UNASSIGNED');
+    const useAllTraders = selectedBox?.ownershipType === 'GENERAL' || (selectedBox?.ownershipType === 'SHARED' && itemOwnership === 'GENERAL');
     const source = useAllTraders ? allTraderInventory : traderInventory;
     return [
       ...new Set(
@@ -282,7 +282,7 @@ export function useNewShipmentItemForm({
   // Derived: pitam statuses for selected combination
   const availablePitamStatuses = useMemo(() => {
     // Unassigned box or SHARED+UNASSIGNED item: from allTraderInventory aggregated
-    if ((selectedBox?.ownershipType === 'UNASSIGNED' || (selectedBox?.ownershipType === 'SHARED' && itemOwnership === 'UNASSIGNED')) && traderCategoryId && grade) {
+    if ((selectedBox?.ownershipType === 'GENERAL' || (selectedBox?.ownershipType === 'SHARED' && itemOwnership === 'GENERAL')) && traderCategoryId && grade) {
       return [
         ...new Set(
           allTraderInventory
@@ -327,7 +327,7 @@ export function useNewShipmentItemForm({
   // Derived: available quantity for current selection
   const availableQuantity = useMemo(() => {
     // Unassigned box or SHARED+UNASSIGNED item: sum all traders' stock for this combination
-    if ((selectedBox?.ownershipType === 'UNASSIGNED' || (selectedBox?.ownershipType === 'SHARED' && itemOwnership === 'UNASSIGNED')) && traderCategoryId && grade && pitamStatus) {
+    if ((selectedBox?.ownershipType === 'GENERAL' || (selectedBox?.ownershipType === 'SHARED' && itemOwnership === 'GENERAL')) && traderCategoryId && grade && pitamStatus) {
       const total = allTraderInventory
         .filter(
           (r) =>
@@ -466,9 +466,9 @@ export function useNewShipmentItemForm({
 
     const boxOwnership = selectedBox.ownershipType;
     const isCustomBox = boxOwnership === 'CUSTOM';
-    const isUnassignedBox = boxOwnership === 'UNASSIGNED';
+    const isUnassignedBox = boxOwnership === 'GENERAL';
     const isSharedCustomItem = boxOwnership === 'SHARED' && itemOwnership === 'CUSTOM';
-    const isSharedUnassigned = boxOwnership === 'SHARED' && itemOwnership === 'UNASSIGNED';
+    const isSharedUnassigned = boxOwnership === 'SHARED' && itemOwnership === 'GENERAL';
     const isCustomFreeText = isCustomBox || isSharedCustomItem;
 
     // For SHARED boxes, item ownership is required
@@ -481,7 +481,7 @@ export function useNewShipmentItemForm({
       boxOwnership === 'TRADER' ? 'TRADER'
         : boxOwnership === 'CUSTOMER' ? 'CUSTOMER'
           : boxOwnership === 'SHARED' ? (itemOwnership as ItemOwnership)
-            : 'UNASSIGNED';
+            : 'GENERAL';
 
     const resolvedTraderId = effectiveTraderId;
     const resolvedCustomerId = effectiveCustomerId;

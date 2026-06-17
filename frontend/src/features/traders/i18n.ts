@@ -268,6 +268,46 @@ export type TraderMovementsI18n = {
 	printTitle: string;
 	exportAriaLabel: string;
 	exportTitle: string;
+	addMovementForm: {
+		title: string;
+		closeLabel: string;
+		typeLabel: string;
+		typePlaceholder: string;
+		typeOptions: {
+			OWNERSHIP_TRANSFER: string;
+			INTERNAL_TRANSFER: string;
+			ASSIGNED: string;
+			SELF_PICKUP: string;
+			WASTE: string;
+			ADJUSTMENT: string;
+		};
+		fromTraderLabel: string;
+		toTraderLabel: string;
+		traderLabel: string;
+		traderPlaceholder: string;
+		moduloOption: string;
+		customerLabel: string;
+		customerPlaceholder: string;
+		traderCategoryLabel: string;
+		traderCategoryPlaceholder: string;
+		customerCategoryLabel: string;
+		customerCategoryPlaceholder: string;
+		gradeLabel: string;
+		gradePlaceholder: string;
+		pitamStatusLabel: string;
+		pitamStatusPlaceholder: string;
+		quantityLabel: string;
+		quantityPlaceholder: string;
+		availableQuantityHint: (quantity: number) => string;
+		adjustmentQuantityHint: string;
+		notesLabel: string;
+		notesPlaceholder: string;
+		cancel: string;
+		save: string;
+		saving: string;
+		validationRequired: string;
+		validationSameTrader: string;
+	};
 };
 
 const TRADERS_I18N: Record<AppLang, TradersI18n> = {

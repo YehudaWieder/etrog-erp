@@ -58,7 +58,7 @@ type NewBoxFormModalProps = {
 };
 
 const BOX_TYPES: BoxType[] = ['SMALL', 'MEDIUM', 'LARGE', 'CUSTOM'];
-const OWNERSHIP_TYPES: BoxOwnership[] = ['UNASSIGNED', 'TRADER', 'CUSTOMER', 'SHARED', 'CUSTOM'];
+const OWNERSHIP_TYPES: BoxOwnership[] = ['GENERAL', 'TRADER', 'CUSTOMER', 'SHARED', 'CUSTOM'];
 
 export function NewBoxFormModal({
   isOpen,

@@ -223,7 +223,9 @@ export class InternalTransferService {
     side: 'from' | 'to',
   ): TransferSideSpec {
     const ownerType = side === 'from' ? data.fromOwnerType : data.toOwnerType;
-    const pitamStatus = data.fromPitamStatus;
+    // pitamStatus is a single shared snapshot across both sides of a transfer; fromPitamStatus
+    // only overrides it when a side-specific value was supplied (e.g. trader -> customer flows).
+    const pitamStatus = data.fromPitamStatus ?? data.pitamStatus;
 
     if (!pitamStatus) {
       throw new BadRequestException(`${side}PitamStatus is required`);

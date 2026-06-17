@@ -365,6 +365,7 @@ exports.Prisma.ShipmentItemScalarFieldEnum = {
   customLabel: 'customLabel',
   customGrade: 'customGrade',
   ownershipType: 'ownershipType',
+  generalSourceBreakdown: 'generalSourceBreakdown',
   traderId: 'traderId',
   customerId: 'customerId',
   isPrivateSelection: 'isPrivateSelection',
@@ -391,6 +392,11 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
@@ -399,6 +405,12 @@ exports.Prisma.NullsOrder = {
 exports.Prisma.QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
+};
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
 };
 exports.Currency = exports.$Enums.Currency = {
   ILS: 'ILS',
@@ -475,14 +487,14 @@ exports.BoxOwnership = exports.$Enums.BoxOwnership = {
   TRADER: 'TRADER',
   CUSTOMER: 'CUSTOMER',
   SHARED: 'SHARED',
-  UNASSIGNED: 'UNASSIGNED',
+  GENERAL: 'GENERAL',
   CUSTOM: 'CUSTOM'
 };
 
 exports.ItemOwnership = exports.$Enums.ItemOwnership = {
   TRADER: 'TRADER',
   CUSTOMER: 'CUSTOMER',
-  UNASSIGNED: 'UNASSIGNED',
+  GENERAL: 'GENERAL',
   CUSTOM: 'CUSTOM'
 };
 

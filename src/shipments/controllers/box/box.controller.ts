@@ -34,7 +34,7 @@ export class BoxController {
         },
       },
       unassignedBox: {
-        summary: 'Unassigned box (minimum required fields)',
+        summary: 'General box (minimum required fields)',
         value: {
           shipmentId: 15,
           boxNumber: 4,

@@ -121,7 +121,7 @@ export const SHIPMENTS_I18N_EN = {
       CUSTOM: 'Custom',
     },
     ownershipTypeOptions: {
-      UNASSIGNED: 'Unassigned',
+      GENERAL: 'General',
       TRADER: 'Trader',
       CUSTOMER: 'Customer',
       SHARED: 'Shared',
@@ -168,7 +168,7 @@ export const SHIPMENTS_I18N_EN = {
       CUSTOM: 'Custom',
     },
     ownershipTypeOptions: {
-      UNASSIGNED: 'Unassigned',
+      GENERAL: 'General',
       TRADER: 'Trader',
       CUSTOMER: 'Customer',
       SHARED: 'Shared',
@@ -238,7 +238,7 @@ export const SHIPMENTS_I18N_EN = {
     ownershipLabels: {
       TRADER: 'Trader',
       CUSTOMER: 'Customer',
-      UNASSIGNED: 'Unassigned',
+      GENERAL: 'General',
       CUSTOM: 'Custom',
     },
     pitamStatusLabels: {
@@ -250,7 +250,7 @@ export const SHIPMENTS_I18N_EN = {
       TRADER: 'Trader',
       CUSTOMER: 'Customer',
       SHARED: 'Shared',
-      UNASSIGNED: 'Unassigned',
+      GENERAL: 'General',
       CUSTOM: 'Custom',
     },
     validationBoxRequired: 'Please select a box',
@@ -388,10 +388,12 @@ export const SHIPMENTS_I18N_EN = {
       colGrade: 'Grade',
       colQuantity: 'Quantity',
       colNotes: 'Note',
+      colGeneralSourceBreakdown: 'Inventory Source Breakdown',
+      generalSourceModuloLabel: 'Unallocated (modulo)',
       ownershipLabels: {
         TRADER: 'Trader',
         CUSTOMER: 'Customer',
-        UNASSIGNED: 'Unassigned',
+        GENERAL: 'General',
         CUSTOM: 'Custom',
       },
       stockSourceLabels: {
@@ -452,10 +454,12 @@ export const SHIPMENTS_I18N_EN = {
       colGrade: 'Grade',
       colQuantity: 'Quantity',
       colNotes: 'Note',
+      colGeneralSourceBreakdown: 'Inventory Source Breakdown',
+      generalSourceModuloLabel: 'Unallocated (modulo)',
       ownershipLabels: {
         TRADER: 'Trader',
         CUSTOMER: 'Customer',
-        UNASSIGNED: 'Unassigned',
+        GENERAL: 'General',
         CUSTOM: 'Custom',
       },
       stockSourceLabels: {
@@ -491,7 +495,7 @@ export const SHIPMENTS_I18N_EN = {
       TRADER: 'Trader',
       CUSTOMER: 'Customer',
       SHARED: 'Shared',
-      UNASSIGNED: 'Unassigned',
+      GENERAL: 'General',
       CUSTOM: 'Custom',
     },
   },
@@ -528,6 +532,8 @@ export const SHIPMENTS_I18N_EN = {
     detailsPrintLabel: 'Print',
     detailsUpdatedByLabel: 'Updated By',
     detailsNotesLabel: 'Notes',
+    detailsGeneralSourceTitle: 'Inventory Source Breakdown',
+    detailsGeneralSourceModuloLabel: 'Unallocated (modulo)',
     colGrade: 'Grade',
     colPitamStatus: 'Pitam Status',
     pitamStatusLabels: {
@@ -554,7 +560,7 @@ export const SHIPMENTS_I18N_EN = {
     ownershipLabels: {
       TRADER: 'Trader',
       CUSTOMER: 'Customer',
-      UNASSIGNED: 'Unassigned',
+      GENERAL: 'General',
       CUSTOM: 'Custom',
     },
     summaryMatrix: {

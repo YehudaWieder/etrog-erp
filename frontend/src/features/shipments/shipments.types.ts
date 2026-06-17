@@ -1,6 +1,6 @@
 import type { ShipmentStatus } from '../../services/shipmentsApi';
 import type { BoxOwnership, BoxStatus } from '../../services/boxesApi';
-import type { ItemOwnership } from '../../services/shipmentItemsApi';
+import type { ItemOwnership, GeneralSourceBreakdownEntry } from '../../services/shipmentItemsApi';
 
 export type { ItemOwnership };
 
@@ -34,6 +34,7 @@ export type ShipmentItemsTableRow = {
   pitamStatus: string | null;
   notes: string | null;
   updatedByName: string;
+  generalSourceBreakdown: GeneralSourceBreakdownEntry[] | null;
 };
 
 export type ShipmentsTableLabels = {
@@ -86,7 +87,9 @@ export type ShipmentsTableLabels = {
     colGrade: string;
     colQuantity: string;
     colNotes: string;
-    ownershipLabels: Record<'TRADER' | 'CUSTOMER' | 'UNASSIGNED' | 'CUSTOM', string>;
+    colGeneralSourceBreakdown: string;
+    generalSourceModuloLabel: string;
+    ownershipLabels: Record<'TRADER' | 'CUSTOMER' | 'GENERAL' | 'CUSTOM', string>;
     stockSourceLabels: Record<'GENERAL' | 'PRIVATE_SELECTION', string>;
     uncategorized: string;
     noGrade: string;
@@ -176,6 +179,8 @@ export type ShipmentItemsTableLabels = {
   detailsPrintLabel: string;
   detailsUpdatedByLabel: string;
   detailsNotesLabel: string;
+  detailsGeneralSourceTitle: string;
+  detailsGeneralSourceModuloLabel: string;
   colGrade: string;
   colPitamStatus: string;
   pitamStatusLabels: Record<string, string>;

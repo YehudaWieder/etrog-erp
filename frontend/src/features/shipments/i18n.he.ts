@@ -124,7 +124,7 @@ export const SHIPMENTS_I18N_HE = {
       CUSTOM: 'מותאם אישית',
     },
     ownershipTypeOptions: {
-      UNASSIGNED: 'לא משויך',
+      GENERAL: 'כללי',
       TRADER: 'סוחר',
       CUSTOMER: 'לקוח',
       SHARED: 'משותף',
@@ -171,7 +171,7 @@ export const SHIPMENTS_I18N_HE = {
       CUSTOM: 'מותאם אישית',
     },
     ownershipTypeOptions: {
-      UNASSIGNED: 'לא משויך',
+      GENERAL: 'כללי',
       TRADER: 'סוחר',
       CUSTOMER: 'לקוח',
       SHARED: 'משותף',
@@ -241,7 +241,7 @@ export const SHIPMENTS_I18N_HE = {
     ownershipLabels: {
       TRADER: 'סוחר',
       CUSTOMER: 'לקוח',
-      UNASSIGNED: 'לא משויך',
+      GENERAL: 'כללי',
       CUSTOM: 'מותאם אישית',
     },
     pitamStatusLabels: {
@@ -253,7 +253,7 @@ export const SHIPMENTS_I18N_HE = {
       TRADER: 'סוחר',
       CUSTOMER: 'לקוח',
       SHARED: 'משותף',
-      UNASSIGNED: 'לא משויך',
+      GENERAL: 'כללי',
       CUSTOM: 'מותאם אישית',
     },
     validationBoxRequired: 'יש לבחור קרטון',
@@ -391,10 +391,12 @@ export const SHIPMENTS_I18N_HE = {
       colGrade: 'דרגה',
       colQuantity: 'כמות',
       colNotes: 'הערה',
+      colGeneralSourceBreakdown: 'פירוט מקור המלאי',
+      generalSourceModuloLabel: 'לא משויך (מודולו)',
       ownershipLabels: {
         TRADER: 'סוחר',
         CUSTOMER: 'לקוח',
-        UNASSIGNED: 'לא משויך',
+        GENERAL: 'כללי',
         CUSTOM: 'מותאם אישית',
       },
       stockSourceLabels: {
@@ -455,10 +457,12 @@ export const SHIPMENTS_I18N_HE = {
       colGrade: 'דרגה',
       colQuantity: 'כמות',
       colNotes: 'הערה',
+      colGeneralSourceBreakdown: 'פירוט מקור המלאי',
+      generalSourceModuloLabel: 'לא משויך (מודולו)',
       ownershipLabels: {
         TRADER: 'סוחר',
         CUSTOMER: 'לקוח',
-        UNASSIGNED: 'לא משויך',
+        GENERAL: 'כללי',
         CUSTOM: 'מותאם אישית',
       },
       stockSourceLabels: {
@@ -494,7 +498,7 @@ export const SHIPMENTS_I18N_HE = {
       TRADER: 'סוחר',
       CUSTOMER: 'לקוח',
       SHARED: 'משותף',
-      UNASSIGNED: 'לא משויך',
+      GENERAL: 'כללי',
       CUSTOM: 'מותאם אישית',
     },
   },
@@ -531,6 +535,8 @@ export const SHIPMENTS_I18N_HE = {
     detailsPrintLabel: 'הדפסה',
     detailsUpdatedByLabel: 'עודכן ע"י',
     detailsNotesLabel: 'הערות',
+    detailsGeneralSourceTitle: 'פירוט מקור המלאי',
+    detailsGeneralSourceModuloLabel: 'לא משויך (מודולו)',
     colGrade: 'דרגה',
     colPitamStatus: 'סטטוס פיטם',
     pitamStatusLabels: {
@@ -557,7 +563,7 @@ export const SHIPMENTS_I18N_HE = {
     ownershipLabels: {
       TRADER: 'סוחר',
       CUSTOMER: 'לקוח',
-      UNASSIGNED: 'לא משויך',
+      GENERAL: 'כללי',
       CUSTOM: 'מותאם אישית',
     },
     summaryMatrix: {

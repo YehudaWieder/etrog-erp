@@ -180,7 +180,7 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
           boxNumber: boxNumberValue,
           status,
           boxType: boxType as 'SMALL' | 'MEDIUM' | 'LARGE' | 'CUSTOM' | undefined,
-          ownershipType: ownershipType as 'TRADER' | 'CUSTOMER' | 'SHARED' | 'UNASSIGNED' | 'CUSTOM' | undefined,
+          ownershipType: ownershipType as 'TRADER' | 'CUSTOMER' | 'SHARED' | 'GENERAL' | 'CUSTOM' | undefined,
           traderId: ownershipType === 'TRADER' ? Number(traderId) : null,
           customerId: ownershipType === 'CUSTOMER' ? Number(customerId) : null,
           notes: notes.trim() || null,

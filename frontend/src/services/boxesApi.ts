@@ -1,7 +1,7 @@
 import { apiClient, type ApiClientInit } from './apiClient';
 
 export type BoxStatus = 'OPEN' | 'CLOSED' | 'SHIPPED';
-export type BoxOwnership = 'TRADER' | 'CUSTOMER' | 'SHARED' | 'UNASSIGNED' | 'CUSTOM';
+export type BoxOwnership = 'TRADER' | 'CUSTOMER' | 'SHARED' | 'GENERAL' | 'CUSTOM';
 
 export type OpenBoxRecord = {
   id: number;

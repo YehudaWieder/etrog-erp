@@ -191,6 +191,19 @@ export function ShipmentItemsTable({ lang, labels, selectedItemId, onSelectItem,
                     </p>
                   </div>
 
+                  {detailsRow.generalSourceBreakdown && detailsRow.generalSourceBreakdown.length > 0 ? (
+                    <div className={`shipment-details-print__card-note ${styles.detailsCardNote}`}>
+                      <strong>{labels.detailsGeneralSourceTitle}:</strong>
+                      <ul style={{ margin: '4px 0 0', paddingInlineStart: '18px' }}>
+                        {detailsRow.generalSourceBreakdown.map((entry, i) => (
+                          <li key={i}>
+                            {entry.traderName ?? labels.detailsGeneralSourceModuloLabel}: {entry.quantity}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+
                   {detailsRow.notes ? (
                     <p className={`shipment-details-print__card-note ${styles.detailsCardNote}`}>
                       <strong>{labels.detailsNotesLabel}:</strong> {detailsRow.notes}

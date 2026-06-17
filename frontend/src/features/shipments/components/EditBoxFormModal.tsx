@@ -18,7 +18,7 @@ const infoStyle: React.CSSProperties = {
 };
 
 type BoxType = 'SMALL' | 'MEDIUM' | 'LARGE' | 'CUSTOM';
-type BoxOwnership = 'UNASSIGNED' | 'TRADER' | 'CUSTOMER' | 'SHARED' | 'CUSTOM';
+type BoxOwnership = 'GENERAL' | 'TRADER' | 'CUSTOMER' | 'SHARED' | 'CUSTOM';
 
 type EditBoxFormModalText = {
   title: (num: number) => string;
@@ -81,7 +81,7 @@ type EditBoxFormModalProps = {
 
 const BOX_STATUSES: BoxStatus[] = ['OPEN', 'CLOSED', 'SHIPPED'];
 const BOX_TYPES: BoxType[] = ['SMALL', 'MEDIUM', 'LARGE', 'CUSTOM'];
-const OWNERSHIP_TYPES: BoxOwnership[] = ['UNASSIGNED', 'TRADER', 'CUSTOMER', 'SHARED', 'CUSTOM'];
+const OWNERSHIP_TYPES: BoxOwnership[] = ['GENERAL', 'TRADER', 'CUSTOMER', 'SHARED', 'CUSTOM'];
 
 export function EditBoxFormModal({
   isOpen,

@@ -85,7 +85,7 @@ export class ItemService {
       }
 
       if (itemOwnership === ItemOwnership.CUSTOM) {
-        throw new BadRequestException('SHARED box supports only TRADER, CUSTOMER, or UNASSIGNED item ownership');
+        throw new BadRequestException('SHARED box supports only TRADER, CUSTOMER, or GENERAL item ownership');
       }
 
       // If assigning to a TRADER, ensure the trader has a share in this category for the season
@@ -105,14 +105,14 @@ export class ItemService {
       };
     }
 
-    if (boxOwnership === BoxOwnership.UNASSIGNED) {
-      const effectiveOwnership = itemOwnership ?? ItemOwnership.UNASSIGNED;
-      if (effectiveOwnership !== ItemOwnership.UNASSIGNED) {
-        throw new BadRequestException('UNASSIGNED box accepts only UNASSIGNED items');
+    if (boxOwnership === BoxOwnership.GENERAL) {
+      const effectiveOwnership = itemOwnership ?? ItemOwnership.GENERAL;
+      if (effectiveOwnership !== ItemOwnership.GENERAL) {
+        throw new BadRequestException('GENERAL box accepts only GENERAL items');
       }
 
       return {
-        ownershipType: ItemOwnership.UNASSIGNED,
+        ownershipType: ItemOwnership.GENERAL,
         traderId: null,
         customerId: null,
       };
@@ -427,12 +427,12 @@ export class ItemService {
       return;
     }
 
-    if (params.itemOwnership === ItemOwnership.UNASSIGNED) {
+    if (params.itemOwnership === ItemOwnership.GENERAL) {
       if (!params.traderCategoryId || !params.grade) {
         throw new BadRequestException('Unassigned packed items require traderCategoryId and grade');
       }
 
-      if (params.boxOwnership === BoxOwnership.SHARED || params.boxOwnership === BoxOwnership.UNASSIGNED) {
+      if (params.boxOwnership === BoxOwnership.SHARED || params.boxOwnership === BoxOwnership.GENERAL) {
         const { traderDeductions, moduloDeduction } = await this.buildUnassignedTraderDeductions(tx, {
           seasonId: params.seasonId,
           traderCategoryId: params.traderCategoryId,
@@ -450,7 +450,7 @@ export class ItemService {
             pitamStatus: params.pitamStatus,
             isModulo: false,
             requiredQuantity: deduction.quantity,
-            contextLabel: 'Packing UNASSIGNED item (trader portion)',
+            contextLabel: 'Packing GENERAL item (trader portion)',
             excludePrivateSelection: true,
           });
         }
@@ -464,7 +464,7 @@ export class ItemService {
             pitamStatus: params.pitamStatus,
             isModulo: true,
             requiredQuantity: moduloDeduction,
-            contextLabel: 'Packing UNASSIGNED item (modulo fallback)',
+            contextLabel: 'Packing GENERAL item (modulo fallback)',
           });
         }
 
@@ -517,9 +517,9 @@ export class ItemService {
       itemOwnership: ItemOwnership;
       updatedById: number;
     },
-  ) {
+  ): Promise<Array<{ traderId: number | null; traderName: string | null; quantity: number }> | null> {
     if (params.boxOwnership === BoxOwnership.CUSTOM || params.itemOwnership === ItemOwnership.CUSTOM) {
-      return;
+      return null;
     }
 
     if (params.itemOwnership === ItemOwnership.TRADER) {
@@ -545,7 +545,7 @@ export class ItemService {
           updatedById: params.updatedById,
         },
       });
-      return;
+      return null;
     }
 
     if (params.itemOwnership === ItemOwnership.CUSTOMER) {
@@ -572,15 +572,15 @@ export class ItemService {
           updatedById: params.updatedById,
         },
       });
-      return;
+      return null;
     }
 
-    if (params.itemOwnership === ItemOwnership.UNASSIGNED) {
+    if (params.itemOwnership === ItemOwnership.GENERAL) {
       if (!params.traderCategoryId || !params.grade) {
         throw new BadRequestException('Unassigned packed movement requires traderCategoryId and grade');
       }
 
-      if (params.boxOwnership === BoxOwnership.SHARED || params.boxOwnership === BoxOwnership.UNASSIGNED) {
+      if (params.boxOwnership === BoxOwnership.SHARED || params.boxOwnership === BoxOwnership.GENERAL) {
         const { traderDeductions, moduloDeduction } = await this.buildUnassignedTraderDeductions(tx, {
           seasonId: params.seasonId,
           traderCategoryId: params.traderCategoryId,
@@ -588,6 +588,12 @@ export class ItemService {
           pitamStatus: params.pitamStatus,
           quantity: params.quantity,
         });
+
+        const traderIds = traderDeductions.map((d) => d.traderId);
+        const traderRows = traderIds.length > 0
+          ? await tx.trader.findMany({ where: { id: { in: traderIds } }, select: { id: true, name: true } })
+          : [];
+        const traderNameMap = new Map(traderRows.map((t) => [t.id, t.name]));
 
         for (const deduction of traderDeductions) {
           await tx.traderStock.create({
@@ -630,7 +636,17 @@ export class ItemService {
             },
           });
         }
-        return;
+
+        const breakdown: Array<{ traderId: number | null; traderName: string | null; quantity: number }> = [
+          ...traderDeductions.map((d) => ({
+            traderId: d.traderId,
+            traderName: traderNameMap.get(d.traderId) ?? null,
+            quantity: d.quantity,
+          })),
+          ...(moduloDeduction > 0 ? [{ traderId: null, traderName: null, quantity: moduloDeduction }] : []),
+        ];
+
+        return breakdown;
       }
     }
 
@@ -747,7 +763,7 @@ export class ItemService {
         },
       });
 
-      await this.createPackedMovement(tx, {
+      const generalSourceBreakdown = await this.createPackedMovement(tx, {
         itemId: newItem.id,
         seasonId,
         boxOwnership: box.ownershipType,
@@ -763,6 +779,10 @@ export class ItemService {
         itemOwnership: newItem.ownershipType,
         updatedById: newItem.updatedById,
       });
+
+      if (generalSourceBreakdown !== null) {
+        await tx.shipmentItem.update({ where: { id: newItem.id }, data: { generalSourceBreakdown } });
+      }
 
       await this.shipmentsService.syncBoxAndShipmentTotals(tx, box.id, box.shipmentId);
 
@@ -916,7 +936,7 @@ export class ItemService {
         },
       });
 
-      await this.createPackedMovement(tx, {
+      const generalSourceBreakdown = await this.createPackedMovement(tx, {
         itemId: updatedItem.id,
         seasonId: currentItem.seasonId,
         boxOwnership: targetBox.ownershipType,
@@ -932,6 +952,10 @@ export class ItemService {
         itemOwnership: updatedItem.ownershipType,
         updatedById: nextUpdatedById,
       });
+
+      if (generalSourceBreakdown !== null) {
+        await tx.shipmentItem.update({ where: { id: updatedItem.id }, data: { generalSourceBreakdown } });
+      }
 
       // Re-sync totals for the associated box and shipment
       await this.shipmentsService.syncBoxAndShipmentTotals(tx, currentItem.boxId, currentItem.shipmentId);
@@ -1049,7 +1073,7 @@ export class ItemService {
       });
       inventoryAvailable = balance;
       maxInventory = balance + freedQuantity;
-    } else if (item.ownershipType === ItemOwnership.UNASSIGNED && item.traderCategoryId && item.grade && item.pitamStatus) {
+    } else if (item.ownershipType === ItemOwnership.GENERAL && item.traderCategoryId && item.grade && item.pitamStatus) {
       const [traderAvailabilities, moduloBalance] = await Promise.all([
         this.inventoryAvailabilityService.getTraderUnshippedAvailabilityByCategory(this.prisma, {
           seasonId: item.seasonId,
