@@ -286,6 +286,11 @@ export type TraderMovementsI18n = {
 		traderLabel: string;
 		traderPlaceholder: string;
 		moduloOption: string;
+		wasteSourceLabel: string;
+		wasteSourcePlaceholder: string;
+		itemStockSourceLabel: string;
+		itemStockSourcePlaceholder: string;
+		itemStockSourceOptions: { GENERAL: string; PRIVATE_SELECTION: string };
 		customerLabel: string;
 		customerPlaceholder: string;
 		traderCategoryLabel: string;
