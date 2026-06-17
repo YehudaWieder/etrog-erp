@@ -44,8 +44,10 @@ export class TraderStockSummaryRepository {
         return ts.boxId !== null && ts.box?.status === 'SHIPPED';
       }
       if (shipmentScope === 'UNSHIPPED') {
-        // No box OR box not shipped
-        return ts.boxId === null || ts.box?.status !== 'SHIPPED';
+        // Source records (positive) have no boxId — always include.
+        // Deduction records (PACKED_SHIPPED, negative) have a boxId; include them
+        // regardless of box status so that shipped deductions still reduce the pool.
+        return ts.boxId === null || ts.quantity < 0;
       }
       return true;
     });

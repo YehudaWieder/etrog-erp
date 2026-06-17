@@ -53,10 +53,10 @@ function applyNonBoxTypeFilters(
   where: Prisma.TraderStockWhereInput,
   shipmentScope: InventoryMovementScope,
 ) {
-  // Only apply type filter for non-box-based scopes
-  // Box-based scopes (PACKED_SHIPPED, SHIPPED, UNSHIPPED) are handled by the repository
-  
-  // For ALL scope: exclude SELF_PICKUP, PACKED_SHIPPED (handled by repository filtering for boxId)
+  // Box-based scopes (PACKED_SHIPPED, SHIPPED, UNSHIPPED) are handled by groupSummaryWithBoxStatus.
+  // UNSHIPPED intentionally has no type filter here so that PACKED_SHIPPED negative records
+  // (items deducted when packed into non-shipped boxes) are included for correct net totals.
+
   if (shipmentScope === 'ALL') {
     where.type = {
       notIn: ['SELF_PICKUP', 'PACKED_SHIPPED'],
