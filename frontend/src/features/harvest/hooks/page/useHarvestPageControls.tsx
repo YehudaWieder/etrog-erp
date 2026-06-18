@@ -5,7 +5,7 @@ import type { Field } from '../../../../services/fieldsApi';
 import type { HarvestRecord } from '../../../../services/harvestsApi';
 import type { Season } from '../../../../services/seasonsApi';
 import type { HarvestI18n } from '../../i18n';
-import { HarvestAddHeaderAction } from '../../components/shared/HarvestAddHeaderAction';
+
 import { HarvestPageHeaderActions } from '../../components/shared/HarvestPageHeaderActions';
 import { HarvestSummaryHeaderActions } from '../../components/shared/HarvestSummaryHeaderActions';
 
@@ -15,64 +15,73 @@ type SortingAssignmentFilterOption = {
   group?: string;
 };
 
+type DateFilterOption = {
+  value: string;
+  label: string;
+};
+
 type UseHarvestPageControlsParams = {
   lang: 'he' | 'en';
   t: HarvestI18n;
   isDailyDetailsTab: boolean;
-  isFieldReportTab: boolean;
   isSortingDailyDetailsTab: boolean;
   isSortingSummaryTab: boolean;
   isHarvestSummaryTab: boolean;
+  isSortingListTab: boolean;
   detailsRecord: HarvestRecord | null;
   selectedHarvestRow: HarvestRecord | null;
   selectedSortingDailyRowId: number | null;
   openHarvestGlobalForm: () => void;
   openHarvestSortingGlobalForm: () => void;
+  onDeleteHarvest: () => void;
   activeSeasonId: number | null;
   seasons: Season[];
   fields: Field[];
   sortingAssignmentFilterOptions: SortingAssignmentFilterOption[];
+  harvestDateOptions: DateFilterOption[];
 };
 
 export function useHarvestPageControls({
   lang,
   t,
   isDailyDetailsTab,
-  isFieldReportTab,
   isSortingDailyDetailsTab,
   isSortingSummaryTab,
   isHarvestSummaryTab,
+  isSortingListTab,
   detailsRecord,
   selectedHarvestRow,
   selectedSortingDailyRowId,
   openHarvestGlobalForm,
   openHarvestSortingGlobalForm,
+  onDeleteHarvest,
   activeSeasonId,
   seasons,
   fields,
   sortingAssignmentFilterOptions,
+  harvestDateOptions,
 }: UseHarvestPageControlsParams) {
   const addActionLabel = t.pageControls.addHarvest;
   const addSortingActionLabel = t.pageControls.addSorting;
   const editActionLabel = t.pageControls.edit;
   const deleteActionLabel = t.pageControls.delete;
+  const deleteHarvestBlockedTitle = t.pageControls.deleteHarvestBlockedTitle;
 
   const pageHeaderActions = useMemo<ReactNode>(() => {
     if (isDailyDetailsTab) {
+      const harvestHasSortings = (selectedHarvestRow?.classifiedTotal ?? 0) > 0;
       return (
         <HarvestPageHeaderActions
           addActionLabel={addActionLabel}
           editActionLabel={editActionLabel}
           deleteActionLabel={deleteActionLabel}
           onAdd={openHarvestGlobalForm}
+          onDelete={onDeleteHarvest}
           editDisabled={!selectedHarvestRow}
-          deleteDisabled={!selectedHarvestRow}
+          deleteDisabled={!selectedHarvestRow || harvestHasSortings}
+          deleteTitle={harvestHasSortings ? deleteHarvestBlockedTitle : undefined}
         />
       );
-    }
-
-    if (isFieldReportTab) {
-      return <HarvestAddHeaderAction label={addActionLabel} onClick={openHarvestGlobalForm} />;
     }
 
     if (isSortingDailyDetailsTab) {
@@ -82,8 +91,10 @@ export function useHarvestPageControls({
           editActionLabel={editActionLabel}
           deleteActionLabel={deleteActionLabel}
           onAdd={openHarvestSortingGlobalForm}
+          onDelete={() => void 0}
           editDisabled={selectedSortingDailyRowId === null}
-          deleteDisabled={selectedSortingDailyRowId === null}
+          deleteDisabled
+          showDelete={false}
         />
       );
     }
@@ -104,13 +115,14 @@ export function useHarvestPageControls({
     addActionLabel,
     addSortingActionLabel,
     deleteActionLabel,
+    deleteHarvestBlockedTitle,
     detailsRecord,
     editActionLabel,
     isDailyDetailsTab,
-    isFieldReportTab,
     isHarvestSummaryTab,
     isSortingDailyDetailsTab,
     isSortingSummaryTab,
+    onDeleteHarvest,
     openHarvestGlobalForm,
     openHarvestSortingGlobalForm,
     selectedHarvestRow,
@@ -130,6 +142,19 @@ export function useHarvestPageControls({
               label: `${season.yearName}${season.isActive ? ` (${t.dailyDetails.filters.activeSeasonBadge})` : ''}`,
             }))
           : [{ value: '', label: t.dailyDetails.filters.noActiveSeason }],
+    };
+
+    const dateFilter: GlobalScopedFilterConfig = {
+      key: 'harvestDate',
+      label: isSortingDailyDetailsTab
+        ? t.sortingDailyDetails.filters.dateFilterLabel
+        : isSortingListTab
+          ? t.sortingList.filters.dateFilterLabel
+          : t.dailyDetails.filters.dateFilterLabel,
+      defaultValue: 'all',
+      queryParam: 'hdDate',
+      options: harvestDateOptions,
+      ...(isSortingListTab ? { type: 'calendar' as const, lang } : {}),
     };
 
     const fieldFilter: GlobalScopedFilterConfig = {
@@ -164,7 +189,7 @@ export function useHarvestPageControls({
       ],
     };
 
-    if (isFieldReportTab || isHarvestSummaryTab) {
+    if (isHarvestSummaryTab) {
       return [seasonFilter, methodFilter];
     }
 
@@ -182,18 +207,35 @@ export function useHarvestPageControls({
       ];
     }
 
+    if (isSortingListTab) {
+      return [
+        seasonFilter,
+        dateFilter,
+        {
+          key: 'sortingAssignmentType',
+          label: t.sortingDailyDetails.filters.assignmentFilterLabel,
+          defaultValue: 'all',
+          queryParam: 'slAssign',
+          options: sortingAssignmentFilterOptions,
+        },
+      ];
+    }
+
     return [seasonFilter, fieldFilter];
   }, [
     activeSeasonId,
     fields,
-    isFieldReportTab,
+    harvestDateOptions,
+    isDailyDetailsTab,
     isHarvestSummaryTab,
     isSortingDailyDetailsTab,
+    isSortingListTab,
     seasons,
     sortingAssignmentFilterOptions,
     t.dailyDetails.filters,
     t.fieldReport.filters,
     t.sortingDailyDetails.filters,
+    t.sortingList.filters,
   ]);
 
   return {

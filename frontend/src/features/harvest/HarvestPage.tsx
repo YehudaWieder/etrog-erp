@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppShell } from '../../app/layout/AppShell';
@@ -10,7 +10,12 @@ import type { Field } from '../../services/fieldsApi';
 import {
   type HarvestFieldReportDetailsRecord,
   type HarvestRecord,
+  deleteHarvest,
 } from '../../services/harvestsApi';
+import {
+  type ClassificationListRecord,
+  getClassificationsBySeason,
+} from '../../services/classificationsApi';
 import {
   type ClassificationDailySummaryCategory,
   type ClassificationDailySummaryRow,
@@ -21,12 +26,14 @@ import type { Customer } from '../../services/customersApi';
 import { setScopeFilter } from '../../store/globalFiltersSlice';
 import type { AppDispatch, RootState } from '../../store';
 import { HARVEST_I18N } from './i18n';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { HarvestBulkFormModal } from './components/forms/HarvestBulkFormModal';
 import { HarvestSortingFormModal } from './components/forms/HarvestSortingFormModal';
 import { HarvestDailyDetailsSection } from './components/daily/HarvestDailyDetailsSection';
 import { HarvestFieldReportSection } from './components/field-report/HarvestFieldReportSection';
 import { HarvestSortingDailySection } from './components/sorting-daily/HarvestSortingDailySection';
 import { HarvestSortingSummarySection } from './components/sorting-summary/HarvestSortingSummarySection';
+import { HarvestSortingListSection } from './components/sorting-list/HarvestSortingListSection';
 import { useHarvestPageLifecycle } from './hooks/page/useHarvestPageLifecycle';
 import { useHarvestFiltersAndRows } from './hooks/data/useHarvestFiltersAndRows';
 import { useHarvestFormCategories } from './hooks/form/useHarvestFormCategories';
@@ -34,7 +41,6 @@ import { useHarvestDetailsSideEffects } from './hooks/details/useHarvestDetailsS
 import { useHarvestDetailsData } from './hooks/details/useHarvestDetailsData';
 import { createHarvestExportActions } from './services/harvestExportActions';
 import { useHarvestDetailsPrintActions } from './hooks/details/useHarvestDetailsPrintActions';
-import { useHarvestNumericSelection } from './hooks/table/useHarvestNumericSelection';
 import { useHarvestPageControls } from './hooks/page/useHarvestPageControls';
 import { useHarvestRelatedSortings } from './hooks/details/useHarvestRelatedSortings';
 import { useHarvestSortingDailyRows } from './hooks/data/useHarvestSortingDailyRows';
@@ -59,6 +65,7 @@ import {
   HARVEST_DAILY_FILTER_SCOPE,
   matchesSortingAssignmentSelection,
   parseFieldFilterId,
+  parseHarvestDateFilter,
   parseSeasonFilterId,
   parseSortingAssignmentFilter,
   resolveSortingCategoryOwnerToken,
@@ -95,7 +102,9 @@ export function HarvestPage() {
   const [sortingDailyDetailRows, setSortingDailyDetailRows] = useState<ClassificationRecord[]>([]);
   const [isSortingDailyDetailRowsLoading, setIsSortingDailyDetailRowsLoading] = useState(false);
   const [sortingDailyDetailRowsLoadError, setSortingDailyDetailRowsLoadError] = useState<string>('');
-  const [isDragSelecting, setIsDragSelecting] = useState(false);
+  const [sortingListRows, setSortingListRows] = useState<ClassificationListRecord[]>([]);
+  const [isSortingListLoading, setIsSortingListLoading] = useState(false);
+  const [sortingListLoadError, setSortingListLoadError] = useState<string>('');
   const detailsPrintRef = useRef<HTMLDivElement | null>(null);
   const fieldReportDetailsPrintRef = useRef<HTMLDivElement | null>(null);
   const sortingDailyDetailsPrintRef = useRef<HTMLDivElement | null>(null);
@@ -105,11 +114,13 @@ export function HarvestPage() {
   const visibleSortingDailyRowsRef = useRef<ClassificationDailySummaryRow[]>([]);
   const [isHarvestLoading, setIsHarvestLoading] = useState(false);
   const [harvestLoadError, setHarvestLoadError] = useState<string>('');
+  const [isDeleteHarvestDialogOpen, setIsDeleteHarvestDialogOpen] = useState(false);
+  const [isDeletingHarvest, setIsDeletingHarvest] = useState(false);
   const globalFilterValues = useSelector(
     (state: RootState) => state.globalFilters.scopes[HARVEST_DAILY_FILTER_SCOPE] ?? EMPTY_FILTERS,
   );
   const currentUser = getCurrentUser();
-  const alertsCount = useHarvestPageLifecycle({ navigate, setIsDragSelecting });
+  const alertsCount = useHarvestPageLifecycle({ navigate });
 
   const lang = useMemo<'he' | 'en'>(() => {
     if (typeof window !== 'undefined') {
@@ -162,7 +173,8 @@ export function HarvestPage() {
   const isFieldReportTab = activeSidebarId === 'harvest-field-report';
   const isSortingDailyDetailsTab = activeSidebarId === 'sorting-daily-details';
   const isSortingSummaryTab = activeSidebarId === 'sorting-summary';
-  const requiresFiltersData = isDailyDetailsTab || isFieldReportTab || isSortingDailyDetailsTab || isHarvestSummaryTab;
+  const isSortingListTab = activeSidebarId === 'sorting-list';
+  const requiresFiltersData = isDailyDetailsTab || isFieldReportTab || isSortingDailyDetailsTab || isHarvestSummaryTab || isSortingListTab;
   const requiresHarvestData = isDailyDetailsTab || isFieldReportTab || isSortingDailyDetailsTab || isHarvestSummaryTab;
 
   const activeSeasonId = useMemo(() => {
@@ -176,6 +188,10 @@ export function HarvestPage() {
   const fieldFilterId = useMemo<number | 'all'>(() => {
     return parseFieldFilterId(globalFilterValues.fieldId ?? 'all');
   }, [globalFilterValues.fieldId]);
+
+  const harvestDateFilterId = useMemo<string | 'all'>(() => {
+    return parseHarvestDateFilter(globalFilterValues.harvestDate ?? 'all');
+  }, [globalFilterValues.harvestDate]);
 
   const {
     isHarvestFormOpen,
@@ -258,12 +274,43 @@ export function HarvestPage() {
     return globalFilterValues.fieldReportMethod === 'franco' ? 'franco' : 'our';
   }, [globalFilterValues.fieldReportMethod]);
 
+  const formatGregorianDate = useCallback(
+    (value: string) => formatHarvestGregorianDate(value, lang),
+    [lang],
+  );
+
+  const harvestDateOptions = useMemo(() => {
+    let sourceRows: { dateGregorian: string }[];
+    let allDatesLabel: string;
+    if (isSortingListTab) {
+      sourceRows = sortingListRows.map((row) => ({ dateGregorian: (row.fieldHarvest?.dateGregorian ?? '').slice(0, 10) })).filter((r) => r.dateGregorian !== '');
+      allDatesLabel = t.sortingList.filters.allDatesOption;
+    } else {
+      sourceRows = harvestRows;
+      allDatesLabel = t.dailyDetails.filters.allDatesOption;
+    }
+    const uniqueDates = [...new Set(sourceRows.map((row) => row.dateGregorian))];
+    uniqueDates.sort((a, b) => b.localeCompare(a));
+    return [
+      { value: 'all', label: allDatesLabel },
+      ...uniqueDates.map((date) => ({ value: date, label: formatGregorianDate(date) })),
+    ];
+  }, [isSortingListTab, sortingListRows, harvestRows, formatGregorianDate, t.dailyDetails.filters.allDatesOption, t.sortingList.filters.allDatesOption]);
+
+  useEffect(() => {
+    if (harvestDateFilterId === 'all') return;
+    if (harvestDateOptions.length <= 1) return; // data not loaded yet
+    const validValues = new Set(harvestDateOptions.map((o) => o.value));
+    if (!validValues.has(harvestDateFilterId)) {
+      dispatch(setScopeFilter({ scope: HARVEST_DAILY_FILTER_SCOPE, key: 'harvestDate', value: 'all' }));
+    }
+  }, [harvestDateOptions, harvestDateFilterId, dispatch]);
+
   useHarvestFiltersAndRows({
     requiresFiltersData,
     isSortingDailyDetailsTab,
-    activeSeasonId,
+    isSortingListTab,
     seasonFilterId,
-    seasons,
     requiresHarvestData,
     isDailyDetailsTab,
     dailyLoadErrorMessage: t.dailyDetails.loadError,
@@ -288,6 +335,26 @@ export function HarvestPage() {
     setSortingDailyLoadError,
     setIsSortingDailyLoading,
   });
+
+  useEffect(() => {
+    if (!isSortingListTab || seasonFilterId === null) {
+      return;
+    }
+
+    setIsSortingListLoading(true);
+    setSortingListLoadError('');
+
+    getClassificationsBySeason(seasonFilterId)
+      .then((data) => {
+        setSortingListRows(data);
+      })
+      .catch(() => {
+        setSortingListLoadError(t.sortingList.loadError);
+      })
+      .finally(() => {
+        setIsSortingListLoading(false);
+      });
+  }, [isSortingListTab, seasonFilterId, t.sortingList.loadError]);
 
   useHarvestFormCategories({
     isOpen: isHarvestFormOpen || isHarvestSortingFormOpen,
@@ -365,6 +432,7 @@ export function HarvestPage() {
 
     return [
       { value: 'all', label: t.sortingDailyDetails.filters.assignmentOptions.all },
+      { value: 'general', label: t.sortingDailyDetails.filters.assignmentOptions.general },
       { value: 'trader', label: t.sortingDailyDetails.filters.assignmentOptions.trader },
       { value: 'customer', label: t.sortingDailyDetails.filters.assignmentOptions.customer },
       ...traderOptions,
@@ -374,6 +442,7 @@ export function HarvestPage() {
     customers,
     lang,
     t.sortingDailyDetails.filters.assignmentOptions.all,
+    t.sortingDailyDetails.filters.assignmentOptions.general,
     t.sortingDailyDetails.filters.assignmentOptions.customer,
     t.sortingDailyDetails.filters.assignmentOptions.customerPrefix,
     t.sortingDailyDetails.filters.assignmentOptions.trader,
@@ -382,7 +451,7 @@ export function HarvestPage() {
   ]);
 
   useEffect(() => {
-    if (!isSortingDailyDetailsTab) {
+    if (!isSortingDailyDetailsTab && !isSortingListTab) {
       return;
     }
 
@@ -398,7 +467,7 @@ export function HarvestPage() {
         }),
       );
     }
-  }, [dispatch, globalFilterValues.sortingAssignmentType, isSortingDailyDetailsTab, sortingAssignmentFilterOptions]);
+  }, [dispatch, globalFilterValues.sortingAssignmentType, isSortingDailyDetailsTab, isSortingListTab, sortingAssignmentFilterOptions]);
 
   const selectedHarvestSummaryTotals = useMemo(() => {
     const selectedHarvestId = Number(harvestSortingFormHarvestId);
@@ -473,8 +542,6 @@ export function HarvestPage() {
     setSortingDailyLoadError,
   });
 
-  const formatGregorianDate = (value: string) => formatHarvestGregorianDate(value, lang);
-
   const harvestSortingOptions = useMemo(() => {
     const locale = lang === 'he' ? 'he-IL' : 'en-US';
     const collator = new Intl.Collator(locale, { sensitivity: 'base', numeric: true });
@@ -492,30 +559,13 @@ export function HarvestPage() {
     openHarvestSortingGlobalForm(null);
   };
 
-  const {
-    clearSelectedNumericCells,
-    formattedSelectedTotal,
-    renderFieldReportNumericCell,
-    renderNumericCell,
-    renderSortingNumericCell,
-    selectedCellsCount,
-  } = useHarvestNumericSelection({
-    lang,
-    isDailyDetailsTab,
-    isFieldReportTab,
-    isHarvestSummaryTab,
-    isSortingDailyDetailsTab,
-    harvestRows,
-    fieldFilterId,
-    fieldReportRows,
-    sortingDailyRows,
-    sortingDailyCategories,
-    isDragSelecting,
-    setIsDragSelecting,
-  });
-
   const filteredHarvestRows = useMemo(() => {
-    return harvestRows.filter((row) => (fieldFilterId === 'all' ? true : row.fieldId === fieldFilterId));
+    return harvestRows.filter((row) => {
+      if (fieldFilterId !== 'all' && row.fieldId !== fieldFilterId) {
+        return false;
+      }
+      return true;
+    });
   }, [harvestRows, fieldFilterId]);
 
   useEffect(() => {
@@ -541,7 +591,6 @@ export function HarvestPage() {
   }, [filteredHarvestRows, selectedHarvestRow]);
 
   useHarvestDetailsSideEffects({
-    isFieldReportTab,
     isHarvestSummaryTab,
     isSortingDailyDetailsTab,
     seasonFilterId,
@@ -610,15 +659,15 @@ export function HarvestPage() {
     setDetailsRecord,
     setFieldReportDetailsFieldId,
     setSortingDailyDetailsRowId,
-    renderNumericCell,
-    renderFieldReportNumericCell,
-    renderSortingNumericCell,
     isPartialClassificationFlag,
   });
 
   const filteredSortingDailyRows = useMemo<ClassificationDailySummaryRow[]>(() => {
     return sortingDailyRows
-      .filter((row) => (fieldFilterId === 'all' ? true : row.fieldId === fieldFilterId))
+      .filter((row) => {
+        if (fieldFilterId !== 'all' && row.fieldId !== fieldFilterId) return false;
+        return true;
+      })
       .map((row) => {
         const categoryTotals: Record<string, number> = {};
         let totalSorted = 0;
@@ -645,6 +694,24 @@ export function HarvestPage() {
     filteredSortingDailyCategories,
     sortingDailyRows,
   ]);
+
+  const filteredSortingListRows = useMemo<ClassificationListRecord[]>(() => {
+    return sortingListRows.filter((row) => {
+      if (harvestDateFilterId !== 'all' && (row.fieldHarvest?.dateGregorian ?? '').slice(0, 10) !== harvestDateFilterId) return false;
+      if (sortingAssignmentFilter !== 'all') {
+        const ownerType: 'GENERAL' | 'TRADER' | 'CUSTOMER' =
+          row.assignmentType === 'TRADER' ? 'TRADER' :
+          row.assignmentType === 'CUSTOMER' ? 'CUSTOMER' : 'GENERAL';
+        const ownerName =
+          row.assignmentType === 'TRADER' ? row.trader?.name :
+          row.assignmentType === 'CUSTOMER' ? row.customer?.customerName : undefined;
+        if (!matchesSortingAssignmentSelection({ sortingAssignmentFilter, ownerType, ownerName, traderNameById, customerNameById, lang })) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [sortingListRows, harvestDateFilterId, sortingAssignmentFilter, traderNameById, customerNameById, lang]);
 
   useEffect(() => {
     if (selectedSortingDailyRowId === null) {
@@ -766,23 +833,44 @@ export function HarvestPage() {
     sortingDailyRows.length,
   ]);
 
+  const handleDeleteHarvest = async () => {
+    if (!selectedHarvestRow) {
+      return;
+    }
+
+    setIsDeletingHarvest(true);
+    try {
+      await deleteHarvest(selectedHarvestRow.id);
+      setHarvestRows((rows) => rows.filter((row) => row.id !== selectedHarvestRow.id));
+      setSelectedHarvestRow(null);
+      setDetailsRecord(null);
+      setIsDeleteHarvestDialogOpen(false);
+    } catch {
+      setIsDeleteHarvestDialogOpen(false);
+    } finally {
+      setIsDeletingHarvest(false);
+    }
+  };
+
   const { pageHeaderActions, filters } = useHarvestPageControls({
     lang,
     t,
     isDailyDetailsTab,
-    isFieldReportTab,
     isSortingDailyDetailsTab,
     isSortingSummaryTab,
     isHarvestSummaryTab,
+    isSortingListTab,
     detailsRecord,
     selectedHarvestRow,
     selectedSortingDailyRowId,
     openHarvestGlobalForm,
     openHarvestSortingGlobalForm: handleOpenSortingForm,
+    onDeleteHarvest: () => setIsDeleteHarvestDialogOpen(true),
     activeSeasonId,
     seasons,
     fields,
     sortingAssignmentFilterOptions,
+    harvestDateOptions,
   });
 
   const {
@@ -871,10 +959,6 @@ export function HarvestPage() {
           fieldReportDetailsPrintRef={fieldReportDetailsPrintRef}
           fieldReportDetailsLabels={fieldReportDetailsLabels}
           fieldReportDetailsEmptyLabel={t.dailyDetails.detailsPanel.empty}
-          selectedCellsCount={selectedCellsCount}
-          formattedSelectedTotal={formattedSelectedTotal}
-          selectionLabels={t.dailyDetails.selection}
-          onClearSelectedNumericCells={clearSelectedNumericCells}
           summaryLabels={t.fieldReport.summary}
           numberFormatter={numberFormatter}
           formatRate={formatRate}
@@ -925,10 +1009,6 @@ export function HarvestPage() {
           getRelatedSortingCategory={getRelatedSortingCategory}
           getRelatedSortingGrade={getRelatedSortingGrade}
           getRelatedSortingNote={getRelatedSortingNote}
-          selectedCellsCount={selectedCellsCount}
-          formattedSelectedTotal={formattedSelectedTotal}
-          selectionLabels={t.dailyDetails.selection}
-          onClearSelectedNumericCells={clearSelectedNumericCells}
           summaryLabels={t.dailyDetails.summary}
         />
       ) : isFieldReportTab ? (
@@ -957,10 +1037,6 @@ export function HarvestPage() {
           fieldReportDetailsPrintRef={fieldReportDetailsPrintRef}
           fieldReportDetailsLabels={fieldReportDetailsLabels}
           fieldReportDetailsEmptyLabel={t.dailyDetails.detailsPanel.empty}
-          selectedCellsCount={selectedCellsCount}
-          formattedSelectedTotal={formattedSelectedTotal}
-          selectionLabels={t.dailyDetails.selection}
-          onClearSelectedNumericCells={clearSelectedNumericCells}
           summaryLabels={t.fieldReport.summary}
           numberFormatter={numberFormatter}
           formatRate={formatRate}
@@ -1009,11 +1085,18 @@ export function HarvestPage() {
             dateHebrew: t.sortingDailyDetails.columns.dateHebrew,
             fieldName: t.sortingDailyDetails.columns.fieldName,
           }}
-          selectedCellsCount={selectedCellsCount}
-          formattedSelectedTotal={formattedSelectedTotal}
-          selectionLabels={t.dailyDetails.selection}
-          onClearSelectedNumericCells={clearSelectedNumericCells}
           summaryLabels={t.sortingDailyDetails.summary}
+        />
+      ) : isSortingListTab ? (
+        <HarvestSortingListSection
+          lang={lang}
+          t={t}
+          filters={filters}
+          rows={filteredSortingListRows}
+          isLoading={isSortingListLoading}
+          loadError={sortingListLoadError}
+          formatGregorianDate={formatGregorianDate}
+          numberFormatter={numberFormatter}
         />
       ) : isSortingSummaryTab ? (
         <HarvestSortingSummarySection
@@ -1027,6 +1110,17 @@ export function HarvestPage() {
           <p className="shipments-empty-desc">{content.description}</p>
         </section>
       )}
+
+      <ConfirmDialog
+        open={isDeleteHarvestDialogOpen}
+        title={t.pageControls.deleteHarvestDialog.title}
+        message={t.pageControls.deleteHarvestDialog.message}
+        confirmLabel={isDeletingHarvest ? '...' : t.pageControls.deleteHarvestDialog.confirm}
+        cancelLabel={t.pageControls.deleteHarvestDialog.cancel}
+        onConfirm={() => { void handleDeleteHarvest(); }}
+        onCancel={() => setIsDeleteHarvestDialogOpen(false)}
+      />
+
 
       <HarvestBulkFormModal
         isOpen={isHarvestFormOpen}

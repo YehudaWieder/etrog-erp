@@ -7,6 +7,13 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     addSorting: 'הוספת מיון',
     edit: 'עריכה',
     delete: 'מחיקה',
+    deleteHarvestDialog: {
+      title: 'מחיקת רשומת קטיף',
+      message: 'האם אתה בטוח שברצונך למחוק את רשומת הקטיף הזו? פעולה זו אינה ניתנת לביטול.',
+      confirm: 'מחיקה',
+      cancel: 'ביטול',
+    },
+    deleteHarvestBlockedTitle: 'לא ניתן למחוק קטיף שיש לו מיונים מקושרים',
   },
   bulkForm: {
     ariaLabel: 'טופס קטיף גלובלי',
@@ -97,12 +104,7 @@ export const HARVEST_I18N_HE: HarvestI18n = {
           href: '/harvest/harvest-daily-details',
           icon: 'fa-calendar',
         },
-        {
-          id: 'harvest-field-report',
-          label: 'דוח קטיפים לפי שדה',
-          href: '/harvest/harvest-field-report',
-          icon: 'fa-bookmark',
-        },
+
       ],
     },
     {
@@ -116,6 +118,12 @@ export const HARVEST_I18N_HE: HarvestI18n = {
           label: 'פירוט לפי ימים',
           href: '/harvest/sorting-daily-details',
           icon: 'fa-calendar',
+        },
+        {
+          id: 'sorting-list',
+          label: 'רשימת מיונים',
+          href: '/harvest/sorting-list',
+          icon: 'fa-list',
         },
       ],
     },
@@ -149,6 +157,15 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     traderRequired: (rowNumber) => `בשורת מיון ${rowNumber} יש לבחור סוחר.`,
     customerRequired: (rowNumber) => `בשורת מיון ${rowNumber} יש לבחור לקוח.`,
     customerCategoryRequired: (rowNumber) => `בשורת מיון ${rowNumber} יש לבחור קטגוריית לקוח.`,
+    apiClassificationsExceedNet: (classificationsTotal, netHarvested) =>
+      `סה"כ כמות המיון (${classificationsTotal}) לא יכולה לעלות על כמות הנטו שנקטפה (${netHarvested}).`,
+    apiClassificationsMustEqualNet: (classificationsTotal, netHarvested) =>
+      `סה"כ כמות המיון (${classificationsTotal}) חייבת להיות שווה לכמות הנטו שנקטפה (${netHarvested}) במיון מלא.`,
+    apiClassificationsMustEqualNetFinal: (classificationsTotal, netHarvested) =>
+      `סה"כ כמות המיון (${classificationsTotal}) חייבת להיות שווה לכמות הנטו שנקטפה (${netHarvested}) במצב סופי.`,
+    apiDuplicateClassification: 'רשומת מיון כפולה: כל שילוב של סוג, סוחר/לקוח, קטגוריה ודרגה חייב להיות ייחודי.',
+    saveFailed: 'שמירת הקטיף נכשלה. נסה שוב.',
+    sortingSaveFailed: 'שמירת המיון נכשלה. נסה שוב.',
   },
   sortingForm: {
     ariaLabel: 'טופס מיון',
@@ -182,15 +199,12 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     activeSeason: (yearName) => `עונה פעילה: ${yearName}`,
     filters: {
       seasonFilterLabel: 'סינון לפי עונה',
+      dateFilterLabel: 'סינון לפי יום',
       fieldFilterLabel: 'סינון לפי שדה',
       activeSeasonBadge: 'פעילה',
       noActiveSeason: 'אין עונה פעילה כרגע',
       allFieldsOption: 'כל השדות',
-    },
-    selection: {
-      selectedCells: (count) => `נבחרו ${count} משבצות`,
-      total: (value) => `סה"כ: ${value}`,
-      clear: 'נקה בחירה',
+      allDatesOption: 'כל הימים',
     },
     summary: {
       totalHarvested: 'סה"כ קטיף',
@@ -314,11 +328,14 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     },
     filters: {
       seasonFilterLabel: 'סינון לפי עונה',
+      dateFilterLabel: 'סינון לפי יום',
       fieldFilterLabel: 'סינון לפי שדה',
       assignmentFilterLabel: 'סוג שיוך',
       allFieldsOption: 'כל השדות',
+      allDatesOption: 'כל הימים',
       assignmentOptions: {
         all: 'הכל',
+        general: 'כללי',
         trader: 'סוחרים',
         customer: 'לקוחות',
         traderPrefix: 'סוחר:',
@@ -377,6 +394,41 @@ export const HARVEST_I18N_HE: HarvestI18n = {
       totalFields: 'סה"כ שדות',
     },
   },
+  sortingList: {
+    description: 'רשימה מלאה של כל רשומות המיון לפי עונה.',
+    loading: 'טוען רשימת מיונים...',
+    loadError: 'טעינת רשימת המיונים נכשלה.',
+    empty: 'לא נמצאו רשומות מיון להצגה עבור העונה הנבחרת.',
+    filters: {
+      seasonFilterLabel: 'סינון לפי עונה',
+      dateFilterLabel: 'סינון לפי יום',
+      fieldFilterLabel: 'סינון לפי שדה',
+      allDatesOption: 'כל הימים',
+      allFieldsOption: 'כל השדות',
+    },
+    columns: {
+      dateGregorian: 'תאריך קטיף',
+      dateHebrew: 'תאריך עברי',
+      fieldName: 'שדה',
+      assignmentType: 'סוג שיוך',
+      target: 'שיוך',
+      category: 'קטגוריה',
+      grade: 'דרגה',
+      pitamStatus: 'פיטם',
+      quantity: 'כמות',
+      notes: 'הערות',
+    },
+    assignmentTypes: {
+      general: 'כללי',
+      trader: 'סוחר',
+      customer: 'לקוח',
+    },
+    pitamLabels: {
+      withPitam: 'פיטם',
+      withoutPitam: 'בל"פ',
+      mixed: 'מעורב',
+    },
+  },
   emptyState: {
     'harvest-summary': {
       title: 'סיכום קטיפים יוצג כאן',
@@ -397,6 +449,10 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     'sorting-daily-details': {
       title: 'פירוט מיונים לפי ימים יוצג כאן',
       description: 'כאן יוצגו נתוני מיון יומיים לפי תאריך ותפוקה.',
+    },
+    'sorting-list': {
+      title: 'רשימת מיונים תוצג כאן',
+      description: 'כאן תוצג רשימה מלאה של כל רשומות המיון לעונה הנבחרת.',
     },
     default: {
       title: 'אין נתונים להצגה',

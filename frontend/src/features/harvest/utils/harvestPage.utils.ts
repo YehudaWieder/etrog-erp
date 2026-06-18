@@ -1,44 +1,24 @@
 import type { ClassificationDailySummaryCategory, ClassificationDailySummaryRow } from '../../../services/classificationsApi';
 import type {
-  FieldReportNumericColumnKey,
   HarvestFormClassificationDraft,
-  HarvestNumericColumnKey,
   SortingAssignmentFilter,
-  SortingDailyNumericColumnKey,
 } from '../harvestPage.types';
 
 export const DEFAULT_SIDEBAR_ITEM_ID = 'harvest-daily-details';
 export const HARVEST_DAILY_FILTER_SCOPE = 'harvest-daily-details';
-
-export const HARVEST_NUMERIC_COLUMNS: HarvestNumericColumnKey[] = [
-  'totalHarvested',
-  'totalRejected',
-  'totalAfterRejected',
-  'classifiedTotal',
-];
-
-export const FIELD_REPORT_NUMERIC_COLUMNS: FieldReportNumericColumnKey[] = [
-  'totalHarvested',
-  'totalRejected',
-  'totalAfterRejected',
-  'rejectionRate',
-  'ownerHarvested',
-  'ownerRejected',
-  'ownerAfterRejected',
-  'ownerRejectionRate',
-];
-
-export const SORTING_DAILY_NUMERIC_COLUMNS: SortingDailyNumericColumnKey[] = [
-  'totalSorted',
-  'ownerSummary:trader',
-  'ownerSummary:customer',
-];
 
 export const HARVEST_GRADE_OPTIONS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו'] as const;
 
 export function parseSeasonFilterId(value: string): number | null {
   const parsedValue = Number(value);
   return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : null;
+}
+
+export function parseHarvestDateFilter(value: string): string | 'all' {
+  if (!value || value === 'all') {
+    return 'all';
+  }
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : 'all';
 }
 
 export function parseFieldFilterId(value: string): number | 'all' {
@@ -52,16 +32,12 @@ export function parseFieldFilterId(value: string): number | 'all' {
 
 export function parseSortingAssignmentFilter(value: string): SortingAssignmentFilter {
   const normalized = value.trim().toLowerCase();
-  if (normalized === 'all' || normalized === 'trader' || normalized === 'customer') {
+  if (normalized === 'all' || normalized === 'general' || normalized === 'trader' || normalized === 'customer') {
     return normalized;
   }
 
   if (normalized.startsWith('trader:') || normalized.startsWith('customer:')) {
     return normalized as SortingAssignmentFilter;
-  }
-
-  if (normalized === 'general') {
-    return 'all';
   }
 
   return 'all';
@@ -193,6 +169,10 @@ export function matchesSortingAssignmentSelection(params: {
 
   if (sortingAssignmentFilter === 'all') {
     return true;
+  }
+
+  if (sortingAssignmentFilter === 'general') {
+    return ownerType === 'GENERAL';
   }
 
   if (sortingAssignmentFilter === 'trader') {

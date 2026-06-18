@@ -14,6 +14,13 @@ export type HarvestI18n = {
     addSorting: string;
     edit: string;
     delete: string;
+    deleteHarvestDialog: {
+      title: string;
+      message: string;
+      confirm: string;
+      cancel: string;
+    };
+    deleteHarvestBlockedTitle: string;
   };
   bulkForm: {
     ariaLabel: string;
@@ -102,6 +109,12 @@ export type HarvestI18n = {
     traderRequired: (rowNumber: number) => string;
     customerRequired: (rowNumber: number) => string;
     customerCategoryRequired: (rowNumber: number) => string;
+    apiClassificationsExceedNet: (classificationsTotal: number, netHarvested: number) => string;
+    apiClassificationsMustEqualNet: (classificationsTotal: number, netHarvested: number) => string;
+    apiClassificationsMustEqualNetFinal: (classificationsTotal: number, netHarvested: number) => string;
+    apiDuplicateClassification: string;
+    saveFailed: string;
+    sortingSaveFailed: string;
   };
   sortingForm: {
     ariaLabel: string;
@@ -135,15 +148,12 @@ export type HarvestI18n = {
     activeSeason: (yearName: string) => string;
     filters: {
       seasonFilterLabel: string;
+      dateFilterLabel: string;
       fieldFilterLabel: string;
       activeSeasonBadge: string;
       noActiveSeason: string;
       allFieldsOption: string;
-    };
-    selection: {
-      selectedCells: (count: number) => string;
-      total: (value: string) => string;
-      clear: string;
+      allDatesOption: string;
     };
     summary: {
       totalHarvested: string;
@@ -267,11 +277,14 @@ export type HarvestI18n = {
     };
     filters: {
       seasonFilterLabel: string;
+      dateFilterLabel: string;
       fieldFilterLabel: string;
       assignmentFilterLabel: string;
       allFieldsOption: string;
+      allDatesOption: string;
       assignmentOptions: {
         all: string;
+        general: string;
         trader: string;
         customer: string;
         traderPrefix: string;
@@ -328,6 +341,41 @@ export type HarvestI18n = {
       avgRejectionRate: string;
       totalRecordCount: string;
       totalFields: string;
+    };
+  };
+  sortingList: {
+    description: string;
+    loading: string;
+    loadError: string;
+    empty: string;
+    filters: {
+      seasonFilterLabel: string;
+      dateFilterLabel: string;
+      fieldFilterLabel: string;
+      allDatesOption: string;
+      allFieldsOption: string;
+    };
+    columns: {
+      dateGregorian: string;
+      dateHebrew: string;
+      fieldName: string;
+      assignmentType: string;
+      target: string;
+      category: string;
+      grade: string;
+      pitamStatus: string;
+      quantity: string;
+      notes: string;
+    };
+    assignmentTypes: {
+      general: string;
+      trader: string;
+      customer: string;
+    };
+    pitamLabels: {
+      withPitam: string;
+      withoutPitam: string;
+      mixed: string;
     };
   };
   emptyState: Record<string, EmptyStateContent>;

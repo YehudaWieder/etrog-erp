@@ -7,6 +7,13 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     addSorting: 'Add Sorting',
     edit: 'Edit',
     delete: 'Delete',
+    deleteHarvestDialog: {
+      title: 'Delete Harvest Record',
+      message: 'Are you sure you want to delete this harvest record? This action cannot be undone.',
+      confirm: 'Delete',
+      cancel: 'Cancel',
+    },
+    deleteHarvestBlockedTitle: 'Cannot delete a harvest that has related sortings',
   },
   bulkForm: {
     ariaLabel: 'Global harvest form',
@@ -97,12 +104,7 @@ export const HARVEST_I18N_EN: HarvestI18n = {
           href: '/harvest/harvest-daily-details',
           icon: 'fa-calendar',
         },
-        {
-          id: 'harvest-field-report',
-          label: 'Harvest Report By Field',
-          href: '/harvest/harvest-field-report',
-          icon: 'fa-bookmark',
-        },
+
       ],
     },
     {
@@ -116,6 +118,12 @@ export const HARVEST_I18N_EN: HarvestI18n = {
           label: 'Daily Breakdown',
           href: '/harvest/sorting-daily-details',
           icon: 'fa-calendar',
+        },
+        {
+          id: 'sorting-list',
+          label: 'Sorting List',
+          href: '/harvest/sorting-list',
+          icon: 'fa-list',
         },
       ],
     },
@@ -149,6 +157,15 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     traderRequired: (rowNumber) => `Sorting row ${rowNumber} must include a trader.`,
     customerRequired: (rowNumber) => `Sorting row ${rowNumber} must include a customer.`,
     customerCategoryRequired: (rowNumber) => `Sorting row ${rowNumber} must include a customer category.`,
+    apiClassificationsExceedNet: (classificationsTotal, netHarvested) =>
+      `Total sorting quantity (${classificationsTotal}) cannot exceed net harvested (${netHarvested}).`,
+    apiClassificationsMustEqualNet: (classificationsTotal, netHarvested) =>
+      `Total sorting quantity (${classificationsTotal}) must equal net harvested (${netHarvested}) in full sorting mode.`,
+    apiClassificationsMustEqualNetFinal: (classificationsTotal, netHarvested) =>
+      `Total sorting quantity (${classificationsTotal}) must equal net harvested (${netHarvested}) in final mode.`,
+    apiDuplicateClassification: 'Duplicate sorting entry: each combination of type, trader/customer, category and grade must be unique.',
+    saveFailed: 'Failed to save the harvest. Please try again.',
+    sortingSaveFailed: 'Failed to save the sorting. Please try again.',
   },
   sortingForm: {
     ariaLabel: 'Sorting form',
@@ -182,15 +199,12 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     activeSeason: (yearName) => `Active season: ${yearName}`,
     filters: {
       seasonFilterLabel: 'Filter by season',
+      dateFilterLabel: 'Filter by date',
       fieldFilterLabel: 'Filter by field',
       activeSeasonBadge: 'Active',
       noActiveSeason: 'No active season right now',
       allFieldsOption: 'All fields',
-    },
-    selection: {
-      selectedCells: (count) => `${count} cells selected`,
-      total: (value) => `Total: ${value}`,
-      clear: 'Clear selection',
+      allDatesOption: 'All dates',
     },
     summary: {
       totalHarvested: 'Total Harvested',
@@ -314,11 +328,14 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     },
     filters: {
       seasonFilterLabel: 'Filter by season',
+      dateFilterLabel: 'Filter by date',
       fieldFilterLabel: 'Filter by field',
       assignmentFilterLabel: 'Assignment type',
       allFieldsOption: 'All fields',
+      allDatesOption: 'All dates',
       assignmentOptions: {
         all: 'All',
+        general: 'General',
         trader: 'Traders',
         customer: 'Customers',
         traderPrefix: 'Trader:',
@@ -377,6 +394,41 @@ export const HARVEST_I18N_EN: HarvestI18n = {
       totalFields: 'Total Fields',
     },
   },
+  sortingList: {
+    description: 'Full list of all sorting records for the selected season.',
+    loading: 'Loading sorting list...',
+    loadError: 'Failed to load the sorting list.',
+    empty: 'No sorting records found for the selected season.',
+    filters: {
+      seasonFilterLabel: 'Filter by season',
+      dateFilterLabel: 'Filter by date',
+      fieldFilterLabel: 'Filter by field',
+      allDatesOption: 'All dates',
+      allFieldsOption: 'All fields',
+    },
+    columns: {
+      dateGregorian: 'Harvest Date',
+      dateHebrew: 'Hebrew Date',
+      fieldName: 'Field',
+      assignmentType: 'Type',
+      target: 'Assignment',
+      category: 'Category',
+      grade: 'Grade',
+      pitamStatus: 'Pitam',
+      quantity: 'Quantity',
+      notes: 'Notes',
+    },
+    assignmentTypes: {
+      general: 'General',
+      trader: 'Trader',
+      customer: 'Customer',
+    },
+    pitamLabels: {
+      withPitam: 'With pitam',
+      withoutPitam: 'Without pitam',
+      mixed: 'Mixed',
+    },
+  },
   emptyState: {
     'harvest-summary': {
       title: 'Harvest summary will appear here',
@@ -397,6 +449,10 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     'sorting-daily-details': {
       title: 'Daily sorting breakdown will appear here',
       description: 'Daily sorting output and status will be shown here.',
+    },
+    'sorting-list': {
+      title: 'Sorting list will appear here',
+      description: 'A full list of all sorting records for the selected season will be shown here.',
     },
     default: {
       title: 'No data to display',

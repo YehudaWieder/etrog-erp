@@ -1,38 +1,10 @@
-export type HarvestNumericColumnKey =
-  | 'totalHarvested'
-  | 'totalRejected'
-  | 'totalAfterRejected'
-  | 'classifiedTotal';
-
-export type FieldReportNumericColumnKey =
-  | 'totalHarvested'
-  | 'totalRejected'
-  | 'totalAfterRejected'
-  | 'rejectionRate'
-  | 'ownerHarvested'
-  | 'ownerRejected'
-  | 'ownerAfterRejected'
-  | 'ownerRejectionRate';
-
-export type SortingDailyNumericColumnKey =
-  | 'totalSorted'
-  | 'ownerSummary:trader'
-  | 'ownerSummary:customer'
-  | `category:${string}`;
-
 export type SortingAssignmentFilter =
   | 'all'
+  | 'general'
   | 'trader'
   | 'customer'
   | `trader:${string}`
   | `customer:${string}`;
-
-export type NumericSelectionScope = 'daily' | 'field-report' | 'sorting-daily';
-
-export type NumericSelectableColumnKey =
-  | HarvestNumericColumnKey
-  | FieldReportNumericColumnKey
-  | SortingDailyNumericColumnKey;
 
 export type HarvestFormClassificationDraft = {
   id: string;
@@ -66,12 +38,6 @@ export type HarvestFieldReportRow = {
   differenceRejectionRate: number;
   hasOwnerOverrides: boolean;
   isPartialClassification: boolean;
-};
-
-export type HarvestSelectionSummaryLabels = {
-  selectedCells: (count: number) => string;
-  total: (value: string) => string;
-  clear: string;
 };
 
 export type HarvestExportTableData = {

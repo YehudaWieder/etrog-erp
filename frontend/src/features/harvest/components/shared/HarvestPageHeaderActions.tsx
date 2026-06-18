@@ -6,8 +6,11 @@ type HarvestPageHeaderActionsProps = {
   editActionLabel: string;
   deleteActionLabel: string;
   onAdd: () => void;
+  onDelete: () => void;
   editDisabled: boolean;
   deleteDisabled: boolean;
+  deleteTitle?: string;
+  showDelete?: boolean;
 };
 
 export function HarvestPageHeaderActions({
@@ -15,8 +18,11 @@ export function HarvestPageHeaderActions({
   editActionLabel,
   deleteActionLabel,
   onAdd,
+  onDelete,
   editDisabled,
   deleteDisabled,
+  deleteTitle,
+  showDelete = true,
 }: HarvestPageHeaderActionsProps): JSX.Element {
   return (
     <div className={styles.actions}>
@@ -39,16 +45,19 @@ export function HarvestPageHeaderActions({
         <FaPenToSquare />
         <span>{editActionLabel}</span>
       </button>
-      <button
-        type="button"
-        className={`${styles.button} ${styles.danger}`}
-        onClick={() => void 0}
-        disabled={deleteDisabled}
-        aria-label={deleteActionLabel}
-      >
-        <FaTrashCan />
-        <span>{deleteActionLabel}</span>
-      </button>
+      {showDelete ? (
+        <button
+          type="button"
+          className={`${styles.button} ${styles.danger}`}
+          onClick={onDelete}
+          disabled={deleteDisabled}
+          aria-label={deleteActionLabel}
+          title={deleteTitle}
+        >
+          <FaTrashCan />
+          <span>{deleteActionLabel}</span>
+        </button>
+      ) : null}
     </div>
   );
 }

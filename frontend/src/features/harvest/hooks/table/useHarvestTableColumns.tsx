@@ -1,5 +1,4 @@
-﻿import { useMemo } from 'react';
-import type { ReactNode } from 'react';
+import { useMemo } from 'react';
 import {
   GLOBAL_DATA_TABLE_WIDTHS,
   type GlobalDataTableColumn,
@@ -7,12 +6,7 @@ import {
 import type { HarvestRecord } from '../../../../services/harvestsApi';
 import type { ClassificationDailySummaryCategory, ClassificationDailySummaryRow } from '../../../../services/classificationsApi';
 import type { HarvestI18n } from '../../i18n';
-import type {
-  FieldReportNumericColumnKey,
-  HarvestFieldReportRow,
-  HarvestNumericColumnKey,
-  SortingDailyNumericColumnKey,
-} from '../../harvestPage.types';
+import type { HarvestFieldReportRow } from '../../harvestPage.types';
 import {
   buildSortingCategoryDisplayLabel,
   getSortingRowOwnerTotals,
@@ -32,26 +26,6 @@ type UseHarvestTableColumnsParams = {
   setDetailsRecord: (value: HarvestRecord | null) => void;
   setFieldReportDetailsFieldId: (value: number | null) => void;
   setSortingDailyDetailsRowId: (value: number | null) => void;
-  renderNumericCell: (
-    row: HarvestRecord,
-    column: HarvestNumericColumnKey,
-    value: number,
-    content?: ReactNode,
-  ) => ReactNode;
-  renderFieldReportNumericCell: (
-    row: HarvestFieldReportRow,
-    column: FieldReportNumericColumnKey,
-    value: number,
-    content?: ReactNode,
-  ) => ReactNode;
-  renderSortingNumericCell: (
-    row: ClassificationDailySummaryRow,
-    column: SortingDailyNumericColumnKey,
-    value: number,
-    content?: ReactNode,
-    className?: string,
-    selectedClassName?: string,
-  ) => ReactNode;
   isPartialClassificationFlag: (value: unknown) => boolean;
 };
 
@@ -66,9 +40,6 @@ export function useHarvestTableColumns({
   setDetailsRecord,
   setFieldReportDetailsFieldId,
   setSortingDailyDetailsRowId,
-  renderNumericCell,
-  renderFieldReportNumericCell,
-  renderSortingNumericCell,
   isPartialClassificationFlag,
 }: UseHarvestTableColumnsParams) {
   const columns = useMemo<GlobalDataTableColumn<HarvestRecord>[]>(() => {
@@ -122,7 +93,7 @@ export function useHarvestTableColumns({
         sortAccessor: (row) => row.totalHarvested,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
         align: 'center',
-        render: (row) => renderNumericCell(row, 'totalHarvested', row.totalHarvested),
+        render: (row) => numberFormatter.format(row.totalHarvested),
       },
       {
         id: 'totalRejected',
@@ -134,7 +105,7 @@ export function useHarvestTableColumns({
         sortAccessor: (row) => row.totalRejected,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
         align: 'center',
-        render: (row) => renderNumericCell(row, 'totalRejected', row.totalRejected),
+        render: (row) => numberFormatter.format(row.totalRejected),
       },
       {
         id: 'totalAfterRejected',
@@ -146,7 +117,7 @@ export function useHarvestTableColumns({
         sortAccessor: (row) => row.totalAfterRejected,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
         align: 'center',
-        render: (row) => renderNumericCell(row, 'totalAfterRejected', row.totalAfterRejected),
+        render: (row) => numberFormatter.format(row.totalAfterRejected),
       },
       {
         id: 'classifiedTotal',
@@ -158,20 +129,16 @@ export function useHarvestTableColumns({
         sortAccessor: (row) => row.classifiedTotal,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
         align: 'center',
-        render: (row) =>
-          renderNumericCell(
-            row,
-            'classifiedTotal',
-            row.classifiedTotal,
-            <span
-              className={`${interactiveStyles.classifiedTotal}${isPartialClassificationFlag(row.isPartialClassification as unknown) ? ` ${interactiveStyles.classifiedTotalPartial}` : ''}`}
-            >
-              {row.classifiedTotal}
-            </span>,
-          ),
+        render: (row) => (
+          <span
+            className={`${interactiveStyles.classifiedTotal}${isPartialClassificationFlag(row.isPartialClassification as unknown) ? ` ${interactiveStyles.classifiedTotalPartial}` : ''}`}
+          >
+            {row.classifiedTotal}
+          </span>
+        ),
       },
     ];
-  }, [formatGregorianDate, isPartialClassificationFlag, lang, renderNumericCell, setDetailsRecord, t]);
+  }, [formatGregorianDate, isPartialClassificationFlag, lang, numberFormatter, setDetailsRecord, t]);
 
   const fieldReportColumns = useMemo<GlobalDataTableColumn<HarvestFieldReportRow>[]>(() => {
     return [
@@ -224,8 +191,7 @@ export function useHarvestTableColumns({
               sortAccessor: (row: HarvestFieldReportRow) => row.ownerHarvested,
               minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
               align: 'center' as const,
-              render: (row: HarvestFieldReportRow) =>
-                renderFieldReportNumericCell(row, 'ownerHarvested', row.ownerHarvested, numberFormatter.format(row.ownerHarvested)),
+              render: (row: HarvestFieldReportRow) => numberFormatter.format(row.ownerHarvested),
             },
             {
               id: 'ownerRejected',
@@ -237,8 +203,7 @@ export function useHarvestTableColumns({
               sortAccessor: (row: HarvestFieldReportRow) => row.ownerRejected,
               minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
               align: 'center' as const,
-              render: (row: HarvestFieldReportRow) =>
-                renderFieldReportNumericCell(row, 'ownerRejected', row.ownerRejected, numberFormatter.format(row.ownerRejected)),
+              render: (row: HarvestFieldReportRow) => numberFormatter.format(row.ownerRejected),
             },
             {
               id: 'ownerAfterRejected',
@@ -250,8 +215,7 @@ export function useHarvestTableColumns({
               sortAccessor: (row: HarvestFieldReportRow) => row.ownerAfterRejected,
               minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
               align: 'center' as const,
-              render: (row: HarvestFieldReportRow) =>
-                renderFieldReportNumericCell(row, 'ownerAfterRejected', row.ownerAfterRejected, numberFormatter.format(row.ownerAfterRejected)),
+              render: (row: HarvestFieldReportRow) => numberFormatter.format(row.ownerAfterRejected),
             },
             {
               id: 'ownerRejectionRate',
@@ -263,8 +227,7 @@ export function useHarvestTableColumns({
               sortAccessor: (row: HarvestFieldReportRow) => row.ownerRejectionRate,
               minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericPercent,
               align: 'center' as const,
-              render: (row: HarvestFieldReportRow) =>
-                renderFieldReportNumericCell(row, 'ownerRejectionRate', row.ownerRejectionRate, formatRate(row.ownerRejectionRate)),
+              render: (row: HarvestFieldReportRow) => formatRate(row.ownerRejectionRate),
             },
           ]
         : [
@@ -278,8 +241,7 @@ export function useHarvestTableColumns({
               sortAccessor: (row: HarvestFieldReportRow) => row.totalHarvested,
               minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
               align: 'center' as const,
-              render: (row: HarvestFieldReportRow) =>
-                renderFieldReportNumericCell(row, 'totalHarvested', row.totalHarvested, numberFormatter.format(row.totalHarvested)),
+              render: (row: HarvestFieldReportRow) => numberFormatter.format(row.totalHarvested),
             },
             {
               id: 'totalRejected',
@@ -291,8 +253,7 @@ export function useHarvestTableColumns({
               sortAccessor: (row: HarvestFieldReportRow) => row.totalRejected,
               minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
               align: 'center' as const,
-              render: (row: HarvestFieldReportRow) =>
-                renderFieldReportNumericCell(row, 'totalRejected', row.totalRejected, numberFormatter.format(row.totalRejected)),
+              render: (row: HarvestFieldReportRow) => numberFormatter.format(row.totalRejected),
             },
             {
               id: 'totalAfterRejected',
@@ -304,8 +265,7 @@ export function useHarvestTableColumns({
               sortAccessor: (row: HarvestFieldReportRow) => row.totalAfterRejected,
               minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
               align: 'center' as const,
-              render: (row: HarvestFieldReportRow) =>
-                renderFieldReportNumericCell(row, 'totalAfterRejected', row.totalAfterRejected, numberFormatter.format(row.totalAfterRejected)),
+              render: (row: HarvestFieldReportRow) => numberFormatter.format(row.totalAfterRejected),
             },
             {
               id: 'rejectionRate',
@@ -317,8 +277,7 @@ export function useHarvestTableColumns({
               sortAccessor: (row: HarvestFieldReportRow) => row.rejectionRate,
               minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericPercent,
               align: 'center' as const,
-              render: (row: HarvestFieldReportRow) =>
-                renderFieldReportNumericCell(row, 'rejectionRate', row.rejectionRate, formatRate(row.rejectionRate)),
+              render: (row: HarvestFieldReportRow) => formatRate(row.rejectionRate),
             },
           ]),
     ];
@@ -327,7 +286,6 @@ export function useHarvestTableColumns({
     formatRate,
     lang,
     numberFormatter,
-    renderFieldReportNumericCell,
     setFieldReportDetailsFieldId,
     t.dailyDetails.columns,
     t.dailyDetails.detailsPanel.fields,
@@ -343,7 +301,6 @@ export function useHarvestTableColumns({
     const categoryColumns: GlobalDataTableColumn<ClassificationDailySummaryRow>[] = visibleSortingDailyCategories
       .map((category) => {
         const categoryLabel = buildSortingCategoryDisplayLabel(category, lang);
-        const columnKey = `category:${category.key}` as SortingDailyNumericColumnKey;
 
         return {
           id: `category-${category.key}`,
@@ -356,11 +313,7 @@ export function useHarvestTableColumns({
           minWidth: '150px',
           gridTemplate: 'minmax(150px, 1fr)',
           align: 'center',
-          render: (row) => {
-            const categoryTotal = row.categoryTotals[category.key] ?? 0;
-
-            return renderSortingNumericCell(row, columnKey, categoryTotal, numberFormatter.format(categoryTotal));
-          },
+          render: (row) => numberFormatter.format(row.categoryTotals[category.key] ?? 0),
         };
       });
 
@@ -376,20 +329,14 @@ export function useHarvestTableColumns({
               headerLabel: t.sortingDailyDetails.columns.traderTotal,
               sortKey: 'ownerSummary:trader',
               sortLabel: `${t.sortingDailyDetails.columns.traderTotal} - ${t.tableLabels.sort}`,
-              defaultSortDirection: 'desc',
-              sortAccessor: (row) => getSortingRowOwnerTotals(row, sortingDailyCategories).traderTotal,
+              defaultSortDirection: 'desc' as const,
+              sortAccessor: (row: ClassificationDailySummaryRow) => getSortingRowOwnerTotals(row, sortingDailyCategories).traderTotal,
               minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
               gridTemplate: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
-              align: 'center',
-              render: (row) => {
+              align: 'center' as const,
+              render: (row: ClassificationDailySummaryRow) => {
                 const traderTotal = getSortingRowOwnerTotals(row, sortingDailyCategories).traderTotal;
-
-                return renderSortingNumericCell(
-                  row,
-                  'ownerSummary:trader',
-                  traderTotal,
-                  <strong>{numberFormatter.format(traderTotal)}</strong>,
-                );
+                return <strong>{numberFormatter.format(traderTotal)}</strong>;
               },
             },
           ]
@@ -402,20 +349,14 @@ export function useHarvestTableColumns({
               headerLabel: t.sortingDailyDetails.columns.customerTotal,
               sortKey: 'ownerSummary:customer',
               sortLabel: `${t.sortingDailyDetails.columns.customerTotal} - ${t.tableLabels.sort}`,
-              defaultSortDirection: 'desc',
-              sortAccessor: (row) => getSortingRowOwnerTotals(row, sortingDailyCategories).customerTotal,
+              defaultSortDirection: 'desc' as const,
+              sortAccessor: (row: ClassificationDailySummaryRow) => getSortingRowOwnerTotals(row, sortingDailyCategories).customerTotal,
               minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
               gridTemplate: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
-              align: 'center',
-              render: (row) => {
+              align: 'center' as const,
+              render: (row: ClassificationDailySummaryRow) => {
                 const customerTotal = getSortingRowOwnerTotals(row, sortingDailyCategories).customerTotal;
-
-                return renderSortingNumericCell(
-                  row,
-                  'ownerSummary:customer',
-                  customerTotal,
-                  <strong>{numberFormatter.format(customerTotal)}</strong>,
-                );
+                return <strong>{numberFormatter.format(customerTotal)}</strong>;
               },
             },
           ]
@@ -488,13 +429,7 @@ export function useHarvestTableColumns({
         align: 'center',
         render: (row) => {
           const rowDailyTotal = sortingDailyCategories.reduce((sum, category) => sum + (row.categoryTotals[category.key] ?? 0), 0);
-
-          return renderSortingNumericCell(
-            row,
-            'totalSorted',
-            rowDailyTotal,
-            <strong>{numberFormatter.format(rowDailyTotal)}</strong>,
-          );
+          return <strong>{numberFormatter.format(rowDailyTotal)}</strong>;
         },
       },
     ];
@@ -502,7 +437,6 @@ export function useHarvestTableColumns({
     formatGregorianDate,
     lang,
     numberFormatter,
-    renderSortingNumericCell,
     setSortingDailyDetailsRowId,
     sortingDailyCategories,
     t.sortingDailyDetails.columns,
@@ -514,6 +448,3 @@ export function useHarvestTableColumns({
     sortingDailyColumns,
   };
 }
-
-
-

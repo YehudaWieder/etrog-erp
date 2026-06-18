@@ -5,9 +5,7 @@ import { GlobalDataTable, type GlobalDataTableColumn } from '../../../../compone
 import { GlobalLeftDetailsPanel } from '../../../../components/ui/GlobalLeftDetailsPanel';
 import { GlobalScopedFilters, type GlobalScopedFilterConfig } from '../../../../components/ui/GlobalScopedFilters';
 import type { ClassificationDailySummaryCategory, ClassificationDailySummaryRow } from '../../../../services/classificationsApi';
-import type { HarvestSelectionSummaryLabels } from '../../harvestPage.types';
 import type { HarvestI18n } from '../../i18n';
-import { HarvestSelectionSummary } from '../shared/HarvestSelectionSummary';
 import {
   HarvestSortingDailyDetailsContent,
   type SortingDailyCategoryBreakdown,
@@ -55,10 +53,6 @@ type HarvestSortingDailySectionProps = {
     dateHebrew: string;
     fieldName: string;
   };
-  selectedCellsCount: number;
-  formattedSelectedTotal: string;
-  selectionLabels: HarvestSelectionSummaryLabels;
-  onClearSelectedNumericCells: () => void;
   summaryLabels: {
     totalSorted: string;
     traderTotal: string;
@@ -97,10 +91,6 @@ export function HarvestSortingDailySection({
   formatGregorianDate,
   numberFormatter,
   sortingDailyDetailsLabels,
-  selectedCellsCount,
-  formattedSelectedTotal,
-  selectionLabels,
-  onClearSelectedNumericCells,
   summaryLabels,
 }: HarvestSortingDailySectionProps): JSX.Element {
   const hasRows = filteredSortingDailyRows.length > 0;
@@ -216,12 +206,6 @@ export function HarvestSortingDailySection({
                   )}
                 </GlobalLeftDetailsPanel>
 
-                <HarvestSelectionSummary
-                  selectedCellsCount={selectedCellsCount}
-                  formattedSelectedTotal={formattedSelectedTotal}
-                  labels={selectionLabels}
-                  onClear={onClearSelectedNumericCells}
-                />
               </>
             ) : (
               <p className="seasons-manager__state">{emptyLabel}</p>

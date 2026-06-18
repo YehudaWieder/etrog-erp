@@ -12,6 +12,7 @@ import {
 } from '../../../../services/classificationsApi';
 import type { HarvestI18n } from '../../i18n';
 import { buildHarvestFormSubmissionPayload } from '../../utils/harvestFormSubmission.util';
+import { translateHarvestApiError } from '../../utils/translateHarvestApiError';
 import type { HarvestFieldReportRow, HarvestFormClassificationDraft } from '../../harvestPage.types';
 
 type UseHarvestFormSubmissionParams = {
@@ -130,9 +131,9 @@ export function useHarvestFormSubmission({
       setIsHarvestFormOpen(false);
     } catch (error) {
       if (error instanceof Error && error.message.trim()) {
-        setHarvestFormError(error.message);
+        setHarvestFormError(translateHarvestApiError(error.message, t.formSubmission));
       } else {
-        setHarvestFormError(lang === 'he' ? 'שמירת הקטיף נכשלה. נסה שוב.' : 'Failed to save the harvest. Please try again.');
+        setHarvestFormError(t.formSubmission.saveFailed);
       }
     } finally {
       setIsSubmittingHarvestForm(false);

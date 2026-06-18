@@ -1,5 +1,5 @@
-﻿import { useEffect } from 'react';
-import { getSeasons, type Season } from '../../../../services/seasonsApi';
+import { useEffect, useRef } from 'react';
+import { getSeasons, getActiveSeason, type Season } from '../../../../services/seasonsApi';
 import { getFields, type Field } from '../../../../services/fieldsApi';
 import {
   getHarvestFieldTotalsBySeason,
@@ -15,11 +15,10 @@ import type { HarvestFieldReportRow } from '../../harvestPage.types';
 type UseHarvestFiltersAndRowsParams = {
   requiresFiltersData: boolean;
   isSortingDailyDetailsTab: boolean;
-  activeSeasonId: number | null;
-  seasonFilterId: number | null;
-  seasons: Season[];
-  requiresHarvestData: boolean;
+  isSortingListTab: boolean;
   isDailyDetailsTab: boolean;
+  requiresHarvestData: boolean;
+  seasonFilterId: number | null;
   dailyLoadErrorMessage: string;
   dispatch: (action: ReturnType<typeof setScopeFilter>) => void;
   setHarvestLoadError: (value: string) => void;
@@ -32,14 +31,19 @@ type UseHarvestFiltersAndRowsParams = {
   setFieldReportRows: (value: HarvestFieldReportRow[]) => void;
 };
 
+function mapFieldTotalsToReportRows(
+  fieldTotals: Awaited<ReturnType<typeof getHarvestFieldTotalsBySeason>>,
+): HarvestFieldReportRow[] {
+  return fieldTotals.map(({ fieldId, ...rest }) => ({ id: fieldId, ...rest }));
+}
+
 export function useHarvestFiltersAndRows({
   requiresFiltersData,
   isSortingDailyDetailsTab,
-  activeSeasonId,
-  seasonFilterId,
-  seasons,
-  requiresHarvestData,
+  isSortingListTab,
   isDailyDetailsTab,
+  requiresHarvestData,
+  seasonFilterId,
   dailyLoadErrorMessage,
   dispatch,
   setHarvestLoadError,
@@ -51,22 +55,44 @@ export function useHarvestFiltersAndRows({
   setHarvestRows,
   setFieldReportRows,
 }: UseHarvestFiltersAndRowsParams): void {
+  // When this effect loads harvest data itself, it sets this ref to the season ID.
+  // The season-change reload effect reads it to avoid a duplicate API call.
+  const harvestLoadedByMainEffectRef = useRef<number | null>(null);
+
+  // Main effect: loads filter data (seasons, fields, traders, customers) in parallel
+  // with the active season endpoint, then immediately loads harvest data.
+  // This avoids the previous 2-render-cycle delay (seasons → Redux dispatch → harvest data).
+  //
+  // seasonFilterId is intentionally NOT in the dep array: it is captured via closure
+  // at the time any other dep changes, but season-filter changes alone should be handled
+  // by the reload effect below (to avoid reloading all filter data on every season change).
   useEffect(() => {
     if (!requiresFiltersData) {
       return;
     }
 
+    // Signal the reload effect to skip its next run (we are handling harvest data here).
+    if (requiresHarvestData) {
+      harvestLoadedByMainEffectRef.current = -1; // sentinel: loading in progress
+    }
+
     let isMounted = true;
 
-    const loadFiltersData = async () => {
+    const loadAll = async () => {
       setHarvestLoadError('');
 
       try {
-        const [nextSeasons, nextFields, nextTraders, nextCustomers] = await Promise.all([
+        const needsTradersCustomers = requiresHarvestData || isSortingDailyDetailsTab || isSortingListTab;
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        const [nextSeasons, nextFields, nextTraders, nextCustomers, activeSeason] = await Promise.all([
           getSeasons(),
           getFields(),
-          requiresHarvestData || isSortingDailyDetailsTab ? getTraders() : Promise.resolve([] as Trader[]),
-          requiresHarvestData || isSortingDailyDetailsTab ? getCustomers() : Promise.resolve([] as Customer[]),
+          needsTradersCustomers ? getTraders() : Promise.resolve([] as Trader[]),
+          needsTradersCustomers ? getCustomers() : Promise.resolve([] as Customer[]),
+          // Fetch active season in parallel only when no season is selected yet;
+          // this lets us start harvest data loading without waiting for a Redux round-trip.
+          !seasonFilterId ? getActiveSeason().catch(() => null) : Promise.resolve(null),
         ]);
 
         if (!isMounted) {
@@ -77,78 +103,134 @@ export function useHarvestFiltersAndRows({
         setFields(nextFields);
         setTraders(nextTraders);
         setCustomers(nextCustomers);
+
+        // Determine effective season ID using the parallel active-season response,
+        // so we never have to wait for a Redux dispatch + re-render to start loading harvest data.
+        const effectiveSeasonId: number | null =
+          // eslint-disable-next-line react-hooks/exhaustive-deps
+          seasonFilterId ??
+          activeSeason?.id ??
+          nextSeasons.find((s) => s.isActive)?.id ??
+          nextSeasons[0]?.id ??
+          null;
+
+        if (effectiveSeasonId !== null && !seasonFilterId) {
+          dispatch(
+            setScopeFilter({
+              scope: HARVEST_DAILY_FILTER_SCOPE,
+              key: 'seasonId',
+              value: String(effectiveSeasonId),
+            }),
+          );
+        }
+
+        if (!requiresHarvestData || effectiveSeasonId === null) {
+          harvestLoadedByMainEffectRef.current = null;
+          return;
+        }
+
+        setIsHarvestLoading(true);
+
+        try {
+          const [records, fieldTotals] = await Promise.all([
+            isDailyDetailsTab || isSortingDailyDetailsTab
+              ? getHarvestsBySeason(effectiveSeasonId)
+              : Promise.resolve([] as HarvestRecord[]),
+            getHarvestFieldTotalsBySeason(effectiveSeasonId),
+          ]);
+
+          if (!isMounted) {
+            return;
+          }
+
+          setHarvestRows(records);
+          setFieldReportRows(mapFieldTotalsToReportRows(fieldTotals));
+          harvestLoadedByMainEffectRef.current = effectiveSeasonId;
+        } catch {
+          if (!isMounted) {
+            return;
+          }
+
+          setHarvestRows([]);
+          setFieldReportRows([]);
+          setHarvestLoadError(dailyLoadErrorMessage);
+          harvestLoadedByMainEffectRef.current = null;
+        } finally {
+          if (isMounted) {
+            setIsHarvestLoading(false);
+          }
+        }
       } catch {
         if (!isMounted) {
           return;
         }
 
         setHarvestLoadError(dailyLoadErrorMessage);
+        harvestLoadedByMainEffectRef.current = null;
       }
     };
 
-    void loadFiltersData();
+    void loadAll();
 
     return () => {
       isMounted = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     dailyLoadErrorMessage,
+    isDailyDetailsTab,
     isSortingDailyDetailsTab,
     requiresFiltersData,
+    requiresHarvestData,
+    // seasonFilterId intentionally omitted — see comment above
+    dispatch,
     setCustomers,
     setFields,
     setHarvestLoadError,
+    setHarvestRows,
+    setFieldReportRows,
+    setIsHarvestLoading,
     setSeasons,
     setTraders,
   ]);
 
-  useEffect(() => {
-    if (!requiresFiltersData) {
-      return;
-    }
-
-    if (activeSeasonId && (seasonFilterId === null || !seasons.some((season) => season.id === seasonFilterId))) {
-      dispatch(
-        setScopeFilter({
-          scope: HARVEST_DAILY_FILTER_SCOPE,
-          key: 'seasonId',
-          value: String(activeSeasonId),
-        }),
-      );
-      return;
-    }
-
-    if (!activeSeasonId && seasonFilterId !== null && !seasons.some((season) => season.id === seasonFilterId)) {
-      dispatch(
-        setScopeFilter({
-          scope: HARVEST_DAILY_FILTER_SCOPE,
-          key: 'seasonId',
-          value: seasons[0] ? String(seasons[0].id) : '',
-        }),
-      );
-    }
-  }, [activeSeasonId, dispatch, requiresFiltersData, seasonFilterId, seasons]);
-
+  // Reload harvest data when the user selects a different season from the filter.
+  // Skips the reload if the main effect already loaded data for this season.
   useEffect(() => {
     if (!requiresHarvestData) {
-      return;
-    }
-
-    if (!seasonFilterId) {
       setHarvestRows([]);
       setFieldReportRows([]);
       return;
     }
 
+    if (seasonFilterId === null) {
+      return;
+    }
+
+    // Main effect already handled (or is handling) this season — skip to avoid duplicate API call.
+    if (
+      harvestLoadedByMainEffectRef.current === seasonFilterId ||
+      harvestLoadedByMainEffectRef.current === -1
+    ) {
+      harvestLoadedByMainEffectRef.current = null;
+      return;
+    }
+
+    // Invalidate the main-effect cache: we're about to load a different season's data,
+    // so if the user later returns to the active season it must reload (not serve stale data).
+    harvestLoadedByMainEffectRef.current = null;
+
     let isMounted = true;
 
-    const loadHarvestRows = async () => {
+    const reloadRows = async () => {
       setIsHarvestLoading(true);
       setHarvestLoadError('');
 
       try {
         const [records, fieldTotals] = await Promise.all([
-          isDailyDetailsTab || isSortingDailyDetailsTab ? getHarvestsBySeason(seasonFilterId) : Promise.resolve([]),
+          isDailyDetailsTab || isSortingDailyDetailsTab
+            ? getHarvestsBySeason(seasonFilterId)
+            : Promise.resolve([] as HarvestRecord[]),
           getHarvestFieldTotalsBySeason(seasonFilterId),
         ]);
 
@@ -157,28 +239,7 @@ export function useHarvestFiltersAndRows({
         }
 
         setHarvestRows(records);
-        setFieldReportRows(
-          fieldTotals.map((row) => ({
-            id: row.fieldId,
-            fieldName: row.fieldName,
-            recordCount: row.recordCount,
-            totalHarvested: row.totalHarvested,
-            totalRejected: row.totalRejected,
-            totalAfterRejected: row.totalAfterRejected,
-            classifiedTotal: row.classifiedTotal,
-            rejectionRate: row.rejectionRate,
-            ownerHarvested: row.ownerHarvested,
-            ownerRejected: row.ownerRejected,
-            ownerAfterRejected: row.ownerAfterRejected,
-            ownerRejectionRate: row.ownerRejectionRate,
-            differenceHarvested: row.differenceHarvested,
-            differenceRejected: row.differenceRejected,
-            differenceAfterRejected: row.differenceAfterRejected,
-            differenceRejectionRate: row.differenceRejectionRate,
-            hasOwnerOverrides: row.hasOwnerOverrides,
-            isPartialClassification: row.isPartialClassification,
-          })),
-        );
+        setFieldReportRows(mapFieldTotalsToReportRows(fieldTotals));
       } catch {
         if (!isMounted) {
           return;
@@ -194,7 +255,7 @@ export function useHarvestFiltersAndRows({
       }
     };
 
-    void loadHarvestRows();
+    void reloadRows();
 
     return () => {
       isMounted = false;
@@ -202,6 +263,7 @@ export function useHarvestFiltersAndRows({
   }, [
     dailyLoadErrorMessage,
     isDailyDetailsTab,
+    isSortingDailyDetailsTab,
     requiresHarvestData,
     seasonFilterId,
     setFieldReportRows,
@@ -210,6 +272,3 @@ export function useHarvestFiltersAndRows({
     setIsHarvestLoading,
   ]);
 }
-
-
-

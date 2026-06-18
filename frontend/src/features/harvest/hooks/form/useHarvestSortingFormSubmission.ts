@@ -8,6 +8,7 @@ import type { ClassificationDailySummaryCategory, ClassificationDailySummaryRow 
 import type { HarvestFieldReportRow } from '../../harvestPage.types';
 import type { HarvestI18n } from '../../i18n';
 import { buildHarvestSortingFormSubmissionPayload } from '../../utils/harvestSortingFormSubmission.util';
+import { translateHarvestApiError } from '../../utils/translateHarvestApiError';
 
 type UseHarvestSortingFormSubmissionParams = {
   lang: 'he' | 'en';
@@ -124,11 +125,9 @@ export function useHarvestSortingFormSubmission({
       setIsHarvestSortingFormOpen(false);
     } catch (error) {
       if (error instanceof Error && error.message.trim()) {
-        setHarvestSortingFormError(error.message);
+        setHarvestSortingFormError(translateHarvestApiError(error.message, t.formSubmission));
       } else {
-        setHarvestSortingFormError(
-          lang === 'he' ? 'שמירת המיון נכשלה. נסה שוב.' : 'Failed to save the sorting. Please try again.',
-        );
+        setHarvestSortingFormError(t.formSubmission.sortingSaveFailed);
       }
     } finally {
       setIsSubmittingHarvestSortingForm(false);

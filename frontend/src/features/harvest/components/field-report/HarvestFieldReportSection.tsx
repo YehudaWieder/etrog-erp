@@ -4,12 +4,11 @@ import { FaPrint } from 'react-icons/fa6';
 import { GlobalDataTable, type GlobalDataTableColumn } from '../../../../components/ui/GlobalDataTable';
 import { GlobalLeftDetailsPanel } from '../../../../components/ui/GlobalLeftDetailsPanel';
 import { GlobalScopedFilters, type GlobalScopedFilterConfig } from '../../../../components/ui/GlobalScopedFilters';
-import type { HarvestFieldReportRow, HarvestSelectionSummaryLabels } from '../../harvestPage.types';
+import type { HarvestFieldReportRow } from '../../harvestPage.types';
 import type { HarvestI18n } from '../../i18n';
 import { buildHarvestFieldReportSummaryTotals } from '../../services/harvestFieldReportSummary.service';
 import { HarvestFieldReportDetailsPanel, type HarvestFieldReportDetailsData, type HarvestFieldReportDetailsPanelLabels } from './HarvestFieldReportDetailsPanel';
 import { HarvestPrintExportActions } from '../shared/HarvestPrintExportActions';
-import { HarvestSelectionSummary } from '../shared/HarvestSelectionSummary';
 import workspaceStyles from '../../../../components/ui/styles/WorkspaceSection.module.css';
 import panelStyles from '../styles/HarvestPanels.module.css';
 import sheetStyles from '../styles/HarvestDetailsSheet.module.css';
@@ -36,10 +35,6 @@ type HarvestFieldReportSectionProps = {
   fieldReportDetailsPrintRef: RefObject<HTMLDivElement>;
   fieldReportDetailsLabels: HarvestFieldReportDetailsPanelLabels;
   fieldReportDetailsEmptyLabel: string;
-  selectedCellsCount: number;
-  formattedSelectedTotal: string;
-  selectionLabels: HarvestSelectionSummaryLabels;
-  onClearSelectedNumericCells: () => void;
   summaryLabels: HarvestI18n['fieldReport']['summary'];
   numberFormatter: Intl.NumberFormat;
   formatRate: (value: number | string) => string;
@@ -66,10 +61,6 @@ export function HarvestFieldReportSection({
   fieldReportDetailsPrintRef,
   fieldReportDetailsLabels,
   fieldReportDetailsEmptyLabel,
-  selectedCellsCount,
-  formattedSelectedTotal,
-  selectionLabels,
-  onClearSelectedNumericCells,
   summaryLabels,
   numberFormatter,
   formatRate,
@@ -185,12 +176,6 @@ export function HarvestFieldReportSection({
                   )}
                 </GlobalLeftDetailsPanel>
 
-                <HarvestSelectionSummary
-                  selectedCellsCount={selectedCellsCount}
-                  formattedSelectedTotal={formattedSelectedTotal}
-                  labels={selectionLabels}
-                  onClear={onClearSelectedNumericCells}
-                />
               </>
             ) : (
               <p className="seasons-manager__state">{emptyLabel}</p>

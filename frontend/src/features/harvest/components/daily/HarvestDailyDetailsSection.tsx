@@ -5,10 +5,8 @@ import { GlobalDataTable, type GlobalDataTableColumn } from '../../../../compone
 import { GlobalLeftDetailsPanel } from '../../../../components/ui/GlobalLeftDetailsPanel';
 import { GlobalScopedFilters, type GlobalScopedFilterConfig } from '../../../../components/ui/GlobalScopedFilters';
 import type { HarvestRecord } from '../../../../services/harvestsApi';
-import type { HarvestSelectionSummaryLabels } from '../../harvestPage.types';
 import { HarvestDailyDetailsContent, type DetailsSheetData, type RelatedSortingsLabels } from './HarvestDailyDetailsContent';
 import { HarvestPrintExportActions } from '../shared/HarvestPrintExportActions';
-import { HarvestSelectionSummary } from '../shared/HarvestSelectionSummary';
 import { buildHarvestDailySummaryTotals } from '../../services/harvestDailySummary.service';
 import workspaceStyles from '../../../../components/ui/styles/WorkspaceSection.module.css';
 import panelStyles from '../styles/HarvestPanels.module.css';
@@ -56,10 +54,6 @@ type HarvestDailyDetailsSectionProps = {
   getRelatedSortingCategory: (row: import('../../../../services/classificationsApi').ClassificationRecord) => string;
   getRelatedSortingGrade: (row: import('../../../../services/classificationsApi').ClassificationRecord) => string;
   getRelatedSortingNote: (row: import('../../../../services/classificationsApi').ClassificationRecord) => string;
-  selectedCellsCount: number;
-  formattedSelectedTotal: string;
-  selectionLabels: HarvestSelectionSummaryLabels;
-  onClearSelectedNumericCells: () => void;
   summaryLabels: {
     totalHarvested: string;
     totalRejected: string;
@@ -108,10 +102,6 @@ export function HarvestDailyDetailsSection({
   getRelatedSortingCategory,
   getRelatedSortingGrade,
   getRelatedSortingNote,
-  selectedCellsCount,
-  formattedSelectedTotal,
-  selectionLabels,
-  onClearSelectedNumericCells,
   summaryLabels,
 }: HarvestDailyDetailsSectionProps): JSX.Element {
   const hasRows = filteredHarvestRows.length > 0;
@@ -223,12 +213,6 @@ export function HarvestDailyDetailsSection({
                   )}
                 </GlobalLeftDetailsPanel>
 
-                <HarvestSelectionSummary
-                  selectedCellsCount={selectedCellsCount}
-                  formattedSelectedTotal={formattedSelectedTotal}
-                  labels={selectionLabels}
-                  onClear={onClearSelectedNumericCells}
-                />
               </>
             ) : (
               <p className="seasons-manager__state">{emptyLabel}</p>
