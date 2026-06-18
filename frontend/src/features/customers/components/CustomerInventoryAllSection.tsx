@@ -50,25 +50,6 @@ export function CustomerInventoryAllSection({
 
   const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
 
-  if (isLoading && rows.length === 0) {
-    return <div className={traderStyles.statusBox}>{labels.loading}</div>;
-  }
-
-  if (error && rows.length === 0) {
-    return (
-      <div className={`${traderStyles.statusBox} ${traderStyles.statusError}`}>
-        <div>{error || labels.loadFailed}</div>
-        <button
-          type="button"
-          className={`btn btn-primary ${traderStyles.retryButton}`}
-          onClick={onRetry}
-        >
-          {labels.retry}
-        </button>
-      </div>
-    );
-  }
-
   return (
     <section className={traderStyles.section}>
       <section className={traderStyles.explainerSection}>
@@ -85,6 +66,10 @@ export function CustomerInventoryAllSection({
       </div>
 
       {filtersBar ? <section className={traderStyles.filtersBarSection}>{filtersBar}</section> : null}
+
+      {isLoading && rows.length === 0 ? (
+        <div className={traderStyles.loadingText}>{labels.loading}</div>
+      ) : null}
 
       {!isLoading && summaryMatrix.customers.length === 0 && !error ? (
         <div className={traderStyles.statusBox}>{labels.empty}</div>

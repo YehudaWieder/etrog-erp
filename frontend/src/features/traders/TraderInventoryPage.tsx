@@ -230,16 +230,18 @@ export function TraderInventoryPage() {
     }));
   }, [activeSeasonId, filterValues.seasonId, isMovementsTab]);
 
-  const seasonOptions = useMemo(
-    () =>
-      [...seasons]
-        .sort((left, right) => right.yearName - left.yearName)
-        .map((season) => ({
-          value: String(season.id),
-          label: `${season.yearName}${season.id === activeSeasonId ? ` (${lang === 'he' ? 'פעילה' : 'Active'})` : ''}`,
-        })),
-    [activeSeasonId, lang, seasons],
-  );
+  const seasonOptions = useMemo(() => {
+    const options = [...seasons]
+      .sort((left, right) => right.yearName - left.yearName)
+      .map((season) => ({
+        value: String(season.id),
+        label: `${season.yearName}${season.id === activeSeasonId ? ` (${lang === 'he' ? 'פעילה' : 'Active'})` : ''}`,
+      }));
+    if (options.length === 0) {
+      return [{ value: '', label: lang === 'he' ? 'לא זמין' : 'Not available' }];
+    }
+    return options;
+  }, [activeSeasonId, lang, seasons]);
 
   const traderOptions = useMemo(
     () => [

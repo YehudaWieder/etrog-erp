@@ -46,6 +46,11 @@
   font-variant-numeric: tabular-nums;
 }
 
+.loadingText {
+  padding: 24px 0;
+  color: var(--color-text-main);
+}
+
 .statusBox {
   border-radius: 16px;
   border: 1px solid rgba(204, 219, 208, 0.95);
