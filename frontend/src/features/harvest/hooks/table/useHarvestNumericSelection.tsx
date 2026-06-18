@@ -24,6 +24,7 @@ type UseHarvestNumericSelectionParams = {
   lang: 'he' | 'en';
   isDailyDetailsTab: boolean;
   isFieldReportTab: boolean;
+  isHarvestSummaryTab: boolean;
   isSortingDailyDetailsTab: boolean;
   harvestRows: HarvestRecord[];
   fieldFilterId: number | 'all';
@@ -38,6 +39,7 @@ export function useHarvestNumericSelection({
   lang,
   isDailyDetailsTab,
   isFieldReportTab,
+  isHarvestSummaryTab,
   isSortingDailyDetailsTab,
   harvestRows,
   fieldFilterId,
@@ -174,23 +176,24 @@ export function useHarvestNumericSelection({
   useEffect(() => {
     const filteredHarvestRows = harvestRows.filter((row) => (fieldFilterId === 'all' ? true : row.fieldId === fieldFilterId));
 
+    const isFieldReportScope = isFieldReportTab || isHarvestSummaryTab;
     const activeScope: NumericSelectionScope | null = isDailyDetailsTab
       ? 'daily'
-      : isFieldReportTab
+      : isFieldReportScope
         ? 'field-report'
         : isSortingDailyDetailsTab
           ? 'sorting-daily'
           : null;
     const activeRows = isDailyDetailsTab
       ? filteredHarvestRows
-      : isFieldReportTab
+      : isFieldReportScope
         ? fieldReportRows
         : isSortingDailyDetailsTab
           ? sortingDailyRows
           : [];
     const activeColumns: NumericSelectableColumnKey[] = isDailyDetailsTab
       ? HARVEST_NUMERIC_COLUMNS
-      : isFieldReportTab
+      : isFieldReportScope
         ? FIELD_REPORT_NUMERIC_COLUMNS
         : isSortingDailyDetailsTab
           ? [
@@ -230,6 +233,7 @@ export function useHarvestNumericSelection({
     harvestRows,
     isDailyDetailsTab,
     isFieldReportTab,
+    isHarvestSummaryTab,
     isSortingDailyDetailsTab,
     sortingDailyCategories,
     sortingDailyRows,

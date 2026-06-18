@@ -8,7 +8,11 @@ export type FieldReportNumericColumnKey =
   | 'totalHarvested'
   | 'totalRejected'
   | 'totalAfterRejected'
-  | 'rejectionRate';
+  | 'rejectionRate'
+  | 'ownerHarvested'
+  | 'ownerRejected'
+  | 'ownerAfterRejected'
+  | 'ownerRejectionRate';
 
 export type SortingDailyNumericColumnKey =
   | 'totalSorted'

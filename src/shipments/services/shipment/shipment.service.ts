@@ -198,7 +198,7 @@ export class ShipmentService {
 
         const boxes = await tx.box.findMany({
           where: { shipmentId: id, isDeleted: false },
-          select: { id: true, boxType: true, totalQuantity: true },
+          select: { id: true, boxType: true, totalQuantity: true, status: true },
         });
 
         for (const box of boxes) {
@@ -211,6 +211,26 @@ export class ShipmentService {
           });
         }
 
+        return tx.shipment.update({
+          where: { id },
+          data: {
+            ...updatableData,
+            ...(newSlug !== undefined ? { slug: newSlug } : {}),
+            updatedById: actorId,
+            status: effectiveStatus,
+            shippedAt: nextShippedAt,
+          },
+        });
+      });
+    }
+
+    // If marking as DELIVERED, update all boxes to DELIVERED in the same transaction
+    if (effectiveStatus === ShipmentStatus.DELIVERED) {
+      return this.prisma.$transaction(async (tx) => {
+        await tx.box.updateMany({
+          where: { shipmentId: id, isDeleted: false },
+          data: { status: 'DELIVERED' },
+        });
         return tx.shipment.update({
           where: { id },
           data: {

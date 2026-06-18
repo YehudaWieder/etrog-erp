@@ -20,29 +20,29 @@ export function ShipmentCategoryTable({ lang, data, shipmentColumnLabel, totalLa
         <table className={styles.matrixTable}>
           <thead>
             <tr>
-              <th className={styles.matrixOwnershipHead} />
-              {data.shipmentNumbers.map((num) => (
-                <th key={num}>{shipmentColumnLabel} {num}</th>
+              <th className={styles.matrixOwnershipHead}>{shipmentColumnLabel}</th>
+              {data.ownerships.map((ownership) => (
+                <th key={ownership}>{ownership}</th>
               ))}
               <th className={styles.matrixTotalHead}>{totalLabel}</th>
             </tr>
           </thead>
           <tbody>
-            {data.ownerships.map((ownership) => (
-              <tr key={ownership}>
-                <th className={styles.matrixOwnershipCell}>{ownership}</th>
-                {data.shipmentNumbers.map((num) => (
-                  <td key={num}>{formatter.format(data.values[ownership]?.[num] ?? 0)}</td>
+            {data.shipmentNumbers.map((num) => (
+              <tr key={num}>
+                <th className={styles.matrixOwnershipCell}><strong>{num}</strong></th>
+                {data.ownerships.map((ownership) => (
+                  <td key={ownership}>{formatter.format(data.values[ownership]?.[num] ?? 0)}</td>
                 ))}
-                <td className={styles.matrixTotalCell}>{formatter.format(data.rowTotals[ownership] ?? 0)}</td>
+                <td className={styles.matrixTotalCell}>{formatter.format(data.columnTotals[num] ?? 0)}</td>
               </tr>
             ))}
           </tbody>
           <tfoot>
             <tr>
               <th className={styles.matrixOwnershipCell}>{totalLabel}</th>
-              {data.shipmentNumbers.map((num) => (
-                <td key={num}>{formatter.format(data.columnTotals[num] ?? 0)}</td>
+              {data.ownerships.map((ownership) => (
+                <td key={ownership}>{formatter.format(data.rowTotals[ownership] ?? 0)}</td>
               ))}
               <td className={styles.matrixTotalCell}>{formatter.format(data.grandTotal)}</td>
             </tr>

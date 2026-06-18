@@ -57,7 +57,7 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     viewAllFieldDetails: (fieldName) => `View all details for ${fieldName}`,
   },
   topNav: [
-    { id: 'harvest', label: 'Harvest & Sorting' },
+    { id: 'harvest', label: 'Harvest & Sorting', href: '/harvest/harvest-summary' },
     { id: 'shipments', label: 'Shipments', href: '/shipments/shipment-items-summary' },
     { id: 'partners', label: 'Trader Inventory' },
     { id: 'customers', label: 'Customer Inventory' },
@@ -65,6 +65,26 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     { id: 'payments', label: 'Expenses & Payments' },
   ],
   sidebar: [
+    {
+      id: 'summaries',
+      title: 'Summary',
+      href: '/harvest/harvest-summary',
+      icon: 'fa-chart-bar',
+      items: [
+        {
+          id: 'harvest-summary',
+          label: 'Harvest Summary',
+          href: '/harvest/harvest-summary',
+          icon: 'fa-lemon',
+        },
+        {
+          id: 'sorting-summary',
+          label: 'Sorting Summary',
+          href: '/harvest/sorting-summary',
+          icon: 'fa-grip',
+        },
+      ],
+    },
     {
       id: 'harvests',
       title: 'Harvests',
@@ -88,15 +108,9 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     {
       id: 'sortings',
       title: 'Sortings',
-      href: '/harvest/sorting-summary',
+      href: '/harvest/sorting-daily-details',
       icon: 'fa-grip',
       items: [
-        {
-          id: 'sorting-summary',
-          label: 'Sorting Summary',
-          href: '/harvest/sorting-summary',
-          icon: 'fa-chart-bar',
-        },
         {
           id: 'sorting-daily-details',
           label: 'Daily Breakdown',
@@ -343,13 +357,31 @@ export const HARVEST_I18N_EN: HarvestI18n = {
       differenceNet: 'Net Difference',
       differenceRate: 'Rejection Rate Difference',
     },
+    filters: {
+      methodFilterLabel: 'Calculation Method',
+      ourMethod: 'Our Method',
+      franco: 'Franco Method',
+    },
+    francoColumns: {
+      harvested: 'Franco Harvested',
+      rejected: 'Franco Rejected',
+      net: 'Franco Net',
+      rejectionRate: 'Franco Rejection Rate',
+    },
     summary: {
       totalHarvested: 'Total Harvested',
+      totalRejected: 'Total Rejected',
       totalNet: 'Total Net',
       avgRejectionRate: 'Avg. Rejection Rate',
+      totalRecordCount: 'Total Harvests',
+      totalFields: 'Total Fields',
     },
   },
   emptyState: {
+    'harvest-summary': {
+      title: 'Harvest summary will appear here',
+      description: 'A summary of all harvests by season and field will be shown here.',
+    },
     'harvest-daily-details': {
       title: 'Daily harvest breakdown will appear here',
       description: 'Select a date range to view daily harvest activity.',

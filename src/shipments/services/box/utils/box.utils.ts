@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { BoxOwnership, BoxStatus, BoxType } from '@prisma/client';
+import { BoxOwnership, BoxStatus, BoxType } from 'src/generated/prisma';
 
 export type CreateBoxInput = {
   shipmentId: number;

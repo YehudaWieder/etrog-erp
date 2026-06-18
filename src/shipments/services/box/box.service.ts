@@ -124,8 +124,12 @@ export class BoxService {
           select: { status: true },
         });
 
-        if (shipment?.status === 'SHIPPED' || shipment?.status === 'DELIVERED') {
-          throw new BadRequestException('Cannot change box status when the shipment has already been shipped or delivered');
+        if (shipment?.status === 'DELIVERED' && data.status !== 'SHIPPED' && data.status !== 'DELIVERED') {
+          throw new BadRequestException('When the shipment is delivered, box status can only be changed between SHIPPED and DELIVERED');
+        }
+
+        if (shipment?.status === 'SHIPPED' && data.status !== 'DELIVERED') {
+          throw new BadRequestException('Cannot change box status when the shipment has already been shipped');
         }
       }
 

@@ -57,7 +57,7 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     viewAllFieldDetails: (fieldName) => `הצגת כל פרטי השדה ${fieldName}`,
   },
   topNav: [
-    { id: 'harvest', label: 'קטיף ומיון', icon: 'fa-leaf' },
+    { id: 'harvest', label: 'קטיף ומיון', icon: 'fa-leaf', href: '/harvest/harvest-summary' },
     { id: 'shipments', label: 'משלוחים', icon: 'fa-truck', href: '/shipments/shipment-items-summary' },
     { id: 'partners', label: 'מלאי סוחרים', icon: 'fa-handshake' },
     { id: 'customers', label: 'מלאי לקוחות', icon: 'fa-users' },
@@ -65,6 +65,26 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     { id: 'payments', label: 'הוצאות ותשלומים', icon: 'fa-money-bill' },
   ],
   sidebar: [
+    {
+      id: 'summaries',
+      title: 'סיכום',
+      href: '/harvest/harvest-summary',
+      icon: 'fa-chart-bar',
+      items: [
+        {
+          id: 'harvest-summary',
+          label: 'סיכום קטיפים',
+          href: '/harvest/harvest-summary',
+          icon: 'fa-lemon',
+        },
+        {
+          id: 'sorting-summary',
+          label: 'סיכום מיונים',
+          href: '/harvest/sorting-summary',
+          icon: 'fa-grip',
+        },
+      ],
+    },
     {
       id: 'harvests',
       title: 'קטיפים',
@@ -88,15 +108,9 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     {
       id: 'sortings',
       title: 'מיונים',
-      href: '/harvest/sorting-summary',
+      href: '/harvest/sorting-daily-details',
       icon: 'fa-grip',
       items: [
-        {
-          id: 'sorting-summary',
-          label: 'סיכום מיונים',
-          href: '/harvest/sorting-summary',
-          icon: 'fa-chart-bar',
-        },
         {
           id: 'sorting-daily-details',
           label: 'פירוט לפי ימים',
@@ -343,13 +357,31 @@ export const HARVEST_I18N_HE: HarvestI18n = {
       differenceNet: 'הפרש נטו',
       differenceRate: 'הפרש אחוז פסילה',
     },
+    filters: {
+      methodFilterLabel: 'שיטת חישוב',
+      ourMethod: 'לשיטתינו',
+      franco: 'שיטת פרנקו',
+    },
+    francoColumns: {
+      harvested: 'קטיף פרנקו',
+      rejected: 'יורדים פרנקו',
+      net: 'נטו פרנקו',
+      rejectionRate: 'אחוז יורדים פרנקו',
+    },
     summary: {
       totalHarvested: 'סה"כ קטיף',
+      totalRejected: 'סה"כ יורדים',
       totalNet: 'סה"כ נטו',
       avgRejectionRate: 'ממוצע אחוז יורדים',
+      totalRecordCount: 'סה"כ קטיפים',
+      totalFields: 'סה"כ שדות',
     },
   },
   emptyState: {
+    'harvest-summary': {
+      title: 'סיכום קטיפים יוצג כאן',
+      description: 'כאן יוצג סיכום כלל הקטיפים לפי עונות ושדות.',
+    },
     'harvest-daily-details': {
       title: 'פירוט קטיפים לפי ימים יוצג כאן',
       description: 'בחר טווח תאריכים כדי לצפות בנתוני הקטיף היומיים.',

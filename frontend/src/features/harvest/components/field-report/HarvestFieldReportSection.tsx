@@ -19,6 +19,7 @@ type HarvestFieldReportSectionProps = {
   lang: 'he' | 'en';
   t: HarvestI18n;
   description: string;
+  fieldReportMethod: 'our' | 'franco';
   filters: GlobalScopedFilterConfig[];
   harvestLoadError: string;
   isHarvestLoading: boolean;
@@ -48,6 +49,7 @@ export function HarvestFieldReportSection({
   lang,
   t,
   description,
+  fieldReportMethod,
   filters,
   harvestLoadError,
   isHarvestLoading,
@@ -75,8 +77,8 @@ export function HarvestFieldReportSection({
   const hasRows = fieldReportRows.length > 0;
 
   const summaryTotals = useMemo(
-    () => buildHarvestFieldReportSummaryTotals(fieldReportRows),
-    [fieldReportRows],
+    () => buildHarvestFieldReportSummaryTotals(fieldReportRows, fieldReportMethod),
+    [fieldReportRows, fieldReportMethod],
   );
 
   return (
@@ -93,12 +95,24 @@ export function HarvestFieldReportSection({
           <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.totalHarvested)}</strong>
         </article>
         <article className={summaryStyles.summaryCard}>
+          <span className={summaryStyles.summaryLabel}>{summaryLabels.totalRejected}</span>
+          <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.totalRejected)}</strong>
+        </article>
+        <article className={summaryStyles.summaryCard}>
           <span className={summaryStyles.summaryLabel}>{summaryLabels.totalNet}</span>
           <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.totalNet)}</strong>
         </article>
         <article className={summaryStyles.summaryCard}>
           <span className={summaryStyles.summaryLabel}>{summaryLabels.avgRejectionRate}</span>
           <strong className={summaryStyles.summaryValue}>{formatRate(summaryTotals.avgRejectionRate)}</strong>
+        </article>
+        <article className={summaryStyles.summaryCard}>
+          <span className={summaryStyles.summaryLabel}>{summaryLabels.totalRecordCount}</span>
+          <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.totalRecordCount)}</strong>
+        </article>
+        <article className={summaryStyles.summaryCard}>
+          <span className={summaryStyles.summaryLabel}>{summaryLabels.totalFields}</span>
+          <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.totalFields)}</strong>
         </article>
       </div>
 

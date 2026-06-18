@@ -3,7 +3,7 @@ import type { DefaultTraderCategoriesI18n, TraderCategoriesI18n, TradersI18n, Tr
 export const TRADER_INVENTORY_I18N_HE: TraderInventoryI18n = {
 	userNameFallback: 'הפרופיל שלי',
 	topNav: [
-		{ id: 'harvest', label: 'קטיף ומיון', icon: 'fa-leaf' },
+		{ id: 'harvest', label: 'קטיף ומיון', icon: 'fa-leaf', href: '/harvest/harvest-summary' },
 		{ id: 'shipments', label: 'משלוחים', icon: 'fa-truck', href: '/shipments/shipment-items-summary' },
 		{ id: 'traders', label: 'מלאי סוחרים', icon: 'fa-handshake' },
 		{ id: 'customers', label: 'מלאי לקוחות', icon: 'fa-users' },

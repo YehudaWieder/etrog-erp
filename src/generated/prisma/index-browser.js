@@ -481,7 +481,8 @@ exports.BoxType = exports.$Enums.BoxType = {
 exports.BoxStatus = exports.$Enums.BoxStatus = {
   OPEN: 'OPEN',
   CLOSED: 'CLOSED',
-  SHIPPED: 'SHIPPED'
+  SHIPPED: 'SHIPPED',
+  DELIVERED: 'DELIVERED'
 };
 
 exports.BoxOwnership = exports.$Enums.BoxOwnership = {

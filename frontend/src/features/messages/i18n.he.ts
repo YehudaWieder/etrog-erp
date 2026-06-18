@@ -3,7 +3,7 @@ import type { MessagesI18n } from './i18n';
 export const MESSAGES_I18N_HE: MessagesI18n = {
   userNameFallback: 'הפרופיל שלי',
   topNav: [
-    { id: 'harvest', label: 'קטיף ומיון', icon: 'fa-leaf' },
+    { id: 'harvest', label: 'קטיף ומיון', icon: 'fa-leaf', href: '/harvest/harvest-summary' },
     { id: 'shipments', label: 'משלוחים', icon: 'fa-truck', href: '/shipments/shipment-items-summary' },
     { id: 'partners', label: 'מלאי סוחרים', icon: 'fa-handshake' },
     { id: 'customers', label: 'מלאי לקוחות', icon: 'fa-users' },

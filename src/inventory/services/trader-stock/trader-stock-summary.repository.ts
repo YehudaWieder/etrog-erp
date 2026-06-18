@@ -40,8 +40,8 @@ export class TraderStockSummaryRepository {
         return ts.boxId !== null;
       }
       if (shipmentScope === 'SHIPPED') {
-        // Items in boxes with SHIPPED status
-        return ts.boxId !== null && ts.box?.status === 'SHIPPED';
+        // Items in boxes with SHIPPED or DELIVERED status
+        return ts.boxId !== null && (ts.box?.status === 'SHIPPED' || ts.box?.status === 'DELIVERED');
       }
       if (shipmentScope === 'UNSHIPPED') {
         // Source records (positive) have no boxId — always include.

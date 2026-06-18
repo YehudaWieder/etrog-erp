@@ -157,12 +157,13 @@ export function HarvestPage() {
     navigate(item.href || `/harvest/${item.id}`);
   };
 
+  const isHarvestSummaryTab = activeSidebarId === 'harvest-summary';
   const isDailyDetailsTab = activeSidebarId === 'harvest-daily-details';
   const isFieldReportTab = activeSidebarId === 'harvest-field-report';
   const isSortingDailyDetailsTab = activeSidebarId === 'sorting-daily-details';
   const isSortingSummaryTab = activeSidebarId === 'sorting-summary';
-  const requiresFiltersData = isDailyDetailsTab || isFieldReportTab || isSortingDailyDetailsTab;
-  const requiresHarvestData = isDailyDetailsTab || isFieldReportTab || isSortingDailyDetailsTab;
+  const requiresFiltersData = isDailyDetailsTab || isFieldReportTab || isSortingDailyDetailsTab || isHarvestSummaryTab;
+  const requiresHarvestData = isDailyDetailsTab || isFieldReportTab || isSortingDailyDetailsTab || isHarvestSummaryTab;
 
   const activeSeasonId = useMemo(() => {
     return seasons.find((season) => season.isActive)?.id ?? null;
@@ -252,6 +253,10 @@ export function HarvestPage() {
   const sortingAssignmentFilter = useMemo<SortingAssignmentFilter>(() => {
     return parseSortingAssignmentFilter(globalFilterValues.sortingAssignmentType ?? 'all');
   }, [globalFilterValues.sortingAssignmentType]);
+
+  const fieldReportMethod = useMemo<'our' | 'franco'>(() => {
+    return globalFilterValues.fieldReportMethod === 'franco' ? 'franco' : 'our';
+  }, [globalFilterValues.fieldReportMethod]);
 
   useHarvestFiltersAndRows({
     requiresFiltersData,
@@ -498,6 +503,7 @@ export function HarvestPage() {
     lang,
     isDailyDetailsTab,
     isFieldReportTab,
+    isHarvestSummaryTab,
     isSortingDailyDetailsTab,
     harvestRows,
     fieldFilterId,
@@ -536,6 +542,7 @@ export function HarvestPage() {
 
   useHarvestDetailsSideEffects({
     isFieldReportTab,
+    isHarvestSummaryTab,
     isSortingDailyDetailsTab,
     seasonFilterId,
     fieldReportDetailsFieldId,
@@ -599,6 +606,7 @@ export function HarvestPage() {
     numberFormatter,
     formatRate,
     sortingDailyCategories,
+    fieldReportMethod,
     setDetailsRecord,
     setFieldReportDetailsFieldId,
     setSortingDailyDetailsRowId,
@@ -765,6 +773,7 @@ export function HarvestPage() {
     isFieldReportTab,
     isSortingDailyDetailsTab,
     isSortingSummaryTab,
+    isHarvestSummaryTab,
     detailsRecord,
     selectedHarvestRow,
     selectedSortingDailyRowId,
@@ -836,7 +845,41 @@ export function HarvestPage() {
         </button>
       }
     >
-      {isDailyDetailsTab ? (
+      {isHarvestSummaryTab ? (
+        <HarvestFieldReportSection
+          lang={lang}
+          t={t}
+          description={t.emptyState['harvest-summary']?.description ?? ''}
+          fieldReportMethod={fieldReportMethod}
+          filters={filters}
+          harvestLoadError={harvestLoadError}
+          isHarvestLoading={isHarvestLoading}
+          loadingLabel={t.dailyDetails.loading}
+          emptyLabel={t.dailyDetails.empty}
+          fieldReportColumns={fieldReportColumns}
+          fieldReportRows={fieldReportRows}
+          onFieldReportSortedRowsChange={(rows) => {
+            visibleFieldReportRowsRef.current = rows;
+          }}
+          onPrintFieldReportTable={handlePrintFieldReportTable}
+          onExportFieldReportTableToExcel={() => {
+            void handleExportFieldReportTableToExcel();
+          }}
+          fieldReportDetailsData={fieldReportDetailsData}
+          onCloseFieldReportDetails={() => setFieldReportDetailsFieldId(null)}
+          onPrintFieldReportDetails={handlePrintFieldReportDetails}
+          fieldReportDetailsPrintRef={fieldReportDetailsPrintRef}
+          fieldReportDetailsLabels={fieldReportDetailsLabels}
+          fieldReportDetailsEmptyLabel={t.dailyDetails.detailsPanel.empty}
+          selectedCellsCount={selectedCellsCount}
+          formattedSelectedTotal={formattedSelectedTotal}
+          selectionLabels={t.dailyDetails.selection}
+          onClearSelectedNumericCells={clearSelectedNumericCells}
+          summaryLabels={t.fieldReport.summary}
+          numberFormatter={numberFormatter}
+          formatRate={formatRate}
+        />
+      ) : isDailyDetailsTab ? (
         <HarvestDailyDetailsSection
           lang={lang}
           tableActionsLabel={t.tableActionsLabel}
@@ -893,6 +936,7 @@ export function HarvestPage() {
           lang={lang}
           t={t}
           description={content.description}
+          fieldReportMethod={fieldReportMethod}
           filters={filters}
           harvestLoadError={harvestLoadError}
           isHarvestLoading={isHarvestLoading}

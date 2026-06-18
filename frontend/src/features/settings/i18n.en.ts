@@ -3,7 +3,7 @@ import type { SettingsI18n } from './settingsPage.types';
 export const SETTINGS_I18N_EN: SettingsI18n = {
   userNameFallback: 'My Profile',
   topNav: [
-    { id: 'harvest', label: 'Harvest & Sorting' },
+    { id: 'harvest', label: 'Harvest & Sorting', href: '/harvest/harvest-summary' },
     { id: 'shipments', label: 'Shipments', href: '/shipments/shipment-items-summary' },
     { id: 'partners', label: 'Partners Inventory' },
     { id: 'customers', label: 'Customers Inventory' },

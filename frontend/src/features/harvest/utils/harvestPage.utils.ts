@@ -22,6 +22,10 @@ export const FIELD_REPORT_NUMERIC_COLUMNS: FieldReportNumericColumnKey[] = [
   'totalRejected',
   'totalAfterRejected',
   'rejectionRate',
+  'ownerHarvested',
+  'ownerRejected',
+  'ownerAfterRejected',
+  'ownerRejectionRate',
 ];
 
 export const SORTING_DAILY_NUMERIC_COLUMNS: SortingDailyNumericColumnKey[] = [

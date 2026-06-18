@@ -23,7 +23,7 @@ type UseAllBoxesFiltersResult = {
   handleFiltersApiReady: (api: GlobalScopedFiltersApi) => void;
 };
 
-const BOX_STATUS_VALUES: BoxStatus[] = ['OPEN', 'CLOSED', 'SHIPPED'];
+const BOX_STATUS_VALUES: BoxStatus[] = ['OPEN', 'CLOSED', 'SHIPPED', 'DELIVERED'];
 const OWNERSHIP_GROUP_TRADERS = 'type:TRADER';
 const OWNERSHIP_GROUP_CUSTOMERS = 'type:CUSTOMER';
 

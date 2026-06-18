@@ -32,6 +32,7 @@ type UseEditBoxFormResult = {
   isLoadingOptions: boolean;
   hasItems: boolean;
   isShipmentFrozen: boolean;
+  isShipmentShipped: boolean;
   selectedShipmentId: string;
   setSelectedShipmentId: (v: string) => void;
   boxNumber: string;
@@ -71,6 +72,7 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
   const [notes, setNotes] = useState('');
   const [hasItems, setHasItems] = useState(false);
   const [isShipmentFrozen, setIsShipmentFrozen] = useState(false);
+  const [isShipmentShipped, setIsShipmentShipped] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -107,7 +109,8 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
         setHasItems(boxItems.length > 0);
 
         const boxShipment = nextShipments.find((s) => s.id === fullBox.shipmentId);
-        setIsShipmentFrozen(boxShipment?.status === 'SHIPPED' || boxShipment?.status === 'DELIVERED');
+        setIsShipmentFrozen(boxShipment?.status === 'DELIVERED');
+        setIsShipmentShipped(boxShipment?.status === 'SHIPPED');
 
         setSelectedShipmentId(String(fullBox.shipmentId));
         setBoxNumber(String(fullBox.boxNumber));
@@ -214,6 +217,7 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
     isLoadingOptions,
     hasItems,
     isShipmentFrozen,
+    isShipmentShipped,
     selectedShipmentId,
     setSelectedShipmentId,
     boxNumber,
@@ -230,7 +234,7 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
     setCustomerId,
     notes,
     setNotes,
-    isShipped: status === 'SHIPPED' || status === 'CLOSED',
+    isShipped: status === 'SHIPPED' || status === 'CLOSED' || status === 'DELIVERED',
     isSubmitting,
     error,
     handleSave,

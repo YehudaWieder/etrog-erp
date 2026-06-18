@@ -1,7 +1,7 @@
 export const SHIPMENTS_I18N_EN = {
   userNameFallback: 'My Profile',
   topNav: [
-    { id: 'harvest', label: 'Harvest & Sorting' },
+    { id: 'harvest', label: 'Harvest & Sorting', href: '/harvest/harvest-summary' },
     { id: 'shipments', label: 'Shipments', href: '/shipments/shipment-items-summary' },
     { id: 'partners', label: 'Partners Inventory' },
     { id: 'customers', label: 'Customers Inventory' },
@@ -148,7 +148,7 @@ export const SHIPMENTS_I18N_EN = {
     save: 'Save Changes',
     cancel: 'Cancel',
     ownershipLockedHint: 'Cannot change ownership while the box has items',
-    shipmentFrozenHint: 'Cannot change box status when the shipment has already been shipped or delivered',
+    shipmentFrozenHint: 'Shipment is delivered — box status can only be toggled between Shipped and Delivered',
     validationBoxNumberRequired: 'Box number is required',
     validationBoxNumberPositive: 'Box number must be a positive integer',
     validationTraderRequired: 'Please select a trader',
@@ -160,6 +160,7 @@ export const SHIPMENTS_I18N_EN = {
       OPEN: 'Open',
       CLOSED: 'Closed',
       SHIPPED: 'Shipped',
+      DELIVERED: 'Delivered',
     },
     boxTypeOptions: {
       SMALL: 'S',
@@ -484,6 +485,7 @@ export const SHIPMENTS_I18N_EN = {
       OPEN: 'Open',
       CLOSED: 'Closed',
       SHIPPED: 'Shipped',
+      DELIVERED: 'Delivered',
     },
     boxTypeLabels: {
       SMALL: 'S',

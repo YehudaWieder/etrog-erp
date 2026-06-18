@@ -108,10 +108,6 @@ export class HarvestQueryService {
       const effectiveOwnerHarvested = hasExplicitOwnerDataValue ? row.ownerHarvested : row.totalHarvested;
       const effectiveOwnerRejected = hasExplicitOwnerDataValue ? row.ownerRejected : row.totalRejected;
       const effectiveOwnerAfterRejected = hasExplicitOwnerDataValue ? row.ownerAfterRejected : row.totalAfterRejected;
-      const effectiveOwnerRejectionRate = hasExplicitOwnerDataValue
-        ? Number(row.ownerRejectionRate)
-        : Number(row.rejectionRate);
-
       target.recordCount += 1;
       target.totalHarvested += row.totalHarvested;
       target.totalRejected += row.totalRejected;
@@ -120,7 +116,6 @@ export class HarvestQueryService {
       target.ownerHarvested += effectiveOwnerHarvested;
       target.ownerRejected += effectiveOwnerRejected;
       target.ownerAfterRejected += effectiveOwnerAfterRejected;
-      target.ownerRejectionRate += effectiveOwnerRejectionRate;
       target.hasOwnerOverrides = target.hasOwnerOverrides || hasExplicitOwnerDataValue;
       target.isPartialClassification = target.isPartialClassification || Boolean(row.isPartialClassification);
     }
@@ -128,7 +123,7 @@ export class HarvestQueryService {
     return Array.from(grouped.values())
       .map((row) => {
         const rejectionRate = row.totalHarvested > 0 ? (row.totalRejected / row.totalHarvested) * 100 : 0;
-        const ownerRejectionRate = row.recordCount > 0 ? row.ownerRejectionRate / row.recordCount : 0;
+        const ownerRejectionRate = row.ownerHarvested > 0 ? (row.ownerRejected / row.ownerHarvested) * 100 : 0;
         const differenceHarvested = row.totalHarvested - row.ownerHarvested;
         const differenceRejected = row.totalRejected - row.ownerRejected;
         const differenceAfterRejected = row.totalAfterRejected - row.ownerAfterRejected;

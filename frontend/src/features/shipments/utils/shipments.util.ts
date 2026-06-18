@@ -16,6 +16,7 @@ export const BOX_STATUS_CSS_CLASS: Record<BoxStatus, string> = {
   OPEN: 'box-open',
   CLOSED: 'box-closed',
   SHIPPED: 'box-shipped',
+  DELIVERED: 'box-delivered',
 };
 
 export function resolveBoxStatusClass(status: BoxStatus): string {

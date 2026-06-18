@@ -4,7 +4,7 @@ export const CUSTOMER_INVENTORY_I18N_EN: CustomerInventoryI18n = {
   userNameFallback: 'My Profile',
   pageTitle: 'Customers Inventory',
   topNav: [
-    { id: 'harvest', label: 'Harvest & Sorting', icon: 'fa-leaf' },
+    { id: 'harvest', label: 'Harvest & Sorting', icon: 'fa-leaf', href: '/harvest/harvest-summary' },
     { id: 'shipments', label: 'Shipments', icon: 'fa-truck', href: '/shipments/shipment-items-summary' },
     { id: 'traders', label: 'Partners Inventory', icon: 'fa-handshake' },
     { id: 'customers', label: 'Customers Inventory', icon: 'fa-users' },

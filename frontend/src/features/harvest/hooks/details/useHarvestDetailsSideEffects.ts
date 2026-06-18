@@ -11,6 +11,7 @@ import type { HarvestFieldReportRow } from '../../harvestPage.types';
 
 type UseHarvestDetailsSideEffectsParams = {
   isFieldReportTab: boolean;
+  isHarvestSummaryTab: boolean;
   isSortingDailyDetailsTab: boolean;
   seasonFilterId: number | null;
   fieldReportDetailsFieldId: number | null;
@@ -33,6 +34,7 @@ type UseHarvestDetailsSideEffectsParams = {
 
 export function useHarvestDetailsSideEffects({
   isFieldReportTab,
+  isHarvestSummaryTab,
   isSortingDailyDetailsTab,
   seasonFilterId,
   fieldReportDetailsFieldId,
@@ -65,7 +67,7 @@ export function useHarvestDetailsSideEffects({
   }, [fieldReportDetailsFieldId, fieldReportRows, setFieldReportDetailsFieldId, setFieldReportDetailsPayload]);
 
   useEffect(() => {
-    if (!isFieldReportTab || fieldReportDetailsFieldId === null || !seasonFilterId) {
+    if ((!isFieldReportTab && !isHarvestSummaryTab) || fieldReportDetailsFieldId === null || !seasonFilterId) {
       setFieldReportDetailsPayload(null);
       return;
     }
@@ -92,7 +94,7 @@ export function useHarvestDetailsSideEffects({
     return () => {
       isMounted = false;
     };
-  }, [fieldReportDetailsFieldId, isFieldReportTab, seasonFilterId, setFieldReportDetailsPayload]);
+  }, [fieldReportDetailsFieldId, isFieldReportTab, isHarvestSummaryTab, seasonFilterId, setFieldReportDetailsPayload]);
 
   useEffect(() => {
     if (!detailsRecord) {

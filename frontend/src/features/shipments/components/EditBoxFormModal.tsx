@@ -73,13 +73,15 @@ type EditBoxFormModalProps = {
   onNotesChange: (v: string) => void;
   isShipped: boolean;
   isShipmentFrozen: boolean;
+  isShipmentShipped: boolean;
   isSubmitting: boolean;
   error: string | null;
   onSave: () => void;
   onClose: () => void;
 };
 
-const BOX_STATUSES: BoxStatus[] = ['OPEN', 'CLOSED', 'SHIPPED'];
+const BOX_STATUSES: BoxStatus[] = ['OPEN', 'CLOSED', 'SHIPPED', 'DELIVERED'];
+const BOX_STATUSES_SHIPPED_ONLY: BoxStatus[] = ['SHIPPED', 'DELIVERED'];
 const BOX_TYPES: BoxType[] = ['SMALL', 'MEDIUM', 'LARGE', 'CUSTOM'];
 const OWNERSHIP_TYPES: BoxOwnership[] = ['GENERAL', 'TRADER', 'CUSTOMER', 'SHARED', 'CUSTOM'];
 
@@ -110,6 +112,7 @@ export function EditBoxFormModal({
   onNotesChange,
   isShipped,
   isShipmentFrozen,
+  isShipmentShipped,
   isSubmitting,
   error,
   onSave,
@@ -168,21 +171,17 @@ export function EditBoxFormModal({
 
           <div className={styles.field}>
             <label className={styles.label}>{t.statusLabel}</label>
-            {isShipmentFrozen ? (
-              <div style={infoStyle}>{t.statusOptions[status]}</div>
-            ) : (
-              <select
-                className="seasons-manager__year-input"
-                value={status}
-                onChange={(e) => onStatusChange(e.target.value as BoxStatus)}
-              >
-                {BOX_STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {t.statusOptions[s]}
-                  </option>
-                ))}
-              </select>
-            )}
+            <select
+              className="seasons-manager__year-input"
+              value={status}
+              onChange={(e) => onStatusChange(e.target.value as BoxStatus)}
+            >
+              {(isShipmentFrozen || isShipmentShipped ? BOX_STATUSES_SHIPPED_ONLY : BOX_STATUSES).map((s) => (
+                <option key={s} value={s}>
+                  {t.statusOptions[s]}
+                </option>
+              ))}
+            </select>
           </div>
 
           {!isShipped ? (

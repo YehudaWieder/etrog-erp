@@ -7,6 +7,7 @@ import type { Season } from '../../../../services/seasonsApi';
 import type { HarvestI18n } from '../../i18n';
 import { HarvestAddHeaderAction } from '../../components/shared/HarvestAddHeaderAction';
 import { HarvestPageHeaderActions } from '../../components/shared/HarvestPageHeaderActions';
+import { HarvestSummaryHeaderActions } from '../../components/shared/HarvestSummaryHeaderActions';
 
 type SortingAssignmentFilterOption = {
   value: string;
@@ -21,6 +22,7 @@ type UseHarvestPageControlsParams = {
   isFieldReportTab: boolean;
   isSortingDailyDetailsTab: boolean;
   isSortingSummaryTab: boolean;
+  isHarvestSummaryTab: boolean;
   detailsRecord: HarvestRecord | null;
   selectedHarvestRow: HarvestRecord | null;
   selectedSortingDailyRowId: number | null;
@@ -39,6 +41,7 @@ export function useHarvestPageControls({
   isFieldReportTab,
   isSortingDailyDetailsTab,
   isSortingSummaryTab,
+  isHarvestSummaryTab,
   detailsRecord,
   selectedHarvestRow,
   selectedSortingDailyRowId,
@@ -85,8 +88,15 @@ export function useHarvestPageControls({
       );
     }
 
-    if (isSortingSummaryTab) {
-      return <HarvestAddHeaderAction label={addSortingActionLabel} onClick={openHarvestSortingGlobalForm} />;
+    if (isSortingSummaryTab || isHarvestSummaryTab) {
+      return (
+        <HarvestSummaryHeaderActions
+          addHarvestLabel={addActionLabel}
+          addSortingLabel={addSortingActionLabel}
+          onAddHarvest={openHarvestGlobalForm}
+          onAddSorting={openHarvestSortingGlobalForm}
+        />
+      );
     }
 
     return null;
@@ -98,6 +108,7 @@ export function useHarvestPageControls({
     editActionLabel,
     isDailyDetailsTab,
     isFieldReportTab,
+    isHarvestSummaryTab,
     isSortingDailyDetailsTab,
     isSortingSummaryTab,
     openHarvestGlobalForm,
@@ -142,8 +153,19 @@ export function useHarvestPageControls({
       ],
     };
 
-    if (isFieldReportTab) {
-      return [seasonFilter];
+    const methodFilter: GlobalScopedFilterConfig = {
+      key: 'fieldReportMethod',
+      label: t.fieldReport.filters.methodFilterLabel,
+      defaultValue: 'our',
+      queryParam: 'frMethod',
+      options: [
+        { value: 'our', label: t.fieldReport.filters.ourMethod },
+        { value: 'franco', label: t.fieldReport.filters.franco },
+      ],
+    };
+
+    if (isFieldReportTab || isHarvestSummaryTab) {
+      return [seasonFilter, methodFilter];
     }
 
     if (isSortingDailyDetailsTab) {
@@ -165,10 +187,12 @@ export function useHarvestPageControls({
     activeSeasonId,
     fields,
     isFieldReportTab,
+    isHarvestSummaryTab,
     isSortingDailyDetailsTab,
     seasons,
     sortingAssignmentFilterOptions,
     t.dailyDetails.filters,
+    t.fieldReport.filters,
     t.sortingDailyDetails.filters,
   ]);
 

@@ -290,3 +290,8 @@
   background: rgba(13, 110, 253, 0.12);
   color: #0a3f8a;
 }
+
+:global(.shipments-status-badge--box-delivered) {
+  background: rgba(25, 135, 84, 0.13);
+  color: #0d5c38;
+}

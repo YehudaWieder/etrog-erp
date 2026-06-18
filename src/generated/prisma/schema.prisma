@@ -694,6 +694,7 @@ enum BoxStatus {
   OPEN // Editing allowed
   CLOSED // Packed and sealed
   SHIPPED // Dispatched
+  DELIVERED // Delivered to recipient
 }
 
 enum BoxType {

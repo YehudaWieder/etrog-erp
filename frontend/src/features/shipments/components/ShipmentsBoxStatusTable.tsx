@@ -1,4 +1,5 @@
 import type { ShipmentRecord, ShipmentStatus } from '../shipments.types';
+import { resolveShipmentStatusClass } from '../utils/shipments.util';
 import styles from './styles/ShipmentCategoryTable.module.css';
 import matrixStyles from './styles/ShipmentsSummaryMatrix.module.css';
 
@@ -25,31 +26,31 @@ export function ShipmentsBoxStatusTable({
   return (
     <div style={{ marginTop: 8, marginBottom: 28 }}>
       <h3 className={matrixStyles.matrixTitle} style={{ marginBottom: 10 }}>{title}</h3>
-      <div className={styles.matrixViewport}>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+      <div className={styles.matrixViewport} style={{ width: 'fit-content', maxWidth: '100%', minWidth: 360 }}>
         <table className={styles.matrixTable}>
           <thead>
             <tr>
-              <th className={styles.matrixOwnershipHead} />
-              {sorted.map((s) => (
-                <th key={s.id}>{shipmentColumnLabel} {s.shipmentNumber}</th>
-              ))}
+              <th>{shipmentColumnLabel}</th>
+              <th>{rowBoxesLabel}</th>
+              <th>{rowStatusLabel}</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <th className={styles.matrixOwnershipCell}>{rowBoxesLabel}</th>
-              {sorted.map((s) => (
-                <td key={s.id}>{s.totalBoxes}</td>
-              ))}
-            </tr>
-            <tr>
-              <th className={styles.matrixOwnershipCell}>{rowStatusLabel}</th>
-              {sorted.map((s) => (
-                <td key={s.id}>{statusLabels[s.status]}</td>
-              ))}
-            </tr>
+            {sorted.map((s) => (
+              <tr key={s.id}>
+                <td><strong>{s.shipmentNumber}</strong></td>
+                <td>{s.totalBoxes}</td>
+                <td>
+                  <span className={`shipments-status-badge shipments-status-badge--${resolveShipmentStatusClass(s.status)}`}>
+                    {statusLabels[s.status]}
+                  </span>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
+      </div>
       </div>
     </div>
   );

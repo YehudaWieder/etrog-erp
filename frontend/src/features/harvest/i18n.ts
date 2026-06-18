@@ -310,10 +310,24 @@ export type HarvestI18n = {
       differenceNet: string;
       differenceRate: string;
     };
+    filters: {
+      methodFilterLabel: string;
+      ourMethod: string;
+      franco: string;
+    };
+    francoColumns: {
+      harvested: string;
+      rejected: string;
+      net: string;
+      rejectionRate: string;
+    };
     summary: {
       totalHarvested: string;
+      totalRejected: string;
       totalNet: string;
       avgRejectionRate: string;
+      totalRecordCount: string;
+      totalFields: string;
     };
   };
   emptyState: Record<string, EmptyStateContent>;

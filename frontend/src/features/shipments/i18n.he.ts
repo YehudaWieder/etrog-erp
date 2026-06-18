@@ -1,7 +1,7 @@
 export const SHIPMENTS_I18N_HE = {
   userNameFallback: 'הפרופיל שלי',
   topNav: [
-    { id: 'harvest', label: 'קטיף ומיון', icon: 'fa-leaf' },
+    { id: 'harvest', label: 'קטיף ומיון', icon: 'fa-leaf', href: '/harvest/harvest-summary' },
     { id: 'shipments', label: 'משלוחים', icon: 'fa-truck', href: '/shipments/shipment-items-summary' },
     { id: 'partners', label: 'מלאי סוחרים', icon: 'fa-handshake' },
     { id: 'customers', label: 'מלאי לקוחות', icon: 'fa-users' },
@@ -151,7 +151,7 @@ export const SHIPMENTS_I18N_HE = {
     save: 'שמור שינויים',
     cancel: 'ביטול',
     ownershipLockedHint: 'לא ניתן לשנות שיוך כל עוד יש פריטים בקרטון',
-    shipmentFrozenHint: 'לא ניתן לשנות סטטוס קרטון כאשר המשלוח כבר נשלח או נמסר',
+    shipmentFrozenHint: 'המשלוח נמסר — ניתן לשנות סטטוס קרטון בין נשלח לנמסר בלבד',
     validationBoxNumberRequired: 'מספר קרטון נדרש',
     validationBoxNumberPositive: 'מספר קרטון חייב להיות מספר שלם חיובי',
     validationTraderRequired: 'יש לבחור סוחר',
@@ -163,6 +163,7 @@ export const SHIPMENTS_I18N_HE = {
       OPEN: 'פתוח',
       CLOSED: 'סגור',
       SHIPPED: 'נשלח',
+      DELIVERED: 'נמסר',
     },
     boxTypeOptions: {
       SMALL: 'S',
@@ -487,6 +488,7 @@ export const SHIPMENTS_I18N_HE = {
       OPEN: 'פתוח',
       CLOSED: 'סגור',
       SHIPPED: 'נשלח',
+      DELIVERED: 'נמסר',
     },
     boxTypeLabels: {
       SMALL: 'S',

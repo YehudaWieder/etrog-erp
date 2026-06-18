@@ -98,6 +98,7 @@ export function createHarvestExportRowBuilders({
   const createFieldReportExportRows = (): HarvestExportTableData => {
     const fields = t.dailyDetails.detailsPanel.fields;
     const values = t.dailyDetails.detailsPanel.values;
+    const franco = t.fieldReport.francoColumns;
 
     const header = [
       t.dailyDetails.columns.fieldName,
@@ -107,10 +108,10 @@ export function createHarvestExportRowBuilders({
       t.dailyDetails.columns.netHarvest,
       t.dailyDetails.columns.classifiedTotal,
       fields.rejectionRate,
-      fields.ownerHarvested,
-      fields.ownerRejected,
-      fields.ownerAfterRejected,
-      fields.ownerRejectionRate,
+      franco.harvested,
+      franco.rejected,
+      franco.net,
+      franco.rejectionRate,
       values.differenceRow,
       t.fieldReport.headers.differenceRejected,
       t.fieldReport.headers.differenceNet,

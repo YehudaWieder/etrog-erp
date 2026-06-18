@@ -199,7 +199,8 @@ export type ShipmentStatus = (typeof ShipmentStatus)[keyof typeof ShipmentStatus
 export const BoxStatus: {
   OPEN: 'OPEN',
   CLOSED: 'CLOSED',
-  SHIPPED: 'SHIPPED'
+  SHIPPED: 'SHIPPED',
+  DELIVERED: 'DELIVERED'
 };
 
 export type BoxStatus = (typeof BoxStatus)[keyof typeof BoxStatus]

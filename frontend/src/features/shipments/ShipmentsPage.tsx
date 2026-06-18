@@ -437,6 +437,7 @@ export function ShipmentsPage() {
         onNotesChange={editBoxForm.setNotes}
         isShipped={editBoxForm.isShipped}
         isShipmentFrozen={editBoxForm.isShipmentFrozen}
+        isShipmentShipped={editBoxForm.isShipmentShipped}
         isSubmitting={editBoxForm.isSubmitting}
         error={editBoxForm.error}
         onSave={editBoxForm.handleSave}

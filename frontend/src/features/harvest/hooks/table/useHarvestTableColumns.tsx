@@ -28,6 +28,7 @@ type UseHarvestTableColumnsParams = {
   numberFormatter: Intl.NumberFormat;
   formatRate: (value: number | string) => string;
   sortingDailyCategories: ClassificationDailySummaryCategory[];
+  fieldReportMethod: 'our' | 'franco';
   setDetailsRecord: (value: HarvestRecord | null) => void;
   setFieldReportDetailsFieldId: (value: number | null) => void;
   setSortingDailyDetailsRowId: (value: number | null) => void;
@@ -61,6 +62,7 @@ export function useHarvestTableColumns({
   numberFormatter,
   formatRate,
   sortingDailyCategories,
+  fieldReportMethod,
   setDetailsRecord,
   setFieldReportDetailsFieldId,
   setSortingDailyDetailsRowId,
@@ -199,63 +201,129 @@ export function useHarvestTableColumns({
         render: (row) => row.fieldName,
       },
       {
-        id: 'totalHarvested',
-        header: t.dailyDetails.columns.totalHarvested,
-        headerLabel: t.dailyDetails.columns.totalHarvested,
-        sortKey: 'totalHarvested',
-        sortLabel: `${t.dailyDetails.columns.totalHarvested} - ${t.tableLabels.sort}`,
+        id: 'recordCount',
+        header: t.fieldReport.headers.recordCount,
+        headerLabel: t.fieldReport.headers.recordCount,
+        sortKey: 'recordCount',
+        sortLabel: `${t.fieldReport.headers.recordCount} - ${t.tableLabels.sort}`,
         defaultSortDirection: 'desc',
-        sortAccessor: (row) => row.totalHarvested,
+        sortAccessor: (row) => row.recordCount,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
         align: 'center',
-        render: (row) =>
-          renderFieldReportNumericCell(row, 'totalHarvested', row.totalHarvested, numberFormatter.format(row.totalHarvested)),
+        render: (row) => numberFormatter.format(row.recordCount),
       },
-      {
-        id: 'totalRejected',
-        header: t.dailyDetails.columns.totalRejected,
-        headerLabel: t.dailyDetails.columns.totalRejected,
-        sortKey: 'totalRejected',
-        sortLabel: `${t.dailyDetails.columns.totalRejected} - ${t.tableLabels.sort}`,
-        defaultSortDirection: 'desc',
-        sortAccessor: (row) => row.totalRejected,
-        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
-        align: 'center',
-        render: (row) =>
-          renderFieldReportNumericCell(row, 'totalRejected', row.totalRejected, numberFormatter.format(row.totalRejected)),
-      },
-      {
-        id: 'totalAfterRejected',
-        header: t.dailyDetails.columns.netHarvest,
-        headerLabel: t.dailyDetails.columns.netHarvest,
-        sortKey: 'totalAfterRejected',
-        sortLabel: `${t.dailyDetails.columns.netHarvest} - ${t.tableLabels.sort}`,
-        defaultSortDirection: 'desc',
-        sortAccessor: (row) => row.totalAfterRejected,
-        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
-        align: 'center',
-        render: (row) =>
-          renderFieldReportNumericCell(
-            row,
-            'totalAfterRejected',
-            row.totalAfterRejected,
-            numberFormatter.format(row.totalAfterRejected),
-          ),
-      },
-      {
-        id: 'rejectionRate',
-        header: t.dailyDetails.detailsPanel.fields.rejectionRate,
-        headerLabel: t.dailyDetails.detailsPanel.fields.rejectionRate,
-        sortKey: 'rejectionRate',
-        sortLabel: `${t.dailyDetails.detailsPanel.fields.rejectionRate} - ${t.tableLabels.sort}`,
-        defaultSortDirection: 'desc',
-        sortAccessor: (row) => row.rejectionRate,
-        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericPercent,
-        align: 'center',
-        render: (row) => renderFieldReportNumericCell(row, 'rejectionRate', row.rejectionRate, formatRate(row.rejectionRate)),
-      },
+      ...(fieldReportMethod === 'franco'
+        ? [
+            {
+              id: 'ownerHarvested',
+              header: t.fieldReport.francoColumns.harvested,
+              headerLabel: t.fieldReport.francoColumns.harvested,
+              sortKey: 'ownerHarvested',
+              sortLabel: `${t.fieldReport.francoColumns.harvested} - ${t.tableLabels.sort}`,
+              defaultSortDirection: 'desc' as const,
+              sortAccessor: (row: HarvestFieldReportRow) => row.ownerHarvested,
+              minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
+              align: 'center' as const,
+              render: (row: HarvestFieldReportRow) =>
+                renderFieldReportNumericCell(row, 'ownerHarvested', row.ownerHarvested, numberFormatter.format(row.ownerHarvested)),
+            },
+            {
+              id: 'ownerRejected',
+              header: t.fieldReport.francoColumns.rejected,
+              headerLabel: t.fieldReport.francoColumns.rejected,
+              sortKey: 'ownerRejected',
+              sortLabel: `${t.fieldReport.francoColumns.rejected} - ${t.tableLabels.sort}`,
+              defaultSortDirection: 'desc' as const,
+              sortAccessor: (row: HarvestFieldReportRow) => row.ownerRejected,
+              minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
+              align: 'center' as const,
+              render: (row: HarvestFieldReportRow) =>
+                renderFieldReportNumericCell(row, 'ownerRejected', row.ownerRejected, numberFormatter.format(row.ownerRejected)),
+            },
+            {
+              id: 'ownerAfterRejected',
+              header: t.fieldReport.francoColumns.net,
+              headerLabel: t.fieldReport.francoColumns.net,
+              sortKey: 'ownerAfterRejected',
+              sortLabel: `${t.fieldReport.francoColumns.net} - ${t.tableLabels.sort}`,
+              defaultSortDirection: 'desc' as const,
+              sortAccessor: (row: HarvestFieldReportRow) => row.ownerAfterRejected,
+              minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
+              align: 'center' as const,
+              render: (row: HarvestFieldReportRow) =>
+                renderFieldReportNumericCell(row, 'ownerAfterRejected', row.ownerAfterRejected, numberFormatter.format(row.ownerAfterRejected)),
+            },
+            {
+              id: 'ownerRejectionRate',
+              header: t.fieldReport.francoColumns.rejectionRate,
+              headerLabel: t.fieldReport.francoColumns.rejectionRate,
+              sortKey: 'ownerRejectionRate',
+              sortLabel: `${t.fieldReport.francoColumns.rejectionRate} - ${t.tableLabels.sort}`,
+              defaultSortDirection: 'desc' as const,
+              sortAccessor: (row: HarvestFieldReportRow) => row.ownerRejectionRate,
+              minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericPercent,
+              align: 'center' as const,
+              render: (row: HarvestFieldReportRow) =>
+                renderFieldReportNumericCell(row, 'ownerRejectionRate', row.ownerRejectionRate, formatRate(row.ownerRejectionRate)),
+            },
+          ]
+        : [
+            {
+              id: 'totalHarvested',
+              header: t.dailyDetails.columns.totalHarvested,
+              headerLabel: t.dailyDetails.columns.totalHarvested,
+              sortKey: 'totalHarvested',
+              sortLabel: `${t.dailyDetails.columns.totalHarvested} - ${t.tableLabels.sort}`,
+              defaultSortDirection: 'desc' as const,
+              sortAccessor: (row: HarvestFieldReportRow) => row.totalHarvested,
+              minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
+              align: 'center' as const,
+              render: (row: HarvestFieldReportRow) =>
+                renderFieldReportNumericCell(row, 'totalHarvested', row.totalHarvested, numberFormatter.format(row.totalHarvested)),
+            },
+            {
+              id: 'totalRejected',
+              header: t.dailyDetails.columns.totalRejected,
+              headerLabel: t.dailyDetails.columns.totalRejected,
+              sortKey: 'totalRejected',
+              sortLabel: `${t.dailyDetails.columns.totalRejected} - ${t.tableLabels.sort}`,
+              defaultSortDirection: 'desc' as const,
+              sortAccessor: (row: HarvestFieldReportRow) => row.totalRejected,
+              minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
+              align: 'center' as const,
+              render: (row: HarvestFieldReportRow) =>
+                renderFieldReportNumericCell(row, 'totalRejected', row.totalRejected, numberFormatter.format(row.totalRejected)),
+            },
+            {
+              id: 'totalAfterRejected',
+              header: t.dailyDetails.columns.netHarvest,
+              headerLabel: t.dailyDetails.columns.netHarvest,
+              sortKey: 'totalAfterRejected',
+              sortLabel: `${t.dailyDetails.columns.netHarvest} - ${t.tableLabels.sort}`,
+              defaultSortDirection: 'desc' as const,
+              sortAccessor: (row: HarvestFieldReportRow) => row.totalAfterRejected,
+              minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericWide,
+              align: 'center' as const,
+              render: (row: HarvestFieldReportRow) =>
+                renderFieldReportNumericCell(row, 'totalAfterRejected', row.totalAfterRejected, numberFormatter.format(row.totalAfterRejected)),
+            },
+            {
+              id: 'rejectionRate',
+              header: t.dailyDetails.detailsPanel.fields.rejectionRate,
+              headerLabel: t.dailyDetails.detailsPanel.fields.rejectionRate,
+              sortKey: 'rejectionRate',
+              sortLabel: `${t.dailyDetails.detailsPanel.fields.rejectionRate} - ${t.tableLabels.sort}`,
+              defaultSortDirection: 'desc' as const,
+              sortAccessor: (row: HarvestFieldReportRow) => row.rejectionRate,
+              minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericPercent,
+              align: 'center' as const,
+              render: (row: HarvestFieldReportRow) =>
+                renderFieldReportNumericCell(row, 'rejectionRate', row.rejectionRate, formatRate(row.rejectionRate)),
+            },
+          ]),
     ];
   }, [
+    fieldReportMethod,
     formatRate,
     lang,
     numberFormatter,
@@ -263,6 +331,8 @@ export function useHarvestTableColumns({
     setFieldReportDetailsFieldId,
     t.dailyDetails.columns,
     t.dailyDetails.detailsPanel.fields,
+    t.fieldReport.francoColumns,
+    t.fieldReport.headers,
   ]);
 
   const sortingDailyColumns = useMemo<GlobalDataTableColumn<ClassificationDailySummaryRow>[]>(() => {
