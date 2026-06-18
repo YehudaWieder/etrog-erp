@@ -45,6 +45,10 @@ export class HarvestService {
     return this.harvestCommandService.updatePartialClassificationMode(id, isPartialClassification);
   }
 
+  removeAllSortings(harvestId: number) {
+    return this.harvestCommandService.removeAllSortings(harvestId);
+  }
+
   remove(id: number) {
     return this.harvestCommandService.remove(id);
   }

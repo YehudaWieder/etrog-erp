@@ -105,3 +105,11 @@ export async function createHarvestWithClassifications(
     body: JSON.stringify(payload),
   });
 }
+
+export async function deleteHarvest(id: number): Promise<void> {
+  await apiClient<void>(`/harvests/${id}`, { method: 'DELETE' });
+}
+
+export async function deleteAllSortingsByHarvest(harvestId: number): Promise<void> {
+  await apiClient<void>(`/harvests/${harvestId}/sortings`, { method: 'DELETE' });
+}

@@ -48,6 +48,10 @@ const EXACT_TRANSLATIONS_HE: Record<string, string> = {
   'Trader movement requires traderId when isModulo=false': 'יש לבחור סוחר',
   'Cannot delete trader stock movement because related records exist in the system.':
     'לא ניתן למחוק את התנועה כי קיימות רשומות מקושרות במערכת',
+  'Cannot delete harvest record because it has related sortings. Delete all sortings first.':
+    'לא ניתן למחוק רשומת קטיף שיש לה מיונים מקושרים. יש למחוק את כל המיונים תחילה.',
+  'Cannot delete harvest record because related records exist in the system.':
+    'לא ניתן למחוק את רשומת הקטיף כי קיימות רשומות מקושרות במערכת.',
   'Ledger mismatch while updating transfer operation': 'חוסר התאמה בנתוני ההעברה בעת העדכון',
 };
 

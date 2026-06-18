@@ -26,7 +26,33 @@ export class ClassificationRepository {
   findAllBySeason(seasonId: number) {
     return this.prisma.classification.findMany({
       where: { seasonId, isDeleted: false },
-      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        assignmentType: true,
+        grade: true,
+        pitamStatus: true,
+        quantity: true,
+        notes: true,
+        trader: { select: { name: true } },
+        customer: { select: { customerName: true } },
+        traderCategory: { select: { name: true } },
+        customerCategory: { select: { name: true, grade: true } },
+        updatedBy: { select: { name: true } },
+        fieldHarvest: {
+          select: {
+            id: true,
+            fieldId: true,
+            dateGregorian: true,
+            dateHebrew: true,
+            field: { select: { name: true } },
+          },
+        },
+      },
+      orderBy: [
+        { fieldHarvest: { dateGregorian: 'desc' } },
+        { fieldHarvest: { id: 'desc' } },
+        { id: 'asc' },
+      ],
     });
   }
 

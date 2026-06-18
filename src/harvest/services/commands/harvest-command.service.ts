@@ -134,27 +134,44 @@ export class HarvestCommandService {
     return this.harvestRepository.update(id, { isPartialClassification });
   }
 
+  async removeAllSortings(harvestId: number) {
+    const harvest = await this.harvestRepository.findUniqueById(harvestId);
+    if (!harvest) {
+      throw new NotFoundException(`Harvest report #${harvestId} not found`);
+    }
+
+    const classificationIds = await this.classificationRepository.findIdsByHarvest(harvestId);
+    const ids = classificationIds.map((item) => item.id);
+
+    if (ids.length === 0) {
+      return;
+    }
+
+    await this.allocationRepository.deleteCustomerAllocationsByReferenceIds(ids);
+    await this.allocationRepository.deleteTraderStocksByReferenceIds(ids);
+    await this.classificationRepository.deleteManyByIds(ids);
+    await this.harvestRepository.update(harvestId, { classifiedTotal: 0 });
+  }
+
   async remove(id: number) {
     const harvest = await this.harvestRepository.findUniqueById(id);
     if (!harvest) {
       throw new NotFoundException(`Harvest report #${id} not found`);
     }
 
+    const classificationIds = await this.classificationRepository.findIdsByHarvest(id);
+    if (classificationIds.length > 0) {
+      throw new ConflictException(
+        'Cannot delete harvest record because it has related sortings. Delete all sortings first.',
+      );
+    }
+
     try {
-      const classificationIds = await this.classificationRepository.findIdsByHarvest(id);
-      const ids = classificationIds.map((item) => item.id);
-
-      if (ids.length > 0) {
-        await this.allocationRepository.deleteCustomerAllocationsByReferenceIds(ids);
-        await this.allocationRepository.deleteTraderStocksByReferenceIds(ids);
-        await this.classificationRepository.deleteManyByIds(ids);
-      }
-
       return await this.harvestRepository.delete(id);
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
         throw new ConflictException(
-          'Cannot delete harvest report because related records exist in the system.',
+          'Cannot delete harvest record because related records exist in the system.',
         );
       }
 

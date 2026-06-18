@@ -73,8 +73,33 @@ export type ClassificationDailySummaryResponse = {
   rows: ClassificationDailySummaryRow[];
 };
 
+export type ClassificationListRecord = {
+  id: number;
+  assignmentType: 'GENERAL' | 'TRADER' | 'CUSTOMER' | string;
+  grade?: string | null;
+  pitamStatus?: string | null;
+  quantity: number;
+  notes?: string | null;
+  trader?: { name: string } | null;
+  customer?: { customerName: string } | null;
+  traderCategory?: { name: string } | null;
+  customerCategory?: { name: string; grade?: string | null } | null;
+  updatedBy?: { name: string } | null;
+  fieldHarvest?: {
+    id: number;
+    fieldId: number;
+    dateGregorian: string;
+    dateHebrew: string;
+    field?: { name: string } | null;
+  } | null;
+};
+
 export async function getClassificationsByHarvest(harvestId: number): Promise<ClassificationRecord[]> {
   return apiClient<ClassificationRecord[]>(`/classifications/harvest/${harvestId}`);
+}
+
+export async function getClassificationsBySeason(seasonId: number): Promise<ClassificationListRecord[]> {
+  return apiClient<ClassificationListRecord[]>(`/classifications?seasonId=${seasonId}`);
 }
 
 export async function getClassificationDailySummaryBySeason(seasonId: number): Promise<ClassificationDailySummaryResponse> {
