@@ -1,6 +1,8 @@
 import type { NavItem, SidebarSection } from '../../types/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { resetAllScopeFilters } from '../../store/globalFiltersSlice';
 import { FaTriangleExclamation, FaXmark } from 'react-icons/fa6';
 import {
   fetchUnreadUrgentInboxMessages,
@@ -61,6 +63,9 @@ export function AppShell({
   children,
 }: AppShellProps): JSX.Element {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const location = useLocation();
+  const resetOnNavigateRef = useRef(false);
   const preferredLanguage = getPreferredLanguage('he');
   const resolvedDirection = direction ?? directionFromLanguage(preferredLanguage);
   const topBarLanguage: 'he' | 'en' = preferredLanguage.toLowerCase().startsWith('en') ? 'en' : 'he';
@@ -318,10 +323,26 @@ export function AppShell({
     document.documentElement.dir = resolvedDirection;
   }
 
+  // Dispatch filter reset AFTER navigation commits, so React Router's setSearchParams
+  // (triggered by resetAllScopeFilters) cannot race with and override the navigation.
+  useEffect(() => {
+    if (resetOnNavigateRef.current) {
+      resetOnNavigateRef.current = false;
+      dispatch(resetAllScopeFilters());
+    }
+  }, [location.key, dispatch]);
+
   const handleTopBarNavigate = (item: NavItem) => {
-    const targetPath = item.href ?? `/${item.id}`;
-    navigate(targetPath);
+    resetOnNavigateRef.current = true;
+    navigate(item.href ?? `/${item.id}`);
   };
+
+  const handleSidebarNavigate = onSidebarClick
+    ? (item: NavItem) => {
+        resetOnNavigateRef.current = true;
+        onSidebarClick(item);
+      }
+    : undefined;
 
   return (
     <div className="app-shell" data-direction={resolvedDirection}>
@@ -347,7 +368,7 @@ export function AppShell({
           <Sidebar
             sections={sidebarSections}
             activeItemId={activeSidebarItemId}
-            onNavigate={onSidebarClick}
+            onNavigate={handleSidebarNavigate}
             footerSlot={sidebarFooterSlot}
           />
         )}

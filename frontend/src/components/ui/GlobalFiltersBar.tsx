@@ -1,4 +1,5 @@
 import React from 'react';
+import { CalendarDateFilter } from './CalendarDateFilter';
 import styles from './styles/GlobalFiltersBar.module.css';
 
 export type GlobalFilterOption = {
@@ -13,6 +14,8 @@ export type GlobalFilterControl = {
   value: string;
   options: GlobalFilterOption[];
   onChange: (value: string) => void;
+  type?: 'calendar';
+  lang?: 'he' | 'en';
 };
 
 type GlobalFiltersBarProps = {
@@ -32,7 +35,22 @@ export const GlobalFiltersBar: React.FC<GlobalFiltersBarProps> = ({
 
   return (
     <div className={containerClassName} dir={direction}>
-      {controls.map((control) => (
+      {controls.map((control) => {
+        if (control.type === 'calendar') {
+          return (
+            <CalendarDateFilter
+              key={control.id}
+              id={control.id}
+              label={control.label}
+              value={control.value}
+              options={control.options}
+              onChange={control.onChange}
+              lang={control.lang}
+            />
+          );
+        }
+
+        return (
         <div className={`global-filters-bar__field ${styles.field}`} key={control.id}>
           <label className={styles.label} htmlFor={control.id}>
             {control.label}
@@ -88,7 +106,8 @@ export const GlobalFiltersBar: React.FC<GlobalFiltersBarProps> = ({
             })()}
           </select>
         </div>
-      ))}
+        );
+      })}
       {actions ? <div className={`global-filters-bar__actions ${styles.actions}`}>{actions}</div> : null}
     </div>
   );

@@ -1,0 +1,200 @@
+.container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 220px;
+}
+
+.label {
+  font-weight: 700;
+  color: #10324a;
+  font-size: 0.92rem;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+  cursor: pointer;
+  text-align: start;
+  background: #fff;
+}
+
+.triggerOpen {
+  border-color: #29540f;
+  outline: 2px solid rgba(41, 84, 15, 0.2);
+  outline-offset: 1px;
+}
+
+.triggerText {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.triggerChevron {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: #29540f;
+  transition: transform 0.15s ease;
+}
+
+.triggerOpen .triggerChevron {
+  transform: rotate(180deg);
+}
+
+/* Popover */
+.popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline-start: 0;
+  z-index: 50;
+  width: 280px;
+  padding: 12px;
+  border: 1px solid rgba(211, 220, 214, 0.95);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(248, 251, 248, 0.98) 100%);
+  box-shadow: 0 18px 40px rgba(16, 50, 23, 0.16);
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.monthLabel {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #214229;
+}
+
+.navBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(211, 220, 214, 0.8);
+  border-radius: 8px;
+  background: transparent;
+  color: #214229;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.navBtn:hover {
+  background: rgba(243, 197, 47, 0.18);
+  border-color: #f3c52f;
+}
+
+/* Calendar grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.dayName {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #7a9a7a;
+  text-transform: uppercase;
+}
+
+.dayEmpty {
+  height: 34px;
+}
+
+.day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.1s ease, color 0.1s ease, border-color 0.1s ease;
+  gap: 2px;
+  position: relative;
+}
+
+.dayAvailable {
+  color: #214229;
+}
+
+.dayAvailable:hover {
+  background: rgba(243, 197, 47, 0.22);
+  border-color: rgba(243, 197, 47, 0.6);
+}
+
+.dayUnavailable {
+  color: #c8d4c8;
+  cursor: default;
+}
+
+.daySelected {
+  background: #29540f !important;
+  color: #fff !important;
+  border-color: #29540f !important;
+}
+
+.daySelected .dot {
+  background: rgba(255, 255, 255, 0.7) !important;
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #f3c52f;
+  flex-shrink: 0;
+}
+
+/* Footer */
+.footer {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(211, 220, 214, 0.6);
+}
+
+.allBtn {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid rgba(211, 220, 214, 0.8);
+  border-radius: 8px;
+  background: transparent;
+  color: #214229;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.allBtn:hover {
+  background: rgba(243, 197, 47, 0.18);
+  border-color: #f3c52f;
+}
+
+.allBtnActive {
+  background: rgba(41, 84, 15, 0.1);
+  border-color: #29540f;
+  color: #29540f;
+}

@@ -43,6 +43,11 @@ export function useGlobalFilters(scope: string, definitions: GlobalFilterDefinit
   // undefined = key not yet synced, null = key intentionally removed (value equals default).
   const syncedUrlValuesRef = useRef<Record<string, string | null | undefined>>({});
 
+  // On the very first URL-sync run, skip writing non-default Redux values that aren't already
+  // in the URL. This prevents stale filter state from a previous tab from polluting the URL of
+  // the newly-mounted tab before the AppShell reset fires (which runs after children effects).
+  const hasFirstSyncRunRef = useRef(false);
+
   const resolvedValues = useMemo(() => {
     const next: Record<string, string> = {};
 
@@ -101,29 +106,47 @@ export function useGlobalFilters(scope: string, definitions: GlobalFilterDefinit
   useEffect(() => {
     const nextParams = new URLSearchParams(searchParams);
     let hasChanged = false;
+    const isFirstRun = !hasFirstSyncRunRef.current;
 
     for (const definition of definitions) {
       const queryKey = definition.queryParam ?? definition.key;
       const value = resolvedValues[definition.key] ?? definition.defaultValue;
       const existing = nextParams.get(queryKey);
 
-      // Always record what URL value we intend so the first effect can distinguish
-      // our own URL updates from external navigation.
-      syncedUrlValuesRef.current[queryKey] = value === definition.defaultValue ? null : value;
-
       if (value === definition.defaultValue) {
         if (existing !== null) {
           nextParams.delete(queryKey);
           hasChanged = true;
+          // URL is about to change — defer recording until the next render confirms it,
+          // so the first effect never sees a stale URL with an already-updated ref.
+        } else {
+          // URL already absent (matches the default) — safe to confirm now.
+          syncedUrlValuesRef.current[queryKey] = null;
         }
+        continue;
+      }
+
+      // On the very first run after mount: if the URL doesn't already carry this param, skip
+      // writing it. A non-default Redux value here is stale state from a previous tab; the
+      // AppShell will dispatch resetAllScopeFilters() momentarily (it runs after child effects).
+      // Writing it now would add an extra location.key change before the reset fires, which can
+      // cause the page to go blank.
+      if (isFirstRun && existing === null) {
+        syncedUrlValuesRef.current[queryKey] = null; // confirm absence so first effect won't treat it as external
         continue;
       }
 
       if (existing !== value) {
         nextParams.set(queryKey, value);
         hasChanged = true;
+        // URL is about to change — defer recording until the next render confirms it.
+      } else {
+        // URL already reflects this value — safe to confirm now.
+        syncedUrlValuesRef.current[queryKey] = value;
       }
     }
+
+    hasFirstSyncRunRef.current = true;
 
     if (hasChanged && nextParams.toString() !== searchParams.toString()) {
       setSearchParams(nextParams, { replace: true });
