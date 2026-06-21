@@ -21,6 +21,8 @@ import {
   buildClassificationDuplicateKey,
 } from 'src/harvest/services/harvest-core/rules/harvest-validation.rules';
 import { HarvestAllocationService } from 'src/harvest/services/workflows/harvest-allocation.service';
+import { InventoryAvailabilityService } from 'src/inventory/services/inventory-availability.service';
+import { Grade, PitamStatus } from 'src/generated/prisma';
 
 @Injectable()
 export class HarvestBulkWorkflowService {
@@ -28,6 +30,7 @@ export class HarvestBulkWorkflowService {
     private prisma: PrismaService,
     private seasonsService: SeasonsService,
     private readonly allocationService: HarvestAllocationService,
+    private readonly inventoryAvailabilityService: InventoryAvailabilityService,
   ) {}
 
   private mapToClassificationBulkItem(c: Classification): ClassificationBulkItemDto {
@@ -437,6 +440,14 @@ export class HarvestBulkWorkflowService {
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
 
     return this.prisma.$transaction(async (tx) => {
+      const newQuantity = updatePayload.quantity ?? oldClassification.quantity;
+
+      // If quantity is being reduced, assert enough unpackaged inventory exists to absorb the decrease
+      if (newQuantity < oldClassification.quantity) {
+        const delta = oldClassification.quantity - newQuantity;
+        await this.assertInventoryCanRelease(tx, oldClassification, delta, 'Update classification quantity');
+      }
+
       // Delete all old movements linked to this classification
       await this.allocationService.deleteLinkedMovements(tx, classificationId);
 
@@ -469,8 +480,6 @@ export class HarvestBulkWorkflowService {
         nextAssignmentType === AssignmentType.GENERAL
           ? null
           : (updatePayload.customerId ?? oldClassification.customerId);
-
-      const newQuantity = updatePayload.quantity ?? oldClassification.quantity;
 
       // Update classification with new values
       const updatedClassification = await tx.classification.update({
@@ -519,7 +528,19 @@ export class HarvestBulkWorkflowService {
       return await this.prisma.$transaction(async (tx) => {
         const classification = await tx.classification.findUnique({
           where: { id: classificationId },
-          select: { id: true, fieldHarvestId: true },
+          select: {
+            id: true,
+            fieldHarvestId: true,
+            assignmentType: true,
+            traderId: true,
+            traderCategoryId: true,
+            grade: true,
+            pitamStatus: true,
+            customerId: true,
+            customerCategoryId: true,
+            quantity: true,
+            seasonId: true,
+          },
         });
 
         if (!classification) {
@@ -531,6 +552,8 @@ export class HarvestBulkWorkflowService {
             `Classification ${classificationId} does not belong to harvest ${harvestId}`,
           );
         }
+
+        await this.assertInventoryAvailableForDeletion(tx, classification);
 
         await this.applyHarvestInlineUpdate(tx, harvestId, deletePayload.harvestUpdate);
 
@@ -551,5 +574,85 @@ export class HarvestBulkWorkflowService {
 
       throw error;
     }
+  }
+
+  private async assertInventoryCanRelease(
+    tx: Prisma.TransactionClient,
+    classification: {
+      assignmentType: string;
+      traderId: number | null;
+      traderCategoryId: number | null;
+      grade: string | null;
+      pitamStatus: string | null;
+      customerId: number | null;
+      customerCategoryId: number | null;
+      seasonId: number;
+    },
+    releasedQuantity: number,
+    contextLabel: string,
+  ) {
+    const { assignmentType, seasonId } = classification;
+
+    if (assignmentType === AssignmentType.TRADER) {
+      await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
+        seasonId,
+        traderId: classification.traderId,
+        traderCategoryId: classification.traderCategoryId!,
+        grade: classification.grade as Grade,
+        pitamStatus: classification.pitamStatus as PitamStatus,
+        isModulo: false,
+        requiredQuantity: releasedQuantity,
+        contextLabel,
+      });
+      return;
+    }
+
+    if (assignmentType === AssignmentType.CUSTOMER) {
+      await this.inventoryAvailabilityService.assertCustomerHasUnshippedStock(tx, {
+        seasonId,
+        customerId: classification.customerId!,
+        customerCategoryId: classification.customerCategoryId!,
+        pitamStatus: classification.pitamStatus as PitamStatus,
+        requiredQuantity: releasedQuantity,
+        contextLabel,
+      });
+      return;
+    }
+
+    if (assignmentType === AssignmentType.GENERAL) {
+      const result = await tx.traderStock.aggregate({
+        where: {
+          seasonId,
+          traderCategoryId: classification.traderCategoryId!,
+          grade: classification.grade as Grade,
+          pitamStatus: classification.pitamStatus as PitamStatus,
+          isDeleted: false,
+        },
+        _sum: { quantity: true },
+      });
+      const available = result._sum.quantity ?? 0;
+      if (available < releasedQuantity) {
+        throw new BadRequestException(
+          `${contextLabel}: insufficient unshipped trader stock. Required=${releasedQuantity}, available=${available}`,
+        );
+      }
+    }
+  }
+
+  private async assertInventoryAvailableForDeletion(
+    tx: Prisma.TransactionClient,
+    classification: {
+      assignmentType: string;
+      traderId: number | null;
+      traderCategoryId: number | null;
+      grade: string | null;
+      pitamStatus: string | null;
+      customerId: number | null;
+      customerCategoryId: number | null;
+      quantity: number;
+      seasonId: number;
+    },
+  ) {
+    await this.assertInventoryCanRelease(tx, classification, classification.quantity, 'Delete classification');
   }
 }

@@ -3,6 +3,7 @@ import { HarvestController } from './controllers/harvest.controller';
 import { HarvestService } from './services/harvest.service';
 import { HarvestBulkService } from './services/harvest-bulk.service';
 import { SeasonsModule } from 'src/seasons/seasons.module';
+import { InventoryModule } from 'src/inventory/inventory.module';
 import { ClassificationController } from './controllers/classification.controller';
 import { ClassificationService } from './classifications/classification.service';
 import { HarvestQueryService } from 'src/harvest/services/queries/harvest-query.service';
@@ -14,7 +15,7 @@ import { HarvestBulkWorkflowService } from 'src/harvest/services/workflows/harve
 import { HarvestAllocationService } from 'src/harvest/services/workflows/harvest-allocation.service';
 
 @Module({
-  imports: [SeasonsModule],
+  imports: [SeasonsModule, InventoryModule],
   controllers: [HarvestController, ClassificationController],
   providers: [
     HarvestService,
