@@ -44,7 +44,7 @@ export function CustomerInventoryPage() {
   const [filterValues, setFilterValues] = useState<Record<string, string>>({
     seasonId: '',
     customerId: 'ALL',
-    inventoryStatus: 'ALL',
+    inventoryStatus: 'UNSHIPPED',
     movementStatus: 'ALL',
     movementCategory: 'ALL',
     movementGrade: 'ALL',
@@ -136,7 +136,7 @@ export function CustomerInventoryPage() {
   const selectedShipmentScope = useMemo<
     'ALL' | 'UNSHIPPED' | 'PACKED_SHIPPED' | 'SHIPPED' | 'SELF_PICKUP'
   >(() => {
-    const status = filterValues.inventoryStatus || 'ALL';
+    const status = filterValues.inventoryStatus || 'UNSHIPPED';
     if (
       status === 'ALL' ||
       status === 'UNSHIPPED' ||
@@ -146,7 +146,7 @@ export function CustomerInventoryPage() {
     ) {
       return status;
     }
-    return 'ALL';
+    return 'UNSHIPPED';
   }, [filterValues.inventoryStatus]);
 
   const summaryFilters = useMemo(
@@ -265,7 +265,7 @@ export function CustomerInventoryPage() {
     }
 
     const statusByTab: Partial<Record<string, string>> = {
-      unboxed: 'UNSHIPPED',
+      unboxed: 'ALL',
       boxed: 'PACKED_SHIPPED',
       shipped: 'SHIPPED',
       arrived: 'SHIPPED',
@@ -312,8 +312,8 @@ export function CustomerInventoryPage() {
 
   const inventoryStatusOptions = useMemo(
     () => [
-      { value: 'ALL', label: t.summary.filters.allInventoryOption },
-      { value: 'UNSHIPPED', label: t.summary.filters.unboxedOption },
+      { value: 'UNSHIPPED', label: t.summary.filters.allInventoryOption },
+      { value: 'ALL', label: t.summary.filters.unboxedOption },
       { value: 'PACKED_SHIPPED', label: t.summary.filters.boxedOption },
       { value: 'SHIPPED', label: t.summary.filters.shippedOption },
       { value: 'SELF_PICKUP', label: t.summary.filters.selfPickupOption },
@@ -389,8 +389,8 @@ export function CustomerInventoryPage() {
         : 'N/A';
 
     const statusMap: Record<string, string> = {
-      ALL: t.summary.filters.allInventoryOption,
-      UNSHIPPED: t.summary.filters.unboxedOption,
+      UNSHIPPED: t.summary.filters.allInventoryOption,
+      ALL: t.summary.filters.unboxedOption,
       PACKED_SHIPPED: t.summary.filters.boxedOption,
       SHIPPED: t.summary.filters.shippedOption,
       SELF_PICKUP: t.summary.filters.selfPickupOption,
@@ -477,8 +477,8 @@ export function CustomerInventoryPage() {
         : 'N/A';
 
     const statusMap: Record<string, string> = {
-      ALL: t.summary.filters.allInventoryOption,
-      UNSHIPPED: t.summary.filters.unboxedOption,
+      UNSHIPPED: t.summary.filters.allInventoryOption,
+      ALL: t.summary.filters.unboxedOption,
       PACKED_SHIPPED: t.summary.filters.boxedOption,
       SHIPPED: t.summary.filters.shippedOption,
       SELF_PICKUP: t.summary.filters.selfPickupOption,
@@ -540,7 +540,7 @@ export function CustomerInventoryPage() {
       if (filtersApiRef.current) {
         filtersApiRef.current.setFilterValue('seasonId', '');
         filtersApiRef.current.setFilterValue('customerId', 'ALL');
-        filtersApiRef.current.setFilterValue('inventoryStatus', 'ALL');
+        filtersApiRef.current.setFilterValue('inventoryStatus', 'UNSHIPPED');
       }
       navigate('/customers/all');
       return;
