@@ -20,6 +20,18 @@ export type HarvestI18n = {
       confirm: string;
       cancel: string;
     };
+    editSortingDialog: {
+      title: string;
+      quantityLabel: string;
+      confirm: string;
+      cancel: string;
+    };
+    deleteSortingDialog: {
+      title: string;
+      message: string;
+      confirm: string;
+      cancel: string;
+    };
     deleteHarvestBlockedTitle: string;
   };
   bulkForm: {
@@ -348,6 +360,15 @@ export type HarvestI18n = {
     loading: string;
     loadError: string;
     empty: string;
+    printWindowTitle: string;
+    sheetName: string;
+    exportError: string;
+    actions: {
+      printAriaLabel: string;
+      printTitle: string;
+      exportAriaLabel: string;
+      exportTitle: string;
+    };
     filters: {
       seasonFilterLabel: string;
       dateFilterLabel: string;

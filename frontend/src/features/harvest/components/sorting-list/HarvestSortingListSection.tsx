@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { GlobalDataTable, type GlobalDataTableColumn } from '../../../../components/ui/GlobalDataTable';
 import { GlobalScopedFilters, type GlobalScopedFilterConfig } from '../../../../components/ui/GlobalScopedFilters';
+import { HarvestPrintExportActions } from '../shared/HarvestPrintExportActions';
 import type { ClassificationListRecord } from '../../../../services/classificationsApi';
 import type { HarvestI18n } from '../../i18n';
 import workspaceStyles from '../../../../components/ui/styles/WorkspaceSection.module.css';
@@ -16,6 +17,10 @@ type HarvestSortingListSectionProps = {
   loadError: string;
   formatGregorianDate: (value: string) => string;
   numberFormatter: Intl.NumberFormat;
+  selectedRowId?: number | null;
+  onRowClick?: (row: ClassificationListRecord) => void;
+  onPrint: () => void;
+  onExport: () => void;
 };
 
 export function HarvestSortingListSection({
@@ -27,8 +32,13 @@ export function HarvestSortingListSection({
   loadError,
   formatGregorianDate,
   numberFormatter,
+  selectedRowId,
+  onRowClick,
+  onPrint,
+  onExport,
 }: HarvestSortingListSectionProps) {
   const sl = t.sortingList;
+  const hasRows = rows.length > 0;
 
   const columns = useMemo<GlobalDataTableColumn<ClassificationListRecord>[]>(() => {
     const resolveTarget = (row: ClassificationListRecord): string => {
@@ -165,6 +175,18 @@ export function HarvestSortingListSection({
         scope="harvest-daily-details"
         filters={filters}
         direction={lang === 'he' ? 'rtl' : 'ltr'}
+        actions={hasRows ? (
+          <HarvestPrintExportActions
+            lang={lang}
+            tableActionsLabel={t.tableActionsLabel}
+            onPrint={onPrint}
+            onExport={onExport}
+            printAriaLabel={sl.actions.printAriaLabel}
+            printTitle={sl.actions.printTitle}
+            exportAriaLabel={sl.actions.exportAriaLabel}
+            exportTitle={sl.actions.exportTitle}
+          />
+        ) : undefined}
       />
 
       {loadError ? <p className="seasons-manager__error">{loadError}</p> : null}
@@ -179,6 +201,8 @@ export function HarvestSortingListSection({
             getRowKey={(row) => row.id}
             emptyLabel={sl.empty}
             defaultSortState={{ key: 'dateGregorian', direction: 'desc' }}
+            selectedRowKey={selectedRowId}
+            onRowClick={onRowClick}
           />
         ) : null}
       </div>

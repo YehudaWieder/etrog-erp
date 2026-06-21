@@ -13,6 +13,18 @@ export const HARVEST_I18N_HE: HarvestI18n = {
       confirm: 'מחיקה',
       cancel: 'ביטול',
     },
+    editSortingDialog: {
+      title: 'עריכת כמות מיון',
+      quantityLabel: 'כמות',
+      confirm: 'שמירה',
+      cancel: 'ביטול',
+    },
+    deleteSortingDialog: {
+      title: 'מחיקת רשומת מיון',
+      message: 'האם אתה בטוח שברצונך למחוק את רשומת המיון הזו? פעולה זו אינה ניתנת לביטול.',
+      confirm: 'מחיקה',
+      cancel: 'ביטול',
+    },
     deleteHarvestBlockedTitle: 'לא ניתן למחוק קטיף שיש לו מיונים מקושרים',
   },
   bulkForm: {
@@ -399,6 +411,15 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     loading: 'טוען רשימת מיונים...',
     loadError: 'טעינת רשימת המיונים נכשלה.',
     empty: 'לא נמצאו רשומות מיון להצגה עבור העונה הנבחרת.',
+    printWindowTitle: 'רשימת מיונים',
+    sheetName: 'רשימת מיונים',
+    exportError: 'לא ניתן לייצא לאקסל כרגע.',
+    actions: {
+      printAriaLabel: 'הדפסת רשימת המיונים',
+      printTitle: 'הדפסה',
+      exportAriaLabel: 'ייצוא רשימת המיונים לאקסל',
+      exportTitle: 'ייצוא לאקסל',
+    },
     filters: {
       seasonFilterLabel: 'סינון לפי עונה',
       dateFilterLabel: 'סינון לפי יום',

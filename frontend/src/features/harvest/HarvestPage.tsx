@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppShell } from '../../app/layout/AppShell';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import type { NavItem } from '../../types/navigation';
+import { ApiError } from '../../services/apiClient';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
 import type { Season } from '../../services/seasonsApi';
 import type { Field } from '../../services/fieldsApi';
@@ -14,7 +15,9 @@ import {
 } from '../../services/harvestsApi';
 import {
   type ClassificationListRecord,
+  deleteHarvestClassification,
   getClassificationsBySeason,
+  updateHarvestClassificationQuantity,
 } from '../../services/classificationsApi';
 import {
   type ClassificationDailySummaryCategory,
@@ -28,6 +31,7 @@ import type { AppDispatch, RootState } from '../../store';
 import { HARVEST_I18N } from './i18n';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { HarvestBulkFormModal } from './components/forms/HarvestBulkFormModal';
+import { HarvestSortingEditModal } from './components/forms/HarvestSortingEditModal';
 import { HarvestSortingFormModal } from './components/forms/HarvestSortingFormModal';
 import { HarvestDailyDetailsSection } from './components/daily/HarvestDailyDetailsSection';
 import { HarvestFieldReportSection } from './components/field-report/HarvestFieldReportSection';
@@ -105,6 +109,14 @@ export function HarvestPage() {
   const [sortingListRows, setSortingListRows] = useState<ClassificationListRecord[]>([]);
   const [isSortingListLoading, setIsSortingListLoading] = useState(false);
   const [sortingListLoadError, setSortingListLoadError] = useState<string>('');
+  const [selectedSortingListRow, setSelectedSortingListRow] = useState<ClassificationListRecord | null>(null);
+  const [isEditSortingListDialogOpen, setIsEditSortingListDialogOpen] = useState(false);
+  const [editQuantityValue, setEditQuantityValue] = useState<number>(0);
+  const [isEditingSortingListRow, setIsEditingSortingListRow] = useState(false);
+  const [editSortingListError, setEditSortingListError] = useState<string>('');
+  const [isDeleteSortingListDialogOpen, setIsDeleteSortingListDialogOpen] = useState(false);
+  const [isDeletingSortingListRow, setIsDeletingSortingListRow] = useState(false);
+  const [deleteSortingListError, setDeleteSortingListError] = useState<string>('');
   const detailsPrintRef = useRef<HTMLDivElement | null>(null);
   const fieldReportDetailsPrintRef = useRef<HTMLDivElement | null>(null);
   const sortingDailyDetailsPrintRef = useRef<HTMLDivElement | null>(null);
@@ -729,6 +741,7 @@ export function HarvestPage() {
     createFieldReportExportRows,
     createSortingDailyExportRows,
     createSortingDailyExpandedMatrixData,
+    createSortingListExportRows,
   } = createHarvestExportRowBuilders({
     lang,
     t,
@@ -739,6 +752,7 @@ export function HarvestPage() {
     filteredHarvestRows,
     fieldReportRows,
     filteredSortingDailyCategories,
+    filteredSortingListRows,
     visibleHarvestRowsRef,
     visibleFieldReportRowsRef,
     getCurrentSortingDailyExportRows,
@@ -755,6 +769,8 @@ export function HarvestPage() {
     scheduleSortingDownloadMenuClose,
     handlePrintSortingDailyTable,
     handleExportSortingDailyTableToExcel,
+    handlePrintSortingListTable,
+    handleExportSortingListTableToExcel,
   } = createHarvestExportActions({
     lang,
     t,
@@ -764,6 +780,7 @@ export function HarvestPage() {
     createFieldReportExportRows,
     createSortingDailyExportRows,
     createSortingDailyExpandedMatrixData,
+    createSortingListExportRows,
     filterValues: globalFilterValues,
     seasons,
     fields,
@@ -852,6 +869,80 @@ export function HarvestPage() {
     }
   };
 
+  const handleOpenEditSortingListDialog = () => {
+    if (!selectedSortingListRow) return;
+    setEditQuantityValue(selectedSortingListRow.quantity);
+    setEditSortingListError('');
+    setIsEditSortingListDialogOpen(true);
+  };
+
+  const handleEditSortingListRow = async () => {
+    if (!selectedSortingListRow) return;
+    const harvestId = selectedSortingListRow.fieldHarvest?.id;
+    const isPartialClassification = selectedSortingListRow.fieldHarvest?.isPartialClassification ?? false;
+    if (!harvestId) return;
+
+    setIsEditingSortingListRow(true);
+    setEditSortingListError('');
+    try {
+      await updateHarvestClassificationQuantity({
+        harvestId,
+        classificationId: selectedSortingListRow.id,
+        isPartialClassification,
+        quantity: editQuantityValue,
+      });
+      setSortingListRows((rows) =>
+        rows.map((row) =>
+          row.id === selectedSortingListRow.id ? { ...row, quantity: editQuantityValue } : row,
+        ),
+      );
+      setSelectedSortingListRow((prev) => (prev ? { ...prev, quantity: editQuantityValue } : prev));
+      setIsEditSortingListDialogOpen(false);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 400) {
+        setEditSortingListError(error.message);
+      } else {
+        setIsEditSortingListDialogOpen(false);
+      }
+    } finally {
+      setIsEditingSortingListRow(false);
+    }
+  };
+
+  const handleDeleteSortingListRow = async () => {
+    if (!selectedSortingListRow) {
+      return;
+    }
+
+    const harvestId = selectedSortingListRow.fieldHarvest?.id;
+    const isPartialClassification = selectedSortingListRow.fieldHarvest?.isPartialClassification ?? false;
+
+    if (!harvestId) {
+      return;
+    }
+
+    setIsDeletingSortingListRow(true);
+    setDeleteSortingListError('');
+    try {
+      await deleteHarvestClassification({
+        harvestId,
+        classificationId: selectedSortingListRow.id,
+        isPartialClassification,
+      });
+      setSortingListRows((rows) => rows.filter((row) => row.id !== selectedSortingListRow.id));
+      setSelectedSortingListRow(null);
+      setIsDeleteSortingListDialogOpen(false);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 400) {
+        setDeleteSortingListError(error.message);
+      } else {
+        setIsDeleteSortingListDialogOpen(false);
+      }
+    } finally {
+      setIsDeletingSortingListRow(false);
+    }
+  };
+
   const { pageHeaderActions, filters } = useHarvestPageControls({
     lang,
     t,
@@ -866,6 +957,9 @@ export function HarvestPage() {
     openHarvestGlobalForm,
     openHarvestSortingGlobalForm: handleOpenSortingForm,
     onDeleteHarvest: () => setIsDeleteHarvestDialogOpen(true),
+    selectedSortingListRow,
+    onEditSortingListRow: handleOpenEditSortingListDialog,
+    onDeleteSortingListRow: () => setIsDeleteSortingListDialogOpen(true),
     activeSeasonId,
     seasons,
     fields,
@@ -1097,6 +1191,10 @@ export function HarvestPage() {
           loadError={sortingListLoadError}
           formatGregorianDate={formatGregorianDate}
           numberFormatter={numberFormatter}
+          selectedRowId={selectedSortingListRow?.id ?? null}
+          onRowClick={(row) => setSelectedSortingListRow((prev) => (prev?.id === row.id ? null : row))}
+          onPrint={handlePrintSortingListTable}
+          onExport={() => { void handleExportSortingListTableToExcel(); }}
         />
       ) : isSortingSummaryTab ? (
         <HarvestSortingSummarySection
@@ -1120,6 +1218,38 @@ export function HarvestPage() {
         onConfirm={() => { void handleDeleteHarvest(); }}
         onCancel={() => setIsDeleteHarvestDialogOpen(false)}
       />
+
+      {selectedSortingListRow ? (
+        <HarvestSortingEditModal
+          isOpen={isEditSortingListDialogOpen}
+          t={t}
+          row={selectedSortingListRow}
+          formatGregorianDate={formatGregorianDate}
+          quantity={editQuantityValue}
+          onQuantityChange={setEditQuantityValue}
+          isSubmitting={isEditingSortingListRow}
+          error={editSortingListError}
+          onClose={() => { setIsEditSortingListDialogOpen(false); setEditSortingListError(''); }}
+          onSubmit={() => { void handleEditSortingListRow(); }}
+        />
+      ) : null}
+
+      <ConfirmDialog
+        open={isDeleteSortingListDialogOpen}
+        title={t.pageControls.deleteSortingDialog.title}
+        message={t.pageControls.deleteSortingDialog.message}
+        confirmLabel={isDeletingSortingListRow ? '...' : t.pageControls.deleteSortingDialog.confirm}
+        cancelLabel={t.pageControls.deleteSortingDialog.cancel}
+        onConfirm={() => { void handleDeleteSortingListRow(); }}
+        onCancel={() => {
+          setIsDeleteSortingListDialogOpen(false);
+          setDeleteSortingListError('');
+        }}
+      >
+        {deleteSortingListError ? (
+          <p className="modal-error">{deleteSortingListError}</p>
+        ) : null}
+      </ConfirmDialog>
 
 
       <HarvestBulkFormModal

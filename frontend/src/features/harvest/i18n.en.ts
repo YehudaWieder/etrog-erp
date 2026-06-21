@@ -13,6 +13,18 @@ export const HARVEST_I18N_EN: HarvestI18n = {
       confirm: 'Delete',
       cancel: 'Cancel',
     },
+    editSortingDialog: {
+      title: 'Edit Sorting Quantity',
+      quantityLabel: 'Quantity',
+      confirm: 'Save',
+      cancel: 'Cancel',
+    },
+    deleteSortingDialog: {
+      title: 'Delete Sorting Record',
+      message: 'Are you sure you want to delete this sorting record? This action cannot be undone.',
+      confirm: 'Delete',
+      cancel: 'Cancel',
+    },
     deleteHarvestBlockedTitle: 'Cannot delete a harvest that has related sortings',
   },
   bulkForm: {
@@ -399,6 +411,15 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     loading: 'Loading sorting list...',
     loadError: 'Failed to load the sorting list.',
     empty: 'No sorting records found for the selected season.',
+    printWindowTitle: 'Sorting List',
+    sheetName: 'Sorting List',
+    exportError: 'Could not export to Excel right now.',
+    actions: {
+      printAriaLabel: 'Print sorting list',
+      printTitle: 'Print',
+      exportAriaLabel: 'Export sorting list to Excel',
+      exportTitle: 'Export to Excel',
+    },
     filters: {
       seasonFilterLabel: 'Filter by season',
       dateFilterLabel: 'Filter by date',

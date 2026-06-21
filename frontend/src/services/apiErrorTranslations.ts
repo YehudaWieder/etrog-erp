@@ -16,6 +16,8 @@ const CONTEXT_LABELS_HE: Record<string, string> = {
   'Packing CUSTOMER item': 'אריזת פריט של לקוח',
   'Packing GENERAL item (trader portion)': 'אריזת פריט כללי (חלק הסוחר)',
   'Packing GENERAL item (modulo fallback)': 'אריזת פריט כללי (גיבוי מהכללי)',
+  'Delete classification': 'מחיקת מיון',
+  'Update classification quantity': 'עדכון כמות מיון',
 };
 
 const EXACT_TRANSLATIONS_HE: Record<string, string> = {
@@ -61,6 +63,26 @@ type PatternTranslation = {
 };
 
 const PATTERN_TRANSLATIONS_HE: PatternTranslation[] = [
+  {
+    regex: /^Total classifications quantity \((\d+)\) cannot exceed net harvested quantity \((\d+)\)/,
+    translate: (classificationsTotal, netHarvested) =>
+      `סה"כ כמות המיון (${classificationsTotal}) לא יכולה לעלות על כמות הנטו שנקטפה (${netHarvested}).`,
+  },
+  {
+    regex: /^Total classifications quantity \((\d+)\) must equal net harvested quantity \((\d+)\) in FINAL mode/,
+    translate: (classificationsTotal, netHarvested) =>
+      `סה"כ כמות המיון (${classificationsTotal}) חייבת להיות שווה לכמות הנטו שנקטפה (${netHarvested}) במצב סופי.`,
+  },
+  {
+    regex: /^Total classifications quantity \((\d+)\) must equal net harvested quantity \((\d+)\)$/,
+    translate: (classificationsTotal, netHarvested) =>
+      `סה"כ כמות המיון (${classificationsTotal}) חייבת להיות שווה לכמות הנטו שנקטפה (${netHarvested}) במיון מלא.`,
+  },
+  {
+    regex: /^Duplicate classification found/,
+    translate: () =>
+      'רשומת מיון כפולה: כל שילוב של סוג, סוחר/לקוח, קטגוריה ודרגה חייב להיות ייחודי.',
+  },
   {
     regex: /^(.+?): insufficient unshipped trader stock\. Required=([\d.]+), available=([\d.]+)$/,
     translate: (context, required, available) =>

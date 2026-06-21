@@ -1,5 +1,5 @@
 import type { MutableRefObject } from 'react';
-import type { ClassificationDailySummaryCategory, ClassificationDailySummaryRow } from '../../../services/classificationsApi';
+import type { ClassificationDailySummaryCategory, ClassificationDailySummaryRow, ClassificationListRecord } from '../../../services/classificationsApi';
 import type { HarvestRecord } from '../../../services/harvestsApi';
 import type { HarvestI18n } from '../i18n';
 import type { HarvestExportTableData, HarvestFieldReportRow, SortingAssignmentFilter } from '../harvestPage.types';
@@ -20,6 +20,7 @@ type CreateHarvestExportRowBuildersParams = {
   filteredHarvestRows: HarvestRecord[];
   fieldReportRows: HarvestFieldReportRow[];
   filteredSortingDailyCategories: ClassificationDailySummaryCategory[];
+  filteredSortingListRows: ClassificationListRecord[];
   visibleHarvestRowsRef: MutableRefObject<HarvestRecord[]>;
   visibleFieldReportRowsRef: MutableRefObject<HarvestFieldReportRow[]>;
   getCurrentSortingDailyExportRows: () => ClassificationDailySummaryRow[];
@@ -36,6 +37,7 @@ export function createHarvestExportRowBuilders({
   filteredHarvestRows,
   fieldReportRows,
   filteredSortingDailyCategories,
+  filteredSortingListRows,
   visibleHarvestRowsRef,
   visibleFieldReportRowsRef,
   getCurrentSortingDailyExportRows,
@@ -209,10 +211,70 @@ export function createHarvestExportRowBuilders({
     });
   };
 
+  const createSortingListExportRows = (): HarvestExportTableData => {
+    const sl = t.sortingList;
+
+    const resolveTarget = (row: ClassificationListRecord): string => {
+      if (row.assignmentType === 'TRADER') return row.trader?.name ?? '-';
+      if (row.assignmentType === 'CUSTOMER') return row.customer?.customerName ?? '-';
+      return sl.assignmentTypes.general;
+    };
+
+    const resolveCategory = (row: ClassificationListRecord): string => {
+      return row.customerCategory?.name ?? row.traderCategory?.name ?? '-';
+    };
+
+    const resolveGrade = (row: ClassificationListRecord): string => {
+      return row.grade ?? row.customerCategory?.grade ?? '-';
+    };
+
+    const resolveAssignmentLabel = (type: string): string => {
+      if (type === 'TRADER') return sl.assignmentTypes.trader;
+      if (type === 'CUSTOMER') return sl.assignmentTypes.customer;
+      return sl.assignmentTypes.general;
+    };
+
+    const resolvePitamLabel = (status?: string | null): string => {
+      if (status === 'WITH_PITAM') return sl.pitamLabels.withPitam;
+      if (status === 'WITHOUT_PITAM') return sl.pitamLabels.withoutPitam;
+      if (status === 'MIXED') return sl.pitamLabels.mixed;
+      return '-';
+    };
+
+    const header = [
+      sl.columns.dateGregorian,
+      sl.columns.dateHebrew,
+      sl.columns.fieldName,
+      sl.columns.assignmentType,
+      sl.columns.target,
+      sl.columns.category,
+      sl.columns.grade,
+      sl.columns.pitamStatus,
+      sl.columns.quantity,
+      sl.columns.notes,
+    ];
+
+    const rows = filteredSortingListRows.map((row) => [
+      formatGregorianDate(row.fieldHarvest?.dateGregorian ?? ''),
+      row.fieldHarvest?.dateHebrew ?? '-',
+      row.fieldHarvest?.field?.name ?? '-',
+      resolveAssignmentLabel(row.assignmentType),
+      resolveTarget(row),
+      resolveCategory(row),
+      resolveGrade(row),
+      resolvePitamLabel(row.pitamStatus),
+      row.quantity,
+      row.notes ?? '-',
+    ]);
+
+    return { header, rows };
+  };
+
   return {
     createHarvestExportRows,
     createFieldReportExportRows,
     createSortingDailyExportRows,
     createSortingDailyExpandedMatrixData,
+    createSortingListExportRows,
   };
 }

@@ -90,6 +90,7 @@ export type ClassificationListRecord = {
     fieldId: number;
     dateGregorian: string;
     dateHebrew: string;
+    isPartialClassification?: boolean | null;
     field?: { name: string } | null;
   } | null;
 };
@@ -106,11 +107,34 @@ export async function getClassificationDailySummaryBySeason(seasonId: number): P
   return apiClient<ClassificationDailySummaryResponse>(`/classifications/daily-summary?seasonId=${seasonId}`);
 }
 
+export async function deleteHarvestClassification(payload: {
+  harvestId: number;
+  classificationId: number;
+  isPartialClassification: boolean;
+}): Promise<void> {
+  await apiClient<void>('/harvests/classifications', {
+    method: 'DELETE',
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function createHarvestClassification(
   payload: CreateHarvestClassificationPayload,
 ): Promise<ClassificationRecord> {
   return apiClient<ClassificationRecord>('/harvests/classifications', {
     method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateHarvestClassificationQuantity(payload: {
+  harvestId: number;
+  classificationId: number;
+  isPartialClassification: boolean;
+  quantity: number;
+}): Promise<void> {
+  await apiClient<void>('/harvests/classifications', {
+    method: 'PATCH',
     body: JSON.stringify(payload),
   });
 }

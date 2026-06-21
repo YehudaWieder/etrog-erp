@@ -1,6 +1,7 @@
 ﻿import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import type { GlobalScopedFilterConfig } from '../../../../components/ui/GlobalScopedFilters';
+import type { ClassificationListRecord } from '../../../../services/classificationsApi';
 import type { Field } from '../../../../services/fieldsApi';
 import type { HarvestRecord } from '../../../../services/harvestsApi';
 import type { Season } from '../../../../services/seasonsApi';
@@ -34,6 +35,9 @@ type UseHarvestPageControlsParams = {
   openHarvestGlobalForm: () => void;
   openHarvestSortingGlobalForm: () => void;
   onDeleteHarvest: () => void;
+  selectedSortingListRow: ClassificationListRecord | null;
+  onEditSortingListRow: () => void;
+  onDeleteSortingListRow: () => void;
   activeSeasonId: number | null;
   seasons: Season[];
   fields: Field[];
@@ -55,6 +59,9 @@ export function useHarvestPageControls({
   openHarvestGlobalForm,
   openHarvestSortingGlobalForm,
   onDeleteHarvest,
+  selectedSortingListRow,
+  onEditSortingListRow,
+  onDeleteSortingListRow,
   activeSeasonId,
   seasons,
   fields,
@@ -92,8 +99,9 @@ export function useHarvestPageControls({
           deleteActionLabel={deleteActionLabel}
           onAdd={openHarvestSortingGlobalForm}
           onDelete={() => void 0}
-          editDisabled={selectedSortingDailyRowId === null}
+          editDisabled={false}
           deleteDisabled
+          showEdit={false}
           showDelete={false}
         />
       );
@@ -110,6 +118,21 @@ export function useHarvestPageControls({
       );
     }
 
+    if (isSortingListTab) {
+      return (
+        <HarvestPageHeaderActions
+          addActionLabel={addSortingActionLabel}
+          editActionLabel={editActionLabel}
+          deleteActionLabel={deleteActionLabel}
+          onAdd={openHarvestSortingGlobalForm}
+          onEdit={onEditSortingListRow}
+          onDelete={onDeleteSortingListRow}
+          editDisabled={!selectedSortingListRow}
+          deleteDisabled={!selectedSortingListRow}
+        />
+      );
+    }
+
     return null;
   }, [
     addActionLabel,
@@ -121,12 +144,16 @@ export function useHarvestPageControls({
     isDailyDetailsTab,
     isHarvestSummaryTab,
     isSortingDailyDetailsTab,
+    isSortingListTab,
     isSortingSummaryTab,
     onDeleteHarvest,
+    onEditSortingListRow,
+    onDeleteSortingListRow,
     openHarvestGlobalForm,
     openHarvestSortingGlobalForm,
     selectedHarvestRow,
     selectedSortingDailyRowId,
+    selectedSortingListRow,
   ]);
 
   const filters = useMemo<GlobalScopedFilterConfig[]>(() => {

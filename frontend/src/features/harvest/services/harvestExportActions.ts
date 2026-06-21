@@ -36,6 +36,7 @@ type HarvestExportActionsParams = {
   createFieldReportExportRows: () => HarvestExportTableData;
   createSortingDailyExportRows: () => HarvestExportTableData;
   createSortingDailyExpandedMatrixData: () => Promise<ExpandedMatrixData>;
+  createSortingListExportRows: () => HarvestExportTableData;
   filterValues?: Record<string, string>;
   seasons?: Season[];
   fields?: Field[];
@@ -176,6 +177,7 @@ export function createHarvestExportActions({
   createFieldReportExportRows,
   createSortingDailyExportRows,
   createSortingDailyExpandedMatrixData,
+  createSortingListExportRows,
   filterValues = {},
   seasons = [],
   fields = [],
@@ -618,6 +620,79 @@ export function createHarvestExportActions({
     }
   };
 
+  const handlePrintSortingListTable = () => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const { header, rows } = createSortingListExportRows();
+    const tableHeaderHtml = header.map((label) => `<th>${escapeHtml(String(label))}</th>`).join('');
+    const tableRowsHtml = rows
+      .map((row) => `<tr>${row.map((value) => `<td>${escapeHtml(String(value))}</td>`).join('')}</tr>`)
+      .join('');
+
+    const printWindow = window.open('', '_blank', 'width=1200,height=760');
+    if (!printWindow) {
+      return;
+    }
+
+    const printTitle = t.sortingList.printWindowTitle;
+    const filterDetailsHtml = buildFilterDetailsHtml(filterValues, seasons, fields, t, lang, 'sorting-daily');
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html lang="${lang === 'he' ? 'he' : 'en'}" dir="${lang === 'he' ? 'rtl' : 'ltr'}">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>${escapeHtml(printTitle)}</title>
+          <style>${HARVEST_PRINT_BASE_STYLE}</style>
+        </head>
+        <body>
+          <h1>${escapeHtml(printTitle)}</h1>
+          ${filterDetailsHtml}
+          <table>
+            <thead>
+              <tr>${tableHeaderHtml}</tr>
+            </thead>
+            <tbody>
+              ${tableRowsHtml}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
+
+  const handleExportSortingListTableToExcel = async () => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    try {
+      const { header, rows } = createSortingListExportRows();
+      const dateStamp = new Date().toISOString().slice(0, 10);
+      const columnCount = header.length;
+      const filterRows = buildSortingDailyFilterRows(filterValues, seasons, fields, t, columnCount);
+
+      await downloadStyledExcel({
+        sheetName: t.sortingList.sheetName,
+        fileName: `sorting-list-${dateStamp}.xlsx`,
+        header,
+        rows: [...filterRows, [], ...rows],
+        rightToLeft: lang === 'he',
+        filterRowCount: filterRows.length + 1,
+      });
+    } catch {
+      window.alert(t.sortingList.exportError);
+    }
+  };
+
   return {
     handlePrintHarvestTable,
     handleExportHarvestTableToExcel,
@@ -628,5 +703,7 @@ export function createHarvestExportActions({
     scheduleSortingDownloadMenuClose,
     handlePrintSortingDailyTable,
     handleExportSortingDailyTableToExcel,
+    handlePrintSortingListTable,
+    handleExportSortingListTableToExcel,
   };
 }
