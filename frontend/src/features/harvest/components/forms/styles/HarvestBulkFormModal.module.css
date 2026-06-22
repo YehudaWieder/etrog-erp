@@ -62,9 +62,12 @@
 }
 
 .notes {
+  grid-column: 1 / -1;
+}
+
+.notesTextarea {
   min-height: 38px;
   resize: none;
-  grid-column: 1 / -1;
   overflow: hidden;
 }
 

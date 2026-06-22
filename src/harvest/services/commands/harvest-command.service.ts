@@ -9,7 +9,10 @@ import { FieldHarvestCreateDto, FieldHarvestUpdateDto } from 'src/harvest/servic
 import { HarvestRepository } from 'src/harvest/services/harvest-core/repositories/harvest.repository';
 import { AllocationRepository } from 'src/harvest/services/harvest-core/repositories/allocation.repository';
 import { ClassificationRepository } from 'src/harvest/services/harvest-core/repositories/classification.repository';
-import { assertFinalClassificationConsistency } from 'src/harvest/services/harvest-core/rules/harvest-validation.rules';
+import {
+  assertFinalClassificationConsistency,
+  assertHarvestNetVsClassified,
+} from 'src/harvest/services/harvest-core/rules/harvest-validation.rules';
 import { calculateHarvestFields } from 'src/harvest/services/harvest-core/utils/harvest-fields.util';
 import {
   hasExplicitOwnerData,
@@ -98,13 +101,25 @@ export class HarvestCommandService {
             ownerRejected: totalRejected,
           };
 
+    const newTotalAfterRejected = Math.max(totalHarvested - totalRejected, 0);
+    const currentClassifiedTotal = Number(current.classifiedTotal) || 0;
+
+    assertHarvestNetVsClassified(currentClassifiedTotal, newTotalAfterRejected, current.isPartialClassification);
+
+    const effectiveIsPartialClassification =
+      !current.isPartialClassification &&
+      currentClassifiedTotal > 0 &&
+      newTotalAfterRejected > currentClassifiedTotal
+        ? true
+        : mergedData.isPartialClassification;
+
     const rates = calculateHarvestFields({
       totalHarvested,
       totalRejected,
       ownerHarvested: normalizedOwners.ownerHarvested,
       ownerRejected: normalizedOwners.ownerRejected,
       classifiedTotal: Number(mergedData.classifiedTotal) || 0,
-      isPartialClassification: mergedData.isPartialClassification,
+      isPartialClassification: effectiveIsPartialClassification,
     });
 
     return this.harvestRepository.update(id, {

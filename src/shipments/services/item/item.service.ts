@@ -801,7 +801,7 @@ export class ItemService {
         trader: { select: { name: true } },
         customer: { select: { customerName: true } },
         traderCategory: { select: { name: true } },
-        customerCategory: { select: { name: true } },
+        customerCategory: { select: { name: true, grade: true } },
         updatedBy: { select: { name: true } },
       },
     });

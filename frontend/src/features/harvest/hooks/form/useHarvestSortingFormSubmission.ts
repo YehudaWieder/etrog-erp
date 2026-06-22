@@ -27,7 +27,7 @@ type UseHarvestSortingFormSubmissionParams = {
     traderCategoryId: string;
     customerCategoryId: string;
     grade: string;
-    pitamStatus: 'WITH_PITAM' | 'WITHOUT_PITAM' | 'MIXED';
+    pitamStatus: 'WITH_PITAM' | 'WITHOUT_PITAM' | 'MIXED' | '';
     quantity: string;
     notes: string;
     isPartialClassification: boolean;

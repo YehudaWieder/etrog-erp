@@ -171,7 +171,7 @@ export function HarvestSortingEditModal({
           />
 
           <textarea
-            className={`seasons-manager__year-input ${styles.notes}`}
+            className={`seasons-manager__year-input ${styles.notes} ${styles.notesTextarea}`}
             rows={1}
             disabled
             value={row.notes ?? ''}

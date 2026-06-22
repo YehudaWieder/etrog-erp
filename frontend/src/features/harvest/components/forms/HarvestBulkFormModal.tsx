@@ -292,7 +292,7 @@ export function HarvestBulkFormModal({
           <label className={`${styles.summaryField} ${styles.notesWithMode}`}>
             <span>{form.notesLabel}</span>
             <textarea
-              className={`seasons-manager__year-input ${styles.notes}`}
+              className={`seasons-manager__year-input ${styles.notesTextarea}`}
               rows={1}
               value={harvestFormNotes}
               onChange={(event) => onNotesChange(event.target.value, event.currentTarget)}

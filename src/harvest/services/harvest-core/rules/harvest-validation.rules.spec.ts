@@ -5,7 +5,9 @@ import {
   assertClassificationsMatchHarvested,
   assertFinalClassificationConsistency,
   assertGeneralAssignmentIds,
+  assertHarvestNetVsClassified,
   assertNoDuplicateClassifications,
+  assertPartialClassificationNetExceedsClassified,
 } from 'src/harvest/services/harvest-core/rules/harvest-validation.rules';
 
 describe('harvest-validation rules', () => {
@@ -80,5 +82,64 @@ describe('harvest-validation rules', () => {
   it('rejects non-partial mismatched classification consistency', () => {
     expect(() => assertFinalClassificationConsistency(9, 10, false)).toThrow(BadRequestException);
     expect(() => assertFinalClassificationConsistency(10, 10, false)).not.toThrow();
+  });
+
+  describe('assertPartialClassificationNetExceedsClassified', () => {
+    it('passes when classifiedTotal is 0 (no sortings)', () => {
+      expect(() => assertPartialClassificationNetExceedsClassified(0, 100)).not.toThrow();
+    });
+
+    it('passes when net exceeds classifiedTotal by at least 1', () => {
+      expect(() => assertPartialClassificationNetExceedsClassified(50, 51)).not.toThrow();
+      expect(() => assertPartialClassificationNetExceedsClassified(50, 100)).not.toThrow();
+    });
+
+    it('rejects when net equals classifiedTotal (partial mode requires net > classified)', () => {
+      expect(() => assertPartialClassificationNetExceedsClassified(100, 100)).toThrow(BadRequestException);
+    });
+
+    it('rejects when net is below classifiedTotal', () => {
+      expect(() => assertPartialClassificationNetExceedsClassified(100, 80)).toThrow(BadRequestException);
+      expect(() => assertPartialClassificationNetExceedsClassified(100, 0)).toThrow(BadRequestException);
+    });
+
+    it('is not called when harvest was full classification — net increase is handled by auto-switch to partial', () => {
+      // assertPartialClassificationNetExceedsClassified is only called when isPartialClassification===true
+      // so this function should never receive a case from a full-classification harvest
+      // The command service handles the auto-switch before reaching this check
+      expect(() => assertPartialClassificationNetExceedsClassified(100, 101)).not.toThrow();
+    });
+  });
+
+  describe('assertHarvestNetVsClassified', () => {
+    it('passes when classifiedTotal is 0', () => {
+      expect(() => assertHarvestNetVsClassified(0, 50, false)).not.toThrow();
+      expect(() => assertHarvestNetVsClassified(0, 50, true)).not.toThrow();
+    });
+
+    it('rejects net below classified for FULL classification harvest', () => {
+      expect(() => assertHarvestNetVsClassified(1900, 1800, false)).toThrow(BadRequestException);
+      expect(() => assertHarvestNetVsClassified(1900, 0, false)).toThrow(BadRequestException);
+    });
+
+    it('allows net equal to classified for FULL classification harvest', () => {
+      expect(() => assertHarvestNetVsClassified(1900, 1900, false)).not.toThrow();
+    });
+
+    it('allows net above classified for FULL classification harvest (will auto-switch to partial)', () => {
+      expect(() => assertHarvestNetVsClassified(1900, 2000, false)).not.toThrow();
+    });
+
+    it('rejects net below classified for PARTIAL classification harvest', () => {
+      expect(() => assertHarvestNetVsClassified(100, 80, true)).toThrow(BadRequestException);
+    });
+
+    it('rejects net equal to classified for PARTIAL classification harvest', () => {
+      expect(() => assertHarvestNetVsClassified(100, 100, true)).toThrow(BadRequestException);
+    });
+
+    it('allows net above classified for PARTIAL classification harvest', () => {
+      expect(() => assertHarvestNetVsClassified(100, 101, true)).not.toThrow();
+    });
   });
 });

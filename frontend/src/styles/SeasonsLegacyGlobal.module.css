@@ -67,6 +67,15 @@
   box-shadow: 0 0 0 3px rgba(45, 90, 39, 0.1);
 }
 
+:global(.seasons-manager__year-input:disabled),
+:global(textarea.seasons-manager__year-input:disabled) {
+  background: #f3f5f7;
+  border-color: #e2e6ea;
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
 :global(.seasons-manager__state) {
   margin: 0;
   color: var(--color-text-muted);
@@ -93,6 +102,16 @@
   border: 1px solid #f3b7c2;
   border-radius: var(--radius-sm);
   color: #8f2435;
+  padding: var(--space-3) var(--space-4);
+  font-weight: 600;
+}
+
+:global(.seasons-manager__warning) {
+  margin: 0;
+  background: #fff8e1;
+  border: 1px solid #f5c842;
+  border-radius: var(--radius-sm);
+  color: #7a5800;
   padding: var(--space-3) var(--space-4);
   font-weight: 600;
 }

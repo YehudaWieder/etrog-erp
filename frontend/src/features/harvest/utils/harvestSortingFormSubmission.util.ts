@@ -16,7 +16,7 @@ type BuildHarvestSortingFormSubmissionPayloadParams = {
     traderCategoryId: string;
     customerCategoryId: string;
     grade: string;
-    pitamStatus: 'WITH_PITAM' | 'WITHOUT_PITAM' | 'MIXED';
+    pitamStatus: 'WITH_PITAM' | 'WITHOUT_PITAM' | 'MIXED' | '';
     quantity: string;
     notes: string;
     isPartialClassification: boolean;
@@ -55,6 +55,10 @@ export function buildHarvestSortingFormSubmissionPayload({
   const availableSortingTotal = selectedHarvestSummary.totalHarvested - selectedHarvestSummary.totalRejected;
   const maximumPartialSortingTotal = Math.max(0, availableSortingTotal - 1);
   const expectedFullSortingTotal = availableSortingTotal - selectedHarvestSummary.classifiedTotal;
+
+  if (!form.pitamStatus) {
+    return { error: t.sortingPitamStatusRequired };
+  }
 
   const payload: CreateHarvestClassificationPayload = {
     harvestId,

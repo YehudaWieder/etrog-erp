@@ -88,6 +88,49 @@ export function assertGeneralAssignmentIds(classItem: {
   }
 }
 
+export function assertPartialClassificationNetExceedsClassified(
+  classifiedTotal: number,
+  newTotalAfterRejected: number,
+) {
+  if (classifiedTotal <= 0) {
+    return;
+  }
+
+  if (newTotalAfterRejected < classifiedTotal) {
+    throw new BadRequestException(
+      `Net harvested quantity (${newTotalAfterRejected}) cannot go below total classified quantity (${classifiedTotal})`,
+    );
+  }
+
+  if (newTotalAfterRejected === classifiedTotal) {
+    throw new BadRequestException(
+      `In partial classification mode, net harvested quantity (${newTotalAfterRejected}) must exceed total classified quantity (${classifiedTotal}) by at least 1. Mark as full classification or increase the net quantity.`,
+    );
+  }
+}
+
+export function assertHarvestNetVsClassified(
+  classifiedTotal: number,
+  newTotalAfterRejected: number,
+  isPartialClassification: boolean,
+) {
+  if (classifiedTotal <= 0) {
+    return;
+  }
+
+  if (newTotalAfterRejected < classifiedTotal) {
+    throw new BadRequestException(
+      `Net harvested quantity (${newTotalAfterRejected}) cannot go below total classified quantity (${classifiedTotal})`,
+    );
+  }
+
+  if (isPartialClassification && newTotalAfterRejected === classifiedTotal) {
+    throw new BadRequestException(
+      `In partial classification mode, net harvested quantity (${newTotalAfterRejected}) must exceed total classified quantity (${classifiedTotal}) by at least 1. Mark as full classification or increase the net quantity.`,
+    );
+  }
+}
+
 export function assertFinalClassificationConsistency(
   classifiedTotal: number,
   netHarvested: number,

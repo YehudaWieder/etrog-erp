@@ -11,7 +11,7 @@ export function useHarvestSortingFormState() {
   const [harvestSortingFormTraderCategoryId, setHarvestSortingFormTraderCategoryId] = useState('');
   const [harvestSortingFormCustomerCategoryId, setHarvestSortingFormCustomerCategoryId] = useState('');
   const [harvestSortingFormGrade, setHarvestSortingFormGrade] = useState('');
-  const [harvestSortingFormPitamStatus, setHarvestSortingFormPitamStatus] = useState<'WITH_PITAM' | 'WITHOUT_PITAM' | 'MIXED'>('WITH_PITAM');
+  const [harvestSortingFormPitamStatus, setHarvestSortingFormPitamStatus] = useState<'WITH_PITAM' | 'WITHOUT_PITAM' | 'MIXED' | ''>('');
   const [harvestSortingFormQuantity, setHarvestSortingFormQuantity] = useState('');
   const [harvestSortingFormNotes, setHarvestSortingFormNotes] = useState('');
   const [harvestSortingFormIsPartialClassification, setHarvestSortingFormIsPartialClassification] = useState(false);
@@ -27,7 +27,7 @@ export function useHarvestSortingFormState() {
     setHarvestSortingFormTraderCategoryId('');
     setHarvestSortingFormCustomerCategoryId('');
     setHarvestSortingFormGrade('');
-    setHarvestSortingFormPitamStatus('WITH_PITAM');
+    setHarvestSortingFormPitamStatus('');
     setHarvestSortingFormQuantity('');
     setHarvestSortingFormNotes('');
     setHarvestSortingFormIsPartialClassification(false);

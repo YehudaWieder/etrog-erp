@@ -31,6 +31,9 @@ export class FieldHarvestUpdateDto {
   @ApiProperty({ example: 1 })
   id!: number;
 
+  @ApiPropertyOptional({ example: 2 })
+  fieldId?: number;
+
   @ApiPropertyOptional({ example: 1630 })
   totalHarvested?: number;
 

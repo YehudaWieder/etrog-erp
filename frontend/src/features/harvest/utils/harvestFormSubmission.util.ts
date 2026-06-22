@@ -297,14 +297,20 @@ export function buildHarvestFormSubmissionPayload({
     classifications: parsedClassifications,
   };
 
-  const ownerHarvested = Number(form.ownerHarvested);
-  if (Number.isFinite(ownerHarvested) && ownerHarvested >= 0) {
-    payload.ownerHarvested = ownerHarvested;
+  const ownerHarvestedStr = form.ownerHarvested.trim();
+  if (ownerHarvestedStr) {
+    const ownerHarvested = Number(ownerHarvestedStr);
+    if (Number.isFinite(ownerHarvested) && ownerHarvested >= 0) {
+      payload.ownerHarvested = ownerHarvested;
+    }
   }
 
-  const ownerRejected = Number(form.ownerRejected);
-  if (Number.isFinite(ownerRejected) && ownerRejected >= 0) {
-    payload.ownerRejected = ownerRejected;
+  const ownerRejectedStr = form.ownerRejected.trim();
+  if (ownerRejectedStr) {
+    const ownerRejected = Number(ownerRejectedStr);
+    if (Number.isFinite(ownerRejected) && ownerRejected >= 0) {
+      payload.ownerRejected = ownerRejected;
+    }
   }
 
   if (form.notes.trim()) {

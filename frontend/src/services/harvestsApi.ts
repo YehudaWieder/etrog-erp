@@ -110,6 +110,30 @@ export async function deleteHarvest(id: number): Promise<void> {
   await apiClient<void>(`/harvests/${id}`, { method: 'DELETE' });
 }
 
+export type UpdateHarvestPayload = {
+  id: number;
+  fieldId?: number;
+  totalHarvested?: number;
+  totalRejected?: number;
+  ownerHarvested?: number;
+  ownerRejected?: number;
+  notes?: string;
+};
+
+export async function updateHarvest(payload: UpdateHarvestPayload): Promise<HarvestRecord> {
+  return apiClient<HarvestRecord>('/harvests', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateHarvestPartialClassification(payload: { id: number; isPartialClassification: boolean }): Promise<HarvestRecord> {
+  return apiClient<HarvestRecord>('/harvests/partial-classification', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function deleteAllSortingsByHarvest(harvestId: number): Promise<void> {
   await apiClient<void>(`/harvests/${harvestId}/sortings`, { method: 'DELETE' });
 }
