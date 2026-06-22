@@ -12,12 +12,14 @@ import { setScopeFilter } from '../../../../store/globalFiltersSlice';
 import { HARVEST_DAILY_FILTER_SCOPE } from '../../utils/harvestPage.utils';
 import type { HarvestFieldReportRow } from '../../harvestPage.types';
 
+
 type UseHarvestFiltersAndRowsParams = {
   requiresFiltersData: boolean;
   isSortingDailyDetailsTab: boolean;
   isSortingListTab: boolean;
   isDailyDetailsTab: boolean;
   requiresHarvestData: boolean;
+  needsHarvestRecords: boolean;
   seasonFilterId: number | null;
   dailyLoadErrorMessage: string;
   dispatch: (action: ReturnType<typeof setScopeFilter>) => void;
@@ -43,6 +45,7 @@ export function useHarvestFiltersAndRows({
   isSortingListTab,
   isDailyDetailsTab,
   requiresHarvestData,
+  needsHarvestRecords,
   seasonFilterId,
   dailyLoadErrorMessage,
   dispatch,
@@ -58,6 +61,9 @@ export function useHarvestFiltersAndRows({
   // When this effect loads harvest data itself, it sets this ref to the season ID.
   // The season-change reload effect reads it to avoid a duplicate API call.
   const harvestLoadedByMainEffectRef = useRef<number | null>(null);
+  // Stores the last successfully loaded seasons so we can recover seasonFilterId
+  // when AppShell's resetAllScopeFilters() clears it during intra-page navigation.
+  const loadedSeasonsRef = useRef<Season[]>([]);
 
   // Main effect: loads filter data (seasons, fields, traders, customers) in parallel
   // with the active season endpoint, then immediately loads harvest data.
@@ -100,6 +106,7 @@ export function useHarvestFiltersAndRows({
         }
 
         setSeasons(nextSeasons);
+        loadedSeasonsRef.current = nextSeasons;
         setFields(nextFields);
         setTraders(nextTraders);
         setCustomers(nextCustomers);
@@ -133,7 +140,7 @@ export function useHarvestFiltersAndRows({
 
         try {
           const [records, fieldTotals] = await Promise.all([
-            isDailyDetailsTab || isSortingDailyDetailsTab
+            needsHarvestRecords
               ? getHarvestsBySeason(effectiveSeasonId)
               : Promise.resolve([] as HarvestRecord[]),
             getHarvestFieldTotalsBySeason(effectiveSeasonId),
@@ -180,6 +187,7 @@ export function useHarvestFiltersAndRows({
     dailyLoadErrorMessage,
     isDailyDetailsTab,
     isSortingDailyDetailsTab,
+    needsHarvestRecords,
     requiresFiltersData,
     requiresHarvestData,
     // seasonFilterId intentionally omitted — see comment above
@@ -193,6 +201,20 @@ export function useHarvestFiltersAndRows({
     setSeasons,
     setTraders,
   ]);
+
+  // Recovery effect: when AppShell's resetAllScopeFilters() wipes seasonFilterId during
+  // intra-page sidebar navigation, the main effect (which has seasonFilterId intentionally
+  // omitted from its deps) won't re-run. If we already have seasons loaded we can
+  // immediately re-dispatch the active season so data loading resumes.
+  useEffect(() => {
+    if (!requiresFiltersData) return;
+    if (seasonFilterId !== null) return;
+    const cached = loadedSeasonsRef.current;
+    if (cached.length === 0) return;
+    const active = cached.find((s) => s.isActive) ?? cached[0];
+    if (!active) return;
+    dispatch(setScopeFilter({ scope: HARVEST_DAILY_FILTER_SCOPE, key: 'seasonId', value: String(active.id) }));
+  }, [requiresFiltersData, seasonFilterId, dispatch]);
 
   // Reload harvest data when the user selects a different season from the filter.
   // Skips the reload if the main effect already loaded data for this season.
@@ -228,7 +250,7 @@ export function useHarvestFiltersAndRows({
 
       try {
         const [records, fieldTotals] = await Promise.all([
-          isDailyDetailsTab || isSortingDailyDetailsTab
+          needsHarvestRecords
             ? getHarvestsBySeason(seasonFilterId)
             : Promise.resolve([] as HarvestRecord[]),
           getHarvestFieldTotalsBySeason(seasonFilterId),
@@ -264,6 +286,7 @@ export function useHarvestFiltersAndRows({
     dailyLoadErrorMessage,
     isDailyDetailsTab,
     isSortingDailyDetailsTab,
+    needsHarvestRecords,
     requiresHarvestData,
     seasonFilterId,
     setFieldReportRows,

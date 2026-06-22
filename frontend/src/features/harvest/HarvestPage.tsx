@@ -5,13 +5,16 @@ import { AppShell } from '../../app/layout/AppShell';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import type { NavItem } from '../../types/navigation';
 import { ApiError } from '../../services/apiClient';
-import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
+import { getCurrentUser, isAuthenticated, isWorkerRole, logout } from '../../services/authService';
+import { NoPermissionBanner } from '../../components/ui/NoPermissionBanner';
 import type { Season } from '../../services/seasonsApi';
 import type { Field } from '../../services/fieldsApi';
 import {
   type HarvestFieldReportDetailsRecord,
   type HarvestRecord,
   deleteHarvest,
+  updateHarvest,
+  updateHarvestPartialClassification,
 } from '../../services/harvestsApi';
 import {
   type ClassificationListRecord,
@@ -31,6 +34,7 @@ import type { AppDispatch, RootState } from '../../store';
 import { HARVEST_I18N } from './i18n';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { HarvestBulkFormModal } from './components/forms/HarvestBulkFormModal';
+import { HarvestEditModal } from './components/forms/HarvestEditModal';
 import { HarvestSortingEditModal } from './components/forms/HarvestSortingEditModal';
 import { HarvestSortingFormModal } from './components/forms/HarvestSortingFormModal';
 import { HarvestDailyDetailsSection } from './components/daily/HarvestDailyDetailsSection';
@@ -128,10 +132,21 @@ export function HarvestPage() {
   const [harvestLoadError, setHarvestLoadError] = useState<string>('');
   const [isDeleteHarvestDialogOpen, setIsDeleteHarvestDialogOpen] = useState(false);
   const [isDeletingHarvest, setIsDeletingHarvest] = useState(false);
+  const [isEditHarvestDialogOpen, setIsEditHarvestDialogOpen] = useState(false);
+  const [isEditingHarvest, setIsEditingHarvest] = useState(false);
+  const [editHarvestError, setEditHarvestError] = useState('');
+  const [editHarvestFieldId, setEditHarvestFieldId] = useState(0);
+  const [editHarvestTotalHarvested, setEditHarvestTotalHarvested] = useState(0);
+  const [editHarvestTotalRejected, setEditHarvestTotalRejected] = useState(0);
+  const [editHarvestOwnerHarvested, setEditHarvestOwnerHarvested] = useState(0);
+  const [editHarvestOwnerRejected, setEditHarvestOwnerRejected] = useState(0);
+  const [editHarvestNotes, setEditHarvestNotes] = useState('');
+  const [editHarvestMarkFullClassification, setEditHarvestMarkFullClassification] = useState(false);
   const globalFilterValues = useSelector(
     (state: RootState) => state.globalFilters.scopes[HARVEST_DAILY_FILTER_SCOPE] ?? EMPTY_FILTERS,
   );
   const currentUser = getCurrentUser();
+  const isWorker = isWorkerRole(currentUser?.role);
   const alertsCount = useHarvestPageLifecycle({ navigate });
 
   const lang = useMemo<'he' | 'en'>(() => {
@@ -186,8 +201,9 @@ export function HarvestPage() {
   const isSortingDailyDetailsTab = activeSidebarId === 'sorting-daily-details';
   const isSortingSummaryTab = activeSidebarId === 'sorting-summary';
   const isSortingListTab = activeSidebarId === 'sorting-list';
-  const requiresFiltersData = isDailyDetailsTab || isFieldReportTab || isSortingDailyDetailsTab || isHarvestSummaryTab || isSortingListTab;
-  const requiresHarvestData = isDailyDetailsTab || isFieldReportTab || isSortingDailyDetailsTab || isHarvestSummaryTab;
+  const requiresFiltersData = isDailyDetailsTab || isFieldReportTab || isSortingDailyDetailsTab || isHarvestSummaryTab || isSortingListTab || isSortingSummaryTab;
+  const requiresHarvestData = isDailyDetailsTab || isFieldReportTab || isSortingDailyDetailsTab || isHarvestSummaryTab || isSortingSummaryTab;
+  const needsHarvestRecords = isDailyDetailsTab || isSortingDailyDetailsTab || isHarvestSummaryTab || isSortingSummaryTab;
 
   const activeSeasonId = useMemo(() => {
     return seasons.find((season) => season.isActive)?.id ?? null;
@@ -324,6 +340,7 @@ export function HarvestPage() {
     isSortingListTab,
     seasonFilterId,
     requiresHarvestData,
+    needsHarvestRecords,
     isDailyDetailsTab,
     dailyLoadErrorMessage: t.dailyDetails.loadError,
     dispatch,
@@ -349,7 +366,7 @@ export function HarvestPage() {
   });
 
   useEffect(() => {
-    if (!isSortingListTab || seasonFilterId === null) {
+    if ((!isSortingListTab && !isSortingSummaryTab) || seasonFilterId === null) {
       return;
     }
 
@@ -361,12 +378,12 @@ export function HarvestPage() {
         setSortingListRows(data);
       })
       .catch(() => {
-        setSortingListLoadError(t.sortingList.loadError);
+        setSortingListLoadError(isSortingSummaryTab ? t.sortingSummary.loadError : t.sortingList.loadError);
       })
       .finally(() => {
         setIsSortingListLoading(false);
       });
-  }, [isSortingListTab, seasonFilterId, t.sortingList.loadError]);
+  }, [isSortingListTab, isSortingSummaryTab, seasonFilterId, t.sortingList.loadError, t.sortingSummary.loadError]);
 
   useHarvestFormCategories({
     isOpen: isHarvestFormOpen || isHarvestSortingFormOpen,
@@ -826,6 +843,11 @@ export function HarvestPage() {
     noneValue: detailsSheetData?.values.none ?? '-',
   });
 
+  const sortingSummarySeasonLabel = useMemo(() => {
+    const s = seasons.find((season) => season.id === seasonFilterId);
+    return s ? String(s.yearName) : null;
+  }, [seasons, seasonFilterId]);
+
   const pageTitleWithCount = useMemo(() => {
     if (isDailyDetailsTab) {
       return `${pageTitle} (${filteredHarvestRows.length})`;
@@ -866,6 +888,47 @@ export function HarvestPage() {
       setIsDeleteHarvestDialogOpen(false);
     } finally {
       setIsDeletingHarvest(false);
+    }
+  };
+
+  const handleOpenEditHarvestDialog = () => {
+    if (!selectedHarvestRow) return;
+    setEditHarvestFieldId(selectedHarvestRow.fieldId);
+    setEditHarvestTotalHarvested(selectedHarvestRow.totalHarvested);
+    setEditHarvestTotalRejected(selectedHarvestRow.totalRejected);
+    setEditHarvestOwnerHarvested(selectedHarvestRow.ownerHarvested);
+    setEditHarvestOwnerRejected(selectedHarvestRow.ownerRejected);
+    setEditHarvestNotes(selectedHarvestRow.notes ?? '');
+    setEditHarvestMarkFullClassification(false);
+    setEditHarvestError('');
+    setIsEditHarvestDialogOpen(true);
+  };
+
+  const handleEditHarvest = async () => {
+    if (!selectedHarvestRow) return;
+    setIsEditingHarvest(true);
+    setEditHarvestError('');
+    try {
+      let updated = await updateHarvest({
+        id: selectedHarvestRow.id,
+        fieldId: editHarvestFieldId,
+        totalHarvested: editHarvestTotalHarvested,
+        totalRejected: editHarvestTotalRejected,
+        ownerHarvested: editHarvestOwnerHarvested,
+        ownerRejected: editHarvestOwnerRejected,
+        notes: editHarvestNotes || undefined,
+      });
+      if (editHarvestMarkFullClassification) {
+        updated = await updateHarvestPartialClassification({ id: selectedHarvestRow.id, isPartialClassification: false });
+      }
+      setHarvestRows((rows) => rows.map((row) => (row.id === updated.id ? { ...row, ...updated } : row)));
+      setSelectedHarvestRow((prev) => (prev ? { ...prev, ...updated } : prev));
+      setDetailsRecord((prev) => (prev?.id === updated.id ? { ...prev, ...updated } : prev));
+      setIsEditHarvestDialogOpen(false);
+    } catch {
+      setEditHarvestError(t.formSubmission.saveFailed);
+    } finally {
+      setIsEditingHarvest(false);
     }
   };
 
@@ -956,6 +1019,7 @@ export function HarvestPage() {
     selectedSortingDailyRowId,
     openHarvestGlobalForm,
     openHarvestSortingGlobalForm: handleOpenSortingForm,
+    onEditHarvestRow: handleOpenEditHarvestDialog,
     onDeleteHarvest: () => setIsDeleteHarvestDialogOpen(true),
     selectedSortingListRow,
     onEditSortingListRow: handleOpenEditSortingListDialog,
@@ -986,7 +1050,7 @@ export function HarvestPage() {
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
       pageTitle={pageTitleWithCount}
-      pageHeaderActions={pageHeaderActions}
+      pageHeaderActions={isWorker ? null : pageHeaderActions}
       topNav={t.topNav}
       activeTopNavId={activeTopId}
       sidebarSections={t.sidebar}
@@ -1027,7 +1091,9 @@ export function HarvestPage() {
         </button>
       }
     >
-      {isHarvestSummaryTab ? (
+      {isWorker ? (
+        <NoPermissionBanner message={lang === 'he' ? 'אין לך הרשאת גישה לאזור זה.' : "You don't have permission to access this area."} />
+      ) : isHarvestSummaryTab ? (
         <HarvestFieldReportSection
           lang={lang}
           t={t}
@@ -1199,8 +1265,12 @@ export function HarvestPage() {
       ) : isSortingSummaryTab ? (
         <HarvestSortingSummarySection
           lang={lang}
-          title={t.emptyState['sorting-summary']?.title ?? ''}
-          description={t.emptyState['sorting-summary']?.description ?? ''}
+          labels={t.sortingSummary}
+          filters={filters}
+          rows={sortingListRows}
+          isLoading={isSortingListLoading}
+          loadError={sortingListLoadError}
+          seasonLabel={sortingSummarySeasonLabel}
         />
       ) : (
         <section className="shipments-empty-state">
@@ -1218,6 +1288,37 @@ export function HarvestPage() {
         onConfirm={() => { void handleDeleteHarvest(); }}
         onCancel={() => setIsDeleteHarvestDialogOpen(false)}
       />
+
+      {selectedHarvestRow ? (
+        <HarvestEditModal
+          isOpen={isEditHarvestDialogOpen}
+          t={t}
+          lang={lang}
+          fields={fields}
+          dateGregorian={formatGregorianDate(selectedHarvestRow.dateGregorian)}
+          dateHebrew={selectedHarvestRow.dateHebrew}
+          fieldId={editHarvestFieldId}
+          totalHarvested={editHarvestTotalHarvested}
+          totalRejected={editHarvestTotalRejected}
+          ownerHarvested={editHarvestOwnerHarvested}
+          ownerRejected={editHarvestOwnerRejected}
+          notes={editHarvestNotes}
+          classifiedTotal={selectedHarvestRow.classifiedTotal}
+          isPartialClassification={selectedHarvestRow.isPartialClassification}
+          markAsFullClassification={editHarvestMarkFullClassification}
+          onMarkAsFullClassificationChange={setEditHarvestMarkFullClassification}
+          isSubmitting={isEditingHarvest}
+          error={editHarvestError}
+          onFieldIdChange={setEditHarvestFieldId}
+          onTotalHarvestedChange={setEditHarvestTotalHarvested}
+          onTotalRejectedChange={setEditHarvestTotalRejected}
+          onOwnerHarvestedChange={setEditHarvestOwnerHarvested}
+          onOwnerRejectedChange={setEditHarvestOwnerRejected}
+          onNotesChange={setEditHarvestNotes}
+          onClose={() => { setIsEditHarvestDialogOpen(false); setEditHarvestError(''); setEditHarvestMarkFullClassification(false); }}
+          onSubmit={() => { void handleEditHarvest(); }}
+        />
+      ) : null}
 
       {selectedSortingListRow ? (
         <HarvestSortingEditModal

@@ -20,6 +20,22 @@ export type HarvestI18n = {
       confirm: string;
       cancel: string;
     };
+    editHarvestDialog: {
+      title: string;
+      fieldLabel: string;
+      fieldPlaceholder: string;
+      totalHarvestedLabel: string;
+      totalRejectedLabel: string;
+      ownerHarvestedLabel: string;
+      ownerRejectedLabel: string;
+      notesLabel: string;
+      classifiedExceedsNetError: (classifiedTotal: number) => string;
+      exactNetRequiresFullClassificationError: string;
+      netIncreaseSwitchesToPartialWarning: string;
+      markAsFullClassificationLabel: string;
+      confirm: string;
+      cancel: string;
+    };
     editSortingDialog: {
       title: string;
       quantityLabel: string;
@@ -65,17 +81,27 @@ export type HarvestI18n = {
       trader: string;
       customer: string;
     };
+    assignmentTypeLabel: string;
+    traderLabel: string;
+    traderCategoryLabel: string;
     traderCategoryPlaceholder: string;
     traderPlaceholder: string;
+    customerLabel: string;
+    customerCategoryLabel: string;
     customerPlaceholder: string;
     customerCategoryPlaceholder: string;
+    gradeLabel: string;
     gradePlaceholder: string;
+    pitamStatusLabel: string;
+    pitamStatusPlaceholder: string;
     pitamOptions: {
       withPitam: string;
       withoutPitam: string;
       mixed: string;
     };
+    quantityLabel: string;
     quantityPlaceholder: string;
+    sortingNotesLabel: string;
     sortingNotesPlaceholder: string;
     addSortingRowBlockedError: string;
     addSortingRowSummaryFieldsRequiredError: string;
@@ -108,6 +134,7 @@ export type HarvestI18n = {
     sortingTraderRequired: string;
     sortingCustomerRequired: string;
     sortingCustomerCategoryRequired: string;
+    sortingPitamStatusRequired: string;
     sortingTotalExceedsAvailable: (maxAllowed: number) => string;
     sortingTotalMustMatchAvailableForFullSorting: (requiredTotal: number) => string;
     sortingTotalWithClassifiedMustMatchAvailableForFullSorting: (requiredTotal: number) => string;
@@ -397,6 +424,41 @@ export type HarvestI18n = {
       withPitam: string;
       withoutPitam: string;
       mixed: string;
+    };
+  };
+  sortingSummary: {
+    loading: string;
+    loadError: string;
+    empty: string;
+    retry: string;
+    tableTitle: string;
+    seasonFilterLabel: string;
+    description: string;
+    actionsLabel: string;
+    printTitle: string;
+    printAriaLabel: string;
+    exportTitle: string;
+    exportAriaLabel: string;
+    exportError: string;
+    columns: {
+      category: string;
+      withPitam: string;
+      withoutPitam: string;
+      mixed: string;
+      total: string;
+    };
+    rows: {
+      privateSorting: string;
+      customers: string;
+      grandTotal: string;
+    };
+    breakdown: {
+      showBreakdown: string;
+      hideBreakdown: string;
+      breakdownTitle: string;
+      grade: string;
+      category: string;
+      noCategory: string;
     };
   };
   emptyState: Record<string, EmptyStateContent>;

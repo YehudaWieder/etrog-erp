@@ -34,6 +34,7 @@ type UseHarvestPageControlsParams = {
   selectedSortingDailyRowId: number | null;
   openHarvestGlobalForm: () => void;
   openHarvestSortingGlobalForm: () => void;
+  onEditHarvestRow: () => void;
   onDeleteHarvest: () => void;
   selectedSortingListRow: ClassificationListRecord | null;
   onEditSortingListRow: () => void;
@@ -58,6 +59,7 @@ export function useHarvestPageControls({
   selectedSortingDailyRowId,
   openHarvestGlobalForm,
   openHarvestSortingGlobalForm,
+  onEditHarvestRow,
   onDeleteHarvest,
   selectedSortingListRow,
   onEditSortingListRow,
@@ -83,6 +85,7 @@ export function useHarvestPageControls({
           editActionLabel={editActionLabel}
           deleteActionLabel={deleteActionLabel}
           onAdd={openHarvestGlobalForm}
+          onEdit={onEditHarvestRow}
           onDelete={onDeleteHarvest}
           editDisabled={!selectedHarvestRow}
           deleteDisabled={!selectedHarvestRow || harvestHasSortings}
@@ -146,6 +149,7 @@ export function useHarvestPageControls({
     isSortingDailyDetailsTab,
     isSortingListTab,
     isSortingSummaryTab,
+    onEditHarvestRow,
     onDeleteHarvest,
     onEditSortingListRow,
     onDeleteSortingListRow,
@@ -220,6 +224,10 @@ export function useHarvestPageControls({
       return [seasonFilter, methodFilter];
     }
 
+    if (isSortingSummaryTab) {
+      return [seasonFilter];
+    }
+
     if (isSortingDailyDetailsTab) {
       return [
         seasonFilter,
@@ -257,6 +265,7 @@ export function useHarvestPageControls({
     isHarvestSummaryTab,
     isSortingDailyDetailsTab,
     isSortingListTab,
+    isSortingSummaryTab,
     seasons,
     sortingAssignmentFilterOptions,
     t.dailyDetails.filters,
