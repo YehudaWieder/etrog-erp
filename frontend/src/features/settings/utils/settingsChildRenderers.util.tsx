@@ -9,12 +9,10 @@ import TradersManagement, { type TradersHeaderState } from '../../traders/Trader
 import SystemConfigManagement from '../../system-config/components/SystemConfigManagement';
 import PricingManagement from '../../system-config/components/PricingManagement';
 import type { Lang, SettingsChildKey } from '../settingsPage.types';
-import feedbackStyles from '../styles/SettingsWorkspaceFeedback.module.css';
 
 type RenderSettingsActiveChildParams = {
   activeChildId: SettingsChildKey;
   isManager: boolean;
-  managerOnlyHint: string;
   lang: Lang;
   setSeasonsHeaderState: Dispatch<SetStateAction<SeasonsHeaderState | null>>;
   setFieldsHeaderState: Dispatch<SetStateAction<FieldsHeaderState | null>>;
@@ -30,7 +28,6 @@ type RenderSettingsActiveChildParams = {
 export function renderSettingsActiveChild({
   activeChildId,
   isManager,
-  managerOnlyHint,
   lang,
   setSeasonsHeaderState,
   setCartonsHeaderState,
@@ -42,6 +39,10 @@ export function renderSettingsActiveChild({
   setCustomersHeaderState,
   setCustomerCategoriesHeaderState,
 }: RenderSettingsActiveChildParams): JSX.Element | null {
+  if (!isManager) {
+    return null;
+  }
+
   const childRenderers: Partial<Record<SettingsChildKey, () => JSX.Element | null>> = {
     seasons: () => <SeasonsManagement onHeaderStateChange={setSeasonsHeaderState} />,
     fields: () => <FieldsManagement onHeaderStateChange={setFieldsHeaderState} />,
@@ -57,10 +58,5 @@ export function renderSettingsActiveChild({
   };
 
   const renderChild = childRenderers[activeChildId];
-
-  if (renderChild) {
-    return renderChild();
-  }
-
-  return isManager ? null : <p className={feedbackStyles.managerNote}>{managerOnlyHint}</p>;
+  return renderChild ? renderChild() : null;
 }

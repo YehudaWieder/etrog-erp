@@ -7,7 +7,7 @@ import {
 } from './apiFeedback';
 import { clearAuthSession, getAuthToken, signalSessionExpired } from './authSession';
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000').replace(/\/+$/, '');
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '/api').replace(/\/+$/, '');
 
 export type ApiClientInit = RequestInit & {
   suppressGlobalFeedback?: boolean;

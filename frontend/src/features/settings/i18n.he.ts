@@ -24,7 +24,6 @@ export const SETTINGS_I18N_HE: SettingsI18n = {
   darkModeLabel: 'מוד כהה',
   darkModeOn: 'כהה',
   darkModeOff: 'בהיר',
-  managerOnlyHint: 'תוכן זה זמין למנהל מערכת.',
   sidebarWorker: [
     {
       id: 'site',

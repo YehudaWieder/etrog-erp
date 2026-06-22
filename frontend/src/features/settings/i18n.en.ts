@@ -24,7 +24,6 @@ export const SETTINGS_I18N_EN: SettingsI18n = {
   darkModeLabel: 'Dark Mode',
   darkModeOn: 'Dark',
   darkModeOff: 'Light',
-  managerOnlyHint: 'This area is visible to managers only.',
   sidebarWorker: [
     {
       id: 'site',

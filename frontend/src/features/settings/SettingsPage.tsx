@@ -154,7 +154,6 @@ export default function SettingsPage(): JSX.Element {
         {renderSettingsActiveChild({
           activeChildId,
           isManager,
-          managerOnlyHint: t.managerOnlyHint,
           lang,
           setSeasonsHeaderState,
           setFieldsHeaderState,
