@@ -19,6 +19,7 @@ type UseAllBoxesFiltersResult = {
   selectedShipmentNumber: 'all' | number;
   selectedStatus: 'all' | BoxStatus;
   selectedOwnership: 'all' | string;
+  filterDisplayValues: { seasonLabel: string | null; shipmentNumberLabel: string | null; statusLabel: string | null; ownershipLabel: string | null };
   handleFilterValuesChange: (values: Record<string, string>) => void;
   handleFiltersApiReady: (api: GlobalScopedFiltersApi) => void;
 };
@@ -259,12 +260,27 @@ export function useAllBoxesFilters(labels: BoxesTableLabels): UseAllBoxesFilters
     [filterValues.ownership, ownershipOptions],
   );
 
+  const filterDisplayValues = useMemo(() => {
+    const seasonRecord = filterValues.seasonId ? seasons.find((s) => String(s.id) === filterValues.seasonId) : null;
+    const seasonLabel = seasonRecord ? String(seasonRecord.yearName) : null;
+    const shipmentNumberLabel = filterValues.shipmentNumber !== 'all' ? filterValues.shipmentNumber : null;
+    const statusLabel = filterValues.status !== 'all' ? (labels.statusLabels[filterValues.status as BoxStatus] ?? null) : null;
+    let ownershipLabel: string | null = null;
+    if (filterValues.ownership !== 'all') {
+      if (filterValues.ownership === OWNERSHIP_GROUP_TRADERS) ownershipLabel = labels.allTradersOption;
+      else if (filterValues.ownership === OWNERSHIP_GROUP_CUSTOMERS) ownershipLabel = labels.allCustomersOption;
+      else ownershipLabel = filterValues.ownership;
+    }
+    return { seasonLabel, shipmentNumberLabel, statusLabel, ownershipLabel };
+  }, [filterValues, seasons, labels]);
+
   return {
     filters,
     selectedSeasonId,
     selectedShipmentNumber,
     selectedStatus,
     selectedOwnership,
+    filterDisplayValues,
     handleFilterValuesChange,
     handleFiltersApiReady,
   };

@@ -1,16 +1,19 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { FaFileArrowDown, FaPrint } from 'react-icons/fa6';
 import { GlobalScopedFilters } from '../../../components/ui/GlobalScopedFilters';
 import { ShipmentsSummaryCards } from './shared/ShipmentsSummaryCards';
 import { buildShipmentItemsSummaryTotals } from '../services/shipmentsSummary.service';
-import { buildShipmentItemsCategoryMatrices, buildShipmentItemsOwnershipMatrix } from '../services/shipmentItemsCategoryMatrix.service';
+import { buildShipmentItemsPerShipmentMatrices } from '../services/shipmentItemsCategoryMatrix.service';
 import { buildShipmentItemsSummaryMatrix } from '../services/shipmentItemsSummaryMatrix.service';
+import { printShipmentsSummary, exportShipmentsSummaryToExcel } from '../services/shipmentItemsSummaryExport.service';
 import { useShipmentItemsFilters } from '../hooks/useShipmentItemsFilters';
 import { useShipmentItemsTable } from '../hooks/useShipmentItemsTable';
-import { ShipmentCategoryTable } from './ShipmentCategoryTable';
+import { ShipmentBreakdownTable } from './ShipmentBreakdownTable';
 import { ShipmentsSummaryMatrix } from './ShipmentsSummaryMatrix';
 import { ShipmentsBoxStatusTable } from './ShipmentsBoxStatusTable';
 import { getShipmentsBySeason } from '../../../services/shipmentsApi';
 import type { ShipmentItemsTableLabels, ShipmentRecord } from '../shipments.types';
+import sharedFilterStyles from '../../../components/ui/styles/GlobalFiltersBar.module.css';
 import workspaceStyles from '../../../components/ui/styles/WorkspaceSection.module.css';
 import styles from './styles/ShipmentItemsSummary.module.css';
 
@@ -25,6 +28,7 @@ export function ShipmentItemsSummary({ lang, labels, description }: ShipmentItem
     filters,
     selectedSeasonId,
     selectedOwnership,
+    filterDisplayValues,
     handleFilterValuesChange,
     handleFiltersApiReady,
   } = useShipmentItemsFilters(labels);
@@ -44,23 +48,23 @@ export function ShipmentItemsSummary({ lang, labels, description }: ShipmentItem
 
   const summaryTotals = useMemo(() => buildShipmentItemsSummaryTotals(rows), [rows]);
   const summaryMatrix = useMemo(() => buildShipmentItemsSummaryMatrix(rows), [rows]);
-  const generalRows = useMemo(
-    () => rows.filter((r) => r.ownershipType !== 'CUSTOMER' && !r.isPrivateSelection),
-    [rows],
-  );
-  const privateSelectionRows = useMemo(
-    () => rows.filter((r) => r.isPrivateSelection),
-    [rows],
-  );
-  const customerRows = useMemo(
-    () => rows.filter((r) => r.ownershipType === 'CUSTOMER'),
-    [rows],
-  );
-  const categoryMatrices = useMemo(() => buildShipmentItemsCategoryMatrices(generalRows), [generalRows]);
-  const privateSelectionMatrix = useMemo(() => buildShipmentItemsOwnershipMatrix(privateSelectionRows), [privateSelectionRows]);
-  const customersMatrix = useMemo(() => buildShipmentItemsOwnershipMatrix(customerRows), [customerRows]);
+  const perShipmentMatrices = useMemo(() => buildShipmentItemsPerShipmentMatrices(rows), [rows]);
   const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
   const [shipments, setShipments] = useState<ShipmentRecord[]>([]);
+
+  const hasData = summaryMatrix.shipmentNumbers.length > 0;
+
+  const handlePrint = useCallback(() => {
+    printShipmentsSummary({ lang, labels, summaryMatrix, shipments, perShipmentMatrices, filterDisplayValues });
+  }, [lang, labels, summaryMatrix, shipments, perShipmentMatrices, filterDisplayValues]);
+
+  const handleExport = useCallback(async () => {
+    try {
+      await exportShipmentsSummaryToExcel({ lang, labels, summaryMatrix, shipments, perShipmentMatrices, filterDisplayValues });
+    } catch {
+      window.alert(labels.summaryExportError);
+    }
+  }, [lang, labels, summaryMatrix, shipments, perShipmentMatrices, filterDisplayValues]);
 
   useEffect(() => {
     if (!selectedSeasonId) {
@@ -97,6 +101,28 @@ export function ShipmentItemsSummary({ lang, labels, description }: ShipmentItem
         filters={summaryFilters}
         onValuesChange={handleFilterValuesChange}
         onApiReady={handleFiltersApiReady}
+        actions={hasData ? (
+          <div className={`global-filters-bar__icon-actions ${sharedFilterStyles.iconActions}`} aria-label={labels.summaryTableActionsLabel}>
+            <button
+              type="button"
+              className={`global-filters-bar__icon-btn ${sharedFilterStyles.iconBtn}`}
+              onClick={handlePrint}
+              aria-label={labels.summaryPrintAriaLabel}
+              title={labels.summaryPrintTitle}
+            >
+              <FaPrint />
+            </button>
+            <button
+              type="button"
+              className={`global-filters-bar__icon-btn ${sharedFilterStyles.iconBtn}`}
+              onClick={() => { void handleExport(); }}
+              aria-label={labels.summaryExportAriaLabel}
+              title={labels.summaryExportTitle}
+            >
+              <FaFileArrowDown />
+            </button>
+          </div>
+        ) : undefined}
       />
       {error ? (
         <p>{error}</p>
@@ -133,38 +159,19 @@ export function ShipmentItemsSummary({ lang, labels, description }: ShipmentItem
               <div className={styles.breakdownContent}>
                 <h3 className={styles.categoriesTitle}>{labels.summaryMatrix.categoriesTitle}</h3>
                 <div className={styles.categoryTablesStack}>
-                  {categoryMatrices.map((matrix) => (
-                    <ShipmentCategoryTable
-                      key={matrix.categoryName}
+                  {perShipmentMatrices.map((matrix) => (
+                    <ShipmentBreakdownTable
+                      key={matrix.shipmentNumber}
                       lang={lang}
                       data={matrix}
-                      shipmentColumnLabel={labels.colShipmentNumber}
+                      shipmentLabel={labels.summaryMatrix.shipmentLabel}
+                      ownerColumnLabel={labels.summaryMatrix.ownerColumnLabel}
+                      privateSelectionLabel={labels.summaryMatrix.privateSelectionLabel}
+                      customersLabel={labels.summaryMatrix.customersLabel}
                       totalLabel={labels.summary.total}
                     />
                   ))}
                 </div>
-                {privateSelectionMatrix.ownerships.length > 0 && (
-                  <>
-                    <h3 className={styles.categoriesTitle}>{labels.summaryMatrix.privateSelectionTitle}</h3>
-                    <ShipmentCategoryTable
-                      lang={lang}
-                      data={privateSelectionMatrix}
-                      shipmentColumnLabel={labels.colShipmentNumber}
-                      totalLabel={labels.summary.total}
-                    />
-                  </>
-                )}
-                {customersMatrix.ownerships.length > 0 && (
-                  <>
-                    <h3 className={styles.categoriesTitle}>{labels.summaryMatrix.customersTitle}</h3>
-                    <ShipmentCategoryTable
-                      lang={lang}
-                      data={customersMatrix}
-                      shipmentColumnLabel={labels.colShipmentNumber}
-                      totalLabel={labels.summary.total}
-                    />
-                  </>
-                )}
               </div>
             )}
           </div>

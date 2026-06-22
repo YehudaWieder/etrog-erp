@@ -14,6 +14,7 @@ type UseAllShipmentsFiltersResult = {
   seasons: Season[];
   selectedSeasonId: number | null;
   selectedStatus: 'all' | ShipmentStatus;
+  filterDisplayValues: { seasonLabel: string | null; statusLabel: string | null };
   handleFilterValuesChange: (values: Record<string, string>) => void;
   handleFiltersApiReady: (api: GlobalScopedFiltersApi) => void;
 };
@@ -114,11 +115,24 @@ export function useAllShipmentsFilters(labels: ShipmentsTableLabels): UseAllShip
     [filterValues.status],
   );
 
+  const filterDisplayValues = useMemo(() => {
+    const seasonRecord = filterValues.seasonId
+      ? seasons.find((s) => String(s.id) === filterValues.seasonId)
+      : null;
+    const seasonLabel = seasonRecord ? String(seasonRecord.yearName) : null;
+    const statusLabel =
+      filterValues.status && filterValues.status !== 'all'
+        ? (labels.statusLabels[filterValues.status as ShipmentStatus] ?? null)
+        : null;
+    return { seasonLabel, statusLabel };
+  }, [filterValues, seasons, labels]);
+
   return {
     filters,
     seasons,
     selectedSeasonId,
     selectedStatus,
+    filterDisplayValues,
     handleFilterValuesChange,
     handleFiltersApiReady,
   };

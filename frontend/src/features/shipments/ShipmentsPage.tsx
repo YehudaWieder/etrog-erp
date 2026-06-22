@@ -4,7 +4,8 @@ import { AppShell } from '../../app/layout/AppShell';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import { SHIPMENTS_I18N } from './i18n';
 import type { NavItem } from '../../types/navigation';
-import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
+import { getCurrentUser, isAuthenticated, isWorkerRole, logout } from '../../services/authService';
+import { NoPermissionBanner } from '../../components/ui/NoPermissionBanner';
 import { AllShipmentsTable } from './components/AllShipmentsTable';
 import { AllBoxesTable } from './components/AllBoxesTable';
 import { ShipmentItemsTable } from './components/ShipmentItemsTable';
@@ -59,6 +60,7 @@ export function ShipmentsPage() {
   }, []);
   const [lastActionText, setLastActionText] = useState<string>('');
   const currentUser = getCurrentUser();
+  const isWorker = isWorkerRole(currentUser?.role);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -310,7 +312,7 @@ export function ShipmentsPage() {
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
       pageTitle={pageTitleWithCount}
-      pageHeaderActions={
+      pageHeaderActions={!isWorker ? (
         <ShipmentsPageHeaderActions
           addActionLabel={addActionLabel}
           editActionLabel={t.pageControls.edit}
@@ -346,7 +348,7 @@ export function ShipmentsPage() {
             { label: t.pageControls.addBox, onClick: () => setIsNewBoxModalOpen(true) },
           ] : undefined}
         />
-      }
+      ) : null}
       topNav={t.topNav}
       activeTopNavId={activeTopId}
       sidebarSections={t.sidebar}
@@ -588,7 +590,9 @@ export function ShipmentsPage() {
         ) : null}
       </ConfirmDialog>
 
-      {activeSidebarId === 'all-shipments' ? (
+      {isWorker ? (
+        <NoPermissionBanner message={lang === 'he' ? 'אין לך הרשאת גישה לאזור זה.' : "You don't have permission to access this area."} />
+      ) : activeSidebarId === 'all-shipments' ? (
         <AllShipmentsTable
           lang={lang}
           labels={t.tableLabels}

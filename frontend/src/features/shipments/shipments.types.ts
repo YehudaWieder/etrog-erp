@@ -103,6 +103,12 @@ export type ShipmentsTableLabels = {
     totalQuantity: string;
   };
   statusLabels: Record<ShipmentStatus, string>;
+  tableActionsLabel: string;
+  tablePrintTitle: string;
+  tablePrintAriaLabel: string;
+  tableExportTitle: string;
+  tableExportAriaLabel: string;
+  tableExportError: string;
 };
 
 export type BoxesTableLabels = {
@@ -147,6 +153,12 @@ export type BoxesTableLabels = {
   };
   statusLabels: Record<BoxStatus, string>;
   ownershipLabels: Record<BoxOwnership, string>;
+  tableActionsLabel: string;
+  tablePrintTitle: string;
+  tablePrintAriaLabel: string;
+  tableExportTitle: string;
+  tableExportAriaLabel: string;
+  tableExportError: string;
 };
 
 export type ShipmentItemsTableLabels = {
@@ -211,6 +223,8 @@ export type ShipmentItemsTableLabels = {
     privateSelectionLabel: string;
     customersLabel: string;
     grandTotalLabel: string;
+    shipmentLabel: string;
+    ownerColumnLabel: string;
   };
   perShipmentTable: {
     title: string;
@@ -219,4 +233,16 @@ export type ShipmentItemsTableLabels = {
     statusLabels: Record<ShipmentStatus, string>;
   };
   ownershipLabels: Record<ItemOwnership, string>;
+  summaryTableActionsLabel: string;
+  summaryPrintTitle: string;
+  summaryPrintAriaLabel: string;
+  summaryExportTitle: string;
+  summaryExportAriaLabel: string;
+  summaryExportError: string;
+  tableActionsLabel: string;
+  tablePrintTitle: string;
+  tablePrintAriaLabel: string;
+  tableExportTitle: string;
+  tableExportAriaLabel: string;
+  tableExportError: string;
 };

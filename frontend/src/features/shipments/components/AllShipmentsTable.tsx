@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { FaPrint } from 'react-icons/fa6';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FaFileArrowDown, FaPrint } from 'react-icons/fa6';
 import { GlobalScopedFilters } from '../../../components/ui/GlobalScopedFilters';
 import { GlobalDataTable } from '../../../components/ui/GlobalDataTable';
 import { GlobalLeftDetailsPanel } from '../../../components/ui/GlobalLeftDetailsPanel';
@@ -18,8 +18,10 @@ import { buildShipmentBoxesSummary } from '../services/shipmentBoxesSummary.serv
 import { buildShipmentEtrogSummary } from '../services/shipmentEtrogSummary.service';
 import { buildShipmentItemsDetailRows } from '../services/shipmentItemsDetailRows.service';
 import { SHIPMENT_DETAILS_PRINT_EXTRA_STYLES } from '../services/shipmentDetailsPrintStyles';
+import { printAllShipments, exportAllShipmentsToExcel } from '../services/allShipmentsExport.service';
 import { openPrintableWindow } from '../../../services/printWindow';
 import { formatShipmentDate } from '../utils/shipments.util';
+import sharedFilterStyles from '../../../components/ui/styles/GlobalFiltersBar.module.css';
 import styles from './styles/AllShipmentsTable.module.css';
 
 type AllShipmentsTableProps = {
@@ -37,6 +39,7 @@ export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectSh
     seasons,
     selectedSeasonId,
     selectedStatus,
+    filterDisplayValues,
     handleFilterValuesChange,
     handleFiltersApiReady,
   } = useAllShipmentsFilters(labels);
@@ -76,6 +79,18 @@ export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectSh
   const detailsPrintRef = useRef<HTMLDivElement>(null);
   const onRowCountChangeRef = useRef(onRowCountChange);
   onRowCountChangeRef.current = onRowCountChange;
+
+  const handlePrintTable = useCallback(() => {
+    printAllShipments({ lang, labels, rows, filterDisplayValues });
+  }, [lang, labels, rows, filterDisplayValues]);
+
+  const handleExportTable = useCallback(async () => {
+    try {
+      await exportAllShipmentsToExcel({ lang, labels, rows, filterDisplayValues });
+    } catch {
+      window.alert(labels.tableExportError);
+    }
+  }, [lang, labels, rows, filterDisplayValues]);
 
   const handlePrintDetails = () => {
     const printableNode = detailsPrintRef.current;
@@ -144,6 +159,28 @@ export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectSh
         filters={filters}
         onValuesChange={handleFilterValuesChange}
         onApiReady={handleFiltersApiReady}
+        actions={rows.length > 0 ? (
+          <div className={`global-filters-bar__icon-actions ${sharedFilterStyles.iconActions}`} aria-label={labels.tableActionsLabel}>
+            <button
+              type="button"
+              className={`global-filters-bar__icon-btn ${sharedFilterStyles.iconBtn}`}
+              onClick={handlePrintTable}
+              aria-label={labels.tablePrintAriaLabel}
+              title={labels.tablePrintTitle}
+            >
+              <FaPrint />
+            </button>
+            <button
+              type="button"
+              className={`global-filters-bar__icon-btn ${sharedFilterStyles.iconBtn}`}
+              onClick={() => { void handleExportTable(); }}
+              aria-label={labels.tableExportAriaLabel}
+              title={labels.tableExportTitle}
+            >
+              <FaFileArrowDown />
+            </button>
+          </div>
+        ) : undefined}
       />
 
       {error ? (

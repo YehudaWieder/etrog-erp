@@ -88,7 +88,7 @@ export function useShipmentItemsTable(
                   ownership: resolveOwnershipLabel(item, labels),
                   ownershipType: item.ownershipType,
                   isPrivateSelection: item.isPrivateSelection,
-                  grade: item.grade ?? null,
+                  grade: item.grade ?? item.customerCategory?.grade ?? null,
                   customGrade: item.customGrade ?? null,
                   pitamStatus: item.pitamStatus ?? null,
                   notes: item.notes ?? null,
@@ -145,6 +145,10 @@ export function useShipmentItemsTable(
           return row.ownershipType === 'CUSTOMER';
         }
 
+        if (ownership === 'type:GENERAL') {
+          return row.ownershipType === 'GENERAL';
+        }
+
         return row.ownership === ownership;
       })
       .map((row) => row);
@@ -194,6 +198,15 @@ export function useShipmentItemsTable(
       sortAccessor: (row) => row.category,
       align: 'center',
       render: (row) => row.category,
+    },
+    {
+      id: 'grade',
+      header: labels.colGrade,
+      headerLabel: labels.colGrade,
+      sortKey: 'grade',
+      sortAccessor: (row) => row.customGrade ?? row.grade ?? '',
+      align: 'center',
+      render: (row) => row.customGrade ?? row.grade ?? labels.noGrade,
     },
     {
       id: 'quantity',

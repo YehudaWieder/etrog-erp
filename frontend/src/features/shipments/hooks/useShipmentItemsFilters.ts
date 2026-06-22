@@ -20,12 +20,14 @@ type UseShipmentItemsFiltersResult = {
   selectedBoxNumber: 'all' | number;
   selectedShipmentNumber: 'all' | number;
   selectedOwnership: 'all' | string;
+  filterDisplayValues: { seasonLabel: string | null; ownershipLabel: string | null };
   handleFilterValuesChange: (values: Record<string, string>) => void;
   handleFiltersApiReady: (api: GlobalScopedFiltersApi) => void;
 };
 
 const OWNERSHIP_GROUP_TRADERS = 'type:TRADER';
 const OWNERSHIP_GROUP_CUSTOMERS = 'type:CUSTOMER';
+const OWNERSHIP_GROUP_GENERAL = 'type:GENERAL';
 
 function resolveOwnershipLabel(item: ShipmentItemRecord, labels: ShipmentItemsTableLabels): string {
   if (item.ownershipType === 'TRADER') {
@@ -57,7 +59,7 @@ function parseOwnershipFilter(value: string, availableOwnerships: string[]): 'al
     return 'all';
   }
 
-  if (value === OWNERSHIP_GROUP_TRADERS || value === OWNERSHIP_GROUP_CUSTOMERS) {
+  if (value === OWNERSHIP_GROUP_TRADERS || value === OWNERSHIP_GROUP_CUSTOMERS || value === OWNERSHIP_GROUP_GENERAL) {
     return value;
   }
 
@@ -241,6 +243,7 @@ export function useShipmentItemsFilters(labels: ShipmentItemsTableLabels): UseSh
           ...traderOptions.map((o) => ({ value: o, label: o, group: labels.tradersGroupLabel })),
           { value: OWNERSHIP_GROUP_CUSTOMERS, label: labels.allCustomersOption, group: labels.customersGroupLabel },
           ...customerOptions.map((o) => ({ value: o, label: o, group: labels.customersGroupLabel })),
+          { value: OWNERSHIP_GROUP_GENERAL, label: labels.ownershipLabels.GENERAL },
         ],
       },
     ];
@@ -271,12 +274,31 @@ export function useShipmentItemsFilters(labels: ShipmentItemsTableLabels): UseSh
     [customerOptions, filterValues.ownership, traderOptions],
   );
 
+  const filterDisplayValues = useMemo(() => {
+    const seasonRecord = filterValues.seasonId
+      ? seasons.find((s) => String(s.id) === filterValues.seasonId)
+      : null;
+    const seasonLabel = seasonRecord ? String(seasonRecord.yearName) : null;
+
+    let ownershipLabel: string | null = null;
+    const ov = filterValues.ownership;
+    if (ov && ov !== 'all') {
+      if (ov === OWNERSHIP_GROUP_TRADERS) ownershipLabel = labels.allTradersOption;
+      else if (ov === OWNERSHIP_GROUP_CUSTOMERS) ownershipLabel = labels.allCustomersOption;
+      else if (ov === OWNERSHIP_GROUP_GENERAL) ownershipLabel = labels.ownershipLabels.GENERAL;
+      else ownershipLabel = ov;
+    }
+
+    return { seasonLabel, ownershipLabel };
+  }, [filterValues, seasons, labels]);
+
   return {
     filters,
     selectedSeasonId,
     selectedBoxNumber,
     selectedShipmentNumber,
     selectedOwnership,
+    filterDisplayValues,
     handleFilterValuesChange,
     handleFiltersApiReady,
   };
