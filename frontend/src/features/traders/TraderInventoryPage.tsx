@@ -16,7 +16,8 @@ import { TRADER_INVENTORY_I18N, getTraderMovementsI18n } from './i18n';
 import { buildTraderInventorySummaryMatrix } from './utils/traderInventorySummaryMatrix.util';
 import { getTraderInventoryPitamStatusLabel } from './utils/traderInventorySummary.util';
 import type { NavItem } from '../../types/navigation';
-import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
+import { getCurrentUser, isAuthenticated, isWorkerRole, logout } from '../../services/authService';
+import { NoPermissionBanner } from '../../components/ui/NoPermissionBanner';
 import { getActiveSeason, getSeasons, type Season } from '../../services/seasonsApi';
 import { getTraders, type Trader } from '../../services/tradersApi';
 import { getTraderCategoriesWithShares, type TraderCategoryWithShares } from '../../services/traderCategoriesApi';
@@ -59,6 +60,7 @@ export function TraderInventoryPage() {
   }, [navigate]);
 
   const currentUser = getCurrentUser();
+  const isWorker = isWorkerRole(currentUser?.role);
 
   useEffect(() => {
     // load unread messages count - only if authenticated
@@ -577,7 +579,7 @@ export function TraderInventoryPage() {
       topNav={t.topNav}
       activeTopNavId={activeTopId}
       pageHeaderActions={
-        isMovementsTab || isAllInventoryTab ? (
+        !isWorker && (isMovementsTab || isAllInventoryTab) ? (
           <div className="action-buttons">
             <button className="btn btn-primary" type="button" onClick={() => setIsAddMovementModalOpen(true)}>
               <FaCirclePlus />
@@ -621,7 +623,9 @@ export function TraderInventoryPage() {
         </button>
       }
     >
-      {isAllInventoryTab ? (
+      {isWorker ? (
+        <NoPermissionBanner message={lang === 'he' ? 'אין לך הרשאת גישה לאזור זה.' : "You don't have permission to access this area."} />
+      ) : isAllInventoryTab ? (
         <TraderInventoryAllSection
           lang={lang}
           labels={t.summary}

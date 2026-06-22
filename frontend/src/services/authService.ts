@@ -134,3 +134,14 @@ export async function updateManagedProfile(payload: UpdateManagedProfilePayload)
 }
 
 export { isAuthenticated };
+
+const MANAGER_ROLES = new Set(['manager', 'owner', 'admin']);
+const WORKER_ROLE = 'worker';
+
+export function isManagerRole(role: string | undefined): boolean {
+  return MANAGER_ROLES.has((role ?? '').trim().toLowerCase());
+}
+
+export function isWorkerRole(role: string | undefined): boolean {
+  return (role ?? '').trim().toLowerCase() === WORKER_ROLE;
+}
