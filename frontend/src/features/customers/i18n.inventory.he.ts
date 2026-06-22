@@ -68,6 +68,7 @@ export const CUSTOMER_INVENTORY_I18N_HE: CustomerInventoryI18n = {
     },
     columns: {
       customer: 'לקוח',
+      category: 'קטגוריה',
     },
     breakdown: {
       showBreakdown: 'הצג פירוט לפי קטגוריה',

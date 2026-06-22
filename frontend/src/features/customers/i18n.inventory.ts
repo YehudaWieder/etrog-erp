@@ -50,6 +50,7 @@ export type CustomerInventoryI18n = {
     };
     columns: {
       customer: string;
+      category: string;
     };
     breakdown: {
       showBreakdown: string;

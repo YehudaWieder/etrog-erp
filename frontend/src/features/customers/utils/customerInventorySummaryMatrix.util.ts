@@ -29,6 +29,7 @@ export type CustomerInventorySummaryMatrixCustomer = {
   categories: {
     key: string;
     label: string;
+    grade: string;
     totalsByPitamStatus: Record<CustomerInventoryPitamStatus, number>;
     total: number;
   }[];
@@ -143,12 +144,32 @@ export function buildCustomerInventorySummaryMatrix(
   };
 }
 
+type DefinedCustomerCategory = {
+  id: number;
+  customerId: number;
+  name: string;
+  grade: string;
+};
+
 export function buildCustomerInventorySummaryMatrixByCustomer(
   rows: CustomerInventorySummaryRow[],
   fallbackLabel: string,
+  definedCategories: DefinedCustomerCategory[],
 ): CustomerInventorySummaryMatrixByCustomer {
+  // Group defined categories by customer
+  const definedByCustomer = new Map<number, DefinedCustomerCategory[]>();
+  for (const cat of definedCategories) {
+    if (!definedByCustomer.has(cat.customerId)) {
+      definedByCustomer.set(cat.customerId, []);
+    }
+    definedByCustomer.get(cat.customerId)!.push(cat);
+  }
+
   const customerMap = new Map<number, CustomerInventorySummaryMatrixCustomer>();
-  const categoryDataMap = new Map<string, { key: string; label: string; totalsByPitamStatus: Record<CustomerInventoryPitamStatus, number>; total: number; customerId: number }>();
+  // Per-customer category data derived from inventory rows (used as fallback)
+  const customerCategoryMap = new Map<number, Map<string, { key: string; label: string; grade: string; totalsByPitamStatus: Record<CustomerInventoryPitamStatus, number>; total: number }>>();
+  // Inventory totals by category key (used when merging with defined categories)
+  const categoryInventoryMap = new Map<string, { totalsByPitamStatus: Record<CustomerInventoryPitamStatus, number>; total: number }>();
   const gradeValues: Record<string, Record<string, MatrixGradeCell>> = {};
   const grandTotalByPitamStatus = { ...EMPTY_PITAM_TOTALS };
 
@@ -167,25 +188,35 @@ export function buildCustomerInventorySummaryMatrixByCustomer(
         total: 0,
         categories: [],
       });
+      customerCategoryMap.set(customerId, new Map());
     }
 
-    if (!categoryDataMap.has(categoryKey)) {
-      categoryDataMap.set(categoryKey, {
+    const categoriesForCustomer = customerCategoryMap.get(customerId)!;
+    if (!categoriesForCustomer.has(categoryKey)) {
+      categoriesForCustomer.set(categoryKey, {
         key: categoryKey,
         label: categoryLabel,
+        grade: row.categoryGrade?.trim() || '',
         totalsByPitamStatus: { ...EMPTY_PITAM_TOTALS },
         total: 0,
-        customerId,
       });
+    }
+
+    if (!categoryInventoryMap.has(categoryKey)) {
+      categoryInventoryMap.set(categoryKey, { totalsByPitamStatus: { ...EMPTY_PITAM_TOTALS }, total: 0 });
     }
 
     if (!gradeValues[gradeKey]) gradeValues[gradeKey] = {};
     if (!gradeValues[gradeKey][categoryKey]) gradeValues[gradeKey][categoryKey] = createEmptyGradeCell();
     gradeValues[gradeKey][categoryKey][row.pitamStatus] += row.quantity;
 
-    const categoryData = categoryDataMap.get(categoryKey)!;
+    const categoryData = categoriesForCustomer.get(categoryKey)!;
     categoryData.totalsByPitamStatus[row.pitamStatus] += row.quantity;
     categoryData.total += row.quantity;
+
+    const invData = categoryInventoryMap.get(categoryKey)!;
+    invData.totalsByPitamStatus[row.pitamStatus] += row.quantity;
+    invData.total += row.quantity;
 
     const customerData = customerMap.get(customerId)!;
     customerData.totalsByPitamStatus[row.pitamStatus] += row.quantity;
@@ -199,10 +230,32 @@ export function buildCustomerInventorySummaryMatrixByCustomer(
   );
 
   for (const customer of customers) {
-    customer.categories = Array.from(categoryDataMap.values())
-      .filter((c) => c.customerId === customer.customerId)
-      .sort((a, b) => a.label.localeCompare(b.label, 'he', { sensitivity: 'base', numeric: true }))
-      .map(({ key, label, totalsByPitamStatus, total }) => ({ key, label, totalsByPitamStatus, total }));
+    const definedCats = definedByCustomer.get(customer.customerId);
+    if (definedCats && definedCats.length > 0) {
+      customer.categories = definedCats
+        .slice()
+        .sort((a, b) => {
+          const nameCompare = a.name.localeCompare(b.name, 'he', { sensitivity: 'base', numeric: true });
+          if (nameCompare !== 0) return nameCompare;
+          return a.grade.localeCompare(b.grade, 'he', { sensitivity: 'base', numeric: true });
+        })
+        .map((cat) => {
+          const categoryKey = `${customer.customerId}:${cat.id}`;
+          const inv = categoryInventoryMap.get(categoryKey);
+          return {
+            key: categoryKey,
+            label: cat.name,
+            grade: cat.grade,
+            totalsByPitamStatus: inv ? { ...inv.totalsByPitamStatus } : { ...EMPTY_PITAM_TOTALS },
+            total: inv ? inv.total : 0,
+          };
+        });
+    } else {
+      const categoriesForCustomer = customerCategoryMap.get(customer.customerId) ?? new Map();
+      customer.categories = Array.from(categoriesForCustomer.values()).sort((a, b) =>
+        a.label.localeCompare(b.label, 'he', { sensitivity: 'base', numeric: true }),
+      );
+    }
   }
 
   const seenGrades = new Set(Object.keys(gradeValues));

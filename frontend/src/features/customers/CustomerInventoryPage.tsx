@@ -18,7 +18,8 @@ import { exportCustomerInventoryExcel } from './services/customerInventoryExport
 import { buildCustomerInventorySummaryMatrixByCustomer } from './utils/customerInventorySummaryMatrix.util';
 import { TraderPrintExportActions } from '../traders/components/TraderPrintExportActions';
 import type { NavItem } from '../../types/navigation';
-import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
+import { getCurrentUser, isAuthenticated, isWorkerRole, logout } from '../../services/authService';
+import { NoPermissionBanner } from '../../components/ui/NoPermissionBanner';
 import { getActiveSeason, getSeasons, type Season } from '../../services/seasonsApi';
 import { getCustomers, type Customer } from '../../services/customersApi';
 import { getTraders, type Trader } from '../../services/tradersApi';
@@ -61,6 +62,7 @@ export function CustomerInventoryPage() {
   }, []);
 
   const currentUser = getCurrentUser();
+  const isWorker = isWorkerRole(currentUser?.role);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -357,7 +359,7 @@ export function CustomerInventoryPage() {
       {
         key: 'inventoryStatus',
         label: t.summary.filters.inventoryStatusLabel,
-        defaultValue: 'ALL',
+        defaultValue: 'UNSHIPPED',
         options: inventoryStatusOptions,
       },
     ],
@@ -427,29 +429,23 @@ export function CustomerInventoryPage() {
     const locale = lang === 'he' ? 'he-IL' : 'en-US';
     const fmt = (n: number) => new Intl.NumberFormat(locale).format(Math.abs(n));
 
-    const summaryMatrix = buildCustomerInventorySummaryMatrixByCustomer(customerInventorySummary.rows, t.summary.values.none);
+    const summaryMatrix = buildCustomerInventorySummaryMatrixByCustomer(customerInventorySummary.rows, t.summary.values.none, customerCategories);
     const pitamWith = t.summary.values.pitamStatus.WITH_PITAM;
     const pitamWithout = t.summary.values.pitamStatus.WITHOUT_PITAM;
     const pitamMixed = t.summary.values.pitamStatus.MIXED;
     const totalLabel = t.summary.matrix.total;
+    const categoryLabel = t.summary.columns.category;
     const gradeLabel = t.summary.matrix.grade;
 
     let breakdownHtml = `<h2 style="margin-top:32px;margin-bottom:16px;font-size:13px;font-weight:bold;text-align:center;">${t.summary.breakdown.breakdownTitle}</h2>`;
     for (const customer of summaryMatrix.customers) {
       breakdownHtml += '<div class="customer-block">';
       breakdownHtml += `<h3>${customer.customerName}</h3>`;
+      breakdownHtml += `<table><thead><tr><th>${categoryLabel}</th><th>${gradeLabel}</th><th>${pitamWith}</th><th>${pitamWithout}</th><th>${pitamMixed}</th><th>${totalLabel}</th></tr></thead><tbody>`;
       for (const category of customer.categories) {
-        breakdownHtml += '<div class="category-block">';
-        breakdownHtml += `<h4>${category.label}</h4>`;
-        breakdownHtml += `<table><thead><tr><th>${gradeLabel}</th><th>${pitamWith}</th><th>${pitamWithout}</th><th>${pitamMixed}</th><th>${totalLabel}</th></tr></thead><tbody>`;
-        for (const grade of summaryMatrix.grades) {
-          const cell = summaryMatrix.gradeValues[grade]?.[category.key] ?? { WITH_PITAM: 0, WITHOUT_PITAM: 0, MIXED: 0 };
-          const gradeTotal = cell.WITH_PITAM + cell.WITHOUT_PITAM + cell.MIXED;
-          breakdownHtml += `<tr><th>${grade}</th><td>${fmt(cell.WITH_PITAM)}</td><td>${fmt(cell.WITHOUT_PITAM)}</td><td>${fmt(cell.MIXED)}</td><td>${fmt(gradeTotal)}</td></tr>`;
-        }
-        breakdownHtml += `</tbody><tfoot><tr><th>${totalLabel}</th><td>${fmt(category.totalsByPitamStatus.WITH_PITAM)}</td><td>${fmt(category.totalsByPitamStatus.WITHOUT_PITAM)}</td><td>${fmt(category.totalsByPitamStatus.MIXED)}</td><td>${fmt(category.total)}</td></tr></tfoot></table>`;
-        breakdownHtml += '</div>';
+        breakdownHtml += `<tr><th>${category.label}</th><td>${category.grade}</td><td>${fmt(category.totalsByPitamStatus.WITH_PITAM)}</td><td>${fmt(category.totalsByPitamStatus.WITHOUT_PITAM)}</td><td>${fmt(category.totalsByPitamStatus.MIXED)}</td><td>${fmt(category.total)}</td></tr>`;
       }
+      breakdownHtml += `</tbody><tfoot><tr><th colspan="2">${totalLabel}</th><td>${fmt(customer.totalsByPitamStatus.WITH_PITAM)}</td><td>${fmt(customer.totalsByPitamStatus.WITHOUT_PITAM)}</td><td>${fmt(customer.totalsByPitamStatus.MIXED)}</td><td>${fmt(customer.total)}</td></tr></tfoot></table>`;
       breakdownHtml += '</div>';
     }
 
@@ -462,7 +458,7 @@ export function CustomerInventoryPage() {
       height: 900,
       extraStyles: tableStyles,
     });
-  }, [customers, filterValues, lang, seasons, t, customerInventorySummary.rows]);
+  }, [customers, customerCategories, filterValues, lang, seasons, t, customerInventorySummary.rows]);
 
   const handleExportInventoryTable = useCallback(async () => {
     const seasonDisplay = filterValues.seasonId
@@ -486,7 +482,7 @@ export function CustomerInventoryPage() {
     const statusDisplay = statusMap[filterValues.inventoryStatus] || filterValues.inventoryStatus;
     const baseFileName = lang === 'he' ? 'מלאי לקוחות' : 'Customer Inventory';
 
-    const summaryMatrix = buildCustomerInventorySummaryMatrixByCustomer(customerInventorySummary.rows, t.summary.values.none);
+    const summaryMatrix = buildCustomerInventorySummaryMatrixByCustomer(customerInventorySummary.rows, t.summary.values.none, customerCategories);
 
     await exportCustomerInventoryExcel({
       fileName: `${baseFileName}_${seasonDisplay}_${customerDisplay}_${statusDisplay}`,
@@ -500,7 +496,7 @@ export function CustomerInventoryPage() {
       labels: t.summary,
       rightToLeft: lang === 'he',
     });
-  }, [customers, filterValues, lang, seasons, t, customerInventorySummary.rows]);
+  }, [customers, customerCategories, filterValues, lang, seasons, t, customerInventorySummary.rows]);
 
   const filtersBar = isInventoryTab ? (
     <GlobalScopedFilters
@@ -532,7 +528,20 @@ export function CustomerInventoryPage() {
 
   const handleTopNavClick = (item: NavItem) => {
     setActiveTopId(item.id);
-    navigate(item.href || `/${item.id}`);
+    if (item.id === 'customers') {
+      if (filtersApiRef.current) {
+        filtersApiRef.current.setFilterValue('seasonId', '');
+        filtersApiRef.current.setFilterValue('customerId', 'ALL');
+        filtersApiRef.current.setFilterValue('inventoryStatus', 'UNSHIPPED');
+        filtersApiRef.current.setFilterValue('movementStatus', 'ALL');
+        filtersApiRef.current.setFilterValue('movementCategory', 'ALL');
+        filtersApiRef.current.setFilterValue('movementGrade', 'ALL');
+        filtersApiRef.current.setFilterValue('movementPitamStatus', 'ALL');
+      }
+      navigate('/customers', { replace: true });
+    } else {
+      navigate(item.href || `/${item.id}`);
+    }
   };
 
   const handleSidebarClick = (item: NavItem) => {
@@ -558,7 +567,7 @@ export function CustomerInventoryPage() {
       topNav={t.topNav}
       activeTopNavId={activeTopId}
       pageHeaderActions={
-        isInventoryTab || isMovementsTab ? (
+        !isWorker && (isInventoryTab || isMovementsTab) ? (
           <div className="action-buttons">
             <button className="btn btn-primary" type="button" onClick={() => setIsAddMovementModalOpen(true)}>
               <FaCirclePlus />
@@ -602,7 +611,9 @@ export function CustomerInventoryPage() {
         </button>
       }
     >
-      {isInventoryTab ? (
+      {isWorker ? (
+        <NoPermissionBanner message={lang === 'he' ? 'אין לך הרשאת גישה לאזור זה.' : "You don't have permission to access this area."} />
+      ) : isInventoryTab ? (
         <CustomerInventoryAllSection
           lang={lang}
           labels={t.summary}
@@ -613,6 +624,7 @@ export function CustomerInventoryPage() {
           error={customerInventorySummary.error}
           onRetry={customerInventorySummary.reload}
           tableRef={matrixTableRef}
+          customerCategories={customerCategories}
         />
       ) : isMovementsTab ? (
         <CustomerMovementsSection

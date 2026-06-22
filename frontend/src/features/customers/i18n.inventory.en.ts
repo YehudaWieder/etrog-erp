@@ -68,6 +68,7 @@ export const CUSTOMER_INVENTORY_I18N_EN: CustomerInventoryI18n = {
     },
     columns: {
       customer: 'Customer',
+      category: 'Category',
     },
     breakdown: {
       showBreakdown: 'Show breakdown by category',
