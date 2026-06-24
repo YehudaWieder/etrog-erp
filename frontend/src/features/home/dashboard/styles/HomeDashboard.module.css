@@ -1,0 +1,133 @@
+.filtersBar {
+  padding: var(--space-4) var(--space-7) 0;
+}
+
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: 100%;
+  padding: var(--space-5);
+  box-sizing: border-box;
+}
+
+.topRow {
+  display: flex;
+  gap: var(--space-5);
+  width: 100%;
+  align-items: stretch;
+}
+
+/* Production throughput chart takes 50% (flex: 2 vs two flex: 1 siblings) */
+.halfCell {
+  flex: 2;
+  min-width: 0;
+}
+
+/* Trader and customer charts take 25% each */
+.quarterCell {
+  flex: 1;
+  min-width: 0;
+}
+
+.metricsRow {
+  display: flex;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.stateBox {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60vh;
+}
+
+.loadingText {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.errorText {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #e74c3c;
+}
+
+.printHeader {
+  display: none;
+}
+
+@media print {
+  .printHeader {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .printFilterLabel {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #ffffff;
+    background: var(--color-text-accent);
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+  .printSeason {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--color-text-accent);
+    border: 1.5px solid var(--color-text-accent);
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+  .filtersBar {
+    display: none;
+  }
+  .dashboard {
+    padding: 0;
+    gap: 20px;
+  }
+  .topRow {
+    flex-wrap: wrap;
+    height: auto;
+    gap: 16px;
+  }
+  .halfCell {
+    flex: unset;
+    width: 100%;
+  }
+  .quarterCell {
+    flex: 1;
+    min-width: 45%;
+  }
+  .metricsRow {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+}
+
+/* Responsive: stack vertically on narrow screens */
+@media (max-width: 900px) {
+  .topRow {
+    flex-direction: column;
+  }
+
+  .halfCell,
+  .quarterCell {
+    flex: unset;
+    width: 100%;
+  }
+
+  .metricsRow {
+    flex-wrap: wrap;
+  }
+
+  .metricsRow > * {
+    flex: 1 1 calc(33.33% - var(--space-4));
+    min-width: 140px;
+  }
+}
