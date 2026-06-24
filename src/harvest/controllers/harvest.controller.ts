@@ -29,6 +29,7 @@ import {
   FieldHarvestCreateDto,
   FieldHarvestUpdateDto,
   HarvestBulkCreateDto,
+  RestoreClassificationDto,
   UpdateHarvestClassificationDto,
   UpdateHarvestPartialClassificationDto,
 } from 'src/harvest/services/harvest-core/dto/harvest.dto';
@@ -123,6 +124,14 @@ export class HarvestController {
     return this.harvestBulkService.createClassification(createDto.harvestId, createDto, actor.id);
   }
 
+  @Post('classifications/restore')
+  @ApiOperation({ summary: 'Restore a soft-deleted classification: atomically deletes the trash record and creates a new one' })
+  @ApiBody({ type: RestoreClassificationDto })
+  async restoreClassification(@Body() dto: RestoreClassificationDto, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.harvestBulkService.restoreClassification(dto.deletedClassificationId, dto.harvestId, dto, actor.id);
+  }
+
   @Patch('classifications')
   @ApiOperation({ summary: 'Update a classification through harvest workflow with explicit PARTIAL/FINAL validation mode' })
   @ApiBody({ type: UpdateHarvestClassificationDto })
@@ -142,6 +151,15 @@ export class HarvestController {
   async deleteClassification(@Body() body: DeleteHarvestClassificationDto, @Req() req: Request) {
     const actor = req.user as AuthenticatedUser;
     return this.harvestBulkService.deleteClassification(body.harvestId, body.classificationId, body, actor.id);
+  }
+
+  @Delete('classifications/:id/permanent')
+  @ApiOperation({ summary: 'Permanently hard-delete a soft-deleted classification record' })
+  @ApiParam({ name: 'id', type: Number, description: 'The ID of the soft-deleted classification to permanently remove.' })
+  @ApiResponse({ status: 200, description: 'Classification permanently deleted.' })
+  @ApiResponse({ status: 404, description: 'Soft-deleted classification not found.' })
+  async permanentDeleteClassification(@Param('id', ParseIntPipe) id: number) {
+    return this.harvestBulkService.permanentDeleteClassification(id);
   }
 
   @Get(':id')

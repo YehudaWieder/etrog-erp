@@ -4,7 +4,7 @@
   max-width: 500px;
   border: 1px solid rgba(226, 230, 235, 0.95);
   border-right: 4px solid var(--color-text-accent);
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--card-bg);
   border-radius: 14px;
   padding: var(--space-4);
   display: flex;
@@ -21,7 +21,7 @@
 .card:hover {
   border-color: #d4dce6;
   border-right-color: var(--color-text-accent);
-  background: #ffffff;
+  background: var(--card-bg-hover);
   box-shadow: 0 12px 26px rgba(0, 0, 0, 0.08);
   transform: translateY(-1px);
 }

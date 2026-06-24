@@ -34,6 +34,8 @@ type NewShipmentItemFormModalText = {
   notesLabel: string;
   notesPlaceholder: string;
   save: string;
+  restoreSave?: string;
+  restoreTitle?: string;
   cancel: string;
   ownershipLabels: Record<string, string>;
   pitamStatusLabels: Record<string, string>;
@@ -43,6 +45,7 @@ type NewShipmentItemFormModalText = {
 
 type NewShipmentItemFormModalProps = {
   isOpen: boolean;
+  isRestoreMode?: boolean;
   t: NewShipmentItemFormModalText;
 
   openBoxes: OpenBoxRecord[];
@@ -140,6 +143,7 @@ export function NewShipmentItemFormModal({
   error,
   onSave,
   onClose,
+  isRestoreMode = false,
 }: NewShipmentItemFormModalProps): JSX.Element | null {
   if (!isOpen) return null;
 
@@ -186,7 +190,7 @@ export function NewShipmentItemFormModal({
           <FaXmark />
         </button>
 
-        <h3 className="modal-title">{t.title}</h3>
+        <h3 className="modal-title">{isRestoreMode && t.restoreTitle ? t.restoreTitle : t.title}</h3>
         <p className="modal-message">{t.description}</p>
 
         <div className={styles.formGrid}>
@@ -488,7 +492,7 @@ export function NewShipmentItemFormModal({
             onClick={onSave}
             disabled={isFormBusy || isInventoryLoading}
           >
-            {t.save}
+            {isRestoreMode && t.restoreSave ? t.restoreSave : t.save}
           </button>
         </div>
       </div>

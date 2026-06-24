@@ -6,6 +6,7 @@ type EditShipmentFormText = {
   shipmentNumberRequired: string;
   shipmentNumberInvalid: string;
   shippedAtRequired: string;
+  shippedAtYearMismatch: string;
   duplicateShipmentNumber: string;
   genericError: string;
 };
@@ -105,8 +106,15 @@ export function useEditShipmentForm({
       onSuccess();
       onClose();
     } catch (err) {
-      const status = err instanceof ApiError ? err.status : 0;
-      setError(status === 400 ? t.duplicateShipmentNumber : t.genericError);
+      if (err instanceof ApiError && err.status === 400) {
+        if (err.message.startsWith('Shipped date year')) {
+          setError(t.shippedAtYearMismatch);
+        } else {
+          setError(t.duplicateShipmentNumber);
+        }
+      } else {
+        setError(t.genericError);
+      }
     } finally {
       setIsSubmitting(false);
     }

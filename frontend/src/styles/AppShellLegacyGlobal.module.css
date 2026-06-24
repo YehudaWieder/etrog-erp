@@ -492,3 +492,36 @@
   color: var(--color-text-accent);
   font-weight: 600;
 }
+
+@media print {
+  :global(.app-shell) {
+    height: auto;
+    overflow: visible;
+    display: block;
+  }
+  :global(.app-shell__body) {
+    height: auto;
+    overflow: visible;
+    display: block;
+  }
+  :global(.app-shell__topbar) {
+    display: none;
+  }
+  :global(.app-shell__sidebar) {
+    display: none;
+  }
+  :global(.app-shell__main) {
+    overflow: visible;
+    width: 100%;
+  }
+  :global(.app-shell__content) {
+    padding: 0;
+    overflow: visible;
+  }
+  :global(.app-shell__page-header) {
+    display: none;
+  }
+  :global(.global-filters-bar) {
+    display: none;
+  }
+}

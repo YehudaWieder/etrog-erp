@@ -50,7 +50,7 @@ export const CUSTOMER_INVENTORY_I18N_EN: CustomerInventoryI18n = {
       inventoryStatusLabel: 'Inventory Status',
       allInventoryOption: 'All Inventory',
       unboxedOption: 'Unboxed',
-      boxedOption: 'Boxed',
+      boxedOption: 'Packed',
       shippedOption: 'Shipped',
       arrivedOption: 'Arrived',
       selfPickupOption: 'Self-Pickup',

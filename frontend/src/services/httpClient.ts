@@ -17,11 +17,13 @@ export type ApiClientInit = RequestInit & {
 
 export class ApiError extends Error {
   status: number;
+  serverMessage: string | undefined;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, serverMessage?: string) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
+    this.serverMessage = serverMessage;
   }
 }
 
@@ -110,7 +112,7 @@ export async function apiClient<T>(path: string, init: ApiClientInit = {}): Prom
       });
     }
 
-    throw new ApiError(safeMessage || `Request failed with status ${response.status}`, response.status);
+    throw new ApiError(safeMessage || `Request failed with status ${response.status}`, response.status, serverMessage);
   }
 
   if (!suppressGlobalFeedback && shouldNotifySuccess(requestMethod)) {

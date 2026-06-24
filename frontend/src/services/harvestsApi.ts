@@ -86,6 +86,10 @@ export async function getHarvestsBySeason(seasonId: number): Promise<HarvestReco
   return apiClient<HarvestRecord[]>(`/harvests?seasonId=${seasonId}`);
 }
 
+export async function getHarvestById(id: number): Promise<HarvestRecord> {
+  return apiClient<HarvestRecord>(`/harvests/${id}`);
+}
+
 export async function getHarvestFieldTotalsBySeason(seasonId: number): Promise<HarvestFieldTotalsRecord[]> {
   return apiClient<HarvestFieldTotalsRecord[]>(`/harvests/field-totals?seasonId=${seasonId}`);
 }

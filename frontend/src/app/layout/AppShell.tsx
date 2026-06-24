@@ -30,6 +30,7 @@ type AppShellProps = {
   brandName?: string;
   logoSrc?: string;
   pageTitle?: string;
+  pageSubtitle?: string;
   topNav: NavItem[];
   activeTopNavId?: string;
   sidebarSections: SidebarSection[];
@@ -49,6 +50,7 @@ export function AppShell({
   brandName = 'Wieders etrogs',
   logoSrc = brandLogo,
   pageTitle,
+  pageSubtitle,
   topNav,
   activeTopNavId,
   sidebarSections,
@@ -379,6 +381,7 @@ export function AppShell({
                 <StickyHeaderBar
                   className="app-shell__page-header-bar"
                   title={pageTitle}
+                  subtitle={pageSubtitle}
                   actions={pageHeaderActions}
                 />
               </div>

@@ -279,7 +279,7 @@ export class BoxService {
 
       if (!box) throw new NotFoundException(`Box #${id} not found`);
 
-      const itemCount = await tx.shipmentItem.count({ where: { boxId: id } });
+      const itemCount = await tx.shipmentItem.count({ where: { boxId: id, isDeleted: false } });
       if (itemCount > 0) {
         throw new ConflictException(
           `Cannot delete box #${id} — it has ${itemCount} associated item${itemCount === 1 ? '' : 's'}. Remove them first.`,

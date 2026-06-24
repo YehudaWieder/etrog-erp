@@ -55,6 +55,7 @@ const EXACT_TRANSLATIONS_HE: Record<string, string> = {
   'Cannot delete harvest record because related records exist in the system.':
     'לא ניתן למחוק את רשומת הקטיף כי קיימות רשומות מקושרות במערכת.',
   'Ledger mismatch while updating transfer operation': 'חוסר התאמה בנתוני ההעברה בעת העדכון',
+  'Cannot delete item from a shipped or delivered box': 'לא ניתן למחוק פריט מקרטון שסומן כנשלח או נמסר',
 };
 
 type PatternTranslation = {

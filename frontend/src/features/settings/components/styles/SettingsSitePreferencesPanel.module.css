@@ -7,7 +7,7 @@
 .panelWideLanguage {
   grid-template-columns: repeat(2, minmax(160px, 210px));
   justify-content: start;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(247, 250, 252, 0.94) 100%);
+  background: var(--card-bg);
   border: 1px solid rgba(226, 230, 235, 0.92);
   border-radius: 16px;
   padding: var(--space-3);
@@ -20,7 +20,7 @@
 
 .choice {
   border: 1px solid #d5dde7;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--card-bg);
   color: #1a2440;
   border-radius: 12px;
   padding: 11px 16px;
@@ -73,7 +73,7 @@
 
 .colorBlock {
   border: 1px solid rgba(226, 230, 235, 0.95);
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--card-bg);
   border-radius: 14px;
   padding: var(--space-4);
   display: flex;

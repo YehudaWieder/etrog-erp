@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ApiError, apiClient } from '../../../services/apiClient';
-import { getOpenBoxes, type OpenBoxRecord } from '../../../services/boxesApi';
+import { getOpenBoxes, getBoxById, type OpenBoxRecord } from '../../../services/boxesApi';
+import { hardDeleteShipmentItem } from '../../../services/shipmentItemsApi';
 import {
   getTraderAvailableInventory,
   getCustomerAvailableInventory,
@@ -12,6 +13,25 @@ import { getTraders, type Trader } from '../../../services/tradersApi';
 import { getCustomers, type Customer } from '../../../services/customersApi';
 
 export type ItemOwnership = 'TRADER' | 'CUSTOMER' | 'GENERAL';
+
+export type InitialItemValues = {
+  boxId: number;
+  boxOwnershipType: string;
+  itemOwnershipType: string;
+  shipmentId: number;
+  shipmentNumber: number;
+  traderId: number | null;
+  customerId: number | null;
+  traderCategoryId: number | null;
+  customerCategoryId: number | null;
+  grade: string | null;
+  customGrade: string | null;
+  customLabel: string | null;
+  pitamStatus: string | null;
+  quantity: number;
+  isPrivateSelection: boolean;
+  notes: string | null;
+};
 
 type NewShipmentItemFormText = {
   validationBoxRequired: string;
@@ -26,6 +46,7 @@ type NewShipmentItemFormText = {
   validationQuantityExceedsAvailable: string;
   validationQuantityExceedsCapacity: string;
   duplicateItemError: string;
+  boxNotOpenError: string;
   genericError: string;
 };
 
@@ -34,6 +55,8 @@ type UseNewShipmentItemFormProps = {
   t: NewShipmentItemFormText;
   onSuccess: () => void;
   onClose: () => void;
+  initialValues?: InitialItemValues | null;
+  deletedItemId?: number | null;
 };
 
 export type StockSource = 'GENERAL' | 'PRIVATE_SELECTION';
@@ -102,6 +125,8 @@ export function useNewShipmentItemForm({
   t,
   onSuccess,
   onClose,
+  initialValues,
+  deletedItemId,
 }: UseNewShipmentItemFormProps): UseNewShipmentItemFormResult {
   const [openBoxes, setOpenBoxes] = useState<OpenBoxRecord[]>([]);
   const [traders, setTraders] = useState<Trader[]>([]);
@@ -126,12 +151,24 @@ export function useNewShipmentItemForm({
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasLoadedOptions, setHasLoadedOptions] = useState(false);
+
+  const initialAppliedRef = useRef(false);
+
+  // Reset tracking state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      initialAppliedRef.current = false;
+      setHasLoadedOptions(false);
+    }
+  }, [isOpen]);
 
   // Load boxes + traders + customers when modal opens
   useEffect(() => {
     if (!isOpen) return;
     let isMounted = true;
     setIsLoadingOptions(true);
+    setHasLoadedOptions(false);
 
     Promise.all([getOpenBoxes(), getTraders(), getCustomers()])
       .then(([boxes, traderList, customerList]) => {
@@ -147,11 +184,67 @@ export function useNewShipmentItemForm({
         setCustomers([]);
       })
       .finally(() => {
-        if (isMounted) setIsLoadingOptions(false);
+        if (isMounted) { setIsLoadingOptions(false); setHasLoadedOptions(true); }
       });
 
     return () => { isMounted = false; };
   }, [isOpen]);
+
+  // Pre-fill form fields when restoring — runs after options finish loading
+  useEffect(() => {
+    if (!isOpen || !initialValues || !hasLoadedOptions || initialAppliedRef.current) return;
+    initialAppliedRef.current = true;
+
+    const apply = async () => {
+      // Ensure the (possibly closed) box is in the list
+      const boxInList = openBoxes.some((b) => b.id === initialValues.boxId);
+      if (!boxInList) {
+        try {
+          const box = await getBoxById(initialValues.boxId);
+          const syntheticBox: OpenBoxRecord = {
+            id: box.id,
+            boxNumber: box.boxNumber,
+            boxType: box.boxType,
+            totalQuantity: box.totalQuantity,
+            capacity: null,
+            ownershipType: box.ownershipType,
+            traderId: box.traderId,
+            customerId: box.customerId,
+            trader: box.trader ?? null,
+            customer: box.customer ?? null,
+            shipment: { id: initialValues.shipmentId, shipmentNumber: initialValues.shipmentNumber },
+          };
+          setOpenBoxes((prev) => (prev.some((b) => b.id === box.id) ? prev : [...prev, syntheticBox]));
+        } catch {}
+      }
+
+      const isSharedBox = initialValues.boxOwnershipType === 'SHARED';
+      const isCustomBox = initialValues.boxOwnershipType === 'CUSTOM';
+      const isCustomFreeText = isCustomBox || (isSharedBox && initialValues.itemOwnershipType === 'CUSTOM');
+
+      setSelectedBoxIdRaw(String(initialValues.boxId));
+      if (isSharedBox) setItemOwnershipRaw(initialValues.itemOwnershipType);
+      setStockSourceRaw(initialValues.isPrivateSelection ? 'PRIVATE_SELECTION' : 'GENERAL');
+      if (initialValues.traderId != null) setTraderIdRaw(String(initialValues.traderId));
+      if (initialValues.customerId != null) setCustomerIdRaw(String(initialValues.customerId));
+
+      if (isCustomFreeText) {
+        setTraderCategoryIdRaw(initialValues.customLabel ?? '');
+        setGradeRaw(initialValues.customGrade ?? '');
+      } else {
+        if (initialValues.traderCategoryId != null) setTraderCategoryIdRaw(String(initialValues.traderCategoryId));
+        if (initialValues.customerCategoryId != null) setCustomerCategoryIdRaw(String(initialValues.customerCategoryId));
+        setGradeRaw(initialValues.grade ?? '');
+      }
+
+      setPitamStatusRaw(initialValues.pitamStatus ?? '');
+      setQuantity(String(initialValues.quantity));
+      setNotes(initialValues.notes ?? '');
+    };
+
+    void apply();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialValues, hasLoadedOptions]);
 
   const selectedBox = useMemo(
     () => openBoxes.find((b) => String(b.id) === selectedBoxId) ?? null,
@@ -559,12 +652,20 @@ export function useNewShipmentItemForm({
         suppressGlobalFeedback: true,
       });
 
+      // Hard-delete the soft-deleted item only after successful creation
+      if (deletedItemId != null) {
+        await hardDeleteShipmentItem(deletedItemId, { suppressGlobalFeedback: true });
+      }
+
       resetForm();
       onSuccess();
       onClose();
     } catch (err) {
       const status = err instanceof ApiError ? err.status : 0;
-      setError(status === 409 ? t.duplicateItemError : t.genericError);
+      const serverMsg = err instanceof ApiError ? (err.serverMessage ?? '') : '';
+      if (status === 409) setError(t.duplicateItemError);
+      else if (status === 400 && serverMsg.toLowerCase().includes('not open')) setError(t.boxNotOpenError);
+      else setError(t.genericError);
     } finally {
       setIsSubmitting(false);
     }
@@ -584,6 +685,7 @@ export function useNewShipmentItemForm({
     remainingCapacity,
     notes,
     t,
+    deletedItemId,
     resetForm,
     onSuccess,
     onClose,

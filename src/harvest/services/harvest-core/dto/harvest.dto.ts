@@ -110,6 +110,11 @@ export class CreateHarvestClassificationDto extends ClassificationBulkItemDto {
   harvestUpdate?: HarvestInlineUpdateDto;
 }
 
+export class RestoreClassificationDto extends CreateHarvestClassificationDto {
+  @ApiProperty({ example: 1, description: 'ID of the soft-deleted classification to permanently remove after restore' })
+  deletedClassificationId!: number;
+}
+
 export class UpdateHarvestClassificationDto {
   @ApiProperty({ example: 1 })
   harvestId!: number;

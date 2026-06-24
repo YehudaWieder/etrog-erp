@@ -30,6 +30,11 @@ export class ClassificationService {
     return this.classificationRepository.findAllBySeason(seasonId);
   }
 
+  async findDeletedAllBySeason(seasonId: number) {
+    await this.seasonsService.assertSeasonExists(seasonId);
+    return this.classificationRepository.findDeletedBySeason(seasonId);
+  }
+
   async findDailySummaryBySeason(seasonId: number) {
     await this.seasonsService.assertSeasonExists(seasonId);
 

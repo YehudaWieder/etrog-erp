@@ -30,7 +30,13 @@ export class HarvestCommandService {
   ) {}
 
   async create(data: FieldHarvestCreateDto, actorId: number) {
-    const { id: seasonId } = await this.seasonsService.findActiveSeason();
+    const { id: seasonId, yearName: activeSeasonYearName } = await this.seasonsService.findActiveSeason();
+    const harvestYear = new Date(data.dateGregorian).getFullYear();
+    if (harvestYear !== activeSeasonYearName) {
+      throw new BadRequestException(
+        `Harvest date year (${harvestYear}) does not match the active season year (${activeSeasonYearName})`,
+      );
+    }
     const dateStr = new Date(data.dateGregorian).toISOString().split('T')[0];
     const slug = `${dateStr}-f${data.fieldId}-s${seasonId}`;
 
@@ -182,6 +188,10 @@ export class HarvestCommandService {
     }
 
     try {
+      const softDeletedIds = await this.classificationRepository.findAllIdsByHarvest(id);
+      if (softDeletedIds.length > 0) {
+        await this.classificationRepository.deleteManyByIds(softDeletedIds.map((c) => c.id));
+      }
       return await this.harvestRepository.delete(id);
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {

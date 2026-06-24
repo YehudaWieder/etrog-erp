@@ -39,6 +39,15 @@ export async function getShipmentItemsByBox(boxId: number): Promise<ShipmentItem
   return apiClient<ShipmentItemRecord[]>(`/shipment-items/box/${boxId}`);
 }
 
+export type DeletedShipmentItemRecord = ShipmentItemRecord & {
+  box: { boxNumber: number; boxType: string; ownershipType: string } | null;
+  shipment: { shipmentNumber: number } | null;
+};
+
+export async function getDeletedShipmentItems(): Promise<DeletedShipmentItemRecord[]> {
+  return apiClient<DeletedShipmentItemRecord[]>('/shipment-items/deleted');
+}
+
 export type UpdateShipmentItemPayload = {
   id: number;
   quantity?: number;
@@ -64,6 +73,26 @@ export async function updateShipmentItem(
   return apiClient<ShipmentItemRecord>('/shipment-items', {
     method: 'PATCH',
     body: JSON.stringify(payload),
+    suppressGlobalFeedback: options?.suppressGlobalFeedback,
+  });
+}
+
+export async function restoreShipmentItem(
+  id: number,
+  options?: { suppressGlobalFeedback?: boolean },
+): Promise<ShipmentItemRecord> {
+  return apiClient<ShipmentItemRecord>(`/shipment-items/${id}/restore`, {
+    method: 'POST',
+    suppressGlobalFeedback: options?.suppressGlobalFeedback,
+  });
+}
+
+export async function hardDeleteShipmentItem(
+  id: number,
+  options?: { suppressGlobalFeedback?: boolean },
+): Promise<ShipmentItemRecord> {
+  return apiClient<ShipmentItemRecord>(`/shipment-items/${id}/hard`, {
+    method: 'DELETE',
     suppressGlobalFeedback: options?.suppressGlobalFeedback,
   });
 }

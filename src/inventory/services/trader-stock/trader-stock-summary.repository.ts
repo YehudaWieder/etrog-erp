@@ -8,8 +8,8 @@ export class TraderStockSummaryRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   groupSummary(where: Prisma.TraderStockWhereInput, shipmentScope?: InventoryMovementScope) {
-    // For PACKED_SHIPPED, SHIPPED, and UNSHIPPED scopes, we need to check Box.status
-    if (shipmentScope === 'PACKED_SHIPPED' || shipmentScope === 'SHIPPED' || shipmentScope === 'UNSHIPPED') {
+    // PACKED_SHIPPED and UNSHIPPED need box-status awareness; all other scopes use a simple groupBy.
+    if (shipmentScope === 'PACKED_SHIPPED' || shipmentScope === 'UNSHIPPED') {
       return this.groupSummaryWithBoxStatus(where, shipmentScope);
     }
 
@@ -44,9 +44,9 @@ export class TraderStockSummaryRepository {
         return ts.boxId !== null && (ts.box?.status === 'SHIPPED' || ts.box?.status === 'DELIVERED');
       }
       if (shipmentScope === 'UNSHIPPED') {
-        // Source records (positive) have no boxId — always include.
-        // Deduction records (PACKED_SHIPPED, negative) have a boxId; include them
-        // regardless of box status so that shipped deductions still reduce the pool.
+        // Include all source records (no boxId: HARVEST_IN, ASSIGNED, INTERNAL_TRANSFER,
+        // SELF_PICKUP, WASTE, etc.) plus PACKED_SHIPPED deductions (negative, have a boxId).
+        // All movement types reduce this view so the result is true remaining inventory.
         return ts.boxId === null || ts.quantity < 0;
       }
       return true;

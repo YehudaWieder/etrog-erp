@@ -5,10 +5,12 @@ import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import { SHIPMENTS_I18N } from './i18n';
 import type { NavItem } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, isWorkerRole, logout } from '../../services/authService';
+import { getActiveSeason } from '../../services/seasonsApi';
 import { NoPermissionBanner } from '../../components/ui/NoPermissionBanner';
 import { AllShipmentsTable } from './components/AllShipmentsTable';
 import { AllBoxesTable } from './components/AllBoxesTable';
 import { ShipmentItemsTable } from './components/ShipmentItemsTable';
+import { DeletedShipmentItemsTable } from './components/DeletedShipmentItemsTable';
 import { ShipmentItemsSummary } from './components/ShipmentItemsSummary';
 import { ShipmentsPageHeaderActions } from './components/shared/ShipmentsPageHeaderActions';
 import { NewShipmentFormModal } from './components/NewShipmentFormModal';
@@ -26,8 +28,11 @@ import { useEditShipmentForm } from './hooks/useEditShipmentForm';
 import { useDeleteShipmentDialog } from './hooks/useDeleteShipmentDialog';
 import { useDeleteBoxDialog } from './hooks/useDeleteBoxDialog';
 import { useDeleteShipmentItemDialog } from './hooks/useDeleteShipmentItemDialog';
+import { useHardDeleteShipmentItemDialog } from './hooks/useHardDeleteShipmentItemDialog';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import type { BoxesTableRow, ShipmentItemsTableRow, ShipmentRecord } from './shipments.types';
+import type { InitialItemValues } from './hooks/useNewShipmentItemForm';
+import type { DeletedShipmentItemRecord } from '../../services/shipmentItemsApi';
 
 const DEFAULT_SIDEBAR_ITEM_ID = 'all-shipments';
 
@@ -41,6 +46,8 @@ export function ShipmentsPage() {
   const [selectedShipmentRow, setSelectedShipmentRow] = useState<ShipmentRecord | null>(null);
   const [selectedBoxRow, setSelectedBoxRow] = useState<BoxesTableRow | null>(null);
   const [selectedItemRow, setSelectedItemRow] = useState<ShipmentItemsTableRow | null>(null);
+  const [selectedDeletedItemRaw, setSelectedDeletedItemRaw] = useState<DeletedShipmentItemRecord | null>(null);
+  const [restoreItemRaw, setRestoreItemRaw] = useState<InitialItemValues | null>(null);
   const [isNewShipmentModalOpen, setIsNewShipmentModalOpen] = useState(false);
   const [isNewBoxModalOpen, setIsNewBoxModalOpen] = useState(false);
   const [isNewItemModalOpen, setIsNewItemModalOpen] = useState(false);
@@ -51,12 +58,17 @@ export function ShipmentsPage() {
   const [boxesRefreshKey, setBoxesRefreshKey] = useState(0);
   const [itemsRefreshKey, setItemsRefreshKey] = useState(0);
   const [tableRowCount, setTableRowCount] = useState<number | null>(null);
+  const [activeSeasonYearName, setActiveSeasonYearName] = useState<number | null>(null);
 
   useEffect(() => {
     // טען כמות הודעות שלא נקראו
     import('../../services/messagesApi').then(({ fetchUnreadCount }) => {
       fetchUnreadCount().then((res) => setAlertsCount(res.count)).catch(() => setAlertsCount(0));
     });
+  }, []);
+
+  useEffect(() => {
+    getActiveSeason().then((season) => setActiveSeasonYearName(season.yearName)).catch(() => {});
   }, []);
   const [lastActionText, setLastActionText] = useState<string>('');
   const currentUser = getCurrentUser();
@@ -109,7 +121,7 @@ export function ShipmentsPage() {
   }, [activeSidebarId, t.sidebar, t.pageTitle]);
 
   const pageTitleWithCount = useMemo(() => {
-    const showCount = activeSidebarId === 'all-shipments' || activeSidebarId === 'all-boxes' || activeSidebarId === 'shipment-items';
+    const showCount = activeSidebarId === 'all-shipments' || activeSidebarId === 'all-boxes' || activeSidebarId === 'shipment-items' || activeSidebarId === 'shipment-items-trash';
     if (showCount && tableRowCount !== null) {
       return `${pageTitle} (${tableRowCount})`;
     }
@@ -119,6 +131,21 @@ export function ShipmentsPage() {
   useEffect(() => {
     setTableRowCount(null);
   }, [activeSidebarId]);
+
+  useEffect(() => {
+    const state = location.state as Record<string, unknown> | null;
+    if (state?.openNewShipment) {
+      setIsNewShipmentModalOpen(true);
+      navigate(location.pathname, { replace: true, state: null });
+    } else if (state?.openNewBox) {
+      setIsNewBoxModalOpen(true);
+      navigate(location.pathname, { replace: true, state: null });
+    } else if (state?.openNewItem) {
+      setIsNewItemModalOpen(true);
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
   const content = useMemo(() => {
     const state = t.emptyState as Record<string, { title: string; description: string }>;
@@ -140,22 +167,14 @@ export function ShipmentsPage() {
   const isShipmentTableActive = activeSidebarId === 'all-shipments';
   const isBoxesTableActive = activeSidebarId === 'all-boxes';
   const isShipmentItemsTableActive = activeSidebarId === 'shipment-items';
+  const isTrashActive = activeSidebarId === 'shipment-items-trash';
   const isShipmentItemsSummaryActive = activeSidebarId === 'shipment-items-summary';
   const areRowActionsDisabled = useMemo(() => {
-    if (isShipmentTableActive) {
-      return selectedShipmentRow === null;
-    }
-
-    if (isBoxesTableActive) {
-      return selectedBoxRow === null;
-    }
-
-    if (isShipmentItemsTableActive) {
-      return selectedItemRow === null;
-    }
-
+    if (isShipmentTableActive) return selectedShipmentRow === null;
+    if (isBoxesTableActive) return selectedBoxRow === null;
+    if (isShipmentItemsTableActive || isTrashActive) return selectedItemRow === null;
     return true;
-  }, [isBoxesTableActive, isShipmentItemsTableActive, isShipmentTableActive, selectedBoxRow, selectedItemRow, selectedShipmentRow]);
+  }, [isBoxesTableActive, isShipmentItemsTableActive, isTrashActive, isShipmentTableActive, selectedBoxRow, selectedItemRow, selectedShipmentRow]);
 
   useEffect(() => {
     if (!isShipmentTableActive && selectedShipmentRow !== null) {
@@ -170,7 +189,7 @@ export function ShipmentsPage() {
   }, [activeSidebarId, selectedBoxRow]);
 
   useEffect(() => {
-    if (activeSidebarId !== 'shipment-items' && selectedItemRow !== null) {
+    if (activeSidebarId !== 'shipment-items' && activeSidebarId !== 'shipment-items-trash' && selectedItemRow !== null) {
       setSelectedItemRow(null);
     }
   }, [activeSidebarId, selectedItemRow]);
@@ -214,11 +233,22 @@ export function ShipmentsPage() {
   });
 
   const newShipmentItemForm = useNewShipmentItemForm({
-    isOpen: isNewItemModalOpen,
+    isOpen: isNewItemModalOpen && !restoreItemRaw,
     t: t.newShipmentItemModal,
     onSuccess: handleItemsRefresh,
     onClose: () => setIsNewItemModalOpen(false),
   });
+
+  const restoreShipmentItemForm = useNewShipmentItemForm({
+    isOpen: isNewItemModalOpen && !!restoreItemRaw,
+    t: t.newShipmentItemModal,
+    onSuccess: () => { setSelectedItemRow(null); handleItemsRefresh(); },
+    onClose: () => { setIsNewItemModalOpen(false); setRestoreItemRaw(null); },
+    initialValues: restoreItemRaw,
+    deletedItemId: selectedDeletedItemRaw?.id ?? null,
+  });
+
+  const activeItemForm = restoreItemRaw ? restoreShipmentItemForm : newShipmentItemForm;
 
   const editShipmentItemForm = useEditShipmentItemForm({
     itemRow: isEditItemModalOpen ? selectedItemRow : null,
@@ -262,6 +292,15 @@ export function ShipmentsPage() {
   const deleteShipmentItemDialog = useDeleteShipmentItemDialog({
     item: selectedItemRow,
     t: t.deleteShipmentItemDialog,
+    onSuccess: () => {
+      setSelectedItemRow(null);
+      handleItemsRefresh();
+    },
+  });
+
+  const hardDeleteShipmentItemDialog = useHardDeleteShipmentItemDialog({
+    item: selectedItemRow,
+    t: t.hardDeleteShipmentItemDialog,
     onSuccess: () => {
       setSelectedItemRow(null);
       handleItemsRefresh();
@@ -315,12 +354,33 @@ export function ShipmentsPage() {
       pageHeaderActions={!isWorker ? (
         <ShipmentsPageHeaderActions
           addActionLabel={addActionLabel}
-          editActionLabel={t.pageControls.edit}
-          deleteActionLabel={t.pageControls.delete}
+          editActionLabel={isTrashActive ? t.pageControls.restore : t.pageControls.edit}
+          deleteActionLabel={isTrashActive ? t.pageControls.hardDelete : t.pageControls.delete}
+          showAddAction={!isTrashActive}
           showRowActions={!isShipmentItemsSummaryActive}
           onAdd={handleAddAction}
           onEdit={() => {
-            if (isShipmentTableActive && selectedShipmentRow) {
+            if (isTrashActive && selectedItemRow && selectedDeletedItemRaw) {
+              setRestoreItemRaw({
+                boxId: selectedDeletedItemRaw.boxId,
+                boxOwnershipType: selectedDeletedItemRaw.box?.ownershipType ?? '',
+                itemOwnershipType: selectedDeletedItemRaw.ownershipType,
+                shipmentId: selectedDeletedItemRaw.shipmentId,
+                shipmentNumber: selectedDeletedItemRaw.shipment?.shipmentNumber ?? 0,
+                traderId: selectedDeletedItemRaw.traderId,
+                customerId: selectedDeletedItemRaw.customerId,
+                traderCategoryId: selectedDeletedItemRaw.traderCategoryId,
+                customerCategoryId: selectedDeletedItemRaw.customerCategoryId,
+                grade: selectedDeletedItemRaw.grade,
+                customGrade: selectedDeletedItemRaw.customGrade,
+                customLabel: selectedDeletedItemRaw.customLabel,
+                pitamStatus: selectedDeletedItemRaw.pitamStatus,
+                quantity: Number(selectedDeletedItemRaw.quantity),
+                isPrivateSelection: selectedDeletedItemRaw.isPrivateSelection,
+                notes: selectedDeletedItemRaw.notes,
+              });
+              setIsNewItemModalOpen(true);
+            } else if (isShipmentTableActive && selectedShipmentRow) {
               setIsEditShipmentModalOpen(true);
             } else if (isBoxesTableActive && selectedBoxRow) {
               setIsEditBoxModalOpen(true);
@@ -331,7 +391,9 @@ export function ShipmentsPage() {
             }
           }}
           onDelete={() => {
-            if (isShipmentTableActive && selectedShipmentRow) {
+            if (isTrashActive && selectedItemRow) {
+              hardDeleteShipmentItemDialog.handleOpen();
+            } else if (isShipmentTableActive && selectedShipmentRow) {
               deleteShipmentDialog.handleOpen();
             } else if (isBoxesTableActive && selectedBoxRow) {
               deleteBoxDialog.handleOpen();
@@ -448,45 +510,46 @@ export function ShipmentsPage() {
 
       <NewShipmentItemFormModal
         isOpen={isNewItemModalOpen}
+        isRestoreMode={!!restoreItemRaw}
         t={t.newShipmentItemModal}
-        openBoxes={newShipmentItemForm.openBoxes}
-        availableTradersFromInventory={newShipmentItemForm.availableTradersFromInventory}
-        availableCustomersFromInventory={newShipmentItemForm.availableCustomersFromInventory}
-        availableTraderCategories={newShipmentItemForm.availableTraderCategories}
-        availableCustomerCategories={newShipmentItemForm.availableCustomerCategories}
-        availableGrades={newShipmentItemForm.availableGrades}
-        availablePitamStatuses={newShipmentItemForm.availablePitamStatuses}
-        availableQuantity={newShipmentItemForm.availableQuantity}
-        remainingCapacity={newShipmentItemForm.remainingCapacity}
-        isLoadingOptions={newShipmentItemForm.isLoadingOptions}
-        isLoadingInventory={newShipmentItemForm.isLoadingInventory}
-        selectedBoxId={newShipmentItemForm.selectedBoxId}
-        onBoxIdChange={newShipmentItemForm.setSelectedBoxId}
-        selectedBox={newShipmentItemForm.selectedBox}
-        itemOwnership={newShipmentItemForm.itemOwnership}
-        onItemOwnershipChange={newShipmentItemForm.setItemOwnership}
-        stockSource={newShipmentItemForm.stockSource}
-        onStockSourceChange={newShipmentItemForm.setStockSource}
-        traderId={newShipmentItemForm.traderId}
-        onTraderIdChange={newShipmentItemForm.setTraderId}
-        customerId={newShipmentItemForm.customerId}
-        onCustomerIdChange={newShipmentItemForm.setCustomerId}
-        traderCategoryId={newShipmentItemForm.traderCategoryId}
-        onTraderCategoryIdChange={newShipmentItemForm.setTraderCategoryId}
-        customerCategoryId={newShipmentItemForm.customerCategoryId}
-        onCustomerCategoryIdChange={newShipmentItemForm.setCustomerCategoryId}
-        grade={newShipmentItemForm.grade}
-        onGradeChange={newShipmentItemForm.setGrade}
-        pitamStatus={newShipmentItemForm.pitamStatus}
-        onPitamStatusChange={newShipmentItemForm.setPitamStatus}
-        quantity={newShipmentItemForm.quantity}
-        onQuantityChange={newShipmentItemForm.setQuantity}
-        notes={newShipmentItemForm.notes}
-        onNotesChange={newShipmentItemForm.setNotes}
-        isSubmitting={newShipmentItemForm.isSubmitting}
-        error={newShipmentItemForm.error}
-        onSave={newShipmentItemForm.handleSave}
-        onClose={newShipmentItemForm.handleClose}
+        openBoxes={activeItemForm.openBoxes}
+        availableTradersFromInventory={activeItemForm.availableTradersFromInventory}
+        availableCustomersFromInventory={activeItemForm.availableCustomersFromInventory}
+        availableTraderCategories={activeItemForm.availableTraderCategories}
+        availableCustomerCategories={activeItemForm.availableCustomerCategories}
+        availableGrades={activeItemForm.availableGrades}
+        availablePitamStatuses={activeItemForm.availablePitamStatuses}
+        availableQuantity={activeItemForm.availableQuantity}
+        remainingCapacity={activeItemForm.remainingCapacity}
+        isLoadingOptions={activeItemForm.isLoadingOptions}
+        isLoadingInventory={activeItemForm.isLoadingInventory}
+        selectedBoxId={activeItemForm.selectedBoxId}
+        onBoxIdChange={activeItemForm.setSelectedBoxId}
+        selectedBox={activeItemForm.selectedBox}
+        itemOwnership={activeItemForm.itemOwnership}
+        onItemOwnershipChange={activeItemForm.setItemOwnership}
+        stockSource={activeItemForm.stockSource}
+        onStockSourceChange={activeItemForm.setStockSource}
+        traderId={activeItemForm.traderId}
+        onTraderIdChange={activeItemForm.setTraderId}
+        customerId={activeItemForm.customerId}
+        onCustomerIdChange={activeItemForm.setCustomerId}
+        traderCategoryId={activeItemForm.traderCategoryId}
+        onTraderCategoryIdChange={activeItemForm.setTraderCategoryId}
+        customerCategoryId={activeItemForm.customerCategoryId}
+        onCustomerCategoryIdChange={activeItemForm.setCustomerCategoryId}
+        grade={activeItemForm.grade}
+        onGradeChange={activeItemForm.setGrade}
+        pitamStatus={activeItemForm.pitamStatus}
+        onPitamStatusChange={activeItemForm.setPitamStatus}
+        quantity={activeItemForm.quantity}
+        onQuantityChange={activeItemForm.setQuantity}
+        notes={activeItemForm.notes}
+        onNotesChange={activeItemForm.setNotes}
+        isSubmitting={activeItemForm.isSubmitting}
+        error={activeItemForm.error}
+        onSave={activeItemForm.handleSave}
+        onClose={activeItemForm.handleClose}
       />
 
       <NewBoxFormModal
@@ -540,6 +603,7 @@ export function ShipmentsPage() {
         shippedAt={editShipmentForm.shippedAt}
         onShippedAtChange={editShipmentForm.setShippedAt}
         isShippedAtDisabled={editShipmentForm.status !== 'SHIPPED'}
+        activeSeasonYearName={activeSeasonYearName}
         notes={editShipmentForm.notes}
         onNotesChange={editShipmentForm.setNotes}
         isSubmitting={editShipmentForm.isSubmitting}
@@ -590,6 +654,20 @@ export function ShipmentsPage() {
         ) : null}
       </ConfirmDialog>
 
+      <ConfirmDialog
+        open={hardDeleteShipmentItemDialog.isOpen}
+        title={t.hardDeleteShipmentItemDialog.title(selectedItemRow?.id ?? 0)}
+        message={t.hardDeleteShipmentItemDialog.message(selectedItemRow?.id ?? 0)}
+        confirmLabel={t.hardDeleteShipmentItemDialog.confirm}
+        cancelLabel={t.hardDeleteShipmentItemDialog.cancel}
+        onConfirm={hardDeleteShipmentItemDialog.handleConfirm}
+        onCancel={hardDeleteShipmentItemDialog.handleCancel}
+      >
+        {hardDeleteShipmentItemDialog.error ? (
+          <p className="seasons-manager__error">{hardDeleteShipmentItemDialog.error}</p>
+        ) : null}
+      </ConfirmDialog>
+
       {isWorker ? (
         <NoPermissionBanner message={lang === 'he' ? 'אין לך הרשאת גישה לאזור זה.' : "You don't have permission to access this area."} />
       ) : activeSidebarId === 'all-shipments' ? (
@@ -622,6 +700,16 @@ export function ShipmentsPage() {
           labels={t.shipmentItemsTableLabels}
           selectedItemId={selectedItemRow?.id ?? null}
           onSelectItem={handleItemRowSelect}
+          refreshKey={itemsRefreshKey}
+          onRowCountChange={setTableRowCount}
+        />
+      ) : activeSidebarId === 'shipment-items-trash' ? (
+        <DeletedShipmentItemsTable
+          lang={lang}
+          labels={t.shipmentItemsTableLabels}
+          selectedItemId={selectedItemRow?.id ?? null}
+          onSelectItem={handleItemRowSelect}
+          onRawItemSelect={setSelectedDeletedItemRaw}
           refreshKey={itemsRefreshKey}
           onRowCountChange={setTableRowCount}
         />

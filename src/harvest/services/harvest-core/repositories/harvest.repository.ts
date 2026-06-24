@@ -63,7 +63,7 @@ export class HarvestRepository {
   findOneWithRelations(id: number) {
     return this.prisma.fieldHarvest.findFirst({
       where: { id, isDeleted: false },
-      include: { field: true, classifications: true },
+      include: { field: true, classifications: { where: { isDeleted: false } } },
     });
   }
 
@@ -74,7 +74,7 @@ export class HarvestRepository {
         dateGregorian: date,
         isDeleted: false,
       },
-      include: { field: true, classifications: true },
+      include: { field: true, classifications: { where: { isDeleted: false } } },
     });
   }
 

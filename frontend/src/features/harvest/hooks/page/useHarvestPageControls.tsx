@@ -29,6 +29,7 @@ type UseHarvestPageControlsParams = {
   isSortingSummaryTab: boolean;
   isHarvestSummaryTab: boolean;
   isSortingListTab: boolean;
+  isSortingListTrashTab: boolean;
   detailsRecord: HarvestRecord | null;
   selectedHarvestRow: HarvestRecord | null;
   selectedSortingDailyRowId: number | null;
@@ -39,6 +40,9 @@ type UseHarvestPageControlsParams = {
   selectedSortingListRow: ClassificationListRecord | null;
   onEditSortingListRow: () => void;
   onDeleteSortingListRow: () => void;
+  selectedDeletedSortingListRow: ClassificationListRecord | null;
+  onRestoreDeletedSortingListRow: () => void;
+  onPermanentDeleteSortingListRow: () => void;
   activeSeasonId: number | null;
   seasons: Season[];
   fields: Field[];
@@ -54,6 +58,7 @@ export function useHarvestPageControls({
   isSortingSummaryTab,
   isHarvestSummaryTab,
   isSortingListTab,
+  isSortingListTrashTab,
   detailsRecord,
   selectedHarvestRow,
   selectedSortingDailyRowId,
@@ -64,6 +69,9 @@ export function useHarvestPageControls({
   selectedSortingListRow,
   onEditSortingListRow,
   onDeleteSortingListRow,
+  selectedDeletedSortingListRow,
+  onRestoreDeletedSortingListRow,
+  onPermanentDeleteSortingListRow,
   activeSeasonId,
   seasons,
   fields,
@@ -136,6 +144,22 @@ export function useHarvestPageControls({
       );
     }
 
+    if (isSortingListTrashTab) {
+      return (
+        <HarvestPageHeaderActions
+          addActionLabel={t.pageControls.restore}
+          editActionLabel={t.pageControls.restore}
+          deleteActionLabel={t.pageControls.permanentDelete}
+          onAdd={onRestoreDeletedSortingListRow}
+          onEdit={onRestoreDeletedSortingListRow}
+          onDelete={onPermanentDeleteSortingListRow}
+          showAdd={false}
+          editDisabled={!selectedDeletedSortingListRow}
+          deleteDisabled={!selectedDeletedSortingListRow}
+        />
+      );
+    }
+
     return null;
   }, [
     addActionLabel,
@@ -153,11 +177,16 @@ export function useHarvestPageControls({
     onDeleteHarvest,
     onEditSortingListRow,
     onDeleteSortingListRow,
+    onRestoreDeletedSortingListRow,
+    onPermanentDeleteSortingListRow,
     openHarvestGlobalForm,
     openHarvestSortingGlobalForm,
     selectedHarvestRow,
     selectedSortingDailyRowId,
     selectedSortingListRow,
+    selectedDeletedSortingListRow,
+    t.pageControls.restore,
+    t.pageControls.permanentDelete,
   ]);
 
   const filters = useMemo<GlobalScopedFilterConfig[]>(() => {
@@ -179,13 +208,13 @@ export function useHarvestPageControls({
       key: 'harvestDate',
       label: isSortingDailyDetailsTab
         ? t.sortingDailyDetails.filters.dateFilterLabel
-        : isSortingListTab
+        : (isSortingListTab || isSortingListTrashTab)
           ? t.sortingList.filters.dateFilterLabel
           : t.dailyDetails.filters.dateFilterLabel,
       defaultValue: 'all',
       queryParam: 'hdDate',
       options: harvestDateOptions,
-      ...(isSortingListTab ? { type: 'calendar' as const, lang } : {}),
+      ...((isSortingListTab || isSortingListTrashTab) ? { type: 'calendar' as const, lang } : {}),
     };
 
     const fieldFilter: GlobalScopedFilterConfig = {
@@ -242,7 +271,7 @@ export function useHarvestPageControls({
       ];
     }
 
-    if (isSortingListTab) {
+    if (isSortingListTab || isSortingListTrashTab) {
       return [
         seasonFilter,
         dateFilter,
@@ -250,7 +279,7 @@ export function useHarvestPageControls({
           key: 'sortingAssignmentType',
           label: t.sortingDailyDetails.filters.assignmentFilterLabel,
           defaultValue: 'all',
-          queryParam: 'slAssign',
+          queryParam: isSortingListTrashTab ? 'slTrashAssign' : 'slAssign',
           options: sortingAssignmentFilterOptions,
         },
       ];
@@ -265,6 +294,7 @@ export function useHarvestPageControls({
     isHarvestSummaryTab,
     isSortingDailyDetailsTab,
     isSortingListTab,
+    isSortingListTrashTab,
     isSortingSummaryTab,
     seasons,
     sortingAssignmentFilterOptions,

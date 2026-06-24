@@ -124,15 +124,27 @@ export class CustomerAllocationService {
     const shipmentScope = query.shipmentScope ?? 'ALL';
     validateCustomerSummaryQuery(shipmentScope, 'updatedAt', 'desc');
 
-    const typeFilter = buildMovementFilter(shipmentScope);
+    const where: Prisma.CustomerAllocationWhereInput = {
+      seasonId,
+      isDeleted: false,
+      customerId: query.customerId,
+    };
+
+    if (shipmentScope === 'ALL') {
+      where.type = { notIn: [MovementType.PACKED_SHIPPED, MovementType.SELF_PICKUP] };
+    } else if (shipmentScope === 'SHIPPED') {
+      where.type = MovementType.PACKED_SHIPPED;
+    } else if (shipmentScope === 'PACKED_SHIPPED') {
+      where.boxId = { not: null };
+    } else if (shipmentScope !== 'UNSHIPPED') {
+      const typeFilter = buildMovementFilter(shipmentScope);
+      if (typeFilter !== undefined) {
+        where.type = typeFilter;
+      }
+    }
 
     return this.prisma.customerAllocation.findMany({
-      where: {
-        seasonId,
-        isDeleted: false,
-        customerId: query.customerId,
-        ...(typeFilter !== undefined ? { type: typeFilter } : {}),
-      },
+      where,
       include: {
         customer: {
           select: {

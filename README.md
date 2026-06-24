@@ -1,98 +1,96 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Etrog ERP — Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+REST API for the Etrog Trade Management Platform. Built with NestJS, PostgreSQL, and Prisma ORM.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Tech Stack
 
-## Description
+- **Framework**: NestJS v11 (TypeScript)
+- **Database**: PostgreSQL via Prisma ORM v7
+- **Auth**: JWT + Passport
+- **Docs**: Swagger (`/api/docs`)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Prerequisites
 
-## Project setup
+- Node.js 22+
+- PostgreSQL instance
+- npm
+
+## Setup
 
 ```bash
-$ npm install
+npm install
 ```
 
-## Compile and run the project
+Copy the example env file and fill in your values:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+cp .env.example .env
 ```
 
-## Run tests
+```env
+DATABASE_URL=postgresql://postgres:PASSWORD@localhost:5432/etrog_erp?schema=public
+JWT_SECRET=your-long-random-secret
+JWT_EXPIRES_IN=1d
+```
+
+Run database migrations:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npx prisma migrate dev
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Running
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Development (watch mode)
+npm run start:dev
+
+# Production
+npm run build
+npm run start:prod
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+The server starts on **port 3000**. API prefix: `/api`. Swagger UI: `http://localhost:3000/api/docs`.
 
-## Resources
+## Scripts
 
-Check out a few resources that may come in handy when working with NestJS:
+| Script | Description |
+|---|---|
+| `npm run start:dev` | Watch mode dev server |
+| `npm run build` | Compile to `dist/` |
+| `npm run start:prod` | Run compiled build |
+| `npm run lint` | ESLint with auto-fix |
+| `npm run test` | Unit tests |
+| `npm run test:e2e` | End-to-end tests |
+| `npx prisma migrate dev` | Apply DB migrations |
+| `npx prisma studio` | Open Prisma DB GUI |
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## Project Structure
 
-## Support
+```
+src/
+├── auth/               # JWT authentication (login, token validation)
+├── authorization/      # Guards, @Public / @Roles decorators
+├── users/              # User management
+├── seasons/            # Season (year) — multi-tenancy key
+├── partners/           # Traders & Customers
+├── categories/         # Trader & Customer categories with pricing
+├── harvest/            # Field harvests & quality classifications
+├── inventory/          # Trader stock & customer allocations
+├── shipments/          # Shipments → Boxes → Items hierarchy
+├── system-config/      # Fields, system settings, default categories
+├── dashboard/          # Analytics & aggregations
+├── messages/           # Inter-user messaging
+└── prisma/             # PrismaService (global DB singleton)
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Authentication
 
-## Stay in touch
+All routes are protected by JWT by default. Mark public routes with `@Public()`. Role-based access uses `@Roles(...)`. Worker accounts are restricted to a limited set of routes defined in `authorization/constants/worker-routes.constants.ts`.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Docker
 
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```bash
+docker build -t etrog-erp-backend .
+docker run -p 3000:3000 --env-file .env etrog-erp-backend
+```

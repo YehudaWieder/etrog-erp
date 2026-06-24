@@ -40,4 +40,17 @@ export class HarvestBulkService {
   ) {
     return this.workflow.deleteClassification(harvestId, classificationId, deleteDto, actorId);
   }
+
+  restoreClassification(
+    deletedClassificationId: number,
+    harvestId: number,
+    createDto: CreateHarvestClassificationDto,
+    actorId: number,
+  ) {
+    return this.workflow.restoreClassification(deletedClassificationId, harvestId, createDto, actorId);
+  }
+
+  permanentDeleteClassification(classificationId: number) {
+    return this.workflow.permanentDeleteClassification(classificationId);
+  }
 }

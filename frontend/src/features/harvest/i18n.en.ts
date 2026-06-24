@@ -37,11 +37,19 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     },
     deleteSortingDialog: {
       title: 'Delete Sorting Record',
-      message: 'Are you sure you want to delete this sorting record? This action cannot be undone.',
+      message: 'Are you sure you want to delete this sorting record?',
       confirm: 'Delete',
       cancel: 'Cancel',
     },
+    permanentDeleteSortingDialog: {
+      title: 'Permanently Delete Sorting Record',
+      message: 'Are you sure you want to permanently delete this sorting record? This cannot be undone.',
+      confirm: 'Delete Permanently',
+      cancel: 'Cancel',
+    },
     deleteHarvestBlockedTitle: 'Cannot delete a harvest that has related sortings',
+    restore: 'Restore',
+    permanentDelete: 'Delete Permanently',
   },
   bulkForm: {
     ariaLabel: 'Global harvest form',
@@ -163,6 +171,12 @@ export const HARVEST_I18N_EN: HarvestI18n = {
           href: '/harvest/sorting-list',
           icon: 'fa-list',
         },
+        {
+          id: 'sorting-list-trash',
+          label: 'Trash',
+          href: '/harvest/sorting-list-trash',
+          icon: 'fa-trash',
+        },
       ],
     },
   ],
@@ -203,6 +217,8 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     apiClassificationsMustEqualNetFinal: (classificationsTotal, netHarvested) =>
       `Total sorting quantity (${classificationsTotal}) must equal net harvested (${netHarvested}) in final mode.`,
     apiDuplicateClassification: 'Duplicate sorting entry: each combination of type, trader/customer, category and grade must be unique.',
+    apiHarvestYearMismatch: (harvestYear, seasonYear) =>
+      `The harvest date year (${harvestYear}) does not match the active season year (${seasonYear}).`,
     saveFailed: 'Failed to save the harvest. Please try again.',
     sortingSaveFailed: 'Failed to save the sorting. Please try again.',
   },
@@ -210,6 +226,7 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     ariaLabel: 'Sorting form',
     closeLabel: 'Close',
     title: 'Add Sorting',
+    restoreTitle: 'Restore Sorting',
     instructions: 'Use this form to create a sorting record for an existing harvest.',
     harvestLabel: 'Linked harvest',
     harvestPlaceholder: 'Select harvest',
@@ -219,6 +236,8 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     classifiedTotalLabel: 'Total sorted',
     save: 'Save sorting',
     saving: 'Saving...',
+    restore: 'Restore',
+    restoring: 'Restoring...',
   },
   dailyDetails: {
     description: 'Centralized daily harvest rows loaded directly from the active season data.',
@@ -477,6 +496,12 @@ export const HARVEST_I18N_EN: HarvestI18n = {
       mixed: 'Mixed',
     },
   },
+  sortingListTrash: {
+    description: 'All soft-deleted sorting records for the selected season.',
+    loading: 'Loading sorting trash...',
+    loadError: 'Failed to load the sorting trash.',
+    empty: 'No deleted sorting records found for the selected season.',
+  },
   sortingSummary: {
     loading: 'Loading sorting summary...',
     loadError: 'Failed to load the sorting summary.',
@@ -536,6 +561,10 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     'sorting-list': {
       title: 'Sorting list will appear here',
       description: 'A full list of all sorting records for the selected season will be shown here.',
+    },
+    'sorting-list-trash': {
+      title: 'Sorting trash will appear here',
+      description: 'Deleted sorting records for the selected season will be shown here.',
     },
     default: {
       title: 'No data to display',

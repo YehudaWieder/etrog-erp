@@ -655,6 +655,107 @@ export class ItemService {
     throw new BadRequestException('Unsupported item ownership for packed movement creation');
   }
 
+  // Shared activation logic used by both create and restore.
+  // Validates the box state, enforces capacity, checks for duplicate active items (excluding the item itself),
+  // verifies available stock, then creates the packed inventory movement.
+  // Returns generalSourceBreakdown (or null) to be persisted on the item record by the caller.
+  private async applyItemToBox(
+    tx: Prisma.TransactionClient,
+    item: {
+      id: number;
+      seasonId: number;
+      boxId: number;
+      shipmentId: number;
+      ownershipType: ItemOwnership;
+      traderId: number | null;
+      customerId: number | null;
+      traderCategoryId: number | null;
+      customerCategoryId: number | null;
+      grade: string | null;
+      pitamStatus: string;
+      quantity: number | Prisma.Decimal;
+      isPrivateSelection: boolean;
+      updatedById: number | null;
+    },
+    box: {
+      ownershipType: BoxOwnership;
+      status: string;
+      boxType: string;
+      totalQuantity: number | null;
+    },
+  ) {
+    if (box.status !== 'OPEN') {
+      throw new BadRequestException('Cannot add items to a box that is not OPEN');
+    }
+
+    if (box.boxType !== 'CUSTOM') {
+      const systemConfig = await tx.systemConfig.findFirst({ where: { seasonId: item.seasonId } });
+      const capacityMap: Record<string, number | null | undefined> = {
+        SMALL: systemConfig?.smallBoxCapacity,
+        MEDIUM: systemConfig?.mediumBoxCapacity,
+        LARGE: systemConfig?.largeBoxCapacity,
+      };
+      const capacity = capacityMap[box.boxType];
+      if (capacity != null) {
+        const currentTotal = box.totalQuantity ?? 0;
+        if (currentTotal + Number(item.quantity) > capacity) {
+          throw new BadRequestException(
+            `Box capacity exceeded: box can hold ${capacity} items, currently has ${currentTotal}, adding ${item.quantity} would exceed the limit`,
+          );
+        }
+      }
+    }
+
+    const duplicate = await tx.shipmentItem.findFirst({
+      where: {
+        id: { not: item.id },
+        seasonId: item.seasonId,
+        boxId: item.boxId,
+        traderCategoryId: item.traderCategoryId,
+        customerCategoryId: item.customerCategoryId,
+        grade: item.grade as Grade | null,
+        pitamStatus: item.pitamStatus as PitamStatus,
+        ownershipType: item.ownershipType,
+        traderId: item.traderId,
+        customerId: item.customerId,
+        isDeleted: false,
+      },
+    });
+    if (duplicate) throw new ConflictException('A matching shipment item already exists in this box');
+
+    await this.ensureEnoughAvailableStock(tx, {
+      seasonId: item.seasonId,
+      boxOwnership: box.ownershipType,
+      itemOwnership: item.ownershipType,
+      itemTraderId: item.traderId,
+      itemCustomerId: item.customerId,
+      traderCategoryId: item.traderCategoryId,
+      customerCategoryId: item.customerCategoryId,
+      grade: item.grade as Grade | null,
+      pitamStatus: item.pitamStatus as PitamStatus,
+      quantity: Number(item.quantity),
+      isPrivateSelection: item.isPrivateSelection,
+    });
+
+    return this.createPackedMovement(tx, {
+      itemId: item.id,
+      seasonId: item.seasonId,
+      boxOwnership: box.ownershipType,
+      shipmentId: item.shipmentId,
+      boxId: item.boxId,
+      quantity: Number(item.quantity),
+      pitamStatus: item.pitamStatus as PitamStatus,
+      traderId: item.traderId,
+      customerId: item.customerId,
+      traderCategoryId: item.traderCategoryId,
+      customerCategoryId: item.customerCategoryId,
+      grade: item.grade as Grade | null,
+      itemOwnership: item.ownershipType,
+      updatedById: item.updatedById ?? 0,
+      isPrivateSelection: item.isPrivateSelection,
+    });
+  }
+
   // Creates a shipment item and triggers totals recalculation for Box and Shipment.
   // Uses a transaction to ensure all updates succeed or fail together.
   async create(data: Prisma.ShipmentItemUncheckedCreateInput, actorId: number) {
@@ -673,36 +774,7 @@ export class ItemService {
         select: { id: true, shipmentId: true, ownershipType: true, traderId: true, customerId: true, status: true, boxType: true, totalQuantity: true },
       });
 
-      if (!box) {
-        throw new NotFoundException(`Box ${createPayload.boxId} not found in active season`);
-      }
-
-      // Prevent adding items to boxes that are not OPEN
-      if (box.status !== 'OPEN') {
-        throw new BadRequestException('Cannot add items to a box that is not OPEN');
-      }
-
-      // Enforce box capacity (skip for CUSTOM box type)
-      if (box.boxType !== 'CUSTOM') {
-        const systemConfig = await tx.systemConfig.findFirst({ where: { seasonId } });
-
-        const capacityMap: Record<string, number | null | undefined> = {
-          SMALL: systemConfig?.smallBoxCapacity,
-          MEDIUM: systemConfig?.mediumBoxCapacity,
-          LARGE: systemConfig?.largeBoxCapacity,
-        };
-
-        const capacity = capacityMap[box.boxType];
-
-        if (capacity != null) {
-          const currentTotal = box.totalQuantity ?? 0;
-          if (currentTotal + Number(createPayload.quantity) > capacity) {
-            throw new BadRequestException(
-              `Box capacity exceeded: box can hold ${capacity} items, currently has ${currentTotal}, adding ${createPayload.quantity} would exceed the limit`,
-            );
-          }
-        }
-      }
+      if (!box) throw new NotFoundException(`Box ${createPayload.boxId} not found in active season`);
 
       const normalizedOwnership = this.normalizeItemOwnershipForBox({
         boxOwnership: box.ownershipType,
@@ -719,41 +791,6 @@ export class ItemService {
         normalizedOwnership.customerId,
       );
 
-      await this.ensureEnoughAvailableStock(tx, {
-        seasonId,
-        boxOwnership: box.ownershipType,
-        itemOwnership: normalizedOwnership.ownershipType,
-        itemTraderId: normalizedOwnership.traderId,
-        itemCustomerId: normalizedOwnership.customerId,
-        traderCategoryId: createPayload.traderCategoryId ?? null,
-        customerCategoryId: createPayload.customerCategoryId ?? null,
-        grade: createPayload.grade ?? null,
-        pitamStatus: createPayload.pitamStatus,
-        quantity: createPayload.quantity,
-        isPrivateSelection: createPayload.isPrivateSelection ?? false,
-      });
-
-      // 1. Check for duplicate based on the complex unique constraint
-      const existing = await tx.shipmentItem.findFirst({
-        where: {
-          seasonId,
-          boxId: createPayload.boxId,
-          traderCategoryId: createPayload.traderCategoryId,
-          customerCategoryId: createPayload.customerCategoryId,
-          grade: createPayload.grade,
-          pitamStatus: createPayload.pitamStatus,
-          ownershipType: normalizedOwnership.ownershipType,
-          traderId: normalizedOwnership.traderId,
-          customerId: normalizedOwnership.customerId,
-          isDeleted: false,
-        },
-      });
-
-      if (existing) {
-        throw new ConflictException('A matching shipment item already exists in this box');
-      }
-
-      // 2. Create the shipment item
       const newItem = await tx.shipmentItem.create({
         data: {
           ...createPayload,
@@ -765,23 +802,11 @@ export class ItemService {
         },
       });
 
-      const generalSourceBreakdown = await this.createPackedMovement(tx, {
-        itemId: newItem.id,
-        seasonId,
-        boxOwnership: box.ownershipType,
-        shipmentId: box.shipmentId,
-        boxId: newItem.boxId,
+      const generalSourceBreakdown = await this.applyItemToBox(tx, {
+        ...newItem,
+        isPrivateSelection: Boolean(newItem.isPrivateSelection),
         quantity: newItem.quantity,
-        pitamStatus: newItem.pitamStatus,
-        traderId: newItem.traderId,
-        customerId: newItem.customerId,
-        traderCategoryId: newItem.traderCategoryId,
-        customerCategoryId: newItem.customerCategoryId,
-        grade: newItem.grade,
-        itemOwnership: newItem.ownershipType,
-        updatedById: newItem.updatedById,
-        isPrivateSelection: Boolean(createPayload.isPrivateSelection),
-      });
+      }, box);
 
       if (generalSourceBreakdown !== null) {
         await tx.shipmentItem.update({ where: { id: newItem.id }, data: { generalSourceBreakdown } });
@@ -790,6 +815,76 @@ export class ItemService {
       await this.shipmentsService.syncBoxAndShipmentTotals(tx, box.id, box.shipmentId);
 
       return newItem;
+    });
+  }
+
+  // Returns all soft-deleted shipment items with related entity details.
+  async findDeleted() {
+    return this.prisma.shipmentItem.findMany({
+      where: { isDeleted: true },
+      include: {
+        trader: { select: { name: true } },
+        customer: { select: { customerName: true } },
+        traderCategory: { select: { name: true } },
+        customerCategory: { select: { name: true, grade: true } },
+        updatedBy: { select: { name: true } },
+        box: { select: { boxNumber: true, boxType: true, ownershipType: true } },
+        shipment: { select: { shipmentNumber: true } },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+  }
+
+  // Permanently deletes a soft-deleted item record. No inventory effects (already reversed at soft-delete time).
+  async hardDelete(id: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const item = await tx.shipmentItem.findFirst({ where: { id, isDeleted: true } });
+      if (!item) throw new NotFoundException(`Soft-deleted shipment item #${id} not found`);
+      return tx.shipmentItem.delete({ where: { id } });
+    });
+  }
+
+  // Restores a soft-deleted item: re-runs the packed-movement creation and syncs box/shipment totals.
+  async restore(id: number, actorId: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const item = await tx.shipmentItem.findFirst({
+        where: { id, isDeleted: true },
+        select: {
+          id: true, seasonId: true, boxId: true, shipmentId: true,
+          ownershipType: true, traderId: true, customerId: true,
+          traderCategoryId: true, customerCategoryId: true,
+          grade: true, pitamStatus: true, quantity: true,
+          isPrivateSelection: true,
+        },
+      });
+
+      if (!item) throw new NotFoundException(`Soft-deleted shipment item #${id} not found`);
+
+      const box = await tx.box.findFirst({
+        where: { id: item.boxId, isDeleted: false },
+        select: { ownershipType: true, status: true, boxType: true, totalQuantity: true, shipmentId: true },
+      });
+
+      if (!box) throw new BadRequestException(`Box #${item.boxId} no longer exists or was deleted`);
+
+      const generalSourceBreakdown = await this.applyItemToBox(tx, {
+        ...item,
+        isPrivateSelection: Boolean(item.isPrivateSelection),
+        updatedById: actorId,
+      }, box);
+
+      const restored = await tx.shipmentItem.update({
+        where: { id },
+        data: {
+          isDeleted: false,
+          updatedById: actorId,
+          ...(generalSourceBreakdown !== null ? { generalSourceBreakdown } : {}),
+        },
+      });
+
+      await this.shipmentsService.syncBoxAndShipmentTotals(tx, item.boxId, item.shipmentId);
+
+      return restored;
     });
   }
 
@@ -1111,35 +1206,37 @@ export class ItemService {
     };
   }
 
-  // Hard deletes an item and updates totals accordingly.
+  // Soft-deletes an item (sets isDeleted=true) and hard-deletes its inventory movements, then syncs totals.
   async remove(id: number) {
-    try {
-      return await this.prisma.$transaction(async (tx) => {
-        const existing = await tx.shipmentItem.findFirst({
-          where: { id, isDeleted: false },
-          select: { boxId: true, shipmentId: true },
-        });
-
-        if (!existing) {
-          throw new NotFoundException(`Shipment item #${id} not found`);
-        }
-
-        await this.deletePackedMovementsByItemId(tx, id);
-
-        const item = await tx.shipmentItem.delete({
-          where: { id },
-        });
-
-        await this.shipmentsService.syncBoxAndShipmentTotals(tx, existing.boxId, existing.shipmentId);
-
-        return item;
+    return await this.prisma.$transaction(async (tx) => {
+      const existing = await tx.shipmentItem.findFirst({
+        where: { id, isDeleted: false },
+        select: { boxId: true, shipmentId: true },
       });
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
-        throw new ConflictException('Cannot delete shipment item because related records exist in the system.');
+
+      if (!existing) {
+        throw new NotFoundException(`Shipment item #${id} not found`);
       }
 
-      throw error;
-    }
+      const box = await tx.box.findUnique({
+        where: { id: existing.boxId },
+        select: { status: true },
+      });
+
+      if (box && (box.status === 'SHIPPED' || box.status === 'DELIVERED')) {
+        throw new BadRequestException('Cannot delete item from a shipped or delivered box');
+      }
+
+      await this.deletePackedMovementsByItemId(tx, id);
+
+      const item = await tx.shipmentItem.update({
+        where: { id },
+        data: { isDeleted: true },
+      });
+
+      await this.shipmentsService.syncBoxAndShipmentTotals(tx, existing.boxId, existing.shipmentId);
+
+      return item;
+    });
   }
 }

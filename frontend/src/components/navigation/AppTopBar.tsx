@@ -1,5 +1,5 @@
 
-import { FaEnvelope } from 'react-icons/fa6';
+import { FaEnvelope, FaGauge } from 'react-icons/fa6';
 import type { NavItem } from '../../types/navigation';
 import { CalendarPopover } from './CalendarPopover';
 import { ProfileMenu, type ProfileMenuProps } from './ProfileMenu';
@@ -66,6 +66,14 @@ export function AppTopBar({
       rightSlot={
         <div className={navStyles.iconGroup}>
           <CalendarPopover lang={lang} />
+          <button
+            className={navStyles.iconButton}
+            type="button"
+            aria-label={lang === 'he' ? 'דשבורד' : 'Dashboard'}
+            onClick={onBrandClick}
+          >
+            <FaGauge />
+          </button>
           <button
             className={navStyles.iconButton}
             type="button"

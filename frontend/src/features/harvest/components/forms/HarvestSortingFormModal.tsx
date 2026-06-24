@@ -13,6 +13,7 @@ type HarvestSortingFormHarvestOption = {
 
 type HarvestSortingFormModalProps = {
   isOpen: boolean;
+  restoreMode?: boolean;
   t: HarvestI18n;
   harvestOptions: HarvestSortingFormHarvestOption[];
   selectedHarvestSummary: {
@@ -55,6 +56,7 @@ type HarvestSortingFormModalProps = {
 
 export function HarvestSortingFormModal({
   isOpen,
+  restoreMode = false,
   t,
   harvestOptions,
   selectedHarvestSummary,
@@ -115,7 +117,7 @@ export function HarvestSortingFormModal({
           X
         </button>
 
-        <h3 className="modal-title">{t.sortingForm.title}</h3>
+        <h3 className="modal-title">{restoreMode ? t.sortingForm.restoreTitle : t.sortingForm.title}</h3>
         <p className="modal-message">{t.sortingForm.instructions}</p>
 
         <div className={`management-form-grid ${styles.grid} ${styles.gridPrimary}`}>
@@ -369,7 +371,9 @@ export function HarvestSortingFormModal({
             {form.cancel}
           </button>
           <button type="button" className="btn btn-primary" onClick={onSubmit} disabled={isSubmittingHarvestSortingForm}>
-            {isSubmittingHarvestSortingForm ? t.sortingForm.saving : t.sortingForm.save}
+            {restoreMode
+              ? (isSubmittingHarvestSortingForm ? t.sortingForm.restoring : t.sortingForm.restore)
+              : (isSubmittingHarvestSortingForm ? t.sortingForm.saving : t.sortingForm.save)}
           </button>
         </div>
       </div>

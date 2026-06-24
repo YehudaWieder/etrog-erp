@@ -36,6 +36,7 @@ export const SHIPMENTS_I18N_EN = {
       title: 'Items',
       items: [
         { id: 'shipment-items', label: 'All Items', href: '/shipments/shipment-items' },
+        { id: 'shipment-items-trash', label: 'Trash', href: '/shipments/shipment-items-trash', icon: 'fa-trash' },
       ],
     },
   ],
@@ -47,6 +48,24 @@ export const SHIPMENTS_I18N_EN = {
     addItem: 'Add Item',
     edit: 'Edit',
     delete: 'Delete',
+    restore: 'Restore',
+    hardDelete: 'Delete Permanently',
+  },
+  restoreShipmentItemDialog: {
+    title: (id: number) => `Restore Item ${id}`,
+    message: (id: number) => `Are you sure you want to restore Item ${id}? Its inventory movements will be recreated.`,
+    confirm: 'Restore',
+    cancel: 'Cancel',
+    conflictError: 'Cannot restore — an identical active item already exists in this box, or the box is full / not open.',
+    genericError: 'An error occurred while restoring. Please try again.',
+  },
+  hardDeleteShipmentItemDialog: {
+    title: (id: number) => `Permanently Delete Item ${id}`,
+    message: (id: number) => `Are you sure you want to permanently delete Item ${id}? This action cannot be undone.`,
+    confirm: 'Delete Permanently',
+    cancel: 'Cancel',
+    conflictError: 'Cannot delete this item.',
+    genericError: 'An error occurred while deleting. Please try again.',
   },
   emptyState: {
     'all-shipments': {
@@ -194,7 +213,7 @@ export const SHIPMENTS_I18N_EN = {
   },
   deleteShipmentItemDialog: {
     title: (id: number) => `Delete Item ${id}`,
-    message: (id: number) => `Are you sure you want to delete Item ${id}? This action cannot be undone.`,
+    message: (id: number) => `Are you sure you want to delete Item ${id}?`,
     confirm: 'Delete',
     cancel: 'Cancel',
     conflictError: 'Cannot delete this item — related records exist.',
@@ -202,6 +221,7 @@ export const SHIPMENTS_I18N_EN = {
   },
   newShipmentItemModal: {
     title: 'New Item',
+    restoreTitle: 'Restore Item',
     description: 'Add an item to an open box from available inventory.',
     stockSourceLabel: 'Stock Source',
     stockSourceLabels: {
@@ -234,6 +254,7 @@ export const SHIPMENTS_I18N_EN = {
     notesLabel: 'Notes',
     notesPlaceholder: 'Optional notes...',
     save: 'Add Item',
+    restoreSave: 'Restore Item',
     cancel: 'Cancel',
     loadingInventory: 'Loading available inventory...',
     ownershipLabels: {
@@ -266,6 +287,7 @@ export const SHIPMENTS_I18N_EN = {
     validationQuantityExceedsAvailable: 'Quantity exceeds available stock',
     validationQuantityExceedsCapacity: 'Quantity exceeds the remaining box capacity',
     duplicateItemError: 'An item with this combination already exists in the box',
+    boxNotOpenError: 'Cannot add item — the box is not open.',
     genericError: 'An error occurred. Please try again.',
   },
   editShipmentItemModal: {
@@ -318,6 +340,7 @@ export const SHIPMENTS_I18N_EN = {
     statusLabel: 'Status',
     shippedAtLabel: 'Shipped Date',
     shippedAtRequired: 'A shipped date is required when status is "Shipped"',
+    shippedAtYearMismatch: 'The shipped date year does not match this shipment\'s season year.',
     notesLabel: 'Notes',
     notesPlaceholder: 'Optional notes...',
     save: 'Save Changes',
@@ -559,6 +582,8 @@ export const SHIPMENTS_I18N_EN = {
     noPitamStatus: '—',
     uncategorized: 'Uncategorized',
     empty: 'No shipment items to display',
+    trashEmpty: 'No deleted shipment items',
+    trashDescription: 'Shipment items that have been deleted. They can be restored or permanently removed.',
     loading: 'Loading shipment items...',
     error: 'Failed to load shipment items',
     summary: {

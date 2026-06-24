@@ -162,6 +162,16 @@ export class ShipmentService {
       (updatableData.shippedAt as Date | string | null | undefined) ?? existing.shippedAt,
     );
 
+    if (effectiveStatus === ShipmentStatus.SHIPPED && nextShippedAt) {
+      const season = await this.seasonsService.findOne(existing.seasonId);
+      const shippedYear = new Date(nextShippedAt).getFullYear();
+      if (shippedYear !== season.yearName) {
+        throw new BadRequestException(
+          `Shipped date year (${shippedYear}) does not match the shipment's season year (${season.yearName})`,
+        );
+      }
+    }
+
     // If marking as SHIPPED, update all boxes to SHIPPED in the same transaction
     if (effectiveStatus === ShipmentStatus.SHIPPED) {
       return this.prisma.$transaction(async (tx) => {

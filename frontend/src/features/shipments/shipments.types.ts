@@ -200,6 +200,8 @@ export type ShipmentItemsTableLabels = {
   noPitamStatus: string;
   uncategorized: string;
   empty: string;
+  trashEmpty: string;
+  trashDescription: string;
   loading: string;
   error: string;
   summary: {

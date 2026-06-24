@@ -38,7 +38,7 @@ export class ShipmentsService {
     const newTotal = boxSum._sum.quantity || 0;
     const updateData: Prisma.BoxUpdateInput = { totalQuantity: newTotal };
 
-    if (box && box.status === 'OPEN' && box.boxType !== 'CUSTOM') {
+    if (box && box.boxType !== 'CUSTOM') {
       const systemConfig = await tx.systemConfig.findFirst({ where: { seasonId: box.seasonId } });
       const capacityMap: Record<string, number | null | undefined> = {
         SMALL: systemConfig?.smallBoxCapacity,
@@ -46,8 +46,12 @@ export class ShipmentsService {
         LARGE: systemConfig?.largeBoxCapacity,
       };
       const capacity = capacityMap[box.boxType];
-      if (capacity != null && newTotal >= capacity) {
-        updateData.status = 'CLOSED';
+      if (capacity != null) {
+        if (box.status === 'OPEN' && newTotal >= capacity) {
+          updateData.status = 'CLOSED';
+        } else if (box.status === 'CLOSED' && newTotal < capacity) {
+          updateData.status = 'OPEN';
+        }
       }
     }
 

@@ -39,6 +39,7 @@ export const SHIPMENTS_I18N_HE = {
       icon: 'fa-lemon',
       items: [
         { id: 'shipment-items', label: 'כל הפריטים', href: '/shipments/shipment-items', icon: 'fa-lemon' },
+        { id: 'shipment-items-trash', label: 'אשפה', href: '/shipments/shipment-items-trash', icon: 'fa-trash' },
       ],
     },
   ],
@@ -50,6 +51,24 @@ export const SHIPMENTS_I18N_HE = {
     addItem: 'פריט חדש',
     edit: 'עריכה',
     delete: 'מחיקה',
+    restore: 'שחזור',
+    hardDelete: 'מחיקה סופית',
+  },
+  restoreShipmentItemDialog: {
+    title: (id: number) => `שחזור פריט ${id}`,
+    message: (id: number) => `האם לשחזר את פריט ${id}? תנועות המלאי שלו ייווצרו מחדש.`,
+    confirm: 'שחזר',
+    cancel: 'ביטול',
+    conflictError: 'לא ניתן לשחזר — פריט זהה כבר קיים בקרטון, או שהקרטון מלא / לא פתוח.',
+    genericError: 'אירעה שגיאה בשחזור. נסה שנית.',
+  },
+  hardDeleteShipmentItemDialog: {
+    title: (id: number) => `מחיקה סופית של פריט ${id}`,
+    message: (id: number) => `האם אתה בטוח שברצונך למחוק סופית את פריט ${id}? פעולה זו אינה הפיכה.`,
+    confirm: 'מחק סופית',
+    cancel: 'ביטול',
+    conflictError: 'לא ניתן למחוק פריט זה.',
+    genericError: 'אירעה שגיאה במחיקה. נסה שנית.',
   },
   emptyState: {
     'all-shipments': {
@@ -197,7 +216,7 @@ export const SHIPMENTS_I18N_HE = {
   },
   deleteShipmentItemDialog: {
     title: (id: number) => `מחיקת פריט ${id}`,
-    message: (id: number) => `האם אתה בטוח שברצונך למחוק את פריט ${id}? פעולה זו אינה ניתנת לביטול.`,
+    message: (id: number) => `האם אתה בטוח שברצונך למחוק את פריט ${id}?`,
     confirm: 'מחק',
     cancel: 'ביטול',
     conflictError: 'לא ניתן למחוק את הפריט — קיימות רשומות מקושרות.',
@@ -205,6 +224,7 @@ export const SHIPMENTS_I18N_HE = {
   },
   newShipmentItemModal: {
     title: 'פריט חדש',
+    restoreTitle: 'שחזור פריט',
     description: 'הוספת פריט לקרטון פתוח מתוך המלאי הזמין.',
     stockSourceLabel: 'מקור מלאי',
     stockSourceLabels: {
@@ -237,6 +257,7 @@ export const SHIPMENTS_I18N_HE = {
     notesLabel: 'הערות',
     notesPlaceholder: 'הערות אופציונליות...',
     save: 'הוסף פריט',
+    restoreSave: 'שחזר פריט',
     cancel: 'ביטול',
     loadingInventory: 'טוען מלאי זמין...',
     ownershipLabels: {
@@ -269,6 +290,7 @@ export const SHIPMENTS_I18N_HE = {
     validationQuantityExceedsAvailable: 'הכמות עולה על המלאי הזמין',
     validationQuantityExceedsCapacity: 'הכמות עולה על הנפח הפנוי בקרטון',
     duplicateItemError: 'פריט עם שילוב זה כבר קיים בקרטון',
+    boxNotOpenError: 'לא ניתן להוסיף פריט — הקרטון אינו פתוח.',
     genericError: 'אירעה שגיאה. נסה שוב.',
   },
   editShipmentItemModal: {
@@ -321,6 +343,7 @@ export const SHIPMENTS_I18N_HE = {
     statusLabel: 'סטטוס',
     shippedAtLabel: 'תאריך משלוח',
     shippedAtRequired: 'יש לבחור תאריך משלוח כאשר הסטטוס הוא "נשלח"',
+    shippedAtYearMismatch: 'תאריך המשלוח אינו שייך לשנת העונה של משלוח זה.',
     notesLabel: 'הערות',
     notesPlaceholder: 'הערות אופציונליות...',
     save: 'שמור שינויים',
@@ -562,6 +585,8 @@ export const SHIPMENTS_I18N_HE = {
     noPitamStatus: '—',
     uncategorized: 'ללא קטגוריה',
     empty: 'אין פריטי משלוחים להצגה',
+    trashEmpty: 'אין פריטים מחוקים',
+    trashDescription: 'פריטי משלוח שנמחקו. ניתן לשחזר אותם או למחוק אותם לצמיתות.',
     loading: 'טוען פריטי משלוחים...',
     error: 'שגיאה בטעינת פריטי המשלוחים',
     summary: {

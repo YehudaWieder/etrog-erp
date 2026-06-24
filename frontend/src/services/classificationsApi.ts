@@ -76,6 +76,10 @@ export type ClassificationDailySummaryResponse = {
 export type ClassificationListRecord = {
   id: number;
   assignmentType: 'GENERAL' | 'TRADER' | 'CUSTOMER' | string;
+  traderId?: number | null;
+  customerId?: number | null;
+  traderCategoryId?: number | null;
+  customerCategoryId?: number | null;
   grade?: string | null;
   pitamStatus?: string | null;
   quantity: number;
@@ -101,6 +105,10 @@ export async function getClassificationsByHarvest(harvestId: number): Promise<Cl
 
 export async function getClassificationsBySeason(seasonId: number): Promise<ClassificationListRecord[]> {
   return apiClient<ClassificationListRecord[]>(`/classifications?seasonId=${seasonId}`);
+}
+
+export async function getDeletedClassificationsBySeason(seasonId: number): Promise<ClassificationListRecord[]> {
+  return apiClient<ClassificationListRecord[]>(`/classifications/deleted?seasonId=${seasonId}`);
 }
 
 export async function getClassificationDailySummaryBySeason(seasonId: number): Promise<ClassificationDailySummaryResponse> {
@@ -136,5 +144,20 @@ export async function updateHarvestClassificationQuantity(payload: {
   await apiClient<void>('/harvests/classifications', {
     method: 'PATCH',
     body: JSON.stringify(payload),
+  });
+}
+
+export async function restoreHarvestClassification(
+  payload: CreateHarvestClassificationPayload & { deletedClassificationId: number },
+): Promise<ClassificationRecord> {
+  return apiClient<ClassificationRecord>('/harvests/classifications/restore', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function permanentDeleteHarvestClassification(classificationId: number): Promise<void> {
+  await apiClient<void>(`/harvests/classifications/${classificationId}/permanent`, {
+    method: 'DELETE',
   });
 }

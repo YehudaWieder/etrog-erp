@@ -11,6 +11,9 @@
   --color-bg-surface: #ffffff;
   --color-bg-hover: #f2f3f5;
 
+  --card-bg: linear-gradient(to bottom, #ffffff, rgba(184, 205, 180, 0.10));
+  --card-bg-hover: linear-gradient(to bottom, #ffffff, rgba(184, 205, 180, 0.16));
+
   --color-text-main: #333333;
   --color-text-muted: #7d7d7d;
   --color-text-accent: #2d5a27;

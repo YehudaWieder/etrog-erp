@@ -18,6 +18,7 @@ type HarvestBulkFormModalProps = {
   isOpen: boolean;
   lang: 'he' | 'en';
   t: HarvestI18n;
+  activeSeasonYearName: number | null;
   fields: Field[];
   traders: Trader[];
   customers: Customer[];
@@ -55,6 +56,7 @@ export function HarvestBulkFormModal({
   isOpen,
   lang,
   t,
+  activeSeasonYearName,
   fields,
   traders,
   customers,
@@ -195,6 +197,8 @@ export function HarvestBulkFormModal({
               className="seasons-manager__year-input"
               type="date"
               value={harvestFormDateGregorian}
+              min={activeSeasonYearName !== null ? `${activeSeasonYearName}-01-01` : undefined}
+              max={activeSeasonYearName !== null ? `${activeSeasonYearName}-12-31` : undefined}
               onChange={(event) => onGregorianDateChange(event.target.value)}
               aria-label={form.gregorianDateLabel}
             />

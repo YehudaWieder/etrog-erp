@@ -11,6 +11,7 @@ type HarvestPageHeaderActionsProps = {
   editDisabled: boolean;
   deleteDisabled: boolean;
   deleteTitle?: string;
+  showAdd?: boolean;
   showEdit?: boolean;
   showDelete?: boolean;
 };
@@ -25,20 +26,23 @@ export function HarvestPageHeaderActions({
   editDisabled,
   deleteDisabled,
   deleteTitle,
+  showAdd = true,
   showEdit = true,
   showDelete = true,
 }: HarvestPageHeaderActionsProps): JSX.Element {
   return (
     <div className={styles.actions}>
-      <button
-        type="button"
-        className={`${styles.button} ${styles.success}`}
-        onClick={onAdd}
-        aria-label={addActionLabel}
-      >
-        <FaCirclePlus />
-        <span>{addActionLabel}</span>
-      </button>
+      {showAdd ? (
+        <button
+          type="button"
+          className={`${styles.button} ${styles.success}`}
+          onClick={onAdd}
+          aria-label={addActionLabel}
+        >
+          <FaCirclePlus />
+          <span>{addActionLabel}</span>
+        </button>
+      ) : null}
       {showEdit ? (
         <button
           type="button"

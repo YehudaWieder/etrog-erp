@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
@@ -19,10 +20,12 @@ import { AuthorizationModule } from './authorization/authorization.module';
 import { RolesGuard } from './authorization/guards/roles.guard';
 import { ActiveGuard } from './authorization/guards/active.guard';
 import { WorkerAccessGuard } from './authorization/guards/worker-access.guard';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     UsersModule,
     SeasonsModule,
     PartnersModule,
@@ -35,6 +38,7 @@ import { WorkerAccessGuard } from './authorization/guards/worker-access.guard';
     SystemConfigModule,
     AuthModule,
     AuthorizationModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [

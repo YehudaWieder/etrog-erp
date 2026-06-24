@@ -27,6 +27,7 @@ type EditShipmentFormModalProps = {
   shippedAt: string;
   onShippedAtChange: (v: string) => void;
   isShippedAtDisabled: boolean;
+  activeSeasonYearName: number | null;
   notes: string;
   onNotesChange: (v: string) => void;
   isSubmitting: boolean;
@@ -46,6 +47,7 @@ export function EditShipmentFormModal({
   shippedAt,
   onShippedAtChange,
   isShippedAtDisabled,
+  activeSeasonYearName,
   notes,
   onNotesChange,
   isSubmitting,
@@ -101,6 +103,8 @@ export function EditShipmentFormModal({
                 className="seasons-manager__year-input"
                 type="date"
                 value={shippedAt}
+                min={activeSeasonYearName !== null ? `${activeSeasonYearName}-01-01` : undefined}
+                max={activeSeasonYearName !== null ? `${activeSeasonYearName}-12-31` : undefined}
                 onChange={(e) => onShippedAtChange(e.target.value)}
               />
             </div>

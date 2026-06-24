@@ -56,3 +56,13 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 /generated/prisma
+
+# Prisma generated client
+.prisma/
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Claude Code / AI tooling
+.agents/
+.claude/

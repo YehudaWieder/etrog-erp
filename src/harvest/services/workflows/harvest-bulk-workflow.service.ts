@@ -206,82 +206,115 @@ export class HarvestBulkWorkflowService {
     createDto: CreateHarvestClassificationDto,
     actorId: number,
   ) {
-    const createPayload = {
-      ...createDto,
-      updatedById: actorId,
-    };
-
+    const createPayload = { ...createDto, updatedById: actorId };
     assertGeneralAssignmentIds(createPayload);
+    const { id: seasonId, yearName: activeSeasonYearName } = await this.seasonsService.findActiveSeason();
+    return this.prisma.$transaction(async (tx) =>
+      this.createClassificationInTx(tx, seasonId, activeSeasonYearName, harvestId, createPayload),
+    );
+  }
 
-    const { id: seasonId } = await this.seasonsService.findActiveSeason();
-
+  async restoreClassification(
+    deletedClassificationId: number,
+    harvestId: number,
+    createDto: CreateHarvestClassificationDto,
+    actorId: number,
+  ) {
+    const createPayload = { ...createDto, updatedById: actorId };
+    assertGeneralAssignmentIds(createPayload);
+    const { id: seasonId, yearName: activeSeasonYearName } = await this.seasonsService.findActiveSeason();
     return this.prisma.$transaction(async (tx) => {
-      const harvest = await tx.fieldHarvest.findUnique({
-        where: { id: harvestId },
-        select: { id: true, dateGregorian: true },
+      const deleted = await tx.classification.findFirst({
+        where: { id: deletedClassificationId, isDeleted: true },
+        select: { id: true },
       });
-
-      if (!harvest) {
-        throw new NotFoundException(`Harvest ${harvestId} not found`);
+      if (!deleted) {
+        throw new NotFoundException(`Deleted classification ${deletedClassificationId} not found`);
       }
-
-      await this.applyHarvestInlineUpdate(tx, harvestId, createPayload.harvestUpdate);
-
-      const duplicateKey = buildClassificationDuplicateKey(createPayload);
-
-      const existingClassifications = await tx.classification.findMany({
-        where: { fieldHarvestId: harvestId },
-        select: {
-          assignmentType: true,
-          traderId: true,
-          customerId: true,
-          traderCategoryId: true,
-          customerCategoryId: true,
-          grade: true,
-          pitamStatus: true,
-        },
-      });
-
-      const hasDuplicate = existingClassifications.some(
-        (classification) => buildClassificationDuplicateKey(classification) === duplicateKey,
-      );
-
-      if (hasDuplicate) {
-        throw new ConflictException('This classification combination already exists for this harvest');
-      }
-
-      const classSlug = `harvest-${harvestId}-t-${createPayload.traderId ?? 0}-c-${createPayload.customerId ?? 0}-tcat-${createPayload.traderCategoryId ?? 0}-ccat-${createPayload.customerCategoryId ?? 0}-g-${createPayload.grade ?? 'NA'}-pitam-${createPayload.pitamStatus}-a-${createPayload.assignmentType}`;
-
-      const classification = await tx.classification.create({
-        data: {
-          seasonId,
-          fieldHarvestId: harvestId,
-          updatedById: createPayload.updatedById,
-          assignmentType: createPayload.assignmentType,
-          traderId: createPayload.traderId,
-          customerId: createPayload.customerId,
-          traderCategoryId: createPayload.traderCategoryId,
-          customerCategoryId: createPayload.customerCategoryId,
-          grade: createPayload.grade,
-          pitamStatus: createPayload.pitamStatus,
-          quantity: createPayload.quantity,
-          notes: createPayload.notes,
-          slug: classSlug,
-        },
-      });
-
-      await this.allocationService.processAllocationsForClassification(tx, {
-        seasonId,
-        classificationId: classification.id,
-        classificationItem: this.mapToClassificationBulkItem(classification),
-        harvestDate: harvest.dateGregorian,
-        updatedById: createPayload.updatedById,
-      });
-
-      await this.syncHarvestClassificationProgress(tx, harvestId, createPayload.isPartialClassification);
-
-      return classification;
+      await tx.classification.delete({ where: { id: deletedClassificationId } });
+      return this.createClassificationInTx(tx, seasonId, activeSeasonYearName, harvestId, createPayload);
     });
+  }
+
+  private async createClassificationInTx(
+    tx: Prisma.TransactionClient,
+    seasonId: number,
+    activeSeasonYearName: number,
+    harvestId: number,
+    createPayload: CreateHarvestClassificationDto & { updatedById: number },
+  ) {
+    const harvest = await tx.fieldHarvest.findUnique({
+      where: { id: harvestId },
+      select: { id: true, dateGregorian: true },
+    });
+
+    if (!harvest) {
+      throw new NotFoundException(`Harvest ${harvestId} not found`);
+    }
+
+    const harvestYear = harvest.dateGregorian.getFullYear();
+    if (harvestYear !== activeSeasonYearName) {
+      throw new BadRequestException(
+        `Harvest date year (${harvestYear}) does not match the active season year (${activeSeasonYearName})`,
+      );
+    }
+
+    await this.applyHarvestInlineUpdate(tx, harvestId, createPayload.harvestUpdate);
+
+    const duplicateKey = buildClassificationDuplicateKey(createPayload);
+
+    const existingClassifications = await tx.classification.findMany({
+      where: { fieldHarvestId: harvestId, isDeleted: false },
+      select: {
+        assignmentType: true,
+        traderId: true,
+        customerId: true,
+        traderCategoryId: true,
+        customerCategoryId: true,
+        grade: true,
+        pitamStatus: true,
+      },
+    });
+
+    const hasDuplicate = existingClassifications.some(
+      (classification) => buildClassificationDuplicateKey(classification) === duplicateKey,
+    );
+
+    if (hasDuplicate) {
+      throw new ConflictException('This classification combination already exists for this harvest');
+    }
+
+    const classSlug = `harvest-${harvestId}-t-${createPayload.traderId ?? 0}-c-${createPayload.customerId ?? 0}-tcat-${createPayload.traderCategoryId ?? 0}-ccat-${createPayload.customerCategoryId ?? 0}-g-${createPayload.grade ?? 'NA'}-pitam-${createPayload.pitamStatus}-a-${createPayload.assignmentType}`;
+
+    const classification = await tx.classification.create({
+      data: {
+        seasonId,
+        fieldHarvestId: harvestId,
+        updatedById: createPayload.updatedById,
+        assignmentType: createPayload.assignmentType,
+        traderId: createPayload.traderId,
+        customerId: createPayload.customerId,
+        traderCategoryId: createPayload.traderCategoryId,
+        customerCategoryId: createPayload.customerCategoryId,
+        grade: createPayload.grade,
+        pitamStatus: createPayload.pitamStatus,
+        quantity: createPayload.quantity,
+        notes: createPayload.notes,
+        slug: classSlug,
+      },
+    });
+
+    await this.allocationService.processAllocationsForClassification(tx, {
+      seasonId,
+      classificationId: classification.id,
+      classificationItem: this.mapToClassificationBulkItem(classification),
+      harvestDate: harvest.dateGregorian,
+      updatedById: createPayload.updatedById,
+    });
+
+    await this.syncHarvestClassificationProgress(tx, harvestId, createPayload.isPartialClassification);
+
+    return classification;
   }
 
   /**
@@ -300,7 +333,14 @@ export class HarvestBulkWorkflowService {
     assertClassificationsMatchHarvested(bulkPayload);
 
     // 2. Get active season
-    const { id: seasonId } = await this.seasonsService.findActiveSeason();
+    const { id: seasonId, yearName: activeSeasonYearName } = await this.seasonsService.findActiveSeason();
+
+    const harvestYear = new Date(bulkPayload.dateGregorian).getFullYear();
+    if (harvestYear !== activeSeasonYearName) {
+      throw new BadRequestException(
+        `Harvest date year (${harvestYear}) does not match the active season year (${activeSeasonYearName})`,
+      );
+    }
 
     // 3. Execute entire flow in transaction
     return this.prisma.$transaction(async (tx) => {
@@ -385,8 +425,8 @@ export class HarvestBulkWorkflowService {
     };
 
     // Get the old classification
-    const oldClassification = await this.prisma.classification.findUnique({
-      where: { id: classificationId },
+    const oldClassification = await this.prisma.classification.findFirst({
+      where: { id: classificationId, isDeleted: false },
     });
 
     if (!oldClassification) {
@@ -526,8 +566,8 @@ export class HarvestBulkWorkflowService {
 
     try {
       return await this.prisma.$transaction(async (tx) => {
-        const classification = await tx.classification.findUnique({
-          where: { id: classificationId },
+        const classification = await tx.classification.findFirst({
+          where: { id: classificationId, isDeleted: false },
           select: {
             id: true,
             fieldHarvestId: true,
@@ -559,8 +599,9 @@ export class HarvestBulkWorkflowService {
 
         await this.allocationService.deleteLinkedMovements(tx, classificationId);
 
-        const deleted = await tx.classification.delete({
+        const deleted = await tx.classification.update({
           where: { id: classificationId },
+          data: { isDeleted: true, updatedById: actorId },
         });
 
         await this.syncHarvestClassificationProgress(tx, harvestId, deletePayload.isPartialClassification);
@@ -637,6 +678,17 @@ export class HarvestBulkWorkflowService {
         );
       }
     }
+  }
+
+  async permanentDeleteClassification(classificationId: number) {
+    const record = await this.prisma.classification.findFirst({
+      where: { id: classificationId, isDeleted: true },
+      select: { id: true },
+    });
+    if (!record) {
+      throw new NotFoundException(`Deleted classification ${classificationId} not found`);
+    }
+    return this.prisma.classification.delete({ where: { id: classificationId } });
   }
 
   private async assertInventoryAvailableForDeletion(

@@ -13,7 +13,7 @@
   min-height: 56px;
   box-shadow: 0 2px 8px #0001;
   direction: inherit;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .main {
@@ -28,11 +28,11 @@
 
 .label {
   display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
   min-width: 0;
   overflow: hidden;
-  white-space: nowrap;
 }
 
 .title {

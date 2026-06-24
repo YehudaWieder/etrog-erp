@@ -13,6 +13,7 @@ import { ClassificationRepository } from 'src/harvest/services/harvest-core/repo
 import { AllocationRepository } from 'src/harvest/services/harvest-core/repositories/allocation.repository';
 import { HarvestBulkWorkflowService } from 'src/harvest/services/workflows/harvest-bulk-workflow.service';
 import { HarvestAllocationService } from 'src/harvest/services/workflows/harvest-allocation.service';
+import { ClassificationCleanupService } from 'src/harvest/services/classification-cleanup.service';
 
 @Module({
   imports: [SeasonsModule, InventoryModule],
@@ -28,6 +29,7 @@ import { HarvestAllocationService } from 'src/harvest/services/workflows/harvest
     ClassificationRepository,
     AllocationRepository,
     ClassificationService,
+    ClassificationCleanupService,
   ],
   exports: [HarvestBulkService],
 })

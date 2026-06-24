@@ -99,10 +99,59 @@ export class ClassificationRepository {
   }
 
   findUnique(id: number, tx?: Prisma.TransactionClient) {
-    return this.client(tx).classification.findUnique({ where: { id } });
+    return this.client(tx).classification.findFirst({ where: { id, isDeleted: false } });
   }
 
   findIdsByHarvest(harvestId: number, tx?: Prisma.TransactionClient) {
+    return this.client(tx).classification.findMany({
+      where: { fieldHarvestId: harvestId, isDeleted: false },
+      select: { id: true },
+    });
+  }
+
+  findDeletedBySeason(seasonId: number) {
+    return this.prisma.classification.findMany({
+      where: { seasonId, isDeleted: true },
+      select: {
+        id: true,
+        assignmentType: true,
+        traderId: true,
+        customerId: true,
+        traderCategoryId: true,
+        customerCategoryId: true,
+        grade: true,
+        pitamStatus: true,
+        quantity: true,
+        notes: true,
+        trader: { select: { name: true } },
+        customer: { select: { customerName: true } },
+        traderCategory: { select: { name: true } },
+        customerCategory: { select: { name: true, grade: true } },
+        updatedBy: { select: { name: true } },
+        fieldHarvest: {
+          select: {
+            id: true,
+            fieldId: true,
+            dateGregorian: true,
+            dateHebrew: true,
+            isPartialClassification: true,
+            field: { select: { name: true } },
+          },
+        },
+      },
+      orderBy: [
+        { fieldHarvest: { dateGregorian: 'desc' } },
+        { fieldHarvest: { id: 'desc' } },
+        { id: 'asc' },
+      ],
+    });
+  }
+
+  permanentDeleteById(id: number, tx?: Prisma.TransactionClient) {
+    return this.client(tx).classification.delete({ where: { id } });
+  }
+
+  findAllIdsByHarvest(harvestId: number, tx?: Prisma.TransactionClient) {
     return this.client(tx).classification.findMany({
       where: { fieldHarvestId: harvestId },
       select: { id: true },

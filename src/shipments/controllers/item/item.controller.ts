@@ -44,6 +44,13 @@ export class ItemController {
     return this.itemService.create(data as Prisma.ShipmentItemUncheckedCreateInput, actor.id);
   }
 
+  @Get('deleted')
+  @ApiOperation({ summary: 'List all soft-deleted shipment items' })
+  @ApiResponse({ status: 200, description: 'List of soft-deleted shipment items returned successfully.' })
+  findDeleted() {
+    return this.itemService.findDeleted();
+  }
+
   @Get(':id/edit-limits')
   @ApiOperation({ summary: 'Get the maximum quantity constraints for editing a shipment item (inventory available + box remaining capacity)' })
   @ApiParam({ name: 'id', type: Number, description: 'The shipment item ID.' })
@@ -96,5 +103,26 @@ export class ItemController {
   @ApiResponse({ status: 404, description: 'Shipment item not found.' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.itemService.remove(id);
+  }
+
+  @Delete(':id/hard')
+  @ApiOperation({ summary: 'Permanently delete a soft-deleted shipment item record' })
+  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the soft-deleted shipment item.' })
+  @ApiResponse({ status: 200, description: 'Shipment item permanently deleted.' })
+  @ApiResponse({ status: 404, description: 'Soft-deleted shipment item not found.' })
+  hardDelete(@Param('id', ParseIntPipe) id: number) {
+    return this.itemService.hardDelete(id);
+  }
+
+  @Post(':id/restore')
+  @ApiOperation({ summary: 'Restore a soft-deleted shipment item: re-creates inventory movements and syncs totals' })
+  @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the soft-deleted shipment item to restore.' })
+  @ApiResponse({ status: 201, description: 'Shipment item restored successfully.' })
+  @ApiResponse({ status: 400, description: 'Box is not OPEN or capacity exceeded.' })
+  @ApiResponse({ status: 404, description: 'Soft-deleted shipment item not found.' })
+  @ApiResponse({ status: 409, description: 'An identical active item already exists in this box.' })
+  restore(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.itemService.restore(id, actor.id);
   }
 }

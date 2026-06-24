@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { ClassificationListRecord } from '../../../../services/classificationsApi';
 
 export function useHarvestSortingFormState() {
   const [isHarvestSortingFormOpen, setIsHarvestSortingFormOpen] = useState(false);
@@ -35,6 +36,29 @@ export function useHarvestSortingFormState() {
 
   const openHarvestSortingGlobalForm = (initialHarvestId: number | null = null) => {
     resetHarvestSortingForm(initialHarvestId);
+    setIsHarvestSortingFormOpen(true);
+  };
+
+  const prefillSortingFormForRestore = (row: ClassificationListRecord) => {
+    setHarvestSortingFormError('');
+    setHarvestSortingFormHarvestId(row.fieldHarvest ? String(row.fieldHarvest.id) : '');
+    setHarvestSortingFormAssignmentType(
+      row.assignmentType === 'TRADER' ? 'TRADER' :
+      row.assignmentType === 'CUSTOMER' ? 'CUSTOMER' : 'GENERAL',
+    );
+    setHarvestSortingFormTraderId(row.traderId ? String(row.traderId) : '');
+    setHarvestSortingFormCustomerId(row.customerId ? String(row.customerId) : '');
+    setHarvestSortingFormTraderCategoryId(row.traderCategoryId ? String(row.traderCategoryId) : '');
+    setHarvestSortingFormCustomerCategoryId(row.customerCategoryId ? String(row.customerCategoryId) : '');
+    setHarvestSortingFormGrade(row.grade ?? '');
+    setHarvestSortingFormPitamStatus(
+      row.pitamStatus === 'WITH_PITAM' || row.pitamStatus === 'WITHOUT_PITAM' || row.pitamStatus === 'MIXED'
+        ? row.pitamStatus
+        : '',
+    );
+    setHarvestSortingFormQuantity(String(row.quantity));
+    setHarvestSortingFormNotes(row.notes ?? '');
+    setHarvestSortingFormIsPartialClassification(row.fieldHarvest?.isPartialClassification ?? false);
     setIsHarvestSortingFormOpen(true);
   };
 
@@ -102,5 +126,6 @@ export function useHarvestSortingFormState() {
     setHarvestSortingFormIsPartialClassification,
     openHarvestSortingGlobalForm,
     closeHarvestSortingGlobalForm,
+    prefillSortingFormForRestore,
   };
 }

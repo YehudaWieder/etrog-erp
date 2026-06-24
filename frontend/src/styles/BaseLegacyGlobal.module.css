@@ -2,6 +2,11 @@
   box-sizing: border-box;
 }
 
+@page {
+  size: A4 portrait;
+  margin: 1.5cm 1cm;
+}
+
 :global(html),
 :global(body),
 :global(#root) {

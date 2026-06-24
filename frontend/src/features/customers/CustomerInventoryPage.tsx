@@ -45,7 +45,7 @@ export function CustomerInventoryPage() {
   const [filterValues, setFilterValues] = useState<Record<string, string>>({
     seasonId: '',
     customerId: 'ALL',
-    inventoryStatus: 'UNSHIPPED',
+    inventoryStatus: 'ALL',
     movementStatus: 'ALL',
     movementCategory: 'ALL',
     movementGrade: 'ALL',
@@ -138,7 +138,7 @@ export function CustomerInventoryPage() {
   const selectedShipmentScope = useMemo<
     'ALL' | 'UNSHIPPED' | 'PACKED_SHIPPED' | 'SHIPPED' | 'SELF_PICKUP'
   >(() => {
-    const status = filterValues.inventoryStatus || 'UNSHIPPED';
+    const status = filterValues.inventoryStatus || 'ALL';
     if (
       status === 'ALL' ||
       status === 'UNSHIPPED' ||
@@ -148,7 +148,7 @@ export function CustomerInventoryPage() {
     ) {
       return status;
     }
-    return 'UNSHIPPED';
+    return 'ALL';
   }, [filterValues.inventoryStatus]);
 
   const summaryFilters = useMemo(
@@ -314,8 +314,8 @@ export function CustomerInventoryPage() {
 
   const inventoryStatusOptions = useMemo(
     () => [
-      { value: 'UNSHIPPED', label: t.summary.filters.allInventoryOption },
-      { value: 'ALL', label: t.summary.filters.unboxedOption },
+      { value: 'ALL', label: t.summary.filters.allInventoryOption },
+      { value: 'UNSHIPPED', label: t.summary.filters.unboxedOption },
       { value: 'PACKED_SHIPPED', label: t.summary.filters.boxedOption },
       { value: 'SHIPPED', label: t.summary.filters.shippedOption },
       { value: 'SELF_PICKUP', label: t.summary.filters.selfPickupOption },
@@ -359,7 +359,7 @@ export function CustomerInventoryPage() {
       {
         key: 'inventoryStatus',
         label: t.summary.filters.inventoryStatusLabel,
-        defaultValue: 'UNSHIPPED',
+        defaultValue: 'ALL',
         options: inventoryStatusOptions,
       },
     ],
@@ -391,10 +391,10 @@ export function CustomerInventoryPage() {
         : 'N/A';
 
     const statusMap: Record<string, string> = {
-      UNSHIPPED: t.summary.filters.allInventoryOption,
-      ALL: t.summary.filters.unboxedOption,
-      PACKED_SHIPPED: t.summary.filters.boxedOption,
+      ALL: t.summary.filters.allInventoryOption,
+      UNSHIPPED: t.summary.filters.unboxedOption,
       SHIPPED: t.summary.filters.shippedOption,
+      PACKED_SHIPPED: t.summary.filters.boxedOption,
       SELF_PICKUP: t.summary.filters.selfPickupOption,
     };
     const statusDisplay = statusMap[filterValues.inventoryStatus] || filterValues.inventoryStatus;
@@ -473,10 +473,10 @@ export function CustomerInventoryPage() {
         : 'N/A';
 
     const statusMap: Record<string, string> = {
-      UNSHIPPED: t.summary.filters.allInventoryOption,
-      ALL: t.summary.filters.unboxedOption,
-      PACKED_SHIPPED: t.summary.filters.boxedOption,
+      ALL: t.summary.filters.allInventoryOption,
+      UNSHIPPED: t.summary.filters.unboxedOption,
       SHIPPED: t.summary.filters.shippedOption,
+      PACKED_SHIPPED: t.summary.filters.boxedOption,
       SELF_PICKUP: t.summary.filters.selfPickupOption,
     };
     const statusDisplay = statusMap[filterValues.inventoryStatus] || filterValues.inventoryStatus;
@@ -532,7 +532,7 @@ export function CustomerInventoryPage() {
       if (filtersApiRef.current) {
         filtersApiRef.current.setFilterValue('seasonId', '');
         filtersApiRef.current.setFilterValue('customerId', 'ALL');
-        filtersApiRef.current.setFilterValue('inventoryStatus', 'UNSHIPPED');
+        filtersApiRef.current.setFilterValue('inventoryStatus', 'ALL');
         filtersApiRef.current.setFilterValue('movementStatus', 'ALL');
         filtersApiRef.current.setFilterValue('movementCategory', 'ALL');
         filtersApiRef.current.setFilterValue('movementGrade', 'ALL');
@@ -549,7 +549,7 @@ export function CustomerInventoryPage() {
       if (filtersApiRef.current) {
         filtersApiRef.current.setFilterValue('seasonId', '');
         filtersApiRef.current.setFilterValue('customerId', 'ALL');
-        filtersApiRef.current.setFilterValue('inventoryStatus', 'UNSHIPPED');
+        filtersApiRef.current.setFilterValue('inventoryStatus', 'ALL');
       }
       navigate('/customers/all');
       return;

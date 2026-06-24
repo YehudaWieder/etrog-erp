@@ -48,7 +48,15 @@ export type HarvestI18n = {
       confirm: string;
       cancel: string;
     };
+    permanentDeleteSortingDialog: {
+      title: string;
+      message: string;
+      confirm: string;
+      cancel: string;
+    };
     deleteHarvestBlockedTitle: string;
+    restore: string;
+    permanentDelete: string;
   };
   bulkForm: {
     ariaLabel: string;
@@ -152,6 +160,7 @@ export type HarvestI18n = {
     apiClassificationsMustEqualNet: (classificationsTotal: number, netHarvested: number) => string;
     apiClassificationsMustEqualNetFinal: (classificationsTotal: number, netHarvested: number) => string;
     apiDuplicateClassification: string;
+    apiHarvestYearMismatch: (harvestYear: number, seasonYear: number) => string;
     saveFailed: string;
     sortingSaveFailed: string;
   };
@@ -159,6 +168,7 @@ export type HarvestI18n = {
     ariaLabel: string;
     closeLabel: string;
     title: string;
+    restoreTitle: string;
     instructions: string;
     harvestLabel: string;
     harvestPlaceholder: string;
@@ -168,6 +178,8 @@ export type HarvestI18n = {
     classifiedTotalLabel: string;
     save: string;
     saving: string;
+    restore: string;
+    restoring: string;
   };
   dailyDetails: {
     description: string;
@@ -425,6 +437,12 @@ export type HarvestI18n = {
       withoutPitam: string;
       mixed: string;
     };
+  };
+  sortingListTrash: {
+    description: string;
+    loading: string;
+    loadError: string;
+    empty: string;
   };
   sortingSummary: {
     loading: string;

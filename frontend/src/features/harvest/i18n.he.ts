@@ -37,11 +37,19 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     },
     deleteSortingDialog: {
       title: 'מחיקת רשומת מיון',
-      message: 'האם אתה בטוח שברצונך למחוק את רשומת המיון הזו? פעולה זו אינה ניתנת לביטול.',
+      message: 'האם אתה בטוח שברצונך למחוק את רשומת המיון הזו?',
       confirm: 'מחיקה',
       cancel: 'ביטול',
     },
+    permanentDeleteSortingDialog: {
+      title: 'מחיקה סופית של רשומת מיון',
+      message: 'האם אתה בטוח שברצונך למחוק לצמיתות את רשומת המיון הזו? לא ניתן לבטל פעולה זו.',
+      confirm: 'מחיקה סופית',
+      cancel: 'ביטול',
+    },
     deleteHarvestBlockedTitle: 'לא ניתן למחוק קטיף שיש לו מיונים מקושרים',
+    restore: 'שחזור',
+    permanentDelete: 'מחיקה סופית',
   },
   bulkForm: {
     ariaLabel: 'טופס קטיף גלובלי',
@@ -163,6 +171,12 @@ export const HARVEST_I18N_HE: HarvestI18n = {
           href: '/harvest/sorting-list',
           icon: 'fa-list',
         },
+        {
+          id: 'sorting-list-trash',
+          label: 'אשפה',
+          href: '/harvest/sorting-list-trash',
+          icon: 'fa-trash',
+        },
       ],
     },
   ],
@@ -203,6 +217,8 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     apiClassificationsMustEqualNetFinal: (classificationsTotal, netHarvested) =>
       `סה"כ כמות המיון (${classificationsTotal}) חייבת להיות שווה לכמות הנטו שנקטפה (${netHarvested}) במצב סופי.`,
     apiDuplicateClassification: 'רשומת מיון כפולה: כל שילוב של סוג, סוחר/לקוח, קטגוריה ודרגה חייב להיות ייחודי.',
+    apiHarvestYearMismatch: (harvestYear, seasonYear) =>
+      `שנת תאריך הקטיף (${harvestYear}) אינה תואמת את שנת העונה הפעילה (${seasonYear}).`,
     saveFailed: 'שמירת הקטיף נכשלה. נסה שוב.',
     sortingSaveFailed: 'שמירת המיון נכשלה. נסה שוב.',
   },
@@ -210,6 +226,7 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     ariaLabel: 'טופס מיון',
     closeLabel: 'סגירה',
     title: 'הוספת מיון',
+    restoreTitle: 'שחזור מיון',
     instructions: 'בטופס זה יוצרים רשומת מיון עבור קטיף קיים.',
     harvestLabel: 'קטיף מקושר',
     harvestPlaceholder: 'בחר קטיף',
@@ -219,6 +236,8 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     classifiedTotalLabel: 'סה"כ מויין',
     save: 'שמירת מיון',
     saving: 'שומר...',
+    restore: 'שחזור',
+    restoring: 'משחזר...',
   },
   dailyDetails: {
     description: 'ריכוז כל רשומות הקטיף לפי ימים, ישירות מנתוני המערכת לעונה הפעילה.',
@@ -477,6 +496,12 @@ export const HARVEST_I18N_HE: HarvestI18n = {
       mixed: 'מעורב',
     },
   },
+  sortingListTrash: {
+    description: 'רשימת כל רשומות המיון שנמחקו עבור העונה הנבחרת.',
+    loading: 'טוען אשפת מיונים...',
+    loadError: 'טעינת אשפת המיונים נכשלה.',
+    empty: 'לא נמצאו רשומות מיון מחוקות עבור העונה הנבחרת.',
+  },
   sortingSummary: {
     loading: 'טוען סיכום מיונים...',
     loadError: 'טעינת סיכום המיונים נכשלה.',
@@ -536,6 +561,10 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     'sorting-list': {
       title: 'רשימת מיונים תוצג כאן',
       description: 'כאן תוצג רשימה מלאה של כל רשומות המיון לעונה הנבחרת.',
+    },
+    'sorting-list-trash': {
+      title: 'אשפת מיונים תוצג כאן',
+      description: 'כאן תוצגנה רשומות המיון שנמחקו עבור העונה הנבחרת.',
     },
     default: {
       title: 'אין נתונים להצגה',

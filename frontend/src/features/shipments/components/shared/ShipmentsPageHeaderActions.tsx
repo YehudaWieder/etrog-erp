@@ -15,6 +15,7 @@ type ShipmentsPageHeaderActionsProps = {
   onDelete: () => void;
   editDisabled: boolean;
   deleteDisabled: boolean;
+  showAddAction?: boolean;
   showRowActions?: boolean;
   extraActions?: ExtraAction[];
 };
@@ -28,6 +29,7 @@ export function ShipmentsPageHeaderActions({
   onDelete,
   editDisabled,
   deleteDisabled,
+  showAddAction = true,
   showRowActions = true,
   extraActions,
 }: ShipmentsPageHeaderActionsProps): JSX.Element {
@@ -45,15 +47,17 @@ export function ShipmentsPageHeaderActions({
           <span>{action.label}</span>
         </button>
       ))}
-      <button
-        type="button"
-        className={`${styles.button} ${styles.success}`}
-        onClick={onAdd}
-        aria-label={addActionLabel}
-      >
-        <FaCirclePlus />
-        <span>{addActionLabel}</span>
-      </button>
+      {showAddAction && (
+        <button
+          type="button"
+          className={`${styles.button} ${styles.success}`}
+          onClick={onAdd}
+          aria-label={addActionLabel}
+        >
+          <FaCirclePlus />
+          <span>{addActionLabel}</span>
+        </button>
+      )}
       {showRowActions && (
         <>
           <button

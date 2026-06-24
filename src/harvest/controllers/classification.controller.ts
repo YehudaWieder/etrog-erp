@@ -46,6 +46,14 @@ export class ClassificationController {
     return this.classificationService.findDailySummaryBySeason(seasonId);
   }
 
+  @Get('deleted')
+  @ApiOperation({ summary: 'Retrieve all soft-deleted classification records for a specific season' })
+  @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season to filter deleted classifications by.' })
+  @ApiResponse({ status: 200, description: 'List of deleted classifications returned successfully.' })
+  findDeleted(@Query('seasonId', ParseIntPipe) seasonId: number) {
+    return this.classificationService.findDeletedAllBySeason(seasonId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Retrieve a single classification record by ID' })
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the classification record.' })
