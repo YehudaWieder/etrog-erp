@@ -22,7 +22,7 @@ const PITAM_STATUS_OPTIONS: PitamStatus[] = ['WITH_PITAM', 'WITHOUT_PITAM', 'MIX
 
 type MovementType = InternalTransferMovementType | TraderAdjustmentMovementType;
 
-const MOVEMENT_TYPE_ORDER: MovementType[] = [
+const MOVEMENT_TYPE_ORDER: Array<Exclude<MovementType, 'PRIVATE_SELECTION'>> = [
   'OWNERSHIP_TRANSFER',
   'ASSIGNED',
   'INTERNAL_TRANSFER',

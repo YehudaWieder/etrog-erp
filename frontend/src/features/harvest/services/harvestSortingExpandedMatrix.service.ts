@@ -68,7 +68,7 @@ export async function buildSortingDailyExpandedMatrixData({
   fixedHeaders,
   noneLabel,
 }: BuildSortingDailyExpandedMatrixDataParams): Promise<SortingExpandedMatrixData> {
-  const fixedGrades = [...HARVEST_GRADE_OPTIONS];
+  const fixedGrades = [...HARVEST_GRADE_OPTIONS] as string[];
   const pitamGroups = [
     { key: 'WITH_PITAM', label: t.withPitam },
     { key: 'WITHOUT_PITAM', label: t.withoutPitam },
