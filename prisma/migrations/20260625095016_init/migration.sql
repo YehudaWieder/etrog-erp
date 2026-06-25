@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('OWNER', 'MANAGER', 'WORKER');
+CREATE TYPE "Role" AS ENUM ('OWNER', 'MANAGER', 'EDITOR', 'WORKER');
 
 -- CreateEnum
 CREATE TYPE "PitamStatus" AS ENUM ('WITH_PITAM', 'WITHOUT_PITAM', 'MIXED');
@@ -17,22 +17,22 @@ CREATE TYPE "SourceType" AS ENUM ('GENERAL', 'TRADER');
 CREATE TYPE "Priority" AS ENUM ('LOW', 'NORMAL', 'HIGH', 'URGENT');
 
 -- CreateEnum
-CREATE TYPE "MovementType" AS ENUM ('HARVEST_IN', 'INTERNAL_TRANSFER', 'OWNERSHIP_TRANSFER', 'ASSIGNED', 'PACKED_SHIPPED', 'SELF_PICKUP', 'WASTE', 'ADJUSTMENT');
+CREATE TYPE "MovementType" AS ENUM ('HARVEST_IN', 'INTERNAL_TRANSFER', 'OWNERSHIP_TRANSFER', 'ASSIGNED', 'PRIVATE_SELECTION', 'PACKED_SHIPPED', 'SELF_PICKUP', 'WASTE', 'ADJUSTMENT');
 
 -- CreateEnum
 CREATE TYPE "ShipmentStatus" AS ENUM ('PREPARING', 'SHIPPED', 'DELIVERED', 'CANCELLED');
 
 -- CreateEnum
-CREATE TYPE "BoxStatus" AS ENUM ('OPEN', 'CLOSED', 'SHIPPED');
+CREATE TYPE "BoxStatus" AS ENUM ('OPEN', 'CLOSED', 'SHIPPED', 'DELIVERED');
 
 -- CreateEnum
 CREATE TYPE "BoxType" AS ENUM ('SMALL', 'MEDIUM', 'LARGE', 'CUSTOM');
 
 -- CreateEnum
-CREATE TYPE "BoxOwnership" AS ENUM ('TRADER', 'CUSTOMER', 'SHARED', 'UNASSIGNED', 'CUSTOM');
+CREATE TYPE "BoxOwnership" AS ENUM ('TRADER', 'CUSTOMER', 'SHARED', 'GENERAL', 'CUSTOM');
 
 -- CreateEnum
-CREATE TYPE "ItemOwnership" AS ENUM ('TRADER', 'CUSTOMER', 'UNASSIGNED', 'CUSTOM');
+CREATE TYPE "ItemOwnership" AS ENUM ('TRADER', 'CUSTOMER', 'GENERAL', 'CUSTOM');
 
 -- CreateEnum
 CREATE TYPE "Currency" AS ENUM ('ILS', 'USD', 'EUR');
@@ -43,6 +43,9 @@ CREATE TABLE "SystemConfig" (
     "seasonId" INTEGER NOT NULL,
     "currency" "Currency",
     "unitPrice" DECIMAL(65,30),
+    "smallBoxCapacity" INTEGER NOT NULL DEFAULT 50,
+    "mediumBoxCapacity" INTEGER NOT NULL DEFAULT 30,
+    "largeBoxCapacity" INTEGER NOT NULL DEFAULT 24,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -239,6 +242,7 @@ CREATE TABLE "TraderStock" (
     "quantity" INTEGER NOT NULL DEFAULT 0,
     "isModulo" BOOLEAN NOT NULL DEFAULT false,
     "type" "MovementType" NOT NULL DEFAULT 'HARVEST_IN',
+    "isFromPrivateSelection" BOOLEAN NOT NULL DEFAULT false,
     "MovementReferenceId" INTEGER,
     "shipmentId" INTEGER,
     "boxId" INTEGER,
@@ -305,7 +309,7 @@ CREATE TABLE "Box" (
     "totalQuantity" INTEGER NOT NULL DEFAULT 0,
     "status" "BoxStatus" NOT NULL DEFAULT 'OPEN',
     "notes" TEXT,
-    "ownershipType" "BoxOwnership" NOT NULL DEFAULT 'UNASSIGNED',
+    "ownershipType" "BoxOwnership" NOT NULL DEFAULT 'GENERAL',
     "traderId" INTEGER,
     "customerId" INTEGER,
     "updatedById" INTEGER NOT NULL,
@@ -328,9 +332,13 @@ CREATE TABLE "ShipmentItem" (
     "pitamStatus" "PitamStatus" NOT NULL,
     "quantity" INTEGER NOT NULL,
     "notes" TEXT,
-    "ownershipType" "ItemOwnership" NOT NULL DEFAULT 'UNASSIGNED',
+    "customLabel" TEXT,
+    "customGrade" TEXT,
+    "ownershipType" "ItemOwnership" NOT NULL DEFAULT 'GENERAL',
+    "generalSourceBreakdown" JSONB,
     "traderId" INTEGER,
     "customerId" INTEGER,
+    "isPrivateSelection" BOOLEAN NOT NULL DEFAULT false,
     "updatedById" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -451,7 +459,7 @@ CREATE INDEX "Classification_seasonId_customerId_idx" ON "Classification"("seaso
 CREATE INDEX "Classification_isDeleted_idx" ON "Classification"("isDeleted");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Classification_fieldHarvestId_traderCategoryId_customerCate_key" ON "Classification"("fieldHarvestId", "traderCategoryId", "customerCategoryId", "grade", "assignmentType");
+CREATE UNIQUE INDEX "Classification_fieldHarvestId_traderId_customerId_traderCat_key" ON "Classification"("fieldHarvestId", "traderId", "customerId", "traderCategoryId", "customerCategoryId", "grade", "assignmentType");
 
 -- CreateIndex
 CREATE INDEX "TraderStock_seasonId_type_idx" ON "TraderStock"("seasonId", "type");
@@ -523,7 +531,7 @@ CREATE INDEX "Box_customerId_status_idx" ON "Box"("customerId", "status");
 CREATE INDEX "Box_isDeleted_idx" ON "Box"("isDeleted");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Box_seasonId_shipmentId_boxNumber_key" ON "Box"("seasonId", "shipmentId", "boxNumber");
+CREATE UNIQUE INDEX "Box_seasonId_boxNumber_key" ON "Box"("seasonId", "boxNumber");
 
 -- CreateIndex
 CREATE INDEX "ShipmentItem_shipmentId_idx" ON "ShipmentItem"("shipmentId");
@@ -550,7 +558,7 @@ CREATE INDEX "ShipmentItem_customerId_shipmentId_idx" ON "ShipmentItem"("custome
 CREATE INDEX "ShipmentItem_isDeleted_idx" ON "ShipmentItem"("isDeleted");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ShipmentItem_seasonId_boxId_traderCategoryId_customerCatego_key" ON "ShipmentItem"("seasonId", "boxId", "traderCategoryId", "customerCategoryId", "grade", "pitamStatus", "ownershipType", "traderId", "customerId");
+CREATE UNIQUE INDEX "ShipmentItem_seasonId_boxId_traderCategoryId_customerCatego_key" ON "ShipmentItem"("seasonId", "boxId", "traderCategoryId", "customerCategoryId", "grade", "pitamStatus", "ownershipType", "traderId", "customerId", "isPrivateSelection");
 
 -- CreateIndex
 CREATE INDEX "Message_senderId_idx" ON "Message"("senderId");
@@ -623,6 +631,9 @@ ALTER TABLE "TraderStock" ADD CONSTRAINT "TraderStock_traderId_fkey" FOREIGN KEY
 
 -- AddForeignKey
 ALTER TABLE "TraderStock" ADD CONSTRAINT "TraderStock_traderCategoryId_fkey" FOREIGN KEY ("traderCategoryId") REFERENCES "TradersCategories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TraderStock" ADD CONSTRAINT "TraderStock_boxId_fkey" FOREIGN KEY ("boxId") REFERENCES "Box"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TraderStock" ADD CONSTRAINT "TraderStock_updatedById_fkey" FOREIGN KEY ("updatedById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
