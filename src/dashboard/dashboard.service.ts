@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { MovementType, ShipmentStatus } from 'src/generated/prisma';
+import { MovementType, ShipmentStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 type DailyDataPoint = { label: string; value: number };
