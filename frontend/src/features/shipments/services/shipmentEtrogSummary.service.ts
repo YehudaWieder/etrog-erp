@@ -55,9 +55,12 @@ export function buildShipmentEtrogSummary(
       targetRow = traderCategoryRowsMap.get(item.traderCategoryId)!;
     } else if (item.customerCategoryId !== null) {
       if (!customerCategoryRowsMap.has(item.customerCategoryId)) {
+        const customerName = item.customer?.customerName;
+        const categoryName = item.customerCategory?.name ?? '';
+        const label = customerName ? `${customerName} | ${categoryName}` : categoryName;
         customerCategoryRowsMap.set(
           item.customerCategoryId,
-          emptyRow(`customer-category-${item.customerCategoryId}`, item.customerCategory?.name ?? ''),
+          emptyRow(`customer-category-${item.customerCategoryId}`, label),
         );
       }
       targetRow = customerCategoryRowsMap.get(item.customerCategoryId)!;

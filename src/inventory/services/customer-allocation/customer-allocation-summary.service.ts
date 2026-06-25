@@ -39,7 +39,7 @@ export class CustomerAllocationSummaryService {
       shipmentScope as InventoryMovementScope,
     );
 
-    const rows = await this.repository.groupSummary(where);
+    const rows = await this.repository.groupSummary(where, shipmentScope as InventoryMovementScope);
 
     const filteredRows = rows.filter((row) => (row._sum.quantity ?? 0) !== 0);
     const customerIds = [...new Set(filteredRows.map((row) => row.customerId))];

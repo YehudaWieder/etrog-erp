@@ -8,8 +8,8 @@ export class TraderStockSummaryRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   groupSummary(where: Prisma.TraderStockWhereInput, shipmentScope?: InventoryMovementScope) {
-    // PACKED_SHIPPED and UNSHIPPED need box-status awareness; all other scopes use a simple groupBy.
-    if (shipmentScope === 'PACKED_SHIPPED' || shipmentScope === 'UNSHIPPED') {
+    // PACKED_SHIPPED, SHIPPED, and UNSHIPPED need box-status awareness; all other scopes use a simple groupBy.
+    if (shipmentScope === 'PACKED_SHIPPED' || shipmentScope === 'SHIPPED' || shipmentScope === 'UNSHIPPED') {
       return this.groupSummaryWithBoxStatus(where, shipmentScope);
     }
 

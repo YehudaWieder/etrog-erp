@@ -36,7 +36,7 @@ export function buildShipmentItemsDetailRows(
       ?? item.customLabel
       ?? labels.uncategorized;
 
-    const grade = item.customGrade ?? item.grade ?? labels.noGrade;
+    const grade = item.customGrade ?? item.grade ?? item.customerCategory?.grade ?? labels.noGrade;
 
     const stockSource = item.ownershipType === 'TRADER'
       ? (item.isPrivateSelection ? labels.stockSourceLabels.PRIVATE_SELECTION : labels.stockSourceLabels.GENERAL)
@@ -75,7 +75,7 @@ export function buildBoxItemsDetailRows(
       ?? item.customLabel
       ?? labels.uncategorized;
 
-    const grade = item.customGrade ?? item.grade ?? labels.noGrade;
+    const grade = item.customGrade ?? item.grade ?? item.customerCategory?.grade ?? labels.noGrade;
 
     const stockSource = item.ownershipType === 'TRADER'
       ? (item.isPrivateSelection ? labels.stockSourceLabels.PRIVATE_SELECTION : labels.stockSourceLabels.GENERAL)
