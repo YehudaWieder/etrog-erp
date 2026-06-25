@@ -47,8 +47,8 @@ export type HarvestFieldReportDetailsPanelLabels = {
 export function HarvestFieldReportDetailsPanel({ data, locale, labels }: HarvestFieldReportDetailsPanelProps): JSX.Element {
   return (
     <div style={{ display: 'grid', gap: 14 }}>
-      <div className={styles.sheetCard}>
-        <div className={styles.sheetHead}>
+      <div className={`${styles.sheetCard} harvest-daily-workspace__sheet-card`}>
+        <div className={`${styles.sheetHead} harvest-daily-workspace__sheet-head`}>
           <p>
             <strong>{labels.season}:</strong> {data.seasonName}
           </p>
@@ -60,10 +60,10 @@ export function HarvestFieldReportDetailsPanel({ data, locale, labels }: Harvest
           </p>
         </div>
 
-        <div className={styles.sheetStatus}>{data.summaryStatus}</div>
+        <div className={`${styles.sheetStatus} harvest-daily-workspace__sheet-status`}>{data.summaryStatus}</div>
 
         <div className={styles.sheetTableWrap}>
-          <table className={styles.sheetTable}>
+          <table className={`${styles.sheetTable} harvest-daily-workspace__sheet-table`}>
             <thead>
               <tr>
                 <th scope="col" aria-label={labels.rowType} />
@@ -76,7 +76,7 @@ export function HarvestFieldReportDetailsPanel({ data, locale, labels }: Harvest
             </thead>
             <tbody>
               {data.summaryRows.map((row) => (
-                <tr key={row.key} className={row.kind === 'summary' ? styles.sheetRowSummary : undefined}>
+                <tr key={row.key} className={row.kind === 'summary' ? `${styles.sheetRowSummary} harvest-daily-workspace__sheet-row--summary` : undefined}>
                   <td>{row.label}</td>
                   <td>{row.totalHarvested}</td>
                   <td>{row.totalRejected}</td>
@@ -90,14 +90,14 @@ export function HarvestFieldReportDetailsPanel({ data, locale, labels }: Harvest
         </div>
       </div>
 
-      <div className={styles.relatedSortingsCard}>
-        <h4 className={styles.relatedSortingsTitle}>{labels.rowsTitle}</h4>
+      <div className={`${styles.relatedSortingsCard} harvest-daily-workspace__related-sortings-card`}>
+        <h4 className={`${styles.relatedSortingsTitle} harvest-daily-workspace__related-sortings-title`}>{labels.rowsTitle}</h4>
 
         {data.rows.length === 0 ? (
           <p className={styles.relatedSortingsState}>{labels.emptyRows}</p>
         ) : (
-          <div className={styles.relatedSortingsTableWrap}>
-            <table className={styles.relatedSortingsTable}>
+          <div className={`${styles.relatedSortingsTableWrap} harvest-daily-workspace__related-sortings-table-wrap`}>
+            <table className={`${styles.relatedSortingsTable} harvest-daily-workspace__related-sortings-table`}>
               <thead>
                 <tr>
                   <th>{labels.dateGregorian}</th>
@@ -128,12 +128,12 @@ export function HarvestFieldReportDetailsPanel({ data, locale, labels }: Harvest
                       <td>
                         {note ? (
                           <span
-                            className={`${styles.relatedSortingNote}${rowIndex === 0 ? ` ${styles.relatedSortingNoteFirstRow}` : ''}`}
+                            className={`${styles.relatedSortingNote} harvest-daily-workspace__related-sorting-note${rowIndex === 0 ? ` ${styles.relatedSortingNoteFirstRow}` : ''}`}
                             tabIndex={0}
                             aria-label={note}
                           >
-                            <span className={styles.relatedSortingNoteBubble} aria-hidden="true" />
-                            <span className={styles.relatedSortingNoteTooltip}>{note}</span>
+                            <span className={`${styles.relatedSortingNoteBubble} harvest-daily-workspace__related-sorting-note-bubble`} aria-hidden="true" />
+                            <span className={`${styles.relatedSortingNoteTooltip} harvest-daily-workspace__related-sorting-note-tooltip`}>{note}</span>
                           </span>
                         ) : null}
                       </td>

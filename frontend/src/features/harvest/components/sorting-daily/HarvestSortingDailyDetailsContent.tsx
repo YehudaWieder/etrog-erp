@@ -61,8 +61,8 @@ export function HarvestSortingDailyDetailsContent({
 }: HarvestSortingDailyDetailsContentProps): JSX.Element {
   return (
     <>
-      <div className={styles.sheetCard}>
-        <div className={styles.sheetHead}>
+      <div className={`${styles.sheetCard} harvest-daily-workspace__sheet-card`}>
+        <div className={`${styles.sheetHead} harvest-daily-workspace__sheet-head`}>
           <p>
             <strong>{labels.dateGregorian}:</strong> {formatGregorianDate(data.row.dateGregorian)}
           </p>
@@ -75,7 +75,7 @@ export function HarvestSortingDailyDetailsContent({
         </div>
 
         <div className={styles.sheetTableWrap}>
-          <table className={styles.sheetTable} style={{ marginTop: 18 }}>
+          <table className={`${styles.sheetTable} harvest-daily-workspace__sheet-table`} style={{ marginTop: 18 }}>
             <thead>
               <tr>
                 <th>{t.sortingDailyDetails.table.category}</th>
@@ -96,7 +96,7 @@ export function HarvestSortingDailyDetailsContent({
                 ))
               )}
 
-              <tr className={styles.sheetRowSummary}>
+              <tr className={`${styles.sheetRowSummary} harvest-daily-workspace__sheet-row--summary`}>
                 <td>{t.sortingDailyDetails.table.dailyTotal}</td>
                 <td>{numberFormatter.format(data.rowDailyTotal)}</td>
               </tr>
@@ -122,10 +122,10 @@ export function HarvestSortingDailyDetailsContent({
           categoryBreakdown.map((category) => (
             <div
               key={`sorting-details-breakdown-${data.row.harvestId}-${category.label}`}
-              className={`${styles.sheetCard} ${styles.sheetCardBorderless} ${styles.sheetCardCategoryBreakdown}`}
+              className={`${styles.sheetCard} ${styles.sheetCardBorderless} ${styles.sheetCardCategoryBreakdown} harvest-daily-workspace__sheet-card harvest-daily-workspace__sheet-card--borderless harvest-daily-workspace__sheet-card--category-breakdown`}
               style={{ marginTop: 14 }}
             >
-              <h4 className={styles.relatedSortingsTitle} style={{ marginTop: 0 }}>
+              <h4 className={`${styles.relatedSortingsTitle} harvest-daily-workspace__related-sortings-title`} style={{ marginTop: 0 }}>
                 {category.label}
                 <span style={{ marginInlineStart: 8 }}>
                   ({numberFormatter.format(category.total)})
@@ -133,7 +133,7 @@ export function HarvestSortingDailyDetailsContent({
               </h4>
 
               <div className={styles.sheetTableWrap}>
-                <table className={styles.sheetTable} style={{ marginTop: 12 }}>
+                <table className={`${styles.sheetTable} harvest-daily-workspace__sheet-table`} style={{ marginTop: 12 }}>
                   <thead>
                     <tr>
                       <th>{t.sortingDailyDetails.table.grade}</th>
@@ -164,7 +164,7 @@ export function HarvestSortingDailyDetailsContent({
                       ))
                     )}
 
-                    <tr className={styles.sheetRowSummary}>
+                    <tr className={`${styles.sheetRowSummary} harvest-daily-workspace__sheet-row--summary`}>
                       <td>{t.sortingDailyDetails.table.total}</td>
                       {category.pitamHeaders.map((header) => (
                         <td key={`sorting-details-summary-${category.label}-${header.key}`}>

@@ -53,8 +53,7 @@ export function openPrintableWindow({
           .harvest-print__content {
             max-width: 1180px;
             margin: 0 auto;
-            display: grid;
-            gap: 14px;
+            display: block;
           }
           @page {
             size: A4 landscape;

@@ -1,15 +1,15 @@
 export const SHIPMENT_DETAILS_PRINT_EXTRA_STYLES = `
   .shipment-details-print__content {
-    display: grid;
-    gap: 14px;
+    display: block;
   }
   .shipment-details-print__card {
     border: 1px solid #d6e0d8;
     border-radius: 14px;
     background: #fff;
     padding: 12px;
-    display: grid;
-    gap: 12px;
+    margin-bottom: 14px;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
   .shipment-details-print__card-head {
     display: flex;
@@ -20,6 +20,7 @@ export const SHIPMENT_DETAILS_PRINT_EXTRA_STYLES = `
     text-align: left;
     color: #243f2b;
     font-weight: 600;
+    margin-bottom: 12px;
   }
   .shipment-details-print__card-head p {
     margin: 0;
@@ -40,12 +41,12 @@ export const SHIPMENT_DETAILS_PRINT_EXTRA_STYLES = `
     padding-top: 8px;
   }
   .shipment-details-print__title {
-    margin: 0;
+    margin: 0 0 12px;
     color: #214f2a;
     font-size: 15px;
   }
   .shipment-details-print__table-wrap {
-    overflow-x: auto;
+    overflow: visible;
   }
   .shipment-details-print__table {
     width: 100%;
@@ -60,6 +61,8 @@ export const SHIPMENT_DETAILS_PRINT_EXTRA_STYLES = `
     text-align: center;
     line-height: 1.15;
     vertical-align: middle;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
   .shipment-details-print__table th {
     background: #f1f7f3;
@@ -69,6 +72,10 @@ export const SHIPMENT_DETAILS_PRINT_EXTRA_STYLES = `
   }
   .shipment-details-print__table tbody tr:nth-child(even) {
     background: #f8fcf9;
+  }
+  .shipment-details-print__table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
   .shipment-details-print__row-label {
     font-weight: 700;

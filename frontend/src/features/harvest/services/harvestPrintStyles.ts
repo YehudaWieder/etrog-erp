@@ -44,16 +44,18 @@ export const HARVEST_DETAILS_PRINT_EXTRA_STYLES = `
   .harvest-daily-workspace__print-content {
     max-width: 1180px;
     margin: 0 auto;
-    display: grid;
-    gap: 14px;
+    display: block;
   }
   .harvest-daily-workspace__sheet-card {
     border: 1px solid #cfdcd2;
     border-radius: 12px;
     background: #fff;
     padding: 12px;
+    margin-bottom: 14px;
     display: grid;
     gap: 12px;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
   .harvest-daily-workspace__sheet-head {
     display: flex;
@@ -314,16 +316,18 @@ export const HARVEST_SORTING_DAILY_DETAILS_PRINT_EXTRA_STYLES = `
   .harvest-daily-workspace__print-content {
     max-width: 1180px;
     margin: 0 auto;
-    display: grid;
-    gap: 14px;
+    display: block;
   }
   .harvest-daily-workspace__sheet-card {
     border: 1px solid #cfdcd2;
     border-radius: 12px;
     background: #fff;
     padding: 12px;
+    margin-bottom: 14px;
     display: grid;
     gap: 12px;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
   .harvest-daily-workspace__sheet-card--borderless {
     border: 0;
