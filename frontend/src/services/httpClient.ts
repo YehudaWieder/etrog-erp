@@ -92,7 +92,9 @@ export async function apiClient<T>(path: string, init: ApiClientInit = {}): Prom
   }
 
   if (!response.ok) {
-    if (response.status === 401 && requestHadAuthToken) {
+    const isSessionExpiry = response.status === 401 && requestHadAuthToken;
+
+    if (isSessionExpiry) {
       clearAuthSession();
       signalSessionExpired();
     }
@@ -103,7 +105,7 @@ export async function apiClient<T>(path: string, init: ApiClientInit = {}): Prom
         : undefined;
     const serverMessage = Array.isArray(rawMessage) ? rawMessage.join(', ') : rawMessage;
 
-    const safeMessage = buildSafeErrorMessage(response.status, serverMessage, errorMessage);
+    const safeMessage = buildSafeErrorMessage(response.status, serverMessage, errorMessage, isSessionExpiry);
 
     if (!suppressGlobalFeedback) {
       dispatchApiFeedback({

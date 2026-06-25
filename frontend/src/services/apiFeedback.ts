@@ -135,7 +135,7 @@ export function buildSuccessMessage(method: string, path: string): string {
   return 'הפעולה הושלמה בהצלחה.';
 }
 
-export function buildSafeErrorMessage(status: number, serverMessage?: string, explicitMessage?: string): string {
+export function buildSafeErrorMessage(status: number, serverMessage?: string, explicitMessage?: string, isSessionExpiry?: boolean): string {
   if (explicitMessage && explicitMessage.trim()) {
     return explicitMessage;
   }
@@ -147,7 +147,12 @@ export function buildSafeErrorMessage(status: number, serverMessage?: string, ex
   }
 
   if (status === 401) {
-    return getCurrentLanguage() === 'en' ? 'Your session expired. Please sign in again.' : 'פג תוקף ההתחברות. התחבר מחדש כדי להמשיך.';
+    if (isSessionExpiry) {
+      return getCurrentLanguage() === 'en' ? 'Your session expired. Please sign in again.' : 'פג תוקף ההתחברות. התחבר מחדש כדי להמשיך.';
+    }
+    const lang = getCurrentLanguage();
+    const translatedServerMessage = serverMessage ? translateApiErrorMessage(serverMessage, lang) : undefined;
+    return translatedServerMessage || (lang === 'en' ? 'Invalid email or password.' : 'האימייל או הסיסמה שגויים.');
   }
 
   if (status === 403) {
