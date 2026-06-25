@@ -14,6 +14,7 @@ export const AUTH_I18N_HE: AuthI18n = {
   loginSubmit: 'התחברות',
   loginConnecting: 'מתחבר...',
   loginFailed: 'ההתחברות נכשלה',
+  loginInvalidCredentials: 'האימייל או הסיסמה שגויים.',
   loginFooterText: 'אין לך חשבון?',
   loginFooterLinkLabel: 'הרשם כאן',
   registerTitle: 'הרשמה',

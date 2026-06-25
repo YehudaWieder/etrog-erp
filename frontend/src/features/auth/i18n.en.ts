@@ -14,6 +14,7 @@ export const AUTH_I18N_EN: AuthI18n = {
   loginSubmit: 'Login',
   loginConnecting: 'Connecting...',
   loginFailed: 'Login failed',
+  loginInvalidCredentials: 'Invalid email or password.',
   loginFooterText: "Don't have an account?",
   loginFooterLinkLabel: 'Register here',
   registerTitle: 'Register',

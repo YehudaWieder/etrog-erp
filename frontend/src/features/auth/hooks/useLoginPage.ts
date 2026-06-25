@@ -65,7 +65,9 @@ export function useLoginPage() {
       await login({ email: formData.email, password: formData.password });
       navigate('/home');
     } catch (submitError) {
-      if (submitError instanceof ApiError && submitError.status === 404) {
+      if (submitError instanceof ApiError && submitError.status === 401) {
+        setError(a.loginInvalidCredentials);
+      } else if (submitError instanceof ApiError && submitError.status === 404) {
         setError(authMessages.notFound);
       } else if (submitError instanceof Error && submitError.message === 'Failed to fetch') {
         setError(authMessages.networkError);

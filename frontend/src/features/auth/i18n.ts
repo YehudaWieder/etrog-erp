@@ -17,6 +17,7 @@ export type AuthI18n = {
   loginSubmit: string;
   loginConnecting: string;
   loginFailed: string;
+  loginInvalidCredentials: string;
   loginFooterText: string;
   loginFooterLinkLabel: string;
 

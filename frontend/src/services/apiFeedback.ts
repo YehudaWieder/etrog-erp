@@ -150,9 +150,7 @@ export function buildSafeErrorMessage(status: number, serverMessage?: string, ex
     if (isSessionExpiry) {
       return getCurrentLanguage() === 'en' ? 'Your session expired. Please sign in again.' : 'פג תוקף ההתחברות. התחבר מחדש כדי להמשיך.';
     }
-    const lang = getCurrentLanguage();
-    const translatedServerMessage = serverMessage ? translateApiErrorMessage(serverMessage, lang) : undefined;
-    return translatedServerMessage || (lang === 'en' ? 'Invalid email or password.' : 'האימייל או הסיסמה שגויים.');
+    return getCurrentLanguage() === 'en' ? 'Operation failed. Please try again.' : 'הפעולה נכשלה. נסה שוב.';
   }
 
   if (status === 403) {
