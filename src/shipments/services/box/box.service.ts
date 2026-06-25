@@ -4,6 +4,7 @@ import { Injectable, NotFoundException, ConflictException, BadRequestException }
 import { PrismaService } from '../../../prisma/prisma.service';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { ShipmentsService } from '../../shipments.service';
+import { BoxStatus } from '@prisma/client';
 import {
   CreateBoxInput,
   UpdateBoxInput,
@@ -111,25 +112,58 @@ export class BoxService {
     return this.prisma.$transaction(async (tx) => {
       const current = await tx.box.findFirst({
         where: { id, isDeleted: false },
-        select: { id: true, shipmentId: true, seasonId: true, boxNumber: true, ownershipType: true, traderId: true, customerId: true },
+        select: { id: true, shipmentId: true, seasonId: true, boxNumber: true, ownershipType: true, traderId: true, customerId: true, status: true, totalQuantity: true, boxType: true },
       });
 
       if (!current) {
         throw new NotFoundException(`Box #${id} not found`);
       }
 
-      if (data.status !== undefined) {
-        const shipment = await tx.shipment.findUnique({
-          where: { id: current.shipmentId },
-          select: { status: true },
-        });
+      if (data.boxType !== undefined && data.boxType !== current.boxType && data.boxType !== 'CUSTOM') {
+        const systemConfig = await tx.systemConfig.findFirst({ where: { seasonId: current.seasonId } });
+        const capacityMap: Record<string, number | null | undefined> = {
+          SMALL: systemConfig?.smallBoxCapacity,
+          MEDIUM: systemConfig?.mediumBoxCapacity,
+          LARGE: systemConfig?.largeBoxCapacity,
+        };
+        const capacity = capacityMap[data.boxType];
+        if (capacity != null && current.totalQuantity > capacity) {
+          throw new BadRequestException(
+            `Cannot change box type to ${data.boxType}: current quantity (${current.totalQuantity}) exceeds capacity (${capacity}).`,
+          );
+        }
+      }
 
-        if (shipment?.status === 'DELIVERED' && data.status !== 'SHIPPED' && data.status !== 'DELIVERED') {
-          throw new BadRequestException('When the shipment is delivered, box status can only be changed between SHIPPED and DELIVERED');
+      const targetShipmentId = data.shipmentId ?? current.shipmentId;
+      const isChangingShipment = data.shipmentId !== undefined && data.shipmentId !== current.shipmentId;
+
+      let derivedStatus: BoxStatus | undefined;
+
+      if (isChangingShipment) {
+        const newShipment = await tx.shipment.findFirst({
+          where: { id: data.shipmentId, seasonId: current.seasonId, isDeleted: false },
+          select: { id: true, status: true },
+        });
+        if (!newShipment) {
+          throw new NotFoundException(`Shipment ${data.shipmentId} not found in current season`);
         }
 
-        if (shipment?.status === 'SHIPPED' && data.status !== 'DELIVERED') {
-          throw new BadRequestException('Cannot change box status when the shipment has already been shipped');
+        if (newShipment.status === 'SHIPPED') {
+          derivedStatus = 'SHIPPED';
+        } else if (newShipment.status === 'DELIVERED') {
+          derivedStatus = 'DELIVERED';
+        } else {
+          const itemCount = await tx.shipmentItem.count({ where: { boxId: id, shipmentId: data.shipmentId, isDeleted: false } });
+          derivedStatus = itemCount > 0 ? 'CLOSED' : 'OPEN';
+        }
+      } else if (data.status !== undefined) {
+        const currentIsShipped = current.status === 'SHIPPED' || current.status === 'DELIVERED';
+        const newIsShipped = data.status === 'SHIPPED' || data.status === 'DELIVERED';
+
+        if (currentIsShipped !== newIsShipped) {
+          throw new BadRequestException(
+            'Box status can only be changed between OPEN and CLOSED, or between SHIPPED and DELIVERED. Shipped and delivered statuses are set automatically via shipment status changes.',
+          );
         }
       }
 
@@ -147,18 +181,6 @@ export class BoxService {
         }
       }
 
-      const targetShipmentId = data.shipmentId ?? current.shipmentId;
-
-      if (data.shipmentId !== undefined && data.shipmentId !== current.shipmentId) {
-        const newShipment = await tx.shipment.findFirst({
-          where: { id: data.shipmentId, seasonId: current.seasonId, isDeleted: false },
-          select: { id: true },
-        });
-        if (!newShipment) {
-          throw new NotFoundException(`Shipment ${data.shipmentId} not found in current season`);
-        }
-      }
-
       if (data.boxNumber !== undefined && data.boxNumber !== current.boxNumber) {
         const existing = await tx.box.findFirst({
           where: { seasonId: current.seasonId, boxNumber: data.boxNumber, NOT: { id } },
@@ -169,18 +191,30 @@ export class BoxService {
         }
       }
 
+      if (isChangingShipment) {
+        await tx.shipmentItem.updateMany({
+          where: { boxId: id, isDeleted: false },
+          data: { shipmentId: data.shipmentId },
+        });
+        await tx.traderStock.updateMany({
+          where: { boxId: id, isDeleted: false },
+          data: { shipmentId: data.shipmentId },
+        });
+      }
+
       const { shipmentId: _shipmentId, ...restData } = data;
       const updatedBox = await tx.box.update({
         where: { id },
         data: {
           ...restData,
-          ...(data.shipmentId !== undefined ? { shipmentId: data.shipmentId } : {}),
+          ...(isChangingShipment ? { shipmentId: data.shipmentId } : {}),
+          ...(derivedStatus !== undefined ? { status: derivedStatus } : {}),
           updatedById: actorId,
         },
       });
 
       await this.shipmentsService.syncShipmentTotals(tx, targetShipmentId);
-      if (data.shipmentId !== undefined && data.shipmentId !== current.shipmentId) {
+      if (isChangingShipment) {
         await this.shipmentsService.syncShipmentTotals(tx, current.shipmentId);
       }
 

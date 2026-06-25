@@ -174,6 +174,7 @@ export const SHIPMENTS_I18N_EN = {
     validationCustomerRequired: 'Please select a customer',
     duplicateBoxNumber: 'This box number already exists in the active season',
     errorOwnershipLocked: 'Cannot change ownership type or owner while the box has items. Remove all items first.',
+    errorBoxTypeCapacity: (quantity: number, capacity: number) => `Cannot change box type: current quantity (${quantity}) exceeds capacity (${capacity}).`,
     genericError: 'An error occurred while saving. Please try again.',
     statusOptions: {
       OPEN: 'Open',

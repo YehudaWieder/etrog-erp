@@ -177,6 +177,7 @@ export const SHIPMENTS_I18N_HE = {
     validationCustomerRequired: 'יש לבחור לקוח',
     duplicateBoxNumber: 'מספר קרטון זה כבר קיים בעונה הפעילה',
     errorOwnershipLocked: 'לא ניתן לשנות שיוך או בעלות כל עוד יש פריטים בקרטון.',
+    errorBoxTypeCapacity: (quantity: number, capacity: number) => `לא ניתן לשנות סוג קרטון: הכמות הנוכחית (${quantity}) עולה על הקיבולת (${capacity}).`,
     genericError: 'אירעה שגיאה בשמירה. נסה שוב.',
     statusOptions: {
       OPEN: 'פתוח',

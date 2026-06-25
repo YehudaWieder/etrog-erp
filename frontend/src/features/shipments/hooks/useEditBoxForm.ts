@@ -3,6 +3,7 @@ import { ApiError } from '../../../services/apiClient';
 import { getBoxById, updateBox, type BoxStatus } from '../../../services/boxesApi';
 import { getActiveSeason } from '../../../services/seasonsApi';
 import { getShipmentsBySeason, type ShipmentRecord } from '../../../services/shipmentsApi';
+import { getSystemConfig, type SystemConfig } from '../../../services/systemConfigApi';
 import { getShipmentItemsByBox } from '../../../services/shipmentItemsApi';
 import { getTraders, type Trader } from '../../../services/tradersApi';
 import { getCustomers, type Customer } from '../../../services/customersApi';
@@ -15,6 +16,7 @@ type EditBoxFormText = {
   validationCustomerRequired: string;
   duplicateBoxNumber: string;
   errorOwnershipLocked: string;
+  errorBoxTypeCapacity: (quantity: number, capacity: number) => string;
   genericError: string;
 };
 
@@ -33,6 +35,7 @@ type UseEditBoxFormResult = {
   hasItems: boolean;
   isShipmentFrozen: boolean;
   isShipmentShipped: boolean;
+  isChangingShipment: boolean;
   selectedShipmentId: string;
   setSelectedShipmentId: (v: string) => void;
   boxNumber: string;
@@ -62,6 +65,7 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 
+  const [originalShipmentId, setOriginalShipmentId] = useState('');
   const [selectedShipmentId, setSelectedShipmentId] = useState('');
   const [boxNumber, setBoxNumber] = useState('');
   const [status, setStatus] = useState<BoxStatus>('OPEN');
@@ -71,6 +75,8 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
   const [customerId, setCustomerId] = useState('');
   const [notes, setNotes] = useState('');
   const [hasItems, setHasItems] = useState(false);
+  const [systemConfig, setSystemConfig] = useState<SystemConfig | null>(null);
+  const [boxTotalQuantity, setBoxTotalQuantity] = useState(0);
   const [isShipmentFrozen, setIsShipmentFrozen] = useState(false);
   const [isShipmentShipped, setIsShipmentShipped] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -91,12 +97,13 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
     const load = async () => {
       try {
         const activeSeason = await getActiveSeason();
-        const [fullBox, boxItems, nextShipments, nextTraders, nextCustomers] = await Promise.all([
+        const [fullBox, boxItems, nextShipments, nextTraders, nextCustomers, nextSystemConfig] = await Promise.all([
           getBoxById(boxRow.id),
           getShipmentItemsByBox(boxRow.id),
           getShipmentsBySeason(activeSeason.id),
           getTraders(),
           getCustomers(),
+          getSystemConfig(activeSeason.id),
         ]);
 
         if (!isMounted) {
@@ -106,12 +113,15 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
         setShipments(nextShipments);
         setTraders(nextTraders);
         setCustomers(nextCustomers);
+        setSystemConfig(nextSystemConfig);
         setHasItems(boxItems.length > 0);
+        setBoxTotalQuantity(fullBox.totalQuantity);
 
         const boxShipment = nextShipments.find((s) => s.id === fullBox.shipmentId);
         setIsShipmentFrozen(boxShipment?.status === 'DELIVERED');
         setIsShipmentShipped(boxShipment?.status === 'SHIPPED');
 
+        setOriginalShipmentId(String(fullBox.shipmentId));
         setSelectedShipmentId(String(fullBox.shipmentId));
         setBoxNumber(String(fullBox.boxNumber));
         setStatus(fullBox.status);
@@ -172,6 +182,19 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
       return;
     }
 
+    if (boxType && boxType !== 'CUSTOM' && systemConfig) {
+      const capacityMap: Record<string, number | null> = {
+        SMALL: systemConfig.smallBoxCapacity,
+        MEDIUM: systemConfig.mediumBoxCapacity,
+        LARGE: systemConfig.largeBoxCapacity,
+      };
+      const capacity = capacityMap[boxType] ?? null;
+      if (capacity !== null && boxTotalQuantity > capacity) {
+        setError(t.errorBoxTypeCapacity(boxTotalQuantity, capacity));
+        return;
+      }
+    }
+
     setError(null);
     setIsSubmitting(true);
 
@@ -208,7 +231,7 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
     } finally {
       setIsSubmitting(false);
     }
-  }, [boxNumber, boxRow, boxType, customerId, notes, onClose, onSuccess, ownershipType, selectedShipmentId, status, t, traderId]);
+  }, [boxNumber, boxRow, boxType, boxTotalQuantity, customerId, notes, onClose, onSuccess, ownershipType, selectedShipmentId, status, systemConfig, t, traderId]);
 
   return {
     shipments,
@@ -234,6 +257,7 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
     setCustomerId,
     notes,
     setNotes,
+    isChangingShipment: selectedShipmentId !== originalShipmentId,
     isShipped: status === 'SHIPPED' || status === 'CLOSED' || status === 'DELIVERED',
     isSubmitting,
     error,

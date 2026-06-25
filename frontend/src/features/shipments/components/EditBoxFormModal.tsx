@@ -74,6 +74,7 @@ type EditBoxFormModalProps = {
   isShipped: boolean;
   isShipmentFrozen: boolean;
   isShipmentShipped: boolean;
+  isChangingShipment: boolean;
   isSubmitting: boolean;
   error: string | null;
   onSave: () => void;
@@ -113,6 +114,7 @@ export function EditBoxFormModal({
   isShipped,
   isShipmentFrozen,
   isShipmentShipped,
+  isChangingShipment,
   isSubmitting,
   error,
   onSave,
@@ -169,20 +171,22 @@ export function EditBoxFormModal({
             </p>
           ) : null}
 
-          <div className={styles.field}>
-            <label className={styles.label}>{t.statusLabel}</label>
-            <select
-              className="seasons-manager__year-input"
-              value={status}
-              onChange={(e) => onStatusChange(e.target.value as BoxStatus)}
-            >
-              {(isShipmentFrozen || isShipmentShipped ? BOX_STATUSES_SHIPPED_ONLY : BOX_STATUSES).map((s) => (
-                <option key={s} value={s}>
-                  {t.statusOptions[s]}
-                </option>
-              ))}
-            </select>
-          </div>
+          {!isChangingShipment ? (
+            <div className={styles.field}>
+              <label className={styles.label}>{t.statusLabel}</label>
+              <select
+                className="seasons-manager__year-input"
+                value={status}
+                onChange={(e) => onStatusChange(e.target.value as BoxStatus)}
+              >
+                {(status === 'SHIPPED' || status === 'DELIVERED' ? BOX_STATUSES_SHIPPED_ONLY : ['OPEN', 'CLOSED'] as BoxStatus[]).map((s) => (
+                  <option key={s} value={s}>
+                    {t.statusOptions[s]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
 
           {!isShipped ? (
             <>

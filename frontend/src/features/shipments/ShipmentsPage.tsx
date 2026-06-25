@@ -502,6 +502,7 @@ export function ShipmentsPage() {
         isShipped={editBoxForm.isShipped}
         isShipmentFrozen={editBoxForm.isShipmentFrozen}
         isShipmentShipped={editBoxForm.isShipmentShipped}
+        isChangingShipment={editBoxForm.isChangingShipment}
         isSubmitting={editBoxForm.isSubmitting}
         error={editBoxForm.error}
         onSave={editBoxForm.handleSave}
