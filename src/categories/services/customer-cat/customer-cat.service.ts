@@ -285,22 +285,30 @@ export class CustomerCatService {
   }
 
   // Remove a price record
+  // Blocked only if classifications, allocations, or shipment items are linked.
   async remove(id: number) {
-    try {
-      return await this.prisma.customerCategories.delete({
-        where: { id },
-      });
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2003'
-      ) {
-        throw new ConflictException(
-          'Cannot delete customer category because related records exist in the system.',
-        );
-      }
+    const category = await this.prisma.customerCategories.findUnique({
+      where: { id },
+      select: {
+        _count: {
+          select: {
+            classifications: true,
+            customerAllocations: true,
+            shipmentItems: true,
+          },
+        },
+      },
+    });
 
-      throw error;
+    if (!category) throw new NotFoundException('Customer category not found');
+
+    const { classifications, customerAllocations, shipmentItems } = category._count;
+    if (classifications > 0 || customerAllocations > 0 || shipmentItems > 0) {
+      throw new ConflictException(
+        'Cannot delete customer category because classifications, allocations, or shipment items are linked to it.',
+      );
     }
+
+    return this.prisma.customerCategories.delete({ where: { id } });
   }
 }

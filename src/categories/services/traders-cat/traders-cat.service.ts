@@ -156,23 +156,34 @@ export class TradersCatService {
   }
 
   // Remove a category
-  // Prisma will block this if there are classifications or stock linked to it
+  // Blocked only if classifications, stock items, or shipment items are linked.
+  // TraderCategoryShare (trader config) is deleted automatically before removal.
   async remove(id: number) {
-    try {
-      return await this.prisma.tradersCategories.delete({
-        where: { id },
-      });
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2003'
-      ) {
-        throw new ConflictException(
-          'Cannot delete trader category because related records exist in the system.',
-        );
-      }
+    const category = await this.prisma.tradersCategories.findUnique({
+      where: { id },
+      select: {
+        _count: {
+          select: {
+            classifications: true,
+            traderStocks: true,
+            shipmentItems: true,
+          },
+        },
+      },
+    });
 
-      throw error;
+    if (!category) throw new NotFoundException('Category not found');
+
+    const { classifications, traderStocks, shipmentItems } = category._count;
+    if (classifications > 0 || traderStocks > 0 || shipmentItems > 0) {
+      throw new ConflictException(
+        'Cannot delete trader category because classifications, stock items, or shipment items are linked to it.',
+      );
     }
+
+    return this.prisma.$transaction(async (tx) => {
+      await tx.traderCategoryShare.deleteMany({ where: { traderCategoryId: id } });
+      return tx.tradersCategories.delete({ where: { id } });
+    });
   }
 }
