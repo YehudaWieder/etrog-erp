@@ -1,5 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from 'src/generated/prisma';
+﻿import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { HarvestRepository } from 'src/harvest/services/harvest-core/repositories/harvest.repository';
 import { hasExplicitOwnerData } from 'src/harvest/services/harvest-core/utils/owner-fallback.util';
 import { SeasonsService } from 'src/seasons/seasons.service';

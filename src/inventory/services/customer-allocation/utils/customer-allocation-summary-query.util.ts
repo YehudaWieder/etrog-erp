@@ -1,4 +1,4 @@
-import { MovementType, Prisma } from 'src/generated/prisma';
+﻿import { MovementType, Prisma } from '@prisma/client';
 import { CustomerInventorySummaryQuery } from 'src/inventory/services/customer-allocation/dto/customer-inventory-summary.dto';
 import { InventoryMovementScope } from 'src/inventory/services/inventory-core/types/inventory-query.types';
 

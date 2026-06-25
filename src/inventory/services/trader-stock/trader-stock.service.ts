@@ -1,8 +1,8 @@
-// src/inventory/services/trader-stock/trader-stock.service.ts
+﻿// src/inventory/services/trader-stock/trader-stock.service.ts
 
 import { BadRequestException, Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Prisma, MovementType, Grade, PitamStatus } from 'src/generated/prisma';
+import { Prisma, MovementType, Grade, PitamStatus } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { InventoryAvailabilityService } from '../inventory-availability.service';
 import { InventorySummaryQuery } from './dto/inventory-summary.dto';

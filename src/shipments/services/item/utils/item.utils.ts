@@ -1,6 +1,6 @@
-import { BadRequestException } from '@nestjs/common';
+﻿import { BadRequestException } from '@nestjs/common';
 import { ItemOwnership, PitamStatus } from '@prisma/client';
-import { Prisma } from 'src/generated/prisma';
+import { Prisma } from '@prisma/client';
 
 export function assertPositiveInt(value: unknown, fieldName: string): void {
   if (!Number.isInteger(value) || Number(value) <= 0) {

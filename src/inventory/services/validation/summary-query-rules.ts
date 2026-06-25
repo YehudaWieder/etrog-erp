@@ -1,5 +1,5 @@
-import { BadRequestException } from '@nestjs/common';
-import { MovementType } from 'src/generated/prisma';
+﻿import { BadRequestException } from '@nestjs/common';
+import { MovementType } from '@prisma/client';
 import { CombinedInventorySummaryQuery } from 'src/inventory/services/inventory-core/dto/combined-inventory-summary.dto';
 import { CustomerInventoryShipmentScope, CustomerInventorySortBy, CustomerInventorySortOrder } from 'src/inventory/services/customer-allocation/dto/customer-inventory-summary.dto';
 import { InventorySummaryQuery } from 'src/inventory/services/trader-stock/dto/inventory-summary.dto';

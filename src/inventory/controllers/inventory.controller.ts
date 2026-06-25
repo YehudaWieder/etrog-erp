@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, Req } from '@nestjs/common';
+﻿import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, Req } from '@nestjs/common';
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -17,7 +17,7 @@ import {
 	CombinedMovementScope,
 	} from 'src/inventory/services/inventory-core/dto/combined-inventory-summary.dto';
 import { InventoryService } from 'src/inventory/services/inventory.service';
-import { Grade, PitamStatus } from 'src/generated/prisma';
+import { Grade, PitamStatus } from '@prisma/client';
 import { InternalTransferRequestDto } from 'src/inventory/services/inventory-core/dto/internal-transfer.dto';
 import { CustomerGeneralAllocationRequestDto } from 'src/inventory/services/inventory-core/dto/customer-general-allocation.dto';
 import { parseOptionalInt } from 'src/inventory/services/inventory-core/utils/inventory-query-parse.util';

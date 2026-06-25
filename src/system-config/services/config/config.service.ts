@@ -1,8 +1,8 @@
-// src/system-config/services/config/config.service.ts
+﻿// src/system-config/services/config/config.service.ts
 
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Currency, Prisma } from 'src/generated/prisma';
+import { Currency, Prisma } from '@prisma/client';
 import {
   buildSystemConfigWriteData,
   hasCompletePricingDefinition,

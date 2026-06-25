@@ -1,4 +1,4 @@
-// src/inventory/controllers/customer-allocation/customer-allocation.controller.ts
+﻿// src/inventory/controllers/customer-allocation/customer-allocation.controller.ts
 
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseEnumPipe, ParseIntPipe, Query, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
@@ -11,7 +11,7 @@ import {
   CustomerInventoryShipmentScope,
   CustomerInventorySortBy,
   } from '../../services/customer-allocation/dto/customer-inventory-summary.dto';
-import { Prisma, PitamStatus } from 'src/generated/prisma';
+import { Prisma, PitamStatus } from '@prisma/client';
 import { CreateCustomerAllocationDto } from '../../services/customer-allocation/dto/create-customer-allocation.dto';
 import { UpdateCustomerAllocationAdjustmentDto } from '../../services/customer-allocation/dto/update-customer-allocation-adjustment.dto';
 import { buildCustomerAllocationSummaryQuery } from '../../services/customer-allocation/utils/customer-allocation-query-parse.util';

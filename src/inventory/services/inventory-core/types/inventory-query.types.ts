@@ -1,4 +1,4 @@
-import { Grade, PitamStatus } from 'src/generated/prisma';
+﻿import { Grade, PitamStatus } from '@prisma/client';
 
 export type InventoryOwnerScope = 'ALL' | 'TRADER' | 'MODULO';
 export type InventoryMovementScope =

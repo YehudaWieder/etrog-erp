@@ -1,8 +1,8 @@
-// src/harvest/services/workflows/harvest-bulk-workflow.service.ts
+﻿// src/harvest/services/workflows/harvest-bulk-workflow.service.ts
 
 import { Injectable, BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma, AssignmentType, Classification } from 'src/generated/prisma';
+import { Prisma, AssignmentType, Classification } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { calculateHarvestFields } from 'src/harvest/services/harvest-core/utils/harvest-fields.util';
 import {
@@ -22,7 +22,7 @@ import {
 } from 'src/harvest/services/harvest-core/rules/harvest-validation.rules';
 import { HarvestAllocationService } from 'src/harvest/services/workflows/harvest-allocation.service';
 import { InventoryAvailabilityService } from 'src/inventory/services/inventory-availability.service';
-import { Grade, PitamStatus } from 'src/generated/prisma';
+import { Grade, PitamStatus } from '@prisma/client';
 
 @Injectable()
 export class HarvestBulkWorkflowService {

@@ -1,5 +1,5 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { Grade, MovementType, PitamStatus, Prisma, SourceType } from 'src/generated/prisma';
+﻿import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Grade, MovementType, PitamStatus, Prisma, SourceType } from '@prisma/client';
 import {
   InternalTransferRequestDto,
   InventoryOwnerType,

@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma } from 'src/generated/prisma';
+﻿import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { InventoryMovementScope } from 'src/inventory/services/inventory-core/types/inventory-query.types';
 

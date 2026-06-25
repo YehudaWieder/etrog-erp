@@ -1,5 +1,5 @@
-import { BadRequestException } from '@nestjs/common';
-import { Currency, Prisma } from 'src/generated/prisma';
+﻿import { BadRequestException } from '@nestjs/common';
+import { Currency, Prisma } from '@prisma/client';
 
 export type SystemConfigPayload = {
   currency?: Currency;

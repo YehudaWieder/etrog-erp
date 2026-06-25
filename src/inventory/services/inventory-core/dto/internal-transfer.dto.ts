@@ -1,4 +1,4 @@
-import { Grade, MovementType, PitamStatus } from 'src/generated/prisma';
+﻿import { Grade, MovementType, PitamStatus } from '@prisma/client';
 
 export enum InventoryOwnerType {
   TRADER = 'TRADER',

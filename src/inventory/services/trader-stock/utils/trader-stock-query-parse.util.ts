@@ -1,10 +1,10 @@
-import {
+﻿import {
   InventoryOwnerScope,
   InventoryShipmentScope,
   InventorySortBy,
   InventorySummaryQuery,
 } from 'src/inventory/services/trader-stock/dto/inventory-summary.dto';
-import { Grade, PitamStatus } from 'src/generated/prisma';
+import { Grade, PitamStatus } from '@prisma/client';
 import { parseOptionalInt } from 'src/inventory/services/inventory-core/utils/inventory-query-parse.util';
 
 export function buildTraderStockSummaryQuery(input: {

@@ -1,4 +1,4 @@
-import { Prisma } from 'src/generated/prisma';
+﻿import { Prisma } from '@prisma/client';
 
 export type HarvestOwnerFallbackRow = {
   totalHarvested: number;

@@ -1,4 +1,4 @@
-import { AssignmentType, Grade, PitamStatus } from 'src/generated/prisma';
+﻿import { AssignmentType, Grade, PitamStatus } from '@prisma/client';
 
 export class UpdateClassificationDto {
   assignmentType?: AssignmentType;

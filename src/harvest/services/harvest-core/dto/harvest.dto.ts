@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { AssignmentType, Grade, PitamStatus } from 'src/generated/prisma';
+﻿import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { AssignmentType, Grade, PitamStatus } from '@prisma/client';
 
 export class FieldHarvestCreateDto {
   @ApiProperty({ format: 'date-time', example: '2026-10-05T06:00:00.000Z' })

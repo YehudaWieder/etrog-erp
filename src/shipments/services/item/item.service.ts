@@ -1,8 +1,8 @@
-// src/shipments/services/item/item.service.ts
+﻿// src/shipments/services/item/item.service.ts
 
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Prisma } from 'src/generated/prisma';
+import { Prisma } from '@prisma/client';
 import { BoxOwnership, Grade, ItemOwnership, MovementType, PitamStatus, SourceType } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { ShipmentsService } from '../../shipments.service';

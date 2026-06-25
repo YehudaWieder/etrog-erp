@@ -1,8 +1,8 @@
-// src/messages/messages.service.ts
+﻿// src/messages/messages.service.ts
 
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from 'src/generated/prisma';
+import { Prisma } from '@prisma/client';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { SendMessageDto } from './dto/send-message.dto';
 import {

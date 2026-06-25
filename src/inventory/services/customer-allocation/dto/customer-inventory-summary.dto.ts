@@ -1,4 +1,4 @@
-import { PitamStatus } from 'src/generated/prisma';
+﻿import { PitamStatus } from '@prisma/client';
 import {
   InventoryCustomerSortBy,
   InventoryMovementScope,

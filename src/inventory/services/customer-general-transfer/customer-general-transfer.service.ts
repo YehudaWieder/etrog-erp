@@ -1,9 +1,9 @@
-import {
+﻿import {
   BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { MovementType, Prisma, SourceType } from 'src/generated/prisma';
+import { MovementType, Prisma, SourceType } from '@prisma/client';
 import { CustomerGeneralAllocationRequestDto } from 'src/inventory/services/inventory-core/dto/customer-general-allocation.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SeasonsService } from 'src/seasons/seasons.service';

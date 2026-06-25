@@ -1,5 +1,5 @@
-import { BadRequestException } from '@nestjs/common';
-import { MovementType } from 'src/generated/prisma';
+﻿import { BadRequestException } from '@nestjs/common';
+import { MovementType } from '@prisma/client';
 
 export function validateAdjustmentType(type?: MovementType | null): void {
   if (!type) {

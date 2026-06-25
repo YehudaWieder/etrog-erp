@@ -1,9 +1,9 @@
-import {
+﻿import {
   CustomerInventoryShipmentScope,
   CustomerInventorySortBy,
   CustomerInventorySummaryQuery,
 } from 'src/inventory/services/customer-allocation/dto/customer-inventory-summary.dto';
-import { PitamStatus } from 'src/generated/prisma';
+import { PitamStatus } from '@prisma/client';
 import { parseOptionalInt } from 'src/inventory/services/inventory-core/utils/inventory-query-parse.util';
 
 export function buildCustomerAllocationSummaryQuery(input: {

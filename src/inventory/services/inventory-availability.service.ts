@@ -1,5 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { Grade, MovementType, PitamStatus, Prisma } from 'src/generated/prisma';
+﻿import { BadRequestException, Injectable } from '@nestjs/common';
+import { Grade, MovementType, PitamStatus, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 type LedgerClient = Prisma.TransactionClient | PrismaService;

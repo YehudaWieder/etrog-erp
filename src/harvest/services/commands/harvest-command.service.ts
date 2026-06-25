@@ -1,10 +1,10 @@
-import {
+﻿import {
   BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, MovementType } from 'src/generated/prisma';
+import { Prisma, MovementType } from '@prisma/client';
 import { FieldHarvestCreateDto, FieldHarvestUpdateDto } from 'src/harvest/services/harvest-core/dto/harvest.dto';
 import { HarvestRepository } from 'src/harvest/services/harvest-core/repositories/harvest.repository';
 import { AllocationRepository } from 'src/harvest/services/harvest-core/repositories/allocation.repository';

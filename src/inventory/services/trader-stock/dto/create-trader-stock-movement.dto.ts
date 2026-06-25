@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Grade, MovementType, PitamStatus } from 'src/generated/prisma';
+﻿import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Grade, MovementType, PitamStatus } from '@prisma/client';
 
 export class CreateTraderStockMovementDto {
   @ApiProperty({ description: 'Movement date-time.', example: '2026-10-08T08:30:00.000Z' })

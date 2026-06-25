@@ -1,6 +1,6 @@
-import { BadRequestException, ConflictException } from '@nestjs/common';
+﻿import { BadRequestException, ConflictException } from '@nestjs/common';
 import { describe, expect, it } from '@jest/globals';
-import { AssignmentType, Grade, PitamStatus } from 'src/generated/prisma';
+import { AssignmentType, Grade, PitamStatus } from '@prisma/client';
 import {
   assertClassificationsMatchHarvested,
   assertFinalClassificationConsistency,

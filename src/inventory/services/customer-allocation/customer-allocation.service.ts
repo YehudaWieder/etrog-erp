@@ -1,8 +1,8 @@
-// src/inventory/services/customer-allocation/customer-allocation.service.ts
+﻿// src/inventory/services/customer-allocation/customer-allocation.service.ts
 
 import { BadRequestException, Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Prisma, MovementType, PitamStatus } from 'src/generated/prisma';
+import { Prisma, MovementType, PitamStatus } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { InventoryAvailabilityService } from '../inventory-availability.service';
 import { CustomerInventorySummaryQuery } from './dto/customer-inventory-summary.dto';

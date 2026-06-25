@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { Grade, PitamStatus } from 'src/generated/prisma';
+﻿import { Injectable } from '@nestjs/common';
+import { Grade, PitamStatus } from '@prisma/client';
 import { InventoryMovementScope } from 'src/inventory/services/inventory-core/types/inventory-query.types';
 import {
   InventoryOwnerScope,

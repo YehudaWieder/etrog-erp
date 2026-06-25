@@ -1,5 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { AssignmentType, MovementType, Prisma } from 'src/generated/prisma';
+﻿import { BadRequestException, Injectable } from '@nestjs/common';
+import { AssignmentType, MovementType, Prisma } from '@prisma/client';
 import { ClassificationBulkItemDto } from 'src/harvest/services/harvest-core/dto/harvest.dto';
 
 @Injectable()

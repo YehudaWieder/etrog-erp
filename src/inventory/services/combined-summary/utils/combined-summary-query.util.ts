@@ -1,4 +1,4 @@
-import { Prisma } from 'src/generated/prisma';
+﻿import { Prisma } from '@prisma/client';
 import { CombinedInventorySummaryQuery } from 'src/inventory/services/inventory-core/dto/combined-inventory-summary.dto';
 import { buildMovementFilter } from 'src/inventory/services/validation/summary-query-rules';
 import { InventoryMovementScope, InventoryOwnerScope } from 'src/inventory/services/inventory-core/types/inventory-query.types';

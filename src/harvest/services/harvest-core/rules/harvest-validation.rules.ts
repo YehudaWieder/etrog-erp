@@ -1,5 +1,5 @@
-import { BadRequestException, ConflictException } from '@nestjs/common';
-import { AssignmentType } from 'src/generated/prisma';
+﻿import { BadRequestException, ConflictException } from '@nestjs/common';
+import { AssignmentType } from '@prisma/client';
 import {
   ClassificationBulkItemDto,
   HarvestBulkCreateDto,

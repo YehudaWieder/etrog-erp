@@ -1,6 +1,6 @@
-import { BadRequestException } from '@nestjs/common';
+﻿import { BadRequestException } from '@nestjs/common';
 import { Priority } from '@prisma/client';
-import { Prisma } from 'src/generated/prisma';
+import { Prisma } from '@prisma/client';
 import { MessageFilterQueryDto } from '../dto/message-filter-query.dto';
 import { SendMessageDto } from '../dto/send-message.dto';
 

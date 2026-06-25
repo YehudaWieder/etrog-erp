@@ -1,4 +1,4 @@
-import { Grade, PitamStatus } from 'src/generated/prisma';
+﻿import { Grade, PitamStatus } from '@prisma/client';
 
 export class CustomerGeneralAllocationRequestDto {
   id!: number;

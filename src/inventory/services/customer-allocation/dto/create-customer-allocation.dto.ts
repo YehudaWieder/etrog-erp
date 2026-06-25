@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { MovementType, PitamStatus } from 'src/generated/prisma';
+﻿import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { MovementType, PitamStatus } from '@prisma/client';
 
 export class CreateCustomerAllocationDto {
   @ApiProperty({ description: 'Allocation date-time.', example: '2026-10-10T09:00:00.000Z' })
