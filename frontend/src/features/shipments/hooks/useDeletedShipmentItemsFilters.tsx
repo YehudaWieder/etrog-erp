@@ -30,6 +30,7 @@ function mapToRow(item: DeletedShipmentItemRecord, labels: ShipmentItemsTableLab
     id: item.id,
     boxId: item.boxId,
     boxNumber: item.box?.boxNumber ?? 0,
+    boxStatus: 'OPEN',
     shipmentNumber: item.shipment?.shipmentNumber ?? 0,
     category: resolveCategoryLabel(item, labels),
     quantity: item.quantity,

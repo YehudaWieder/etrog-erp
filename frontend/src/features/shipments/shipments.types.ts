@@ -23,6 +23,7 @@ export type ShipmentItemsTableRow = {
   id: number;
   boxId: number;
   boxNumber: number;
+  boxStatus: BoxStatus;
   shipmentNumber: number;
   category: string;
   quantity: number;

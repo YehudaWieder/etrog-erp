@@ -172,7 +172,11 @@ export function ShipmentsPage() {
   const areRowActionsDisabled = useMemo(() => {
     if (isShipmentTableActive) return selectedShipmentRow === null;
     if (isBoxesTableActive) return selectedBoxRow === null;
-    if (isShipmentItemsTableActive || isTrashActive) return selectedItemRow === null;
+    if (isTrashActive) return selectedItemRow === null;
+    if (isShipmentItemsTableActive) {
+      if (selectedItemRow === null) return true;
+      return selectedItemRow.boxStatus === 'SHIPPED' || selectedItemRow.boxStatus === 'DELIVERED';
+    }
     return true;
   }, [isBoxesTableActive, isShipmentItemsTableActive, isTrashActive, isShipmentTableActive, selectedBoxRow, selectedItemRow, selectedShipmentRow]);
 

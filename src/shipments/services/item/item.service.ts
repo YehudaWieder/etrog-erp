@@ -935,6 +935,15 @@ export class ItemService {
         throw new NotFoundException(`Shipment item #${id} not found`);
       }
 
+      const currentBox = await tx.box.findUnique({
+        where: { id: currentItem.boxId },
+        select: { status: true },
+      });
+
+      if (currentBox && (currentBox.status === 'SHIPPED' || currentBox.status === 'DELIVERED')) {
+        throw new BadRequestException('לא ניתן לערוך פריט שנמצא בקרטון שנשלח או נמסר');
+      }
+
       const nextBoxId = Number(updatePayload.boxId ?? currentItem.boxId);
       const nextQuantity = Number(updatePayload.quantity ?? currentItem.quantity);
       const nextPitamStatus = (updatePayload.pitamStatus ?? currentItem.pitamStatus) as PitamStatus;
@@ -1224,7 +1233,7 @@ export class ItemService {
       });
 
       if (box && (box.status === 'SHIPPED' || box.status === 'DELIVERED')) {
-        throw new BadRequestException('Cannot delete item from a shipped or delivered box');
+        throw new BadRequestException('לא ניתן למחוק פריט שנמצא בקרטון שנשלח או נמסר');
       }
 
       await this.deletePackedMovementsByItemId(tx, id);

@@ -82,6 +82,7 @@ export function useShipmentItemsTable(
                   id: item.id,
                   boxId: box.id,
                   boxNumber: box.boxNumber,
+                  boxStatus: box.status,
                   shipmentNumber: shipment.shipmentNumber,
                   category: resolveCategoryLabel(item, labels),
                   quantity: item.quantity,
