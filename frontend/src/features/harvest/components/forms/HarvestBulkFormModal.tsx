@@ -337,126 +337,153 @@ export function HarvestBulkFormModal({
                 </div>
 
                 <div className={`management-form-grid ${styles.grid} ${styles.classificationGrid}`}>
-                  <select
-                    className="seasons-manager__year-input"
-                    value={draft.assignmentType}
-                    onChange={(event) =>
-                      onUpdateClassificationDraft(draft.id, {
-                        assignmentType: event.target.value as HarvestFormClassificationDraft['assignmentType'],
-                      })
-                    }
-                  >
-                    <option value="GENERAL">{form.assignmentOptions.general}</option>
-                    <option value="TRADER">{form.assignmentOptions.trader}</option>
-                    <option value="CUSTOMER">{form.assignmentOptions.customer}</option>
-                  </select>
-
-                  {draft.assignmentType === 'TRADER' ? (
+                  <label className={styles.summaryField}>
+                    <span>{form.assignmentTypeLabel}</span>
                     <select
                       className="seasons-manager__year-input"
-                      value={draft.traderId}
-                      onChange={(event) => onUpdateClassificationDraft(draft.id, { traderId: event.target.value })}
+                      value={draft.assignmentType}
+                      onChange={(event) =>
+                        onUpdateClassificationDraft(draft.id, {
+                          assignmentType: event.target.value as HarvestFormClassificationDraft['assignmentType'],
+                        })
+                      }
                     >
-                      <option value="">{form.traderPlaceholder}</option>
-                      {[...traders]
-                        .sort((left, right) => left.name.localeCompare(right.name))
-                        .map((trader) => (
-                        <option key={`harvest-form-trader-${trader.id}`} value={String(trader.id)}>
-                          {trader.name}
-                        </option>
-                      ))}
+                      <option value="GENERAL">{form.assignmentOptions.general}</option>
+                      <option value="TRADER">{form.assignmentOptions.trader}</option>
+                      <option value="CUSTOMER">{form.assignmentOptions.customer}</option>
                     </select>
+                  </label>
+
+                  {draft.assignmentType === 'TRADER' ? (
+                    <label className={styles.summaryField}>
+                      <span>{form.traderLabel}</span>
+                      <select
+                        className="seasons-manager__year-input"
+                        value={draft.traderId}
+                        onChange={(event) => onUpdateClassificationDraft(draft.id, { traderId: event.target.value })}
+                      >
+                        <option value="">{form.traderPlaceholder}</option>
+                        {[...traders]
+                          .sort((left, right) => left.name.localeCompare(right.name))
+                          .map((trader) => (
+                          <option key={`harvest-form-trader-${trader.id}`} value={String(trader.id)}>
+                            {trader.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                   ) : null}
 
                   {draft.assignmentType === 'GENERAL' || draft.assignmentType === 'TRADER' ? (
-                    <select
-                      className="seasons-manager__year-input"
-                      value={draft.traderCategoryId}
-                      onChange={(event) => onUpdateClassificationDraft(draft.id, { traderCategoryId: event.target.value })}
-                    >
-                      <option value="">{form.traderCategoryPlaceholder}</option>
-                      {harvestFormTraderCategories.map((category) => (
-                        <option key={`harvest-form-trader-category-${category.id}`} value={String(category.id)}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
+                    <label className={styles.summaryField}>
+                      <span>{form.traderCategoryLabel}</span>
+                      <select
+                        className="seasons-manager__year-input"
+                        value={draft.traderCategoryId}
+                        onChange={(event) => onUpdateClassificationDraft(draft.id, { traderCategoryId: event.target.value })}
+                      >
+                        <option value="">{form.traderCategoryPlaceholder}</option>
+                        {harvestFormTraderCategories.map((category) => (
+                          <option key={`harvest-form-trader-category-${category.id}`} value={String(category.id)}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                   ) : null}
 
                   {draft.assignmentType === 'CUSTOMER' ? (
                     <>
-                      <select
-                        className="seasons-manager__year-input"
-                        value={draft.customerId}
-                        onChange={(event) => onUpdateClassificationDraft(draft.id, { customerId: event.target.value })}
-                      >
-                        <option value="">{form.customerPlaceholder}</option>
-                        {customers.map((customer) => (
-                          <option key={`harvest-form-customer-${customer.id}`} value={String(customer.id)}>
-                            {customer.customerName}
-                          </option>
-                        ))}
-                      </select>
+                      <label className={styles.summaryField}>
+                        <span>{form.customerLabel}</span>
+                        <select
+                          className="seasons-manager__year-input"
+                          value={draft.customerId}
+                          onChange={(event) => onUpdateClassificationDraft(draft.id, { customerId: event.target.value })}
+                        >
+                          <option value="">{form.customerPlaceholder}</option>
+                          {customers.map((customer) => (
+                            <option key={`harvest-form-customer-${customer.id}`} value={String(customer.id)}>
+                              {customer.customerName}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
 
-                      <select
-                        className="seasons-manager__year-input"
-                        value={draft.customerCategoryId}
-                        onChange={(event) => onUpdateClassificationDraft(draft.id, { customerCategoryId: event.target.value })}
-                        disabled={!draft.customerId}
-                      >
-                        <option value="">{form.customerCategoryPlaceholder}</option>
-                        {availableCustomerCategories.map((category) => (
-                          <option key={`harvest-form-customer-category-${category.id}`} value={String(category.id)}>
-                            {`${category.name} (${category.grade})`}
-                          </option>
-                        ))}
-                      </select>
+                      <label className={styles.summaryField}>
+                        <span>{form.customerCategoryLabel}</span>
+                        <select
+                          className="seasons-manager__year-input"
+                          value={draft.customerCategoryId}
+                          onChange={(event) => onUpdateClassificationDraft(draft.id, { customerCategoryId: event.target.value })}
+                          disabled={!draft.customerId}
+                        >
+                          <option value="">{form.customerCategoryPlaceholder}</option>
+                          {availableCustomerCategories.map((category) => (
+                            <option key={`harvest-form-customer-category-${category.id}`} value={String(category.id)}>
+                              {`${category.name} (${category.grade})`}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
                     </>
                   ) : (
-                    <select
-                      className="seasons-manager__year-input"
-                      value={draft.grade}
-                      onChange={(event) => onUpdateClassificationDraft(draft.id, { grade: event.target.value })}
-                    >
-                      <option value="">{form.gradePlaceholder}</option>
-                      {HARVEST_GRADE_OPTIONS.map((grade) => (
-                        <option key={`harvest-form-grade-${grade}`} value={grade}>
-                          {grade}
-                        </option>
-                      ))}
-                    </select>
+                    <label className={styles.summaryField}>
+                      <span>{form.gradeLabel}</span>
+                      <select
+                        className="seasons-manager__year-input"
+                        value={draft.grade}
+                        onChange={(event) => onUpdateClassificationDraft(draft.id, { grade: event.target.value })}
+                      >
+                        <option value="">{form.gradePlaceholder}</option>
+                        {HARVEST_GRADE_OPTIONS.map((grade) => (
+                          <option key={`harvest-form-grade-${grade}`} value={grade}>
+                            {grade}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                   )}
 
-                  <select
-                    className="seasons-manager__year-input"
-                    value={draft.pitamStatus}
-                    onChange={(event) =>
-                      onUpdateClassificationDraft(draft.id, {
-                        pitamStatus: event.target.value as HarvestFormClassificationDraft['pitamStatus'],
-                      })
-                    }
-                  >
-                    <option value="WITH_PITAM">{form.pitamOptions.withPitam}</option>
-                    <option value="WITHOUT_PITAM">{form.pitamOptions.withoutPitam}</option>
-                    <option value="MIXED">{form.pitamOptions.mixed}</option>
-                  </select>
+                  <label className={styles.summaryField}>
+                    <span>{form.pitamStatusLabel}</span>
+                    <select
+                      className="seasons-manager__year-input"
+                      value={draft.pitamStatus}
+                      onChange={(event) =>
+                        onUpdateClassificationDraft(draft.id, {
+                          pitamStatus: event.target.value as HarvestFormClassificationDraft['pitamStatus'],
+                        })
+                      }
+                    >
+                      <option value="WITH_PITAM">{form.pitamOptions.withPitam}</option>
+                      <option value="WITHOUT_PITAM">{form.pitamOptions.withoutPitam}</option>
+                      <option value="MIXED">{form.pitamOptions.mixed}</option>
+                    </select>
+                  </label>
 
-                  <input
-                    className="seasons-manager__year-input"
-                    type="number"
-                    min="1"
-                    value={draft.quantity}
-                    onChange={(event) => onUpdateClassificationDraft(draft.id, { quantity: event.target.value })}
-                    placeholder={form.quantityPlaceholder}
-                  />
+                  <label className={styles.summaryField}>
+                    <span>{form.quantityLabel}</span>
+                    <input
+                      className="seasons-manager__year-input"
+                      type="number"
+                      min="1"
+                      value={draft.quantity}
+                      onChange={(event) => onUpdateClassificationDraft(draft.id, { quantity: event.target.value })}
+                      placeholder={form.quantityPlaceholder}
+                    />
+                  </label>
 
-                  <input
-                    className={`seasons-manager__year-input ${styles.classificationNotes}`}
-                    type="text"
-                    value={draft.notes}
-                    onChange={(event) => onUpdateClassificationDraft(draft.id, { notes: event.target.value })}
-                    placeholder={form.sortingNotesPlaceholder}
-                  />
+                  <label className={`${styles.summaryField} ${styles.classificationNotes}`}>
+                    <span>{form.sortingNotesLabel}</span>
+                    <input
+                      className="seasons-manager__year-input"
+                      type="text"
+                      value={draft.notes}
+                      onChange={(event) => onUpdateClassificationDraft(draft.id, { notes: event.target.value })}
+                      placeholder={form.sortingNotesPlaceholder}
+                    />
+                  </label>
 
                   <div className={styles.classificationActions}>
                     {isLastSortingRow ? (

@@ -78,7 +78,7 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     sortingRowPrefix: (index) => `מיון ${index + 1}`,
     removeSortingRow: 'מחיקה',
     assignmentOptions: { general: 'כללי', trader: 'סוחר', customer: 'לקוח' },
-    assignmentTypeLabel: 'הקצאה',
+    assignmentTypeLabel: 'שיוך',
     traderLabel: 'סוחר',
     traderCategoryLabel: 'קטגוריה',
     traderCategoryPlaceholder: 'בחר קטגוריית סוחרים',
