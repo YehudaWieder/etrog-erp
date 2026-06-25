@@ -1,0 +1,172 @@
+.seasons-manager {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.seasons-manager__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.seasons-manager__header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.seasons-manager__title-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.seasons-manager__create-row {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-3);
+  flex-wrap: nowrap;
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-4);
+}
+
+.seasons-manager__create-row .seasons-manager__year-input {
+  flex: 0 1 280px;
+  width: min(280px, 100%);
+  min-width: 0;
+}
+
+.seasons-manager__create-row .btn {
+  flex: 0 0 auto;
+  min-height: 42px;
+}
+
+.seasons-manager__selection {
+  margin: 0;
+  color: #234059;
+  font-weight: 600;
+}
+
+.seasons-manager__year-input {
+  width: 240px;
+  max-width: 100%;
+  min-height: 42px;
+  border: 1px solid #d5dde7;
+  border-radius: var(--radius-sm);
+  padding: 0 12px;
+  background: #fff;
+  color: var(--color-text-main);
+}
+
+.seasons-manager__year-input:focus {
+  outline: none;
+  border-color: #a5c49a;
+  box-shadow: 0 0 0 3px rgba(45, 90, 39, 0.1);
+}
+
+.seasons-manager__year-input:disabled,
+textarea.seasons-manager__year-input:disabled {
+  background: #f3f5f7;
+  border-color: #e2e6ea;
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.seasons-manager__state {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.seasons-manager__all-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  border-radius: var(--radius-pill);
+  border: 1px solid #d5dde7;
+  background: #fbfdff;
+  color: #234059;
+  font-weight: 700;
+  padding: 0 10px;
+}
+
+.seasons-manager__error {
+  margin: 0;
+  background: #ffe8e8;
+  border: 1px solid #f3b7c2;
+  border-radius: var(--radius-sm);
+  color: #8f2435;
+  padding: var(--space-3) var(--space-4);
+  font-weight: 600;
+}
+
+.seasons-manager__warning {
+  margin: 0;
+  background: #fff8e1;
+  border: 1px solid #f5c842;
+  border-radius: var(--radius-sm);
+  color: #7a5800;
+  padding: var(--space-3) var(--space-4);
+  font-weight: 600;
+}
+
+.seasons-manager__empty {
+  border: 1px dashed #d5dde7;
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  color: var(--color-text-muted);
+  background: #fbfdff;
+}
+
+.seasons-manager__section-title {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #4f6678;
+}
+
+.seasons-manager__year {
+  font-weight: 700;
+  color: #10324a;
+  font-size: 1.05rem;
+}
+
+.seasons-manager__meta {
+  color: var(--color-text-muted);
+  font-size: 0.92rem;
+}
+
+.management-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.management-form-grid .seasons-manager__year-input {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .seasons-manager__create-row {
+    flex-wrap: wrap;
+  }
+
+  .seasons-manager__create-row .seasons-manager__year-input {
+    flex: 1 1 100%;
+  }
+
+  .seasons-manager__create-row .btn {
+    width: 100%;
+  }
+
+  .management-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
