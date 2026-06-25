@@ -24,6 +24,11 @@ export const SETTINGS_I18N_HE: SettingsI18n = {
   darkModeLabel: 'מוד כהה',
   darkModeOn: 'כהה',
   darkModeOff: 'בהיר',
+  setupNotices: {
+    1: 'לפני שניתן להשתמש במערכת יש להוסיף סוחרים.',
+    2: 'לאחר הוספת הסוחרים יש להגדיר קטגוריות ברירת מחדל.',
+    3: 'לאחר הגדרת הקטגוריות יש ליצור עונה.',
+  },
   sidebarWorker: [
     {
       id: 'site',

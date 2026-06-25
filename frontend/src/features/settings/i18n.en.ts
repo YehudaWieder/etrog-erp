@@ -24,6 +24,11 @@ export const SETTINGS_I18N_EN: SettingsI18n = {
   darkModeLabel: 'Dark Mode',
   darkModeOn: 'Dark',
   darkModeOff: 'Light',
+  setupNotices: {
+    1: 'Traders must be added before the system can be used.',
+    2: 'After adding traders, default categories must be configured.',
+    3: 'After configuring categories, a season must be created.',
+  },
   sidebarWorker: [
     {
       id: 'site',

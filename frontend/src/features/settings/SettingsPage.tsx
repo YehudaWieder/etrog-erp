@@ -54,6 +54,9 @@ export default function SettingsPage(): JSX.Element {
   const activeChildId = normalizeSettingsChildId(location.pathname, isManager);
   const content = t.content[activeChildId];
 
+  const setupStep = (location.state as { setupStep?: number } | null)?.setupStep;
+  const setupNotice = setupStep != null ? (t.setupNotices[setupStep as 1 | 2 | 3] ?? null) : null;
+
   const {
     pageTitle,
     seasonsHeaderState,
@@ -133,6 +136,7 @@ export default function SettingsPage(): JSX.Element {
     >
       <section className={workspaceStyles.workspace}>
         <p className={workspaceStyles.description}>{content.description}</p>
+        {setupNotice ? <p className={feedbackStyles.setupNotice}>{setupNotice}</p> : null}
         {saveFeedback ? <p className={feedbackStyles.saved}>{saveFeedback}</p> : null}
 
         <SettingsSitePreferencesPanel

@@ -37,6 +37,7 @@ export type SettingsI18n = {
   darkModeLabel: string;
   darkModeOn: string;
   darkModeOff: string;
+  setupNotices: Record<1 | 2 | 3, string>;
   sidebarWorker: SidebarSection[];
   sidebarManager: SidebarSection[];
   content: Record<SettingsChildKey, SettingsContent>;

@@ -7,7 +7,7 @@ import './styles/SeasonsLegacyGlobal.css';
 import './styles/AuthLegacyGlobal.css';
 import './styles/DarkModeLegacyGlobal.css';
 import './styles/ResponsiveLegacyGlobal.css';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
@@ -25,6 +25,8 @@ import { WorkersRoute } from './app/routes/WorkersRoute';
 import { PaymentsRoute } from './app/routes/PaymentsRoute';
 import { AUTH_SESSION_EXPIRED_EVENT } from './services/apiClient';
 import SettingsPage from './features/settings/SettingsPage';
+import { isAuthenticated, getCurrentUser, isManagerRole } from './services/authService';
+import { getSetupStatus } from './services/setupApi';
 
 // Load saved colors from localStorage and apply to CSS variables
 function initializeTheme(): void {
@@ -51,6 +53,71 @@ function initializeTheme(): void {
 
 initializeTheme();
 
+type SetupRequirement = { path: string; step: 1 | 2 | 3 };
+
+const SETUP_ALLOWED_PATHS: Record<1 | 2 | 3, string[]> = {
+  1: ['/settings/traders'],
+  2: ['/settings/traders', '/settings/traders/default-categories'],
+  3: ['/settings/traders', '/settings/traders/default-categories', '/settings/system/seasons'],
+};
+
+function getSetupRequirement(status: { hasTraders: boolean; hasDefaultCategories: boolean; hasSeasons: boolean }): SetupRequirement | null {
+  if (!status.hasTraders) return { path: '/settings/traders', step: 1 };
+  if (!status.hasDefaultCategories) return { path: '/settings/traders/default-categories', step: 2 };
+  if (!status.hasSeasons) return { path: '/settings/system/seasons', step: 3 };
+  return null;
+}
+
+function SetupGuard({ children }: { children: React.ReactNode }): JSX.Element | null {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const setupCompleteRef = useRef<boolean | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const user = getCurrentUser();
+    const isManager = isAuthenticated() && isManagerRole(user?.role);
+    const isExempt = location.pathname === '/login' || location.pathname === '/register';
+
+    if (!isManager || isExempt) {
+      setReady(true);
+      return;
+    }
+
+    if (setupCompleteRef.current === true) {
+      setReady(true);
+      return;
+    }
+
+    setReady(false);
+    getSetupStatus()
+      .then(status => {
+        setupCompleteRef.current = status.isSetupComplete;
+
+        if (status.isSetupComplete) {
+          setReady(true);
+          return;
+        }
+
+        const requirement = getSetupRequirement(status);
+        if (!requirement) {
+          setReady(true);
+          return;
+        }
+
+        if (SETUP_ALLOWED_PATHS[requirement.step].includes(location.pathname)) {
+          setReady(true);
+          return;
+        }
+
+        navigate(requirement.path, { replace: true, state: { setupStep: requirement.step } });
+      })
+      .catch(() => setReady(true));
+  }, [location.pathname, navigate]);
+
+  return ready ? <>{children}</> : null;
+}
+
 function AppRouter(): JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
@@ -69,23 +136,25 @@ function AppRouter(): JSX.Element {
   }, [location.pathname, navigate]);
 
   return (
-    <Routes>
-      <Route path="/login" element={<LoginRoute />} />
-      <Route path="/register" element={<RegisterRoute />} />
-      <Route path="/home" element={<HomeRoute />} />
-      <Route path="/profile/*" element={<ProfileRoute />} />
-      <Route path="/messages/*" element={<MessagesRoute />} />
-      <Route path="/harvest/*" element={<HarvestRoute />} />
-      <Route path="/traders/*" element={<TraderInventoryRoute />} />
-      <Route path="/partners/*" element={<Navigate to="/traders" replace />} />
-      <Route path="/customers/*" element={<CustomerInventoryRoute />} />
-      <Route path="/shipments/*" element={<ShipmentsRoute />} />
-      <Route path="/workers/*" element={<WorkersRoute />} />
-      <Route path="/payments/*" element={<PaymentsRoute />} />
-      <Route path="/settings/*" element={<SettingsPage />} />
-      {/* <Route path="/seasons" element={<Navigate to="/settings/system/seasons" replace />} /> removed as per request */}
-      <Route path="*" element={<Navigate to="/home" replace />} />
-    </Routes>
+    <SetupGuard>
+      <Routes>
+        <Route path="/login" element={<LoginRoute />} />
+        <Route path="/register" element={<RegisterRoute />} />
+        <Route path="/home" element={<HomeRoute />} />
+        <Route path="/profile/*" element={<ProfileRoute />} />
+        <Route path="/messages/*" element={<MessagesRoute />} />
+        <Route path="/harvest/*" element={<HarvestRoute />} />
+        <Route path="/traders/*" element={<TraderInventoryRoute />} />
+        <Route path="/partners/*" element={<Navigate to="/traders" replace />} />
+        <Route path="/customers/*" element={<CustomerInventoryRoute />} />
+        <Route path="/shipments/*" element={<ShipmentsRoute />} />
+        <Route path="/workers/*" element={<WorkersRoute />} />
+        <Route path="/payments/*" element={<PaymentsRoute />} />
+        <Route path="/settings/*" element={<SettingsPage />} />
+        {/* <Route path="/seasons" element={<Navigate to="/settings/system/seasons" replace />} /> removed as per request */}
+        <Route path="*" element={<Navigate to="/home" replace />} />
+      </Routes>
+    </SetupGuard>
   );
 }
 
