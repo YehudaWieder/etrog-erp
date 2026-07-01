@@ -210,6 +210,7 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     traderRequired: (rowNumber) => `בשורת מיון ${rowNumber} יש לבחור סוחר.`,
     customerRequired: (rowNumber) => `בשורת מיון ${rowNumber} יש לבחור לקוח.`,
     customerCategoryRequired: (rowNumber) => `בשורת מיון ${rowNumber} יש לבחור קטגוריית לקוח.`,
+    pitamStatusRequired: (rowNumber) => `בשורת מיון ${rowNumber} יש לבחור סטטוס פיטם.`,
     apiClassificationsExceedNet: (classificationsTotal, netHarvested) =>
       `סה"כ כמות המיון (${classificationsTotal}) לא יכולה לעלות על כמות הנטו שנקטפה (${netHarvested}).`,
     apiClassificationsMustEqualNet: (classificationsTotal, netHarvested) =>

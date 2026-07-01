@@ -156,6 +156,7 @@ export type HarvestI18n = {
     traderRequired: (rowNumber: number) => string;
     customerRequired: (rowNumber: number) => string;
     customerCategoryRequired: (rowNumber: number) => string;
+    pitamStatusRequired: (rowNumber: number) => string;
     apiClassificationsExceedNet: (classificationsTotal: number, netHarvested: number) => string;
     apiClassificationsMustEqualNet: (classificationsTotal: number, netHarvested: number) => string;
     apiClassificationsMustEqualNetFinal: (classificationsTotal: number, netHarvested: number) => string;

@@ -90,6 +90,10 @@ export function isHarvestClassificationDraftComplete(draft: HarvestFormClassific
     return false;
   }
 
+  if (!draft.pitamStatus) {
+    return false;
+  }
+
   if (draft.assignmentType === 'GENERAL' || draft.assignmentType === 'TRADER') {
     const traderCategoryId = Number(draft.traderCategoryId);
     if (!Number.isFinite(traderCategoryId) || traderCategoryId <= 0) {
@@ -191,6 +195,12 @@ export function buildHarvestFormSubmissionPayload({
     if (!Number.isFinite(quantity) || quantity <= 0) {
       return {
         error: t.sortingRowQuantityRequired(rowNumber),
+      };
+    }
+
+    if (!draft.pitamStatus) {
+      return {
+        error: t.pitamStatusRequired(rowNumber),
       };
     }
 

@@ -210,6 +210,7 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     traderRequired: (rowNumber) => `Sorting row ${rowNumber} must include a trader.`,
     customerRequired: (rowNumber) => `Sorting row ${rowNumber} must include a customer.`,
     customerCategoryRequired: (rowNumber) => `Sorting row ${rowNumber} must include a customer category.`,
+    pitamStatusRequired: (rowNumber) => `Sorting row ${rowNumber} must include a pitam status.`,
     apiClassificationsExceedNet: (classificationsTotal, netHarvested) =>
       `Total sorting quantity (${classificationsTotal}) cannot exceed net harvested (${netHarvested}).`,
     apiClassificationsMustEqualNet: (classificationsTotal, netHarvested) =>

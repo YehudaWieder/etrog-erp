@@ -8,6 +8,14 @@ export const DEFAULT_SIDEBAR_ITEM_ID = 'harvest-daily-details';
 export const HARVEST_DAILY_FILTER_SCOPE = 'harvest-daily-details';
 
 export const HARVEST_GRADE_OPTIONS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו'] as const;
+export type HarvestGradeOption = (typeof HARVEST_GRADE_OPTIONS)[number];
+
+const BOMBES_TRADER_CATEGORY_NAME = 'בומבעס';
+const BOMBES_GRADE_OPTIONS: readonly HarvestGradeOption[] = ['ג', 'ד', 'ה'];
+
+export function getAvailableHarvestGradeOptions(traderCategoryName: string | null | undefined): readonly HarvestGradeOption[] {
+  return traderCategoryName?.trim() === BOMBES_TRADER_CATEGORY_NAME ? BOMBES_GRADE_OPTIONS : HARVEST_GRADE_OPTIONS;
+}
 
 export function parseSeasonFilterId(value: string): number | null {
   const parsedValue = Number(value);
@@ -233,7 +241,7 @@ export function createEmptyHarvestClassificationDraft(id: string): HarvestFormCl
     traderCategoryId: '',
     customerCategoryId: '',
     grade: '',
-    pitamStatus: 'WITH_PITAM',
+    pitamStatus: '',
     quantity: '',
     notes: '',
   };

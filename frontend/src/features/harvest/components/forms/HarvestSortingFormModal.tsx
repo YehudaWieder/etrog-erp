@@ -3,7 +3,7 @@ import type { CustomerCategory } from '../../../../services/customerCategoriesAp
 import type { Trader } from '../../../../services/tradersApi';
 import type { TraderCategoryWithShares } from '../../../../services/traderCategoriesApi';
 import type { HarvestI18n } from '../../i18n';
-import { HARVEST_GRADE_OPTIONS } from '../../utils/harvestPage.utils';
+import { getAvailableHarvestGradeOptions } from '../../utils/harvestPage.utils';
 import styles from './styles/HarvestBulkFormModal.module.css';
 
 type HarvestSortingFormHarvestOption = {
@@ -103,6 +103,25 @@ export function HarvestSortingFormModal({
   const selectedCustomerCategoryGrade = availableCustomerCategories.find(
     (category) => String(category.id) === harvestSortingFormCustomerCategoryId,
   )?.grade ?? '';
+
+  const selectedTraderCategoryName = harvestFormTraderCategories.find(
+    (category) => String(category.id) === harvestSortingFormTraderCategoryId,
+  )?.name;
+
+  const availableGradeOptions = getAvailableHarvestGradeOptions(selectedTraderCategoryName);
+
+  const handleTraderCategoryIdChange = (nextTraderCategoryId: string) => {
+    onTraderCategoryIdChange(nextTraderCategoryId);
+
+    const nextTraderCategoryName = harvestFormTraderCategories.find(
+      (category) => String(category.id) === nextTraderCategoryId,
+    )?.name;
+    const nextGradeOptions = getAvailableHarvestGradeOptions(nextTraderCategoryName);
+
+    if (harvestSortingFormGrade && !(nextGradeOptions as readonly string[]).includes(harvestSortingFormGrade)) {
+      onGradeChange('');
+    }
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -243,7 +262,7 @@ export function HarvestSortingFormModal({
               <select
                 className="seasons-manager__year-input"
                 value={harvestSortingFormTraderCategoryId}
-                onChange={(event) => onTraderCategoryIdChange(event.target.value)}
+                onChange={(event) => handleTraderCategoryIdChange(event.target.value)}
               >
                 <option value="">{form.traderCategoryPlaceholder}</option>
                 {harvestFormTraderCategories.map((category) => (
@@ -264,7 +283,7 @@ export function HarvestSortingFormModal({
                 onChange={(event) => onGradeChange(event.target.value)}
               >
                 <option value="">{form.gradePlaceholder}</option>
-                {HARVEST_GRADE_OPTIONS.map((grade) => (
+                {availableGradeOptions.map((grade) => (
                   <option key={`sorting-form-grade-${grade}`} value={grade}>
                     {grade}
                   </option>

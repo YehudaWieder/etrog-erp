@@ -11,7 +11,7 @@ import {
   getHarvestSortingQuantityState,
   isHarvestClassificationDraftComplete,
 } from '../../utils/harvestFormSubmission.util';
-import { HARVEST_GRADE_OPTIONS } from '../../utils/harvestPage.utils';
+import { getAvailableHarvestGradeOptions } from '../../utils/harvestPage.utils';
 import styles from './styles/HarvestBulkFormModal.module.css';
 
 type HarvestBulkFormModalProps = {
@@ -320,6 +320,21 @@ export function HarvestBulkFormModal({
             const availableCustomerCategories = harvestFormCustomerCategories.filter(
               (category) => String(category.customerId) === draft.customerId,
             );
+            const selectedTraderCategoryName = harvestFormTraderCategories.find(
+              (category) => String(category.id) === draft.traderCategoryId,
+            )?.name;
+            const availableGradeOptions = getAvailableHarvestGradeOptions(selectedTraderCategoryName);
+            const handleTraderCategoryIdChange = (nextTraderCategoryId: string) => {
+              const nextTraderCategoryName = harvestFormTraderCategories.find(
+                (category) => String(category.id) === nextTraderCategoryId,
+              )?.name;
+              const nextGradeOptions = getAvailableHarvestGradeOptions(nextTraderCategoryName);
+              const nextGrade = draft.grade && !(nextGradeOptions as readonly string[]).includes(draft.grade)
+                ? ''
+                : draft.grade;
+
+              onUpdateClassificationDraft(draft.id, { traderCategoryId: nextTraderCategoryId, grade: nextGrade });
+            };
             const isLastSortingRow = index === harvestFormClassifications.length - 1;
             const canAddNextSortingRow = isHarvestClassificationDraftComplete(draft);
             const rowAddSortingBlockReason = !areTotalsFilled
@@ -380,7 +395,7 @@ export function HarvestBulkFormModal({
                       <select
                         className="seasons-manager__year-input"
                         value={draft.traderCategoryId}
-                        onChange={(event) => onUpdateClassificationDraft(draft.id, { traderCategoryId: event.target.value })}
+                        onChange={(event) => handleTraderCategoryIdChange(event.target.value)}
                       >
                         <option value="">{form.traderCategoryPlaceholder}</option>
                         {harvestFormTraderCategories.map((category) => (
@@ -436,7 +451,7 @@ export function HarvestBulkFormModal({
                         onChange={(event) => onUpdateClassificationDraft(draft.id, { grade: event.target.value })}
                       >
                         <option value="">{form.gradePlaceholder}</option>
-                        {HARVEST_GRADE_OPTIONS.map((grade) => (
+                        {availableGradeOptions.map((grade) => (
                           <option key={`harvest-form-grade-${grade}`} value={grade}>
                             {grade}
                           </option>
@@ -456,6 +471,7 @@ export function HarvestBulkFormModal({
                         })
                       }
                     >
+                      <option value="">{form.pitamStatusPlaceholder}</option>
                       <option value="WITH_PITAM">{form.pitamOptions.withPitam}</option>
                       <option value="WITHOUT_PITAM">{form.pitamOptions.withoutPitam}</option>
                       <option value="MIXED">{form.pitamOptions.mixed}</option>
@@ -499,7 +515,6 @@ export function HarvestBulkFormModal({
                       type="button"
                       className="btn btn-danger"
                       onClick={() => onRemoveClassificationDraft(draft.id)}
-                      disabled={harvestFormClassifications.length <= 1}
                     >
                       {form.removeSortingRow}
                     </button>
