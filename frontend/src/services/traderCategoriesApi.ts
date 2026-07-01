@@ -11,6 +11,8 @@ export type TraderCategoryWithShares = {
   seasonId: number;
   name: string;
   notes?: string | null;
+  supportedGrades: string[];
+  orderIndex: number;
   shares: TraderCategoryShare[];
   totalPercent: number;
   createdAt: string;
@@ -21,6 +23,7 @@ export type CreateTraderCategoryWithSharesPayload = {
   seasonId: number;
   name: string;
   notes?: string;
+  supportedGrades?: string[];
   shares: Array<{
     traderId: number;
     percent: number;
@@ -31,6 +34,7 @@ export type UpdateTraderCategoryWithSharesPayload = {
   id: number;
   name?: string;
   notes?: string;
+  supportedGrades?: string[];
   shares: Array<{
     traderId: number;
     percent: number;
@@ -42,6 +46,8 @@ type LegacyTraderCategory = {
   seasonId: number;
   name: string;
   notes?: string | null;
+  supportedGrades?: string[];
+  orderIndex?: number;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -74,7 +80,7 @@ function mapLegacyToWithShares(
     sharesByCategoryId.set(share.traderCategoryId, existing);
   }
 
-  return categories.map((category) => {
+  return categories.map((category, index) => {
     const categoryShares = (sharesByCategoryId.get(category.id) ?? []).sort(
       (a, b) => a.traderName.localeCompare(b.traderName, 'he'),
     );
@@ -86,6 +92,8 @@ function mapLegacyToWithShares(
       seasonId: category.seasonId,
       name: category.name,
       notes: category.notes,
+      supportedGrades: category.supportedGrades ?? [],
+      orderIndex: category.orderIndex ?? index,
       shares: categoryShares,
       totalPercent: Number(totalPercent.toFixed(2)),
       createdAt: category.createdAt ?? '',
@@ -132,5 +140,15 @@ export async function updateTraderCategoryWithShares(
 export async function deleteTraderCategory(categoryId: number): Promise<{ id: number }> {
   return apiClient<{ id: number }>(`/traders-categories/${categoryId}`, {
     method: 'DELETE',
+  });
+}
+
+export async function reorderTraderCategories(
+  seasonId: number,
+  orderedIds: number[],
+): Promise<{ orderedIds: number[] }> {
+  return apiClient<{ orderedIds: number[] }>('/traders-categories/reorder', {
+    method: 'PATCH',
+    body: JSON.stringify({ seasonId, orderedIds }),
   });
 }

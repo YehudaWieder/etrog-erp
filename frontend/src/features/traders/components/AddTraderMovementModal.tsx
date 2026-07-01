@@ -176,6 +176,24 @@ export function AddTraderMovementModal({
     };
   }, [type, fromTraderId, traderId, stockSource, isModulo, seasonId]);
 
+  const traderCategoryOrderById = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const category of traderCategories) {
+      map.set(category.id, category.orderIndex);
+    }
+    return map;
+  }, [traderCategories]);
+
+  const sortCategoryOptionsByPriority = (options: Array<{ id: number; name: string }>) =>
+    [...options].sort((left, right) => {
+      const li = traderCategoryOrderById.get(left.id);
+      const ri = traderCategoryOrderById.get(right.id);
+      if (li !== undefined && ri !== undefined) return li - ri;
+      if (li !== undefined) return -1;
+      if (ri !== undefined) return 1;
+      return left.name.localeCompare(right.name);
+    });
+
   const fromTraderCategoryOptions = useMemo(() => {
     const seen = new Map<number, string>();
     for (const row of fromTraderStock) {
@@ -183,8 +201,8 @@ export function AddTraderMovementModal({
         seen.set(row.traderCategoryId, row.traderCategoryName ?? `#${row.traderCategoryId}`);
       }
     }
-    return [...seen.entries()].map(([id, name]) => ({ id, name }));
-  }, [fromTraderStock]);
+    return sortCategoryOptionsByPriority([...seen.entries()].map(([id, name]) => ({ id, name })));
+  }, [fromTraderStock, traderCategoryOrderById]);
 
   const fromTraderGradeOptions = useMemo(() => {
     if (!traderCategoryId) return [];
@@ -211,8 +229,8 @@ export function AddTraderMovementModal({
         seen.set(row.traderCategoryId, row.traderCategoryName ?? `#${row.traderCategoryId}`);
       }
     }
-    return [...seen.entries()].map(([id, name]) => ({ id, name }));
-  }, [generalStock]);
+    return sortCategoryOptionsByPriority([...seen.entries()].map(([id, name]) => ({ id, name })));
+  }, [generalStock, traderCategoryOrderById]);
 
   const assignedGradeOptions = useMemo(() => {
     if (!traderCategoryId) return [];

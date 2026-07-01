@@ -10,6 +10,8 @@ export type DefaultTraderCategory = {
   id: number;
   name: string;
   notes?: string | null;
+  supportedGrades: string[];
+  orderIndex: number;
   shares: DefaultTraderCategoryShare[];
   totalPercent: number;
   createdAt: string;
@@ -19,6 +21,7 @@ export type DefaultTraderCategory = {
 export type CreateDefaultTraderCategoryWithSharesPayload = {
   name: string;
   notes?: string;
+  supportedGrades?: string[];
   shares: Array<{
     traderId: number;
     percent: number;
@@ -29,6 +32,7 @@ export type UpdateDefaultTraderCategoryPayload = {
   id: number;
   name?: string;
   notes?: string;
+  supportedGrades?: string[];
 };
 
 export type CreateDefaultTraderCategorySharePayload = {
@@ -95,5 +99,14 @@ export async function deleteDefaultTraderCategoryShare(
 export async function deleteDefaultTraderCategory(categoryId: number): Promise<{ id: number }> {
   return apiClient<{ id: number }>(`/default-trader-categories/${categoryId}`, {
     method: 'DELETE',
+  });
+}
+
+export async function reorderDefaultTraderCategories(
+  orderedIds: number[],
+): Promise<{ orderedIds: number[] }> {
+  return apiClient<{ orderedIds: number[] }>('/default-trader-categories/reorder', {
+    method: 'PATCH',
+    body: JSON.stringify({ orderedIds }),
   });
 }

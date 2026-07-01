@@ -52,6 +52,7 @@ function getCategoryLabel(row: TraderInventorySummaryRow, fallbackCategoryLabel:
 export function buildTraderInventorySummaryMatrix(
   rows: TraderInventorySummaryRow[],
   fallbackCategoryLabel: string,
+  categoryOrderByName?: Map<string, number> | null,
 ): TraderInventorySummaryMatrix {
   const categoryMap = new Map<string, TraderInventorySummaryMatrixCategory>();
   const gradeValues: Record<string, Record<string, MatrixGradeCell>> = {};
@@ -91,9 +92,16 @@ export function buildTraderInventorySummaryMatrix(
     grandTotalByPitamStatus[row.pitamStatus] += row.quantity;
   }
 
-  const categories = Array.from(categoryMap.values()).sort((left, right) =>
-    left.label.localeCompare(right.label, 'he', { sensitivity: 'base', numeric: true }),
-  );
+  const categories = Array.from(categoryMap.values()).sort((left, right) => {
+    if (categoryOrderByName) {
+      const li = categoryOrderByName.get(left.label);
+      const ri = categoryOrderByName.get(right.label);
+      if (li !== undefined && ri !== undefined) return li - ri;
+      if (li !== undefined) return -1;
+      if (ri !== undefined) return 1;
+    }
+    return left.label.localeCompare(right.label, 'he', { sensitivity: 'base', numeric: true });
+  });
 
   const seenGrades = new Set(Object.keys(gradeValues));
   const orderedKnownGrades = GRADE_ORDER.filter((grade) => seenGrades.has(grade));

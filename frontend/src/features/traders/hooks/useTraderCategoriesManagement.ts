@@ -4,6 +4,7 @@ import {
   createTraderCategoryWithShares,
   deleteTraderCategory,
   getTraderCategoriesWithShares,
+  reorderTraderCategories,
   type TraderCategoryWithShares,
   updateTraderCategoryWithShares,
 } from '../../../services/traderCategoriesApi';
@@ -12,8 +13,9 @@ import { fetchTraders } from '../../../store/tradersSlice';
 import { setScopeFilter } from '../../../store/globalFiltersSlice';
 import type { AppDispatch, RootState } from '../../../store';
 import { getTraderCategoriesI18n, resolveTradersAppLang } from '../i18n';
-import { sortByHebrewName } from '../services/traderCollections.service';
+import { sortByHebrewName, sortByOrderIndex } from '../services/traderCollections.service';
 import { getAddShareRowBlockReason, getAvailableTradersForRow } from '../services/traderShareRows.service';
+import { toggleGradeSelection } from '../utils/traderCategoryGrades.util';
 import {
   buildTraderCategoriesFiltersConfig,
   parseTraderCategorySeasonFilterId,
@@ -54,12 +56,14 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
 
   const [categoryName, setCategoryName] = useState('');
   const [categoryNotes, setCategoryNotes] = useState('');
+  const [supportedGrades, setSupportedGrades] = useState<string[]>([]);
   const [shareRows, setShareRows] = useState<ShareRow[]>([createEmptyShareRow(1)]);
   const [showAddRowBlockReason, setShowAddRowBlockReason] = useState(false);
 
   const [addError, setAddError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [reorderError, setReorderError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -117,7 +121,7 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
 
     try {
       const result = await getTraderCategoriesWithShares(seasonId);
-      setCategories(sortByHebrewName(result));
+      setCategories(sortByOrderIndex(result));
     } catch (requestError) {
       const message = requestError instanceof Error ? requestError.message : t.loadFailed;
       setError(message);
@@ -210,9 +214,14 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
     );
   };
 
+  const toggleSupportedGrade = (grade: string) => {
+    setSupportedGrades((current) => toggleGradeSelection(current, grade));
+  };
+
   const resetForm = () => {
     setCategoryName('');
     setCategoryNotes('');
+    setSupportedGrades([]);
     setShareRows([createEmptyShareRow(1)]);
     setShowAddRowBlockReason(false);
   };
@@ -283,6 +292,7 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
     setAddError(null);
     setCategoryName(selectedCategory.name);
     setCategoryNotes(selectedCategory.notes ?? '');
+    setSupportedGrades(selectedCategory.supportedGrades ?? []);
     setShowAddRowBlockReason(false);
     setShareRows(
       selectedCategory.shares.length > 0
@@ -327,13 +337,14 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
         seasonId: seasonFilterId,
         name: categoryName.trim(),
         notes: categoryNotes.trim() || undefined,
+        supportedGrades,
         shares: shareRows.map((shareRow) => ({
           traderId: shareRow.traderId as number,
           percent: Number(shareRow.percent),
         })),
       });
 
-      setCategories((current) => sortByHebrewName([...current.filter((item) => item.id !== createdCategory.id), createdCategory]));
+      setCategories((current) => sortByOrderIndex([...current.filter((item) => item.id !== createdCategory.id), createdCategory]));
       setSelectedCategoryId(createdCategory.id);
       setIsAddDialogOpen(false);
       resetForm();
@@ -364,13 +375,14 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
         id: selectedCategory.id,
         name: categoryName.trim(),
         notes: categoryNotes.trim() || undefined,
+        supportedGrades,
         shares: shareRows.map((shareRow) => ({
           traderId: shareRow.traderId as number,
           percent: Number(shareRow.percent),
         })),
       });
 
-      setCategories((current) => sortByHebrewName([...current.filter((item) => item.id !== updated.id), updated]));
+      setCategories((current) => sortByOrderIndex([...current.filter((item) => item.id !== updated.id), updated]));
       setSelectedCategoryId(updated.id);
       setIsEditDialogOpen(false);
     } catch (requestError) {
@@ -403,7 +415,33 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
   const isAddDisabled = loading || isSubmitting || sortedTraders.length === 0 || !seasonFilterId;
   const isEditDisabled = loading || isSubmitting || !selectedCategory;
   const isDeleteDisabled = loading || isSubmitting || !selectedCategory;
-  const shownError = addError ?? editError ?? deleteError ?? error;
+  const isReorderDisabled = traderFilterId !== 'all';
+  const shownError = addError ?? editError ?? deleteError ?? reorderError ?? error;
+
+  const reorderCategories = async (orderedIds: number[]) => {
+    if (!seasonFilterId || isReorderDisabled) {
+      return;
+    }
+
+    const previousCategories = categories;
+    const reordered = orderedIds
+      .map((id, index) => {
+        const category = categories.find((item) => item.id === id);
+        return category ? { ...category, orderIndex: index } : null;
+      })
+      .filter((item): item is TraderCategoryWithShares => item !== null);
+
+    setCategories(reordered);
+    setReorderError(null);
+
+    try {
+      await reorderTraderCategories(seasonFilterId, orderedIds);
+    } catch (requestError) {
+      setCategories(previousCategories);
+      const message = requestError instanceof Error ? requestError.message : t.reorderFailed;
+      setReorderError(message);
+    }
+  };
 
   useEffect(() => {
     if (!onHeaderStateChange) {
@@ -448,6 +486,8 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
     setCategoryName,
     categoryNotes,
     setCategoryNotes,
+    supportedGrades,
+    toggleSupportedGrade,
     shareRows,
     updateShareRow,
     removeShareRow,
@@ -473,5 +513,9 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
       void handleEditCategory();
     },
     getRowAvailableTraders,
+    isReorderDisabled,
+    onReorderCategories: (orderedIds: number[]) => {
+      void reorderCategories(orderedIds);
+    },
   };
 }

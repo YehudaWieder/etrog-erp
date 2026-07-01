@@ -4,15 +4,17 @@ import {
   createDefaultTraderCategoryWithShares,
   deleteDefaultTraderCategory,
   getDefaultTraderCategories,
+  reorderDefaultTraderCategories,
   type DefaultTraderCategory,
   updateDefaultTraderCategory,
 } from '../../../services/defaultTraderCategoriesApi';
 import { fetchTraders } from '../../../store/tradersSlice';
 import type { AppDispatch, RootState } from '../../../store';
 import { getDefaultTraderCategoriesI18n, resolveTradersAppLang } from '../i18n';
-import { sortByHebrewName } from '../services/traderCollections.service';
+import { sortByHebrewName, sortByOrderIndex } from '../services/traderCollections.service';
 import { syncDefaultTraderCategoryShares } from '../services/defaultTraderCategorySharesSync.service';
 import { getAddShareRowBlockReason, getAvailableTradersForRow } from '../services/traderShareRows.service';
+import { toggleGradeSelection } from '../utils/traderCategoryGrades.util';
 import type { DefaultTraderCategoriesManagementProps, ShareRow } from '../tradersManagement.types';
 import {
   calculateTotalPercent,
@@ -38,10 +40,12 @@ export function useDefaultTraderCategoriesManagement({ onHeaderStateChange }: De
   const [addError, setAddError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [reorderError, setReorderError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [categoryName, setCategoryName] = useState('');
   const [categoryNotes, setCategoryNotes] = useState('');
+  const [supportedGrades, setSupportedGrades] = useState<string[]>([]);
   const [shareRows, setShareRows] = useState<ShareRow[]>([createEmptyShareRow(1)]);
   const [showAddRowBlockReason, setShowAddRowBlockReason] = useState(false);
 
@@ -60,7 +64,7 @@ export function useDefaultTraderCategoriesManagement({ onHeaderStateChange }: De
     [categories, selectedCategoryId],
   );
 
-  const sortedCategories = useMemo(() => sortByHebrewName(categories), [categories]);
+  const sortedCategories = useMemo(() => sortByOrderIndex(categories), [categories]);
 
   const totalPercent = useMemo(() => calculateTotalPercent(shareRows), [shareRows]);
 
@@ -116,9 +120,14 @@ export function useDefaultTraderCategoriesManagement({ onHeaderStateChange }: De
     );
   };
 
+  const toggleSupportedGrade = (grade: string) => {
+    setSupportedGrades((current) => toggleGradeSelection(current, grade));
+  };
+
   const resetForm = () => {
     setCategoryName('');
     setCategoryNotes('');
+    setSupportedGrades([]);
     setShareRows([createEmptyShareRow(1)]);
     setShowAddRowBlockReason(false);
   };
@@ -129,7 +138,7 @@ export function useDefaultTraderCategoriesManagement({ onHeaderStateChange }: De
 
     try {
       const result = await getDefaultTraderCategories();
-      setCategories(sortByHebrewName(result));
+      setCategories(sortByOrderIndex(result));
     } catch (requestError) {
       const message = requestError instanceof Error ? requestError.message : t.loadFailed;
       setError(message);
@@ -195,6 +204,7 @@ export function useDefaultTraderCategoriesManagement({ onHeaderStateChange }: De
     setAddError(null);
     setCategoryName(selectedCategory.name);
     setCategoryNotes(selectedCategory.notes ?? '');
+    setSupportedGrades(selectedCategory.supportedGrades ?? []);
     setShowAddRowBlockReason(false);
     setShareRows(
       selectedCategory.shares.length > 0
@@ -233,13 +243,14 @@ export function useDefaultTraderCategoriesManagement({ onHeaderStateChange }: De
       const createdCategory = await createDefaultTraderCategoryWithShares({
         name: categoryName.trim(),
         notes: categoryNotes.trim() || undefined,
+        supportedGrades,
         shares: shareRows.map((shareRow) => ({
           traderId: shareRow.traderId as number,
           percent: Number(shareRow.percent),
         })),
       });
 
-      setCategories((current) => sortByHebrewName([...current.filter((item) => item.id !== createdCategory.id), createdCategory]));
+      setCategories((current) => sortByOrderIndex([...current.filter((item) => item.id !== createdCategory.id), createdCategory]));
       setSelectedCategoryId(createdCategory.id);
       setIsAddDialogOpen(false);
       resetForm();
@@ -270,12 +281,13 @@ export function useDefaultTraderCategoriesManagement({ onHeaderStateChange }: De
         id: selectedCategory.id,
         name: categoryName.trim(),
         notes: categoryNotes.trim() || undefined,
+        supportedGrades,
       });
 
       await syncDefaultTraderCategoryShares(selectedCategory.id, selectedCategory.shares, shareRows);
 
       const refreshed = await getDefaultTraderCategories();
-      const sorted = sortByHebrewName(refreshed);
+      const sorted = sortByOrderIndex(refreshed);
       setCategories(sorted);
       setSelectedCategoryId(selectedCategory.id);
       setIsEditDialogOpen(false);
@@ -309,7 +321,28 @@ export function useDefaultTraderCategoriesManagement({ onHeaderStateChange }: De
   const isAddDisabled = loading || isSubmitting || sortedTraders.length === 0;
   const isEditDisabled = loading || isSubmitting || !selectedCategory;
   const isDeleteDisabled = loading || isSubmitting || !selectedCategory;
-  const shownError = addError ?? editError ?? deleteError ?? error;
+  const shownError = addError ?? editError ?? deleteError ?? reorderError ?? error;
+
+  const reorderCategories = async (orderedIds: number[]) => {
+    const previousCategories = categories;
+    const reordered = orderedIds
+      .map((id, index) => {
+        const category = categories.find((item) => item.id === id);
+        return category ? { ...category, orderIndex: index } : null;
+      })
+      .filter((item): item is DefaultTraderCategory => item !== null);
+
+    setCategories(reordered);
+    setReorderError(null);
+
+    try {
+      await reorderDefaultTraderCategories(orderedIds);
+    } catch (requestError) {
+      setCategories(previousCategories);
+      const message = requestError instanceof Error ? requestError.message : t.reorderFailed;
+      setReorderError(message);
+    }
+  };
 
   useEffect(() => {
     if (!onHeaderStateChange) {
@@ -352,6 +385,8 @@ export function useDefaultTraderCategoriesManagement({ onHeaderStateChange }: De
     setCategoryName,
     categoryNotes,
     setCategoryNotes,
+    supportedGrades,
+    toggleSupportedGrade,
     shareRows,
     updateShareRow,
     removeShareRow,
@@ -377,5 +412,8 @@ export function useDefaultTraderCategoriesManagement({ onHeaderStateChange }: De
       void handleEditCategory();
     },
     getRowAvailableTraders,
+    onReorderCategories: (orderedIds: number[]) => {
+      void reorderCategories(orderedIds);
+    },
   };
 }

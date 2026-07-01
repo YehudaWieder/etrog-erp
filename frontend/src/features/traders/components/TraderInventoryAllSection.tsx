@@ -18,6 +18,7 @@ type TraderInventoryAllSectionProps = {
   error: string | null;
   onRetry: () => void;
   tableRef?: RefObject<HTMLTableElement>;
+  traderCategoryOrder?: Map<string, number>;
 };
 
 export function TraderInventoryAllSection({
@@ -30,6 +31,7 @@ export function TraderInventoryAllSection({
   error,
   onRetry,
   tableRef,
+  traderCategoryOrder,
 }: TraderInventoryAllSectionProps) {
   const locale = lang === 'he' ? 'he-IL' : 'en-US';
 
@@ -37,8 +39,8 @@ export function TraderInventoryAllSection({
   const fmt = (n: number) => numberFormatter.format(Math.abs(n));
 
   const summaryMatrix = useMemo(
-    () => buildTraderInventorySummaryMatrix(rows, labels.values.none),
-    [labels.values.none, rows],
+    () => buildTraderInventorySummaryMatrix(rows, labels.values.none, traderCategoryOrder),
+    [labels.values.none, rows, traderCategoryOrder],
   );
 
   const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);

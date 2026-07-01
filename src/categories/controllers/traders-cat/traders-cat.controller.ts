@@ -4,7 +4,7 @@ import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Query,
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { TradersCatService } from '../../services/traders-cat/traders-cat.service';
 import { TraderCatShareService } from '../../services/traders-cat-share/traders-cat-share.service';
-import { Role } from '@prisma/client';
+import { Grade, Role } from '@prisma/client';
 import { Roles } from 'src/authorization/decorators/roles.decorator';
 import type { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
@@ -12,6 +12,7 @@ import { CreateTraderCategoryDto } from 'src/categories/services/traders-cat/dto
 import { UpdateTraderCategoryDto } from 'src/categories/services/traders-cat/dto/update-trader-category.dto';
 import { CreateTraderCategoryWithSharesDto } from 'src/categories/services/traders-cat-share/dto/create-trader-category-with-shares.dto';
 import { UpdateTraderCategoryWithSharesDto } from 'src/categories/services/traders-cat-share/dto/update-trader-category-with-shares.dto';
+import { ReorderTraderCategoriesDto } from 'src/categories/services/traders-cat/dto/reorder-trader-categories.dto';
 
 @ApiTags('Categories')
 @ApiBearerAuth('access-token')
@@ -34,10 +35,17 @@ export class TradersCatController {
       properties: {
         name: { type: 'string', description: 'The category name (e.g., "Yanover").', example: 'Yanover Premium' },
         notes: { type: 'string', description: 'Optional notes about the category.', nullable: true, example: 'Large-size export category' },
+        supportedGrades: {
+          type: 'array',
+          items: { type: 'string', enum: Object.values(Grade) },
+          description: 'Grades supported by this category.',
+          example: [Grade.א, Grade.ב],
+        },
       },
       example: {
         name: 'Yanover Premium',
         notes: 'Large-size export category',
+        supportedGrades: [Grade.א, Grade.ב],
       },
     },
   })
@@ -57,6 +65,12 @@ export class TradersCatController {
         seasonId: { type: 'number', example: 1 },
         name: { type: 'string', example: 'Yanover Premium' },
         notes: { type: 'string', nullable: true, example: 'Large-size export category' },
+        supportedGrades: {
+          type: 'array',
+          items: { type: 'string', enum: Object.values(Grade) },
+          description: 'Grades supported by this category.',
+          example: [Grade.א, Grade.ב],
+        },
         shares: {
           type: 'array',
           items: {
@@ -134,6 +148,12 @@ export class TradersCatController {
         id: { type: 'number', example: 1 },
         name: { type: 'string', example: 'Yanover Premium Updated' },
         notes: { type: 'string', nullable: true, example: 'Adjusted classification notes' },
+        supportedGrades: {
+          type: 'array',
+          items: { type: 'string', enum: Object.values(Grade) },
+          description: 'Updated list of grades supported by this category.',
+          example: [Grade.א, Grade.ב, Grade.ג],
+        },
       },
     },
     examples: {
@@ -143,6 +163,7 @@ export class TradersCatController {
           id: 1,
           name: 'Yanover Premium Updated',
           notes: 'Adjusted classification notes',
+          supportedGrades: [Grade.א, Grade.ב, Grade.ג],
         },
       },
     },
@@ -165,6 +186,12 @@ export class TradersCatController {
         id: { type: 'number', example: 1 },
         name: { type: 'string', example: 'Yanover Premium Updated' },
         notes: { type: 'string', nullable: true, example: 'Adjusted notes' },
+        supportedGrades: {
+          type: 'array',
+          items: { type: 'string', enum: Object.values(Grade) },
+          description: 'Updated list of grades supported by this category.',
+          example: [Grade.א, Grade.ב, Grade.ג],
+        },
         shares: {
           type: 'array',
           items: {
@@ -185,6 +212,29 @@ export class TradersCatController {
   @ApiResponse({ status: 409, description: 'Category already exists in this season.' })
   updateWithShares(@Body() dto: UpdateTraderCategoryWithSharesDto) {
     return this.traderCatShareService.updateWithShares(dto);
+  }
+
+  @Patch('reorder')
+  @ApiOperation({ summary: 'Persist a manual priority order for all trader categories in a season.' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['seasonId', 'orderedIds'],
+      properties: {
+        seasonId: { type: 'number', example: 1 },
+        orderedIds: {
+          type: 'array',
+          items: { type: 'number' },
+          description: 'Category IDs for this season in the desired display order.',
+          example: [4, 2, 1, 3],
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Categories reordered successfully.' })
+  @ApiResponse({ status: 400, description: 'orderedIds does not match the categories in this season.' })
+  reorder(@Body() dto: ReorderTraderCategoriesDto) {
+    return this.tradersCatService.reorder(dto);
   }
 
   @Delete(':id')

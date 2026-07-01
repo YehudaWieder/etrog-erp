@@ -143,8 +143,12 @@ export type TraderCategoriesI18n = {
 	notesLabel: string;
 	notesPlaceholder: string;
 	allocationSectionTitle: string;
+	supportedGradesLabel: string;
 	categoryId: string;
 	sharesDetailsTitle: string;
+	priorityLabel: string;
+	dragHandleLabel: string;
+	reorderFailed: string;
 	selectTraderOption: string;
 	percentPlaceholder: (index: number) => string;
 	addRow: string;
@@ -186,8 +190,12 @@ export type DefaultTraderCategoriesI18n = {
 	notesLabel: string;
 	notesPlaceholder: string;
 	allocationSectionTitle: string;
+	supportedGradesLabel: string;
 	categoryId: string;
 	sharesDetailsTitle: string;
+	priorityLabel: string;
+	dragHandleLabel: string;
+	reorderFailed: string;
 	selectTraderOption: string;
 	percentPlaceholder: (index: number) => string;
 	addRow: string;

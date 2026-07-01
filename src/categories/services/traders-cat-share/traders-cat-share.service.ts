@@ -84,11 +84,20 @@ export class TraderCatShareService {
     categoryName: string,
   ): Promise<number> {
     return this.prisma.$transaction(async (tx) => {
+      const lastCategory = await tx.tradersCategories.findFirst({
+        where: { seasonId: dto.seasonId },
+        orderBy: { orderIndex: 'desc' },
+        select: { orderIndex: true },
+      });
+      const nextOrderIndex = (lastCategory?.orderIndex ?? -1) + 1;
+
       const createdCategory = await tx.tradersCategories.create({
         data: {
           seasonId: dto.seasonId,
           name: categoryName,
           notes: dto.notes,
+          supportedGrades: dto.supportedGrades,
+          orderIndex: nextOrderIndex,
         },
         select: { id: true },
       });
@@ -117,6 +126,7 @@ export class TraderCatShareService {
         data: {
           name: categoryName,
           notes: dto.notes,
+          supportedGrades: dto.supportedGrades,
         },
       });
 
@@ -309,7 +319,7 @@ export class TraderCatShareService {
 
     const categories = await this.prisma.tradersCategories.findMany({
       where: { seasonId },
-      orderBy: { name: 'asc' },
+      orderBy: [{ orderIndex: 'asc' }, { name: 'asc' }],
       include: {
         traderCategoryShares: {
           orderBy: { traderId: 'asc' },

@@ -1,10 +1,11 @@
-import { Role } from '@prisma/client';
+import { Grade, Role } from '@prisma/client';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 
 export type TraderWorkerCategoryRecord = {
   id: number;
   name: string;
   notes: string | null;
+  supportedGrades: Grade[];
 };
 
 export function isManagerOrAbove(actor: AuthenticatedUser): boolean {
@@ -18,5 +19,6 @@ export function toWorkerTraderCategoryView(record: TraderWorkerCategoryRecord) {
     grade: null,
     percent: null,
     notes: record.notes,
+    supportedGrades: record.supportedGrades,
   };
 }

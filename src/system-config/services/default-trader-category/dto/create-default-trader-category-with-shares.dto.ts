@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Grade } from '@prisma/client';
 
 export class CreateDefaultTraderCategoryWithSharesItemDto {
   @ApiProperty({ description: 'Trader ID to include in the default category distribution.', example: 1 })
@@ -19,6 +20,14 @@ export class CreateDefaultTraderCategoryWithSharesDto {
 
   @ApiPropertyOptional({ description: 'Optional notes for the category.', example: 'Default multi-season setup' })
   notes?: string;
+
+  @ApiPropertyOptional({
+    enum: Grade,
+    enumName: 'Grade',
+    isArray: true,
+    description: 'Grades supported by this category.',
+  })
+  supportedGrades?: Grade[];
 
   @ApiProperty({
     type: [CreateDefaultTraderCategoryWithSharesItemDto],

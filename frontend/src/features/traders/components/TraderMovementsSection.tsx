@@ -37,6 +37,7 @@ type TraderMovementsSectionProps = {
   onCategoryChange?: (categoryId: string) => void;
   onGradeChange?: (grade: string) => void;
   onPitamStatusChange?: (pitamStatus: string) => void;
+  traderCategoryOrder?: Map<string, number>;
 };
 
 export function TraderMovementsSection({
@@ -60,19 +61,27 @@ export function TraderMovementsSection({
   onCategoryChange,
   onGradeChange,
   onPitamStatusChange,
+  traderCategoryOrder,
 }: TraderMovementsSectionProps) {
   const i18n = getTraderMovementsI18n();
 
   const categoryOptions = useMemo<FilterOption[]>(() => {
-    const uniqueCategories = Array.from(new Set(movements.map((movement) => movement.categoryName).filter(Boolean))).sort((left, right) =>
-      left.localeCompare(right, lang === 'he' ? 'he' : 'en', { sensitivity: 'base' }),
-    );
+    const uniqueCategories = Array.from(new Set(movements.map((movement) => movement.categoryName).filter(Boolean))).sort((left, right) => {
+      if (traderCategoryOrder) {
+        const li = traderCategoryOrder.get(left);
+        const ri = traderCategoryOrder.get(right);
+        if (li !== undefined && ri !== undefined) return li - ri;
+        if (li !== undefined) return -1;
+        if (ri !== undefined) return 1;
+      }
+      return left.localeCompare(right, lang === 'he' ? 'he' : 'en', { sensitivity: 'base' });
+    });
 
     return [
       { value: 'ALL', label: i18n.filters.allCategoriesOption },
       ...uniqueCategories.map((value) => ({ value, label: value })),
     ];
-  }, [i18n.filters.allCategoriesOption, lang, movements]);
+  }, [i18n.filters.allCategoriesOption, lang, movements, traderCategoryOrder]);
 
   const gradeOptions = useMemo<FilterOption[]>(() => {
     const uniqueGrades = Array.from(new Set(movements.map((movement) => movement.grade).filter(Boolean))).sort((left, right) =>

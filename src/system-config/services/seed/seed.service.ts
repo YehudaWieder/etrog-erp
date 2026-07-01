@@ -7,8 +7,8 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 export class SeedService {
   /**
-   * Bootstrap default trader categories and shares into a new season.
-   * All operations are wrapped in a single transaction for atomicity.
+   * Bootstrap a new season's system config (with schema defaults) plus default
+   * trader categories and shares. All operations are wrapped in a single transaction for atomicity.
    *
    * @param seasonId - The ID of the newly created season
    * @param tx - Prisma transaction client (ensures all-or-nothing semantics)
@@ -17,6 +17,9 @@ export class SeedService {
     seasonId: number,
     tx: any, // TransactionClient - uses any to avoid type conflicts between generated and node_modules Prisma
   ): Promise<void> {
+    // Create the season's system config with schema defaults (box capacities, no pricing yet)
+    await tx.systemConfig.create({ data: { seasonId } });
+
     // Fetch all default trader categories
     const defaultCategories = await tx.defaultTraderCategory.findMany();
 
@@ -35,6 +38,7 @@ export class SeedService {
           seasonId,
           name: defaultCategory.name,
           notes: defaultCategory.notes,
+          orderIndex: defaultCategory.orderIndex,
           isDefault: true, // Mark as created from seed bootstrap
         },
       });

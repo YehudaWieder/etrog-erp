@@ -4,6 +4,7 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
@@ -11,6 +12,7 @@ import { SeasonsService } from 'src/seasons/seasons.service';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { CreateTraderCategoryDto } from './dto/create-trader-category.dto';
 import { UpdateTraderCategoryDto } from './dto/update-trader-category.dto';
+import { ReorderTraderCategoriesDto } from './dto/reorder-trader-categories.dto';
 import {
   isManagerOrAbove,
   toWorkerTraderCategoryView,
@@ -44,6 +46,7 @@ export class TradersCatService {
         id: true,
         name: true,
         notes: true,
+        supportedGrades: true,
       },
     });
   }
@@ -61,6 +64,7 @@ export class TradersCatService {
         id: true,
         name: true,
         notes: true,
+        supportedGrades: true,
       },
     });
   }
@@ -68,7 +72,7 @@ export class TradersCatService {
   private async findManyManagerViewBySeason(seasonId: number) {
     return this.prisma.tradersCategories.findMany({
       where: { seasonId },
-      orderBy: { name: 'asc' },
+      orderBy: [{ orderIndex: 'asc' }, { name: 'asc' }],
     });
   }
 
@@ -79,8 +83,9 @@ export class TradersCatService {
         id: true,
         name: true,
         notes: true,
+        supportedGrades: true,
       },
-      orderBy: { name: 'asc' },
+      orderBy: [{ orderIndex: 'asc' }, { name: 'asc' }],
     });
   }
 
@@ -103,6 +108,7 @@ export class TradersCatService {
         name,
         notes,
         seasonId,
+        supportedGrades: dto.supportedGrades,
       },
     });
   }
@@ -153,6 +159,38 @@ export class TradersCatService {
       where: { id },
       data,
     });
+  }
+
+  // Persist a manual priority order for all categories in a season
+  async reorder(dto: ReorderTraderCategoriesDto) {
+    const existing = await this.prisma.tradersCategories.findMany({
+      where: { seasonId: dto.seasonId },
+      select: { id: true },
+    });
+
+    const existingIds = new Set(existing.map((category) => category.id));
+    const uniqueOrderedIds = new Set(dto.orderedIds);
+
+    if (
+      uniqueOrderedIds.size !== dto.orderedIds.length ||
+      uniqueOrderedIds.size !== existingIds.size ||
+      dto.orderedIds.some((id) => !existingIds.has(id))
+    ) {
+      throw new BadRequestException(
+        'orderedIds must contain exactly the set of category IDs for this season.',
+      );
+    }
+
+    await this.prisma.$transaction(
+      dto.orderedIds.map((id, index) =>
+        this.prisma.tradersCategories.update({
+          where: { id },
+          data: { orderIndex: index },
+        }),
+      ),
+    );
+
+    return { orderedIds: dto.orderedIds };
   }
 
   // Remove a category

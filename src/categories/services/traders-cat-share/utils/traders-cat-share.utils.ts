@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { Prisma, Role } from '@prisma/client';
+import { Grade, Prisma, Role } from '@prisma/client';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import type { TraderShareRowDto } from '../dto/trader-share-row.dto';
 
@@ -10,6 +10,8 @@ export type TraderCategoryWithSharesRecord = {
   seasonId: number;
   name: string;
   notes: string | null;
+  supportedGrades: Grade[];
+  orderIndex: number;
   createdAt: Date;
   updatedAt: Date;
   traderCategoryShares: Array<{
@@ -77,6 +79,8 @@ export function transformCategoryWithShares(record: TraderCategoryWithSharesReco
     seasonId: record.seasonId,
     name: record.name,
     notes: record.notes,
+    supportedGrades: record.supportedGrades,
+    orderIndex: record.orderIndex,
     shares,
     totalPercent: Number(totalPercent.toFixed(2)),
     createdAt: record.createdAt,

@@ -1,6 +1,7 @@
 import { FaXmark } from 'react-icons/fa6';
 import type { ShareRow } from '../tradersManagement.types';
 import { DEFAULT_PERCENT_STEP } from '../utils/traderShares.util';
+import { TRADER_CATEGORY_GRADE_OPTIONS } from '../utils/traderCategoryGrades.util';
 import styles from './styles/TraderCategoriesShared.module.css';
 
 type TraderOption = {
@@ -19,6 +20,7 @@ type TraderCategoryFormModalText = {
   notesLabel: string;
   notesPlaceholder: string;
   allocationSectionTitle: string;
+  supportedGradesLabel: string;
   selectTraderOption: string;
   percentPlaceholder: (index: number) => string;
   removeRow: string;
@@ -36,6 +38,8 @@ type TraderCategoryFormModalProps = {
   setCategoryName: (value: string) => void;
   categoryNotes: string;
   setCategoryNotes: (value: string) => void;
+  supportedGrades: string[];
+  toggleSupportedGrade: (grade: string) => void;
   shareRows: ShareRow[];
   getAvailableTradersForRow: (row: ShareRow) => TraderOption[];
   updateShareRow: (rowId: number, changes: Partial<ShareRow>) => void;
@@ -61,6 +65,8 @@ export function TraderCategoryFormModal({
   setCategoryName,
   categoryNotes,
   setCategoryNotes,
+  supportedGrades,
+  toggleSupportedGrade,
   shareRows,
   getAvailableTradersForRow,
   updateShareRow,
@@ -114,6 +120,20 @@ export function TraderCategoryFormModal({
               placeholder={t.notesPlaceholder}
             />
           </div>
+        </div>
+
+        <p className={styles.sharesSubtitle}>{t.supportedGradesLabel}</p>
+        <div className={styles.gradesChecklist}>
+          {TRADER_CATEGORY_GRADE_OPTIONS.map((grade) => (
+            <label key={grade} className={styles.gradeCheckboxItem}>
+              <input
+                type="checkbox"
+                checked={supportedGrades.includes(grade)}
+                onChange={() => toggleSupportedGrade(grade)}
+              />
+              <span>{grade}</span>
+            </label>
+          ))}
         </div>
 
         <p className={styles.sharesSubtitle}>{t.allocationSectionTitle}</p>

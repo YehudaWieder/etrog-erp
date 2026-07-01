@@ -25,6 +25,72 @@
   width: 100%;
 }
 
+.gradesChecklist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  width: max-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: 0;
+  margin-bottom: var(--space-2);
+}
+
+.gradeCheckboxItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: #17384f;
+  cursor: pointer;
+}
+
+.gradeCheckboxItem input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  border: 2px solid #c8d0d8;
+  border-radius: 6px;
+  background: var(--color-bg-surface);
+  cursor: pointer;
+  position: relative;
+  transition: background var(--easing-standard), border-color var(--easing-standard);
+}
+
+.gradeCheckboxItem input[type='checkbox']:hover {
+  border-color: var(--color-primary);
+}
+
+.gradeCheckboxItem input[type='checkbox']:checked {
+  background: var(--color-text-accent);
+  border-color: var(--color-text-accent);
+}
+
+.gradeCheckboxItem input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  width: 5px;
+  height: 10px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.gradeCheckboxItem input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+:global(.app-shell[data-direction='ltr']) .gradesChecklist {
+  margin-left: 0;
+  margin-right: auto;
+}
+
 .sharesArea {
   display: flex;
   flex-direction: column;
@@ -185,6 +251,39 @@
   font-weight: 700;
   font-size: 0.9rem;
   color: #17384f;
+}
+
+.priorityBadge {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text-accent);
+  background: var(--color-primary-soft);
+  border-radius: 999px;
+  padding: 2px 10px;
+  margin-bottom: 2px;
+  width: fit-content;
+}
+
+.dragHandle {
+  cursor: grab;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--color-text-muted);
+  padding: 4px;
+  user-select: none;
+}
+
+.draggableCard {
+  transition: opacity 0.15s ease, box-shadow 0.15s ease;
+}
+
+.draggingCard {
+  opacity: 0.5;
+}
+
+.dragOverCard :global(.seasons-manager__card) {
+  box-shadow: 0 0 0 2px var(--color-text-accent);
 }
 
 @media (max-width: 900px) {

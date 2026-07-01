@@ -48,9 +48,11 @@ model Field {
 // 3. Default Trader Categories (Global Defaults)
 // -----------------------------------------------------------------------------
 model DefaultTraderCategory {
-  id    Int     @id @default(autoincrement())
-  name  String  @unique
-  notes String?
+  id              Int     @id @default(autoincrement())
+  name            String  @unique
+  notes           String?
+  supportedGrades Grade[]
+  orderIndex      Int     @default(0)
 
   shares DefaultTraderCategoryShare[]
 
@@ -185,11 +187,13 @@ model Customer {
 // 9. Traders categories
 // -----------------------------------------------------------------------------
 model TradersCategories {
-  id       Int     @id @default(autoincrement())
-  name     String // Category name (e.g., "Yanover")
-  notes    String?
-  seasonId Int
-  season   Season  @relation(fields: [seasonId], references: [id])
+  id              Int     @id @default(autoincrement())
+  name            String // Category name (e.g., "Yanover")
+  notes           String?
+  seasonId        Int
+  season          Season  @relation(fields: [seasonId], references: [id])
+  supportedGrades Grade[]
+  orderIndex      Int     @default(0)
 
   isDefault Boolean @default(false) // true = created by SeedService bootstrap, false = manually added
 
@@ -343,7 +347,7 @@ model Classification {
 
   isDeleted Boolean @default(false)
 
-  @@unique([fieldHarvestId, traderId, customerId, traderCategoryId, customerCategoryId, grade, assignmentType])
+  @@unique([fieldHarvestId, traderId, customerId, traderCategoryId, customerCategoryId, grade, assignmentType, pitamStatus, isDeleted])
   @@index([seasonId])
   @@index([seasonId, fieldHarvestId])
   @@index([seasonId, assignmentType])
@@ -583,7 +587,7 @@ model ShipmentItem {
 
   isDeleted Boolean @default(false)
 
-  @@unique([seasonId, boxId, traderCategoryId, customerCategoryId, grade, pitamStatus, ownershipType, traderId, customerId, isPrivateSelection])
+  @@unique([seasonId, boxId, traderCategoryId, customerCategoryId, grade, pitamStatus, ownershipType, traderId, customerId, isPrivateSelection, isDeleted])
   @@index([shipmentId])
   @@index([boxId])
   @@index([seasonId])
@@ -643,6 +647,7 @@ enum Grade {
   ד
   ה
   ו
+  ללא
 }
 
 enum AssignmentType {

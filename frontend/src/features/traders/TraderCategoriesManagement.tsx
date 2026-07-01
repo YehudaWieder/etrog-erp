@@ -29,6 +29,8 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
     setCategoryName,
     categoryNotes,
     setCategoryNotes,
+    supportedGrades,
+    toggleSupportedGrade,
     shareRows,
     updateShareRow,
     removeShareRow,
@@ -44,6 +46,8 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
     closeDialogs,
     onSaveFromModal,
     getRowAvailableTraders,
+    isReorderDisabled,
+    onReorderCategories,
   } = useTraderCategoriesManagement({ onHeaderStateChange });
 
   return (
@@ -66,10 +70,14 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
         onToggleCategory={(id) => {
           setSelectedCategoryId((currentId) => (currentId === id ? null : id));
         }}
+        onReorder={onReorderCategories}
+        isReorderDisabled={isReorderDisabled}
         t={{
           categoryId: t.categoryId,
           notesLabel: t.notesLabel,
           sharesDetailsTitle: t.sharesDetailsTitle,
+          priorityLabel: t.priorityLabel,
+          dragHandleLabel: t.dragHandleLabel,
         }}
       />
 
@@ -100,6 +108,7 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
           notesLabel: t.notesLabel,
           notesPlaceholder: t.notesPlaceholder,
           allocationSectionTitle: t.allocationSectionTitle,
+          supportedGradesLabel: t.supportedGradesLabel,
           selectTraderOption: t.selectTraderOption,
           percentPlaceholder: t.percentPlaceholder,
           removeRow: t.removeRow,
@@ -111,6 +120,8 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
         setCategoryName={setCategoryName}
         categoryNotes={categoryNotes}
         setCategoryNotes={setCategoryNotes}
+        supportedGrades={supportedGrades}
+        toggleSupportedGrade={toggleSupportedGrade}
         shareRows={shareRows}
         getAvailableTradersForRow={getRowAvailableTraders}
         updateShareRow={updateShareRow}

@@ -38,6 +38,9 @@ import {
 import {
   DefaultTraderCategoryApprovalResponseDto,
 } from 'src/system-config/services/default-trader-category/dto/default-trader-category-approval-response.dto';
+import {
+  ReorderDefaultTraderCategoriesDto,
+} from 'src/system-config/services/default-trader-category/dto/reorder-default-trader-categories.dto';
 import { DefaultTraderCategoryService } from 'src/system-config/services/default-trader-category/default-trader-category.service';
 
 @ApiTags('System Configuration')
@@ -158,6 +161,32 @@ export class DefaultTraderCategoryController {
     @Body() dto: UpdateDefaultTraderCategoryDto,
   ) {
     return this.defaultTraderCategoryService.update(dto.id, dto);
+  }
+
+  @ApiOperation({
+    summary:
+      'Persist a manual priority order for all default trader categories. Roles: OWNER, MANAGER.',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['orderedIds'],
+      properties: {
+        orderedIds: {
+          type: 'array',
+          items: { type: 'number' },
+          description: 'Default trader category IDs in the desired display order.',
+          example: [4, 2, 1, 3],
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Default trader categories reordered successfully.' })
+  @ApiResponse({ status: 400, description: 'orderedIds does not match the existing categories.' })
+  @Roles(Role.OWNER, Role.MANAGER)
+  @Patch('reorder')
+  async reorderDefaultCategories(@Body() dto: ReorderDefaultTraderCategoriesDto) {
+    return this.defaultTraderCategoryService.reorder(dto);
   }
 
   @ApiOperation({

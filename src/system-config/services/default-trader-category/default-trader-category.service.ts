@@ -19,6 +19,9 @@ import {
   CreateDefaultTraderCategoryShareDto,
 } from './dto/create-default-trader-category-share.dto';
 import {
+  ReorderDefaultTraderCategoriesDto,
+} from './dto/reorder-default-trader-categories.dto';
+import {
   normalizeCategoryName,
   toApprovalResponse,
   validateCreateWithSharesPayload,
@@ -66,6 +69,7 @@ export class DefaultTraderCategoryService {
       data: {
         name: categoryName,
         notes: dto.notes,
+        supportedGrades: dto.supportedGrades,
       },
     });
   }
@@ -100,10 +104,18 @@ export class DefaultTraderCategoryService {
     }
 
     const createdCategoryId = await this.prisma.$transaction(async (tx) => {
+      const lastCategory = await tx.defaultTraderCategory.findFirst({
+        orderBy: { orderIndex: 'desc' },
+        select: { orderIndex: true },
+      });
+      const nextOrderIndex = (lastCategory?.orderIndex ?? -1) + 1;
+
       const createdCategory = await tx.defaultTraderCategory.create({
         data: {
           name: categoryName,
           notes: dto.notes,
+          supportedGrades: dto.supportedGrades,
+          orderIndex: nextOrderIndex,
         },
         select: { id: true },
       });
@@ -145,7 +157,7 @@ export class DefaultTraderCategoryService {
    */
   async findAll() {
     const categories = await this.prisma.defaultTraderCategory.findMany({
-      orderBy: { name: 'asc' },
+      orderBy: [{ orderIndex: 'asc' }, { name: 'asc' }],
       include: {
         shares: {
           orderBy: { traderId: 'asc' },
@@ -222,6 +234,7 @@ export class DefaultTraderCategoryService {
       data: {
         name: normalizedName,
         notes: dto.notes,
+        supportedGrades: dto.supportedGrades,
       },
       include: {
         shares: {
@@ -236,6 +249,39 @@ export class DefaultTraderCategoryService {
     });
 
     return toApprovalResponse(updated);
+  }
+
+  /**
+   * Persist a manual priority order for all default trader categories
+   */
+  async reorder(dto: ReorderDefaultTraderCategoriesDto) {
+    const existing = await this.prisma.defaultTraderCategory.findMany({
+      select: { id: true },
+    });
+
+    const existingIds = new Set(existing.map((category) => category.id));
+    const uniqueOrderedIds = new Set(dto.orderedIds);
+
+    if (
+      uniqueOrderedIds.size !== dto.orderedIds.length ||
+      uniqueOrderedIds.size !== existingIds.size ||
+      dto.orderedIds.some((id) => !existingIds.has(id))
+    ) {
+      throw new BadRequestException(
+        'orderedIds must contain exactly the set of existing default trader category IDs.',
+      );
+    }
+
+    await this.prisma.$transaction(
+      dto.orderedIds.map((id, index) =>
+        this.prisma.defaultTraderCategory.update({
+          where: { id },
+          data: { orderIndex: index },
+        }),
+      ),
+    );
+
+    return { orderedIds: dto.orderedIds };
   }
 
   /**

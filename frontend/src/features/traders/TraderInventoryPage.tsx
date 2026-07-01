@@ -51,6 +51,13 @@ export function TraderInventoryPage() {
   const [traderCategories, setTraderCategories] = useState<TraderCategoryWithShares[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [customerCategories, setCustomerCategories] = useState<CustomerCategory[]>([]);
+  const traderCategoryOrder = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const category of traderCategories) {
+      map.set(category.name, category.orderIndex);
+    }
+    return map;
+  }, [traderCategories]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -441,7 +448,7 @@ export function TraderInventoryPage() {
     const locale = lang === 'he' ? 'he-IL' : 'en-US';
     const fmt = (n: number) => new Intl.NumberFormat(locale).format(Math.abs(n));
 
-    const summaryMatrix = buildTraderInventorySummaryMatrix(traderInventorySummary.rows, t.summary.values.none);
+    const summaryMatrix = buildTraderInventorySummaryMatrix(traderInventorySummary.rows, t.summary.values.none, traderCategoryOrder);
     const pitamWith = getTraderInventoryPitamStatusLabel('WITH_PITAM', t.summary);
     const pitamWithout = getTraderInventoryPitamStatusLabel('WITHOUT_PITAM', t.summary);
     const pitamMixed = getTraderInventoryPitamStatusLabel('MIXED', t.summary);
@@ -473,7 +480,7 @@ export function TraderInventoryPage() {
       height: 900,
       extraStyles: tableStyles,
     });
-  }, [lang, seasons, traders, filterValues, t, traderInventorySummary.rows]);
+  }, [lang, seasons, traders, filterValues, t, traderInventorySummary.rows, traderCategoryOrder]);
 
   const handleExportInventoryTable = useCallback(async () => {
     const seasonDisplay = filterValues.seasonId
@@ -497,7 +504,7 @@ export function TraderInventoryPage() {
     const statusDisplay = statusMap[filterValues.inventoryStatus] || filterValues.inventoryStatus;
     const baseFileName = lang === 'he' ? 'מלאי סוחרים' : 'Trader Inventory';
 
-    const summaryMatrix = buildTraderInventorySummaryMatrix(traderInventorySummary.rows, t.summary.values.none);
+    const summaryMatrix = buildTraderInventorySummaryMatrix(traderInventorySummary.rows, t.summary.values.none, traderCategoryOrder);
 
     await exportTraderInventoryExcel({
       fileName: `${baseFileName}_${seasonDisplay}_${traderDisplay}_${statusDisplay}`,
@@ -511,7 +518,7 @@ export function TraderInventoryPage() {
       labels: t.summary,
       rightToLeft: lang === 'he',
     });
-  }, [lang, seasons, traders, filterValues, t, traderInventorySummary.rows]);
+  }, [lang, seasons, traders, filterValues, t, traderInventorySummary.rows, traderCategoryOrder]);
 
   const filtersBar = isAllInventoryTab ? (
     <GlobalScopedFilters
@@ -636,6 +643,7 @@ export function TraderInventoryPage() {
           error={traderInventorySummary.error}
           onRetry={traderInventorySummary.reload}
           tableRef={matrixTableRef}
+          traderCategoryOrder={traderCategoryOrder}
         />
       ) : isMovementsTab ? (
         <TraderMovementsSection
@@ -659,6 +667,7 @@ export function TraderInventoryPage() {
           onSeasonChange={(value) => setFilterValues((prev) => ({ ...prev, seasonId: value }))}
           onTraderChange={(value) => setFilterValues((prev) => ({ ...prev, traderId: value }))}
           onMovementStatusChange={(value) => setFilterValues((prev) => ({ ...prev, movementStatus: value }))}
+          traderCategoryOrder={traderCategoryOrder}
         />
       ) : (
         <section className="shipments-empty-state">
