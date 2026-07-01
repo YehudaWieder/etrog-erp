@@ -718,6 +718,7 @@ export class ItemService {
         ownershipType: item.ownershipType,
         traderId: item.traderId,
         customerId: item.customerId,
+        isPrivateSelection: item.isPrivateSelection,
         isDeleted: false,
       },
     });

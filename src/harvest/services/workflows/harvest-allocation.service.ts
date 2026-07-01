@@ -180,6 +180,7 @@ export class HarvestAllocationService {
           quantity: classItem.quantity,
           isModulo: false,
           type: MovementType.PRIVATE_SELECTION,
+          isFromPrivateSelection: true,
           MovementReferenceId: params.classificationId,
           updatedById: params.updatedById,
           notes: classItem.notes,
