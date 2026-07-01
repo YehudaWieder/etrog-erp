@@ -25,7 +25,21 @@ function emptyBucket(shipmentNumbers: number[]): ShipmentSummaryBucket {
   return { quantities, total: 0 };
 }
 
-export function buildShipmentItemsSummaryMatrix(rows: ShipmentItemsTableRow[]): ShipmentItemsSummaryMatrix {
+function compareCategoryNames(a: string, b: string, categoryOrderByName?: Map<string, number> | null): number {
+  if (categoryOrderByName) {
+    const ai = categoryOrderByName.get(a);
+    const bi = categoryOrderByName.get(b);
+    if (ai !== undefined && bi !== undefined) return ai - bi;
+    if (ai !== undefined) return -1;
+    if (bi !== undefined) return 1;
+  }
+  return a.localeCompare(b);
+}
+
+export function buildShipmentItemsSummaryMatrix(
+  rows: ShipmentItemsTableRow[],
+  categoryOrderByName?: Map<string, number> | null,
+): ShipmentItemsSummaryMatrix {
   const shipmentSet = new Set<number>();
   for (const row of rows) shipmentSet.add(row.shipmentNumber);
   const shipmentNumbers = Array.from(shipmentSet).sort((a, b) => a - b);
@@ -62,7 +76,7 @@ export function buildShipmentItemsSummaryMatrix(rows: ShipmentItemsTableRow[]): 
 
   const generalCategories: ShipmentSummaryCategoryRow[] = Array.from(generalMap.entries())
     .map(([categoryName, bucket]) => ({ categoryName, bucket }))
-    .sort((a, b) => a.categoryName.localeCompare(b.categoryName));
+    .sort((a, b) => compareCategoryNames(a.categoryName, b.categoryName, categoryOrderByName));
 
   return { shipmentNumbers, generalCategories, privateSelection, customers, columnTotals, grandTotal };
 }

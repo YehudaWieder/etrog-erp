@@ -104,8 +104,20 @@ export function buildShipmentItemsOwnershipMatrix(rows: ShipmentItemsTableRow[])
   return { categoryName: '', ownerships, shipmentNumbers, values, rowTotals, columnTotals, grandTotal };
 }
 
+function compareCategoryNames(a: string, b: string, categoryOrderByName?: Map<string, number> | null): number {
+  if (categoryOrderByName) {
+    const ai = categoryOrderByName.get(a);
+    const bi = categoryOrderByName.get(b);
+    if (ai !== undefined && bi !== undefined) return ai - bi;
+    if (ai !== undefined) return -1;
+    if (bi !== undefined) return 1;
+  }
+  return a.localeCompare(b);
+}
+
 export function buildShipmentItemsPerShipmentMatrices(
-  rows: ShipmentItemsTableRow[]
+  rows: ShipmentItemsTableRow[],
+  categoryOrderByName?: Map<string, number> | null,
 ): ShipmentBreakdownMatrix[] {
   const shipmentMap = new Map<number, ShipmentItemsTableRow[]>();
   for (const row of rows) {
@@ -129,7 +141,7 @@ export function buildShipmentItemsPerShipmentMatrices(
     const ownershipTypePriority = (type: string) =>
       type === 'TRADER' ? 0 : type === 'CUSTOMER' ? 1 : 2;
 
-    const generalCategories = Array.from(categorySet).sort((a, b) => a.localeCompare(b));
+    const generalCategories = Array.from(categorySet).sort((a, b) => compareCategoryNames(a, b, categoryOrderByName));
     const ownershipNames = Array.from(ownershipTypeMap.keys()).sort((a, b) => {
       const pa = ownershipTypePriority(ownershipTypeMap.get(a) ?? '');
       const pb = ownershipTypePriority(ownershipTypeMap.get(b) ?? '');

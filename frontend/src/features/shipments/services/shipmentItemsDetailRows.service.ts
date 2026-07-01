@@ -58,12 +58,24 @@ export function buildShipmentItemsDetailRows(
   return rows.sort((a, b) => a.boxNumber - b.boxNumber);
 }
 
+function compareCategoryNames(a: string, b: string, categoryOrderByName?: Map<string, number> | null): number {
+  if (categoryOrderByName) {
+    const ai = categoryOrderByName.get(a);
+    const bi = categoryOrderByName.get(b);
+    if (ai !== undefined && bi !== undefined) return ai - bi;
+    if (ai !== undefined) return -1;
+    if (bi !== undefined) return 1;
+  }
+  return a.localeCompare(b);
+}
+
 export function buildBoxItemsDetailRows(
   items: ShipmentItemRecord[],
   boxNumber: number,
   labels: ShipmentsTableLabels['detailsItemsTable'],
+  categoryOrderByName?: Map<string, number> | null,
 ): ShipmentItemDetailRow[] {
-  return items.map((item) => {
+  const rows = items.map((item) => {
     const ownership = item.ownershipType === 'TRADER'
       ? item.trader?.name || labels.ownershipLabels.TRADER
       : item.ownershipType === 'CUSTOMER'
@@ -92,5 +104,11 @@ export function buildBoxItemsDetailRows(
       notes: item.notes?.trim() ?? '',
       generalSourceBreakdown: item.generalSourceBreakdown ?? null,
     };
+  });
+
+  return rows.sort((a, b) => {
+    if (a.ownership !== b.ownership) return a.ownership.localeCompare(b.ownership);
+    if (a.stockSource !== b.stockSource) return a.stockSource.localeCompare(b.stockSource);
+    return compareCategoryNames(a.category, b.category, categoryOrderByName) || a.grade.localeCompare(b.grade);
   });
 }

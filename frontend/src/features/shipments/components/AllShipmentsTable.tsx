@@ -20,6 +20,7 @@ import { buildShipmentItemsDetailRows } from '../services/shipmentItemsDetailRow
 import { SHIPMENT_DETAILS_PRINT_EXTRA_STYLES } from '../services/shipmentDetailsPrintStyles';
 import { printAllShipments, exportAllShipmentsToExcel } from '../services/allShipmentsExport.service';
 import { openPrintableWindow } from '../../../services/printWindow';
+import { getTraderCategoriesWithShares } from '../../../services/traderCategoriesApi';
 import { formatShipmentDate } from '../utils/shipments.util';
 import sharedFilterStyles from '../../../components/ui/styles/GlobalFiltersBar.module.css';
 import styles from './styles/AllShipmentsTable.module.css';
@@ -68,9 +69,33 @@ export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectSh
     isLoading: isDetailsItemsLoading,
     error: detailsItemsError,
   } = useShipmentDetailsItems(detailsBoxes, !isDetailsBoxesLoading, labels.detailsEtrogSummary.error);
+  const [detailsTraderCategoryOrder, setDetailsTraderCategoryOrder] = useState<Map<string, number>>(new Map());
+  useEffect(() => {
+    const seasonId = detailsRow?.seasonId ?? null;
+    if (!seasonId) {
+      setDetailsTraderCategoryOrder(new Map());
+      return;
+    }
+    let isMounted = true;
+    getTraderCategoriesWithShares(seasonId)
+      .then((categories) => {
+        if (!isMounted) return;
+        const map = new Map<string, number>();
+        for (const category of categories) {
+          map.set(category.name, category.orderIndex);
+        }
+        setDetailsTraderCategoryOrder(map);
+      })
+      .catch(() => {
+        if (isMounted) setDetailsTraderCategoryOrder(new Map());
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [detailsRow]);
   const detailsEtrogSummary = useMemo(
-    () => buildShipmentEtrogSummary(detailsItems, labels.detailsEtrogSummary.customRowLabel),
-    [detailsItems, labels.detailsEtrogSummary.customRowLabel],
+    () => buildShipmentEtrogSummary(detailsItems, labels.detailsEtrogSummary.customRowLabel, detailsTraderCategoryOrder),
+    [detailsItems, labels.detailsEtrogSummary.customRowLabel, detailsTraderCategoryOrder],
   );
   const detailsItemsRows = useMemo(
     () => buildShipmentItemsDetailRows(detailsItems, detailsBoxes, labels.detailsItemsTable),

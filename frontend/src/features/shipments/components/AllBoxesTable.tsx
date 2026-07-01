@@ -15,6 +15,7 @@ import { buildBoxItemsDetailRows } from '../services/shipmentItemsDetailRows.ser
 import { SHIPMENT_DETAILS_PRINT_EXTRA_STYLES } from '../services/shipmentDetailsPrintStyles';
 import { printAllBoxes, exportAllBoxesToExcel } from '../services/allBoxesExport.service';
 import { openPrintableWindow } from '../../../services/printWindow';
+import { getTraderCategoriesWithShares } from '../../../services/traderCategoriesApi';
 import sharedFilterStyles from '../../../components/ui/styles/GlobalFiltersBar.module.css';
 import styles from './styles/AllShipmentsTable.module.css';
 
@@ -54,9 +55,32 @@ export function AllBoxesTable({ lang, labels, selectedBoxId, onSelectBox, refres
     isLoading: isDetailsItemsLoading,
     error: detailsItemsError,
   } = useBoxDetailsItems(detailsRow?.id ?? null, labels.detailsItemsError);
+  const [traderCategoryOrder, setTraderCategoryOrder] = useState<Map<string, number>>(new Map());
+  useEffect(() => {
+    if (!selectedSeasonId) {
+      setTraderCategoryOrder(new Map());
+      return;
+    }
+    let isMounted = true;
+    getTraderCategoriesWithShares(selectedSeasonId)
+      .then((categories) => {
+        if (!isMounted) return;
+        const map = new Map<string, number>();
+        for (const category of categories) {
+          map.set(category.name, category.orderIndex);
+        }
+        setTraderCategoryOrder(map);
+      })
+      .catch(() => {
+        if (isMounted) setTraderCategoryOrder(new Map());
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedSeasonId]);
   const detailsItemsRows = useMemo(
-    () => (detailsRow ? buildBoxItemsDetailRows(detailsItems, detailsRow.boxNumber, labels.detailsItemsTable) : []),
-    [detailsItems, detailsRow, labels.detailsItemsTable],
+    () => (detailsRow ? buildBoxItemsDetailRows(detailsItems, detailsRow.boxNumber, labels.detailsItemsTable, traderCategoryOrder) : []),
+    [detailsItems, detailsRow, labels.detailsItemsTable, traderCategoryOrder],
   );
   const detailsPrintRef = useRef<HTMLDivElement>(null);
   const onRowCountChangeRef = useRef(onRowCountChange);

@@ -35,6 +35,7 @@ function isPitamStatusKey(value: string | null): value is PitamStatusKey {
 export function buildShipmentEtrogSummary(
   items: ShipmentItemRecord[],
   customLabel: string,
+  traderCategoryOrderByName?: Map<string, number> | null,
 ): ShipmentEtrogSummary {
   const traderCategoryRowsMap = new Map<number, ShipmentEtrogSummaryRow>();
   const customerCategoryRowsMap = new Map<number, ShipmentEtrogSummaryRow>();
@@ -76,7 +77,16 @@ export function buildShipmentEtrogSummary(
     grandTotal += item.quantity;
   }
 
-  const traderCategoryRows = Array.from(traderCategoryRowsMap.values()).sort((a, b) => a.label.localeCompare(b.label));
+  const traderCategoryRows = Array.from(traderCategoryRowsMap.values()).sort((a, b) => {
+    if (traderCategoryOrderByName) {
+      const ai = traderCategoryOrderByName.get(a.label);
+      const bi = traderCategoryOrderByName.get(b.label);
+      if (ai !== undefined && bi !== undefined) return ai - bi;
+      if (ai !== undefined) return -1;
+      if (bi !== undefined) return 1;
+    }
+    return a.label.localeCompare(b.label);
+  });
   const customerCategoryRows = Array.from(customerCategoryRowsMap.values()).sort((a, b) => a.label.localeCompare(b.label));
 
   return {

@@ -12,6 +12,7 @@ import { ShipmentBreakdownTable } from './ShipmentBreakdownTable';
 import { ShipmentsSummaryMatrix } from './ShipmentsSummaryMatrix';
 import { ShipmentsBoxStatusTable } from './ShipmentsBoxStatusTable';
 import { getShipmentsBySeason } from '../../../services/shipmentsApi';
+import { getTraderCategoriesWithShares } from '../../../services/traderCategoriesApi';
 import type { ShipmentItemsTableLabels, ShipmentRecord } from '../shipments.types';
 import sharedFilterStyles from '../../../components/ui/styles/GlobalFiltersBar.module.css';
 import workspaceStyles from '../../../components/ui/styles/WorkspaceSection.module.css';
@@ -46,9 +47,17 @@ export function ShipmentItemsSummary({ lang, labels, description }: ShipmentItem
     selectedOwnership,
   );
 
+  const [traderCategoryOrder, setTraderCategoryOrder] = useState<Map<string, number>>(new Map());
+
   const summaryTotals = useMemo(() => buildShipmentItemsSummaryTotals(rows), [rows]);
-  const summaryMatrix = useMemo(() => buildShipmentItemsSummaryMatrix(rows), [rows]);
-  const perShipmentMatrices = useMemo(() => buildShipmentItemsPerShipmentMatrices(rows), [rows]);
+  const summaryMatrix = useMemo(
+    () => buildShipmentItemsSummaryMatrix(rows, traderCategoryOrder),
+    [rows, traderCategoryOrder],
+  );
+  const perShipmentMatrices = useMemo(
+    () => buildShipmentItemsPerShipmentMatrices(rows, traderCategoryOrder),
+    [rows, traderCategoryOrder],
+  );
   const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
   const [shipments, setShipments] = useState<ShipmentRecord[]>([]);
 
@@ -72,6 +81,22 @@ export function ShipmentItemsSummary({ lang, labels, description }: ShipmentItem
       return;
     }
     getShipmentsBySeason(selectedSeasonId).then(setShipments).catch(() => setShipments([]));
+  }, [selectedSeasonId]);
+
+  useEffect(() => {
+    if (!selectedSeasonId) {
+      setTraderCategoryOrder(new Map());
+      return;
+    }
+    getTraderCategoriesWithShares(selectedSeasonId)
+      .then((categories) => {
+        const map = new Map<string, number>();
+        for (const category of categories) {
+          map.set(category.name, category.orderIndex);
+        }
+        setTraderCategoryOrder(map);
+      })
+      .catch(() => setTraderCategoryOrder(new Map()));
   }, [selectedSeasonId]);
 
   return (
