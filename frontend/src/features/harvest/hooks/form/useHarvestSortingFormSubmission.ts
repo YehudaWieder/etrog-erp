@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
   createHarvestClassification,
   restoreHarvestClassification,
@@ -6,10 +6,13 @@ import {
 } from '../../../../services/classificationsApi';
 import { getHarvestFieldTotalsBySeason, getHarvestsBySeason, type HarvestRecord } from '../../../../services/harvestsApi';
 import type { ClassificationDailySummaryCategory, ClassificationDailySummaryRow } from '../../../../services/classificationsApi';
-import type { HarvestFieldReportRow } from '../../harvestPage.types';
+import type { TraderCategoryWithShares } from '../../../../services/traderCategoriesApi';
+import type { HarvestFieldReportRow, HarvestFormClassificationDraft } from '../../harvestPage.types';
 import type { HarvestI18n } from '../../i18n';
 import { buildHarvestSortingFormSubmissionPayload } from '../../utils/harvestSortingFormSubmission.util';
+import { buildExistingHarvestClassificationsPayload } from '../../utils/harvestFormSubmission.util';
 import { translateHarvestApiError } from '../../utils/translateHarvestApiError';
+import { sortSortingDailyCategories } from '../../utils/harvestPage.utils';
 
 type UseHarvestSortingFormSubmissionParams = {
   lang: 'he' | 'en';
@@ -33,6 +36,7 @@ type UseHarvestSortingFormSubmissionParams = {
     notes: string;
     isPartialClassification: boolean;
   };
+  harvestFormClassifications: HarvestFormClassificationDraft[];
   setIsSubmittingHarvestSortingForm: (value: boolean) => void;
   setHarvestSortingFormError: (value: string) => void;
   setIsHarvestSortingFormOpen: (value: boolean) => void;
@@ -43,6 +47,7 @@ type UseHarvestSortingFormSubmissionParams = {
   setSortingDailyLoadError: (value: string) => void;
   deletedClassificationId?: number;
   onRestoreSuccess?: (restoredId: number) => void;
+  traderCategories?: TraderCategoryWithShares[];
 };
 
 export function useHarvestSortingFormSubmission({
@@ -51,6 +56,7 @@ export function useHarvestSortingFormSubmission({
   seasonFilterId,
   selectedHarvestSummary,
   form,
+  harvestFormClassifications,
   setIsSubmittingHarvestSortingForm,
   setHarvestSortingFormError,
   setIsHarvestSortingFormOpen,
@@ -61,7 +67,15 @@ export function useHarvestSortingFormSubmission({
   setSortingDailyLoadError,
   deletedClassificationId,
   onRestoreSuccess,
+  traderCategories = [],
 }: UseHarvestSortingFormSubmissionParams) {
+  const traderCategoryOrder = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const category of traderCategories) {
+      map.set(category.name, category.orderIndex);
+    }
+    return map;
+  }, [traderCategories]);
   const refreshHarvestWorkspaceData = useCallback(async () => {
     if (!seasonFilterId) {
       return;
@@ -97,7 +111,7 @@ export function useHarvestSortingFormSubmission({
       })),
     );
     setSortingDailyRows(sortingSummary.rows);
-    setSortingDailyCategories(sortingSummary.categories);
+    setSortingDailyCategories(sortSortingDailyCategories(sortingSummary.categories, traderCategoryOrder));
     setSortingDailyLoadError('');
   }, [
     seasonFilterId,
@@ -106,30 +120,46 @@ export function useHarvestSortingFormSubmission({
     setSortingDailyCategories,
     setSortingDailyLoadError,
     setSortingDailyRows,
+    traderCategoryOrder,
   ]);
 
   const handleSubmitHarvestSortingGlobalForm = useCallback(async (): Promise<boolean> => {
-    const submission = buildHarvestSortingFormSubmissionPayload({
-      seasonFilterId,
-      selectedHarvestSummary,
-      form,
-      t: t.formSubmission,
-    });
-
-    if (!submission.payload) {
-      setHarvestSortingFormError(submission.error);
-      return false;
-    }
-
     setIsSubmittingHarvestSortingForm(true);
     setHarvestSortingFormError('');
 
     try {
       if (deletedClassificationId !== undefined) {
+        const submission = buildHarvestSortingFormSubmissionPayload({
+          seasonFilterId,
+          selectedHarvestSummary,
+          form,
+          t: t.formSubmission,
+        });
+
+        if (!submission.payload) {
+          setHarvestSortingFormError(submission.error);
+          return false;
+        }
+
         await restoreHarvestClassification({ ...submission.payload, deletedClassificationId });
         onRestoreSuccess?.(deletedClassificationId);
       } else {
-        await createHarvestClassification(submission.payload);
+        const submission = buildExistingHarvestClassificationsPayload({
+          t: t.formSubmission,
+          harvestId: form.harvestId,
+          isPartialClassification: form.isPartialClassification,
+          selectedHarvestSummary,
+          classifications: harvestFormClassifications,
+        });
+
+        if (!submission.payloads) {
+          setHarvestSortingFormError(submission.error);
+          return false;
+        }
+
+        for (const payload of submission.payloads) {
+          await createHarvestClassification(payload);
+        }
       }
       await refreshHarvestWorkspaceData();
       setIsHarvestSortingFormOpen(false);
@@ -147,6 +177,7 @@ export function useHarvestSortingFormSubmission({
   }, [
     deletedClassificationId,
     form,
+    harvestFormClassifications,
     lang,
     onRestoreSuccess,
     refreshHarvestWorkspaceData,

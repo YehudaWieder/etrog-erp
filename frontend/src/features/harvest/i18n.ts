@@ -109,6 +109,7 @@ export type HarvestI18n = {
     };
     quantityLabel: string;
     quantityPlaceholder: string;
+    selectCategoryForQuantitiesHint: string;
     sortingNotesLabel: string;
     sortingNotesPlaceholder: string;
     addSortingRowBlockedError: string;

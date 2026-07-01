@@ -8,6 +8,7 @@ import {
   createEmptyHarvestClassificationDraft,
   formatHebrewDateFromGregorianInput,
 } from '../../utils/harvestPage.utils';
+import { setMatrixQuantity, type PitamRowKey } from '../../utils/harvestClassificationMatrix.util';
 
 type UseHarvestFormStateParams = {
   fieldFilterId: number | 'all';
@@ -29,6 +30,8 @@ export function useHarvestFormState({
   const [harvestFormOwnerHarvested, setHarvestFormOwnerHarvested] = useState('');
   const [harvestFormOwnerRejected, setHarvestFormOwnerRejected] = useState('');
   const [harvestFormNotes, setHarvestFormNotes] = useState('');
+  const isOwnerHarvestedTouchedRef = useRef(false);
+  const isOwnerRejectedTouchedRef = useRef(false);
   const [harvestFormIsPartialClassification, setHarvestFormIsPartialClassification] = useState(false);
   const [harvestFormClassifications, setHarvestFormClassifications] = useState<HarvestFormClassificationDraft[]>([]);
   const [harvestFormTraderCategories, setHarvestFormTraderCategories] = useState<TraderCategoryWithShares[]>([]);
@@ -45,6 +48,32 @@ export function useHarvestFormState({
   const handleHarvestGregorianDateChange = (nextGregorianDate: string) => {
     setHarvestFormDateGregorian(nextGregorianDate);
     setHarvestFormDateHebrew(formatHebrewDateFromGregorianInput(nextGregorianDate));
+  };
+
+  const handleHarvestTotalHarvestedChange = (nextValue: string) => {
+    setHarvestFormTotalHarvested(nextValue);
+
+    if (!isOwnerHarvestedTouchedRef.current) {
+      setHarvestFormOwnerHarvested(nextValue);
+    }
+  };
+
+  const handleHarvestTotalRejectedChange = (nextValue: string) => {
+    setHarvestFormTotalRejected(nextValue);
+
+    if (!isOwnerRejectedTouchedRef.current) {
+      setHarvestFormOwnerRejected(nextValue);
+    }
+  };
+
+  const handleHarvestOwnerHarvestedChange = (nextValue: string) => {
+    isOwnerHarvestedTouchedRef.current = true;
+    setHarvestFormOwnerHarvested(nextValue);
+  };
+
+  const handleHarvestOwnerRejectedChange = (nextValue: string) => {
+    isOwnerRejectedTouchedRef.current = true;
+    setHarvestFormOwnerRejected(nextValue);
   };
 
   const handleHarvestNotesChange = (nextNotes: string, textareaElement: HTMLTextAreaElement) => {
@@ -72,6 +101,8 @@ export function useHarvestFormState({
     setHarvestFormNotes('');
     setHarvestFormIsPartialClassification(false);
     setHarvestFormClassifications([]);
+    isOwnerHarvestedTouchedRef.current = false;
+    isOwnerRejectedTouchedRef.current = false;
   };
 
   const openHarvestGlobalForm = () => {
@@ -117,6 +148,21 @@ export function useHarvestFormState({
     );
   };
 
+  const updateHarvestClassificationDraftQuantity = (
+    draftId: string,
+    pitamKey: PitamRowKey,
+    gradeKey: string,
+    value: string,
+  ) => {
+    setHarvestFormClassifications((previous) =>
+      previous.map((draft) =>
+        draft.id === draftId
+          ? { ...draft, quantities: setMatrixQuantity(draft.quantities, pitamKey, gradeKey, value) }
+          : draft,
+      ),
+    );
+  };
+
   return {
     isHarvestFormOpen,
     setIsHarvestFormOpen,
@@ -149,12 +195,17 @@ export function useHarvestFormState({
     harvestFormCustomerCategories,
     setHarvestFormCustomerCategories,
     handleHarvestGregorianDateChange,
+    handleHarvestTotalHarvestedChange,
+    handleHarvestTotalRejectedChange,
+    handleHarvestOwnerHarvestedChange,
+    handleHarvestOwnerRejectedChange,
     handleHarvestNotesChange,
     openHarvestGlobalForm,
     closeHarvestGlobalForm,
     addHarvestClassificationDraft,
     removeHarvestClassificationDraft,
     updateHarvestClassificationDraft,
+    updateHarvestClassificationDraftQuantity,
   };
 }
 

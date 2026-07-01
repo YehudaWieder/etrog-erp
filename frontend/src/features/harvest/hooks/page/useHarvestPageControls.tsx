@@ -208,20 +208,22 @@ export function useHarvestPageControls({
       key: 'harvestDate',
       label: isSortingDailyDetailsTab
         ? t.sortingDailyDetails.filters.dateFilterLabel
-        : (isSortingListTab || isSortingListTrashTab)
+        : (isSortingListTab || isSortingListTrashTab || isSortingSummaryTab)
           ? t.sortingList.filters.dateFilterLabel
           : t.dailyDetails.filters.dateFilterLabel,
       defaultValue: 'all',
       queryParam: 'hdDate',
       options: harvestDateOptions,
-      ...((isSortingListTab || isSortingListTrashTab) ? { type: 'calendar' as const, lang } : {}),
+      ...((isSortingListTab || isSortingListTrashTab || isSortingSummaryTab) ? { type: 'calendar' as const, lang } : {}),
     };
 
     const fieldFilter: GlobalScopedFilterConfig = {
       key: 'fieldId',
       label: isSortingDailyDetailsTab
         ? t.sortingDailyDetails.filters.fieldFilterLabel
-        : t.dailyDetails.filters.fieldFilterLabel,
+        : isSortingSummaryTab
+          ? t.sortingList.filters.fieldFilterLabel
+          : t.dailyDetails.filters.fieldFilterLabel,
       defaultValue: 'all',
       queryParam: 'hdField',
       options: [
@@ -229,7 +231,9 @@ export function useHarvestPageControls({
           value: 'all',
           label: isSortingDailyDetailsTab
             ? t.sortingDailyDetails.filters.allFieldsOption
-            : t.dailyDetails.filters.allFieldsOption,
+            : isSortingSummaryTab
+              ? t.sortingList.filters.allFieldsOption
+              : t.dailyDetails.filters.allFieldsOption,
         },
         ...fields.map((field) => ({
           value: String(field.id),
@@ -254,7 +258,7 @@ export function useHarvestPageControls({
     }
 
     if (isSortingSummaryTab) {
-      return [seasonFilter];
+      return [seasonFilter, dateFilter, fieldFilter];
     }
 
     if (isSortingDailyDetailsTab) {

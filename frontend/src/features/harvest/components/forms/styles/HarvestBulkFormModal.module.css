@@ -175,6 +175,53 @@
   margin-top: 4px;
 }
 
+.quantityMatrix {
+  overflow-x: auto;
+}
+
+.quantityMatrixTable {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.quantityMatrixTable th,
+.quantityMatrixTable td {
+  border: 1px solid rgba(200, 208, 216, 0.7);
+  padding: 6px 8px;
+  text-align: center;
+  font-size: 0.82rem;
+}
+
+.quantityMatrixTable thead th {
+  background: #f1f6f2;
+  color: #27482f;
+  font-weight: 700;
+}
+
+.quantityMatrixTable tbody th {
+  background: #fbfdfb;
+  color: #27482f;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.quantityMatrixTable td input {
+  width: 90px;
+  min-width: 70px;
+}
+
+.quantityMatrixTable td input:disabled {
+  background: rgba(230, 233, 236, 0.6);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.quantityMatrixHint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
 @media (max-width: 900px) {
   .notesWithMode {
     grid-column: 1 / -1;

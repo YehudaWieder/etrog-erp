@@ -4,6 +4,7 @@ import type {
 } from '../../../services/harvestsApi';
 import type { HarvestI18n } from '../i18n';
 import type { HarvestFormClassificationDraft } from '../harvestPage.types';
+import { getFilledMatrixEntries, getMatrixTotalQuantity } from './harvestClassificationMatrix.util';
 
 type BuildHarvestFormSubmissionPayloadParams = {
   lang: 'he' | 'en';
@@ -69,10 +70,10 @@ export function getHarvestSortingQuantityState(params: {
     ? partialSortingQuantityLimit
     : maxSortingQuantity;
 
-  const currentSortingQuantitySum = params.classifications.reduce((sum, draft) => {
-    const quantity = Number(draft.quantity);
-    return Number.isFinite(quantity) && quantity > 0 ? sum + quantity : sum;
-  }, 0);
+  const currentSortingQuantitySum = params.classifications.reduce(
+    (sum, draft) => sum + getMatrixTotalQuantity(draft.quantities),
+    0,
+  );
 
   return {
     maxSortingQuantity,
@@ -85,22 +86,13 @@ export function getHarvestSortingQuantityState(params: {
 }
 
 export function isHarvestClassificationDraftComplete(draft: HarvestFormClassificationDraft): boolean {
-  const quantity = Number(draft.quantity);
-  if (!Number.isFinite(quantity) || quantity <= 0) {
-    return false;
-  }
-
-  if (!draft.pitamStatus) {
+  if (getFilledMatrixEntries(draft.quantities).length === 0) {
     return false;
   }
 
   if (draft.assignmentType === 'GENERAL' || draft.assignmentType === 'TRADER') {
     const traderCategoryId = Number(draft.traderCategoryId);
     if (!Number.isFinite(traderCategoryId) || traderCategoryId <= 0) {
-      return false;
-    }
-
-    if (!draft.grade.trim()) {
       return false;
     }
   }
@@ -126,6 +118,147 @@ export function isHarvestClassificationDraftComplete(draft: HarvestFormClassific
   }
 
   return true;
+}
+
+type ParseHarvestClassificationRowsResult =
+  | { ok: true; items: HarvestBulkClassificationPayload[] }
+  | { ok: false; error: string };
+
+export function parseHarvestClassificationRows(
+  classifications: HarvestFormClassificationDraft[],
+  t: HarvestI18n['formSubmission'],
+): ParseHarvestClassificationRowsResult {
+  const items: HarvestBulkClassificationPayload[] = [];
+
+  for (const [index, draft] of classifications.entries()) {
+    const rowNumber = index + 1;
+    const filledEntries = getFilledMatrixEntries(draft.quantities);
+
+    if (filledEntries.length === 0) {
+      return { ok: false, error: t.sortingRowQuantityRequired(rowNumber) };
+    }
+
+    if (draft.assignmentType === 'GENERAL' || draft.assignmentType === 'TRADER') {
+      const traderCategoryId = Number(draft.traderCategoryId);
+      if (!Number.isFinite(traderCategoryId) || traderCategoryId <= 0) {
+        return { ok: false, error: t.traderCategoryRequired(rowNumber) };
+      }
+    }
+
+    if (draft.assignmentType === 'TRADER') {
+      const traderId = Number(draft.traderId);
+      if (!Number.isFinite(traderId) || traderId <= 0) {
+        return { ok: false, error: t.traderRequired(rowNumber) };
+      }
+    }
+
+    if (draft.assignmentType === 'CUSTOMER') {
+      const customerId = Number(draft.customerId);
+      const customerCategoryId = Number(draft.customerCategoryId);
+
+      if (!Number.isFinite(customerId) || customerId <= 0) {
+        return { ok: false, error: t.customerRequired(rowNumber) };
+      }
+
+      if (!Number.isFinite(customerCategoryId) || customerCategoryId <= 0) {
+        return { ok: false, error: t.customerCategoryRequired(rowNumber) };
+      }
+    }
+
+    for (const entry of filledEntries) {
+      const classificationPayload: HarvestBulkClassificationPayload = {
+        assignmentType: draft.assignmentType,
+        pitamStatus: entry.pitamStatus,
+        quantity: entry.quantity,
+      };
+
+      if (draft.notes.trim()) {
+        classificationPayload.notes = draft.notes.trim();
+      }
+
+      if (draft.assignmentType === 'GENERAL' || draft.assignmentType === 'TRADER') {
+        classificationPayload.traderCategoryId = Number(draft.traderCategoryId);
+        classificationPayload.grade = entry.grade ?? undefined;
+      }
+
+      if (draft.assignmentType === 'TRADER') {
+        classificationPayload.traderId = Number(draft.traderId);
+      }
+
+      if (draft.assignmentType === 'CUSTOMER') {
+        classificationPayload.customerId = Number(draft.customerId);
+        classificationPayload.customerCategoryId = Number(draft.customerCategoryId);
+      }
+
+      items.push(classificationPayload);
+    }
+  }
+
+  return { ok: true, items };
+}
+
+type BuildExistingHarvestClassificationsPayloadParams = {
+  t: HarvestI18n['formSubmission'];
+  harvestId: string;
+  isPartialClassification: boolean;
+  selectedHarvestSummary: {
+    totalHarvested: number;
+    totalRejected: number;
+    classifiedTotal: number;
+  } | null;
+  classifications: HarvestFormClassificationDraft[];
+};
+
+export type ExistingHarvestClassificationPayload = HarvestBulkClassificationPayload & {
+  harvestId: number;
+  isPartialClassification: boolean;
+};
+
+type BuildExistingHarvestClassificationsPayloadResult =
+  | { payloads: ExistingHarvestClassificationPayload[]; error?: never }
+  | { payloads?: never; error: string };
+
+export function buildExistingHarvestClassificationsPayload({
+  t,
+  harvestId,
+  isPartialClassification,
+  selectedHarvestSummary,
+  classifications,
+}: BuildExistingHarvestClassificationsPayloadParams): BuildExistingHarvestClassificationsPayloadResult {
+  const parsedHarvestId = Number(harvestId);
+  if (!Number.isFinite(parsedHarvestId) || parsedHarvestId <= 0) {
+    return { error: t.sortingHarvestRequired };
+  }
+
+  if (!selectedHarvestSummary) {
+    return { error: t.sortingHarvestRequired };
+  }
+
+  const parsed = parseHarvestClassificationRows(classifications, t);
+  if (!parsed.ok) {
+    return { error: parsed.error };
+  }
+
+  const availableSortingTotal = selectedHarvestSummary.totalHarvested - selectedHarvestSummary.totalRejected;
+  const maximumPartialSortingTotal = Math.max(0, availableSortingTotal - 1);
+  const expectedFullSortingTotal = availableSortingTotal - selectedHarvestSummary.classifiedTotal;
+  const totalQuantity = parsed.items.reduce((sum, item) => sum + item.quantity, 0);
+
+  if (totalQuantity > availableSortingTotal) {
+    return { error: t.sortingTotalExceedsAvailable(availableSortingTotal) };
+  }
+
+  if (!isPartialClassification && totalQuantity !== expectedFullSortingTotal) {
+    return { error: t.sortingTotalWithClassifiedMustMatchAvailableForFullSorting(availableSortingTotal) };
+  }
+
+  if (isPartialClassification && totalQuantity > maximumPartialSortingTotal) {
+    return { error: t.sortingTotalMustBeAtMostAvailableMinusOneForPartialSorting(maximumPartialSortingTotal) };
+  }
+
+  return {
+    payloads: parsed.items.map((item) => ({ ...item, harvestId: parsedHarvestId, isPartialClassification })),
+  };
 }
 
 export function buildHarvestFormSubmissionPayload({
@@ -186,86 +319,12 @@ export function buildHarvestFormSubmissionPayload({
     isPartialClassification: form.isPartialClassification,
   });
 
-  const parsedClassifications: HarvestBulkClassificationPayload[] = [];
-
-  for (const [index, draft] of form.classifications.entries()) {
-    const rowNumber = index + 1;
-    const quantity = Number(draft.quantity);
-
-    if (!Number.isFinite(quantity) || quantity <= 0) {
-      return {
-        error: t.sortingRowQuantityRequired(rowNumber),
-      };
-    }
-
-    if (!draft.pitamStatus) {
-      return {
-        error: t.pitamStatusRequired(rowNumber),
-      };
-    }
-
-    const classificationPayload: HarvestBulkClassificationPayload = {
-      assignmentType: draft.assignmentType,
-      pitamStatus: draft.pitamStatus,
-      quantity,
-    };
-
-    if (draft.notes.trim()) {
-      classificationPayload.notes = draft.notes.trim();
-    }
-
-    if (draft.assignmentType === 'GENERAL' || draft.assignmentType === 'TRADER') {
-      const traderCategoryId = Number(draft.traderCategoryId);
-      if (!Number.isFinite(traderCategoryId) || traderCategoryId <= 0) {
-        return {
-          error: t.traderCategoryRequired(rowNumber),
-        };
-      }
-
-      const trimmedGrade = draft.grade.trim();
-      if (!trimmedGrade) {
-        return {
-          error: t.gradeRequired(rowNumber),
-        };
-      }
-
-      classificationPayload.traderCategoryId = traderCategoryId;
-      classificationPayload.grade = trimmedGrade;
-    }
-
-    if (draft.assignmentType === 'TRADER') {
-      const traderId = Number(draft.traderId);
-      if (!Number.isFinite(traderId) || traderId <= 0) {
-        return {
-          error: t.traderRequired(rowNumber),
-        };
-      }
-
-      classificationPayload.traderId = traderId;
-    }
-
-    if (draft.assignmentType === 'CUSTOMER') {
-      const customerId = Number(draft.customerId);
-      const customerCategoryId = Number(draft.customerCategoryId);
-
-      if (!Number.isFinite(customerId) || customerId <= 0) {
-        return {
-          error: t.customerRequired(rowNumber),
-        };
-      }
-
-      if (!Number.isFinite(customerCategoryId) || customerCategoryId <= 0) {
-        return {
-          error: t.customerCategoryRequired(rowNumber),
-        };
-      }
-
-      classificationPayload.customerId = customerId;
-      classificationPayload.customerCategoryId = customerCategoryId;
-    }
-
-    parsedClassifications.push(classificationPayload);
+  const parsedRows = parseHarvestClassificationRows(form.classifications, t);
+  if (!parsedRows.ok) {
+    return { error: parsedRows.error };
   }
+
+  const parsedClassifications = parsedRows.items;
 
   const partialSortingQuantityLimit = maxSortingQuantity !== null ? Math.max(0, maxSortingQuantity - 1) : null;
 

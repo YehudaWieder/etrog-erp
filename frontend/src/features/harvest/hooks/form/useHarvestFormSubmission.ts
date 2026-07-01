@@ -1,4 +1,4 @@
-﻿import { useCallback } from 'react';
+﻿import { useCallback, useMemo } from 'react';
 import {
   createHarvestWithClassifications,
   getHarvestFieldTotalsBySeason,
@@ -10,9 +10,11 @@ import {
   type ClassificationDailySummaryCategory,
   type ClassificationDailySummaryRow,
 } from '../../../../services/classificationsApi';
+import type { TraderCategoryWithShares } from '../../../../services/traderCategoriesApi';
 import type { HarvestI18n } from '../../i18n';
 import { buildHarvestFormSubmissionPayload } from '../../utils/harvestFormSubmission.util';
 import { translateHarvestApiError } from '../../utils/translateHarvestApiError';
+import { sortSortingDailyCategories } from '../../utils/harvestPage.utils';
 import type { HarvestFieldReportRow, HarvestFormClassificationDraft } from '../../harvestPage.types';
 
 type UseHarvestFormSubmissionParams = {
@@ -40,6 +42,7 @@ type UseHarvestFormSubmissionParams = {
   setSortingDailyRows: (rows: ClassificationDailySummaryRow[]) => void;
   setSortingDailyCategories: (rows: ClassificationDailySummaryCategory[]) => void;
   setSortingDailyLoadError: (value: string) => void;
+  traderCategories?: TraderCategoryWithShares[];
 };
 
 export function useHarvestFormSubmission({
@@ -56,7 +59,15 @@ export function useHarvestFormSubmission({
   setSortingDailyRows,
   setSortingDailyCategories,
   setSortingDailyLoadError,
+  traderCategories = [],
 }: UseHarvestFormSubmissionParams) {
+  const traderCategoryOrder = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const category of traderCategories) {
+      map.set(category.name, category.orderIndex);
+    }
+    return map;
+  }, [traderCategories]);
   const refreshHarvestWorkspaceData = useCallback(async () => {
     if (!seasonFilterId) {
       return;
@@ -94,7 +105,7 @@ export function useHarvestFormSubmission({
     try {
       const sortingSummary = await getClassificationDailySummaryBySeason(seasonFilterId);
       setSortingDailyRows(sortingSummary.rows);
-      setSortingDailyCategories(sortingSummary.categories);
+      setSortingDailyCategories(sortSortingDailyCategories(sortingSummary.categories, traderCategoryOrder));
       setSortingDailyLoadError('');
     } catch {
       // Keep current sorting summary when refresh fallback endpoint fails.
@@ -106,6 +117,7 @@ export function useHarvestFormSubmission({
     setSortingDailyCategories,
     setSortingDailyLoadError,
     setSortingDailyRows,
+    traderCategoryOrder,
   ]);
 
   const handleSubmitHarvestGlobalForm = useCallback(async () => {

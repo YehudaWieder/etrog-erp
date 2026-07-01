@@ -260,28 +260,30 @@ export function HarvestPage() {
     harvestFormFieldId,
     setHarvestFormFieldId,
     harvestFormTotalHarvested,
-    setHarvestFormTotalHarvested,
     harvestFormTotalRejected,
-    setHarvestFormTotalRejected,
     harvestFormOwnerHarvested,
-    setHarvestFormOwnerHarvested,
     harvestFormOwnerRejected,
-    setHarvestFormOwnerRejected,
     harvestFormNotes,
     harvestFormIsPartialClassification,
     setHarvestFormIsPartialClassification,
     harvestFormClassifications,
+    setHarvestFormClassifications,
     harvestFormTraderCategories,
     setHarvestFormTraderCategories,
     harvestFormCustomerCategories,
     setHarvestFormCustomerCategories,
     handleHarvestGregorianDateChange,
+    handleHarvestTotalHarvestedChange,
+    handleHarvestTotalRejectedChange,
+    handleHarvestOwnerHarvestedChange,
+    handleHarvestOwnerRejectedChange,
     handleHarvestNotesChange,
     openHarvestGlobalForm,
     closeHarvestGlobalForm,
     addHarvestClassificationDraft,
     removeHarvestClassificationDraft,
     updateHarvestClassificationDraft,
+    updateHarvestClassificationDraftQuantity,
   } = useHarvestFormState({
     fieldFilterId,
     fields,
@@ -337,8 +339,8 @@ export function HarvestPage() {
   const harvestDateOptions = useMemo(() => {
     let sourceRows: { dateGregorian: string }[];
     let allDatesLabel: string;
-    if (isSortingListTab || isSortingListTrashTab) {
-      const sourceList = isSortingListTab ? sortingListRows : deletedSortingListRows;
+    if (isSortingListTab || isSortingListTrashTab || isSortingSummaryTab) {
+      const sourceList = isSortingListTab || isSortingSummaryTab ? sortingListRows : deletedSortingListRows;
       sourceRows = sourceList.map((row) => ({ dateGregorian: (row.fieldHarvest?.dateGregorian ?? '').slice(0, 10) })).filter((r) => r.dateGregorian !== '');
       allDatesLabel = t.sortingList.filters.allDatesOption;
     } else {
@@ -351,7 +353,7 @@ export function HarvestPage() {
       { value: 'all', label: allDatesLabel },
       ...uniqueDates.map((date) => ({ value: date, label: formatGregorianDate(date) })),
     ];
-  }, [isSortingListTab, isSortingListTrashTab, sortingListRows, deletedSortingListRows, harvestRows, formatGregorianDate, t.dailyDetails.filters.allDatesOption, t.sortingList.filters.allDatesOption]);
+  }, [isSortingListTab, isSortingListTrashTab, isSortingSummaryTab, sortingListRows, deletedSortingListRows, harvestRows, formatGregorianDate, t.dailyDetails.filters.allDatesOption, t.sortingList.filters.allDatesOption]);
 
   useEffect(() => {
     if (harvestDateFilterId === 'all') return;
@@ -391,6 +393,7 @@ export function HarvestPage() {
     setSortingDailyCategories,
     setSortingDailyLoadError,
     setIsSortingDailyLoading,
+    traderCategories: harvestFormTraderCategories,
   });
 
   useEffect(() => {
@@ -434,7 +437,7 @@ export function HarvestPage() {
   }, [isSortingListTrashTab, seasonFilterId, t.sortingListTrash.loadError]);
 
   useHarvestFormCategories({
-    isOpen: isHarvestFormOpen || isHarvestSortingFormOpen,
+    isOpen: isHarvestFormOpen || isHarvestSortingFormOpen || isSortingSummaryTab || isDailyDetailsTab || isSortingDailyDetailsTab,
     seasonFilterId,
     setHarvestFormTraderCategories,
     setHarvestFormCustomerCategories,
@@ -446,6 +449,10 @@ export function HarvestPage() {
       openHarvestGlobalForm();
       navigate(location.pathname, { replace: true, state: null });
     } else if (state?.openSortingForm) {
+      setIsRestoreSortingMode(false);
+      setRestoreHarvestSummary(null);
+      setHarvestFormClassifications([]);
+      addHarvestClassificationDraft();
       openHarvestSortingGlobalForm(null);
       navigate(location.pathname, { replace: true, state: null });
     }
@@ -609,6 +616,7 @@ export function HarvestPage() {
     setSortingDailyRows,
     setSortingDailyCategories,
     setSortingDailyLoadError,
+    traderCategories: harvestFormTraderCategories,
   });
 
   const { handleSubmitHarvestSortingGlobalForm } = useHarvestSortingFormSubmission({
@@ -629,6 +637,7 @@ export function HarvestPage() {
       notes: harvestSortingFormNotes,
       isPartialClassification: harvestSortingFormIsPartialClassification,
     },
+    harvestFormClassifications,
     setIsSubmittingHarvestSortingForm,
     setHarvestSortingFormError,
     setIsHarvestSortingFormOpen,
@@ -637,6 +646,7 @@ export function HarvestPage() {
     setSortingDailyRows,
     setSortingDailyCategories,
     setSortingDailyLoadError,
+    traderCategories: harvestFormTraderCategories,
     deletedClassificationId: isRestoreSortingMode ? (selectedDeletedSortingListRow?.id ?? undefined) : undefined,
     onRestoreSuccess: (restoredId) => {
       setDeletedSortingListRows((rows) => rows.filter((r) => r.id !== restoredId));
@@ -685,6 +695,10 @@ export function HarvestPage() {
   }, [selectedDeletedSortingListRow, formatGregorianDate, t.dailyDetails.columns.fieldName]);
 
   const handleOpenSortingForm = () => {
+    setIsRestoreSortingMode(false);
+    setRestoreHarvestSummary(null);
+    setHarvestFormClassifications([]);
+    addHarvestClassificationDraft();
     openHarvestSortingGlobalForm(null);
   };
 
@@ -860,6 +874,14 @@ export function HarvestPage() {
     });
   }, [sortingListRows, harvestDateFilterId, sortingAssignmentFilter, traderNameById, customerNameById, lang]);
 
+  const filteredSortingSummaryRows = useMemo<ClassificationListRecord[]>(() => {
+    return sortingListRows.filter((row) => {
+      if (harvestDateFilterId !== 'all' && (row.fieldHarvest?.dateGregorian ?? '').slice(0, 10) !== harvestDateFilterId) return false;
+      if (fieldFilterId !== 'all' && row.fieldHarvest?.fieldId !== fieldFilterId) return false;
+      return true;
+    });
+  }, [sortingListRows, harvestDateFilterId, fieldFilterId]);
+
   useEffect(() => {
     if (selectedSortingDailyRowId === null) {
       return;
@@ -959,6 +981,7 @@ export function HarvestPage() {
     relatedSortings,
     relatedSortingsLabels,
     noneValue: detailsSheetData?.values.none ?? '-',
+    traderCategories: harvestFormTraderCategories,
   });
 
   const sortingSummarySeasonLabel = useMemo(() => {
@@ -1445,10 +1468,11 @@ export function HarvestPage() {
           lang={lang}
           labels={t.sortingSummary}
           filters={filters}
-          rows={sortingListRows}
+          rows={filteredSortingSummaryRows}
           isLoading={isSortingListLoading}
           loadError={sortingListLoadError}
           seasonLabel={sortingSummarySeasonLabel}
+          traderCategories={harvestFormTraderCategories}
         />
       ) : (
         <section className="shipments-empty-state">
@@ -1576,15 +1600,16 @@ export function HarvestPage() {
         onFieldIdChange={setHarvestFormFieldId}
         onGregorianDateChange={handleHarvestGregorianDateChange}
         onHebrewDateChange={setHarvestFormDateHebrew}
-        onTotalHarvestedChange={setHarvestFormTotalHarvested}
-        onTotalRejectedChange={setHarvestFormTotalRejected}
-        onOwnerHarvestedChange={setHarvestFormOwnerHarvested}
-        onOwnerRejectedChange={setHarvestFormOwnerRejected}
+        onTotalHarvestedChange={handleHarvestTotalHarvestedChange}
+        onTotalRejectedChange={handleHarvestTotalRejectedChange}
+        onOwnerHarvestedChange={handleHarvestOwnerHarvestedChange}
+        onOwnerRejectedChange={handleHarvestOwnerRejectedChange}
         onPartialClassificationChange={setHarvestFormIsPartialClassification}
         onNotesChange={handleHarvestNotesChange}
         onAddClassificationDraft={addHarvestClassificationDraft}
         onRemoveClassificationDraft={removeHarvestClassificationDraft}
         onUpdateClassificationDraft={updateHarvestClassificationDraft}
+        onUpdateClassificationDraftQuantity={updateHarvestClassificationDraftQuantity}
       />
 
       <HarvestSortingFormModal
@@ -1593,6 +1618,14 @@ export function HarvestPage() {
         t={t}
         harvestOptions={isRestoreSortingMode ? restoreHarvestOptions : harvestSortingOptions}
         selectedHarvestSummary={isRestoreSortingMode ? restoreHarvestSummary : selectedHarvestSummary}
+        rawTotals={
+          selectedHarvestSummaryTotals
+            ? {
+                totalHarvested: selectedHarvestSummaryTotals.totalHarvested,
+                totalRejected: selectedHarvestSummaryTotals.totalRejected,
+              }
+            : null
+        }
         traders={traders}
         customers={customers}
         isSubmittingHarvestSortingForm={isSubmittingHarvestSortingForm}
@@ -1610,6 +1643,7 @@ export function HarvestPage() {
         harvestSortingFormIsPartialClassification={harvestSortingFormIsPartialClassification}
         harvestFormTraderCategories={harvestFormTraderCategories}
         harvestFormCustomerCategories={harvestFormCustomerCategories}
+        harvestFormClassifications={harvestFormClassifications}
         onClose={isRestoreSortingMode ? closeRestoreSortingForm : closeHarvestSortingGlobalForm}
         onSubmit={() => void handleSubmitHarvestSortingGlobalForm()}
         onHarvestIdChange={setHarvestSortingFormHarvestId}
@@ -1623,6 +1657,10 @@ export function HarvestPage() {
         onQuantityChange={setHarvestSortingFormQuantity}
         onNotesChange={handleHarvestSortingNotesChange}
         onPartialClassificationChange={setHarvestSortingFormIsPartialClassification}
+        onAddClassificationDraft={addHarvestClassificationDraft}
+        onRemoveClassificationDraft={removeHarvestClassificationDraft}
+        onUpdateClassificationDraft={updateHarvestClassificationDraft}
+        onUpdateClassificationDraftQuantity={updateHarvestClassificationDraftQuantity}
       />
     </AppShell>
   );

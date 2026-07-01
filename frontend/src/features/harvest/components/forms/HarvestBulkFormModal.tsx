@@ -1,4 +1,3 @@
-﻿import { useEffect, useState } from 'react';
 import type { Field } from '../../../../services/fieldsApi';
 import type { Trader } from '../../../../services/tradersApi';
 import type { Customer } from '../../../../services/customersApi';
@@ -6,12 +5,8 @@ import type { CustomerCategory } from '../../../../services/customerCategoriesAp
 import type { TraderCategoryWithShares } from '../../../../services/traderCategoriesApi';
 import type { HarvestFormClassificationDraft } from '../../harvestPage.types';
 import type { HarvestI18n } from '../../i18n';
-import {
-  areHarvestSortingTotalsFilled,
-  getHarvestSortingQuantityState,
-  isHarvestClassificationDraftComplete,
-} from '../../utils/harvestFormSubmission.util';
-import { getAvailableHarvestGradeOptions } from '../../utils/harvestPage.utils';
+import { HarvestClassificationRowsSection } from './HarvestClassificationRowsSection';
+import type { PitamRowKey } from '../../utils/harvestClassificationMatrix.util';
 import styles from './styles/HarvestBulkFormModal.module.css';
 
 type HarvestBulkFormModalProps = {
@@ -50,11 +45,11 @@ type HarvestBulkFormModalProps = {
   onAddClassificationDraft: () => void;
   onRemoveClassificationDraft: (draftId: string) => void;
   onUpdateClassificationDraft: (draftId: string, updater: Partial<HarvestFormClassificationDraft>) => void;
+  onUpdateClassificationDraftQuantity: (draftId: string, pitamKey: PitamRowKey, gradeKey: string, value: string) => void;
 };
 
 export function HarvestBulkFormModal({
   isOpen,
-  lang,
   t,
   activeSeasonYearName,
   fields,
@@ -88,73 +83,13 @@ export function HarvestBulkFormModal({
   onAddClassificationDraft,
   onRemoveClassificationDraft,
   onUpdateClassificationDraft,
+  onUpdateClassificationDraftQuantity,
 }: HarvestBulkFormModalProps) {
-  const [didTryAddSortingRow, setDidTryAddSortingRow] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      setDidTryAddSortingRow(false);
-    }
-  }, [isOpen]);
-
   if (!isOpen) {
     return null;
   }
 
   const form = t.bulkForm;
-  const lastSortingRowDraft = harvestFormClassifications[harvestFormClassifications.length - 1] ?? null;
-  const areTotalsFilled = areHarvestSortingTotalsFilled({
-    totalHarvested: harvestFormTotalHarvested,
-    totalRejected: harvestFormTotalRejected,
-  });
-  const { reachedSortingQuantityLimit } = getHarvestSortingQuantityState({
-    classifications: harvestFormClassifications,
-    totalHarvested: harvestFormTotalHarvested,
-    totalRejected: harvestFormTotalRejected,
-    isPartialClassification: harvestFormIsPartialClassification,
-  });
-  const canAddSortingRow =
-    areTotalsFilled
-    && (lastSortingRowDraft ? isHarvestClassificationDraftComplete(lastSortingRowDraft) : true)
-    && !reachedSortingQuantityLimit;
-
-  const addSortingBlockReason = !areTotalsFilled
-    ? 'totals-missing'
-    : reachedSortingQuantityLimit
-    ? 'max-reached'
-    : lastSortingRowDraft && !isHarvestClassificationDraftComplete(lastSortingRowDraft)
-      ? 'incomplete'
-      : null;
-
-  const getAddSortingBlockMessage = (reason: 'totals-missing' | 'incomplete' | 'max-reached' | null) => {
-    if (reason === 'totals-missing') {
-      return (
-        form.addSortingRowSummaryFieldsRequiredError
-        || t.formSubmission.addSortingRowTotalsRequiredError
-        || form.addSortingRowBlockedError
-      );
-    }
-
-    if (reason === 'incomplete') {
-      return form.addSortingRowBlockedError;
-    }
-
-    if (reason === 'max-reached') {
-      return form.addSortingRowMaxReachedError || form.addSortingRowBlockedError;
-    }
-
-    return form.addSortingRowBlockedError;
-  };
-
-  const handleAddSortingRowClick = () => {
-    if (!canAddSortingRow) {
-      setDidTryAddSortingRow(true);
-      return;
-    }
-
-    setDidTryAddSortingRow(false);
-    onAddClassificationDraft();
-  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -306,236 +241,23 @@ export function HarvestBulkFormModal({
           </label>
         </div>
 
-        <div className={styles.classifications}>
-          <div className={styles.classificationsHeader}>
-            <h4>{form.sortingRowsTitle}</h4>
-            {!harvestFormClassifications.length ? (
-              <button type="button" className="btn btn-primary" onClick={handleAddSortingRowClick}>
-                {form.addSortingRow}
-              </button>
-            ) : null}
-          </div>
-
-          {harvestFormClassifications.map((draft, index) => {
-            const availableCustomerCategories = harvestFormCustomerCategories.filter(
-              (category) => String(category.customerId) === draft.customerId,
-            );
-            const selectedTraderCategoryName = harvestFormTraderCategories.find(
-              (category) => String(category.id) === draft.traderCategoryId,
-            )?.name;
-            const availableGradeOptions = getAvailableHarvestGradeOptions(selectedTraderCategoryName);
-            const handleTraderCategoryIdChange = (nextTraderCategoryId: string) => {
-              const nextTraderCategoryName = harvestFormTraderCategories.find(
-                (category) => String(category.id) === nextTraderCategoryId,
-              )?.name;
-              const nextGradeOptions = getAvailableHarvestGradeOptions(nextTraderCategoryName);
-              const nextGrade = draft.grade && !(nextGradeOptions as readonly string[]).includes(draft.grade)
-                ? ''
-                : draft.grade;
-
-              onUpdateClassificationDraft(draft.id, { traderCategoryId: nextTraderCategoryId, grade: nextGrade });
-            };
-            const isLastSortingRow = index === harvestFormClassifications.length - 1;
-            const canAddNextSortingRow = isHarvestClassificationDraftComplete(draft);
-            const rowAddSortingBlockReason = !areTotalsFilled
-              ? 'totals-missing'
-              : !canAddNextSortingRow
-              ? 'incomplete'
-              : reachedSortingQuantityLimit
-                ? 'max-reached'
-                : null;
-
-            return (
-              <div key={draft.id} className={styles.classificationRow}>
-                <div className={styles.classificationRowHead}>
-                  <strong>{form.sortingRowPrefix(index)}</strong>
-                </div>
-
-                <div className={`management-form-grid ${styles.grid} ${styles.classificationGrid}`}>
-                  <label className={styles.summaryField}>
-                    <span>{form.assignmentTypeLabel}</span>
-                    <select
-                      className="seasons-manager__year-input"
-                      value={draft.assignmentType}
-                      onChange={(event) =>
-                        onUpdateClassificationDraft(draft.id, {
-                          assignmentType: event.target.value as HarvestFormClassificationDraft['assignmentType'],
-                        })
-                      }
-                    >
-                      <option value="GENERAL">{form.assignmentOptions.general}</option>
-                      <option value="TRADER">{form.assignmentOptions.trader}</option>
-                      <option value="CUSTOMER">{form.assignmentOptions.customer}</option>
-                    </select>
-                  </label>
-
-                  {draft.assignmentType === 'TRADER' ? (
-                    <label className={styles.summaryField}>
-                      <span>{form.traderLabel}</span>
-                      <select
-                        className="seasons-manager__year-input"
-                        value={draft.traderId}
-                        onChange={(event) => onUpdateClassificationDraft(draft.id, { traderId: event.target.value })}
-                      >
-                        <option value="">{form.traderPlaceholder}</option>
-                        {[...traders]
-                          .sort((left, right) => left.name.localeCompare(right.name))
-                          .map((trader) => (
-                          <option key={`harvest-form-trader-${trader.id}`} value={String(trader.id)}>
-                            {trader.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  ) : null}
-
-                  {draft.assignmentType === 'GENERAL' || draft.assignmentType === 'TRADER' ? (
-                    <label className={styles.summaryField}>
-                      <span>{form.traderCategoryLabel}</span>
-                      <select
-                        className="seasons-manager__year-input"
-                        value={draft.traderCategoryId}
-                        onChange={(event) => handleTraderCategoryIdChange(event.target.value)}
-                      >
-                        <option value="">{form.traderCategoryPlaceholder}</option>
-                        {harvestFormTraderCategories.map((category) => (
-                          <option key={`harvest-form-trader-category-${category.id}`} value={String(category.id)}>
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  ) : null}
-
-                  {draft.assignmentType === 'CUSTOMER' ? (
-                    <>
-                      <label className={styles.summaryField}>
-                        <span>{form.customerLabel}</span>
-                        <select
-                          className="seasons-manager__year-input"
-                          value={draft.customerId}
-                          onChange={(event) => onUpdateClassificationDraft(draft.id, { customerId: event.target.value })}
-                        >
-                          <option value="">{form.customerPlaceholder}</option>
-                          {customers.map((customer) => (
-                            <option key={`harvest-form-customer-${customer.id}`} value={String(customer.id)}>
-                              {customer.customerName}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-
-                      <label className={styles.summaryField}>
-                        <span>{form.customerCategoryLabel}</span>
-                        <select
-                          className="seasons-manager__year-input"
-                          value={draft.customerCategoryId}
-                          onChange={(event) => onUpdateClassificationDraft(draft.id, { customerCategoryId: event.target.value })}
-                          disabled={!draft.customerId}
-                        >
-                          <option value="">{form.customerCategoryPlaceholder}</option>
-                          {availableCustomerCategories.map((category) => (
-                            <option key={`harvest-form-customer-category-${category.id}`} value={String(category.id)}>
-                              {`${category.name} (${category.grade})`}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    </>
-                  ) : (
-                    <label className={styles.summaryField}>
-                      <span>{form.gradeLabel}</span>
-                      <select
-                        className="seasons-manager__year-input"
-                        value={draft.grade}
-                        onChange={(event) => onUpdateClassificationDraft(draft.id, { grade: event.target.value })}
-                      >
-                        <option value="">{form.gradePlaceholder}</option>
-                        {availableGradeOptions.map((grade) => (
-                          <option key={`harvest-form-grade-${grade}`} value={grade}>
-                            {grade}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  )}
-
-                  <label className={styles.summaryField}>
-                    <span>{form.pitamStatusLabel}</span>
-                    <select
-                      className="seasons-manager__year-input"
-                      value={draft.pitamStatus}
-                      onChange={(event) =>
-                        onUpdateClassificationDraft(draft.id, {
-                          pitamStatus: event.target.value as HarvestFormClassificationDraft['pitamStatus'],
-                        })
-                      }
-                    >
-                      <option value="">{form.pitamStatusPlaceholder}</option>
-                      <option value="WITH_PITAM">{form.pitamOptions.withPitam}</option>
-                      <option value="WITHOUT_PITAM">{form.pitamOptions.withoutPitam}</option>
-                      <option value="MIXED">{form.pitamOptions.mixed}</option>
-                    </select>
-                  </label>
-
-                  <label className={styles.summaryField}>
-                    <span>{form.quantityLabel}</span>
-                    <input
-                      className="seasons-manager__year-input"
-                      type="number"
-                      min="1"
-                      value={draft.quantity}
-                      onChange={(event) => onUpdateClassificationDraft(draft.id, { quantity: event.target.value })}
-                      placeholder={form.quantityPlaceholder}
-                    />
-                  </label>
-
-                  <label className={`${styles.summaryField} ${styles.classificationNotes}`}>
-                    <span>{form.sortingNotesLabel}</span>
-                    <input
-                      className="seasons-manager__year-input"
-                      type="text"
-                      value={draft.notes}
-                      onChange={(event) => onUpdateClassificationDraft(draft.id, { notes: event.target.value })}
-                      placeholder={form.sortingNotesPlaceholder}
-                    />
-                  </label>
-
-                  <div className={styles.classificationActions}>
-                    {isLastSortingRow ? (
-                      <button
-                        type="button"
-                        className="btn btn-primary"
-                        onClick={handleAddSortingRowClick}
-                      >
-                        {form.addSortingRow}
-                      </button>
-                    ) : null}
-                    <button
-                      type="button"
-                      className="btn btn-danger"
-                      onClick={() => onRemoveClassificationDraft(draft.id)}
-                    >
-                      {form.removeSortingRow}
-                    </button>
-                  </div>
-                </div>
-
-                {isLastSortingRow && didTryAddSortingRow && rowAddSortingBlockReason ? (
-                  <p className={`seasons-manager__error ${styles.classificationAddError}`}>
-                    {getAddSortingBlockMessage(rowAddSortingBlockReason)}
-                  </p>
-                ) : null}
-              </div>
-            );
-          })}
-
-          {!harvestFormClassifications.length && didTryAddSortingRow && addSortingBlockReason ? (
-            <p className={`seasons-manager__error ${styles.classificationAddError}`}>
-              {getAddSortingBlockMessage(addSortingBlockReason)}
-            </p>
-          ) : null}
-        </div>
+        <HarvestClassificationRowsSection
+          isOpen={isOpen}
+          form={form}
+          formSubmissionText={t.formSubmission}
+          traders={traders}
+          customers={customers}
+          totalHarvested={harvestFormTotalHarvested}
+          totalRejected={harvestFormTotalRejected}
+          isPartialClassification={harvestFormIsPartialClassification}
+          harvestFormClassifications={harvestFormClassifications}
+          harvestFormTraderCategories={harvestFormTraderCategories}
+          harvestFormCustomerCategories={harvestFormCustomerCategories}
+          onAddClassificationDraft={onAddClassificationDraft}
+          onRemoveClassificationDraft={onRemoveClassificationDraft}
+          onUpdateClassificationDraft={onUpdateClassificationDraft}
+          onUpdateClassificationDraftQuantity={onUpdateClassificationDraftQuantity}
+        />
 
         {harvestFormError ? <p className="seasons-manager__error">{harvestFormError}</p> : null}
 
@@ -551,6 +273,3 @@ export function HarvestBulkFormModal({
     </div>
   );
 }
-
-
-

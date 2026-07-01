@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { FaFileArrowDown, FaPrint } from 'react-icons/fa6';
 import { GlobalScopedFilters, type GlobalScopedFilterConfig } from '../../../../components/ui/GlobalScopedFilters';
 import type { ClassificationListRecord } from '../../../../services/classificationsApi';
+import type { TraderCategoryWithShares } from '../../../../services/traderCategoriesApi';
 import type { HarvestI18n } from '../../i18n';
 import { HARVEST_GRADE_OPTIONS } from '../../utils/harvestPage.utils';
 import { printHarvestSortingSummary, exportHarvestSortingSummaryToExcel } from '../../services/harvestSortingSummaryExport.service';
@@ -51,6 +52,29 @@ function resolveGrade(record: ClassificationListRecord, fallback: string): strin
   return (record.grade || record.customerCategory?.grade || '').trim() || fallback;
 }
 
+function sortCategoryNames(
+  names: string[],
+  orderByName: Map<string, number> | null,
+  lastLabel?: string,
+): string[] {
+  return [...names].sort((a, b) => {
+    if (lastLabel !== undefined) {
+      if (a === lastLabel) return 1;
+      if (b === lastLabel) return -1;
+    }
+
+    if (orderByName) {
+      const ai = orderByName.get(a);
+      const bi = orderByName.get(b);
+      if (ai !== undefined && bi !== undefined) return ai - bi;
+      if (ai !== undefined) return -1;
+      if (bi !== undefined) return 1;
+    }
+
+    return a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true });
+  });
+}
+
 function sortGrades(grades: string[], fallback: string): string[] {
   const fixed = [...HARVEST_GRADE_OPTIONS] as string[];
   return [...grades].sort((a, b) => {
@@ -71,6 +95,7 @@ function buildSortingData(
   customersLabel: string,
   gradeFallback: string,
   noCategoryLabel: string,
+  traderCategoryOrder: Map<string, number> | null,
 ): { summaryRows: SummaryRow[]; breakdown: BreakdownEntry[] } {
   // GENERAL: keyed by category name only
   const generalCatPitam = new Map<string, PitamTotals>();
@@ -147,11 +172,10 @@ function buildSortingData(
     label: string,
     pitam: PitamTotals,
     catGradeMap: Map<string, Map<string, PitamTotals>>,
+    orderByName: Map<string, number> | null,
   ): { summary: SummaryRow; entry: BreakdownEntry } => {
     const total = pitam.WITH_PITAM + pitam.WITHOUT_PITAM + pitam.MIXED;
-    const sortedCategories = [...catGradeMap.keys()].sort((a, b) =>
-      a === noCategoryLabel ? 1 : b === noCategoryLabel ? -1 : a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }),
-    );
+    const sortedCategories = sortCategoryNames([...catGradeMap.keys()], orderByName, noCategoryLabel);
     const rows: BreakdownGradeRow[] = [];
     for (const cat of sortedCategories) {
       const gradeMap = catGradeMap.get(cat)!;
@@ -170,9 +194,7 @@ function buildSortingData(
   const summaryRows: SummaryRow[] = [];
   const breakdown: BreakdownEntry[] = [];
 
-  const sortedGeneralCats = [...generalCatPitam.keys()].sort((a, b) =>
-    a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }),
-  );
+  const sortedGeneralCats = sortCategoryNames([...generalCatPitam.keys()], traderCategoryOrder);
   for (const catName of sortedGeneralCats) {
     const { summary, entry } = buildGeneralBreakdown(
       `category:${catName}`,
@@ -187,7 +209,13 @@ function buildSortingData(
   const privateTotal = privatePitam.WITH_PITAM + privatePitam.WITHOUT_PITAM + privatePitam.MIXED;
   const hasSomething = privateTotal > 0 || summaryRows.length > 0 || generalCatPitam.size > 0;
   if (hasSomething) {
-    const { summary, entry } = buildCategoryGradeBreakdown('private', privateSortingLabel, privatePitam, privateCatGrade);
+    const { summary, entry } = buildCategoryGradeBreakdown(
+      'private',
+      privateSortingLabel,
+      privatePitam,
+      privateCatGrade,
+      traderCategoryOrder,
+    );
     summaryRows.push({ ...summary, isSeparator: summaryRows.length > 0 });
     breakdown.push(entry);
   }
@@ -197,6 +225,7 @@ function buildSortingData(
     customersLabel,
     customerPitam,
     customerCatGrade,
+    null,
   );
   summaryRows.push(custSummary);
   breakdown.push(custEntry);
@@ -212,6 +241,7 @@ type HarvestSortingSummarySectionProps = {
   isLoading: boolean;
   loadError: string;
   seasonLabel?: string | null;
+  traderCategories?: TraderCategoryWithShares[];
 };
 
 export function HarvestSortingSummarySection({
@@ -222,6 +252,7 @@ export function HarvestSortingSummarySection({
   isLoading,
   loadError,
   seasonLabel = null,
+  traderCategories = [],
 }: HarvestSortingSummarySectionProps) {
   const locale = lang === 'he' ? 'he-IL' : 'en-US';
   const fmt = useMemo(() => {
@@ -231,6 +262,14 @@ export function HarvestSortingSummarySection({
 
   const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
 
+  const traderCategoryOrder = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const category of traderCategories) {
+      map.set(category.name, category.orderIndex);
+    }
+    return map;
+  }, [traderCategories]);
+
   const { summaryRows, breakdown } = useMemo(
     () =>
       buildSortingData(
@@ -239,8 +278,9 @@ export function HarvestSortingSummarySection({
         labels.rows.customers,
         labels.breakdown.grade,
         labels.breakdown.noCategory,
+        traderCategoryOrder,
       ),
-    [rows, labels.rows.privateSorting, labels.rows.customers, labels.breakdown.grade, labels.breakdown.noCategory],
+    [rows, labels.rows.privateSorting, labels.rows.customers, labels.breakdown.grade, labels.breakdown.noCategory, traderCategoryOrder],
   );
 
   const grandTotal: PitamTotals = useMemo(

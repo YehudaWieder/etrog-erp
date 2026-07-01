@@ -3,6 +3,7 @@ import type {
   HarvestFormClassificationDraft,
   SortingAssignmentFilter,
 } from '../harvestPage.types';
+import { createEmptyGradeQuantityMatrix } from './harvestClassificationMatrix.util';
 
 export const DEFAULT_SIDEBAR_ITEM_ID = 'harvest-daily-details';
 export const HARVEST_DAILY_FILTER_SCOPE = 'harvest-daily-details';
@@ -100,6 +101,7 @@ export function resolveSortingCategoryOwnerType(
 export function compareSortingCategoryOwnerOrder(
   left: ClassificationDailySummaryCategory,
   right: ClassificationDailySummaryCategory,
+  categoryOrderByName?: Map<string, number> | null,
 ): number {
   const ownerOrder = (ownerType?: string) => {
     if (ownerType === 'GENERAL') {
@@ -122,14 +124,38 @@ export function compareSortingCategoryOwnerOrder(
     return ownerDiff;
   }
 
+  if (categoryOrderByName) {
+    const leftCategoryName = left.categoryName?.trim() ?? '';
+    const rightCategoryName = right.categoryName?.trim() ?? '';
+    const leftIndex = categoryOrderByName.get(leftCategoryName);
+    const rightIndex = categoryOrderByName.get(rightCategoryName);
+
+    if (leftIndex !== undefined || rightIndex !== undefined) {
+      if (leftIndex !== undefined && rightIndex !== undefined && leftIndex !== rightIndex) {
+        return leftIndex - rightIndex;
+      }
+
+      if (leftIndex !== undefined && rightIndex === undefined) {
+        return -1;
+      }
+
+      if (leftIndex === undefined && rightIndex !== undefined) {
+        return 1;
+      }
+    }
+  }
+
   const leftLabel = buildSortingCategoryDisplayLabel(left, 'he');
   const rightLabel = buildSortingCategoryDisplayLabel(right, 'he');
 
   return leftLabel.localeCompare(rightLabel, 'he', { sensitivity: 'base', numeric: true });
 }
 
-export function sortSortingDailyCategories(categories: ClassificationDailySummaryCategory[]): ClassificationDailySummaryCategory[] {
-  return [...categories].sort(compareSortingCategoryOwnerOrder);
+export function sortSortingDailyCategories(
+  categories: ClassificationDailySummaryCategory[],
+  categoryOrderByName?: Map<string, number> | null,
+): ClassificationDailySummaryCategory[] {
+  return [...categories].sort((left, right) => compareSortingCategoryOwnerOrder(left, right, categoryOrderByName));
 }
 
 export function getSortingRowOwnerTotals(
@@ -240,10 +266,8 @@ export function createEmptyHarvestClassificationDraft(id: string): HarvestFormCl
     customerId: '',
     traderCategoryId: '',
     customerCategoryId: '',
-    grade: '',
-    pitamStatus: '',
-    quantity: '',
     notes: '',
+    quantities: createEmptyGradeQuantityMatrix(),
   };
 }
 
@@ -260,21 +284,27 @@ export function applyHarvestClassificationDraftUpdate(
     nextDraft.traderId = '';
     nextDraft.customerId = '';
     nextDraft.customerCategoryId = '';
+    nextDraft.quantities = createEmptyGradeQuantityMatrix();
   }
 
   if (updater.assignmentType === 'TRADER') {
     nextDraft.customerId = '';
     nextDraft.customerCategoryId = '';
+    nextDraft.quantities = createEmptyGradeQuantityMatrix();
   }
 
   if (updater.assignmentType === 'CUSTOMER') {
     nextDraft.traderId = '';
     nextDraft.traderCategoryId = '';
-    nextDraft.grade = '';
+    nextDraft.quantities = createEmptyGradeQuantityMatrix();
   }
 
   if (updater.customerId !== undefined) {
     nextDraft.customerCategoryId = '';
+  }
+
+  if (updater.traderCategoryId !== undefined) {
+    nextDraft.quantities = createEmptyGradeQuantityMatrix();
   }
 
   return nextDraft;

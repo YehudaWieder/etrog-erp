@@ -6,6 +6,7 @@ import {
   type ClassificationDailySummaryCategory,
   type ClassificationDailySummaryRow,
 } from '../../../../services/classificationsApi';
+import type { TraderCategoryWithShares } from '../../../../services/traderCategoriesApi';
 import { buildSortingCategoryDisplayLabel, sortSortingDailyCategories } from '../../utils/harvestPage.utils';
 
 type UseHarvestSortingDailyRowsParams = {
@@ -17,6 +18,7 @@ type UseHarvestSortingDailyRowsParams = {
   setSortingDailyCategories: (value: ClassificationDailySummaryCategory[]) => void;
   setSortingDailyLoadError: (value: string) => void;
   setIsSortingDailyLoading: (value: boolean) => void;
+  traderCategories?: TraderCategoryWithShares[];
 };
 
 export function useHarvestSortingDailyRows({
@@ -28,7 +30,12 @@ export function useHarvestSortingDailyRows({
   setSortingDailyCategories,
   setSortingDailyLoadError,
   setIsSortingDailyLoading,
+  traderCategories = [],
 }: UseHarvestSortingDailyRowsParams): void {
+  const traderCategoryOrder = new Map<string, number>();
+  for (const category of traderCategories) {
+    traderCategoryOrder.set(category.name, category.orderIndex);
+  }
   useEffect(() => {
     if (!isSortingDailyDetailsTab) {
       setSortingDailyRows([]);
@@ -183,7 +190,7 @@ export function useHarvestSortingDailyRows({
 
         return {
           rows,
-          categories: sortSortingDailyCategories(categories),
+          categories: sortSortingDailyCategories(categories, traderCategoryOrder),
         };
       };
 
@@ -194,7 +201,7 @@ export function useHarvestSortingDailyRows({
         }
 
         setSortingDailyRows(payload.rows);
-        setSortingDailyCategories(sortSortingDailyCategories(payload.categories));
+        setSortingDailyCategories(sortSortingDailyCategories(payload.categories, traderCategoryOrder));
       } catch {
         try {
           const fallbackPayload = await buildFallbackFromHarvestRows();
@@ -204,7 +211,7 @@ export function useHarvestSortingDailyRows({
           }
 
           setSortingDailyRows(fallbackPayload.rows);
-          setSortingDailyCategories(sortSortingDailyCategories(fallbackPayload.categories));
+          setSortingDailyCategories(fallbackPayload.categories);
           setSortingDailyLoadError('');
         } catch {
           if (!isMounted) {
@@ -236,6 +243,7 @@ export function useHarvestSortingDailyRows({
     setSortingDailyLoadError,
     setSortingDailyRows,
     sortingDailyLoadErrorMessage,
+    traderCategories,
   ]);
 }
 

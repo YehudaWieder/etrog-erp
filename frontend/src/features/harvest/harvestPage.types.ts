@@ -6,6 +6,8 @@ export type SortingAssignmentFilter =
   | `trader:${string}`
   | `customer:${string}`;
 
+import type { GradeQuantityMatrix } from './utils/harvestClassificationMatrix.util';
+
 export type HarvestFormClassificationDraft = {
   id: string;
   assignmentType: 'GENERAL' | 'TRADER' | 'CUSTOMER';
@@ -13,10 +15,8 @@ export type HarvestFormClassificationDraft = {
   customerId: string;
   traderCategoryId: string;
   customerCategoryId: string;
-  grade: string;
-  pitamStatus: 'WITH_PITAM' | 'WITHOUT_PITAM' | 'MIXED' | '';
-  quantity: string;
   notes: string;
+  quantities: GradeQuantityMatrix;
 };
 
 export type HarvestFieldReportRow = {

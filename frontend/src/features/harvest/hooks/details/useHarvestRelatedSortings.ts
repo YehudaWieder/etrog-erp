@@ -1,5 +1,6 @@
 ﻿import { useMemo } from 'react';
 import type { ClassificationRecord } from '../../../../services/classificationsApi';
+import type { TraderCategoryWithShares } from '../../../../services/traderCategoriesApi';
 import type { HarvestI18n } from '../../i18n';
 
 type RelatedSortingsLabels = HarvestI18n['dailyDetails']['detailsPanel']['relatedSortings'];
@@ -9,6 +10,7 @@ type UseHarvestRelatedSortingsParams = {
   relatedSortings: ClassificationRecord[];
   relatedSortingsLabels: RelatedSortingsLabels;
   noneValue: string;
+  traderCategories?: TraderCategoryWithShares[];
 };
 
 export function useHarvestRelatedSortings({
@@ -16,7 +18,16 @@ export function useHarvestRelatedSortings({
   relatedSortings,
   relatedSortingsLabels,
   noneValue,
+  traderCategories = [],
 }: UseHarvestRelatedSortingsParams) {
+  const traderCategoryOrder = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const category of traderCategories) {
+      map.set(category.name, category.orderIndex);
+    }
+    return map;
+  }, [traderCategories]);
+
   const sortedRelatedSortings = useMemo(() => {
     const locale = lang === 'he' ? 'he' : 'en';
 
@@ -40,16 +51,22 @@ export function useHarvestRelatedSortings({
 
     const getGradeForSort = (row: ClassificationRecord) => row.grade ?? row.customerCategory?.grade ?? '';
 
+    const compareCategoryNames = (a: string, b: string) => {
+      const ai = traderCategoryOrder.get(a);
+      const bi = traderCategoryOrder.get(b);
+      if (ai !== undefined && bi !== undefined) return ai - bi;
+      if (ai !== undefined) return -1;
+      if (bi !== undefined) return 1;
+      return a.localeCompare(b, locale, { sensitivity: 'base', numeric: true });
+    };
+
     return [...relatedSortings].sort((a, b) => {
       const assignmentDiff = getAssignmentOrder(a.assignmentType) - getAssignmentOrder(b.assignmentType);
       if (assignmentDiff !== 0) {
         return assignmentDiff;
       }
 
-      const categoryDiff = getCategoryNameForSort(a).localeCompare(getCategoryNameForSort(b), locale, {
-        sensitivity: 'base',
-        numeric: true,
-      });
+      const categoryDiff = compareCategoryNames(getCategoryNameForSort(a), getCategoryNameForSort(b));
       if (categoryDiff !== 0) {
         return categoryDiff;
       }
@@ -59,7 +76,7 @@ export function useHarvestRelatedSortings({
         numeric: true,
       });
     });
-  }, [lang, relatedSortings]);
+  }, [lang, relatedSortings, traderCategoryOrder]);
 
   const getRelatedSortingAssignmentLabel = (assignmentType: string) => {
     if (assignmentType === 'TRADER') {
