@@ -117,6 +117,8 @@ export type BoxesTableLabels = {
   description: string;
   seasonFilterLabel: string;
   shipmentNumberFilterLabel: string;
+  boxNumberFilterLabel: string;
+  boxNumberFilterPlaceholder: string;
   boxStatusFilterLabel: string;
   ownershipFilterLabel: string;
   allShipmentNumbersOption: string;
@@ -133,6 +135,7 @@ export type BoxesTableLabels = {
   colQuantity: string;
   colStatus: string;
   colOwnership: string;
+  selectRowAriaLabel: string;
   boxTypeLabels: Record<string, string>;
   detailsButtonAriaLabel: string;
   detailsPanelTitle: (boxNumber?: number) => string;

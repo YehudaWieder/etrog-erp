@@ -22,17 +22,20 @@ import styles from './styles/AllShipmentsTable.module.css';
 type AllBoxesTableProps = {
   lang: 'he' | 'en';
   labels: BoxesTableLabels;
-  selectedBoxId: number | null;
+  selectedBoxIds: number[];
   onSelectBox: (row: BoxesTableRow | null) => void;
+  onToggleBoxSelection: (row: BoxesTableRow) => void;
+  onPruneSelection?: (validIds: Set<number>) => void;
   refreshKey?: number;
   onRowCountChange?: (count: number) => void;
 };
 
-export function AllBoxesTable({ lang, labels, selectedBoxId, onSelectBox, refreshKey, onRowCountChange }: AllBoxesTableProps): JSX.Element {
+export function AllBoxesTable({ lang, labels, selectedBoxIds, onSelectBox, onToggleBoxSelection, onPruneSelection, refreshKey, onRowCountChange }: AllBoxesTableProps): JSX.Element {
   const {
     filters,
     selectedSeasonId,
     selectedShipmentNumber,
+    selectedBoxNumber,
     selectedStatus,
     selectedOwnership,
     filterDisplayValues,
@@ -44,6 +47,7 @@ export function AllBoxesTable({ lang, labels, selectedBoxId, onSelectBox, refres
     labels,
     selectedSeasonId,
     selectedShipmentNumber,
+    selectedBoxNumber,
     selectedStatus,
     selectedOwnership,
     refreshKey,
@@ -121,15 +125,16 @@ export function AllBoxesTable({ lang, labels, selectedBoxId, onSelectBox, refres
   }, [rows.length, isLoading]);
 
   useEffect(() => {
-    if (selectedBoxId === null) {
+    if (selectedBoxIds.length === 0 || !onPruneSelection) {
       return;
     }
 
-    const selectedExists = rows.some((row) => row.id === selectedBoxId);
-    if (!selectedExists) {
-      onSelectBox(null);
+    const existingIds = new Set(rows.map((row) => row.id));
+    const hasStaleSelection = selectedBoxIds.some((id) => !existingIds.has(id));
+    if (hasStaleSelection) {
+      onPruneSelection(existingIds);
     }
-  }, [onSelectBox, rows, selectedBoxId]);
+  }, [onPruneSelection, rows, selectedBoxIds]);
 
   useEffect(() => {
     if (detailsRow === null) {
@@ -202,8 +207,10 @@ export function AllBoxesTable({ lang, labels, selectedBoxId, onSelectBox, refres
             rows={rows}
             getRowKey={(row) => row.id}
             emptyLabel={labels.empty}
-            selectedRowKey={selectedBoxId}
+            selectedRowKeys={selectedBoxIds}
             onRowClick={onSelectBox}
+            onToggleRowSelection={onToggleBoxSelection}
+            selectionColumnLabel={labels.selectRowAriaLabel}
             defaultSortState={{ key: 'boxNumber', direction: 'desc' }}
           />
 

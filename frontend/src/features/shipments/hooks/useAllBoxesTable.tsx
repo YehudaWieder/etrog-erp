@@ -30,6 +30,7 @@ export function useAllBoxesTable(
   labels: BoxesTableLabels,
   seasonId: number | null,
   shipmentNumber: 'all' | number,
+  boxNumber: string,
   status: 'all' | BoxStatus,
   ownership: 'all' | string,
   refreshKey?: number,
@@ -100,8 +101,11 @@ export function useAllBoxesTable(
   }, [labels, refreshKey, seasonId]);
 
   const rows = useMemo<BoxesTableRow[]>(() => {
+    const boxNumberQuery = boxNumber.trim();
+
     return rawRows
       .filter((row) => shipmentNumber === 'all' || row.shipmentNumber === shipmentNumber)
+      .filter((row) => !boxNumberQuery || String(row.boxNumber).includes(boxNumberQuery))
       .filter((row) => status === 'all' || row.status === status)
       .filter((row) => {
         if (ownership === 'all') {
@@ -119,7 +123,7 @@ export function useAllBoxesTable(
         return row.ownership === ownership;
       })
       .map(({ ownershipType: _ownershipType, ...row }) => row);
-  }, [ownership, rawRows, shipmentNumber, status]);
+  }, [boxNumber, ownership, rawRows, shipmentNumber, status]);
 
   const columns = useMemo<GlobalDataTableColumn<BoxesTableRow>[]>(() => [
     {

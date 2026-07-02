@@ -5,6 +5,7 @@ import { downloadStyledExcel } from '../../../services/exportExcel';
 type FilterDisplay = {
   seasonLabel: string | null;
   shipmentNumberLabel: string | null;
+  boxNumberLabel: string | null;
   statusLabel: string | null;
   ownershipLabel: string | null;
 };
@@ -63,6 +64,7 @@ function filtersHtml(filterDisplayValues: FilterDisplay, labels: BoxesTableLabel
   const parts: string[] = [];
   if (filterDisplayValues.seasonLabel) parts.push(`${esc(labels.seasonFilterLabel)}: ${esc(filterDisplayValues.seasonLabel)}`);
   if (filterDisplayValues.shipmentNumberLabel) parts.push(`${esc(labels.shipmentNumberFilterLabel)}: ${esc(filterDisplayValues.shipmentNumberLabel)}`);
+  if (filterDisplayValues.boxNumberLabel) parts.push(`${esc(labels.boxNumberFilterLabel)}: ${esc(filterDisplayValues.boxNumberLabel)}`);
   if (filterDisplayValues.statusLabel) parts.push(`${esc(labels.boxStatusFilterLabel)}: ${esc(filterDisplayValues.statusLabel)}`);
   if (filterDisplayValues.ownershipLabel) parts.push(`${esc(labels.ownershipFilterLabel)}: ${esc(filterDisplayValues.ownershipLabel)}`);
   if (parts.length === 0) return '';
@@ -74,6 +76,7 @@ function buildFilterRows(filterDisplayValues: FilterDisplay, labels: BoxesTableL
   const empty = Array<string>(colCount - 1).fill('');
   if (filterDisplayValues.seasonLabel) rows.push([`${labels.seasonFilterLabel}: ${filterDisplayValues.seasonLabel}`, ...empty]);
   if (filterDisplayValues.shipmentNumberLabel) rows.push([`${labels.shipmentNumberFilterLabel}: ${filterDisplayValues.shipmentNumberLabel}`, ...empty]);
+  if (filterDisplayValues.boxNumberLabel) rows.push([`${labels.boxNumberFilterLabel}: ${filterDisplayValues.boxNumberLabel}`, ...empty]);
   if (filterDisplayValues.statusLabel) rows.push([`${labels.boxStatusFilterLabel}: ${filterDisplayValues.statusLabel}`, ...empty]);
   if (filterDisplayValues.ownershipLabel) rows.push([`${labels.ownershipFilterLabel}: ${filterDisplayValues.ownershipLabel}`, ...empty]);
   return rows;

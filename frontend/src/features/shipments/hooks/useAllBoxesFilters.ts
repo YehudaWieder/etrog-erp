@@ -9,6 +9,7 @@ import { parseShipmentSeasonFilterId } from '../utils/shipments.util';
 type AllBoxesFilterValues = {
   seasonId: string;
   shipmentNumber: string;
+  boxNumber: string;
   status: string;
   ownership: string;
 };
@@ -17,9 +18,10 @@ type UseAllBoxesFiltersResult = {
   filters: GlobalScopedFilterConfig[];
   selectedSeasonId: number | null;
   selectedShipmentNumber: 'all' | number;
+  selectedBoxNumber: string;
   selectedStatus: 'all' | BoxStatus;
   selectedOwnership: 'all' | string;
-  filterDisplayValues: { seasonLabel: string | null; shipmentNumberLabel: string | null; statusLabel: string | null; ownershipLabel: string | null };
+  filterDisplayValues: { seasonLabel: string | null; shipmentNumberLabel: string | null; boxNumberLabel: string | null; statusLabel: string | null; ownershipLabel: string | null };
   handleFilterValuesChange: (values: Record<string, string>) => void;
   handleFiltersApiReady: (api: GlobalScopedFiltersApi) => void;
 };
@@ -81,6 +83,7 @@ export function useAllBoxesFilters(labels: BoxesTableLabels): UseAllBoxesFilters
   const [filterValues, setFilterValues] = useState<AllBoxesFilterValues>({
     seasonId: '',
     shipmentNumber: 'all',
+    boxNumber: '',
     status: 'all',
     ownership: 'all',
   });
@@ -208,6 +211,15 @@ export function useAllBoxesFilters(labels: BoxesTableLabels): UseAllBoxesFilters
         ],
       },
       {
+        key: 'boxNumber',
+        label: labels.boxNumberFilterLabel,
+        defaultValue: '',
+        queryParam: 'shBoxesBoxNumber',
+        type: 'text',
+        placeholder: labels.boxNumberFilterPlaceholder,
+        options: [],
+      },
+      {
         key: 'status',
         label: labels.boxStatusFilterLabel,
         defaultValue: 'all',
@@ -242,6 +254,7 @@ export function useAllBoxesFilters(labels: BoxesTableLabels): UseAllBoxesFilters
     setFilterValues({
       seasonId: values.seasonId ?? '',
       shipmentNumber: values.shipmentNumber ?? 'all',
+      boxNumber: values.boxNumber ?? '',
       status: values.status ?? 'all',
       ownership: values.ownership ?? 'all',
     });
@@ -252,6 +265,8 @@ export function useAllBoxesFilters(labels: BoxesTableLabels): UseAllBoxesFilters
   }, []);
 
   const selectedShipmentNumber = useMemo(() => parseShipmentNumberFilter(filterValues.shipmentNumber), [filterValues.shipmentNumber]);
+
+  const selectedBoxNumber = useMemo(() => filterValues.boxNumber.trim(), [filterValues.boxNumber]);
 
   const selectedStatus = useMemo(() => parseBoxStatusFilter(filterValues.status), [filterValues.status]);
 
@@ -264,6 +279,7 @@ export function useAllBoxesFilters(labels: BoxesTableLabels): UseAllBoxesFilters
     const seasonRecord = filterValues.seasonId ? seasons.find((s) => String(s.id) === filterValues.seasonId) : null;
     const seasonLabel = seasonRecord ? String(seasonRecord.yearName) : null;
     const shipmentNumberLabel = filterValues.shipmentNumber !== 'all' ? filterValues.shipmentNumber : null;
+    const boxNumberLabel = filterValues.boxNumber.trim() ? filterValues.boxNumber.trim() : null;
     const statusLabel = filterValues.status !== 'all' ? (labels.statusLabels[filterValues.status as BoxStatus] ?? null) : null;
     let ownershipLabel: string | null = null;
     if (filterValues.ownership !== 'all') {
@@ -271,13 +287,14 @@ export function useAllBoxesFilters(labels: BoxesTableLabels): UseAllBoxesFilters
       else if (filterValues.ownership === OWNERSHIP_GROUP_CUSTOMERS) ownershipLabel = labels.allCustomersOption;
       else ownershipLabel = filterValues.ownership;
     }
-    return { seasonLabel, shipmentNumberLabel, statusLabel, ownershipLabel };
+    return { seasonLabel, shipmentNumberLabel, boxNumberLabel, statusLabel, ownershipLabel };
   }, [filterValues, seasons, labels]);
 
   return {
     filters,
     selectedSeasonId,
     selectedShipmentNumber,
+    selectedBoxNumber,
     selectedStatus,
     selectedOwnership,
     filterDisplayValues,

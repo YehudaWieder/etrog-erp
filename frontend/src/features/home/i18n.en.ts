@@ -8,7 +8,7 @@ export const HOME_I18N_EN = {
     addSorting: 'Add Sorting',
     newShipment: 'New Shipment',
     newBox: 'New Box',
-    newItem: 'New Item',
+    packItems: 'Pack Items',
     settings: 'Settings',
   },
   dashboard: {

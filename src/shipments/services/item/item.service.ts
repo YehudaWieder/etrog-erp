@@ -760,6 +760,19 @@ export class ItemService {
   // Creates a shipment item and triggers totals recalculation for Box and Shipment.
   // Uses a transaction to ensure all updates succeed or fail together.
   async create(data: Prisma.ShipmentItemUncheckedCreateInput, actorId: number) {
+    const { id: seasonId } = await this.seasonsService.findActiveSeason();
+
+    return this.prisma.$transaction((tx) => this.createInTx(tx, data, actorId, seasonId));
+  }
+
+  // Tx-scoped body of create(), reusable by callers that already hold an open transaction
+  // (e.g. BoxPackingWorkflowService, which updates a box and creates its items atomically).
+  async createInTx(
+    tx: Prisma.TransactionClient,
+    data: Prisma.ShipmentItemUncheckedCreateInput,
+    actorId: number,
+    seasonId: number,
+  ) {
     const createPayload = {
       ...data,
       updatedById: actorId,
@@ -767,56 +780,52 @@ export class ItemService {
 
     validateCreateShipmentItemInput(createPayload);
 
-    const { id: seasonId } = await this.seasonsService.findActiveSeason();
-
-    return this.prisma.$transaction(async (tx) => {
-      const box = await tx.box.findFirst({
-        where: { id: createPayload.boxId, seasonId, isDeleted: false },
-        select: { id: true, shipmentId: true, ownershipType: true, traderId: true, customerId: true, status: true, boxType: true, totalQuantity: true },
-      });
-
-      if (!box) throw new NotFoundException(`Box ${createPayload.boxId} not found in active season`);
-
-      const normalizedOwnership = this.normalizeItemOwnershipForBox({
-        boxOwnership: box.ownershipType,
-        boxTraderId: box.traderId,
-        boxCustomerId: box.customerId,
-        itemOwnership: createPayload.ownershipType as ItemOwnership | undefined,
-        itemTraderId: createPayload.traderId ?? null,
-        itemCustomerId: createPayload.customerId ?? null,
-      });
-
-      validateItemOwnership(
-        normalizedOwnership.ownershipType,
-        normalizedOwnership.traderId,
-        normalizedOwnership.customerId,
-      );
-
-      const newItem = await tx.shipmentItem.create({
-        data: {
-          ...createPayload,
-          ownershipType: normalizedOwnership.ownershipType,
-          traderId: normalizedOwnership.traderId,
-          customerId: normalizedOwnership.customerId,
-          seasonId,
-          shipmentId: box.shipmentId,
-        },
-      });
-
-      const generalSourceBreakdown = await this.applyItemToBox(tx, {
-        ...newItem,
-        isPrivateSelection: Boolean(newItem.isPrivateSelection),
-        quantity: newItem.quantity,
-      }, box);
-
-      if (generalSourceBreakdown !== null) {
-        await tx.shipmentItem.update({ where: { id: newItem.id }, data: { generalSourceBreakdown } });
-      }
-
-      await this.shipmentsService.syncBoxAndShipmentTotals(tx, box.id, box.shipmentId);
-
-      return newItem;
+    const box = await tx.box.findFirst({
+      where: { id: createPayload.boxId, seasonId, isDeleted: false },
+      select: { id: true, shipmentId: true, ownershipType: true, traderId: true, customerId: true, status: true, boxType: true, totalQuantity: true },
     });
+
+    if (!box) throw new NotFoundException(`Box ${createPayload.boxId} not found in active season`);
+
+    const normalizedOwnership = this.normalizeItemOwnershipForBox({
+      boxOwnership: box.ownershipType,
+      boxTraderId: box.traderId,
+      boxCustomerId: box.customerId,
+      itemOwnership: createPayload.ownershipType as ItemOwnership | undefined,
+      itemTraderId: createPayload.traderId ?? null,
+      itemCustomerId: createPayload.customerId ?? null,
+    });
+
+    validateItemOwnership(
+      normalizedOwnership.ownershipType,
+      normalizedOwnership.traderId,
+      normalizedOwnership.customerId,
+    );
+
+    const newItem = await tx.shipmentItem.create({
+      data: {
+        ...createPayload,
+        ownershipType: normalizedOwnership.ownershipType,
+        traderId: normalizedOwnership.traderId,
+        customerId: normalizedOwnership.customerId,
+        seasonId,
+        shipmentId: box.shipmentId,
+      },
+    });
+
+    const generalSourceBreakdown = await this.applyItemToBox(tx, {
+      ...newItem,
+      isPrivateSelection: Boolean(newItem.isPrivateSelection),
+      quantity: newItem.quantity,
+    }, box);
+
+    if (generalSourceBreakdown !== null) {
+      await tx.shipmentItem.update({ where: { id: newItem.id }, data: { generalSourceBreakdown } });
+    }
+
+    await this.shipmentsService.syncBoxAndShipmentTotals(tx, box.id, box.shipmentId);
+
+    return newItem;
   }
 
   // Returns all soft-deleted shipment items with related entity details.

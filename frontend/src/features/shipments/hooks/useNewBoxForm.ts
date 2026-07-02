@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../../../services/apiClient';
-import { createBox, type BoxOwnership } from '../../../services/boxesApi';
+import { createBox, createBoxesBulk, type BoxOwnership } from '../../../services/boxesApi';
 import { getActiveSeason } from '../../../services/seasonsApi';
 import { getShipmentsBySeason, type ShipmentRecord } from '../../../services/shipmentsApi';
 import { getTraders, type Trader } from '../../../services/tradersApi';
 import { getCustomers, type Customer } from '../../../services/customersApi';
+
+export type NewBoxFormMode = 'SINGLE' | 'BULK';
+
+const MAX_BULK_BOX_RANGE = 100;
 
 type NewBoxFormText = {
   validationShipmentRequired: string;
@@ -14,7 +18,12 @@ type NewBoxFormText = {
   validationOwnershipTypeRequired: string;
   validationTraderRequired: string;
   validationCustomerRequired: string;
+  validationStartNumberRequired: string;
+  validationEndNumberRequired: string;
+  validationRangeInvalid: string;
+  validationRangeTooLarge: (max: number) => string;
   duplicateBoxNumber: string;
+  duplicateBoxNumbersInRange: (numbers: string) => string;
   genericError: string;
 };
 
@@ -26,6 +35,8 @@ type UseNewBoxFormProps = {
 };
 
 type UseNewBoxFormResult = {
+  mode: NewBoxFormMode;
+  setMode: (v: NewBoxFormMode) => void;
   shipments: ShipmentRecord[];
   traders: Trader[];
   customers: Customer[];
@@ -44,6 +55,10 @@ type UseNewBoxFormResult = {
   setCustomerId: (v: string) => void;
   notes: string;
   setNotes: (v: string) => void;
+  startNumber: string;
+  setStartNumber: (v: string) => void;
+  endNumber: string;
+  setEndNumber: (v: string) => void;
   isSubmitting: boolean;
   error: string | null;
   handleSave: () => Promise<void>;
@@ -56,6 +71,7 @@ export function useNewBoxForm({ isOpen, t, onSuccess, onClose }: UseNewBoxFormPr
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 
+  const [mode, setMode] = useState<NewBoxFormMode>('SINGLE');
   const [selectedShipmentId, setSelectedShipmentId] = useState('');
   const [boxNumber, setBoxNumber] = useState('');
   const [boxType, setBoxType] = useState('');
@@ -63,6 +79,8 @@ export function useNewBoxForm({ isOpen, t, onSuccess, onClose }: UseNewBoxFormPr
   const [traderId, setTraderId] = useState('');
   const [customerId, setCustomerId] = useState('');
   const [notes, setNotes] = useState('');
+  const [startNumber, setStartNumber] = useState('');
+  const [endNumber, setEndNumber] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -113,6 +131,7 @@ export function useNewBoxForm({ isOpen, t, onSuccess, onClose }: UseNewBoxFormPr
   }, [isOpen]);
 
   const resetForm = useCallback(() => {
+    setMode('SINGLE');
     setSelectedShipmentId('');
     setBoxNumber('');
     setBoxType('');
@@ -120,6 +139,8 @@ export function useNewBoxForm({ isOpen, t, onSuccess, onClose }: UseNewBoxFormPr
     setTraderId('');
     setCustomerId('');
     setNotes('');
+    setStartNumber('');
+    setEndNumber('');
     setError(null);
   }, []);
 
@@ -128,7 +149,68 @@ export function useNewBoxForm({ isOpen, t, onSuccess, onClose }: UseNewBoxFormPr
     onClose();
   }, [onClose, resetForm]);
 
-  const handleSave = useCallback(async () => {
+  const handleSaveBulk = useCallback(async () => {
+    if (!selectedShipmentId) {
+      setError(t.validationShipmentRequired);
+      return;
+    }
+
+    if (!startNumber.trim()) {
+      setError(t.validationStartNumberRequired);
+      return;
+    }
+
+    if (!endNumber.trim()) {
+      setError(t.validationEndNumberRequired);
+      return;
+    }
+
+    const startNumberValue = Number(startNumber);
+    const endNumberValue = Number(endNumber);
+    if (
+      !Number.isInteger(startNumberValue) ||
+      startNumberValue <= 0 ||
+      !Number.isInteger(endNumberValue) ||
+      endNumberValue < startNumberValue
+    ) {
+      setError(t.validationRangeInvalid);
+      return;
+    }
+
+    if (endNumberValue - startNumberValue + 1 > MAX_BULK_BOX_RANGE) {
+      setError(t.validationRangeTooLarge(MAX_BULK_BOX_RANGE));
+      return;
+    }
+
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      await createBoxesBulk(
+        {
+          shipmentId: Number(selectedShipmentId),
+          startNumber: startNumberValue,
+          endNumber: endNumberValue,
+        },
+        { suppressGlobalFeedback: true },
+      );
+
+      resetForm();
+      onSuccess();
+      onClose();
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409 && err.serverMessage) {
+        const numbersMatch = err.serverMessage.match(/:\s*([\d,\s]+)$/);
+        setError(numbersMatch ? t.duplicateBoxNumbersInRange(numbersMatch[1].trim()) : t.duplicateBoxNumber);
+      } else {
+        setError(t.genericError);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [endNumber, onClose, onSuccess, resetForm, selectedShipmentId, startNumber, t]);
+
+  const handleSaveSingle = useCallback(async () => {
     if (!selectedShipmentId) {
       setError(t.validationShipmentRequired);
       return;
@@ -193,7 +275,17 @@ export function useNewBoxForm({ isOpen, t, onSuccess, onClose }: UseNewBoxFormPr
     }
   }, [boxNumber, boxType, customerId, notes, onClose, onSuccess, ownershipType, resetForm, selectedShipmentId, t, traderId]);
 
+  const handleSave = useCallback(async () => {
+    if (mode === 'BULK') {
+      await handleSaveBulk();
+    } else {
+      await handleSaveSingle();
+    }
+  }, [handleSaveBulk, handleSaveSingle, mode]);
+
   return {
+    mode,
+    setMode,
     shipments,
     traders,
     customers,
@@ -212,6 +304,10 @@ export function useNewBoxForm({ isOpen, t, onSuccess, onClose }: UseNewBoxFormPr
     setCustomerId,
     notes,
     setNotes,
+    startNumber,
+    setStartNumber,
+    endNumber,
+    setEndNumber,
     isSubmitting,
     error,
     handleSave,

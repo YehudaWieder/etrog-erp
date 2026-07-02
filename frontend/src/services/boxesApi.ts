@@ -46,6 +46,12 @@ export type CreateBoxPayload = {
   notes?: string;
 };
 
+export type CreateBoxesBulkPayload = {
+  shipmentId: number;
+  startNumber: number;
+  endNumber: number;
+};
+
 export type UpdateBoxPayload = {
   id: number;
   shipmentId?: number;
@@ -87,8 +93,49 @@ export async function deleteBox(
   });
 }
 
+export async function deleteBoxesBulk(
+  ids: number[],
+  init?: Pick<ApiClientInit, 'suppressGlobalFeedback'>,
+): Promise<{ deleted: boolean; ids: number[] }> {
+  return apiClient<{ deleted: boolean; ids: number[] }>('/boxes/bulk', {
+    method: 'DELETE',
+    body: JSON.stringify({ ids }),
+    ...init,
+  });
+}
+
 export async function getBoxesByShipment(shipmentId: number): Promise<BoxRecord[]> {
   return apiClient<BoxRecord[]>(`/boxes/shipment/${shipmentId}`);
+}
+
+export type PackBoxItemPayload = {
+  traderCategoryId?: number;
+  customerCategoryId?: number;
+  grade?: string;
+  pitamStatus: string;
+  quantity: number;
+  notes?: string;
+  ownershipType?: string;
+  traderId?: number;
+  customerId?: number;
+  isPrivateSelection?: boolean;
+  customLabel?: string;
+  customGrade?: string;
+};
+
+export type PackBoxPayload = UpdateBoxPayload & {
+  items: PackBoxItemPayload[];
+};
+
+export async function packBox(
+  payload: PackBoxPayload,
+  init?: Pick<ApiClientInit, 'suppressGlobalFeedback'>,
+): Promise<{ box: BoxRecord; items: unknown[] }> {
+  return apiClient<{ box: BoxRecord; items: unknown[] }>('/boxes/pack', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+    ...init,
+  });
 }
 
 export async function createBox(
@@ -96,6 +143,17 @@ export async function createBox(
   init?: Pick<ApiClientInit, 'suppressGlobalFeedback'>,
 ): Promise<BoxRecord> {
   return apiClient<BoxRecord>('/boxes', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    ...init,
+  });
+}
+
+export async function createBoxesBulk(
+  payload: CreateBoxesBulkPayload,
+  init?: Pick<ApiClientInit, 'suppressGlobalFeedback'>,
+): Promise<BoxRecord[]> {
+  return apiClient<BoxRecord[]>('/boxes/bulk', {
     method: 'POST',
     body: JSON.stringify(payload),
     ...init,

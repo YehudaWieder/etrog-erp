@@ -12,6 +12,14 @@ export type CreateBoxInput = {
   customerId?: number;
 };
 
+export type BulkCreateBoxInput = {
+  shipmentId: number;
+  startNumber: number;
+  endNumber: number;
+};
+
+export const MAX_BULK_BOX_RANGE = 100;
+
 export type UpdateBoxInput = {
   shipmentId?: number;
   boxNumber?: number;
@@ -97,6 +105,39 @@ export function validateCreateBoxInput(data: CreateBoxInput): void {
   }
 
   validateBoxOwnership(data.ownershipType, data.traderId, data.customerId);
+}
+
+export function validateBulkCreateBoxInput(data: BulkCreateBoxInput): void {
+  assertOnlyAllowedFields(
+    data as Record<string, unknown>,
+    ['shipmentId', 'startNumber', 'endNumber'],
+    'Only shipmentId, startNumber, endNumber are allowed when bulk-creating boxes.',
+  );
+
+  assertPositiveInt(data.shipmentId, 'shipmentId');
+  assertPositiveInt(data.startNumber, 'startNumber');
+  assertPositiveInt(data.endNumber, 'endNumber');
+
+  if (data.endNumber < data.startNumber) {
+    throw new BadRequestException('endNumber must be greater than or equal to startNumber');
+  }
+
+  const rangeSize = data.endNumber - data.startNumber + 1;
+  if (rangeSize > MAX_BULK_BOX_RANGE) {
+    throw new BadRequestException(`Cannot create more than ${MAX_BULK_BOX_RANGE} boxes at once`);
+  }
+}
+
+export function validateBulkDeleteBoxInput(ids: unknown): asserts ids is number[] {
+  if (!Array.isArray(ids) || ids.length === 0) {
+    throw new BadRequestException('ids must be a non-empty array of box IDs');
+  }
+
+  if (ids.length > MAX_BULK_BOX_RANGE) {
+    throw new BadRequestException(`Cannot delete more than ${MAX_BULK_BOX_RANGE} boxes at once`);
+  }
+
+  ids.forEach((id) => assertPositiveInt(id, 'id'));
 }
 
 export function validateUpdateBoxInput(data: UpdateBoxInput): void {

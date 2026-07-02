@@ -1,9 +1,15 @@
-import { FaCirclePlus, FaPenToSquare, FaTrashCan } from 'react-icons/fa6';
+import { FaBoxesPacking, FaCirclePlus, FaPenToSquare, FaTrashCan } from 'react-icons/fa6';
 import styles from '../../../../components/ui/styles/HeaderActionButtons.module.css';
 
 type ExtraAction = {
   label: string;
   onClick: () => void;
+};
+
+type PackAction = {
+  label: string;
+  onClick: () => void;
+  disabled: boolean;
 };
 
 type ShipmentsPageHeaderActionsProps = {
@@ -18,6 +24,7 @@ type ShipmentsPageHeaderActionsProps = {
   showAddAction?: boolean;
   showRowActions?: boolean;
   extraActions?: ExtraAction[];
+  packAction?: PackAction;
 };
 
 export function ShipmentsPageHeaderActions({
@@ -32,6 +39,7 @@ export function ShipmentsPageHeaderActions({
   showAddAction = true,
   showRowActions = true,
   extraActions,
+  packAction,
 }: ShipmentsPageHeaderActionsProps): JSX.Element {
   return (
     <div className={styles.actions}>
@@ -70,6 +78,18 @@ export function ShipmentsPageHeaderActions({
             <FaPenToSquare />
             <span>{editActionLabel}</span>
           </button>
+          {packAction && (
+            <button
+              type="button"
+              className={`${styles.button} ${styles.success}`}
+              onClick={packAction.onClick}
+              disabled={packAction.disabled}
+              aria-label={packAction.label}
+            >
+              <FaBoxesPacking />
+              <span>{packAction.label}</span>
+            </button>
+          )}
           <button
             type="button"
             className={`${styles.button} ${styles.danger}`}

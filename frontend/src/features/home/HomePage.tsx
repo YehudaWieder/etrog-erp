@@ -52,7 +52,7 @@ export function HomePage() {
     { label: qa.addSorting, icon: <FaSort />, onClick: () => navigate('/harvest', { state: { openSortingForm: true } }) },
     { label: qa.newShipment, icon: <FaTruck />, onClick: () => navigate('/shipments', { state: { openNewShipment: true } }) },
     { label: qa.newBox, icon: <FaBoxArchive />, onClick: () => navigate('/shipments', { state: { openNewBox: true } }) },
-    { label: qa.newItem, icon: <FaBoxesPacking />, onClick: () => navigate('/shipments', { state: { openNewItem: true } }) },
+    { label: qa.packItems, icon: <FaBoxesPacking />, onClick: () => navigate('/shipments', { state: { openPacking: true } }) },
     { label: qa.settings, icon: <FaGear />, onClick: () => navigate('/settings') },
   ];
 

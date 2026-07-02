@@ -8,7 +8,7 @@ export const HOME_I18N_HE = {
     addSorting: 'הוספת מיון',
     newShipment: 'משלוח חדש',
     newBox: 'קרטון חדש',
-    newItem: 'פריט חדש',
+    packItems: 'אריזת פריטים',
     settings: 'הגדרות',
   },
   dashboard: {

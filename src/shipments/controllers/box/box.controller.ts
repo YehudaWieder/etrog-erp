@@ -5,9 +5,13 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedRespo
 import { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { BoxService } from '../../services/box/box.service';
+import { BoxPackingWorkflowService } from '../../services/box/box-packing-workflow.service';
 import { BoxResponseSwaggerDto } from 'src/docs/dto/swagger-enums.dto';
 import { CreateBoxDto } from '../../services/box/dto/create-box.dto';
+import { CreateBoxesBulkDto } from '../../services/box/dto/create-boxes-bulk.dto';
+import { DeleteBoxesBulkDto } from '../../services/box/dto/delete-boxes-bulk.dto';
 import { UpdateBoxDto } from '../../services/box/dto/update-box.dto';
+import { PackBoxDto } from '../../services/box/dto/pack-box.dto';
 
 @ApiTags('Logistics')
 @ApiBearerAuth('access-token')
@@ -15,7 +19,10 @@ import { UpdateBoxDto } from '../../services/box/dto/update-box.dto';
 @ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
 @Controller('boxes')
 export class BoxController {
-  constructor(private readonly boxService: BoxService) {}
+  constructor(
+    private readonly boxService: BoxService,
+    private readonly boxPackingWorkflowService: BoxPackingWorkflowService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new box within a shipment. seasonId and totalQuantity are auto-managed by the server.' })
@@ -48,6 +55,28 @@ export class BoxController {
   create(@Body() data: CreateBoxDto, @Req() req: Request) {
     const actor = req.user as AuthenticatedUser;
     return this.boxService.create(data, actor.id);
+  }
+
+  @Post('bulk')
+  @ApiOperation({
+    summary:
+      'Create a contiguous range of boxes in a shipment by box number, defaulting to SMALL/GENERAL (to be configured later, e.g. via the packing form).',
+  })
+  @ApiBody({
+    type: CreateBoxesBulkDto,
+    examples: {
+      range: {
+        summary: 'Create boxes #100 through #150',
+        value: { shipmentId: 15, startNumber: 100, endNumber: 150 },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Boxes created successfully.', type: BoxResponseSwaggerDto, isArray: true })
+  @ApiResponse({ status: 400, description: 'Invalid input or range too large.' })
+  @ApiResponse({ status: 409, description: 'One or more box numbers in the range already exist.' })
+  bulkCreate(@Body() data: CreateBoxesBulkDto, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.boxService.bulkCreate(data, actor.id);
   }
 
   @Get('shipment/:shipmentId')
@@ -111,6 +140,36 @@ export class BoxController {
     return this.boxService.update(id, data, actor.id);
   }
 
+  @Patch('pack')
+  @ApiOperation({ summary: 'Update a box and create any number of shipment items in it, atomically in a single transaction.' })
+  @ApiBody({
+    type: PackBoxDto,
+    examples: {
+      packWithItems: {
+        summary: 'Close a box while packing two items',
+        value: {
+          id: 101,
+          status: 'CLOSED',
+          items: [
+            { traderCategoryId: 4, grade: 'A', pitamStatus: 'WITH_PITAM', quantity: 20, ownershipType: 'TRADER', traderId: 3 },
+            { traderCategoryId: 4, grade: 'B', pitamStatus: 'WITHOUT_PITAM', quantity: 15, ownershipType: 'TRADER', traderId: 3 },
+          ],
+        },
+      },
+      boxOnlyEdit: {
+        summary: 'Box edit with no items',
+        value: { id: 101, notes: 'Sealed and ready for dispatch', items: [] },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Box updated and items created successfully.' })
+  @ApiResponse({ status: 400, description: 'Invalid update data, or a row failed validation — nothing was committed.' })
+  @ApiResponse({ status: 404, description: 'Box not found.' })
+  pack(@Body() data: PackBoxDto, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.boxPackingWorkflowService.packBox(data, actor.id);
+  }
+
   @Patch('recalculate')
   @ApiOperation({ summary: 'Recalculate and update the total quantity for a box based on its items' })
   @ApiBody({
@@ -126,6 +185,27 @@ export class BoxController {
   @ApiResponse({ status: 404, description: 'Box not found.' })
   recalculate(@Body() data: UpdateBoxDto) {
     return this.boxService.updateBoxTotal(data.id);
+  }
+
+  @Delete('bulk')
+  @ApiOperation({
+    summary: 'Permanently delete multiple boxes at once, atomically. Fails entirely if any box has items or linked trader stock.',
+  })
+  @ApiBody({
+    type: DeleteBoxesBulkDto,
+    examples: {
+      sample: {
+        summary: 'Delete three empty boxes',
+        value: { ids: [101, 102, 103] },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Boxes permanently deleted.' })
+  @ApiResponse({ status: 400, description: 'Invalid input.' })
+  @ApiResponse({ status: 404, description: 'One or more boxes not found.' })
+  @ApiResponse({ status: 409, description: 'One or more boxes have associated items or linked trader stock.' })
+  bulkRemove(@Body() data: DeleteBoxesBulkDto) {
+    return this.boxService.removeHardBulk(data.ids);
   }
 
   @Delete(':id')
