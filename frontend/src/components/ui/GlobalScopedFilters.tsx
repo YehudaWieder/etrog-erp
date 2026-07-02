@@ -8,7 +8,8 @@ export type GlobalScopedFilterConfig = {
   defaultValue: string;
   options: GlobalFilterOption[];
   queryParam?: string;
-  type?: 'calendar';
+  type?: 'calendar' | 'text';
+  placeholder?: string;
   lang?: 'he' | 'en';
 };
 
@@ -66,6 +67,7 @@ export const GlobalScopedFilters: React.FC<GlobalScopedFiltersProps> = ({
           setFilterValue(filter.key, value);
         },
         type: filter.type,
+        placeholder: filter.placeholder,
         lang: filter.lang,
       })),
     [filters, scope, setFilterValue, values],

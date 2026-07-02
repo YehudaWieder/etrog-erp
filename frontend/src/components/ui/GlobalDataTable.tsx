@@ -39,7 +39,10 @@ type GlobalDataTableProps<RowT> = {
   emptyLabel: string;
   className?: string;
   selectedRowKey?: string | number | null;
+  selectedRowKeys?: Array<string | number>;
   onRowClick?: (row: RowT) => void;
+  onToggleRowSelection?: (row: RowT) => void;
+  selectionColumnLabel?: string;
   sortState?: GlobalDataTableSortState | null;
   onSort?: (key: string) => void;
   defaultSortState?: GlobalDataTableSortState | null;
@@ -84,7 +87,10 @@ export function GlobalDataTable<RowT>({
   emptyLabel,
   className,
   selectedRowKey,
+  selectedRowKeys,
   onRowClick,
+  onToggleRowSelection,
+  selectionColumnLabel,
   sortState,
   onSort,
   defaultSortState,
@@ -106,13 +112,16 @@ export function GlobalDataTable<RowT>({
     return typeof column.header === 'string' ? column.header : '';
   };
 
-  const templateColumns = columns
-    .map((column) => column.gridTemplate ?? `minmax(${column.minWidth ?? '120px'}, 1fr)`)
-    .join(' ');
+  const hasSelectionColumn = Boolean(onToggleRowSelection);
+  const selectionColumnWidth = '28px';
+  const templateColumns = [
+    ...(hasSelectionColumn ? [selectionColumnWidth] : []),
+    ...columns.map((column) => column.gridTemplate ?? `minmax(${column.minWidth ?? '120px'}, 1fr)`),
+  ].join(' ');
   const minTableWidthPx = columns.reduce((total, column) => {
     const parsed = Number.parseFloat(column.minWidth ?? '120');
     return Number.isFinite(parsed) ? total + parsed : total + 120;
-  }, 0);
+  }, hasSelectionColumn ? Number.parseFloat(selectionColumnWidth) : 0);
   const minTableWidth = `${Math.max(minTableWidthPx, 0)}px`;
   const responsiveMinWidth = `max(100%, ${minTableWidth})`;
   const activeSortState = sortState ?? internalSortState;
@@ -228,6 +237,13 @@ export function GlobalDataTable<RowT>({
           }}
           role="row"
         >
+          {hasSelectionColumn ? (
+            <div
+              className={`global-data-table__cell global-data-table__cell--head global-data-table__cell--center ${styles.cell} ${styles.cellHead} ${styles.selectionCell} ${alignClassName.center}`}
+              role="columnheader"
+              aria-label={selectionColumnLabel}
+            />
+          ) : null}
           {columns.map((column) => (
             <div
               key={column.id}
@@ -246,7 +262,9 @@ export function GlobalDataTable<RowT>({
             {sortedRows.map((row) => (
               (() => {
                 const rowKey = getRowKey(row);
-                const isSelected = selectedRowKey !== undefined && selectedRowKey !== null && rowKey === selectedRowKey;
+                const isSelected = selectedRowKeys
+                  ? selectedRowKeys.includes(rowKey)
+                  : selectedRowKey !== undefined && selectedRowKey !== null && rowKey === selectedRowKey;
 
                 return (
                   <div
@@ -285,6 +303,20 @@ export function GlobalDataTable<RowT>({
                     }}
                     role="row"
                   >
+                    {hasSelectionColumn ? (
+                      <div
+                        className={`global-data-table__cell global-data-table__cell--center ${styles.cell} ${styles.selectionCell} ${alignClassName.center}`}
+                        role="cell"
+                      >
+                        <input
+                          type="checkbox"
+                          className={styles.selectionCheckbox}
+                          checked={isSelected}
+                          onChange={() => onToggleRowSelection?.(row)}
+                          aria-label={selectionColumnLabel}
+                        />
+                      </div>
+                    ) : null}
                     {columns.map((column) => (
                       <div
                         key={column.id}

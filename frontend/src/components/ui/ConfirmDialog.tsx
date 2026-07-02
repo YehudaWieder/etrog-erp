@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { SubmitButton } from './SubmitButton';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -9,6 +10,8 @@ interface ConfirmDialogProps {
   onConfirm: () => void;
   onCancel: () => void;
   children?: ReactNode;
+  isConfirming?: boolean;
+  confirmingLabel?: string;
 }
 
 export function ConfirmDialog({
@@ -20,6 +23,8 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
   children,
+  isConfirming = false,
+  confirmingLabel,
 }: ConfirmDialogProps) {
   if (!open) return null;
   return (
@@ -29,10 +34,15 @@ export function ConfirmDialog({
         <div className="modal-message">{message}</div>
         {children}
         <div className="modal-actions">
-          <button className="btn btn-danger" onClick={onConfirm} type="button">
+          <SubmitButton
+            className="btn btn-danger"
+            onClick={onConfirm}
+            isLoading={isConfirming}
+            loadingText={confirmingLabel ?? confirmLabel}
+          >
             {confirmLabel}
-          </button>
-          <button className="btn btn-success" onClick={onCancel} type="button">
+          </SubmitButton>
+          <button className="btn btn-success" onClick={onCancel} type="button" disabled={isConfirming}>
             {cancelLabel}
           </button>
         </div>

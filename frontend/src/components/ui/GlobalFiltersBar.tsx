@@ -14,7 +14,8 @@ export type GlobalFilterControl = {
   value: string;
   options: GlobalFilterOption[];
   onChange: (value: string) => void;
-  type?: 'calendar';
+  type?: 'calendar' | 'text';
+  placeholder?: string;
   lang?: 'he' | 'en';
 };
 
@@ -47,6 +48,24 @@ export const GlobalFiltersBar: React.FC<GlobalFiltersBarProps> = ({
               onChange={control.onChange}
               lang={control.lang}
             />
+          );
+        }
+
+        if (control.type === 'text') {
+          return (
+            <div className={`global-filters-bar__field ${styles.field}`} key={control.id}>
+              <label className={styles.label} htmlFor={control.id}>
+                {control.label}
+              </label>
+              <input
+                id={control.id}
+                type="text"
+                className={`seasons-manager__year-input global-filters-bar__select ${styles.select}`}
+                value={control.value}
+                placeholder={control.placeholder}
+                onChange={(event) => control.onChange(event.target.value)}
+              />
+            </div>
           );
         }
 
