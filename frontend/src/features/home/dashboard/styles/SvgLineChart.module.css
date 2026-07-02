@@ -50,6 +50,8 @@
   border-right: 1px solid #cbd5e1;
   min-width: 0;
   height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .svg {

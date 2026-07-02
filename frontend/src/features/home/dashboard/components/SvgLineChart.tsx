@@ -11,6 +11,9 @@ const CHART_H = VIEW_H - PAD_TOP - PAD_BOTTOM;
 
 const BG_COLORS = ['#f59e0b', '#a78bfa'] as const;
 
+// Minimum horizontal spacing (in px) between consecutive points before the chart scrolls instead of squeezing.
+const MIN_PX_PER_POINT = 26;
+
 function toY(value: number, maxValue: number): number {
   return PAD_TOP + (1 - value / maxValue) * CHART_H;
 }
@@ -50,6 +53,7 @@ export function SvgLineChart({
   const maxValue = Math.max(...allSeries.flatMap((s) => s.map((d) => d.value)));
   const totalDays = Math.max(...allSeries.map((s) => s.length));
   const xStep = (VIEW_W - PAD_H * 2) / Math.max(totalDays - 1, 1);
+  const minChartWidthPx = PAD_H * 2 + Math.max(totalDays - 1, 0) * MIN_PX_PER_POINT;
 
   const points = data.map((d, i) => ({
     x: PAD_H + i * xStep,
@@ -104,7 +108,12 @@ export function SvgLineChart({
           ))}
         </div>
         <div className={styles.chartArea}>
-          <svg viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} className={styles.svg} preserveAspectRatio="none">
+          <svg
+            viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+            className={styles.svg}
+            preserveAspectRatio="none"
+            style={{ minWidth: `${minChartWidthPx}px` }}
+          >
             <defs>
               <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#3d5830" stopOpacity="1" />
