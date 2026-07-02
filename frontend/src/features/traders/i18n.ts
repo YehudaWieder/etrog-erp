@@ -125,6 +125,8 @@ export type TradersI18n = {
 	editFallback: string;
 	traderPlaceholder: string;
 	save: string;
+	saving: string;
+	adding: string;
 };
 
 export type TraderCategoriesI18n = {
@@ -173,6 +175,7 @@ export type TraderCategoriesI18n = {
 	deleteConfirm: string;
 	cancel: string;
 	save: string;
+	saving: string;
 	shareRows: {
 		incompleteLastRow: string;
 		totalReachedHundred: string;
@@ -223,6 +226,7 @@ export type DefaultTraderCategoriesI18n = {
 	cancel: string;
 	editFailed: string;
 	save: string;
+	saving: string;
 	shareRows: {
 		incompleteLastRow: string;
 		totalReachedHundred: string;

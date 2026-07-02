@@ -1,4 +1,5 @@
 import { FaXmark } from 'react-icons/fa6';
+import { SubmitButton } from '../../../components/ui/SubmitButton';
 import type { BoxStatus } from '../../../services/boxesApi';
 import type { ShipmentRecord } from '../../../services/shipmentsApi';
 import type { Trader } from '../../../services/tradersApi';
@@ -40,6 +41,7 @@ type EditBoxFormModalText = {
   notesLabel: string;
   notesPlaceholder: string;
   save: string;
+  saving: string;
   cancel: string;
   statusOptions: Record<BoxStatus, string>;
   boxTypeOptions: Record<BoxType, string>;
@@ -314,14 +316,15 @@ export function EditBoxFormModal({
           <button className="btn btn-danger" type="button" onClick={onClose}>
             {t.cancel}
           </button>
-          <button
+          <SubmitButton
             className="btn btn-success"
-            type="button"
             onClick={onSave}
-            disabled={isSubmitting || isLoadingOptions}
+            disabled={isLoadingOptions}
+            isLoading={isSubmitting}
+            loadingText={t.saving}
           >
             {t.save}
-          </button>
+          </SubmitButton>
         </div>
       </div>
     </div>

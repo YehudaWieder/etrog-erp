@@ -1,5 +1,6 @@
 import { FaChevronDown, FaPaperPlane, FaXmark } from 'react-icons/fa6';
 import type { KeyboardEvent, RefObject } from 'react';
+import { SubmitButton } from '../../../components/ui/SubmitButton';
 import type { Message } from '../../../services/messagesApi';
 import type { MessagesListLabels, InlineAction } from '../messagesPage.types';
 import styles from './styles/MessagesFeature.module.css';
@@ -82,15 +83,16 @@ export function InlineThreadCompose(props: InlineThreadComposeProps) {
             disabled={inlineLoading}
           />
           {inlineError ? <div className={styles.composeError}>{inlineError}</div> : null}
-          <button
+          <SubmitButton
             type="button"
             className="btn btn-success"
             style={{ marginTop: 4, width: '100%' }}
             onClick={() => onSendReply(message)}
-            disabled={inlineLoading}
+            isLoading={inlineLoading}
+            loadingText={<><FaPaperPlane /> {labels.compose.sending}</>}
           >
-            <FaPaperPlane /> {inlineLoading ? labels.compose.sending : inlineAction.type === 'reply-all' ? labels.compose.sendReplyAll : labels.compose.sendReply}
-          </button>
+            <FaPaperPlane /> {inlineAction.type === 'reply-all' ? labels.compose.sendReplyAll : labels.compose.sendReply}
+          </SubmitButton>
         </>
       ) : (
         <>
@@ -147,15 +149,16 @@ export function InlineThreadCompose(props: InlineThreadComposeProps) {
             disabled={inlineLoading}
           />
           {inlineError ? <div className={styles.composeError}>{inlineError}</div> : null}
-          <button
+          <SubmitButton
             type="button"
             className="btn btn-success"
             style={{ marginTop: 4, width: '100%' }}
             onClick={() => onSendForward(message)}
-            disabled={inlineLoading}
+            isLoading={inlineLoading}
+            loadingText={<><FaPaperPlane /> {labels.compose.sending}</>}
           >
-            <FaPaperPlane /> {inlineLoading ? labels.compose.sending : labels.compose.sendForward}
-          </button>
+            <FaPaperPlane /> {labels.compose.sendForward}
+          </SubmitButton>
         </>
       )}
     </div>

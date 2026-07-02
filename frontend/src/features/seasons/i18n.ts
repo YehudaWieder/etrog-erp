@@ -9,6 +9,7 @@ export type SeasonsI18n = {
   deleteFailed: string;
   newSeasonPlaceholder: (minYear: number, maxYear: number) => string;
   addSeason: string;
+  adding: string;
   loading: string;
   yearRangeError: (minYear: number, maxYear: number) => string;
   empty: string;

@@ -18,6 +18,8 @@ export function useTradersManagement({ onHeaderStateChange }: TradersManagementP
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [addError, setAddError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const [editTraderName, setEditTraderName] = useState('');
   const [editTraderPercent, setEditTraderPercent] = useState('');
   const t = getTradersI18n();
@@ -59,25 +61,31 @@ export function useTradersManagement({ onHeaderStateChange }: TradersManagementP
     }
 
     setAddError(null);
-    const actionResult = await dispatch(
-      addTrader({
-        name: trimmedName,
-        paymentPercent: parsedPercent,
-      }),
-    );
+    setIsAdding(true);
 
-    if (addTrader.fulfilled.match(actionResult)) {
-      setNewTraderName('');
-      setNewTraderPercent('');
-      return;
+    try {
+      const actionResult = await dispatch(
+        addTrader({
+          name: trimmedName,
+          paymentPercent: parsedPercent,
+        }),
+      );
+
+      if (addTrader.fulfilled.match(actionResult)) {
+        setNewTraderName('');
+        setNewTraderPercent('');
+        return;
+      }
+
+      const failureMessage =
+        (typeof actionResult.payload === 'string' && actionResult.payload) ||
+        actionResult.error.message ||
+        t.addFailed;
+
+      setAddError(failureMessage);
+    } finally {
+      setIsAdding(false);
     }
-
-    const failureMessage =
-      (typeof actionResult.payload === 'string' && actionResult.payload) ||
-      actionResult.error.message ||
-      t.addFailed;
-
-    setAddError(failureMessage);
   };
 
   const handleOpenDeleteDialog = () => {
@@ -129,26 +137,32 @@ export function useTradersManagement({ onHeaderStateChange }: TradersManagementP
 
     const parsedPercent = Number(trimmedPercent);
 
-    const actionResult = await dispatch(
-      editTrader({
-        id: selectedTrader.id,
-        name: trimmedName,
-        paymentPercent: parsedPercent,
-      }),
-    );
+    setIsSubmitting(true);
 
-    if (editTrader.fulfilled.match(actionResult)) {
-      setEditError(null);
-      setIsEditDialogOpen(false);
-      return;
+    try {
+      const actionResult = await dispatch(
+        editTrader({
+          id: selectedTrader.id,
+          name: trimmedName,
+          paymentPercent: parsedPercent,
+        }),
+      );
+
+      if (editTrader.fulfilled.match(actionResult)) {
+        setEditError(null);
+        setIsEditDialogOpen(false);
+        return;
+      }
+
+      const failureMessage =
+        (typeof actionResult.payload === 'string' && actionResult.payload) ||
+        actionResult.error.message ||
+        t.editFailed;
+
+      setEditError(failureMessage);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const failureMessage =
-      (typeof actionResult.payload === 'string' && actionResult.payload) ||
-      actionResult.error.message ||
-      t.editFailed;
-
-    setEditError(failureMessage);
   };
 
   const handleDeleteTrader = async () => {
@@ -173,8 +187,8 @@ export function useTradersManagement({ onHeaderStateChange }: TradersManagementP
     setIsDeleteDialogOpen(false);
   };
 
-  const isEditDisabled = !selectedTrader || loading;
-  const isDeleteDisabled = !selectedTrader || loading;
+  const isEditDisabled = !selectedTrader || loading || isSubmitting;
+  const isDeleteDisabled = !selectedTrader || loading || isSubmitting;
   const shownError = addError ?? editError ?? deleteError ?? error;
 
   useEffect(() => {
@@ -189,7 +203,7 @@ export function useTradersManagement({ onHeaderStateChange }: TradersManagementP
       onEdit: handleOpenEditDialog,
       onDelete: handleOpenDeleteDialog,
     });
-  }, [onHeaderStateChange, sortedTraders.length, isEditDisabled, isDeleteDisabled, selectedTrader, loading]);
+  }, [onHeaderStateChange, sortedTraders.length, isEditDisabled, isDeleteDisabled, selectedTrader, loading, isSubmitting]);
 
   useEffect(() => () => {
     onHeaderStateChange?.(null);
@@ -216,6 +230,8 @@ export function useTradersManagement({ onHeaderStateChange }: TradersManagementP
     setEditTraderPercent,
     editError,
     isEditDisabled,
+    isSubmitting,
+    isAdding,
     shownError,
     handleAdd,
     handleDeleteTrader,

@@ -216,6 +216,12 @@
   cursor: not-allowed;
 }
 
+.readOnlyField {
+  background: rgba(230, 233, 236, 0.6);
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
 .quantityMatrixHint {
   margin: 0;
   font-size: 0.82rem;

@@ -20,4 +20,6 @@ export const FIELDS_I18N_EN: FieldsI18n = {
   editFallback: 'Update selected field name',
   editFieldPlaceholder: 'Field name',
   save: 'Save',
+  updating: 'Updating...',
+  adding: 'Adding...',
 };

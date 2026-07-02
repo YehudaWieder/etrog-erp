@@ -1,5 +1,6 @@
 import { FaChevronDown, FaPaperPlane, FaXmark } from 'react-icons/fa6';
 import type { FormEvent, KeyboardEvent } from 'react';
+import { SubmitButton } from '../../../components/ui/SubmitButton';
 import type { ComposeFormState, RecipientOption } from '../messagesPage.types';
 import type { MessagePriority } from '../../../services/messagesApi';
 import styles from './styles/MessagesFeature.module.css';
@@ -184,10 +185,15 @@ export function MessagesComposeModal(props: MessagesComposeModalProps) {
             <button type="button" className="btn" onClick={onClose}>
               {cancelLabel}
             </button>
-            <button type="submit" className="btn btn-success" disabled={isSubmitting}>
+            <SubmitButton
+              type="submit"
+              className="btn btn-success"
+              isLoading={isSubmitting}
+              loadingText={<><FaPaperPlane /><span>{sendingLabel}</span></>}
+            >
               <FaPaperPlane />
-              <span>{isSubmitting ? sendingLabel : sendLabel}</span>
-            </button>
+              <span>{sendLabel}</span>
+            </SubmitButton>
           </div>
         </form>
       </section>

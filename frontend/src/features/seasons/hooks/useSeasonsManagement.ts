@@ -27,7 +27,7 @@ export function useSeasonsManagement({ onHeaderStateChange }: SeasonsManagementP
     setDeleteError,
   } = useSeasonsData();
 
-  const { handleAdd, handleActivate, handleOpenDeleteDialog, handleDeleteSeason } = useSeasonsActions({
+  const { handleAdd, handleActivate, handleOpenDeleteDialog, handleDeleteSeason, isAdding } = useSeasonsActions({
     dispatch,
     t,
     newSeasonYear,
@@ -85,5 +85,6 @@ export function useSeasonsManagement({ onHeaderStateChange }: SeasonsManagementP
     handleActivate,
     handleOpenDeleteDialog,
     handleDeleteSeason,
+    isAdding,
   };
 }

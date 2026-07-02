@@ -4,6 +4,7 @@ import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import ManagementCardsGrid from '../../../components/ui/ManagementCardsGrid';
 import ManagementSelectableCard from '../../../components/ui/ManagementSelectableCard';
 import SettingsInnerTemplate from '../../../components/ui/SettingsInnerTemplate';
+import { SubmitButton } from '../../../components/ui/SubmitButton';
 import type { FieldsManagementProps } from '../fieldsPage.types';
 import { useFieldsManagement } from '../hooks/useFieldsManagement';
 
@@ -27,6 +28,8 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
     editFieldName,
     setEditFieldName,
     editError,
+    isSavingEdit,
+    isAdding,
     handleAdd,
     handleDeleteField,
     handleEditField,
@@ -43,16 +46,17 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
             onChange={(e) => setNewFieldName(e.target.value)}
             placeholder={t.newFieldPlaceholder}
           />
-          <button
-            type="button"
+          <SubmitButton
             className="btn btn-primary"
             onClick={() => {
               void handleAdd();
             }}
             disabled={loading}
+            isLoading={isAdding}
+            loadingText={t.adding}
           >
             {t.addField}
-          </button>
+          </SubmitButton>
         </div>
       )}
       loadingMessage={loading ? t.loading : null}
@@ -131,18 +135,20 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
             {editError ? <p className="seasons-manager__error">{editError}</p> : null}
 
             <div className="modal-actions">
-              <button className="btn btn-danger" onClick={() => setIsEditDialogOpen(false)} type="button">
+              <button className="btn btn-danger" onClick={() => setIsEditDialogOpen(false)} type="button" disabled={isSavingEdit}>
                 {t.cancel}
               </button>
-              <button
+              <SubmitButton
                 className="btn btn-success"
                 onClick={() => {
                   void handleEditField();
                 }}
                 type="button"
+                isLoading={isSavingEdit}
+                loadingText={t.updating}
               >
                 {t.save}
-              </button>
+              </SubmitButton>
             </div>
           </div>
         </div>

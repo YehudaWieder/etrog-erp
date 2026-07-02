@@ -151,6 +151,8 @@ export const TRADERS_I18N_EN: TradersI18n = {
 	editFallback: 'Update selected trader details',
 	traderPlaceholder: 'Trader name',
 	save: 'Save',
+	saving: 'Saving...',
+	adding: 'Adding...',
 };
 
 export const TRADER_CATEGORIES_I18N_EN: TraderCategoriesI18n = {
@@ -199,6 +201,7 @@ export const TRADER_CATEGORIES_I18N_EN: TraderCategoriesI18n = {
 	deleteConfirm: 'Delete',
 	cancel: 'Cancel',
 	save: 'Save',
+	saving: 'Saving...',
 	shareRows: {
 		incompleteLastRow: 'Complete the previous row (trader and valid percent) before adding a new one.',
 		totalReachedHundred: 'Cannot add another row because total percent already reached 100%.',
@@ -249,6 +252,7 @@ export const DEFAULT_TRADER_CATEGORIES_I18N_EN: DefaultTraderCategoriesI18n = {
 	cancel: 'Cancel',
 	editFailed: 'Failed to update default trader category.',
 	save: 'Save',
+	saving: 'Saving...',
 	shareRows: {
 		incompleteLastRow: 'Complete the previous row (trader and valid percent) before adding a new one.',
 		totalReachedHundred: 'Cannot add another row because total percent already reached 100%.',

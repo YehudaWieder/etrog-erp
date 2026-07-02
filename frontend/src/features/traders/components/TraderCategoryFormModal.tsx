@@ -1,4 +1,5 @@
 import { FaXmark } from 'react-icons/fa6';
+import { SubmitButton } from '../../../components/ui/SubmitButton';
 import type { ShareRow } from '../tradersManagement.types';
 import { DEFAULT_PERCENT_STEP } from '../utils/traderShares.util';
 import { TRADER_CATEGORY_GRADE_OPTIONS } from '../utils/traderCategoryGrades.util';
@@ -27,6 +28,7 @@ type TraderCategoryFormModalText = {
   addRow: string;
   totalPercentLabel: string;
   save: string;
+  saving: string;
 };
 
 type TraderCategoryFormModalProps = {
@@ -202,9 +204,15 @@ export function TraderCategoryFormModal({
           <button className="btn btn-danger" onClick={onClose} type="button">
             {t.cancel}
           </button>
-          <button className="btn btn-success" onClick={onSave} type="button" disabled={isSubmitting}>
+          <SubmitButton
+            className="btn btn-success"
+            onClick={onSave}
+            type="button"
+            isLoading={isSubmitting}
+            loadingText={t.saving}
+          >
             {t.save}
-          </button>
+          </SubmitButton>
         </div>
       </div>
     </div>

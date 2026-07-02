@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaXmark } from 'react-icons/fa6';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
+import { SubmitButton } from '../../../components/ui/SubmitButton';
 import ManagementCardsGrid from '../../../components/ui/ManagementCardsGrid';
 import ManagementSelectableCard from '../../../components/ui/ManagementSelectableCard';
 import SettingsInnerTemplate from '../../../components/ui/SettingsInnerTemplate';
@@ -36,6 +37,8 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
     editCustomerPhone,
     setEditCustomerPhone,
     editError,
+    isSubmitting,
+    isAdding,
     handleAdd,
     handleDeleteCustomer,
     handleEditCustomer,
@@ -66,16 +69,17 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
             onChange={(e) => setNewCustomerPhone(e.target.value)}
             placeholder={t.optionalPhonePlaceholder}
           />
-          <button
-            type="button"
+          <SubmitButton
             className="btn btn-primary"
             onClick={() => {
               void handleAdd();
             }}
             disabled={loading}
+            isLoading={isAdding}
+            loadingText={t.adding}
           >
             {t.addCustomer}
-          </button>
+          </SubmitButton>
         </div>
       )}
       loadingMessage={loading ? t.loading : null}
@@ -177,15 +181,17 @@ const CustomersManagement: React.FC<CustomersManagementProps> = ({ onHeaderState
               <button className="btn btn-danger" onClick={() => setIsEditDialogOpen(false)} type="button">
                 {t.cancel}
               </button>
-              <button
+              <SubmitButton
                 className="btn btn-success"
                 onClick={() => {
                   void handleEditCustomer();
                 }}
                 type="button"
+                isLoading={isSubmitting}
+                loadingText={t.saving}
               >
                 {t.save}
-              </button>
+              </SubmitButton>
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { SubmitButton } from '../../../components/ui/SubmitButton';
 import type { AppLang } from '../i18n';
 import { getTraderMovementsI18n } from '../i18n';
 import type { Trader } from '../../../services/tradersApi';
@@ -1393,9 +1394,15 @@ export function AddTraderMovementModal({
           <button className="btn btn-danger" type="button" onClick={handleClose}>
             {f.cancel}
           </button>
-          <button className="btn btn-success" type="button" onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? f.saving : f.save}
-          </button>
+          <SubmitButton
+            className="btn btn-success"
+            type="button"
+            onClick={handleSubmit}
+            isLoading={isSubmitting}
+            loadingText={f.saving}
+          >
+            {f.save}
+          </SubmitButton>
         </div>
       </div>
     </div>

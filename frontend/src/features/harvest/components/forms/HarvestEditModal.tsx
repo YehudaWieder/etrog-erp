@@ -1,3 +1,4 @@
+import { SubmitButton } from '../../../../components/ui/SubmitButton';
 import type { Field } from '../../../../services/fieldsApi';
 import type { HarvestI18n } from '../../i18n';
 import styles from './styles/HarvestBulkFormModal.module.css';
@@ -205,14 +206,16 @@ export function HarvestEditModal({
           <button type="button" className="btn btn-secondary" onClick={onClose}>
             {ed.cancel}
           </button>
-          <button
+          <SubmitButton
             type="button"
             className="btn btn-primary"
             onClick={onSubmit}
-            disabled={isSubmitting || fieldId === 0 || submitBlocked}
+            disabled={fieldId === 0 || submitBlocked}
+            isLoading={isSubmitting}
+            loadingText={bf.saving}
           >
-            {isSubmitting ? bf.saving : ed.confirm}
-          </button>
+            {ed.confirm}
+          </SubmitButton>
         </div>
       </div>
     </div>

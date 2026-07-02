@@ -1,4 +1,5 @@
 import { FaXmark } from 'react-icons/fa6';
+import { SubmitButton } from '../../../components/ui/SubmitButton';
 
 type EditShipmentItemFormModalText = {
   title: (id: number) => string;
@@ -20,6 +21,7 @@ type EditShipmentItemFormModalText = {
   notesLabel: string;
   notesPlaceholder: string;
   save: string;
+  saving: string;
   cancel: string;
   loading: string;
 };
@@ -210,14 +212,15 @@ export function EditShipmentItemFormModal({
           <button className="btn btn-danger" type="button" onClick={onClose}>
             {t.cancel}
           </button>
-          <button
+          <SubmitButton
             className="btn btn-success"
-            type="button"
             onClick={onSave}
-            disabled={isBusy}
+            disabled={isLoading}
+            isLoading={isSubmitting}
+            loadingText={t.saving}
           >
             {t.save}
-          </button>
+          </SubmitButton>
         </div>
       </div>
     </div>

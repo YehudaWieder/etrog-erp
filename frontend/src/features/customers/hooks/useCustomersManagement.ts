@@ -22,6 +22,8 @@ export function useCustomersManagement({ onHeaderStateChange }: CustomersManagem
   const [addError, setAddError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
 
   const [editCustomerName, setEditCustomerName] = useState('');
   const [editCustomerEmail, setEditCustomerEmail] = useState('');
@@ -66,28 +68,33 @@ export function useCustomersManagement({ onHeaderStateChange }: CustomersManagem
     }
 
     setAddError(null);
+    setIsAdding(true);
 
-    const actionResult = await dispatch(
-      addCustomer({
-        customerName: trimmedName,
-        ...(sanitizedEmail ? { email: sanitizedEmail } : {}),
-        ...(sanitizedPhone ? { phone: sanitizedPhone } : {}),
-      }),
-    );
+    try {
+      const actionResult = await dispatch(
+        addCustomer({
+          customerName: trimmedName,
+          ...(sanitizedEmail ? { email: sanitizedEmail } : {}),
+          ...(sanitizedPhone ? { phone: sanitizedPhone } : {}),
+        }),
+      );
 
-    if (addCustomer.fulfilled.match(actionResult)) {
-      setNewCustomerName('');
-      setNewCustomerEmail('');
-      setNewCustomerPhone('');
-      return;
+      if (addCustomer.fulfilled.match(actionResult)) {
+        setNewCustomerName('');
+        setNewCustomerEmail('');
+        setNewCustomerPhone('');
+        return;
+      }
+
+      const failureMessage =
+        (typeof actionResult.payload === 'string' && actionResult.payload) ||
+        actionResult.error.message ||
+        t.addFailed;
+
+      setAddError(failureMessage);
+    } finally {
+      setIsAdding(false);
     }
-
-    const failureMessage =
-      (typeof actionResult.payload === 'string' && actionResult.payload) ||
-      actionResult.error.message ||
-      t.addFailed;
-
-    setAddError(failureMessage);
   };
 
   const handleOpenDeleteDialog = () => {
@@ -135,27 +142,33 @@ export function useCustomersManagement({ onHeaderStateChange }: CustomersManagem
       return;
     }
 
-    const actionResult = await dispatch(
-      editCustomer({
-        id: selectedCustomer.id,
-        customerName: trimmedName,
-        ...(sanitizedEmail ? { email: sanitizedEmail } : {}),
-        ...(sanitizedPhone ? { phone: sanitizedPhone } : {}),
-      }),
-    );
+    setIsSubmitting(true);
 
-    if (editCustomer.fulfilled.match(actionResult)) {
-      setEditError(null);
-      setIsEditDialogOpen(false);
-      return;
+    try {
+      const actionResult = await dispatch(
+        editCustomer({
+          id: selectedCustomer.id,
+          customerName: trimmedName,
+          ...(sanitizedEmail ? { email: sanitizedEmail } : {}),
+          ...(sanitizedPhone ? { phone: sanitizedPhone } : {}),
+        }),
+      );
+
+      if (editCustomer.fulfilled.match(actionResult)) {
+        setEditError(null);
+        setIsEditDialogOpen(false);
+        return;
+      }
+
+      const failureMessage =
+        (typeof actionResult.payload === 'string' && actionResult.payload) ||
+        actionResult.error.message ||
+        t.editFailed;
+
+      setEditError(failureMessage);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const failureMessage =
-      (typeof actionResult.payload === 'string' && actionResult.payload) ||
-      actionResult.error.message ||
-      t.editFailed;
-
-    setEditError(failureMessage);
   };
 
   const handleDeleteCustomer = async () => {
@@ -180,8 +193,8 @@ export function useCustomersManagement({ onHeaderStateChange }: CustomersManagem
     setIsDeleteDialogOpen(false);
   };
 
-  const isEditDisabled = !selectedCustomer || loading;
-  const isDeleteDisabled = !selectedCustomer || loading;
+  const isEditDisabled = !selectedCustomer || loading || isSubmitting;
+  const isDeleteDisabled = !selectedCustomer || loading || isSubmitting;
   const shownError = addError ?? editError ?? deleteError ?? error;
 
   useEffect(() => {
@@ -196,7 +209,7 @@ export function useCustomersManagement({ onHeaderStateChange }: CustomersManagem
       onEdit: handleOpenEditDialog,
       onDelete: handleOpenDeleteDialog,
     });
-  }, [onHeaderStateChange, sortedCustomers.length, isEditDisabled, isDeleteDisabled, selectedCustomer, loading]);
+  }, [onHeaderStateChange, sortedCustomers.length, isEditDisabled, isDeleteDisabled, selectedCustomer, loading, isSubmitting]);
 
   useEffect(() => () => {
     onHeaderStateChange?.(null);
@@ -227,6 +240,8 @@ export function useCustomersManagement({ onHeaderStateChange }: CustomersManagem
     editCustomerPhone,
     setEditCustomerPhone,
     editError,
+    isSubmitting,
+    isAdding,
     handleAdd,
     handleDeleteCustomer,
     handleEditCustomer,

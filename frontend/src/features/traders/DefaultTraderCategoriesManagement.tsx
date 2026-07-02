@@ -105,6 +105,7 @@ const DefaultTraderCategoriesManagement: React.FC<DefaultTraderCategoriesManagem
           addRow: t.addRow,
           totalPercentLabel: t.totalPercentLabel,
           save: t.save,
+          saving: t.saving,
         }}
         categoryName={categoryName}
         setCategoryName={setCategoryName}

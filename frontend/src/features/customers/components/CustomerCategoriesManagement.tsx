@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaXmark } from 'react-icons/fa6';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
+import { SubmitButton } from '../../../components/ui/SubmitButton';
 import { GlobalScopedFilters } from '../../../components/ui/GlobalScopedFilters';
 import ManagementCardsGrid from '../../../components/ui/ManagementCardsGrid';
 import ManagementSelectableCard from '../../../components/ui/ManagementSelectableCard';
@@ -43,6 +44,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
     sortedCustomers,
     addError,
     editError,
+    isSubmitting,
     handleDeleteCategory,
     handleAddCategory,
     handleEditCategory,
@@ -260,7 +262,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
               >
                 {t.cancel}
               </button>
-              <button
+              <SubmitButton
                 className="btn btn-success"
                 onClick={() => {
                   if (isAddDialogOpen) {
@@ -271,9 +273,11 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
                   void handleEditCategory();
                 }}
                 type="button"
+                isLoading={isSubmitting}
+                loadingText={t.saving}
               >
                 {t.save}
-              </button>
+              </SubmitButton>
             </div>
           </div>
         </div>

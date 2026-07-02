@@ -1,6 +1,7 @@
 import React from 'react';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import SettingsInnerTemplate from '../../components/ui/SettingsInnerTemplate';
+import { SubmitButton } from '../../components/ui/SubmitButton';
 import { SeasonsCardsSection } from './components/SeasonsCardsSection';
 import { useSeasonsManagement } from './hooks/useSeasonsManagement';
 import type { SeasonsHeaderState, SeasonsManagementProps } from './seasonsManagement.types';
@@ -28,6 +29,7 @@ const SeasonsManagement: React.FC<SeasonsManagementProps> = ({ onHeaderStateChan
     shownError,
     handleAdd,
     handleDeleteSeason,
+    isAdding,
   } = useSeasonsManagement({ onHeaderStateChange });
 
   return (
@@ -44,16 +46,17 @@ const SeasonsManagement: React.FC<SeasonsManagementProps> = ({ onHeaderStateChan
             onChange={(event) => setNewSeasonYear(event.target.value)}
             placeholder={t.newSeasonPlaceholder(MIN_SEASON_YEAR, MAX_SEASON_YEAR)}
           />
-          <button
-            type="button"
+          <SubmitButton
             className="btn btn-primary"
             onClick={() => {
               void handleAdd();
             }}
             disabled={loading}
+            isLoading={isAdding}
+            loadingText={t.adding}
           >
             {t.addSeason}
-          </button>
+          </SubmitButton>
         </div>
       }
       loadingMessage={loading ? t.loading : null}

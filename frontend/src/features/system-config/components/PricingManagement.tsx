@@ -3,6 +3,7 @@ import { FaXmark } from 'react-icons/fa6';
 import ManagementCardsGrid from '../../../components/ui/ManagementCardsGrid';
 import ManagementSelectableCard from '../../../components/ui/ManagementSelectableCard';
 import SettingsInnerTemplate from '../../../components/ui/SettingsInnerTemplate';
+import { SubmitButton } from '../../../components/ui/SubmitButton';
 import seasonCardStyles from '../../seasons/components/styles/SeasonsCardsSection.module.css';
 import type { Lang } from '../../settings/settingsPage.types';
 import feedbackStyles from '../../settings/styles/SettingsWorkspaceFeedback.module.css';
@@ -166,14 +167,16 @@ const PricingManagement: React.FC<Props> = ({ lang, onHeaderStateChange }) => {
               <button className="btn btn-danger" type="button" onClick={() => setIsEditModalOpen(false)}>
                 {t.cancel}
               </button>
-              <button
+              <SubmitButton
                 className="btn btn-success"
                 type="button"
                 onClick={() => { void handleSave(); }}
-                disabled={saving || !!validationError}
+                disabled={!!validationError}
+                isLoading={saving}
+                loadingText={t.saving}
               >
-                {saving ? t.saving : t.save}
-              </button>
+                {t.save}
+              </SubmitButton>
             </div>
           </div>
         </div>

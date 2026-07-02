@@ -1,4 +1,5 @@
 import { FaFloppyDisk, FaXmark } from 'react-icons/fa6';
+import { SubmitButton } from '../../../components/ui/SubmitButton';
 import type { EditProfileForm, ProfileI18nLabels, ProfileLang } from '../profilePage.types';
 import styles from './styles/ProfileFeature.module.css';
 
@@ -116,10 +117,17 @@ export function EditMyProfileModal({
           <button className="btn" type="button" onClick={onClose} disabled={isUpdatingProfile || isDeletingProfile}>
             {t.common.cancel}
           </button>
-          <button className="btn btn-primary" type="button" onClick={onUpdate} disabled={isUpdatingProfile || isDeletingProfile || isLoadingProfile}>
+          <SubmitButton
+            className="btn btn-primary"
+            type="button"
+            onClick={onUpdate}
+            disabled={isDeletingProfile || isLoadingProfile}
+            isLoading={isUpdatingProfile}
+            loadingText={<><FaFloppyDisk /><span>{t.editProfile.actions.updating}</span></>}
+          >
             <FaFloppyDisk />
-            <span>{isUpdatingProfile ? t.editProfile.actions.updating : t.editProfile.actions.update}</span>
-          </button>
+            <span>{t.editProfile.actions.update}</span>
+          </SubmitButton>
         </div>
       </section>
     </div>

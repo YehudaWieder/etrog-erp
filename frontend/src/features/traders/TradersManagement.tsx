@@ -4,6 +4,7 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import ManagementCardsGrid from '../../components/ui/ManagementCardsGrid';
 import ManagementSelectableCard from '../../components/ui/ManagementSelectableCard';
 import SettingsInnerTemplate from '../../components/ui/SettingsInnerTemplate';
+import { SubmitButton } from '../../components/ui/SubmitButton';
 import { useTradersManagement } from './hooks/useTradersManagement';
 import type { TradersHeaderState, TradersManagementProps } from './tradersManagement.types';
 import { MAX_PAYMENT_PERCENT, MIN_PAYMENT_PERCENT } from './utils/traderPayments.util';
@@ -36,6 +37,8 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
     handleDeleteTrader,
     handleEditTrader,
     isValidPaymentPercent,
+    isSubmitting,
+    isAdding,
   } = useTradersManagement({ onHeaderStateChange });
 
   return (
@@ -59,16 +62,17 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
             onChange={(e) => setNewTraderPercent(e.target.value)}
             placeholder={t.paymentPlaceholder}
           />
-          <button
-            type="button"
+          <SubmitButton
             className="btn btn-primary"
             onClick={() => {
               void handleAdd();
             }}
             disabled={loading}
+            isLoading={isAdding}
+            loadingText={t.adding}
           >
             {t.addTrader}
-          </button>
+          </SubmitButton>
         </div>
       )}
       loadingMessage={loading ? t.loading : null}
@@ -174,15 +178,16 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
               <button className="btn btn-danger" onClick={() => setIsEditDialogOpen(false)} type="button">
                 {t.cancel}
               </button>
-              <button
+              <SubmitButton
                 className="btn btn-success"
                 onClick={() => {
                   void handleEditTrader();
                 }}
-                type="button"
+                isLoading={isSubmitting}
+                loadingText={t.saving}
               >
                 {t.save}
-              </button>
+              </SubmitButton>
             </div>
           </div>
         </div>

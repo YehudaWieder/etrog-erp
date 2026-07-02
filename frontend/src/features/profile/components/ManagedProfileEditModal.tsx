@@ -1,4 +1,5 @@
 import { FaFloppyDisk, FaXmark } from 'react-icons/fa6';
+import { SubmitButton } from '../../../components/ui/SubmitButton';
 import type { AuthUserListItem } from '../../../services/authService';
 import type { ProfileI18nLabels, ProfileLang } from '../profilePage.types';
 import styles from './styles/ProfileFeature.module.css';
@@ -99,10 +100,17 @@ export function ManagedProfileEditModal({
           <button className="btn" type="button" onClick={onClose} disabled={isUpdatingManagedProfile}>
             {t.common.cancel}
           </button>
-          <button className="btn btn-primary" type="button" onClick={onUpdate} disabled={!selectedManagedProfileId || isUpdatingManagedProfile}>
+          <SubmitButton
+            className="btn btn-primary"
+            type="button"
+            onClick={onUpdate}
+            disabled={!selectedManagedProfileId}
+            isLoading={isUpdatingManagedProfile}
+            loadingText={<><FaFloppyDisk /><span>{t.managedEditProfile.updating}</span></>}
+          >
             <FaFloppyDisk />
-            <span>{isUpdatingManagedProfile ? t.managedEditProfile.updating : t.managedEditProfile.update}</span>
-          </button>
+            <span>{t.managedEditProfile.update}</span>
+          </SubmitButton>
         </div>
       </section>
     </div>

@@ -17,6 +17,8 @@ export function useFieldsManagement({ onHeaderStateChange }: FieldsManagementPro
   const [addError, setAddError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [editFieldName, setEditFieldName] = useState('');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const t = getFieldsI18n();
 
   useEffect(() => {
@@ -44,19 +46,25 @@ export function useFieldsManagement({ onHeaderStateChange }: FieldsManagementPro
     }
 
     setAddError(null);
-    const actionResult = await dispatch(addField({ name: trimmedName }));
+    setIsAdding(true);
 
-    if (addField.fulfilled.match(actionResult)) {
-      setNewFieldName('');
-      return;
+    try {
+      const actionResult = await dispatch(addField({ name: trimmedName }));
+
+      if (addField.fulfilled.match(actionResult)) {
+        setNewFieldName('');
+        return;
+      }
+
+      const failureMessage =
+        (typeof actionResult.payload === 'string' && actionResult.payload) ||
+        actionResult.error.message ||
+        t.addFailed;
+
+      setAddError(failureMessage);
+    } finally {
+      setIsAdding(false);
     }
-
-    const failureMessage =
-      (typeof actionResult.payload === 'string' && actionResult.payload) ||
-      actionResult.error.message ||
-      t.addFailed;
-
-    setAddError(failureMessage);
   };
 
   const handleOpenDeleteDialog = () => {
@@ -89,11 +97,13 @@ export function useFieldsManagement({ onHeaderStateChange }: FieldsManagementPro
       return;
     }
 
+    setIsSavingEdit(true);
     const actionResult = await dispatch(editField({ id: selectedField.id, name: trimmedName }));
 
     if (editField.fulfilled.match(actionResult)) {
       setEditError(null);
       setIsEditDialogOpen(false);
+      setIsSavingEdit(false);
       return;
     }
 
@@ -103,6 +113,7 @@ export function useFieldsManagement({ onHeaderStateChange }: FieldsManagementPro
       t.editFailed;
 
     setEditError(failureMessage);
+    setIsSavingEdit(false);
   };
 
   const handleDeleteField = async () => {
@@ -166,6 +177,8 @@ export function useFieldsManagement({ onHeaderStateChange }: FieldsManagementPro
     editFieldName,
     setEditFieldName,
     editError,
+    isSavingEdit,
+    isAdding,
     handleAdd,
     handleDeleteField,
     handleEditField,

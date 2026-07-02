@@ -1,4 +1,4 @@
-import { useCallback, type Dispatch, type SetStateAction } from 'react';
+import { useCallback, useState, type Dispatch, type SetStateAction } from 'react';
 import { addSeason, activateSeason, removeSeason } from '../../../store/seasonsSlice';
 import type { AppDispatch } from '../../../store';
 import type { ResolvedSeason } from '../seasonsManagement.types';
@@ -29,6 +29,8 @@ export function useSeasonsActions({
   setDeleteError,
   setIsDeleteDialogOpen,
 }: UseSeasonsActionsParams) {
+  const [isAdding, setIsAdding] = useState(false);
+
   const handleAdd = useCallback(async () => {
     const parsedYear = Number(newSeasonYear);
 
@@ -37,15 +39,21 @@ export function useSeasonsActions({
     }
 
     setAddError(null);
-    const actionResult = await dispatch(addSeason({ yearName: parsedYear }));
+    setIsAdding(true);
 
-    if (addSeason.fulfilled.match(actionResult)) {
-      setNewSeasonYear('');
-      return;
+    try {
+      const actionResult = await dispatch(addSeason({ yearName: parsedYear }));
+
+      if (addSeason.fulfilled.match(actionResult)) {
+        setNewSeasonYear('');
+        return;
+      }
+
+      const failureMessage = toSeasonFailureMessage(actionResult.payload, actionResult.error.message, t.addFailed);
+      setAddError(failureMessage);
+    } finally {
+      setIsAdding(false);
     }
-
-    const failureMessage = toSeasonFailureMessage(actionResult.payload, actionResult.error.message, t.addFailed);
-    setAddError(failureMessage);
   }, [dispatch, newSeasonYear, setAddError, setNewSeasonYear, t.addFailed]);
 
   const handleActivate = useCallback(async () => {
@@ -94,5 +102,6 @@ export function useSeasonsActions({
     handleActivate,
     handleOpenDeleteDialog,
     handleDeleteSeason,
+    isAdding,
   };
 }

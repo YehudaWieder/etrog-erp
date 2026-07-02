@@ -151,6 +151,8 @@ export const TRADERS_I18N_HE: TradersI18n = {
 	editFallback: 'עדכון פרטי סוחר נבחר',
 	traderPlaceholder: 'שם סוחר',
 	save: 'שמור',
+	saving: 'שומר...',
+	adding: 'מוסיף...',
 };
 
 export const TRADER_CATEGORIES_I18N_HE: TraderCategoriesI18n = {
@@ -199,6 +201,7 @@ export const TRADER_CATEGORIES_I18N_HE: TraderCategoriesI18n = {
 	deleteConfirm: 'מחק',
 	cancel: 'ביטול',
 	save: 'שמור',
+	saving: 'שומר...',
 	shareRows: {
 		incompleteLastRow: 'לא ניתן להוסיף שורה חדשה לפני השלמת השורה האחרונה (סוחר ואחוז תקין).',
 		totalReachedHundred: 'לא ניתן להוסיף שורה נוספת כי הסכום הכולל כבר הגיע ל-100%.',
@@ -249,6 +252,7 @@ export const DEFAULT_TRADER_CATEGORIES_I18N_HE: DefaultTraderCategoriesI18n = {
 	cancel: 'ביטול',
 	editFailed: 'עדכון הקטגוריה נכשל.',
 	save: 'שמור',
+	saving: 'שומר...',
 	shareRows: {
 		incompleteLastRow: 'לא ניתן להוסיף שורה חדשה לפני השלמת השורה האחרונה (סוחר ואחוז תקין).',
 		totalReachedHundred: 'לא ניתן להוסיף שורה נוספת כי הסכום הכולל כבר הגיע ל-100%.',

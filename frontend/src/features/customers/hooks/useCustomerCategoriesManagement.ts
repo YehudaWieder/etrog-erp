@@ -58,6 +58,7 @@ export function useCustomerCategoriesManagement({ onHeaderStateChange }: Custome
   const [addError, setAddError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const t = getCustomerCategoriesI18n();
   const globalFilterValues = useSelector(
     (state: RootState) => state.globalFilters.scopes[FILTER_SCOPE] ?? EMPTY_FILTERS,
@@ -289,25 +290,30 @@ export function useCustomerCategoriesManagement({ onHeaderStateChange }: Custome
     }
 
     setAddError(null);
+    setIsSubmitting(true);
 
-    const actionResult = await dispatch(
-      addCustomerCategory({
-        seasonId: seasonFilterId as number,
-        ...validation.payload,
-      }),
-    );
+    try {
+      const actionResult = await dispatch(
+        addCustomerCategory({
+          seasonId: seasonFilterId as number,
+          ...validation.payload,
+        }),
+      );
 
-    if (addCustomerCategory.fulfilled.match(actionResult)) {
-      setIsAddDialogOpen(false);
-      return;
+      if (addCustomerCategory.fulfilled.match(actionResult)) {
+        setIsAddDialogOpen(false);
+        return;
+      }
+
+      const failureMessage =
+        (typeof actionResult.payload === 'string' && actionResult.payload) ||
+        actionResult.error.message ||
+        t.addFailed;
+
+      setAddError(failureMessage);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const failureMessage =
-      (typeof actionResult.payload === 'string' && actionResult.payload) ||
-      actionResult.error.message ||
-      t.addFailed;
-
-    setAddError(failureMessage);
   };
 
   const handleEditCategory = async () => {
@@ -322,26 +328,31 @@ export function useCustomerCategoriesManagement({ onHeaderStateChange }: Custome
     }
 
     setEditError(null);
+    setIsSubmitting(true);
 
-    const actionResult = await dispatch(
-      editCustomerCategory({
-        id: selectedCategory.id,
-        seasonId: seasonFilterId as number,
-        ...validation.payload,
-      }),
-    );
+    try {
+      const actionResult = await dispatch(
+        editCustomerCategory({
+          id: selectedCategory.id,
+          seasonId: seasonFilterId as number,
+          ...validation.payload,
+        }),
+      );
 
-    if (editCustomerCategory.fulfilled.match(actionResult)) {
-      setIsEditDialogOpen(false);
-      return;
+      if (editCustomerCategory.fulfilled.match(actionResult)) {
+        setIsEditDialogOpen(false);
+        return;
+      }
+
+      const failureMessage =
+        (typeof actionResult.payload === 'string' && actionResult.payload) ||
+        actionResult.error.message ||
+        t.editFailed;
+
+      setEditError(failureMessage);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const failureMessage =
-      (typeof actionResult.payload === 'string' && actionResult.payload) ||
-      actionResult.error.message ||
-      t.editFailed;
-
-    setEditError(failureMessage);
   };
 
   const handleDeleteCategory = async () => {
@@ -366,9 +377,9 @@ export function useCustomerCategoriesManagement({ onHeaderStateChange }: Custome
     setIsDeleteDialogOpen(false);
   };
 
-  const isAddDisabled = loading || !seasonFilterId || sortedCustomers.length === 0;
-  const isEditDisabled = !selectedCategory || loading;
-  const isDeleteDisabled = !selectedCategory || loading;
+  const isAddDisabled = loading || isSubmitting || !seasonFilterId || sortedCustomers.length === 0;
+  const isEditDisabled = !selectedCategory || loading || isSubmitting;
+  const isDeleteDisabled = !selectedCategory || loading || isSubmitting;
   const shownError = addError ?? editError ?? deleteError ?? error;
 
   useEffect(() => {
@@ -385,7 +396,7 @@ export function useCustomerCategoriesManagement({ onHeaderStateChange }: Custome
       onEdit: handleOpenEditDialog,
       onDelete: handleOpenDeleteDialog,
     });
-  }, [onHeaderStateChange, filteredCategories.length, isAddDisabled, isEditDisabled, isDeleteDisabled, selectedCategory, loading, seasonFilterId, sortedCustomers.length]);
+  }, [onHeaderStateChange, filteredCategories.length, isAddDisabled, isEditDisabled, isDeleteDisabled, selectedCategory, loading, isSubmitting, seasonFilterId, sortedCustomers.length]);
 
   useEffect(() => () => {
     onHeaderStateChange?.(null);
@@ -414,6 +425,7 @@ export function useCustomerCategoriesManagement({ onHeaderStateChange }: Custome
     sortedCustomers,
     addError,
     editError,
+    isSubmitting,
     handleDeleteCategory,
     handleAddCategory,
     handleEditCategory,

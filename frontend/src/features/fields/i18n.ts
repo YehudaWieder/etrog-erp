@@ -24,6 +24,8 @@ export type FieldsI18n = {
   editFallback: string;
   editFieldPlaceholder: string;
   save: string;
+  updating: string;
+  adding: string;
 };
 
 const FIELDS_I18N: Record<AppLang, FieldsI18n> = {

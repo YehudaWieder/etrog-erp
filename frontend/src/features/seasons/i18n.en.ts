@@ -5,6 +5,7 @@ export const SEASONS_I18N_EN: SeasonsI18n = {
   deleteFailed: 'Unable to delete the selected season.',
   newSeasonPlaceholder: (minYear, maxYear) => `New season year (${minYear}-${maxYear})`,
   addSeason: 'Add season',
+  adding: 'Adding...',
   loading: 'Loading seasons...',
   yearRangeError: (minYear, maxYear) => `Year must be between ${minYear} and ${maxYear}.`,
   empty: 'No seasons to display yet.',

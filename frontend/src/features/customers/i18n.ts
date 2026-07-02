@@ -30,6 +30,8 @@ export type CustomersI18n = {
   editFallback: string;
   customerPlaceholder: string;
   save: string;
+  saving: string;
+  adding: string;
 };
 
 export type CustomerCategoriesI18n = {
@@ -74,6 +76,7 @@ export type CustomerCategoriesI18n = {
   pricePlaceholder: string;
   currencyLabel: string;
   save: string;
+  saving: string;
 };
 
 const CUSTOMERS_I18N: Record<AppLang, CustomersI18n> = {

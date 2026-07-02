@@ -26,6 +26,8 @@ export const CUSTOMERS_I18N_HE: CustomersI18n = {
   editFallback: 'עדכון פרטי לקוח נבחר',
   customerPlaceholder: 'שם לקוח',
   save: 'שמור',
+  saving: 'שומר...',
+  adding: 'מוסיף...',
 };
 
 export const CUSTOMER_CATEGORIES_I18N_HE: CustomerCategoriesI18n = {
@@ -70,4 +72,5 @@ export const CUSTOMER_CATEGORIES_I18N_HE: CustomerCategoriesI18n = {
   pricePlaceholder: 'הזן מחיר',
   currencyLabel: 'מטבע',
   save: 'שמור',
+  saving: 'שומר...',
 };

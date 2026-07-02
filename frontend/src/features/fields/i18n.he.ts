@@ -20,4 +20,6 @@ export const FIELDS_I18N_HE: FieldsI18n = {
   editFallback: 'עדכון שם שדה נבחר',
   editFieldPlaceholder: 'שם שדה',
   save: 'שמור',
+  updating: 'מעדכן...',
+  adding: 'מוסיף...',
 };

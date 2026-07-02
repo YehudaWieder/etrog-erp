@@ -5,6 +5,7 @@ export const SEASONS_I18N_HE: SeasonsI18n = {
   deleteFailed: 'לא ניתן למחוק את העונה שנבחרה.',
   newSeasonPlaceholder: (minYear, maxYear) => `שנת עונה חדשה (${minYear}-${maxYear})`,
   addSeason: 'הוסף עונה',
+  adding: 'מוסיף...',
   loading: 'טוען עונות...',
   yearRangeError: (minYear, maxYear) => `ניתן להוסיף שנה רק בין ${minYear} ל-${maxYear}.`,
   empty: 'אין עונות להצגה כרגע.',

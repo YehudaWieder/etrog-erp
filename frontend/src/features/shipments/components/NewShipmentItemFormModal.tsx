@@ -1,4 +1,5 @@
 ﻿import { FaXmark } from 'react-icons/fa6';
+import { SubmitButton } from '../../../components/ui/SubmitButton';
 import type { OpenBoxRecord } from '../../../services/boxesApi';
 import type { StockSource } from '../hooks/useNewShipmentItemForm';
 import styles from './styles/NewShipmentItemFormModal.module.css';
@@ -34,6 +35,7 @@ type NewShipmentItemFormModalText = {
   notesLabel: string;
   notesPlaceholder: string;
   save: string;
+  saving: string;
   restoreSave?: string;
   restoreTitle?: string;
   cancel: string;
@@ -486,14 +488,15 @@ export function NewShipmentItemFormModal({
           <button className="btn btn-danger" type="button" onClick={onClose}>
             {t.cancel}
           </button>
-          <button
+          <SubmitButton
             className="btn btn-success"
-            type="button"
             onClick={onSave}
-            disabled={isFormBusy || isInventoryLoading}
+            disabled={isLoadingOptions || isInventoryLoading}
+            isLoading={isSubmitting}
+            loadingText={t.saving}
           >
             {isRestoreMode && t.restoreSave ? t.restoreSave : t.save}
-          </button>
+          </SubmitButton>
         </div>
       </div>
     </div>

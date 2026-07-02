@@ -1,3 +1,4 @@
+import { SubmitButton } from '../../../../components/ui/SubmitButton';
 import type { Field } from '../../../../services/fieldsApi';
 import type { Trader } from '../../../../services/tradersApi';
 import type { Customer } from '../../../../services/customersApi';
@@ -265,9 +266,15 @@ export function HarvestBulkFormModal({
           <button className="btn btn-danger" onClick={onClose} type="button" disabled={isSubmittingHarvestForm}>
             {form.cancel}
           </button>
-          <button className="btn btn-success" onClick={onSubmit} type="button" disabled={isSubmittingHarvestForm}>
-            {isSubmittingHarvestForm ? form.saving : form.save}
-          </button>
+          <SubmitButton
+            className="btn btn-success"
+            onClick={onSubmit}
+            type="button"
+            isLoading={isSubmittingHarvestForm}
+            loadingText={form.saving}
+          >
+            {form.save}
+          </SubmitButton>
         </div>
       </div>
     </div>

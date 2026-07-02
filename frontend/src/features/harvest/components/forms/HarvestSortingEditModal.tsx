@@ -1,3 +1,4 @@
+import { SubmitButton } from '../../../../components/ui/SubmitButton';
 import type { ClassificationListRecord } from '../../../../services/classificationsApi';
 import type { HarvestI18n } from '../../i18n';
 import styles from './styles/HarvestBulkFormModal.module.css';
@@ -185,14 +186,16 @@ export function HarvestSortingEditModal({
           <button type="button" className="btn btn-secondary" onClick={onClose}>
             {ed.cancel}
           </button>
-          <button
+          <SubmitButton
             type="button"
             className="btn btn-primary"
             onClick={onSubmit}
-            disabled={isSubmitting || quantity < 1}
+            disabled={quantity < 1}
+            isLoading={isSubmitting}
+            loadingText={t.sortingForm.saving}
           >
-            {isSubmitting ? t.sortingForm.saving : ed.confirm}
-          </button>
+            {ed.confirm}
+          </SubmitButton>
         </div>
       </div>
     </div>

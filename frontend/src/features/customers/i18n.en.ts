@@ -26,6 +26,8 @@ export const CUSTOMERS_I18N_EN: CustomersI18n = {
   editFallback: 'Update selected customer details',
   customerPlaceholder: 'Customer name',
   save: 'Save',
+  saving: 'Saving...',
+  adding: 'Adding...',
 };
 
 export const CUSTOMER_CATEGORIES_I18N_EN: CustomerCategoriesI18n = {
@@ -70,4 +72,5 @@ export const CUSTOMER_CATEGORIES_I18N_EN: CustomerCategoriesI18n = {
   pricePlaceholder: 'Enter price',
   currencyLabel: 'Currency',
   save: 'Save',
+  saving: 'Saving...',
 };
