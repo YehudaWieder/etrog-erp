@@ -1,10 +1,11 @@
+import { SubmitButton } from '../../../../components/ui/SubmitButton';
 import type { Customer } from '../../../../services/customersApi';
 import type { CustomerCategory } from '../../../../services/customerCategoriesApi';
+import type { ClassificationRecord } from '../../../../services/classificationsApi';
 import type { Trader } from '../../../../services/tradersApi';
 import type { TraderCategoryWithShares } from '../../../../services/traderCategoriesApi';
 import type { HarvestFormClassificationDraft } from '../../harvestPage.types';
 import type { HarvestI18n } from '../../i18n';
-import { getAvailableHarvestGradeOptions } from '../../utils/harvestPage.utils';
 import { HarvestClassificationRowsSection } from './HarvestClassificationRowsSection';
 import type { PitamRowKey } from '../../utils/harvestClassificationMatrix.util';
 import styles from './styles/HarvestBulkFormModal.module.css';
@@ -44,6 +45,7 @@ type HarvestSortingFormModalProps = {
   harvestFormTraderCategories: TraderCategoryWithShares[];
   harvestFormCustomerCategories: CustomerCategory[];
   harvestFormClassifications: HarvestFormClassificationDraft[];
+  existingHarvestClassifications: ClassificationRecord[];
   onClose: () => void;
   onSubmit: () => void;
   onHarvestIdChange: (value: string) => void;
@@ -88,6 +90,7 @@ export function HarvestSortingFormModal({
   harvestFormTraderCategories,
   harvestFormCustomerCategories,
   harvestFormClassifications,
+  existingHarvestClassifications,
   onClose,
   onSubmit,
   onHarvestIdChange,
@@ -123,20 +126,34 @@ export function HarvestSortingFormModal({
     (category) => String(category.id) === harvestSortingFormTraderCategoryId,
   )?.name;
 
-  const availableGradeOptions = getAvailableHarvestGradeOptions(selectedTraderCategoryName);
+  const restoreAssignmentTypeLabel = harvestSortingFormAssignmentType === 'TRADER'
+    ? form.assignmentOptions.trader
+    : harvestSortingFormAssignmentType === 'CUSTOMER'
+      ? form.assignmentOptions.customer
+      : form.assignmentOptions.general;
 
-  const handleTraderCategoryIdChange = (nextTraderCategoryId: string) => {
-    onTraderCategoryIdChange(nextTraderCategoryId);
+  const restoreTraderName = traders.find(
+    (trader) => String(trader.id) === harvestSortingFormTraderId,
+  )?.name ?? '';
 
-    const nextTraderCategoryName = harvestFormTraderCategories.find(
-      (category) => String(category.id) === nextTraderCategoryId,
-    )?.name;
-    const nextGradeOptions = getAvailableHarvestGradeOptions(nextTraderCategoryName);
+  const restoreCustomerName = customers.find(
+    (customer) => String(customer.id) === harvestSortingFormCustomerId,
+  )?.customerName ?? '';
 
-    if (harvestSortingFormGrade && !(nextGradeOptions as readonly string[]).includes(harvestSortingFormGrade)) {
-      onGradeChange('');
-    }
-  };
+  const restoreCustomerCategoryLabel = availableCustomerCategories.find(
+    (category) => String(category.id) === harvestSortingFormCustomerCategoryId,
+  );
+  const restoreCustomerCategoryText = restoreCustomerCategoryLabel
+    ? `${restoreCustomerCategoryLabel.name} — ${restoreCustomerCategoryLabel.grade}`
+    : '';
+
+  const restorePitamStatusLabel = harvestSortingFormPitamStatus === 'WITH_PITAM'
+    ? form.pitamOptions.withPitam
+    : harvestSortingFormPitamStatus === 'WITHOUT_PITAM'
+      ? form.pitamOptions.withoutPitam
+      : harvestSortingFormPitamStatus === 'MIXED'
+        ? form.pitamOptions.mixed
+        : '';
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -157,24 +174,34 @@ export function HarvestSortingFormModal({
         <div className={`management-form-grid ${styles.grid} ${styles.gridPrimary}`}>
           <label className={styles.selectionField}>
             <span>{t.sortingForm.harvestLabel}</span>
-            <select
-              className={`seasons-manager__year-input ${styles.compactSelect}`}
-              value={harvestSortingFormHarvestId}
-              onChange={(event) => onHarvestIdChange(event.target.value)}
-            >
-              <option value="">{t.sortingForm.harvestPlaceholder}</option>
-              {harvestOptions.map((option) => (
-                <option key={`sorting-form-harvest-${option.value}`} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            {restoreMode ? (
+              <input
+                className={`seasons-manager__year-input ${styles.readOnlyField}`}
+                type="text"
+                value={harvestOptions.find((option) => option.value === harvestSortingFormHarvestId)?.label ?? ''}
+                readOnly
+                aria-label={t.sortingForm.harvestLabel}
+              />
+            ) : (
+              <select
+                className={`seasons-manager__year-input ${styles.compactSelect}`}
+                value={harvestSortingFormHarvestId}
+                onChange={(event) => onHarvestIdChange(event.target.value)}
+              >
+                <option value="">{t.sortingForm.harvestPlaceholder}</option>
+                {harvestOptions.map((option) => (
+                  <option key={`sorting-form-harvest-${option.value}`} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            )}
           </label>
 
           <label className={styles.summaryField}>
             <span>{t.sortingForm.dateGregorianLabel}</span>
             <input
-              className="seasons-manager__year-input"
+              className={`seasons-manager__year-input ${styles.readOnlyField}`}
               type="text"
               value={selectedHarvestSummary?.dateGregorian ?? ''}
               readOnly
@@ -185,7 +212,7 @@ export function HarvestSortingFormModal({
           <label className={styles.summaryField}>
             <span>{t.sortingForm.totalHarvestedLabel}</span>
             <input
-              className="seasons-manager__year-input"
+              className={`seasons-manager__year-input ${styles.readOnlyField}`}
               type="text"
               value={selectedHarvestSummary?.totalHarvested ?? ''}
               readOnly
@@ -196,7 +223,7 @@ export function HarvestSortingFormModal({
           <label className={styles.summaryField}>
             <span>{t.sortingForm.totalRejectedLabel}</span>
             <input
-              className="seasons-manager__year-input"
+              className={`seasons-manager__year-input ${styles.readOnlyField}`}
               type="text"
               value={selectedHarvestSummary?.totalRejected ?? ''}
               readOnly
@@ -207,7 +234,7 @@ export function HarvestSortingFormModal({
           <label className={styles.summaryField}>
             <span>{t.sortingForm.classifiedTotalLabel}</span>
             <input
-              className="seasons-manager__year-input"
+              className={`seasons-manager__year-input ${styles.readOnlyField}`}
               type="text"
               value={selectedHarvestSummary?.classifiedTotal ?? ''}
               readOnly
@@ -243,68 +270,51 @@ export function HarvestSortingFormModal({
           <div className={`management-form-grid ${styles.grid} ${styles.gridPrimary}`}>
             <label className={styles.selectionField}>
               <span>{form.assignmentTypeLabel}</span>
-              <select
-                className="seasons-manager__year-input"
-                value={harvestSortingFormAssignmentType}
-                onChange={(event) => onAssignmentTypeChange(event.target.value as 'GENERAL' | 'TRADER' | 'CUSTOMER')}
-              >
-                <option value="GENERAL">{form.assignmentOptions.general}</option>
-                <option value="TRADER">{form.assignmentOptions.trader}</option>
-                <option value="CUSTOMER">{form.assignmentOptions.customer}</option>
-              </select>
+              <input
+                className={`seasons-manager__year-input ${styles.readOnlyField}`}
+                type="text"
+                value={restoreAssignmentTypeLabel}
+                readOnly
+                aria-label={form.assignmentTypeLabel}
+              />
             </label>
 
             {harvestSortingFormAssignmentType === 'TRADER' ? (
               <label className={styles.selectionField}>
                 <span>{form.traderLabel}</span>
-                <select
-                  className="seasons-manager__year-input"
-                  value={harvestSortingFormTraderId}
-                  onChange={(event) => onTraderIdChange(event.target.value)}
-                >
-                  <option value="">{form.traderPlaceholder}</option>
-                  {[...traders].sort((left, right) => left.name.localeCompare(right.name)).map((trader) => (
-                    <option key={`sorting-form-trader-${trader.id}`} value={String(trader.id)}>
-                      {trader.name}
-                    </option>
-                  ))}
-                </select>
+                <input
+                  className={`seasons-manager__year-input ${styles.readOnlyField}`}
+                  type="text"
+                  value={restoreTraderName}
+                  readOnly
+                  aria-label={form.traderLabel}
+                />
               </label>
             ) : null}
 
             {harvestSortingFormAssignmentType === 'GENERAL' || harvestSortingFormAssignmentType === 'TRADER' ? (
               <label className={styles.selectionField}>
                 <span>{form.traderCategoryLabel}</span>
-                <select
-                  className="seasons-manager__year-input"
-                  value={harvestSortingFormTraderCategoryId}
-                  onChange={(event) => handleTraderCategoryIdChange(event.target.value)}
-                >
-                  <option value="">{form.traderCategoryPlaceholder}</option>
-                  {harvestFormTraderCategories.map((category) => (
-                    <option key={`sorting-form-trader-category-${category.id}`} value={String(category.id)}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
+                <input
+                  className={`seasons-manager__year-input ${styles.readOnlyField}`}
+                  type="text"
+                  value={selectedTraderCategoryName ?? ''}
+                  readOnly
+                  aria-label={form.traderCategoryLabel}
+                />
               </label>
             ) : null}
 
             {harvestSortingFormAssignmentType === 'GENERAL' || harvestSortingFormAssignmentType === 'TRADER' ? (
               <label className={styles.selectionField}>
                 <span>{form.gradeLabel}</span>
-                <select
-                  className="seasons-manager__year-input"
+                <input
+                  className={`seasons-manager__year-input ${styles.readOnlyField}`}
+                  type="text"
                   value={harvestSortingFormGrade}
-                  onChange={(event) => onGradeChange(event.target.value)}
-                >
-                  <option value="">{form.gradePlaceholder}</option>
-                  {availableGradeOptions.map((grade) => (
-                    <option key={`sorting-form-grade-${grade}`} value={grade}>
-                      {grade}
-                    </option>
-                  ))}
-                </select>
+                  readOnly
+                  aria-label={form.gradeLabel}
+                />
               </label>
             ) : null}
 
@@ -312,43 +322,30 @@ export function HarvestSortingFormModal({
               <>
                 <label className={styles.selectionField}>
                   <span>{form.customerLabel}</span>
-                  <select
-                    className="seasons-manager__year-input"
-                    value={harvestSortingFormCustomerId}
-                    onChange={(event) => onCustomerIdChange(event.target.value)}
-                  >
-                    <option value="">{form.customerPlaceholder}</option>
-                    {[...customers]
-                      .sort((left, right) => left.customerName.localeCompare(right.customerName))
-                      .map((customer) => (
-                        <option key={`sorting-form-customer-${customer.id}`} value={String(customer.id)}>
-                          {customer.customerName}
-                        </option>
-                      ))}
-                  </select>
+                  <input
+                    className={`seasons-manager__year-input ${styles.readOnlyField}`}
+                    type="text"
+                    value={restoreCustomerName}
+                    readOnly
+                    aria-label={form.customerLabel}
+                  />
                 </label>
 
                 <label className={styles.selectionField}>
                   <span>{form.customerCategoryLabel}</span>
-                  <select
-                    className="seasons-manager__year-input"
-                    value={harvestSortingFormCustomerCategoryId}
-                    onChange={(event) => onCustomerCategoryIdChange(event.target.value)}
-                    disabled={!harvestSortingFormCustomerId}
-                  >
-                    <option value="">{form.customerCategoryPlaceholder}</option>
-                    {availableCustomerCategories.map((category) => (
-                      <option key={`sorting-form-customer-category-${category.id}`} value={String(category.id)}>
-                        {`${category.name} — ${category.grade}`}
-                      </option>
-                    ))}
-                  </select>
+                  <input
+                    className={`seasons-manager__year-input ${styles.readOnlyField}`}
+                    type="text"
+                    value={restoreCustomerCategoryText}
+                    readOnly
+                    aria-label={form.customerCategoryLabel}
+                  />
                 </label>
 
                 <label className={styles.selectionField}>
                   <span>{form.gradeLabel}</span>
                   <input
-                    className="seasons-manager__year-input"
+                    className={`seasons-manager__year-input ${styles.readOnlyField}`}
                     type="text"
                     value={selectedCustomerCategoryGrade}
                     readOnly
@@ -360,16 +357,13 @@ export function HarvestSortingFormModal({
 
             <label className={styles.selectionField}>
               <span>{form.pitamStatusLabel}</span>
-              <select
-                className="seasons-manager__year-input"
-                value={harvestSortingFormPitamStatus}
-                onChange={(event) => onPitamStatusChange(event.target.value as 'WITH_PITAM' | 'WITHOUT_PITAM' | 'MIXED' | '')}
-              >
-                <option value="">{form.pitamStatusPlaceholder}</option>
-                <option value="WITH_PITAM">{form.pitamOptions.withPitam}</option>
-                <option value="WITHOUT_PITAM">{form.pitamOptions.withoutPitam}</option>
-                <option value="MIXED">{form.pitamOptions.mixed}</option>
-              </select>
+              <input
+                className={`seasons-manager__year-input ${styles.readOnlyField}`}
+                type="text"
+                value={restorePitamStatusLabel}
+                readOnly
+                aria-label={form.pitamStatusLabel}
+              />
             </label>
 
             <label className={styles.selectionField}>
@@ -399,6 +393,7 @@ export function HarvestSortingFormModal({
             harvestFormClassifications={harvestFormClassifications}
             harvestFormTraderCategories={harvestFormTraderCategories}
             harvestFormCustomerCategories={harvestFormCustomerCategories}
+            existingHarvestClassifications={existingHarvestClassifications}
             onAddClassificationDraft={onAddClassificationDraft}
             onRemoveClassificationDraft={onRemoveClassificationDraft}
             onUpdateClassificationDraft={onUpdateClassificationDraft}
@@ -428,11 +423,15 @@ export function HarvestSortingFormModal({
           <button type="button" className="btn btn-secondary" onClick={onClose}>
             {form.cancel}
           </button>
-          <button type="button" className="btn btn-primary" onClick={onSubmit} disabled={isSubmittingHarvestSortingForm}>
-            {restoreMode
-              ? (isSubmittingHarvestSortingForm ? t.sortingForm.restoring : t.sortingForm.restore)
-              : (isSubmittingHarvestSortingForm ? t.sortingForm.saving : t.sortingForm.save)}
-          </button>
+          <SubmitButton
+            type="button"
+            className="btn btn-primary"
+            onClick={onSubmit}
+            isLoading={isSubmittingHarvestSortingForm}
+            loadingText={restoreMode ? t.sortingForm.restoring : t.sortingForm.saving}
+          >
+            {restoreMode ? t.sortingForm.restore : t.sortingForm.save}
+          </SubmitButton>
         </div>
       </div>
     </div>

@@ -85,6 +85,34 @@ export function getHarvestSortingQuantityState(params: {
   };
 }
 
+export type ClassificationComboIdentity = {
+  assignmentType: string;
+  traderName?: string | null;
+  customerName?: string | null;
+  categoryName?: string | null;
+};
+
+export function buildClassificationComboKey({
+  assignmentType,
+  traderName,
+  customerName,
+  categoryName,
+}: ClassificationComboIdentity): string | null {
+  if (!categoryName) {
+    return null;
+  }
+
+  if (assignmentType === 'TRADER') {
+    return traderName ? `TRADER:${traderName}:${categoryName}` : null;
+  }
+
+  if (assignmentType === 'CUSTOMER') {
+    return customerName ? `CUSTOMER:${customerName}:${categoryName}` : null;
+  }
+
+  return `GENERAL:${categoryName}`;
+}
+
 export function isHarvestClassificationDraftComplete(draft: HarvestFormClassificationDraft): boolean {
   if (getFilledMatrixEntries(draft.quantities).length === 0) {
     return false;

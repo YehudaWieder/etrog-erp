@@ -115,6 +115,9 @@ export type HarvestI18n = {
     addSortingRowBlockedError: string;
     addSortingRowSummaryFieldsRequiredError: string;
     addSortingRowMaxReachedError: string;
+    duplicateSortingRowError: string;
+    existingClassificationCellBlockedHint: string;
+    blockedQuantityFieldsHint: string;
     cancel: string;
     save: string;
     saving: string;

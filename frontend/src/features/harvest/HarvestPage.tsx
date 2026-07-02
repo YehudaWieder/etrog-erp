@@ -19,6 +19,7 @@ import {
 import {
   type ClassificationListRecord,
   deleteHarvestClassification,
+  getClassificationsByHarvest,
   getClassificationsBySeason,
   getDeletedClassificationsBySeason,
   updateHarvestClassificationQuantity,
@@ -322,6 +323,35 @@ export function HarvestPage() {
     closeHarvestSortingGlobalForm,
     prefillSortingFormForRestore,
   } = useHarvestSortingFormState();
+
+  const [harvestSortingFormExistingClassifications, setHarvestSortingFormExistingClassifications] = useState<ClassificationRecord[]>([]);
+
+  useEffect(() => {
+    const selectedHarvestId = Number(harvestSortingFormHarvestId);
+
+    if (!isHarvestSortingFormOpen || isRestoreSortingMode || !Number.isFinite(selectedHarvestId) || selectedHarvestId <= 0) {
+      setHarvestSortingFormExistingClassifications([]);
+      return;
+    }
+
+    let isMounted = true;
+
+    getClassificationsByHarvest(selectedHarvestId)
+      .then((rows) => {
+        if (isMounted) {
+          setHarvestSortingFormExistingClassifications(rows);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setHarvestSortingFormExistingClassifications([]);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [harvestSortingFormHarvestId, isHarvestSortingFormOpen, isRestoreSortingMode]);
 
   const sortingAssignmentFilter = useMemo<SortingAssignmentFilter>(() => {
     return parseSortingAssignmentFilter(globalFilterValues.sortingAssignmentType ?? 'all');
@@ -1644,6 +1674,7 @@ export function HarvestPage() {
         harvestFormTraderCategories={harvestFormTraderCategories}
         harvestFormCustomerCategories={harvestFormCustomerCategories}
         harvestFormClassifications={harvestFormClassifications}
+        existingHarvestClassifications={harvestSortingFormExistingClassifications}
         onClose={isRestoreSortingMode ? closeRestoreSortingForm : closeHarvestSortingGlobalForm}
         onSubmit={() => void handleSubmitHarvestSortingGlobalForm()}
         onHarvestIdChange={setHarvestSortingFormHarvestId}
