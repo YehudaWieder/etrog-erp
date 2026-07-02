@@ -5,7 +5,7 @@ CREATE TYPE "Role" AS ENUM ('OWNER', 'MANAGER', 'EDITOR', 'WORKER');
 CREATE TYPE "PitamStatus" AS ENUM ('WITH_PITAM', 'WITHOUT_PITAM', 'MIXED');
 
 -- CreateEnum
-CREATE TYPE "Grade" AS ENUM ('א', 'ב', 'ג', 'ד', 'ה', 'ו');
+CREATE TYPE "Grade" AS ENUM ('א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ללא');
 
 -- CreateEnum
 CREATE TYPE "AssignmentType" AS ENUM ('GENERAL', 'TRADER', 'CUSTOMER');
@@ -68,6 +68,8 @@ CREATE TABLE "DefaultTraderCategory" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "notes" TEXT,
+    "supportedGrades" "Grade"[],
+    "orderIndex" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -145,6 +147,8 @@ CREATE TABLE "TradersCategories" (
     "name" TEXT NOT NULL,
     "notes" TEXT,
     "seasonId" INTEGER NOT NULL,
+    "supportedGrades" "Grade"[],
+    "orderIndex" INTEGER NOT NULL DEFAULT 0,
     "isDefault" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -459,7 +463,7 @@ CREATE INDEX "Classification_seasonId_customerId_idx" ON "Classification"("seaso
 CREATE INDEX "Classification_isDeleted_idx" ON "Classification"("isDeleted");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Classification_fieldHarvestId_traderId_customerId_traderCat_key" ON "Classification"("fieldHarvestId", "traderId", "customerId", "traderCategoryId", "customerCategoryId", "grade", "assignmentType");
+CREATE UNIQUE INDEX "Classification_fieldHarvestId_traderId_customerId_traderCat_key" ON "Classification"("fieldHarvestId", "traderId", "customerId", "traderCategoryId", "customerCategoryId", "grade", "assignmentType", "pitamStatus", "isDeleted");
 
 -- CreateIndex
 CREATE INDEX "TraderStock_seasonId_type_idx" ON "TraderStock"("seasonId", "type");
@@ -558,7 +562,7 @@ CREATE INDEX "ShipmentItem_customerId_shipmentId_idx" ON "ShipmentItem"("custome
 CREATE INDEX "ShipmentItem_isDeleted_idx" ON "ShipmentItem"("isDeleted");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ShipmentItem_seasonId_boxId_traderCategoryId_customerCatego_key" ON "ShipmentItem"("seasonId", "boxId", "traderCategoryId", "customerCategoryId", "grade", "pitamStatus", "ownershipType", "traderId", "customerId", "isPrivateSelection");
+CREATE UNIQUE INDEX "ShipmentItem_seasonId_boxId_traderCategoryId_customerCatego_key" ON "ShipmentItem"("seasonId", "boxId", "traderCategoryId", "customerCategoryId", "grade", "pitamStatus", "ownershipType", "traderId", "customerId", "isPrivateSelection", "isDeleted");
 
 -- CreateIndex
 CREATE INDEX "Message_senderId_idx" ON "Message"("senderId");
