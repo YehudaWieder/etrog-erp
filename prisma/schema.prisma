@@ -111,13 +111,13 @@ model Season {
 // 6. User Management
 // -----------------------------------------------------------------------------
 model User {
-  id           Int     @id @default(autoincrement())
-  name         String  @unique
-  email        String  @unique
-  phone        String? @unique
-  passwordHash String
-  role         Role    @default(WORKER)
-  isActive     Boolean @default(false)
+  id          Int     @id @default(autoincrement())
+  supabaseId  String  @unique
+  name        String  @unique
+  email       String  @unique
+  phone       String? @unique
+  role        Role    @default(WORKER)
+  isActive    Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

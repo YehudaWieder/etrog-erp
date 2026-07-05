@@ -11,6 +11,15 @@ export type AuthI18n = {
   emailPlaceholder: string;
   passwordLabel: string;
   passwordPlaceholder: string;
+  newPasswordLabel: string;
+  newPasswordPlaceholder: string;
+  confirmPasswordLabel: string;
+  confirmPasswordPlaceholder: string;
+  passwordRulesHint: string;
+  passwordMismatch: string;
+  invalidEmail: string;
+  showPassword: string;
+  hidePassword: string;
 
   // Login
   loginTitle: string;
@@ -21,7 +30,17 @@ export type AuthI18n = {
   loginFooterText: string;
   loginFooterLinkLabel: string;
 
-  // Register
+  // Forgot password (on login page)
+  forgotPasswordLabel: string;
+  forgotPasswordTitle: string;
+  forgotPasswordEmailLabel: string;
+  forgotPasswordEmailPlaceholder: string;
+  forgotPasswordSubmit: string;
+  forgotPasswordSending: string;
+  forgotPasswordSentMessage: string;
+  forgotPasswordErrorMessage: string;
+
+  // Register form
   registerTitle: string;
   registerSubmit: string;
   registerConnecting: string;
@@ -32,14 +51,34 @@ export type AuthI18n = {
   namePlaceholder: string;
   phoneLabel: string;
   phonePlaceholder: string;
-  confirmPasswordLabel: string;
-  confirmPasswordPlaceholder: string;
-  passwordRulesHint: string;
-  passwordMismatch: string;
-  invalidEmail: string;
-  showPassword: string;
-  hidePassword: string;
-  registerSuccess: string;
+
+  // Register — email confirmation screen
+  registerEmailSentTitle: string;
+  registerEmailSentBody: string;
+  registerEmailSentReturn: string;
+
+  // Google OAuth button
+  googleContinue: string;
+  orDivider: string;
+
+  // Reset password page (/auth/reset-password)
+  resetPasswordTitle: string;
+  resetPasswordSubtitle: string;
+  resetPasswordSubmit: string;
+  resetPasswordUpdating: string;
+  resetPasswordSuccessNotice: string;
+  resetPasswordInvalidLink: string;
+  resetPasswordLinkError: string;
+  resetPasswordLoading: string;
+  resetPasswordBackToLogin: string;
+  resetPasswordUpdateFailed: string;
+
+  // Auth callback route (/auth/callback)
+  callbackLoading: string;
+  callbackAwaitingActivation: string;
+  callbackAccountCreated: string;
+  callbackError: string;
+  callbackNoSession: string;
 };
 import { AUTH_I18N_EN } from './i18n.en';
 import { AUTH_I18N_HE } from './i18n.he';

@@ -16,10 +16,7 @@ export function useMyProfileData({ activeSidebarId, navigate, t, initialProfile 
   const [profileError, setProfileError] = useState('');
   const [editForm, setEditForm] = useState<EditProfileForm>({
     name: '',
-    email: '',
     phone: '',
-    currentPassword: '',
-    newPassword: '',
   });
   const [editMessage, setEditMessage] = useState('');
   const [editError, setEditError] = useState('');
@@ -68,10 +65,7 @@ export function useMyProfileData({ activeSidebarId, navigate, t, initialProfile 
     setEditForm((prev) => ({
       ...prev,
       name: profile.name || '',
-      email: profile.email || '',
       phone: profile.phone || '',
-      currentPassword: '',
-      newPassword: '',
     }));
   }, [profile]);
 

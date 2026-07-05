@@ -66,11 +66,11 @@ export function HarvestClassificationRowsSection({
     }
   }, [isOpen]);
 
-  // Cell-level keys (combo + pitam status + grade) for classifications already saved on this harvest.
+  // Cell-level quantities (combo + pitam status + grade) for classifications already saved on this harvest.
   // Existing records only block the exact matrix cell they occupy, not the whole category, since the
   // same category can still be sorted again under a different grade/pitam status.
-  const existingCellKeys = useMemo(() => {
-    const keys = new Set<string>();
+  const existingCellQuantities = useMemo(() => {
+    const quantities = new Map<string, number>();
     for (const record of existingHarvestClassifications) {
       const comboKey = buildClassificationComboKey({
         assignmentType: record.assignmentType,
@@ -82,9 +82,9 @@ export function HarvestClassificationRowsSection({
         continue;
       }
       const gradeKey = record.grade ?? SINGLE_GRADE_COLUMN_KEY;
-      keys.add(`${comboKey}:${record.pitamStatus}:${gradeKey}`);
+      quantities.set(`${comboKey}:${record.pitamStatus}:${gradeKey}`, record.quantity);
     }
-    return keys;
+    return quantities;
   }, [existingHarvestClassifications]);
 
   const getDraftComboKey = (draft: HarvestFormClassificationDraft): string | null => {
@@ -127,12 +127,16 @@ export function HarvestClassificationRowsSection({
     return getUsedComboKeysExcludingDraftId(draft.id).has(key);
   };
 
-  const isDraftCellAlreadyExisting = (draft: HarvestFormClassificationDraft, pitamKey: PitamRowKey, gradeKey: string): boolean => {
+  const getDraftCellExistingQuantity = (draft: HarvestFormClassificationDraft, pitamKey: PitamRowKey, gradeKey: string): number | undefined => {
     const comboKey = getDraftComboKey(draft);
     if (!comboKey) {
-      return false;
+      return undefined;
     }
-    return existingCellKeys.has(`${comboKey}:${pitamKey}:${gradeKey}`);
+    return existingCellQuantities.get(`${comboKey}:${pitamKey}:${gradeKey}`);
+  };
+
+  const isDraftCellAlreadyExisting = (draft: HarvestFormClassificationDraft, pitamKey: PitamRowKey, gradeKey: string): boolean => {
+    return getDraftCellExistingQuantity(draft, pitamKey, gradeKey) !== undefined;
   };
 
   const lastSortingRowDraft = harvestFormClassifications[harvestFormClassifications.length - 1] ?? null;
@@ -380,7 +384,8 @@ export function HarvestClassificationRowsSection({
                     <tr key={`harvest-form-pitam-row-${draft.id}-${pitamKey}`}>
                       <th>{form.pitamOptions[pitamKey === 'WITH_PITAM' ? 'withPitam' : pitamKey === 'WITHOUT_PITAM' ? 'withoutPitam' : 'mixed']}</th>
                       {displayGradeColumns.map((gradeKey) => {
-                        const isCellAlreadyExisting = isDraftCellAlreadyExisting(draft, pitamKey, gradeKey);
+                        const existingQuantity = getDraftCellExistingQuantity(draft, pitamKey, gradeKey);
+                        const isCellAlreadyExisting = existingQuantity !== undefined;
                         return (
                           <td key={`harvest-form-quantity-cell-${draft.id}-${pitamKey}-${gradeKey}`}>
                             <input
@@ -388,7 +393,8 @@ export function HarvestClassificationRowsSection({
                               type="number"
                               min="0"
                               disabled={!enabledGradeColumns.includes(gradeKey) || isCellAlreadyExisting}
-                              value={draft.quantities[pitamKey][gradeKey] ?? ''}
+                              value={isCellAlreadyExisting ? existingQuantity : draft.quantities[pitamKey][gradeKey] ?? ''}
+                              readOnly={isCellAlreadyExisting}
                               onChange={(event) =>
                                 onUpdateClassificationDraftQuantity(draft.id, pitamKey, gradeKey, event.target.value)
                               }

@@ -1,3 +1,5 @@
+import { supabase } from './supabaseClient';
+
 export const AUTH_TOKEN_STORAGE_KEY = 'auth.accessToken';
 export const AUTH_USER_STORAGE_KEY = 'auth.user';
 export const AUTH_SESSION_EXPIRED_EVENT = 'auth:session-expired';
@@ -12,23 +14,30 @@ export type StoredAuthUser = {
   isActive: boolean;
 };
 
-export function getAuthToken(): string | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
+// Sync Supabase session token into our localStorage key so getAuthToken() stays synchronous.
+// Fires on startup (INITIAL_SESSION), login, logout, and token refresh.
+supabase.auth.onAuthStateChange((event, session) => {
+  if (typeof window === 'undefined') return;
 
+  if (session?.access_token) {
+    window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, session.access_token);
+    hasSignaledSessionExpiry = false;
+  } else {
+    window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+    window.localStorage.removeItem(AUTH_USER_STORAGE_KEY);
+  }
+});
+
+export function getAuthToken(): string | null {
+  if (typeof window === 'undefined') return null;
   return window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
 }
 
 export function getStoredAuthUser(): StoredAuthUser | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
+  if (typeof window === 'undefined') return null;
 
   const rawUser = window.localStorage.getItem(AUTH_USER_STORAGE_KEY);
-  if (!rawUser) {
-    return null;
-  }
+  if (!rawUser) return null;
 
   try {
     return JSON.parse(rawUser) as StoredAuthUser;
@@ -41,49 +50,32 @@ export function isAuthenticated(): boolean {
   return Boolean(getAuthToken());
 }
 
-export function persistAuthSession(accessToken: string, user: StoredAuthUser): void {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, accessToken);
+export function persistAuthSession(user: StoredAuthUser): void {
+  if (typeof window === 'undefined') return;
+  // Token is managed by onAuthStateChange — only persist user profile here
   window.localStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(user));
   hasSignaledSessionExpiry = false;
 }
 
 export function clearAuthSession(): void {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
+  if (typeof window === 'undefined') return;
   window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
   window.localStorage.removeItem(AUTH_USER_STORAGE_KEY);
 }
 
 export function signalSessionExpired(): void {
-  if (typeof window === 'undefined' || hasSignaledSessionExpiry) {
-    return;
-  }
-
+  if (typeof window === 'undefined' || hasSignaledSessionExpiry) return;
   hasSignaledSessionExpiry = true;
   window.dispatchEvent(new CustomEvent(AUTH_SESSION_EXPIRED_EVENT));
 }
 
 export function patchStoredAuthUser(patch: Partial<StoredAuthUser>): StoredAuthUser | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
+  if (typeof window === 'undefined') return null;
 
   const existing = getStoredAuthUser();
-  if (!existing) {
-    return null;
-  }
+  if (!existing) return null;
 
-  const updated: StoredAuthUser = {
-    ...existing,
-    ...patch,
-  };
-
+  const updated: StoredAuthUser = { ...existing, ...patch };
   window.localStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(updated));
   return updated;
 }

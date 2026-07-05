@@ -9,20 +9,17 @@ import {
 } from 'src/common/utils/input-normalization.util';
 
 export type CreateUserInput = {
+  supabaseId: string;
   name: string;
   email: string;
   phone?: string;
-  password: string;
   role?: never;
   isActive?: never;
 };
 
 export type SelfUpdateInput = {
   name?: string;
-  email?: string;
   phone?: string | null;
-  currentPassword?: string;
-  newPassword?: string;
 };
 
 export type AdminUpdateInput = {
@@ -57,19 +54,11 @@ export function assertPhoneFormat(phone: string): void {
   }
 }
 
-export function assertPasswordFormat(password: string, passwordRegex: RegExp): void {
-  if (!passwordRegex.test(password)) {
-    throw new BadRequestException(
-      'Password must be at least 8 characters long and include letters and numbers.',
-    );
-  }
-}
-
 export function sanitizeCreateUserInput(data: CreateUserInput): {
+  supabaseId: string;
   name: string;
   email: string;
   phone?: string;
-  password: string;
 } {
   const sanitizedName = sanitizeText(data.name);
   const sanitizedEmail = sanitizeEmail(data.email);
@@ -81,10 +70,10 @@ export function sanitizeCreateUserInput(data: CreateUserInput): {
   }
 
   return {
+    supabaseId: data.supabaseId,
     name: sanitizedName,
     email: sanitizedEmail,
     phone: sanitizedPhone,
-    password: data.password,
   };
 }
 
@@ -96,10 +85,6 @@ export function sanitizeSelfProfileFields(profileFields: SelfUpdateInput): SelfU
     if (sanitized.name.length === 0) {
       throw new BadRequestException('name cannot be empty');
     }
-  }
-
-  if (sanitized.email !== undefined) {
-    sanitized.email = sanitizeEmail(sanitized.email);
   }
 
   if (sanitized.phone !== undefined && sanitized.phone !== null) {

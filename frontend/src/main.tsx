@@ -23,6 +23,8 @@ import { TraderInventoryRoute } from './app/routes/TraderInventoryRoute';
 import { CustomerInventoryRoute } from './app/routes/CustomerInventoryRoute';
 import { WorkersRoute } from './app/routes/WorkersRoute';
 import { PaymentsRoute } from './app/routes/PaymentsRoute';
+import { AuthCallbackRoute } from './app/routes/AuthCallbackRoute';
+import { ResetPasswordRoute } from './app/routes/ResetPasswordRoute';
 import { AUTH_SESSION_EXPIRED_EVENT } from './services/apiClient';
 import SettingsPage from './features/settings/SettingsPage';
 import { isAuthenticated, getCurrentUser, isManagerRole } from './services/authService';
@@ -77,7 +79,7 @@ function SetupGuard({ children }: { children: React.ReactNode }): JSX.Element | 
   useEffect(() => {
     const user = getCurrentUser();
     const isManager = isAuthenticated() && isManagerRole(user?.role);
-    const isExempt = location.pathname === '/login' || location.pathname === '/register';
+    const isExempt = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/auth/callback' || location.pathname === '/auth/reset-password';
 
     if (!isManager || isExempt) {
       setReady(true);
@@ -140,6 +142,8 @@ function AppRouter(): JSX.Element {
       <Routes>
         <Route path="/login" element={<LoginRoute />} />
         <Route path="/register" element={<RegisterRoute />} />
+        <Route path="/auth/callback" element={<AuthCallbackRoute />} />
+        <Route path="/auth/reset-password" element={<ResetPasswordRoute />} />
         <Route path="/home" element={<HomeRoute />} />
         <Route path="/profile/*" element={<ProfileRoute />} />
         <Route path="/messages/*" element={<MessagesRoute />} />

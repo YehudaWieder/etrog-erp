@@ -4,7 +4,7 @@ import type { ComponentProps } from 'react';
 import { AuthForm } from '../../../components/forms/AuthForm';
 import { AppTopBar } from '../../../components/navigation/AppTopBar';
 import { ApiError } from '../../../services/apiClient';
-import { getCurrentUser, isAuthenticated, login, logout } from '../../../services/authService';
+import { getCurrentUser, isAuthenticated, login, logout, requestPasswordReset } from '../../../services/authService';
 import { SHIPMENTS_I18N } from '../../shipments/i18n';
 import { AUTH_I18N } from '../i18n';
 import { useAuthLanguage } from './useAuthLanguage';
@@ -22,6 +22,10 @@ export function useLoginPage() {
   });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotMessage, setForgotMessage] = useState('');
+  const [isSendingReset, setIsSendingReset] = useState(false);
 
   const successNotice = (() => {
     const state = location.state as { notice?: string } | null;
@@ -62,7 +66,7 @@ export function useLoginPage() {
     try {
       setIsSubmitting(true);
       setError('');
-      await login({ email: formData.email, password: formData.password });
+      await login(formData.email, formData.password);
       navigate('/home');
     } catch (submitError) {
       if (submitError instanceof ApiError && submitError.status === 401) {
@@ -110,10 +114,35 @@ export function useLoginPage() {
     footerLinkTo: '/register',
     onChange: handleChange,
     onSubmit: handleSubmit,
+    onForgotPassword: () => setShowForgotPassword((prev) => !prev),
+    forgotPasswordLabel: a.forgotPasswordLabel,
+  };
+
+  const handleForgotPasswordSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!forgotEmail) return;
+    try {
+      setIsSendingReset(true);
+      setForgotMessage('');
+      setError('');
+      await requestPasswordReset(forgotEmail);
+      setForgotMessage(a.forgotPasswordSentMessage);
+    } catch {
+      setError(a.forgotPasswordErrorMessage);
+    } finally {
+      setIsSendingReset(false);
+    }
   };
 
   return {
     topBarProps,
     formProps,
+    showForgotPassword,
+    setShowForgotPassword,
+    forgotEmail,
+    setForgotEmail,
+    forgotMessage,
+    isSendingReset,
+    handleForgotPasswordSubmit,
   };
 }

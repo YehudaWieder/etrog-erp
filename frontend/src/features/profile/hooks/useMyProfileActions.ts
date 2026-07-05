@@ -41,9 +41,7 @@ export function useMyProfileActions({
       form: editForm,
       messages: {
         nameRequired: t.editProfile.messages.nameRequired,
-        invalidEmail: t.editProfile.messages.invalidEmail,
         invalidPhone: t.editProfile.messages.invalidPhone,
-        passwordNeedsCurrent: t.editProfile.messages.passwordNeedsCurrent,
       },
     });
 

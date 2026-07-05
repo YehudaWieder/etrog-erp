@@ -1,24 +1,49 @@
-import { ExecutionContext, Injectable } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { AuthGuard } from '@nestjs/passport';
+import { Request } from 'express';
 import { IS_PUBLIC_KEY } from '../../authorization/decorators/public.decorator';
+import { PrismaService } from '../../prisma/prisma.service';
+import { SupabaseService } from '../../supabase/supabase.service';
 
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {
-  constructor(private readonly reflector: Reflector) {
-    super();
-  }
+export class JwtAuthGuard implements CanActivate {
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly supabase: SupabaseService,
+    private readonly prisma: PrismaService,
+  ) {}
 
-  canActivate(context: ExecutionContext) {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    if (isPublic) {
-      return true;
-    }
+    if (isPublic) return true;
 
-    return super.canActivate(context);
+    const request = context.switchToHttp().getRequest<Request>();
+    const token = this.extractToken(request);
+
+    if (!token) throw new UnauthorizedException('No token provided.');
+
+    const { data: { user: supabaseUser }, error } = await this.supabase.getUser(token);
+
+    if (error || !supabaseUser) throw new UnauthorizedException('Invalid or expired token.');
+
+    const user = await this.prisma.user.findUnique({
+      where: { supabaseId: supabaseUser.id },
+      select: { id: true, email: true, role: true, isActive: true },
+    });
+
+    if (!user) throw new UnauthorizedException('User profile not found.');
+
+    request.user = user;
+    return true;
+  }
+
+  private extractToken(request: Request): string | undefined {
+    const auth = request.headers.authorization;
+    if (!auth?.startsWith('Bearer ')) return undefined;
+    return auth.slice(7);
   }
 }

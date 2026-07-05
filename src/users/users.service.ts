@@ -1,13 +1,12 @@
 import { Injectable, ConflictException, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { Prisma, Priority, Role } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+import { SupabaseService } from '../supabase/supabase.service';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { buildNewUserPendingActivationMessage } from 'src/notifications/templates/user-registration-notification';
 import {
 	AdminUpdateInput,
 	assertEmailFormat,
-	assertPasswordFormat,
 	assertPhoneFormat,
 	createUserSlug,
 	isPrivilegedRole,
@@ -20,10 +19,10 @@ import {
 
 @Injectable()
 export class UsersService {
-	private readonly saltRounds = 10;
-	private readonly passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
-
-	constructor(private prisma: PrismaService) {}
+	constructor(
+		private prisma: PrismaService,
+		private supabase: SupabaseService,
+	) {}
 
 	async createUser(data: CreateUserInput) {
 		if ((data as Record<string, unknown>).role !== undefined || (data as Record<string, unknown>).isActive !== undefined) {
@@ -33,7 +32,6 @@ export class UsersService {
 		const sanitizedData = sanitizeCreateUserInput(data);
 
 		assertEmailFormat(sanitizedData.email);
-		assertPasswordFormat(sanitizedData.password, this.passwordRegex);
 		if (sanitizedData.phone) {
 			assertPhoneFormat(sanitizedData.phone);
 		}
@@ -41,6 +39,7 @@ export class UsersService {
 		const existing = await this.prisma.user.findFirst({
 			where: {
 				OR: [
+					{ supabaseId: sanitizedData.supabaseId },
 					{ email: sanitizedData.email },
 					{ name: sanitizedData.name },
 					...(sanitizedData.phone ? [{ phone: sanitizedData.phone }] : []),
@@ -52,16 +51,15 @@ export class UsersService {
 			throw new ConflictException('User with this email, name, or phone already exists');
 		}
 
-		const hashedPassword = await bcrypt.hash(sanitizedData.password, this.saltRounds);
 		const slug = createUserSlug(sanitizedData.name);
 
 		return this.prisma.$transaction(async (tx) => {
 			const newUser = await tx.user.create({
 				data: {
+					supabaseId: sanitizedData.supabaseId,
 					name: sanitizedData.name,
 					email: sanitizedData.email,
 					phone: sanitizedData.phone,
-					passwordHash: hashedPassword,
 					role: Role.WORKER,
 					isActive: false,
 					slug,
@@ -174,43 +172,19 @@ export class UsersService {
 	}
 
 	private async updateOwnProfile(id: number, data: UpdateUserByActorInput) {
-		const { currentPassword, newPassword, role, isActive, ...profileFields } = data;
+		const { role, isActive, ...profileFields } = data;
 
 		if (role !== undefined || isActive !== undefined) {
 			throw new ForbiddenException('You are not allowed to update role or isActive on your own account.');
 		}
 
- 		const sanitizedProfileFields = sanitizeSelfProfileFields(profileFields as SelfUpdateInput);
-
-		if (sanitizedProfileFields.email !== undefined) {
-			assertEmailFormat(sanitizedProfileFields.email);
-		}
+		const sanitizedProfileFields = sanitizeSelfProfileFields(profileFields as SelfUpdateInput);
 
 		if (sanitizedProfileFields.phone !== undefined && sanitizedProfileFields.phone !== null) {
 			assertPhoneFormat(sanitizedProfileFields.phone);
 		}
 
 		const updateData: Prisma.UserUpdateInput = { ...sanitizedProfileFields };
-
-		if (newPassword !== undefined) {
-			assertPasswordFormat(newPassword, this.passwordRegex);
-
-			if (!currentPassword) {
-				throw new BadRequestException('currentPassword is required to change password.');
-			}
-
-			const user = await this.prisma.user.findUnique({ where: { id } });
-			if (!user) {
-				throw new NotFoundException('User not found');
-			}
-
-			const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash);
-			if (!isCurrentPasswordValid) {
-				throw new ForbiddenException('Current password is incorrect.');
-			}
-
-			updateData.passwordHash = await bcrypt.hash(newPassword, this.saltRounds);
-		}
 
 		if (updateData.name && typeof updateData.name === 'string') {
 			updateData.slug = createUserSlug(updateData.name);
@@ -227,10 +201,7 @@ export class UsersService {
 
 		const hasUnexpectedFields =
 			data.name !== undefined ||
-			data.email !== undefined ||
-			data.phone !== undefined ||
-			data.currentPassword !== undefined ||
-			data.newPassword !== undefined;
+			data.phone !== undefined;
 
 		if (hasUnexpectedFields) {
 			throw new ForbiddenException('Manager/Owner can only update role and isActive.');
@@ -296,13 +267,6 @@ export class UsersService {
 		});
 	}
 
-	async toggleStatus(id: number, isActive: boolean) {
-		return this.prisma.user.update({
-			where: { id },
-			data: { isActive },
-		});
-	}
-
 	async removeByActor(id: number, actor: AuthenticatedUser) {
 		if (!actor) {
 			throw new ForbiddenException('Authenticated user context is missing.');
@@ -314,15 +278,19 @@ export class UsersService {
 
 		try {
 			return this.prisma.$transaction(async (tx) => {
-				// First, delete all messages sent by this user (cascade will be handled by DB)
-				await tx.message.deleteMany({
-					where: { senderId: id },
+				const user = await tx.user.findUnique({
+					where: { id },
+					select: { supabaseId: true },
 				});
 
-				// Then delete the user
-				return tx.user.delete({
-					where: { id },
-				});
+				if (!user) throw new NotFoundException('User not found');
+
+				await tx.message.deleteMany({ where: { senderId: id } });
+				const deleted = await tx.user.delete({ where: { id } });
+
+				await this.supabase.adminAuth.deleteUser(user.supabaseId);
+
+				return deleted;
 			});
 		} catch (error) {
 			if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
@@ -332,5 +300,4 @@ export class UsersService {
 			throw error;
 		}
 	}
-
 }

@@ -1,7 +1,7 @@
-import { Role } from '@prisma/client';
-
-export interface JwtPayload {
-  sub: number;
+// Supabase JWT payload shape (for reference only — validation is done via supabase.auth.getUser)
+export interface SupabaseJwtPayload {
+  sub: string; // Supabase user UUID
   email: string;
-  role?: Role;
+  aud: string;
+  role: string; // Supabase role ("authenticated"), not our app Role
 }

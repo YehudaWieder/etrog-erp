@@ -18,19 +18,13 @@ export type ProfileRowsSections = {
 
 export type EditProfileForm = {
   name: string;
-  email: string;
   phone: string;
-  currentPassword: string;
-  newPassword: string;
 };
 
 export type ProfileUpdatePayload = {
   id: number;
   name?: string;
-  email?: string;
   phone?: string | null;
-  currentPassword?: string;
-  newPassword?: string;
 };
 
 export type ProfileCounts = {

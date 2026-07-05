@@ -24,6 +24,7 @@ export function useRegisterPage() {
     confirmPassword: '',
   });
   const [error, setError] = useState('');
+  const [successNotice, setSuccessNotice] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -83,14 +84,12 @@ export function useRegisterPage() {
       setIsSubmitting(true);
       setError('');
 
-      await register({
+      const emailConfirmationRequired = await register(normalizedEmail, formData.password, {
         name: normalizedName,
-        email: normalizedEmail,
         phone: normalizedPhone || undefined,
-        password: formData.password,
       });
 
-      navigate('/login', { state: { notice: a.registerSuccess } });
+      setSuccessNotice(emailConfirmationRequired ? a.registerEmailSentBody : a.callbackAccountCreated);
     } catch (submitError) {
       if (submitError instanceof ApiError && submitError.status === 404) {
         setError(a.registrationEndpointNotFound);
@@ -146,6 +145,7 @@ export function useRegisterPage() {
 
   const formProps: ComponentProps<typeof AuthForm> = {
     title: a.registerTitle,
+    notice: successNotice,
     error,
     fields,
     values: formData,
@@ -160,5 +160,6 @@ export function useRegisterPage() {
   return {
     topBarProps,
     formProps,
+    successNotice,
   };
 }
