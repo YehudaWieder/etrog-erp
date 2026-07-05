@@ -47,6 +47,10 @@ export function HomePage() {
 
   const qa = home.quickActions;
 
+  if (!isAuthenticated()) {
+    return null;
+  }
+
   const quickActions = [
     { label: qa.addHarvest, icon: <FaLeaf />, onClick: () => navigate('/harvest', { state: { openHarvestForm: true } }) },
     { label: qa.addSorting, icon: <FaSort />, onClick: () => navigate('/harvest', { state: { openSortingForm: true } }) },
