@@ -198,6 +198,11 @@ export class SeasonsService {
           });
         }
 
+        // Delete the season's system config row (created automatically on season bootstrap)
+        await tx.systemConfig.deleteMany({
+          where: { seasonId: id },
+        });
+
         // Finally delete the season
         return tx.season.delete({
           where: { id },
