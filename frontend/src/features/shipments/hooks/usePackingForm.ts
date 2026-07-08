@@ -52,6 +52,8 @@ type PackingItemRowText = {
   duplicateItemError: string;
   boxNotOpenError: string;
   errorBoxCapacityExceeded: string;
+  existingItemInvalidQuantityError: string;
+  existingItemUpdateError: string;
   genericError: string;
 };
 
@@ -95,7 +97,7 @@ export type PackingItemRowView = {
   availableCustomerCategories: Array<{ id: number; name: string; grade: string | null }>;
   displayGradeColumns: string[];
   cellAvailability: Record<PitamRowKey, Record<string, number>>;
-  existingQuantityByCell: Record<PitamRowKey, Record<string, number>>;
+  existingItemByCell: Record<PitamRowKey, Record<string, { id: number; quantity: number }>>;
 };
 
 type UsePackingFormProps = {
@@ -147,11 +149,14 @@ type UsePackingFormResult = {
   isBoxFull: boolean;
   isBoxOverCapacity: boolean;
   draftQuantityTotal: number;
+  totalPackedQuantity: number;
   boxRemainingCapacity: number | null;
   addItemRow: () => void;
   removeItemRow: (id: string) => void;
   updateItemRow: (id: string, updater: Partial<PackingItemRowDraft>) => void;
   updateItemRowQuantity: (id: string, pitamKey: PitamRowKey, gradeKey: string, value: string) => void;
+  pendingExistingItemEdits: Record<number, string>;
+  stageExistingItemEdit: (itemId: number, value: string | null) => void;
 
   isSubmitting: boolean;
   error: string | null;
@@ -206,6 +211,7 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
   const [error, setError] = useState<string | null>(null);
 
   const [itemRows, setItemRows] = useState<PackingItemRowDraft[]>([]);
+  const [pendingExistingItemEdits, setPendingExistingItemEdits] = useState<Record<number, string>>({});
   const rowCounterRef = useRef(1);
 
   const [allTraderInventory, setAllTraderInventory] = useState<TraderInventoryRow[]>([]);
@@ -611,8 +617,9 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
 
       // Cells that already have a matching item packed in this box (same category/grade/pitam/
       // ownership/owner combo) can't accept another one — the backend enforces this as a duplicate.
-      // Surface the existing quantity there instead of leaving the cell open for a new entry.
-      const existingQuantityByCell: Record<PitamRowKey, Record<string, number>> = {
+      // Surface the existing item there (with its id, for inline editing) instead of leaving the
+      // cell open for a new entry.
+      const existingItemByCell: Record<PitamRowKey, Record<string, { id: number; quantity: number }>> = {
         WITH_PITAM: {},
         WITHOUT_PITAM: {},
         MIXED: {},
@@ -628,7 +635,10 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
 
           if (isCustomerItem) {
             if (!draft.customerCategoryId || String(item.customerCategoryId) !== draft.customerCategoryId) continue;
-            existingQuantityByCell[pitamKey][SINGLE_GRADE_COLUMN_KEY] = (existingQuantityByCell[pitamKey][SINGLE_GRADE_COLUMN_KEY] ?? 0) + item.quantity;
+            const existing = existingItemByCell[pitamKey][SINGLE_GRADE_COLUMN_KEY];
+            existingItemByCell[pitamKey][SINGLE_GRADE_COLUMN_KEY] = existing
+              ? { id: existing.id, quantity: existing.quantity + item.quantity }
+              : { id: item.id, quantity: item.quantity };
           } else {
             if (!draft.traderCategoryId || String(item.traderCategoryId) !== draft.traderCategoryId) continue;
             if (!item.grade) continue;
@@ -636,7 +646,10 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
               if (item.traderId !== effTraderId) continue;
               if (item.isPrivateSelection !== (draft.stockSource === 'PRIVATE_SELECTION')) continue;
             }
-            existingQuantityByCell[pitamKey][item.grade] = (existingQuantityByCell[pitamKey][item.grade] ?? 0) + item.quantity;
+            const existing = existingItemByCell[pitamKey][item.grade];
+            existingItemByCell[pitamKey][item.grade] = existing
+              ? { id: existing.id, quantity: existing.quantity + item.quantity }
+              : { id: item.id, quantity: item.quantity };
           }
         }
       }
@@ -653,7 +666,7 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
         availableCustomerCategories,
         displayGradeColumns,
         cellAvailability,
-        existingQuantityByCell,
+        existingItemByCell,
       };
     });
   }, [itemRows, ownershipType, allTraderInventory, traderInventoryCache, customerInventoryCache, resolveEffectiveTraderId, resolveEffectiveCustomerId, comboPrefixOf, usedCategoryByPrefix, existingBoxItems]);
@@ -685,7 +698,22 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
     return sum;
   }, [itemRows, ownershipType]);
 
-  const boxRemainingCapacity = boxCapacity !== null ? Math.max(0, boxCapacity - boxTotalQuantity) : null;
+  // Net change to the box total from pending edits to already-existing items — folded into the
+  // capacity math below so editing an existing quantity up/down is reflected immediately.
+  const pendingEditsQuantityDelta = useMemo(() => {
+    let delta = 0;
+    for (const [itemIdStr, rawValue] of Object.entries(pendingExistingItemEdits)) {
+      const item = existingBoxItems.find((row) => row.id === Number(itemIdStr));
+      if (!item) continue;
+      const nextQuantity = Number(rawValue);
+      if (Number.isFinite(nextQuantity)) delta += nextQuantity - item.quantity;
+    }
+    return delta;
+  }, [pendingExistingItemEdits, existingBoxItems]);
+
+  const effectiveBoxTotalQuantity = boxTotalQuantity + pendingEditsQuantityDelta;
+  const totalPackedQuantity = effectiveBoxTotalQuantity + draftQuantityTotal;
+  const boxRemainingCapacity = boxCapacity !== null ? Math.max(0, boxCapacity - effectiveBoxTotalQuantity) : null;
   const isBoxFull = boxRemainingCapacity !== null && draftQuantityTotal >= boxRemainingCapacity;
   const isBoxOverCapacity = boxRemainingCapacity !== null && draftQuantityTotal > boxRemainingCapacity;
 
@@ -705,7 +733,22 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
     setIsShipmentFrozen(false);
     setIsShipmentShipped(false);
     setItemRows([]);
+    setPendingExistingItemEdits({});
     setError(null);
+  }, []);
+
+  const stageExistingItemEdit = useCallback((itemId: number, value: string | null) => {
+    setPendingExistingItemEdits((prev) => {
+      if (value === null) {
+        if (!(itemId in prev)) {
+          return prev;
+        }
+        const next = { ...prev };
+        delete next[itemId];
+        return next;
+      }
+      return { ...prev, [itemId]: value };
+    });
   }, []);
 
   const setSelectedBoxId = useCallback((v: string) => {
@@ -792,7 +835,10 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
 
     const filledEntries = getFilledMatrixEntries(draft.quantities);
     if (filledEntries.length === 0) {
-      return { rowError: itemsT.validationMatrixEmpty };
+      // A row can exist purely to surface an already-packed combo's matrix for inline editing (via
+      // the pencil icon on existing cells) without adding any new quantity. Such a row has nothing
+      // new to submit here, so skip it instead of blocking the form with a "quantity required" error.
+      return [];
     }
 
     const payloads: PackBoxItemPayload[] = [];
@@ -861,8 +907,8 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
         LARGE: systemConfig.largeBoxCapacity,
       };
       const capacity = capacityMap[boxType] ?? null;
-      if (capacity !== null && boxTotalQuantity > capacity) {
-        setError(t.errorBoxTypeCapacity(boxTotalQuantity, capacity));
+      if (capacity !== null && effectiveBoxTotalQuantity > capacity) {
+        setError(t.errorBoxTypeCapacity(effectiveBoxTotalQuantity, capacity));
         return;
       }
     }
@@ -882,10 +928,22 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
       itemPayloads.push(...result);
     }
 
+    const existingItemEdits: { itemId: number; quantity: number }[] = [];
+    for (const [itemIdStr, rawValue] of Object.entries(pendingExistingItemEdits)) {
+      const quantity = Number(rawValue);
+      if (!Number.isInteger(quantity) || quantity <= 0) {
+        setError(itemsT.existingItemInvalidQuantityError);
+        return;
+      }
+      existingItemEdits.push({ itemId: Number(itemIdStr), quantity });
+    }
+
     setError(null);
     setIsSubmitting(true);
 
     try {
+      // Edits to already-packed items and creation of new ones are sent together so the backend
+      // can apply both inside a single transaction — either everything lands, or nothing does.
       await packBox(
         {
           id: Number(selectedBoxId),
@@ -898,10 +956,12 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
           customerId: ownershipType === 'CUSTOMER' ? Number(customerId) : null,
           notes: notes.trim() || null,
           items: itemPayloads,
+          itemEdits: existingItemEdits.map((edit) => ({ id: edit.itemId, quantity: edit.quantity })),
         },
         { suppressGlobalFeedback: true },
       );
 
+      setPendingExistingItemEdits({});
       onSuccess();
       handleClose();
     } catch (err) {
@@ -928,7 +988,7 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
     } finally {
       setIsSubmitting(false);
     }
-  }, [boxNumber, boxType, boxTotalQuantity, boxRemainingCapacity, buildRowPayloads, customerId, draftQuantityTotal, handleClose, isBoxOverCapacity, itemRowsView, notes, onSuccess, ownershipType, selectedBoxId, selectedShipmentId, status, systemConfig, t, traderId]);
+  }, [boxNumber, boxType, effectiveBoxTotalQuantity, boxRemainingCapacity, buildRowPayloads, customerId, draftQuantityTotal, handleClose, isBoxOverCapacity, itemRowsView, notes, onSuccess, ownershipType, pendingExistingItemEdits, selectedBoxId, selectedShipmentId, status, systemConfig, t, itemsT, traderId]);
 
   const selectedBoxStatus = boxOptions.find((b) => String(b.id) === selectedBoxId)?.status ?? null;
 
@@ -973,11 +1033,14 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
     isBoxFull,
     isBoxOverCapacity,
     draftQuantityTotal,
+    totalPackedQuantity,
     boxRemainingCapacity,
     addItemRow,
     removeItemRow,
     updateItemRow,
     updateItemRowQuantity,
+    pendingExistingItemEdits,
+    stageExistingItemEdit,
 
     isSubmitting,
     error,

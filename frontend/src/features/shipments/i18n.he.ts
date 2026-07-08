@@ -276,6 +276,7 @@ export const SHIPMENTS_I18N_HE = {
       removeRow: 'הסר',
       rowPrefix: (index: number) => `פריט ${index + 1}`,
       emptyHint: 'אין עדיין פריטים. לחץ "הוסף פריט" כדי להתחיל.',
+      totalPackedQuantityLabel: 'סך הכל נארז',
     },
   },
   deleteBoxDialog: {
@@ -345,6 +346,8 @@ export const SHIPMENTS_I18N_HE = {
     availableQuantityHint: (n: number) => `זמין: ${n}`,
     existingQuantityHint: (n: number) => `כבר בקרטון: ${n}`,
     remainingCapacityHint: (n: number) => `מקום פנוי בקרטון: ${n}`,
+    editExistingItemLabel: 'עריכת כמות קיימת',
+    cancelExistingItemEditLabel: 'ביטול השינוי לכמות המקורית',
     notesLabel: 'הערות',
     notesPlaceholder: 'הערות...',
     save: 'הוסף פריט',
@@ -385,6 +388,8 @@ export const SHIPMENTS_I18N_HE = {
     duplicateItemError: 'פריט עם שילוב זה כבר קיים בקרטון',
     boxNotOpenError: 'לא ניתן להוסיף פריט — הקרטון אינו פתוח.',
     errorBoxCapacityExceeded: 'הכמות שנוספה חורגת מקיבולת הקרטון.',
+    existingItemInvalidQuantityError: 'יש להזין כמות תקינה עבור הפריט הקיים שנערך.',
+    existingItemUpdateError: 'עדכון הכמות הקיימת נכשל. נסו שוב.',
     genericError: 'אירעה שגיאה. נסה שוב.',
   },
   editShipmentItemModal: {

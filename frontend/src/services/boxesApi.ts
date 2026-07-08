@@ -123,15 +123,21 @@ export type PackBoxItemPayload = {
   customGrade?: string;
 };
 
+export type PackBoxItemEditPayload = {
+  id: number;
+  quantity: number;
+};
+
 export type PackBoxPayload = UpdateBoxPayload & {
   items: PackBoxItemPayload[];
+  itemEdits?: PackBoxItemEditPayload[];
 };
 
 export async function packBox(
   payload: PackBoxPayload,
   init?: Pick<ApiClientInit, 'suppressGlobalFeedback'>,
-): Promise<{ box: BoxRecord; items: unknown[] }> {
-  return apiClient<{ box: BoxRecord; items: unknown[] }>('/boxes/pack', {
+): Promise<{ box: BoxRecord; items: unknown[]; editedItems: unknown[] }> {
+  return apiClient<{ box: BoxRecord; items: unknown[]; editedItems: unknown[] }>('/boxes/pack', {
     method: 'PATCH',
     body: JSON.stringify(payload),
     ...init,

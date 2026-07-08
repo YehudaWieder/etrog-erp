@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { FaTrashCan } from 'react-icons/fa6';
 import type { Trader } from '../../../services/tradersApi';
 import type { Customer } from '../../../services/customersApi';
@@ -17,6 +18,7 @@ type PackingItemRowsText = {
   removeRow: string;
   rowPrefix: (index: number) => string;
   emptyHint: string;
+  totalPackedQuantityLabel: string;
 };
 
 type PackingItemFieldsText = {
@@ -40,6 +42,8 @@ type PackingItemFieldsText = {
   quantityPlaceholder: string;
   availableQuantityHint: (n: number) => string;
   existingQuantityHint: (n: number) => string;
+  editExistingItemLabel: string;
+  cancelExistingItemEditLabel: string;
   notesLabel: string;
   notesPlaceholder: string;
   loadingInventory: string;
@@ -60,10 +64,13 @@ type PackingItemRowsSectionProps = {
   boxCapacityMessage: string | null;
   remainingCapacityMessage: string | null;
   addItemDisabledHint: string;
+  totalPackedQuantity: number;
+  pendingExistingItemEdits: Record<number, string>;
   onAddRow: () => void;
   onRemoveRow: (id: string) => void;
   onUpdateRow: (id: string, updater: Partial<PackingItemRowDraft>) => void;
   onUpdateRowQuantity: (id: string, pitamKey: PitamRowKey, gradeKey: string, value: string) => void;
+  onStageExistingItemEdit: (itemId: number, value: string | null) => void;
 };
 
 const ITEM_OWNERSHIP_OPTIONS = ['TRADER', 'CUSTOMER', 'GENERAL', 'CUSTOM'] as const;
@@ -81,13 +88,37 @@ export function PackingItemRowsSection({
   boxCapacityMessage,
   remainingCapacityMessage,
   addItemDisabledHint,
+  totalPackedQuantity,
+  pendingExistingItemEdits,
   onAddRow,
   onRemoveRow,
   onUpdateRow,
   onUpdateRowQuantity,
+  onStageExistingItemEdit,
 }: PackingItemRowsSectionProps) {
   const isSharedBox = boxOwnershipType === 'SHARED';
   const isCustomBox = boxOwnershipType === 'CUSTOM';
+  const [unlockedCellKeys, setUnlockedCellKeys] = useState<Set<string>>(new Set());
+
+  const handleUnlockCellForEdit = (cellKey: string) => {
+    setUnlockedCellKeys((prev) => {
+      const next = new Set(prev);
+      next.add(cellKey);
+      return next;
+    });
+  };
+
+  const handleRevertCellEdit = (cellKey: string, itemId: number) => {
+    setUnlockedCellKeys((prev) => {
+      if (!prev.has(cellKey)) {
+        return prev;
+      }
+      const next = new Set(prev);
+      next.delete(cellKey);
+      return next;
+    });
+    onStageExistingItemEdit(itemId, null);
+  };
 
   return (
     <div>
@@ -314,28 +345,73 @@ export function PackingItemRowsSection({
                           const isEnabled = available > 0;
                           const hasValue = Boolean((draft.quantities[pitamKey][gradeKey] ?? '').trim());
                           const isLockedByFullBox = isBoxFull && !hasValue;
-                          const existingQty = view.existingQuantityByCell[pitamKey]?.[gradeKey] ?? 0;
+                          const existingItem = view.existingItemByCell[pitamKey]?.[gradeKey];
+                          const isExistingCell = Boolean(existingItem);
+                          const cellKey = `${draft.id}:${pitamKey}:${gradeKey}`;
+                          const isCellUnlocked = isExistingCell && unlockedCellKeys.has(cellKey);
+                          const pendingValue = existingItem ? pendingExistingItemEdits[existingItem.id] : undefined;
+
+                          if (isExistingCell && existingItem) {
+                            return (
+                              <td key={`packing-cell-${draft.id}-${pitamKey}-${gradeKey}`}>
+                                <div className={styles.existingCellWrapper}>
+                                  <input
+                                    className="seasons-manager__year-input"
+                                    type="number"
+                                    min={1}
+                                    step={1}
+                                    disabled={!isCellUnlocked}
+                                    readOnly={!isCellUnlocked}
+                                    value={pendingValue ?? existingItem.quantity}
+                                    onChange={(e) => {
+                                      if (isCellUnlocked) {
+                                        onStageExistingItemEdit(existingItem.id, e.target.value);
+                                      }
+                                    }}
+                                    onWheel={(e) => e.currentTarget.blur()}
+                                    title={!isCellUnlocked ? fieldsT.existingQuantityHint(existingItem.quantity) : undefined}
+                                  />
+                                  {!isCellUnlocked ? (
+                                    <button
+                                      type="button"
+                                      className={styles.editExistingCellButton}
+                                      onClick={() => handleUnlockCellForEdit(cellKey)}
+                                      aria-label={fieldsT.editExistingItemLabel}
+                                      title={fieldsT.editExistingItemLabel}
+                                    >
+                                      ✎
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      className={styles.editExistingCellButton}
+                                      onClick={() => handleRevertCellEdit(cellKey, existingItem.id)}
+                                      aria-label={fieldsT.cancelExistingItemEditLabel}
+                                      title={fieldsT.cancelExistingItemEditLabel}
+                                    >
+                                      ×
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            );
+                          }
+
                           return (
                             <td key={`packing-cell-${draft.id}-${pitamKey}-${gradeKey}`}>
-                              {existingQty > 0 ? (
-                                <div className={styles.infoValue} title={fieldsT.existingQuantityHint(existingQty)}>
-                                  {existingQty}
-                                </div>
-                              ) : (
-                                <input
-                                  className="seasons-manager__year-input"
-                                  type="number"
-                                  min={1}
-                                  max={available || undefined}
-                                  step={1}
-                                  disabled={!isEnabled || isLockedByFullBox}
-                                  value={draft.quantities[pitamKey][gradeKey] ?? ''}
-                                  onChange={(e) => onUpdateRowQuantity(draft.id, pitamKey, gradeKey, e.target.value)}
-                                  onWheel={(e) => e.currentTarget.blur()}
-                                  placeholder={fieldsT.availableQuantityHint(available)}
-                                  title={isLockedByFullBox ? (boxCapacityMessage ?? undefined) : isEnabled ? fieldsT.availableQuantityHint(available) : undefined}
-                                />
-                              )}
+                              <input
+                                className="seasons-manager__year-input"
+                                type="number"
+                                min={1}
+                                max={available || undefined}
+                                step={1}
+                                disabled={!isEnabled || isLockedByFullBox}
+                                value={draft.quantities[pitamKey][gradeKey] ?? ''}
+                                onChange={(e) => onUpdateRowQuantity(draft.id, pitamKey, gradeKey, e.target.value)}
+                                onWheel={(e) => e.currentTarget.blur()}
+                                placeholder={fieldsT.availableQuantityHint(available)}
+                                title={isLockedByFullBox ? (boxCapacityMessage ?? undefined) : isEnabled ? fieldsT.availableQuantityHint(available) : undefined}
+                              />
                             </td>
                           );
                         })}
@@ -379,6 +455,13 @@ export function PackingItemRowsSection({
           </div>
         );
       })}
+
+      {rows.length ? (
+        <div className={styles.totalPackedSummary}>
+          <span>{rowsT.totalPackedQuantityLabel}</span>
+          <span>{totalPackedQuantity}</span>
+        </div>
+      ) : null}
 
       {isBoxOpen && boxCapacityMessage ? (
         <p className="seasons-manager__error" style={{ margin: '0.5rem 0 0' }}>{boxCapacityMessage}</p>

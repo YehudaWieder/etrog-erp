@@ -591,11 +591,14 @@ export function ShipmentsPage() {
         isBoxFull={packingForm.isBoxFull}
         isBoxOverCapacity={packingForm.isBoxOverCapacity}
         draftQuantityTotal={packingForm.draftQuantityTotal}
+        totalPackedQuantity={packingForm.totalPackedQuantity}
         boxRemainingCapacity={packingForm.boxRemainingCapacity}
         onAddItemRow={packingForm.addItemRow}
         onRemoveItemRow={packingForm.removeItemRow}
         onUpdateItemRow={packingForm.updateItemRow}
         onUpdateItemRowQuantity={packingForm.updateItemRowQuantity}
+        pendingExistingItemEdits={packingForm.pendingExistingItemEdits}
+        onStageExistingItemEdit={packingForm.stageExistingItemEdit}
         isSubmitting={packingForm.isSubmitting}
         error={packingForm.error}
         onSave={packingForm.handleSaveAll}
@@ -809,6 +812,7 @@ export function ShipmentsPage() {
           lang={lang}
           labels={t.shipmentItemsTableLabels}
           description={content.description}
+          refreshKey={itemsRefreshKey}
         />
       ) : activeSidebarId === 'shipment-items' ? (
         <ShipmentItemsTable

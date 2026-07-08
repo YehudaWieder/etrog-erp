@@ -17,12 +17,13 @@ export class BoxPackingWorkflowService {
     private itemService: ItemService,
   ) {}
 
-  // Updates a box and creates any number of shipment items in it, atomically. The box update
-  // runs first so item capacity/ownership checks see the post-update box state; each item is
-  // created via ItemService.createInTx so box.totalQuantity (and therefore capacity checks) are
-  // kept in sync across rows within the same transaction. If any row fails, nothing is committed.
+  // Updates a box, edits any number of already-packed items, and creates any number of new
+  // shipment items in it, all atomically. The box update runs first so item capacity/ownership
+  // checks see the post-update box state; edits run before creates so box.totalQuantity reflects
+  // them before new-item capacity checks run. Every step shares one transaction — if any row
+  // fails (an edit, a create, anything), nothing is committed and nothing is left half-applied.
   async packBox(dto: PackBoxDto, actorId: number) {
-    const { id, items, ...boxData } = dto;
+    const { id, items, itemEdits = [], ...boxData } = dto;
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
 
     return this.prisma.$transaction(async (tx) => {
@@ -37,6 +38,12 @@ export class BoxPackingWorkflowService {
         throw new BadRequestException('Cannot add items to a box that is not OPEN');
       }
 
+      const editedItems = [] as Awaited<ReturnType<ItemService['updateInTx']>>[];
+      for (const edit of itemEdits) {
+        const item = await this.itemService.updateInTx(tx, edit.id, { quantity: edit.quantity }, actorId);
+        editedItems.push(item);
+      }
+
       const createdItems = [] as Awaited<ReturnType<ItemService['createInTx']>>[];
       for (const itemInput of items) {
         const item = await this.itemService.createInTx(
@@ -48,13 +55,14 @@ export class BoxPackingWorkflowService {
         createdItems.push(item);
       }
 
-      return { box, items: createdItems };
+      return { box, items: createdItems, editedItems };
     }, {
       // A single pack request can create many items sequentially (box update, then N × duplicate
       // check + stock availability check + movement write + totals sync each). Prisma's default
       // transaction timeout is 5s, which the original single-item-per-request flows never
-      // approached; a large batch here plausibly could. Give it more room before failing outright.
-      timeout: 20000,
+      // approached; a large batch here plausibly could. Give it a lot of headroom before failing
+      // outright, especially under a slow/loaded DB.
+      timeout: 300_000,
     });
   }
 }

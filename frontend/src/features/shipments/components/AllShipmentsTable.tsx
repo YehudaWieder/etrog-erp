@@ -223,7 +223,7 @@ export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectSh
             emptyLabel={labels.empty}
             selectedRowKey={selectedShipmentId}
             onRowClick={onSelectShipment}
-            defaultSortState={{ key: 'shipmentNumber', direction: 'desc' }}
+            defaultSortState={{ key: 'shipmentNumber', direction: 'asc' }}
           />
 
           <GlobalLeftDetailsPanel

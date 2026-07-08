@@ -91,7 +91,7 @@ export function useAllShipmentsTable(
       headerLabel: labels.colShipmentNumber,
       sortKey: 'shipmentNumber',
       sortAccessor: (row) => row.shipmentNumber,
-      defaultSortDirection: 'desc',
+      defaultSortDirection: 'asc',
       align: 'center',
       render: (row) => <strong>{row.shipmentNumber}</strong>,
     },

@@ -211,7 +211,7 @@ export function AllBoxesTable({ lang, labels, selectedBoxIds, onSelectBox, onTog
             onRowClick={onSelectBox}
             onToggleRowSelection={onToggleBoxSelection}
             selectionColumnLabel={labels.selectRowAriaLabel}
-            defaultSortState={{ key: 'boxNumber', direction: 'desc' }}
+            defaultSortState={{ key: 'boxNumber', direction: 'asc' }}
           />
 
           <GlobalLeftDetailsPanel

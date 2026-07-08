@@ -274,6 +274,7 @@ export const SHIPMENTS_I18N_EN = {
       removeRow: 'Remove',
       rowPrefix: (index: number) => `Item ${index + 1}`,
       emptyHint: 'No items yet. Click "Add Item" to start.',
+      totalPackedQuantityLabel: 'Total packed quantity',
     },
   },
   deleteBoxDialog: {
@@ -343,6 +344,8 @@ export const SHIPMENTS_I18N_EN = {
     availableQuantityHint: (n: number) => `Available: ${n}`,
     existingQuantityHint: (n: number) => `Already in box: ${n}`,
     remainingCapacityHint: (n: number) => `Box space remaining: ${n}`,
+    editExistingItemLabel: 'Edit existing quantity',
+    cancelExistingItemEditLabel: 'Revert to original quantity',
     notesLabel: 'Notes',
     notesPlaceholder: 'Notes...',
     save: 'Add Item',
@@ -383,6 +386,8 @@ export const SHIPMENTS_I18N_EN = {
     duplicateItemError: 'An item with this combination already exists in the box',
     boxNotOpenError: 'Cannot add item — the box is not open.',
     errorBoxCapacityExceeded: 'The added quantity exceeds the box capacity.',
+    existingItemInvalidQuantityError: 'Enter a valid quantity for the edited existing item.',
+    existingItemUpdateError: 'Failed to update the existing quantity. Please try again.',
     genericError: 'An error occurred. Please try again.',
   },
   editShipmentItemModal: {

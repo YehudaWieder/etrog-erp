@@ -762,7 +762,7 @@ export class ItemService {
   async create(data: Prisma.ShipmentItemUncheckedCreateInput, actorId: number) {
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
 
-    return this.prisma.$transaction((tx) => this.createInTx(tx, data, actorId, seasonId));
+    return this.prisma.$transaction((tx) => this.createInTx(tx, data, actorId, seasonId), { timeout: 300_000 });
   }
 
   // Tx-scoped body of create(), reusable by callers that already hold an open transaction
@@ -801,6 +801,24 @@ export class ItemService {
       normalizedOwnership.traderId,
       normalizedOwnership.customerId,
     );
+
+    // A soft-deleted item with the same natural key would otherwise sit in the trash
+    // indefinitely as "restorable" even though new data now supersedes it. Purge it.
+    await tx.shipmentItem.deleteMany({
+      where: {
+        seasonId,
+        boxId: createPayload.boxId,
+        traderCategoryId: createPayload.traderCategoryId ?? null,
+        customerCategoryId: createPayload.customerCategoryId ?? null,
+        grade: (createPayload.grade as Grade | null | undefined) ?? null,
+        pitamStatus: createPayload.pitamStatus as PitamStatus,
+        ownershipType: normalizedOwnership.ownershipType,
+        traderId: normalizedOwnership.traderId,
+        customerId: normalizedOwnership.customerId,
+        isPrivateSelection: Boolean(createPayload.isPrivateSelection),
+        isDeleted: true,
+      },
+    });
 
     const newItem = await tx.shipmentItem.create({
       data: {
@@ -895,7 +913,7 @@ export class ItemService {
       await this.shipmentsService.syncBoxAndShipmentTotals(tx, item.boxId, item.shipmentId);
 
       return restored;
-    });
+    }, { timeout: 300_000 });
   }
 
   // Retrieves all items for a given box, excluding soft-deleted items, and includes related trader and customer info.
@@ -914,6 +932,22 @@ export class ItemService {
 
   // Updates an item and ensures totals are recalculated for the associated Box and Shipment.
   async update(id: number, data: Prisma.ShipmentItemUncheckedUpdateInput, actorId: number) {
+    return this.prisma.$transaction((tx) => this.updateInTx(tx, id, data, actorId), {
+      // Reverses and recreates inventory movements, checks stock/capacity, and re-syncs box/shipment
+      // totals — several sequential queries that can run well past Prisma's default 5s transaction
+      // timeout when the DB is under load. Give it a lot of headroom rather than fail outright.
+      timeout: 300_000,
+    });
+  }
+
+  // Tx-scoped body of update(), reusable by callers that already hold an open transaction
+  // (e.g. BoxPackingWorkflowService, which packs a box's edits and new items atomically).
+  async updateInTx(
+    tx: Prisma.TransactionClient,
+    id: number,
+    data: Prisma.ShipmentItemUncheckedUpdateInput,
+    actorId: number,
+  ) {
     const updatePayload = {
       ...data,
       updatedById: actorId,
@@ -921,7 +955,7 @@ export class ItemService {
 
     validateUpdateShipmentItemInput(updatePayload);
 
-    return this.prisma.$transaction(async (tx) => {
+    {
       const currentItem = await tx.shipmentItem.findFirst({
         where: { id, isDeleted: false },
         select: {
@@ -1083,7 +1117,7 @@ export class ItemService {
       }
 
       return updatedItem;
-    });
+    }
   }
 
   // Returns the maximum quantity constraints for editing a shipment item.
@@ -1256,6 +1290,6 @@ export class ItemService {
       await this.shipmentsService.syncBoxAndShipmentTotals(tx, existing.boxId, existing.shipmentId);
 
       return item;
-    });
+    }, { timeout: 300_000 });
   }
 }

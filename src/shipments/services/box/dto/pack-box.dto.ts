@@ -2,6 +2,16 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { BoxOwnership, BoxStatus, BoxType } from '@prisma/client';
 import { PackBoxItemDto } from '../../item/dto/pack-box-item.dto';
 
+// Quantity edit for an item already packed in this box. Runs in the same transaction as the box
+// update and new item creations — see BoxPackingWorkflowService.
+export class PackBoxItemEditDto {
+  @ApiProperty({ description: 'ID of the already-packed shipment item to update.', example: 501 })
+  id!: number;
+
+  @ApiProperty({ description: 'New quantity for the item.', example: 30 })
+  quantity!: number;
+}
+
 // Same box fields as UpdateBoxDto, plus the shipment items to pack into it. The box update
 // and every item creation run in a single transaction — see BoxPackingWorkflowService.
 export class PackBoxDto {
@@ -39,4 +49,7 @@ export class PackBoxDto {
 
   @ApiProperty({ type: [PackBoxItemDto], description: 'Shipment items to create in this box. May be empty for a box-only edit.' })
   items!: PackBoxItemDto[];
+
+  @ApiPropertyOptional({ type: [PackBoxItemEditDto], description: 'Quantity edits for items already packed in this box.' })
+  itemEdits?: PackBoxItemEditDto[];
 }

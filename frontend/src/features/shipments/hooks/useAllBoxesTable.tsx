@@ -148,7 +148,7 @@ export function useAllBoxesTable(
       headerLabel: labels.colBoxNumber,
       sortKey: 'boxNumber',
       sortAccessor: (row) => row.boxNumber,
-      defaultSortDirection: 'desc',
+      defaultSortDirection: 'asc',
       align: 'center',
       render: (row) => <strong>{row.boxNumber}</strong>,
     },

@@ -64,6 +64,7 @@ type PackingFormModalText = {
     removeRow: string;
     rowPrefix: (index: number) => string;
     emptyHint: string;
+    totalPackedQuantityLabel: string;
   };
 };
 
@@ -89,6 +90,8 @@ type PackingItemFieldsText = {
   quantityPlaceholder: string;
   availableQuantityHint: (n: number) => string;
   existingQuantityHint: (n: number) => string;
+  editExistingItemLabel: string;
+  cancelExistingItemEditLabel: string;
   remainingCapacityHint: (n: number) => string;
   notesLabel: string;
   notesPlaceholder: string;
@@ -137,11 +140,14 @@ type PackingFormModalProps = {
   isBoxFull: boolean;
   isBoxOverCapacity: boolean;
   draftQuantityTotal: number;
+  totalPackedQuantity: number;
   boxRemainingCapacity: number | null;
   onAddItemRow: () => void;
   onRemoveItemRow: (id: string) => void;
   onUpdateItemRow: (id: string, updater: Partial<PackingItemRowDraft>) => void;
   onUpdateItemRowQuantity: (id: string, pitamKey: PitamRowKey, gradeKey: string, value: string) => void;
+  pendingExistingItemEdits: Record<number, string>;
+  onStageExistingItemEdit: (itemId: number, value: string | null) => void;
 
   isSubmitting: boolean;
   error: string | null;
@@ -192,11 +198,14 @@ export function PackingFormModal({
   isBoxFull,
   isBoxOverCapacity,
   draftQuantityTotal,
+  totalPackedQuantity,
   boxRemainingCapacity,
   onAddItemRow,
   onRemoveItemRow,
   onUpdateItemRow,
   onUpdateItemRowQuantity,
+  pendingExistingItemEdits,
+  onStageExistingItemEdit,
   isSubmitting,
   error,
   onSave,
@@ -446,10 +455,13 @@ export function PackingFormModal({
             boxCapacityMessage={boxCapacityMessage}
             remainingCapacityMessage={remainingCapacityMessage}
             addItemDisabledHint={t.addItemDisabledHint}
+            totalPackedQuantity={totalPackedQuantity}
+            pendingExistingItemEdits={pendingExistingItemEdits}
             onAddRow={onAddItemRow}
             onRemoveRow={onRemoveItemRow}
             onUpdateRow={onUpdateItemRow}
             onUpdateRowQuantity={onUpdateItemRowQuantity}
+            onStageExistingItemEdit={onStageExistingItemEdit}
           />
         ) : null}
 

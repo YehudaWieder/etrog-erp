@@ -22,9 +22,10 @@ type ShipmentItemsSummaryProps = {
   lang: 'he' | 'en';
   labels: ShipmentItemsTableLabels;
   description: string;
+  refreshKey?: number;
 };
 
-export function ShipmentItemsSummary({ lang, labels, description }: ShipmentItemsSummaryProps) {
+export function ShipmentItemsSummary({ lang, labels, description, refreshKey }: ShipmentItemsSummaryProps) {
   const {
     filters,
     selectedSeasonId,
@@ -45,6 +46,7 @@ export function ShipmentItemsSummary({ lang, labels, description }: ShipmentItem
     'all',
     'all',
     selectedOwnership,
+    refreshKey,
   );
 
   const [traderCategoryOrder, setTraderCategoryOrder] = useState<Map<string, number>>(new Map());
