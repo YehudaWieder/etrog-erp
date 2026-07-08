@@ -162,8 +162,11 @@ export function parseHarvestClassificationRows(
     const rowNumber = index + 1;
     const filledEntries = getFilledMatrixEntries(draft.quantities);
 
+    // A row can exist purely to surface an already-saved combo's matrix for inline editing (via the
+    // pencil icon on existing cells) without adding any new quantity. Such a row has nothing to submit
+    // here, so skip it instead of blocking the form with a "quantity required" error.
     if (filledEntries.length === 0) {
-      return { ok: false, error: t.sortingRowQuantityRequired(rowNumber) };
+      continue;
     }
 
     if (draft.assignmentType === 'GENERAL' || draft.assignmentType === 'TRADER') {
@@ -268,12 +271,21 @@ export function buildExistingHarvestClassificationsPayload({
   }
 
   const availableSortingTotal = selectedHarvestSummary.totalHarvested - selectedHarvestSummary.totalRejected;
-  const maximumPartialSortingTotal = Math.max(0, availableSortingTotal - 1);
-  const expectedFullSortingTotal = availableSortingTotal - selectedHarvestSummary.classifiedTotal;
+  // Remaining room for new rows: the net harvested total minus what's already classified on this harvest
+  // (including any pending edits to existing rows the caller has folded into classifiedTotal).
+  const remainingSortingCapacity = Math.max(0, availableSortingTotal - selectedHarvestSummary.classifiedTotal);
+  const maximumPartialSortingTotal = Math.max(0, remainingSortingCapacity - 1);
+  const expectedFullSortingTotal = remainingSortingCapacity;
   const totalQuantity = parsed.items.reduce((sum, item) => sum + item.quantity, 0);
 
-  if (totalQuantity > availableSortingTotal) {
-    return { error: t.sortingTotalExceedsAvailable(availableSortingTotal) };
+  if (totalQuantity > remainingSortingCapacity) {
+    return {
+      error: t.sortingTotalExceedsAvailable(
+        remainingSortingCapacity,
+        selectedHarvestSummary.classifiedTotal,
+        availableSortingTotal,
+      ),
+    };
   }
 
   if (!isPartialClassification && totalQuantity !== expectedFullSortingTotal) {
@@ -281,7 +293,13 @@ export function buildExistingHarvestClassificationsPayload({
   }
 
   if (isPartialClassification && totalQuantity > maximumPartialSortingTotal) {
-    return { error: t.sortingTotalMustBeAtMostAvailableMinusOneForPartialSorting(maximumPartialSortingTotal) };
+    return {
+      error: t.sortingTotalMustBeAtMostAvailableMinusOneForPartialSorting(
+        maximumPartialSortingTotal,
+        selectedHarvestSummary.classifiedTotal,
+        availableSortingTotal,
+      ),
+    };
   }
 
   return {
@@ -358,7 +376,7 @@ export function buildHarvestFormSubmissionPayload({
 
   if (maxSortingQuantity !== null && currentSortingQuantitySum > maxSortingQuantity) {
     return {
-      error: t.sortingTotalExceedsAvailable(maxSortingQuantity),
+      error: t.sortingTotalExceedsAvailable(maxSortingQuantity, 0, maxSortingQuantity),
     };
   }
 
@@ -376,10 +394,11 @@ export function buildHarvestFormSubmissionPayload({
   if (
     form.isPartialClassification
     && partialSortingQuantityLimit !== null
+    && maxSortingQuantity !== null
     && currentSortingQuantitySum > partialSortingQuantityLimit
   ) {
     return {
-      error: t.sortingTotalMustBeAtMostAvailableMinusOneForPartialSorting(partialSortingQuantityLimit),
+      error: t.sortingTotalMustBeAtMostAvailableMinusOneForPartialSorting(partialSortingQuantityLimit, 0, maxSortingQuantity),
     };
   }
 

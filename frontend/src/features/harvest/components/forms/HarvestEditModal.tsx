@@ -10,6 +10,7 @@ type HarvestEditModalProps = {
   fields: Field[];
   dateGregorian: string;
   dateHebrew: string;
+  activeSeasonYearName: number | null;
   fieldId: number;
   totalHarvested: number;
   totalRejected: number;
@@ -22,6 +23,7 @@ type HarvestEditModalProps = {
   onMarkAsFullClassificationChange: (value: boolean) => void;
   isSubmitting: boolean;
   error: string;
+  onDateGregorianChange: (value: string) => void;
   onFieldIdChange: (value: number) => void;
   onTotalHarvestedChange: (value: number) => void;
   onTotalRejectedChange: (value: number) => void;
@@ -38,6 +40,7 @@ export function HarvestEditModal({
   fields,
   dateGregorian,
   dateHebrew,
+  activeSeasonYearName,
   fieldId,
   totalHarvested,
   totalRejected,
@@ -50,6 +53,7 @@ export function HarvestEditModal({
   onMarkAsFullClassificationChange,
   isSubmitting,
   error,
+  onDateGregorianChange,
   onFieldIdChange,
   onTotalHarvestedChange,
   onTotalRejectedChange,
@@ -94,9 +98,11 @@ export function HarvestEditModal({
             <span>{bf.gregorianDateLabel}</span>
             <input
               className="seasons-manager__year-input"
-              type="text"
-              disabled
+              type="date"
               value={dateGregorian}
+              min={activeSeasonYearName !== null ? `${activeSeasonYearName}-01-01` : undefined}
+              max={activeSeasonYearName !== null ? `${activeSeasonYearName}-12-31` : undefined}
+              onChange={(e) => onDateGregorianChange(e.target.value)}
             />
           </label>
           <label className={styles.summaryField}>
@@ -104,8 +110,8 @@ export function HarvestEditModal({
             <input
               className="seasons-manager__year-input"
               type="text"
-              disabled
               value={dateHebrew}
+              disabled
             />
           </label>
         </div>

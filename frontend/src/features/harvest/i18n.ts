@@ -81,9 +81,15 @@ export type HarvestI18n = {
     notesPlaceholder: string;
     notesLabel: string;
     sortingRowsTitle: string;
+    sortingTotalQuantityLabel: string;
     addSortingRow: string;
     sortingRowPrefix: (index: number) => string;
     removeSortingRow: string;
+    addRejectedQuantity: string;
+    additionalRejectedLabel: string;
+    additionalRejectedPlaceholder: string;
+    additionalRejectedNewTotalLabel: (newTotal: number) => string;
+    removeAddedRejectedQuantity: string;
     assignmentOptions: {
       general: string;
       trader: string;
@@ -118,6 +124,10 @@ export type HarvestI18n = {
     duplicateSortingRowError: string;
     existingClassificationCellBlockedHint: string;
     blockedQuantityFieldsHint: string;
+    editExistingClassificationCellLabel: string;
+    cancelExistingClassificationCellLabel: string;
+    existingClassificationCellInvalidQuantityError: string;
+    existingClassificationCellSaveError: string;
     cancel: string;
     save: string;
     saving: string;
@@ -147,10 +157,18 @@ export type HarvestI18n = {
     sortingCustomerRequired: string;
     sortingCustomerCategoryRequired: string;
     sortingPitamStatusRequired: string;
-    sortingTotalExceedsAvailable: (maxAllowed: number) => string;
+    sortingTotalExceedsAvailable: (
+      maxAllowed: number,
+      alreadyClassifiedTotal: number,
+      availableSortingTotal: number,
+    ) => string;
     sortingTotalMustMatchAvailableForFullSorting: (requiredTotal: number) => string;
     sortingTotalWithClassifiedMustMatchAvailableForFullSorting: (requiredTotal: number) => string;
-    sortingTotalMustBeAtMostAvailableMinusOneForPartialSorting: (maximumTotal: number) => string;
+    sortingTotalMustBeAtMostAvailableMinusOneForPartialSorting: (
+      maximumTotal: number,
+      alreadyClassifiedTotal: number,
+      availableSortingTotal: number,
+    ) => string;
     sortingRowRequired: string;
     addSortingRowTotalsRequiredError: string;
     addSortingRowSummaryFieldsRequiredError: string;

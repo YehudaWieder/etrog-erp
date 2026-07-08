@@ -64,6 +64,11 @@ export class HarvestBulkWorkflowService {
     // Create Classification
     const classSlug = `harvest-${params.harvestId}-tcat-${classItem.traderCategoryId ?? 0}-ccat-${classItem.customerCategoryId ?? 0}-g-${classItem.grade ?? 'NA'}-pitam-${classItem.pitamStatus}-a-${classItem.assignmentType}`;
 
+    // A previously soft-deleted classification with the same natural key would still hold this
+    // slug (unique regardless of isDeleted) and block creation. New data supersedes the trashed
+    // row, so purge it before inserting — it also becomes unrestorable at that point.
+    await tx.classification.deleteMany({ where: { slug: classSlug, isDeleted: true } });
+
     const classification = await tx.classification.create({
       data: {
         seasonId: params.seasonId,
@@ -190,13 +195,19 @@ export class HarvestBulkWorkflowService {
     const classifiedTotal = classifiedAgg._sum.quantity ?? 0;
     const totalAfterRejected = harvest.totalAfterRejected;
 
-    assertFinalClassificationConsistency(classifiedTotal, totalAfterRejected, isPartialClassification);
+    // Once classifications fully cover the net harvested quantity, the report is complete
+    // regardless of the partial flag the caller passed in (which may be stale from before this
+    // create/update/delete brought the total to an exact match).
+    const effectiveIsPartialClassification =
+      classifiedTotal >= totalAfterRejected ? false : isPartialClassification;
+
+    assertFinalClassificationConsistency(classifiedTotal, totalAfterRejected, effectiveIsPartialClassification);
 
     await tx.fieldHarvest.update({
       where: { id: harvestId },
       data: {
         classifiedTotal,
-        isPartialClassification,
+        isPartialClassification: effectiveIsPartialClassification,
       },
     });
   }
@@ -236,6 +247,76 @@ export class HarvestBulkWorkflowService {
     });
   }
 
+  // Duplicate-check + create + allocate for one new classification. Tx-scoped and reusable by any
+  // caller that already resolved the harvest and holds an open transaction (e.g. saveSortingBatch,
+  // which creates several classifications alongside edits in one transaction).
+  private async createClassificationEntryInTx(
+    tx: Prisma.TransactionClient,
+    seasonId: number,
+    harvestId: number,
+    harvestDate: Date,
+    item: ClassificationBulkItemDto,
+    updatedById: number,
+  ) {
+    const duplicateKey = buildClassificationDuplicateKey(item);
+
+    const existingClassifications = await tx.classification.findMany({
+      where: { fieldHarvestId: harvestId, isDeleted: false },
+      select: {
+        assignmentType: true,
+        traderId: true,
+        customerId: true,
+        traderCategoryId: true,
+        customerCategoryId: true,
+        grade: true,
+        pitamStatus: true,
+      },
+    });
+
+    const hasDuplicate = existingClassifications.some(
+      (classification) => buildClassificationDuplicateKey(classification) === duplicateKey,
+    );
+
+    if (hasDuplicate) {
+      throw new ConflictException('This classification combination already exists for this harvest');
+    }
+
+    const classSlug = `harvest-${harvestId}-t-${item.traderId ?? 0}-c-${item.customerId ?? 0}-tcat-${item.traderCategoryId ?? 0}-ccat-${item.customerCategoryId ?? 0}-g-${item.grade ?? 'NA'}-pitam-${item.pitamStatus}-a-${item.assignmentType}`;
+
+    // A previously soft-deleted classification with the same natural key would still hold this
+    // slug (unique regardless of isDeleted) and block creation. New data supersedes the trashed
+    // row, so purge it before inserting — it also becomes unrestorable at that point.
+    await tx.classification.deleteMany({ where: { slug: classSlug, isDeleted: true } });
+
+    const classification = await tx.classification.create({
+      data: {
+        seasonId,
+        fieldHarvestId: harvestId,
+        updatedById,
+        assignmentType: item.assignmentType,
+        traderId: item.traderId,
+        customerId: item.customerId,
+        traderCategoryId: item.traderCategoryId,
+        customerCategoryId: item.customerCategoryId,
+        grade: item.grade,
+        pitamStatus: item.pitamStatus,
+        quantity: item.quantity,
+        notes: item.notes,
+        slug: classSlug,
+      },
+    });
+
+    await this.allocationService.processAllocationsForClassification(tx, {
+      seasonId,
+      classificationId: classification.id,
+      classificationItem: this.mapToClassificationBulkItem(classification),
+      harvestDate,
+      updatedById,
+    });
+
+    return classification;
+  }
+
   private async createClassificationInTx(
     tx: Prisma.TransactionClient,
     seasonId: number,
@@ -261,56 +342,14 @@ export class HarvestBulkWorkflowService {
 
     await this.applyHarvestInlineUpdate(tx, harvestId, createPayload.harvestUpdate);
 
-    const duplicateKey = buildClassificationDuplicateKey(createPayload);
-
-    const existingClassifications = await tx.classification.findMany({
-      where: { fieldHarvestId: harvestId, isDeleted: false },
-      select: {
-        assignmentType: true,
-        traderId: true,
-        customerId: true,
-        traderCategoryId: true,
-        customerCategoryId: true,
-        grade: true,
-        pitamStatus: true,
-      },
-    });
-
-    const hasDuplicate = existingClassifications.some(
-      (classification) => buildClassificationDuplicateKey(classification) === duplicateKey,
-    );
-
-    if (hasDuplicate) {
-      throw new ConflictException('This classification combination already exists for this harvest');
-    }
-
-    const classSlug = `harvest-${harvestId}-t-${createPayload.traderId ?? 0}-c-${createPayload.customerId ?? 0}-tcat-${createPayload.traderCategoryId ?? 0}-ccat-${createPayload.customerCategoryId ?? 0}-g-${createPayload.grade ?? 'NA'}-pitam-${createPayload.pitamStatus}-a-${createPayload.assignmentType}`;
-
-    const classification = await tx.classification.create({
-      data: {
-        seasonId,
-        fieldHarvestId: harvestId,
-        updatedById: createPayload.updatedById,
-        assignmentType: createPayload.assignmentType,
-        traderId: createPayload.traderId,
-        customerId: createPayload.customerId,
-        traderCategoryId: createPayload.traderCategoryId,
-        customerCategoryId: createPayload.customerCategoryId,
-        grade: createPayload.grade,
-        pitamStatus: createPayload.pitamStatus,
-        quantity: createPayload.quantity,
-        notes: createPayload.notes,
-        slug: classSlug,
-      },
-    });
-
-    await this.allocationService.processAllocationsForClassification(tx, {
+    const classification = await this.createClassificationEntryInTx(
+      tx,
       seasonId,
-      classificationId: classification.id,
-      classificationItem: this.mapToClassificationBulkItem(classification),
-      harvestDate: harvest.dateGregorian,
-      updatedById: createPayload.updatedById,
-    });
+      harvestId,
+      harvest.dateGregorian,
+      createPayload,
+      createPayload.updatedById,
+    );
 
     await this.syncHarvestClassificationProgress(tx, harvestId, createPayload.isPartialClassification);
 
@@ -550,6 +589,131 @@ export class HarvestBulkWorkflowService {
       await this.syncHarvestClassificationProgress(tx, harvestId, updatePayload.isPartialClassification);
 
       return updatedClassification;
+    }, {
+      // This path deletes and recreates allocation movements (trader stock / customer allocation
+      // writes and availability checks), which can exceed Prisma's default 5s transaction timeout
+      // under load. Give it a lot of headroom before failing outright, especially under a
+      // slow/loaded DB.
+      timeout: 300_000,
+    });
+  }
+
+  // Quantity-only edit for an existing classification: deletes and recreates its allocation
+  // movements, but leaves assignment/category/grade/pitam untouched. Tx-scoped and reusable by
+  // any caller that already resolved the harvest and holds an open transaction (e.g.
+  // saveSortingBatch, which edits several classifications alongside creates in one transaction).
+  private async applyClassificationQuantityEditInTx(
+    tx: Prisma.TransactionClient,
+    seasonId: number,
+    harvestId: number,
+    harvestDate: Date,
+    classificationId: number,
+    newQuantity: number,
+    updatedById: number,
+  ) {
+    const oldClassification = await tx.classification.findFirst({
+      where: { id: classificationId, isDeleted: false },
+    });
+
+    if (!oldClassification) {
+      throw new NotFoundException(`Classification ${classificationId} not found`);
+    }
+
+    if (oldClassification.fieldHarvestId !== harvestId) {
+      throw new BadRequestException(
+        `Classification ${classificationId} does not belong to harvest ${harvestId}`,
+      );
+    }
+
+    if (newQuantity === oldClassification.quantity) {
+      return oldClassification;
+    }
+
+    // If quantity is being reduced, assert enough unpackaged inventory exists to absorb the decrease
+    if (newQuantity < oldClassification.quantity) {
+      const delta = oldClassification.quantity - newQuantity;
+      await this.assertInventoryCanRelease(tx, oldClassification, delta, 'Update classification quantity');
+    }
+
+    await this.allocationService.deleteLinkedMovements(tx, classificationId);
+
+    const updatedClassification = await tx.classification.update({
+      where: { id: classificationId },
+      data: { quantity: newQuantity, updatedById },
+    });
+
+    await this.allocationService.processAllocationsForClassification(tx, {
+      seasonId,
+      classificationId,
+      classificationItem: this.mapToClassificationBulkItem(updatedClassification),
+      harvestDate,
+      updatedById,
+    });
+
+    return updatedClassification;
+  }
+
+  /**
+   * Edits quantities of existing classifications and creates new ones on the same harvest, all in
+   * one transaction — either everything is saved, or nothing is. This is what the "add sorting"
+   * form's save button calls when it has both pencil-edited existing cells and new sorting rows.
+   */
+  async saveSortingBatch(
+    harvestId: number,
+    edits: { classificationId: number; quantity: number }[],
+    creates: ClassificationBulkItemDto[],
+    isPartialClassification: boolean,
+    actorId: number,
+    harvestUpdate?: HarvestInlineUpdateDto,
+  ) {
+    const { id: seasonId } = await this.seasonsService.findActiveSeason();
+
+    return this.prisma.$transaction(async (tx) => {
+      const harvest = await tx.fieldHarvest.findUnique({
+        where: { id: harvestId },
+        select: { id: true, dateGregorian: true },
+      });
+
+      if (!harvest) {
+        throw new NotFoundException(`Harvest ${harvestId} not found`);
+      }
+
+      await this.applyHarvestInlineUpdate(tx, harvestId, harvestUpdate);
+
+      for (const edit of edits) {
+        await this.applyClassificationQuantityEditInTx(
+          tx,
+          seasonId,
+          harvestId,
+          harvest.dateGregorian,
+          edit.classificationId,
+          edit.quantity,
+          actorId,
+        );
+      }
+
+      const created: Classification[] = [];
+      for (const item of creates) {
+        assertGeneralAssignmentIds(item);
+        const classification = await this.createClassificationEntryInTx(
+          tx,
+          seasonId,
+          harvestId,
+          harvest.dateGregorian,
+          item,
+          actorId,
+        );
+        created.push(classification);
+      }
+
+      await this.syncHarvestClassificationProgress(tx, harvestId, isPartialClassification);
+
+      return { editedCount: edits.length, created };
+    }, {
+      // Batches quantity edits (each deletes/recreates allocation movements) and new-classification
+      // creates in one transaction so the whole save is atomic. Can involve many sequential
+      // queries; give it a lot of headroom before failing outright.
+      timeout: 300_000,
     });
   }
 
@@ -607,6 +771,11 @@ export class HarvestBulkWorkflowService {
         await this.syncHarvestClassificationProgress(tx, harvestId, deletePayload.isPartialClassification);
 
         return deleted;
+      }, {
+        // Deletes and recreates allocation movements (trader stock / customer allocation writes
+        // and availability checks), which can exceed Prisma's default 5s transaction timeout under
+        // load. Give it a lot of headroom before failing outright, especially under a slow/loaded DB.
+        timeout: 300_000,
       });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {

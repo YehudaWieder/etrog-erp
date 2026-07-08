@@ -175,6 +175,22 @@
   margin-top: 4px;
 }
 
+.sortingTotalSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-radius: 12px;
+  background: #f1f6f2;
+  padding: 10px 14px;
+  font-weight: 700;
+  color: #214f2a;
+}
+
+.sortingTotalSummary span:last-child {
+  font-size: 1.05rem;
+}
+
 .quantityMatrix {
   overflow-x: auto;
 }
@@ -226,6 +242,51 @@
   margin: 0;
   font-size: 0.82rem;
   color: var(--color-text-muted);
+}
+
+.existingCellWrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.existingCellWrapper input {
+  text-align: center;
+  padding-inline-end: 26px;
+  -moz-appearance: textfield;
+}
+
+.existingCellWrapper input::-webkit-outer-spin-button,
+.existingCellWrapper input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.editExistingCellButton {
+  /* Spinner arrows are hidden on these inputs (see .existingCellWrapper input above), so the icon
+     can sit flush at the physical right edge of the field. */
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%) scaleX(-1);
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #1b3320;
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editExistingCellButton:hover {
+  color: #0d1f11;
 }
 
 @media (max-width: 900px) {

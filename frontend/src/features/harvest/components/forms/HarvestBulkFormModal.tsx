@@ -36,7 +36,6 @@ type HarvestBulkFormModalProps = {
   onSubmit: () => void;
   onFieldIdChange: (value: string) => void;
   onGregorianDateChange: (value: string) => void;
-  onHebrewDateChange: (value: string) => void;
   onTotalHarvestedChange: (value: string) => void;
   onTotalRejectedChange: (value: string) => void;
   onOwnerHarvestedChange: (value: string) => void;
@@ -74,7 +73,6 @@ export function HarvestBulkFormModal({
   onSubmit,
   onFieldIdChange,
   onGregorianDateChange,
-  onHebrewDateChange,
   onTotalHarvestedChange,
   onTotalRejectedChange,
   onOwnerHarvestedChange,
@@ -146,8 +144,7 @@ export function HarvestBulkFormModal({
               className="seasons-manager__year-input"
               type="text"
               value={harvestFormDateHebrew}
-              onChange={(event) => onHebrewDateChange(event.target.value)}
-              placeholder={form.hebrewDatePlaceholder}
+              disabled
               aria-label={form.hebrewDateLabel}
             />
           </label>

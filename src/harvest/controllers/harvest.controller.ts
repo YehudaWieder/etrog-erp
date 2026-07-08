@@ -30,6 +30,7 @@ import {
   FieldHarvestUpdateDto,
   HarvestBulkCreateDto,
   RestoreClassificationDto,
+  SortingBatchDto,
   UpdateHarvestClassificationDto,
   UpdateHarvestPartialClassificationDto,
 } from 'src/harvest/services/harvest-core/dto/harvest.dto';
@@ -142,6 +143,21 @@ export class HarvestController {
       updateDto.classificationId,
       updateDto,
       actor.id,
+    );
+  }
+
+  @Patch('classifications/batch')
+  @ApiOperation({ summary: 'Edit existing classifications and create new ones on a harvest in a single transaction' })
+  @ApiBody({ type: SortingBatchDto })
+  async saveSortingBatch(@Body() body: SortingBatchDto, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.harvestBulkService.saveSortingBatch(
+      body.harvestId,
+      body.edits ?? [],
+      body.creates ?? [],
+      body.isPartialClassification,
+      actor.id,
+      body.harvestUpdate,
     );
   }
 

@@ -53,8 +53,9 @@ export function buildHarvestSortingFormSubmissionPayload({
   }
 
   const availableSortingTotal = selectedHarvestSummary.totalHarvested - selectedHarvestSummary.totalRejected;
-  const maximumPartialSortingTotal = Math.max(0, availableSortingTotal - 1);
-  const expectedFullSortingTotal = availableSortingTotal - selectedHarvestSummary.classifiedTotal;
+  const remainingSortingCapacity = Math.max(0, availableSortingTotal - selectedHarvestSummary.classifiedTotal);
+  const maximumPartialSortingTotal = Math.max(0, remainingSortingCapacity - 1);
+  const expectedFullSortingTotal = remainingSortingCapacity;
 
   if (!form.pitamStatus) {
     return { error: t.sortingPitamStatusRequired };
@@ -112,9 +113,13 @@ export function buildHarvestSortingFormSubmissionPayload({
     payload.customerCategoryId = customerCategoryId;
   }
 
-  if (quantity > availableSortingTotal) {
+  if (quantity > remainingSortingCapacity) {
     return {
-      error: t.sortingTotalExceedsAvailable(availableSortingTotal),
+      error: t.sortingTotalExceedsAvailable(
+        remainingSortingCapacity,
+        selectedHarvestSummary.classifiedTotal,
+        availableSortingTotal,
+      ),
     };
   }
 
@@ -126,7 +131,11 @@ export function buildHarvestSortingFormSubmissionPayload({
 
   if (form.isPartialClassification && quantity > maximumPartialSortingTotal) {
     return {
-      error: t.sortingTotalMustBeAtMostAvailableMinusOneForPartialSorting(maximumPartialSortingTotal),
+      error: t.sortingTotalMustBeAtMostAvailableMinusOneForPartialSorting(
+        maximumPartialSortingTotal,
+        selectedHarvestSummary.classifiedTotal,
+        availableSortingTotal,
+      ),
     };
   }
 

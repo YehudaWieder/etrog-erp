@@ -116,12 +116,15 @@ export async function deleteHarvest(id: number): Promise<void> {
 
 export type UpdateHarvestPayload = {
   id: number;
+  dateGregorian?: string;
+  dateHebrew?: string;
   fieldId?: number;
   totalHarvested?: number;
   totalRejected?: number;
   ownerHarvested?: number;
   ownerRejected?: number;
   notes?: string;
+  isPartialClassification?: boolean;
 };
 
 export async function updateHarvest(payload: UpdateHarvestPayload): Promise<HarvestRecord> {

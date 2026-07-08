@@ -42,10 +42,13 @@ type HarvestSortingFormModalProps = {
   harvestSortingFormQuantity: string;
   harvestSortingFormNotes: string;
   harvestSortingFormIsPartialClassification: boolean;
+  isAddingRejectedQuantity: boolean;
+  harvestSortingFormAdditionalRejected: string;
   harvestFormTraderCategories: TraderCategoryWithShares[];
   harvestFormCustomerCategories: CustomerCategory[];
   harvestFormClassifications: HarvestFormClassificationDraft[];
   existingHarvestClassifications: ClassificationRecord[];
+  pendingExistingClassificationEdits: Record<number, string>;
   onClose: () => void;
   onSubmit: () => void;
   onHarvestIdChange: (value: string) => void;
@@ -59,10 +62,14 @@ type HarvestSortingFormModalProps = {
   onQuantityChange: (value: string) => void;
   onNotesChange: (nextNotes: string, textareaElement: HTMLTextAreaElement) => void;
   onPartialClassificationChange: (value: boolean) => void;
+  onOpenAddRejectedQuantity: () => void;
+  onAdditionalRejectedQuantityChange: (value: string) => void;
+  onRemoveAddedRejectedQuantity: () => void;
   onAddClassificationDraft: () => void;
   onRemoveClassificationDraft: (draftId: string) => void;
   onUpdateClassificationDraft: (draftId: string, updater: Partial<HarvestFormClassificationDraft>) => void;
   onUpdateClassificationDraftQuantity: (draftId: string, pitamKey: PitamRowKey, gradeKey: string, value: string) => void;
+  onStageExistingClassificationQuantity: (classificationId: number, value: string | null) => void;
 };
 
 export function HarvestSortingFormModal({
@@ -87,10 +94,13 @@ export function HarvestSortingFormModal({
   harvestSortingFormQuantity,
   harvestSortingFormNotes,
   harvestSortingFormIsPartialClassification,
+  isAddingRejectedQuantity,
+  harvestSortingFormAdditionalRejected,
   harvestFormTraderCategories,
   harvestFormCustomerCategories,
   harvestFormClassifications,
   existingHarvestClassifications,
+  pendingExistingClassificationEdits,
   onClose,
   onSubmit,
   onHarvestIdChange,
@@ -104,10 +114,14 @@ export function HarvestSortingFormModal({
   onQuantityChange,
   onNotesChange,
   onPartialClassificationChange,
+  onOpenAddRejectedQuantity,
+  onAdditionalRejectedQuantityChange,
+  onRemoveAddedRejectedQuantity,
   onAddClassificationDraft,
   onRemoveClassificationDraft,
   onUpdateClassificationDraft,
   onUpdateClassificationDraftQuantity,
+  onStageExistingClassificationQuantity,
 }: HarvestSortingFormModalProps): JSX.Element | null {
   if (!isOpen) {
     return null;
@@ -394,10 +408,17 @@ export function HarvestSortingFormModal({
             harvestFormTraderCategories={harvestFormTraderCategories}
             harvestFormCustomerCategories={harvestFormCustomerCategories}
             existingHarvestClassifications={existingHarvestClassifications}
+            pendingExistingClassificationEdits={pendingExistingClassificationEdits}
+            isAddingRejectedQuantity={isAddingRejectedQuantity}
+            additionalRejectedQuantity={harvestSortingFormAdditionalRejected}
             onAddClassificationDraft={onAddClassificationDraft}
             onRemoveClassificationDraft={onRemoveClassificationDraft}
             onUpdateClassificationDraft={onUpdateClassificationDraft}
             onUpdateClassificationDraftQuantity={onUpdateClassificationDraftQuantity}
+            onStageExistingClassificationQuantity={onStageExistingClassificationQuantity}
+            onOpenAddRejectedQuantity={onOpenAddRejectedQuantity}
+            onAdditionalRejectedQuantityChange={onAdditionalRejectedQuantityChange}
+            onRemoveAddedRejectedQuantity={onRemoveAddedRejectedQuantity}
           />
         )}
 

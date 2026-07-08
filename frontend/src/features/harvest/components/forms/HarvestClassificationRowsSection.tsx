@@ -15,6 +15,7 @@ import {
 import {
   getDisplayGradeColumns,
   getEnabledGradeColumns,
+  getMatrixTotalQuantity,
   PITAM_ROW_KEYS,
   SINGLE_GRADE_COLUMN_KEY,
   type PitamRowKey,
@@ -34,10 +35,17 @@ type HarvestClassificationRowsSectionProps = {
   harvestFormTraderCategories: TraderCategoryWithShares[];
   harvestFormCustomerCategories: CustomerCategory[];
   existingHarvestClassifications?: ClassificationRecord[];
+  pendingExistingClassificationEdits?: Record<number, string>;
+  isAddingRejectedQuantity?: boolean;
+  additionalRejectedQuantity?: string;
   onAddClassificationDraft: () => void;
   onRemoveClassificationDraft: (draftId: string) => void;
   onUpdateClassificationDraft: (draftId: string, updater: Partial<HarvestFormClassificationDraft>) => void;
   onUpdateClassificationDraftQuantity: (draftId: string, pitamKey: PitamRowKey, gradeKey: string, value: string) => void;
+  onStageExistingClassificationQuantity?: (classificationId: number, value: string | null) => void;
+  onOpenAddRejectedQuantity?: () => void;
+  onAdditionalRejectedQuantityChange?: (value: string) => void;
+  onRemoveAddedRejectedQuantity?: () => void;
 };
 
 export function HarvestClassificationRowsSection({
@@ -53,24 +61,33 @@ export function HarvestClassificationRowsSection({
   harvestFormTraderCategories,
   harvestFormCustomerCategories,
   existingHarvestClassifications = [],
+  pendingExistingClassificationEdits = {},
+  isAddingRejectedQuantity = false,
+  additionalRejectedQuantity = '',
   onAddClassificationDraft,
   onRemoveClassificationDraft,
   onUpdateClassificationDraft,
   onUpdateClassificationDraftQuantity,
+  onStageExistingClassificationQuantity,
+  onOpenAddRejectedQuantity,
+  onAdditionalRejectedQuantityChange,
+  onRemoveAddedRejectedQuantity,
 }: HarvestClassificationRowsSectionProps) {
   const [didTryAddSortingRow, setDidTryAddSortingRow] = useState(false);
+  const [unlockedCellKeys, setUnlockedCellKeys] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (isOpen) {
       setDidTryAddSortingRow(false);
+      setUnlockedCellKeys(new Set());
     }
   }, [isOpen]);
 
   // Cell-level quantities (combo + pitam status + grade) for classifications already saved on this harvest.
   // Existing records only block the exact matrix cell they occupy, not the whole category, since the
   // same category can still be sorted again under a different grade/pitam status.
-  const existingCellQuantities = useMemo(() => {
-    const quantities = new Map<string, number>();
+  const existingCellRecords = useMemo(() => {
+    const records = new Map<string, { id: number; quantity: number }>();
     for (const record of existingHarvestClassifications) {
       const comboKey = buildClassificationComboKey({
         assignmentType: record.assignmentType,
@@ -82,10 +99,25 @@ export function HarvestClassificationRowsSection({
         continue;
       }
       const gradeKey = record.grade ?? SINGLE_GRADE_COLUMN_KEY;
-      quantities.set(`${comboKey}:${record.pitamStatus}:${gradeKey}`, record.quantity);
+      records.set(`${comboKey}:${record.pitamStatus}:${gradeKey}`, { id: record.id, quantity: record.quantity });
     }
-    return quantities;
+    return records;
   }, [existingHarvestClassifications]);
+
+  // Grand total across everything the sorting form will end up saving: quantities already persisted on
+  // existing classifications (respecting any pending inline edits) plus everything staged in draft rows.
+  const totalSortingQuantity = useMemo(() => {
+    const existingTotal = existingHarvestClassifications.reduce((sum, record) => {
+      const pendingValue = pendingExistingClassificationEdits[record.id];
+      const quantity = pendingValue !== undefined ? Number(pendingValue) : record.quantity;
+      return sum + (Number.isFinite(quantity) ? quantity : 0);
+    }, 0);
+    const draftsTotal = harvestFormClassifications.reduce(
+      (sum, draft) => sum + getMatrixTotalQuantity(draft.quantities),
+      0,
+    );
+    return existingTotal + draftsTotal;
+  }, [existingHarvestClassifications, pendingExistingClassificationEdits, harvestFormClassifications]);
 
   const getDraftComboKey = (draft: HarvestFormClassificationDraft): string | null => {
     const traderName = traders.find((trader) => String(trader.id) === draft.traderId)?.name ?? null;
@@ -105,13 +137,25 @@ export function HarvestClassificationRowsSection({
 
   // Sibling drafts within this form fully block a repeated assignment+category: a second row for the
   // same category is redundant since one row's matrix already covers every grade/pitam combination.
-  const getUsedComboKeysExcludingDraftId = (excludeDraftId: string | null): Set<string> => {
+  // Identity is keyed by category ID (not name): customer categories can share a display name while
+  // representing distinct grades, and those must remain independently selectable.
+  const getDraftIdentityKey = (draft: HarvestFormClassificationDraft): string | null => {
+    if (draft.assignmentType === 'TRADER') {
+      return draft.traderId && draft.traderCategoryId ? `TRADER:${draft.traderId}:${draft.traderCategoryId}` : null;
+    }
+    if (draft.assignmentType === 'CUSTOMER') {
+      return draft.customerId && draft.customerCategoryId ? `CUSTOMER:${draft.customerId}:${draft.customerCategoryId}` : null;
+    }
+    return draft.traderCategoryId ? `GENERAL:${draft.traderCategoryId}` : null;
+  };
+
+  const getUsedIdentityKeysExcludingDraftId = (excludeDraftId: string | null): Set<string> => {
     const keys = new Set<string>();
     for (const otherDraft of harvestFormClassifications) {
       if (otherDraft.id === excludeDraftId) {
         continue;
       }
-      const key = getDraftComboKey(otherDraft);
+      const key = getDraftIdentityKey(otherDraft);
       if (key) {
         keys.add(key);
       }
@@ -120,24 +164,55 @@ export function HarvestClassificationRowsSection({
   };
 
   const isDraftComboDuplicate = (draft: HarvestFormClassificationDraft): boolean => {
-    const key = getDraftComboKey(draft);
+    const key = getDraftIdentityKey(draft);
     if (!key) {
       return false;
     }
-    return getUsedComboKeysExcludingDraftId(draft.id).has(key);
+    return getUsedIdentityKeysExcludingDraftId(draft.id).has(key);
   };
 
-  const getDraftCellExistingQuantity = (draft: HarvestFormClassificationDraft, pitamKey: PitamRowKey, gradeKey: string): number | undefined => {
+  const getDraftCellExistingRecord = (
+    draft: HarvestFormClassificationDraft,
+    pitamKey: PitamRowKey,
+    gradeKey: string,
+  ): { id: number; quantity: number } | undefined => {
     const comboKey = getDraftComboKey(draft);
     if (!comboKey) {
       return undefined;
     }
-    return existingCellQuantities.get(`${comboKey}:${pitamKey}:${gradeKey}`);
+    return existingCellRecords.get(`${comboKey}:${pitamKey}:${gradeKey}`);
   };
 
   const isDraftCellAlreadyExisting = (draft: HarvestFormClassificationDraft, pitamKey: PitamRowKey, gradeKey: string): boolean => {
-    return getDraftCellExistingQuantity(draft, pitamKey, gradeKey) !== undefined;
+    return getDraftCellExistingRecord(draft, pitamKey, gradeKey) !== undefined;
   };
+
+  const handleUnlockCellForEdit = (cellKey: string) => {
+    setUnlockedCellKeys((prev) => {
+      const next = new Set(prev);
+      next.add(cellKey);
+      return next;
+    });
+  };
+
+  const handleRevertCellEdit = (cellKey: string, classificationId: number) => {
+    setUnlockedCellKeys((prev) => {
+      if (!prev.has(cellKey)) {
+        return prev;
+      }
+      const next = new Set(prev);
+      next.delete(cellKey);
+      return next;
+    });
+    onStageExistingClassificationQuantity?.(classificationId, null);
+  };
+
+  const parsedAdditionalRejectedQuantity = (() => {
+    const parsed = Number(additionalRejectedQuantity);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+  })();
+  const parsedTotalRejected = Number(totalRejected);
+  const baseTotalRejected = (Number.isFinite(parsedTotalRejected) ? parsedTotalRejected : 0) - parsedAdditionalRejectedQuantity;
 
   const lastSortingRowDraft = harvestFormClassifications[harvestFormClassifications.length - 1] ?? null;
   const areTotalsFilled = areHarvestSortingTotalsFilled({ totalHarvested, totalRejected });
@@ -200,9 +275,16 @@ export function HarvestClassificationRowsSection({
       <div className={styles.classificationsHeader}>
         <h4>{form.sortingRowsTitle}</h4>
         {!harvestFormClassifications.length ? (
-          <button type="button" className="btn btn-primary" onClick={handleAddSortingRowClick}>
-            {form.addSortingRow}
-          </button>
+          <div className={styles.classificationActions}>
+            <button type="button" className="btn btn-primary" onClick={handleAddSortingRowClick}>
+              {form.addSortingRow}
+            </button>
+            {!isAddingRejectedQuantity && onOpenAddRejectedQuantity ? (
+              <button type="button" className="btn btn-primary" onClick={onOpenAddRejectedQuantity}>
+                {form.addRejectedQuantity}
+              </button>
+            ) : null}
+          </div>
         ) : null}
       </div>
 
@@ -232,33 +314,27 @@ export function HarvestClassificationRowsSection({
               ? 'max-reached'
               : null;
 
-        const usedComboKeysForDraft = getUsedComboKeysExcludingDraftId(draft.id);
-        const traderNameForDraft = traders.find((trader) => String(trader.id) === draft.traderId)?.name ?? null;
-        const customerNameForDraft =
-          customers.find((customer) => String(customer.id) === draft.customerId)?.customerName ?? null;
+        const usedIdentityKeysForDraft = getUsedIdentityKeysExcludingDraftId(draft.id);
 
         const selectableTraderCategories = harvestFormTraderCategories.filter((category) => {
           if (String(category.id) === draft.traderCategoryId) {
             return true;
           }
-          const key = buildClassificationComboKey({
-            assignmentType: draft.assignmentType,
-            traderName: traderNameForDraft,
-            categoryName: category.name,
-          });
-          return !key || !usedComboKeysForDraft.has(key);
+          const key =
+            draft.assignmentType === 'TRADER'
+              ? draft.traderId
+                ? `TRADER:${draft.traderId}:${category.id}`
+                : null
+              : `GENERAL:${category.id}`;
+          return !key || !usedIdentityKeysForDraft.has(key);
         });
 
         const selectableCustomerCategories = availableCustomerCategories.filter((category) => {
           if (String(category.id) === draft.customerCategoryId) {
             return true;
           }
-          const key = buildClassificationComboKey({
-            assignmentType: 'CUSTOMER',
-            customerName: customerNameForDraft,
-            categoryName: category.name,
-          });
-          return !key || !usedComboKeysForDraft.has(key);
+          const key = draft.customerId ? `CUSTOMER:${draft.customerId}:${category.id}` : null;
+          return !key || !usedIdentityKeysForDraft.has(key);
         });
 
         return (
@@ -384,23 +460,58 @@ export function HarvestClassificationRowsSection({
                     <tr key={`harvest-form-pitam-row-${draft.id}-${pitamKey}`}>
                       <th>{form.pitamOptions[pitamKey === 'WITH_PITAM' ? 'withPitam' : pitamKey === 'WITHOUT_PITAM' ? 'withoutPitam' : 'mixed']}</th>
                       {displayGradeColumns.map((gradeKey) => {
-                        const existingQuantity = getDraftCellExistingQuantity(draft, pitamKey, gradeKey);
-                        const isCellAlreadyExisting = existingQuantity !== undefined;
+                        const existingRecord = getDraftCellExistingRecord(draft, pitamKey, gradeKey);
+                        const isCellAlreadyExisting = existingRecord !== undefined;
+                        const cellKey = `${draft.id}:${pitamKey}:${gradeKey}`;
+                        const isCellUnlocked = isCellAlreadyExisting && unlockedCellKeys.has(cellKey);
+                        const pendingValue = existingRecord ? pendingExistingClassificationEdits[existingRecord.id] : undefined;
                         return (
                           <td key={`harvest-form-quantity-cell-${draft.id}-${pitamKey}-${gradeKey}`}>
-                            <input
-                              className="seasons-manager__year-input"
-                              type="number"
-                              min="0"
-                              disabled={!enabledGradeColumns.includes(gradeKey) || isCellAlreadyExisting}
-                              value={isCellAlreadyExisting ? existingQuantity : draft.quantities[pitamKey][gradeKey] ?? ''}
-                              readOnly={isCellAlreadyExisting}
-                              onChange={(event) =>
-                                onUpdateClassificationDraftQuantity(draft.id, pitamKey, gradeKey, event.target.value)
-                              }
-                              placeholder={form.quantityPlaceholder}
-                              title={isCellAlreadyExisting ? form.existingClassificationCellBlockedHint : undefined}
-                            />
+                            <div className={styles.existingCellWrapper}>
+                              <input
+                                className="seasons-manager__year-input"
+                                type="number"
+                                min="0"
+                                disabled={!enabledGradeColumns.includes(gradeKey) || (isCellAlreadyExisting && !isCellUnlocked)}
+                                value={
+                                  isCellAlreadyExisting
+                                    ? pendingValue ?? existingRecord.quantity
+                                    : draft.quantities[pitamKey][gradeKey] ?? ''
+                                }
+                                readOnly={isCellAlreadyExisting && !isCellUnlocked}
+                                onChange={(event) => {
+                                  if (isCellUnlocked && existingRecord) {
+                                    onStageExistingClassificationQuantity?.(existingRecord.id, event.target.value);
+                                    return;
+                                  }
+                                  onUpdateClassificationDraftQuantity(draft.id, pitamKey, gradeKey, event.target.value);
+                                }}
+                                placeholder={form.quantityPlaceholder}
+                                title={isCellAlreadyExisting && !isCellUnlocked ? form.existingClassificationCellBlockedHint : undefined}
+                              />
+                              {isCellAlreadyExisting && !isCellUnlocked && onStageExistingClassificationQuantity ? (
+                                <button
+                                  type="button"
+                                  className={styles.editExistingCellButton}
+                                  onClick={() => handleUnlockCellForEdit(cellKey)}
+                                  aria-label={form.editExistingClassificationCellLabel}
+                                  title={form.editExistingClassificationCellLabel}
+                                >
+                                  ✎
+                                </button>
+                              ) : null}
+                              {isCellUnlocked && existingRecord ? (
+                                <button
+                                  type="button"
+                                  className={styles.editExistingCellButton}
+                                  onClick={() => handleRevertCellEdit(cellKey, existingRecord.id)}
+                                  aria-label={form.cancelExistingClassificationCellLabel}
+                                  title={form.cancelExistingClassificationCellLabel}
+                                >
+                                  ×
+                                </button>
+                              ) : null}
+                            </div>
                           </td>
                         );
                       })}
@@ -441,6 +552,11 @@ export function HarvestClassificationRowsSection({
                     {form.addSortingRow}
                   </button>
                 ) : null}
+                {isLastSortingRow && !isAddingRejectedQuantity && onOpenAddRejectedQuantity ? (
+                  <button type="button" className="btn btn-primary" onClick={onOpenAddRejectedQuantity}>
+                    {form.addRejectedQuantity}
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="btn btn-danger"
@@ -459,6 +575,44 @@ export function HarvestClassificationRowsSection({
           </div>
         );
       })}
+
+      {isAddingRejectedQuantity ? (
+        <div className={styles.classificationRow}>
+          <div className={`management-form-grid ${styles.grid} ${styles.classificationGrid}`}>
+            <label className={styles.summaryField}>
+              <span>{form.additionalRejectedLabel}</span>
+              <input
+                className="seasons-manager__year-input harvest-bulk-form-number-input"
+                type="number"
+                min="0"
+                value={additionalRejectedQuantity}
+                onChange={(event) => onAdditionalRejectedQuantityChange?.(event.target.value)}
+                placeholder={form.additionalRejectedPlaceholder}
+                aria-label={form.additionalRejectedLabel}
+              />
+            </label>
+
+            <div className={styles.classificationActions}>
+              <button type="button" className="btn btn-danger" onClick={onRemoveAddedRejectedQuantity}>
+                {form.removeAddedRejectedQuantity}
+              </button>
+            </div>
+          </div>
+
+          {parsedAdditionalRejectedQuantity > 0 ? (
+            <p className={styles.quantityMatrixHint}>
+              {form.additionalRejectedNewTotalLabel(baseTotalRejected + parsedAdditionalRejectedQuantity)}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {harvestFormClassifications.length || existingHarvestClassifications.length ? (
+        <div className={styles.sortingTotalSummary}>
+          <span>{form.sortingTotalQuantityLabel}</span>
+          <span>{totalSortingQuantity}</span>
+        </div>
+      ) : null}
 
       {!harvestFormClassifications.length && didTryAddSortingRow && addSortingBlockReason ? (
         <p className={`seasons-manager__error ${styles.classificationAddError}`}>

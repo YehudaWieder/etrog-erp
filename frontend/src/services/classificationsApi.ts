@@ -161,3 +161,44 @@ export async function permanentDeleteHarvestClassification(classificationId: num
     method: 'DELETE',
   });
 }
+
+export type HarvestSortingBatchEdit = {
+  classificationId: number;
+  quantity: number;
+};
+
+export type HarvestSortingBatchCreateItem = {
+  assignmentType: 'GENERAL' | 'TRADER' | 'CUSTOMER';
+  traderId?: number;
+  customerId?: number;
+  traderCategoryId?: number;
+  customerCategoryId?: number;
+  grade?: string;
+  pitamStatus: 'WITH_PITAM' | 'WITHOUT_PITAM' | 'MIXED';
+  quantity: number;
+  notes?: string;
+};
+
+export type HarvestSortingBatchHarvestUpdate = {
+  totalHarvested?: number;
+  totalRejected?: number;
+  ownerHarvested?: number;
+  ownerRejected?: number;
+  notes?: string;
+};
+
+// Edits existing classifications, creates new ones, and optionally applies an inline harvest field
+// change (e.g. added rejected quantity) — all on the same harvest, in a single backend transaction.
+// Either everything is saved, or nothing is.
+export async function saveHarvestSortingBatch(payload: {
+  harvestId: number;
+  isPartialClassification: boolean;
+  edits: HarvestSortingBatchEdit[];
+  creates: HarvestSortingBatchCreateItem[];
+  harvestUpdate?: HarvestSortingBatchHarvestUpdate;
+}): Promise<{ editedCount: number; created: ClassificationRecord[] }> {
+  return apiClient<{ editedCount: number; created: ClassificationRecord[] }>('/harvests/classifications/batch', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}

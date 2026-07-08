@@ -1,11 +1,13 @@
 import { useCallback, useMemo } from 'react';
 import {
-  createHarvestClassification,
   restoreHarvestClassification,
+  saveHarvestSortingBatch,
   getClassificationDailySummaryBySeason,
+  getClassificationsBySeason,
+  type ClassificationListRecord,
 } from '../../../../services/classificationsApi';
 import { getHarvestFieldTotalsBySeason, getHarvestsBySeason, type HarvestRecord } from '../../../../services/harvestsApi';
-import type { ClassificationDailySummaryCategory, ClassificationDailySummaryRow } from '../../../../services/classificationsApi';
+import type { ClassificationDailySummaryCategory, ClassificationDailySummaryRow, ClassificationRecord } from '../../../../services/classificationsApi';
 import type { TraderCategoryWithShares } from '../../../../services/traderCategoriesApi';
 import type { HarvestFieldReportRow, HarvestFormClassificationDraft } from '../../harvestPage.types';
 import type { HarvestI18n } from '../../i18n';
@@ -37,6 +39,10 @@ type UseHarvestSortingFormSubmissionParams = {
     isPartialClassification: boolean;
   };
   harvestFormClassifications: HarvestFormClassificationDraft[];
+  existingHarvestClassifications: ClassificationRecord[];
+  pendingExistingClassificationEdits: Record<number, string>;
+  setPendingExistingClassificationEdits: (value: Record<number, string>) => void;
+  additionalRejectedQuantity?: number;
   setIsSubmittingHarvestSortingForm: (value: boolean) => void;
   setHarvestSortingFormError: (value: string) => void;
   setIsHarvestSortingFormOpen: (value: boolean) => void;
@@ -45,6 +51,7 @@ type UseHarvestSortingFormSubmissionParams = {
   setSortingDailyRows: (rows: ClassificationDailySummaryRow[]) => void;
   setSortingDailyCategories: (rows: ClassificationDailySummaryCategory[]) => void;
   setSortingDailyLoadError: (value: string) => void;
+  setSortingListRows?: (rows: ClassificationListRecord[]) => void;
   deletedClassificationId?: number;
   onRestoreSuccess?: (restoredId: number) => void;
   traderCategories?: TraderCategoryWithShares[];
@@ -57,6 +64,10 @@ export function useHarvestSortingFormSubmission({
   selectedHarvestSummary,
   form,
   harvestFormClassifications,
+  existingHarvestClassifications,
+  pendingExistingClassificationEdits,
+  setPendingExistingClassificationEdits,
+  additionalRejectedQuantity = 0,
   setIsSubmittingHarvestSortingForm,
   setHarvestSortingFormError,
   setIsHarvestSortingFormOpen,
@@ -65,6 +76,7 @@ export function useHarvestSortingFormSubmission({
   setSortingDailyRows,
   setSortingDailyCategories,
   setSortingDailyLoadError,
+  setSortingListRows,
   deletedClassificationId,
   onRestoreSuccess,
   traderCategories = [],
@@ -81,13 +93,17 @@ export function useHarvestSortingFormSubmission({
       return;
     }
 
-    const [records, fieldTotals, sortingSummary] = await Promise.all([
+    const [records, fieldTotals, sortingSummary, sortingListRows] = await Promise.all([
       getHarvestsBySeason(seasonFilterId),
       getHarvestFieldTotalsBySeason(seasonFilterId),
       getClassificationDailySummaryBySeason(seasonFilterId),
+      setSortingListRows ? getClassificationsBySeason(seasonFilterId) : Promise.resolve(null),
     ]);
 
     setHarvestRows(records);
+    if (sortingListRows) {
+      setSortingListRows?.(sortingListRows);
+    }
     setFieldReportRows(
       fieldTotals.map((row) => ({
         id: row.fieldId,
@@ -120,6 +136,7 @@ export function useHarvestSortingFormSubmission({
     setSortingDailyCategories,
     setSortingDailyLoadError,
     setSortingDailyRows,
+    setSortingListRows,
     traderCategoryOrder,
   ]);
 
@@ -144,11 +161,30 @@ export function useHarvestSortingFormSubmission({
         await restoreHarvestClassification({ ...submission.payload, deletedClassificationId });
         onRestoreSuccess?.(deletedClassificationId);
       } else {
+        const pendingEditEntries = Object.entries(pendingExistingClassificationEdits);
+        const classificationsById = new Map(existingHarvestClassifications.map((record) => [record.id, record]));
+
+        const edits: { classificationId: number; quantity: number }[] = [];
+        let classifiedTotalAdjustment = 0;
+        for (const [classificationIdStr, rawValue] of pendingEditEntries) {
+          const classificationId = Number(classificationIdStr);
+          const quantity = Number(rawValue);
+          if (!Number.isFinite(quantity) || quantity < 0) {
+            setHarvestSortingFormError(t.bulkForm.existingClassificationCellInvalidQuantityError);
+            return false;
+          }
+          const oldQuantity = classificationsById.get(classificationId)?.quantity ?? 0;
+          classifiedTotalAdjustment += quantity - oldQuantity;
+          edits.push({ classificationId, quantity });
+        }
+
         const submission = buildExistingHarvestClassificationsPayload({
           t: t.formSubmission,
           harvestId: form.harvestId,
           isPartialClassification: form.isPartialClassification,
-          selectedHarvestSummary,
+          selectedHarvestSummary: selectedHarvestSummary
+            ? { ...selectedHarvestSummary, classifiedTotal: selectedHarvestSummary.classifiedTotal + classifiedTotalAdjustment }
+            : null,
           classifications: harvestFormClassifications,
         });
 
@@ -157,9 +193,31 @@ export function useHarvestSortingFormSubmission({
           return false;
         }
 
-        for (const payload of submission.payloads) {
-          await createHarvestClassification(payload);
+        const parsedHarvestId = Number(form.harvestId);
+
+        // Edits to existing classifications, creation of new ones, and an added-rejected-quantity
+        // harvest update (if any) are all sent together so the backend can apply everything inside
+        // a single transaction — either everything lands, or nothing does.
+        try {
+          await saveHarvestSortingBatch({
+            harvestId: parsedHarvestId,
+            isPartialClassification: form.isPartialClassification,
+            edits,
+            creates: submission.payloads.map(({ harvestId: _harvestId, isPartialClassification: _isPartial, ...item }) => item),
+            harvestUpdate: additionalRejectedQuantity > 0 && selectedHarvestSummary
+              ? { totalRejected: selectedHarvestSummary.totalRejected }
+              : undefined,
+          });
+        } catch (error) {
+          if (error instanceof Error && error.message.trim()) {
+            setHarvestSortingFormError(translateHarvestApiError(error.message, t.formSubmission));
+          } else {
+            setHarvestSortingFormError(t.bulkForm.existingClassificationCellSaveError);
+          }
+          return false;
         }
+
+        setPendingExistingClassificationEdits({});
       }
       await refreshHarvestWorkspaceData();
       setIsHarvestSortingFormOpen(false);
@@ -175,17 +233,22 @@ export function useHarvestSortingFormSubmission({
       setIsSubmittingHarvestSortingForm(false);
     }
   }, [
+    additionalRejectedQuantity,
     deletedClassificationId,
+    existingHarvestClassifications,
     form,
     harvestFormClassifications,
     lang,
     onRestoreSuccess,
+    pendingExistingClassificationEdits,
     refreshHarvestWorkspaceData,
     seasonFilterId,
     selectedHarvestSummary,
     setHarvestSortingFormError,
     setIsHarvestSortingFormOpen,
     setIsSubmittingHarvestSortingForm,
+    setPendingExistingClassificationEdits,
+    t.bulkForm,
     t.formSubmission,
   ]);
 

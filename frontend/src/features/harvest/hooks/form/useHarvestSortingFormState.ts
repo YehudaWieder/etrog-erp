@@ -16,6 +16,8 @@ export function useHarvestSortingFormState() {
   const [harvestSortingFormQuantity, setHarvestSortingFormQuantity] = useState('');
   const [harvestSortingFormNotes, setHarvestSortingFormNotes] = useState('');
   const [harvestSortingFormIsPartialClassification, setHarvestSortingFormIsPartialClassification] = useState(false);
+  const [isAddingRejectedQuantity, setIsAddingRejectedQuantity] = useState(false);
+  const [harvestSortingFormAdditionalRejected, setHarvestSortingFormAdditionalRejected] = useState('');
 
   const resetHarvestSortingForm = (initialHarvestId: number | null = null) => {
     const nextHarvestId = initialHarvestId !== null ? String(initialHarvestId) : '';
@@ -32,6 +34,17 @@ export function useHarvestSortingFormState() {
     setHarvestSortingFormQuantity('');
     setHarvestSortingFormNotes('');
     setHarvestSortingFormIsPartialClassification(false);
+    setIsAddingRejectedQuantity(false);
+    setHarvestSortingFormAdditionalRejected('');
+  };
+
+  const openAddRejectedQuantity = () => {
+    setIsAddingRejectedQuantity(true);
+  };
+
+  const removeAddedRejectedQuantity = () => {
+    setIsAddingRejectedQuantity(false);
+    setHarvestSortingFormAdditionalRejected('');
   };
 
   const openHarvestSortingGlobalForm = (initialHarvestId: number | null = null) => {
@@ -124,6 +137,11 @@ export function useHarvestSortingFormState() {
     handleHarvestSortingNotesChange,
     harvestSortingFormIsPartialClassification,
     setHarvestSortingFormIsPartialClassification,
+    isAddingRejectedQuantity,
+    harvestSortingFormAdditionalRejected,
+    setHarvestSortingFormAdditionalRejected,
+    openAddRejectedQuantity,
+    removeAddedRejectedQuantity,
     openHarvestSortingGlobalForm,
     closeHarvestSortingGlobalForm,
     prefillSortingFormForRestore,

@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import {
+  ClassificationBulkItemDto,
   CreateHarvestClassificationDto,
   DeleteHarvestClassificationDto,
   HarvestBulkCreateDto,
+  HarvestInlineUpdateDto,
+  SortingBatchEditDto,
   UpdateHarvestClassificationDto,
 } from 'src/harvest/services/harvest-core/dto/harvest.dto';
 import { HarvestBulkWorkflowService } from 'src/harvest/services/workflows/harvest-bulk-workflow.service';
@@ -52,5 +55,16 @@ export class HarvestBulkService {
 
   permanentDeleteClassification(classificationId: number) {
     return this.workflow.permanentDeleteClassification(classificationId);
+  }
+
+  saveSortingBatch(
+    harvestId: number,
+    edits: SortingBatchEditDto[],
+    creates: ClassificationBulkItemDto[],
+    isPartialClassification: boolean,
+    actorId: number,
+    harvestUpdate?: HarvestInlineUpdateDto,
+  ) {
+    return this.workflow.saveSortingBatch(harvestId, edits, creates, isPartialClassification, actorId, harvestUpdate);
   }
 }

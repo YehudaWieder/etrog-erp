@@ -31,6 +31,12 @@ export class FieldHarvestUpdateDto {
   @ApiProperty({ example: 1 })
   id!: number;
 
+  @ApiPropertyOptional({ format: 'date-time', example: '2026-10-05T06:00:00.000Z' })
+  dateGregorian?: string;
+
+  @ApiPropertyOptional({ example: 'י"ב תשרי תשפ"ז' })
+  dateHebrew?: string;
+
   @ApiPropertyOptional({ example: 2 })
   fieldId?: number;
 
@@ -48,6 +54,9 @@ export class FieldHarvestUpdateDto {
 
   @ApiPropertyOptional({ example: 'Updated after quality review' })
   notes?: string;
+
+  @ApiPropertyOptional({ example: false, description: 'Explicitly confirm the new partial/final classification mode when this update makes net harvested quantity exactly equal to the already classified total.' })
+  isPartialClassification?: boolean;
 }
 
 export class ClassificationBulkItemDto {
@@ -167,6 +176,31 @@ export class DeleteHarvestClassificationDto {
   isPartialClassification!: boolean;
 
   @ApiPropertyOptional({ type: HarvestInlineUpdateDto })
+  harvestUpdate?: HarvestInlineUpdateDto;
+}
+
+export class SortingBatchEditDto {
+  @ApiProperty({ example: 5, description: 'ID of the already-existing classification to update.' })
+  classificationId!: number;
+
+  @ApiProperty({ example: 30 })
+  quantity!: number;
+}
+
+export class SortingBatchDto {
+  @ApiProperty({ example: 1 })
+  harvestId!: number;
+
+  @ApiProperty({ example: true })
+  isPartialClassification!: boolean;
+
+  @ApiPropertyOptional({ type: [SortingBatchEditDto], description: 'Quantity edits for classifications already on this harvest.' })
+  edits?: SortingBatchEditDto[];
+
+  @ApiPropertyOptional({ type: [ClassificationBulkItemDto], description: 'New classifications to create on this harvest.' })
+  creates?: ClassificationBulkItemDto[];
+
+  @ApiPropertyOptional({ type: HarvestInlineUpdateDto, description: 'Inline harvest field changes (e.g. added rejected quantity) applied in the same transaction.' })
   harvestUpdate?: HarvestInlineUpdateDto;
 }
 

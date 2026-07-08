@@ -110,14 +110,19 @@ export class HarvestCommandService {
     const newTotalAfterRejected = Math.max(totalHarvested - totalRejected, 0);
     const currentClassifiedTotal = Number(current.classifiedTotal) || 0;
 
-    assertHarvestNetVsClassified(currentClassifiedTotal, newTotalAfterRejected, current.isPartialClassification);
+    // Whatever the caller asks for this update takes precedence over the stale pre-edit flag —
+    // otherwise a request that both shrinks net-vs-classified to an exact match and confirms
+    // "mark as full classification" in the same call would still be rejected based on the old flag.
+    const requestedIsPartialClassification = data.isPartialClassification ?? current.isPartialClassification;
+
+    assertHarvestNetVsClassified(currentClassifiedTotal, newTotalAfterRejected, requestedIsPartialClassification);
 
     const effectiveIsPartialClassification =
       !current.isPartialClassification &&
       currentClassifiedTotal > 0 &&
       newTotalAfterRejected > currentClassifiedTotal
         ? true
-        : mergedData.isPartialClassification;
+        : requestedIsPartialClassification;
 
     const rates = calculateHarvestFields({
       totalHarvested,
@@ -128,6 +133,28 @@ export class HarvestCommandService {
       isPartialClassification: effectiveIsPartialClassification,
     });
 
+    let dateUpdate: { dateGregorian?: Date; dateHebrew?: string; slug?: string } = {};
+    if (data.dateGregorian !== undefined) {
+      const season = await this.harvestRepository.findSeasonName(current.seasonId);
+      const harvestYear = new Date(data.dateGregorian).getFullYear();
+      if (season && harvestYear !== season.yearName) {
+        throw new BadRequestException(
+          `Harvest date year (${harvestYear}) does not match the season year (${season.yearName})`,
+        );
+      }
+
+      const dateStr = new Date(data.dateGregorian).toISOString().split('T')[0];
+      const slug = `${dateStr}-f${mergedData.fieldId}-s${current.seasonId}`;
+      if (slug !== current.slug) {
+        const existing = await this.harvestRepository.findBySlug(slug);
+        if (existing && existing.id !== id) {
+          throw new ConflictException('A report for this field and date already exists');
+        }
+      }
+
+      dateUpdate = { dateGregorian: new Date(data.dateGregorian), dateHebrew: data.dateHebrew ?? current.dateHebrew, slug };
+    }
+
     return this.harvestRepository.update(id, {
       ...data,
       updatedById: actorId,
@@ -136,6 +163,7 @@ export class HarvestCommandService {
       ownerHarvested: normalizedOwners.ownerHarvested,
       ownerRejected: normalizedOwners.ownerRejected,
       ...rates,
+      ...dateUpdate,
     });
   }
 

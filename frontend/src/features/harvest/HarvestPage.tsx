@@ -14,7 +14,6 @@ import {
   type HarvestRecord,
   deleteHarvest,
   updateHarvest,
-  updateHarvestPartialClassification,
 } from '../../services/harvestsApi';
 import {
   type ClassificationListRecord,
@@ -84,6 +83,7 @@ import {
   resolveSortingCategoryOwnerToken,
   resolveSortingCategoryOwnerType,
   canAttachSortingToHarvest,
+  formatHebrewDateFromGregorianInput,
 } from './utils/harvestPage.utils';
 
 const EMPTY_FILTERS: Record<string, string> = {};
@@ -157,6 +157,8 @@ export function HarvestPage() {
   const [isEditHarvestDialogOpen, setIsEditHarvestDialogOpen] = useState(false);
   const [isEditingHarvest, setIsEditingHarvest] = useState(false);
   const [editHarvestError, setEditHarvestError] = useState('');
+  const [editHarvestDateGregorian, setEditHarvestDateGregorian] = useState('');
+  const [editHarvestDateHebrew, setEditHarvestDateHebrew] = useState('');
   const [editHarvestFieldId, setEditHarvestFieldId] = useState(0);
   const [editHarvestTotalHarvested, setEditHarvestTotalHarvested] = useState(0);
   const [editHarvestTotalRejected, setEditHarvestTotalRejected] = useState(0);
@@ -319,15 +321,23 @@ export function HarvestPage() {
     handleHarvestSortingNotesChange,
     harvestSortingFormIsPartialClassification,
     setHarvestSortingFormIsPartialClassification,
+    isAddingRejectedQuantity,
+    harvestSortingFormAdditionalRejected,
+    setHarvestSortingFormAdditionalRejected,
+    openAddRejectedQuantity,
+    removeAddedRejectedQuantity,
     openHarvestSortingGlobalForm,
     closeHarvestSortingGlobalForm,
     prefillSortingFormForRestore,
   } = useHarvestSortingFormState();
 
   const [harvestSortingFormExistingClassifications, setHarvestSortingFormExistingClassifications] = useState<ClassificationRecord[]>([]);
+  const [pendingExistingClassificationEdits, setPendingExistingClassificationEdits] = useState<Record<number, string>>({});
 
   useEffect(() => {
     const selectedHarvestId = Number(harvestSortingFormHarvestId);
+
+    setPendingExistingClassificationEdits({});
 
     if (!isHarvestSortingFormOpen || isRestoreSortingMode || !Number.isFinite(selectedHarvestId) || selectedHarvestId <= 0) {
       setHarvestSortingFormExistingClassifications([]);
@@ -352,6 +362,20 @@ export function HarvestPage() {
       isMounted = false;
     };
   }, [harvestSortingFormHarvestId, isHarvestSortingFormOpen, isRestoreSortingMode]);
+
+  const handleStageExistingClassificationQuantity = (classificationId: number, value: string | null) => {
+    setPendingExistingClassificationEdits((prev) => {
+      if (value === null) {
+        if (!(classificationId in prev)) {
+          return prev;
+        }
+        const next = { ...prev };
+        delete next[classificationId];
+        return next;
+      }
+      return { ...prev, [classificationId]: value };
+    });
+  };
 
   const sortingAssignmentFilter = useMemo<SortingAssignmentFilter>(() => {
     return parseSortingAssignmentFilter(globalFilterValues.sortingAssignmentType ?? 'all');
@@ -595,6 +619,11 @@ export function HarvestPage() {
     }
   }, [dispatch, globalFilterValues.sortingAssignmentType, isSortingDailyDetailsTab, isSortingListTab, sortingAssignmentFilterOptions]);
 
+  const harvestSortingFormAdditionalRejectedAmount = useMemo(() => {
+    const parsed = Number(harvestSortingFormAdditionalRejected);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+  }, [harvestSortingFormAdditionalRejected]);
+
   const selectedHarvestSummaryTotals = useMemo(() => {
     if (isRestoreSortingMode && restoreHarvestSummary) {
       return {
@@ -616,10 +645,16 @@ export function HarvestPage() {
 
     return {
       totalHarvested: selectedHarvest.totalHarvested,
-      totalRejected: selectedHarvest.totalRejected,
+      totalRejected: selectedHarvest.totalRejected + harvestSortingFormAdditionalRejectedAmount,
       classifiedTotal: selectedHarvest.classifiedTotal,
     };
-  }, [isRestoreSortingMode, restoreHarvestSummary, harvestRows, harvestSortingFormHarvestId]);
+  }, [
+    isRestoreSortingMode,
+    restoreHarvestSummary,
+    harvestRows,
+    harvestSortingFormHarvestId,
+    harvestSortingFormAdditionalRejectedAmount,
+  ]);
 
   const { handleSubmitHarvestGlobalForm } = useHarvestFormSubmission({
     lang,
@@ -668,6 +703,10 @@ export function HarvestPage() {
       isPartialClassification: harvestSortingFormIsPartialClassification,
     },
     harvestFormClassifications,
+    existingHarvestClassifications: harvestSortingFormExistingClassifications,
+    pendingExistingClassificationEdits,
+    setPendingExistingClassificationEdits,
+    additionalRejectedQuantity: harvestSortingFormAdditionalRejectedAmount,
     setIsSubmittingHarvestSortingForm,
     setHarvestSortingFormError,
     setIsHarvestSortingFormOpen,
@@ -676,6 +715,7 @@ export function HarvestPage() {
     setSortingDailyRows,
     setSortingDailyCategories,
     setSortingDailyLoadError,
+    setSortingListRows,
     traderCategories: harvestFormTraderCategories,
     deletedClassificationId: isRestoreSortingMode ? (selectedDeletedSortingListRow?.id ?? undefined) : undefined,
     onRestoreSuccess: (restoredId) => {
@@ -801,16 +841,24 @@ export function HarvestPage() {
       return null;
     }
 
+    const effectiveTotalRejected = selectedHarvest.totalRejected + harvestSortingFormAdditionalRejectedAmount;
+
     return {
       totalHarvestedValue: selectedHarvest.totalHarvested,
-      totalRejectedValue: selectedHarvest.totalRejected,
+      totalRejectedValue: effectiveTotalRejected,
       classifiedTotalValue: selectedHarvest.classifiedTotal,
       dateGregorian: formatGregorianDate(selectedHarvest.dateGregorian),
       totalHarvested: numberFormatter.format(selectedHarvest.totalHarvested),
-      totalRejected: numberFormatter.format(selectedHarvest.totalRejected),
+      totalRejected: numberFormatter.format(effectiveTotalRejected),
       classifiedTotal: numberFormatter.format(selectedHarvest.classifiedTotal),
     };
-  }, [formatGregorianDate, harvestRows, harvestSortingFormHarvestId, numberFormatter]);
+  }, [
+    formatGregorianDate,
+    harvestRows,
+    harvestSortingFormHarvestId,
+    numberFormatter,
+    harvestSortingFormAdditionalRejectedAmount,
+  ]);
 
   const percentFormatter = useMemo(() => {
     const locale = lang === 'he' ? 'he-IL' : 'en-US';
@@ -1062,8 +1110,16 @@ export function HarvestPage() {
     }
   };
 
+  const handleEditHarvestGregorianDateChange = (nextGregorianDate: string) => {
+    setEditHarvestDateGregorian(nextGregorianDate);
+    setEditHarvestDateHebrew(formatHebrewDateFromGregorianInput(nextGregorianDate));
+  };
+
   const handleOpenEditHarvestDialog = () => {
     if (!selectedHarvestRow) return;
+    const initialDateGregorian = selectedHarvestRow.dateGregorian.slice(0, 10);
+    setEditHarvestDateGregorian(initialDateGregorian);
+    setEditHarvestDateHebrew(formatHebrewDateFromGregorianInput(initialDateGregorian));
     setEditHarvestFieldId(selectedHarvestRow.fieldId);
     setEditHarvestTotalHarvested(selectedHarvestRow.totalHarvested);
     setEditHarvestTotalRejected(selectedHarvestRow.totalRejected);
@@ -1080,18 +1136,18 @@ export function HarvestPage() {
     setIsEditingHarvest(true);
     setEditHarvestError('');
     try {
-      let updated = await updateHarvest({
+      const updated = await updateHarvest({
         id: selectedHarvestRow.id,
+        dateGregorian: editHarvestDateGregorian,
+        dateHebrew: editHarvestDateHebrew,
         fieldId: editHarvestFieldId,
         totalHarvested: editHarvestTotalHarvested,
         totalRejected: editHarvestTotalRejected,
         ownerHarvested: editHarvestOwnerHarvested,
         ownerRejected: editHarvestOwnerRejected,
         notes: editHarvestNotes || undefined,
+        isPartialClassification: editHarvestMarkFullClassification ? false : undefined,
       });
-      if (editHarvestMarkFullClassification) {
-        updated = await updateHarvestPartialClassification({ id: selectedHarvestRow.id, isPartialClassification: false });
-      }
       setHarvestRows((rows) => rows.map((row) => (row.id === updated.id ? { ...row, ...updated } : row)));
       setSelectedHarvestRow((prev) => (prev ? { ...prev, ...updated } : prev));
       setDetailsRecord((prev) => (prev?.id === updated.id ? { ...prev, ...updated } : prev));
@@ -1149,7 +1205,6 @@ export function HarvestPage() {
     }
 
     const harvestId = selectedSortingListRow.fieldHarvest?.id;
-    const isPartialClassification = selectedSortingListRow.fieldHarvest?.isPartialClassification ?? false;
 
     if (!harvestId) {
       return;
@@ -1161,7 +1216,7 @@ export function HarvestPage() {
       await deleteHarvestClassification({
         harvestId,
         classificationId: selectedSortingListRow.id,
-        isPartialClassification,
+        isPartialClassification: true,
       });
       setSortingListRows((rows) => rows.filter((row) => row.id !== selectedSortingListRow.id));
       setSelectedSortingListRow(null);
@@ -1527,8 +1582,9 @@ export function HarvestPage() {
           t={t}
           lang={lang}
           fields={fields}
-          dateGregorian={formatGregorianDate(selectedHarvestRow.dateGregorian)}
-          dateHebrew={selectedHarvestRow.dateHebrew}
+          dateGregorian={editHarvestDateGregorian}
+          dateHebrew={editHarvestDateHebrew}
+          activeSeasonYearName={activeSeasonYearName}
           fieldId={editHarvestFieldId}
           totalHarvested={editHarvestTotalHarvested}
           totalRejected={editHarvestTotalRejected}
@@ -1541,6 +1597,7 @@ export function HarvestPage() {
           onMarkAsFullClassificationChange={setEditHarvestMarkFullClassification}
           isSubmitting={isEditingHarvest}
           error={editHarvestError}
+          onDateGregorianChange={handleEditHarvestGregorianDateChange}
           onFieldIdChange={setEditHarvestFieldId}
           onTotalHarvestedChange={setEditHarvestTotalHarvested}
           onTotalRejectedChange={setEditHarvestTotalRejected}
@@ -1629,7 +1686,6 @@ export function HarvestPage() {
         }}
         onFieldIdChange={setHarvestFormFieldId}
         onGregorianDateChange={handleHarvestGregorianDateChange}
-        onHebrewDateChange={setHarvestFormDateHebrew}
         onTotalHarvestedChange={handleHarvestTotalHarvestedChange}
         onTotalRejectedChange={handleHarvestTotalRejectedChange}
         onOwnerHarvestedChange={handleHarvestOwnerHarvestedChange}
@@ -1671,10 +1727,13 @@ export function HarvestPage() {
         harvestSortingFormQuantity={harvestSortingFormQuantity}
         harvestSortingFormNotes={harvestSortingFormNotes}
         harvestSortingFormIsPartialClassification={harvestSortingFormIsPartialClassification}
+        isAddingRejectedQuantity={isAddingRejectedQuantity}
+        harvestSortingFormAdditionalRejected={harvestSortingFormAdditionalRejected}
         harvestFormTraderCategories={harvestFormTraderCategories}
         harvestFormCustomerCategories={harvestFormCustomerCategories}
         harvestFormClassifications={harvestFormClassifications}
         existingHarvestClassifications={harvestSortingFormExistingClassifications}
+        pendingExistingClassificationEdits={pendingExistingClassificationEdits}
         onClose={isRestoreSortingMode ? closeRestoreSortingForm : closeHarvestSortingGlobalForm}
         onSubmit={() => void handleSubmitHarvestSortingGlobalForm()}
         onHarvestIdChange={setHarvestSortingFormHarvestId}
@@ -1688,10 +1747,14 @@ export function HarvestPage() {
         onQuantityChange={setHarvestSortingFormQuantity}
         onNotesChange={handleHarvestSortingNotesChange}
         onPartialClassificationChange={setHarvestSortingFormIsPartialClassification}
+        onOpenAddRejectedQuantity={openAddRejectedQuantity}
+        onAdditionalRejectedQuantityChange={setHarvestSortingFormAdditionalRejected}
+        onRemoveAddedRejectedQuantity={removeAddedRejectedQuantity}
         onAddClassificationDraft={addHarvestClassificationDraft}
         onRemoveClassificationDraft={removeHarvestClassificationDraft}
         onUpdateClassificationDraft={updateHarvestClassificationDraft}
         onUpdateClassificationDraftQuantity={updateHarvestClassificationDraftQuantity}
+        onStageExistingClassificationQuantity={handleStageExistingClassificationQuantity}
       />
     </AppShell>
   );
