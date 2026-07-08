@@ -4,6 +4,8 @@ import { Pool } from 'pg';
 import { PrismaClient } from '@prisma/client';
 
 const DEFAULT_POOL_SIZE = 5;
+const DEFAULT_TRANSACTION_TIMEOUT_MS = 300_000;
+const DEFAULT_TRANSACTION_MAX_WAIT_MS = 300_000;
 
 function getPoolSize(): number {
   const rawPoolSize = process.env.DATABASE_POOL_SIZE;
@@ -35,7 +37,13 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     const adapter = new PrismaPg(pool, {
       disposeExternalPool: true,
     });
-    super({ adapter });
+    super({
+      adapter,
+      transactionOptions: {
+        timeout: DEFAULT_TRANSACTION_TIMEOUT_MS,
+        maxWait: DEFAULT_TRANSACTION_MAX_WAIT_MS,
+      },
+    });
   }
 
   async onModuleInit() {
