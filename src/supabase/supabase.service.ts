@@ -11,6 +11,10 @@ export class SupabaseService {
     const serviceKey = configService.getOrThrow<string>('SUPABASE_SERVICE_ROLE_KEY');
     this.client = createClient(url, serviceKey, {
       auth: { autoRefreshToken: false, persistSession: false },
+      global: {
+        fetch: (input, init) =>
+          fetch(input, { ...init, signal: AbortSignal.timeout(60_000) }),
+      },
     });
   }
 
