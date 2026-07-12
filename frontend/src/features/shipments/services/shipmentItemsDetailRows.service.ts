@@ -9,6 +9,7 @@ export type ShipmentItemDetailRow = {
   stockSource: string;
   category: string;
   grade: string;
+  pitamStatus: string;
   quantity: number;
   notes: string;
   generalSourceBreakdown: GeneralSourceBreakdownEntry[] | null;
@@ -42,6 +43,10 @@ export function buildShipmentItemsDetailRows(
       ? (item.isPrivateSelection ? labels.stockSourceLabels.PRIVATE_SELECTION : labels.stockSourceLabels.GENERAL)
       : '—';
 
+    const pitamStatus = item.pitamStatus
+      ? (labels.pitamStatusLabels[item.pitamStatus as keyof typeof labels.pitamStatusLabels] ?? item.pitamStatus)
+      : labels.noPitamStatus;
+
     return {
       id: item.id,
       boxNumber: boxNumberById.get(item.boxId) ?? 0,
@@ -49,6 +54,7 @@ export function buildShipmentItemsDetailRows(
       stockSource,
       category,
       grade,
+      pitamStatus,
       quantity: item.quantity,
       notes: item.notes?.trim() ?? '',
       generalSourceBreakdown: item.generalSourceBreakdown ?? null,
@@ -93,6 +99,10 @@ export function buildBoxItemsDetailRows(
       ? (item.isPrivateSelection ? labels.stockSourceLabels.PRIVATE_SELECTION : labels.stockSourceLabels.GENERAL)
       : '—';
 
+    const pitamStatus = item.pitamStatus
+      ? (labels.pitamStatusLabels[item.pitamStatus as keyof typeof labels.pitamStatusLabels] ?? item.pitamStatus)
+      : labels.noPitamStatus;
+
     return {
       id: item.id,
       boxNumber,
@@ -100,6 +110,7 @@ export function buildBoxItemsDetailRows(
       stockSource,
       category,
       grade,
+      pitamStatus,
       quantity: item.quantity,
       notes: item.notes?.trim() ?? '',
       generalSourceBreakdown: item.generalSourceBreakdown ?? null,
@@ -109,6 +120,8 @@ export function buildBoxItemsDetailRows(
   return rows.sort((a, b) => {
     if (a.ownership !== b.ownership) return a.ownership.localeCompare(b.ownership);
     if (a.stockSource !== b.stockSource) return a.stockSource.localeCompare(b.stockSource);
-    return compareCategoryNames(a.category, b.category, categoryOrderByName) || a.grade.localeCompare(b.grade);
+    const categoryCompare = compareCategoryNames(a.category, b.category, categoryOrderByName) || a.grade.localeCompare(b.grade);
+    if (categoryCompare !== 0) return categoryCompare;
+    return a.pitamStatus.localeCompare(b.pitamStatus);
   });
 }

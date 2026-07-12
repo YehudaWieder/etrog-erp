@@ -55,6 +55,7 @@ export function ShipmentItemsDetailTable({ rows, labels, showBoxNumber = true }:
               <th scope="col">{labels.colStockSource}</th>
               <th scope="col">{labels.colCategory}</th>
               <th scope="col">{labels.colGrade}</th>
+              <th scope="col">{labels.colPitamStatus}</th>
               <th scope="col">{labels.colQuantity}</th>
               <th scope="col">{labels.colGeneralSourceBreakdown}</th>
               <th scope="col">{labels.colNotes}</th>
@@ -74,6 +75,7 @@ export function ShipmentItemsDetailTable({ rows, labels, showBoxNumber = true }:
                 ) : null}
                 <td>{row.category}</td>
                 <td>{row.grade}</td>
+                <td>{row.pitamStatus}</td>
                 <td>{row.quantity.toLocaleString()}</td>
                 <td>
                   {row.generalSourceBreakdown && row.generalSourceBreakdown.length > 0 ? (

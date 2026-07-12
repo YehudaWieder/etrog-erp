@@ -86,14 +86,17 @@ export type ShipmentsTableLabels = {
     colStockSource: string;
     colCategory: string;
     colGrade: string;
+    colPitamStatus: string;
     colQuantity: string;
     colNotes: string;
     colGeneralSourceBreakdown: string;
     generalSourceModuloLabel: string;
     ownershipLabels: Record<'TRADER' | 'CUSTOMER' | 'GENERAL' | 'CUSTOM', string>;
     stockSourceLabels: Record<'GENERAL' | 'PRIVATE_SELECTION', string>;
+    pitamStatusLabels: Record<'WITH_PITAM' | 'WITHOUT_PITAM', string>;
     uncategorized: string;
     noGrade: string;
+    noPitamStatus: string;
   };
   empty: string;
   loading: string;
