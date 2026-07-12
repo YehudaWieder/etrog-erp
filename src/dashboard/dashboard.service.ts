@@ -35,15 +35,15 @@ export class DashboardService {
   }
 
   private async buildPackagedSeries(seasonId: number): Promise<DailyDataPoint[]> {
-    const records = await this.prisma.shipment.findMany({
+    const records = await this.prisma.shipmentItem.findMany({
       where: { seasonId, isDeleted: false },
-      select: { createdAt: true, totalQuantity: true },
+      select: { createdAt: true, quantity: true },
       orderBy: { createdAt: 'asc' },
     });
     const byDate = new Map<string, number>();
     for (const r of records) {
       const key = r.createdAt.toISOString().split('T')[0];
-      byDate.set(key, (byDate.get(key) ?? 0) + r.totalQuantity);
+      byDate.set(key, (byDate.get(key) ?? 0) + r.quantity);
     }
     let cumulative = 0;
     return Array.from(byDate.keys())
@@ -273,30 +273,20 @@ export class DashboardService {
 
     const shipmentRecords = await this.prisma.shipment.findMany({
       where: { seasonId, isDeleted: false },
-      select: { createdAt: true, totalQuantity: true, status: true },
-      orderBy: { createdAt: 'asc' },
+      select: { totalQuantity: true, status: true },
     });
 
-    const byShipmentDate = new Map<string, { totalQuantity: number }>();
     let packaged = 0;
     let shipped = 0;
 
     for (const s of shipmentRecords) {
-      const dateKey = s.createdAt.toISOString().split('T')[0];
-      if (!byShipmentDate.has(dateKey)) byShipmentDate.set(dateKey, { totalQuantity: 0 });
-      byShipmentDate.get(dateKey)!.totalQuantity += s.totalQuantity;
       packaged += s.totalQuantity;
       if (s.status === ShipmentStatus.SHIPPED || s.status === ShipmentStatus.DELIVERED) {
         shipped += s.totalQuantity;
       }
     }
 
-    const sortedShipmentDates = Array.from(byShipmentDate.keys()).sort();
-    let cumulativePackaged = 0;
-    const packagedSeries: DailyDataPoint[] = sortedShipmentDates.map((d, i) => {
-      cumulativePackaged += byShipmentDate.get(d)!.totalQuantity;
-      return { label: `יום ${i + 1}`, value: cumulativePackaged };
-    });
+    const packagedSeries = await this.buildPackagedSeries(seasonId);
 
     const metrics: Record<string, MetricGauge> = {
       grossHarvest: { value: grandHarvested, percent: 100 },
