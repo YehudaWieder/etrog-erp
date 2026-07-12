@@ -7,6 +7,7 @@ import { getSystemConfig, type SystemConfig } from '../../../services/systemConf
 import { getShipmentItemsByBox, type ShipmentItemRecord } from '../../../services/shipmentItemsApi';
 import { getTraders, type Trader } from '../../../services/tradersApi';
 import { getCustomers, type Customer } from '../../../services/customersApi';
+import { getTraderCategoriesWithShares } from '../../../services/traderCategoriesApi';
 import {
   getTraderAvailableInventory,
   getCustomerAvailableInventory,
@@ -188,6 +189,7 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
   const [shipments, setShipments] = useState<ShipmentRecord[]>([]);
   const [traders, setTraders] = useState<Trader[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [traderCategoryOrderById, setTraderCategoryOrderById] = useState<Map<number, number>>(new Map());
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 
   const [selectedBoxId, setSelectedBoxIdRaw] = useState('');
@@ -306,14 +308,16 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
     const load = async () => {
       try {
         const activeSeason = await getActiveSeason();
-        const [fullBox, boxItems, nextShipments, nextTraders, nextCustomers, nextSystemConfig] = await Promise.all([
-          getBoxById(boxId),
-          getShipmentItemsByBox(boxId),
-          getShipmentsBySeason(activeSeason.id),
-          getTraders(),
-          getCustomers(),
-          getSystemConfig(activeSeason.id),
-        ]);
+        const [fullBox, boxItems, nextShipments, nextTraders, nextCustomers, nextSystemConfig, nextTraderCategories] =
+          await Promise.all([
+            getBoxById(boxId),
+            getShipmentItemsByBox(boxId),
+            getShipmentsBySeason(activeSeason.id),
+            getTraders(),
+            getCustomers(),
+            getSystemConfig(activeSeason.id),
+            getTraderCategoriesWithShares(activeSeason.id),
+          ]);
 
         if (!isMounted) {
           return;
@@ -322,6 +326,7 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
         setShipments(nextShipments);
         setTraders(nextTraders);
         setCustomers(nextCustomers);
+        setTraderCategoryOrderById(new Map(nextTraderCategories.map((category) => [category.id, category.orderIndex])));
         setSystemConfig(nextSystemConfig);
         setHasItems(boxItems.length > 0);
         setExistingBoxItems(boxItems);
@@ -348,6 +353,7 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
         setShipments([]);
         setTraders([]);
         setCustomers([]);
+        setTraderCategoryOrderById(new Map());
       } finally {
         if (isMounted) {
           setIsLoadingOptions(false);
@@ -570,7 +576,15 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
       }
       const availableTraderCategories = Array.from(traderCategorySeen.entries())
         .filter(([id]) => !isClaimedByOtherRow(id))
-        .map(([id, name]) => ({ id, name }));
+        .map(([id, name]) => ({ id, name }))
+        .sort((left, right) => {
+          const leftOrder = traderCategoryOrderById.get(left.id);
+          const rightOrder = traderCategoryOrderById.get(right.id);
+          if (leftOrder !== undefined && rightOrder !== undefined) return leftOrder - rightOrder;
+          if (leftOrder !== undefined) return -1;
+          if (rightOrder !== undefined) return 1;
+          return left.name.localeCompare(right.name);
+        });
 
       const customerCategorySeen = new Map<number, { name: string; grade: string | null }>();
       for (const row of customerSource) {
@@ -669,7 +683,7 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
         existingItemByCell,
       };
     });
-  }, [itemRows, ownershipType, allTraderInventory, traderInventoryCache, customerInventoryCache, resolveEffectiveTraderId, resolveEffectiveCustomerId, comboPrefixOf, usedCategoryByPrefix, existingBoxItems]);
+  }, [itemRows, ownershipType, allTraderInventory, traderInventoryCache, customerInventoryCache, resolveEffectiveTraderId, resolveEffectiveCustomerId, comboPrefixOf, usedCategoryByPrefix, existingBoxItems, traderCategoryOrderById]);
 
   const boxCapacity = useMemo(() => {
     if (!boxType || boxType === 'CUSTOM' || !systemConfig) return null;
