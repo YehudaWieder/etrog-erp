@@ -31,28 +31,33 @@ export function SvgBarChart({ data, barColor, highlightLabels, highlightColor = 
   return (
     <div className={styles.wrapper}>
       <div className={styles.yAxis}>
-        {yLabels.map((lbl, i) => (
-          <span key={i}>{lbl}</span>
-        ))}
+        <div className={styles.yAxisTrack}>
+          {yLabels.map((lbl, i) => (
+            <span key={i}>{lbl}</span>
+          ))}
+        </div>
+        <div className={styles.yAxisSpacer} />
       </div>
       <div className={styles.barsArea}>
         {data.map((bar) => {
-          const heightPct = maxValue > 0 ? (bar.value / maxValue) * 85 : 0;
+          const heightPct = maxValue > 0 ? (bar.value / maxValue) * 100 : 0;
           const isHighlighted = highlightLabels?.includes(bar.label);
         return (
             <div key={bar.label} className={styles.barCol}>
-              <div
-                className={styles.barFill}
-                style={{
-                  height: `${heightPct}%`,
-                  ...(isHighlighted
-                    ? { background: toBarGradient(highlightColor) }
-                    : barColor
-                      ? { background: toBarGradient(barColor) }
-                      : {}),
-                }}
-              >
-                <span className={styles.barTopText}>{bar.value.toLocaleString()}</span>
+              <div className={styles.barTrack}>
+                <div
+                  className={styles.barFill}
+                  style={{
+                    height: `${heightPct}%`,
+                    ...(isHighlighted
+                      ? { background: toBarGradient(highlightColor) }
+                      : barColor
+                        ? { background: toBarGradient(barColor) }
+                        : {}),
+                  }}
+                >
+                  <span className={styles.barTopText}>{bar.value.toLocaleString()}</span>
+                </div>
               </div>
               <span className={styles.axisLabel}>{bar.label}</span>
             </div>
