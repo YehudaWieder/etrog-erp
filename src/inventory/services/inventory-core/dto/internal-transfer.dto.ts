@@ -22,6 +22,7 @@ export class InternalTransferRequestDto {
   fromCustomerCategoryId?: number;
   toTraderCategoryId?: number;
   toGrade?: Grade;
+  toPitamStatus?: PitamStatus;
   toCustomerCategoryId?: number;
   fromOwnerType!: InventoryOwnerType;
   fromTraderId?: number;

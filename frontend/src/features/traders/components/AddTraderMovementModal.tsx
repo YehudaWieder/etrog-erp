@@ -8,6 +8,7 @@ import type { TraderCategoryWithShares } from '../../../services/traderCategorie
 import type { CustomerCategory } from '../../../services/customerCategoriesApi';
 import {
   InventoryOwnerType,
+  createCustomerGeneralTransfer,
   createInternalTransfer,
   createTraderAdjustmentMovement,
   type InternalTransferMovementType,
@@ -90,6 +91,9 @@ export function AddTraderMovementModal({
   const [grade, setGrade] = useState('');
   const [customerGrade, setCustomerGrade] = useState('');
   const [pitamStatus, setPitamStatus] = useState<PitamStatus | ''>('');
+  // Only used for INTERNAL_TRANSFER when the trader's pitamStatus is MIXED — the customer side
+  // can't stay "mixed", so the user must pick the actual resolved status for the customer record.
+  const [customerPitamStatus, setCustomerPitamStatus] = useState<PitamStatus | ''>('');
   const [quantity, setQuantity] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -98,10 +102,13 @@ export function AddTraderMovementModal({
   const [isLoadingFromTraderStock, setIsLoadingFromTraderStock] = useState(false);
   const [generalStock, setGeneralStock] = useState<TraderInventorySummaryRow[]>([]);
   const [isLoadingGeneralStock, setIsLoadingGeneralStock] = useState(false);
+  const [generalTransferStock, setGeneralTransferStock] = useState<TraderInventorySummaryRow[]>([]);
+  const [isLoadingGeneralTransferStock, setIsLoadingGeneralTransferStock] = useState(false);
 
-  // ASSIGNED allocates from general (MODULO) stock — load it when this type is selected.
+  // ASSIGNED and WASTE (general/modulo source) both allocate from MODULO stock — load it for either.
   useEffect(() => {
-    if (type !== 'ASSIGNED' || !seasonId) {
+    const needsGeneralStock = type === 'ASSIGNED' || (type === 'WASTE' && isModulo);
+    if (!needsGeneralStock || !seasonId) {
       setGeneralStock([]);
       return;
     }
@@ -131,14 +138,48 @@ export function AddTraderMovementModal({
     return () => {
       isActive = false;
     };
-  }, [type, seasonId]);
+  }, [type, isModulo, seasonId]);
+
+  // INTERNAL_TRANSFER "General" (customer allocation from general pool) draws from MODULO first,
+  // then proportionally from every trader's share — so what's actually offerable is the union of
+  // MODULO stock and stock held across all traders combined.
+  useEffect(() => {
+    const needsCombinedStock = type === 'INTERNAL_TRANSFER' && isModulo;
+    if (!needsCombinedStock || !seasonId) {
+      setGeneralTransferStock([]);
+      return;
+    }
+
+    let isActive = true;
+    setIsLoadingGeneralTransferStock(true);
+
+    fetchTraderInventorySummary({ seasonId, traderId: null, ownerScope: 'ALL', shipmentScope: 'UNSHIPPED' })
+      .then((result) => {
+        if (!isActive) return;
+        setGeneralTransferStock(result.rows.filter((row) => row.quantity > 0));
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setGeneralTransferStock([]);
+      })
+      .finally(() => {
+        if (!isActive) return;
+        setIsLoadingGeneralTransferStock(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [type, isModulo, seasonId]);
 
   // Ownership, internal transfers, self-pickup and waste (trader) use the source trader's actual stock.
   useEffect(() => {
     const activeFromTraderId = (type === 'SELF_PICKUP' || type === 'WASTE') ? traderId : fromTraderId;
     const isWaste = type === 'WASTE';
+    const isInternalTransferGeneral = type === 'INTERNAL_TRANSFER' && isModulo;
     const needsStockSource = type !== 'WASTE' || !isModulo;
     if (
+      isInternalTransferGeneral ||
       (type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'SELF_PICKUP' && !isWaste) ||
       !activeFromTraderId || !seasonId ||
       (needsStockSource && !stockSource) ||
@@ -223,7 +264,8 @@ export function AddTraderMovementModal({
     )];
   }, [fromTraderStock, traderCategoryId, grade]);
 
-  const assignedCategoryOptions = useMemo(() => {
+  // Shared by ASSIGNED and WASTE (general/modulo source) — both draw purely from MODULO stock.
+  const generalCategoryOptions = useMemo(() => {
     const seen = new Map<number, string>();
     for (const row of generalStock) {
       if (!seen.has(row.traderCategoryId)) {
@@ -233,7 +275,7 @@ export function AddTraderMovementModal({
     return sortCategoryOptionsByPriority([...seen.entries()].map(([id, name]) => ({ id, name })));
   }, [generalStock, traderCategoryOrderById]);
 
-  const assignedGradeOptions = useMemo(() => {
+  const generalGradeOptions = useMemo(() => {
     if (!traderCategoryId) return [];
     return [...new Set(
       generalStock
@@ -242,7 +284,7 @@ export function AddTraderMovementModal({
     )];
   }, [generalStock, traderCategoryId]);
 
-  const assignedPitamStatusOptions = useMemo(() => {
+  const generalPitamStatusOptions = useMemo(() => {
     if (!traderCategoryId || !grade) return [];
     return [...new Set(
       generalStock
@@ -250,6 +292,35 @@ export function AddTraderMovementModal({
         .map((row) => row.pitamStatus),
     )];
   }, [generalStock, traderCategoryId, grade]);
+
+  // INTERNAL_TRANSFER "General" — options come from the combined MODULO + all-traders pool.
+  const generalTransferCategoryOptions = useMemo(() => {
+    const seen = new Map<number, string>();
+    for (const row of generalTransferStock) {
+      if (!seen.has(row.traderCategoryId)) {
+        seen.set(row.traderCategoryId, row.traderCategoryName ?? `#${row.traderCategoryId}`);
+      }
+    }
+    return sortCategoryOptionsByPriority([...seen.entries()].map(([id, name]) => ({ id, name })));
+  }, [generalTransferStock, traderCategoryOrderById]);
+
+  const generalTransferGradeOptions = useMemo(() => {
+    if (!traderCategoryId) return [];
+    return [...new Set(
+      generalTransferStock
+        .filter((row) => String(row.traderCategoryId) === traderCategoryId)
+        .map((row) => row.grade),
+    )];
+  }, [generalTransferStock, traderCategoryId]);
+
+  const generalTransferPitamStatusOptions = useMemo(() => {
+    if (!traderCategoryId || !grade) return [];
+    return [...new Set(
+      generalTransferStock
+        .filter((row) => String(row.traderCategoryId) === traderCategoryId && row.grade === grade)
+        .map((row) => row.pitamStatus),
+    )];
+  }, [generalTransferStock, traderCategoryId, grade]);
 
   const availableQuantityForAssigned = useMemo(() => {
     if (type !== 'ASSIGNED' || !traderCategoryId || !grade || !pitamStatus) return null;
@@ -260,15 +331,32 @@ export function AddTraderMovementModal({
   }, [type, generalStock, traderCategoryId, grade, pitamStatus]);
 
   const availableQuantityForSelection = useMemo(() => {
+    if (!traderCategoryId || !grade || !pitamStatus) return null;
+
+    if (type === 'WASTE' && isModulo) {
+      const match = generalStock.find(
+        (row) => String(row.traderCategoryId) === traderCategoryId && row.grade === grade && row.pitamStatus === pitamStatus,
+      );
+      return match ? match.quantity : null;
+    }
+
+    if (type === 'INTERNAL_TRANSFER' && isModulo) {
+      // Combined MODULO + all-traders pool can have several matching rows (one per trader) — sum them.
+      const total = generalTransferStock
+        .filter((row) => String(row.traderCategoryId) === traderCategoryId && row.grade === grade && row.pitamStatus === pitamStatus)
+        .reduce((sum, row) => sum + row.quantity, 0);
+      return total > 0 ? total : null;
+    }
+
     const isWasteTrader = type === 'WASTE' && !isModulo && Boolean(stockSource);
-    if ((type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'SELF_PICKUP' && !isWasteTrader) || !traderCategoryId || !grade || !pitamStatus) {
+    if (type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'SELF_PICKUP' && !isWasteTrader) {
       return null;
     }
     const match = fromTraderStock.find(
       (row) => String(row.traderCategoryId) === traderCategoryId && row.grade === grade && row.pitamStatus === pitamStatus,
     );
     return match ? match.quantity : null;
-  }, [type, fromTraderStock, traderCategoryId, grade, pitamStatus]);
+  }, [type, isModulo, generalStock, generalTransferStock, fromTraderStock, stockSource, traderCategoryId, grade, pitamStatus]);
 
   // Reset downstream selections whenever the source trader or stock source changes.
   useEffect(() => {
@@ -277,7 +365,8 @@ export function AddTraderMovementModal({
     setTraderCategoryId('');
     setGrade('');
     setPitamStatus('');
-  }, [type, fromTraderId]);
+    setCustomerPitamStatus('');
+  }, [type, fromTraderId, isModulo]);
 
   useEffect(() => {
     if (type !== 'SELF_PICKUP') return;
@@ -303,33 +392,58 @@ export function AddTraderMovementModal({
     setPitamStatus('');
   }, [type, seasonId]);
 
+  // When isModulo is set (WASTE general or INTERNAL_TRANSFER "General"), grade/pitam come from a
+  // different pool entirely (generalStock / generalTransferStock, not fromTraderStock) — those
+  // cases are validated by their own dedicated effects below, so skip this trader-stock check then.
   useEffect(() => {
-    if ((type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'SELF_PICKUP' && type !== 'WASTE') || !grade) return;
+    const usesOtherPool = isModulo && (type === 'WASTE' || type === 'INTERNAL_TRANSFER');
+    if ((type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'SELF_PICKUP' && type !== 'WASTE') || !grade || usesOtherPool) return;
     if (!fromTraderGradeOptions.includes(grade)) {
       setGrade('');
     }
-  }, [type, fromTraderGradeOptions, grade]);
+  }, [type, fromTraderGradeOptions, grade, isModulo]);
 
   useEffect(() => {
-    if ((type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'SELF_PICKUP' && type !== 'WASTE') || !pitamStatus) return;
+    const usesOtherPool = isModulo && (type === 'WASTE' || type === 'INTERNAL_TRANSFER');
+    if ((type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'SELF_PICKUP' && type !== 'WASTE') || !pitamStatus || usesOtherPool) return;
     if (!fromTraderPitamStatusOptions.includes(pitamStatus)) {
       setPitamStatus('');
     }
-  }, [type, fromTraderPitamStatusOptions, pitamStatus]);
+  }, [type, fromTraderPitamStatusOptions, pitamStatus, isModulo]);
 
+  // ASSIGNED and WASTE (general/modulo source) both offer grade/pitam filtered to actual MODULO stock.
   useEffect(() => {
-    if (type !== 'ASSIGNED' || !grade) return;
-    if (!assignedGradeOptions.includes(grade)) {
+    const usesGeneralStock = type === 'ASSIGNED' || (type === 'WASTE' && isModulo);
+    if (!usesGeneralStock || !grade) return;
+    if (!generalGradeOptions.includes(grade)) {
       setGrade('');
     }
-  }, [type, assignedGradeOptions, grade]);
+  }, [type, isModulo, generalGradeOptions, grade]);
 
   useEffect(() => {
-    if (type !== 'ASSIGNED' || !pitamStatus) return;
-    if (!(assignedPitamStatusOptions as string[]).includes(pitamStatus)) {
+    const usesGeneralStock = type === 'ASSIGNED' || (type === 'WASTE' && isModulo);
+    if (!usesGeneralStock || !pitamStatus) return;
+    if (!(generalPitamStatusOptions as string[]).includes(pitamStatus)) {
       setPitamStatus('');
     }
-  }, [type, assignedPitamStatusOptions, pitamStatus]);
+  }, [type, isModulo, generalPitamStatusOptions, pitamStatus]);
+
+  // INTERNAL_TRANSFER "General" offers grade/pitam filtered to the combined MODULO + all-traders pool.
+  useEffect(() => {
+    const usesGeneralTransferStock = type === 'INTERNAL_TRANSFER' && isModulo;
+    if (!usesGeneralTransferStock || !grade) return;
+    if (!generalTransferGradeOptions.includes(grade)) {
+      setGrade('');
+    }
+  }, [type, isModulo, generalTransferGradeOptions, grade]);
+
+  useEffect(() => {
+    const usesGeneralTransferStock = type === 'INTERNAL_TRANSFER' && isModulo;
+    if (!usesGeneralTransferStock || !pitamStatus) return;
+    if (!(generalTransferPitamStatusOptions as string[]).includes(pitamStatus)) {
+      setPitamStatus('');
+    }
+  }, [type, isModulo, generalTransferPitamStatusOptions, pitamStatus]);
 
   const sortedTraders = useMemo(
     () => [...traders].sort((left, right) => left.name.localeCompare(right.name, undefined, { sensitivity: 'base' })),
@@ -364,13 +478,21 @@ export function AddTraderMovementModal({
   const isQuantityEnabled = isPitamEnabled && Boolean(pitamStatus);
 
   // INTERNAL_TRANSFER gating: trader fields first (filtered by actual unshipped stock), then customer fields.
-  const isItTraderCategoryEnabled = type === 'INTERNAL_TRANSFER' && Boolean(fromTraderId) && Boolean(stockSource) && !isLoadingFromTraderStock;
+  // When isModulo (General) is chosen, there is no single source trader/stockSource to wait on.
+  const isItTraderCategoryEnabled = type === 'INTERNAL_TRANSFER' && (
+    isModulo
+      ? !isLoadingGeneralTransferStock
+      : Boolean(fromTraderId) && Boolean(stockSource) && !isLoadingFromTraderStock
+  );
   const isItGradeEnabled = isItTraderCategoryEnabled && Boolean(traderCategoryId);
   const isItPitamEnabled = isItGradeEnabled && Boolean(grade);
   const isItCustomerEnabled = isItPitamEnabled && Boolean(pitamStatus);
   const isItCustomerCategoryEnabled = isItCustomerEnabled && Boolean(customerId);
   const isItCustomerGradeEnabled = isItCustomerCategoryEnabled && Boolean(customerCategoryId);
-  const isItQuantityEnabled = isItCustomerGradeEnabled;
+  // When the trader's pitam status is MIXED, the customer-side status must be explicitly resolved
+  // (a customer can't own "mixed" stock) before the transfer is considered complete.
+  const isItCustomerPitamReady = pitamStatus !== 'MIXED' || Boolean(customerPitamStatus);
+  const isItQuantityEnabled = isItCustomerGradeEnabled && isItCustomerPitamReady;
 
   const isAssignedCategoryEnabled = type === 'ASSIGNED' && Boolean(toTraderId) && !isLoadingGeneralStock;
   const isAssignedGradeEnabled = isAssignedCategoryEnabled && Boolean(traderCategoryId);
@@ -387,7 +509,7 @@ export function AddTraderMovementModal({
   const isWasteTraderPitamEnabled = isWasteTraderGradeEnabled && Boolean(grade);
   const isWasteTraderQuantityEnabled = isWasteTraderPitamEnabled && Boolean(pitamStatus);
 
-  const isWasteModuloCategoryEnabled = type === 'WASTE' && isModulo;
+  const isWasteModuloCategoryEnabled = type === 'WASTE' && isModulo && !isLoadingGeneralStock;
   const isWasteModuloGradeEnabled = isWasteModuloCategoryEnabled && Boolean(traderCategoryId);
   const isWasteModuloPitamEnabled = isWasteModuloGradeEnabled && Boolean(grade);
   const isWasteModuloQuantityEnabled = isWasteModuloPitamEnabled && Boolean(pitamStatus);
@@ -419,6 +541,7 @@ export function AddTraderMovementModal({
     setGrade('');
     setCustomerGrade('');
     setPitamStatus('');
+    setCustomerPitamStatus('');
     setQuantity('');
     setNotes('');
     setError(null);
@@ -431,6 +554,19 @@ export function AddTraderMovementModal({
 
   const handleTypeChange = (nextType: MovementType | '') => {
     setType(nextType);
+    setFromTraderId('');
+    setToTraderId('');
+    setTraderId('');
+    setIsModulo(false);
+    setStockSource('');
+    setCustomerId('');
+    setTraderCategoryId('');
+    setCustomerCategoryId('');
+    setGrade('');
+    setCustomerGrade('');
+    setPitamStatus('');
+    setCustomerPitamStatus('');
+    setQuantity('');
     setError(null);
   };
 
@@ -533,27 +669,46 @@ export function AddTraderMovementModal({
           notes: notes || null,
         });
       } else if (type === 'INTERNAL_TRANSFER') {
-        if (!fromTraderId || !traderCategoryId || !grade || !pitamStatus || !customerId || !customerCategoryId || !customerGrade) {
+        if (
+          !traderCategoryId || !grade || !pitamStatus || !customerId || !customerCategoryId || !customerGrade ||
+          (!isModulo && !fromTraderId) ||
+          (pitamStatus === 'MIXED' && !customerPitamStatus)
+        ) {
           setError(f.validationRequired);
           return;
         }
 
-        await createInternalTransfer({
-          type: 'INTERNAL_TRANSFER',
-          date: nowIso,
-          quantity: quantityNumber,
-          fromOwnerType: InventoryOwnerType.TRADER,
-          fromTraderId: Number(fromTraderId),
-          fromTraderCategoryId: Number(traderCategoryId),
-          fromGrade: grade,
-          fromPitamStatus: pitamStatus,
-          toOwnerType: InventoryOwnerType.CUSTOMER,
-          toCustomerId: Number(customerId),
-          toCustomerCategoryId: Number(customerCategoryId),
-          toGrade: customerGrade,
-          stockSource: stockSource || undefined,
-          notes: notes || null,
-        });
+        if (isModulo) {
+          await createCustomerGeneralTransfer({
+            date: nowIso,
+            dateHebrew: new Date(nowIso).toLocaleDateString('he-IL'),
+            quantity: quantityNumber,
+            pitamStatus,
+            grade,
+            traderCategoryId: Number(traderCategoryId),
+            customerId: Number(customerId),
+            customerCategoryId: Number(customerCategoryId),
+            notes: notes || null,
+          });
+        } else {
+          await createInternalTransfer({
+            type: 'INTERNAL_TRANSFER',
+            date: nowIso,
+            quantity: quantityNumber,
+            fromOwnerType: InventoryOwnerType.TRADER,
+            fromTraderId: Number(fromTraderId),
+            fromTraderCategoryId: Number(traderCategoryId),
+            fromGrade: grade,
+            fromPitamStatus: pitamStatus,
+            toPitamStatus: pitamStatus === 'MIXED' ? customerPitamStatus || undefined : undefined,
+            toOwnerType: InventoryOwnerType.CUSTOMER,
+            toCustomerId: Number(customerId),
+            toCustomerCategoryId: Number(customerCategoryId),
+            toGrade: customerGrade,
+            stockSource: stockSource || undefined,
+            notes: notes || null,
+          });
+        }
       }
 
       resetForm();
@@ -696,10 +851,10 @@ export function AddTraderMovementModal({
                       setGrade('');
                       setPitamStatus('');
                     }}
-                    disabled={!isAssignedCategoryEnabled || assignedCategoryOptions.length === 0}
+                    disabled={!isAssignedCategoryEnabled || generalCategoryOptions.length === 0}
                   >
                     <option value="">{f.traderCategoryPlaceholder}</option>
-                    {assignedCategoryOptions.map((category) => (
+                    {generalCategoryOptions.map((category) => (
                       <option key={category.id} value={String(category.id)}>
                         {category.name}
                       </option>
@@ -716,10 +871,10 @@ export function AddTraderMovementModal({
                       setGrade(event.target.value);
                       setPitamStatus('');
                     }}
-                    disabled={!isAssignedGradeEnabled || assignedGradeOptions.length === 0}
+                    disabled={!isAssignedGradeEnabled || generalGradeOptions.length === 0}
                   >
                     <option value="">{f.gradePlaceholder}</option>
-                    {assignedGradeOptions.map((option) => (
+                    {generalGradeOptions.map((option) => (
                       <option key={option} value={option}>
                         {option}
                       </option>
@@ -733,10 +888,10 @@ export function AddTraderMovementModal({
                     className="seasons-manager__year-input"
                     value={pitamStatus}
                     onChange={(event) => setPitamStatus(event.target.value as PitamStatus | '')}
-                    disabled={!isAssignedPitamEnabled || assignedPitamStatusOptions.length === 0}
+                    disabled={!isAssignedPitamEnabled || generalPitamStatusOptions.length === 0}
                   >
                     <option value="">{f.pitamStatusPlaceholder}</option>
-                    {assignedPitamStatusOptions.map((option) => (
+                    {generalPitamStatusOptions.map((option) => (
                       <option key={option} value={option}>
                         {i18n.pitamStatuses[option] || option}
                       </option>
@@ -777,18 +932,27 @@ export function AddTraderMovementModal({
                   <label style={LABEL_STYLE}>{f.fromTraderLabel}</label>
                   <select
                     className="seasons-manager__year-input"
-                    value={fromTraderId}
+                    value={isModulo ? 'MODULO' : fromTraderId}
                     onChange={(event) => {
-                      setFromTraderId(event.target.value);
+                      const val = event.target.value;
+                      if (val === 'MODULO') {
+                        setIsModulo(true);
+                        setFromTraderId('');
+                      } else {
+                        setIsModulo(false);
+                        setFromTraderId(val);
+                      }
                       setTraderCategoryId('');
                       setGrade('');
                       setPitamStatus('');
+                      setCustomerPitamStatus('');
                       setCustomerId('');
                       setCustomerCategoryId('');
                       setCustomerGrade('');
                     }}
                   >
                     <option value="">{f.traderPlaceholder}</option>
+                    <option value="MODULO">{f.moduloOption}</option>
                     {sortedTraders.map((trader) => (
                       <option key={`transfer-from-${trader.id}`} value={String(trader.id)}>
                         {trader.name}
@@ -797,6 +961,7 @@ export function AddTraderMovementModal({
                   </select>
                 </div>
 
+                {/* Stock source only applies when transferring from a specific trader's stock. */}
                 <div style={FIELD_STYLE}>
                   <label style={LABEL_STYLE}>{f.itemStockSourceLabel}</label>
                   <select
@@ -807,11 +972,12 @@ export function AddTraderMovementModal({
                       setTraderCategoryId('');
                       setGrade('');
                       setPitamStatus('');
+                      setCustomerPitamStatus('');
                       setCustomerId('');
                       setCustomerCategoryId('');
                       setCustomerGrade('');
                     }}
-                    disabled={!fromTraderId}
+                    disabled={isModulo || !fromTraderId}
                   >
                     <option value="">{f.itemStockSourcePlaceholder}</option>
                     <option value="GENERAL">{f.itemStockSourceOptions.GENERAL}</option>
@@ -830,14 +996,15 @@ export function AddTraderMovementModal({
                       setTraderCategoryId(event.target.value);
                       setGrade('');
                       setPitamStatus('');
+                      setCustomerPitamStatus('');
                       setCustomerId('');
                       setCustomerCategoryId('');
                       setCustomerGrade('');
                     }}
-                    disabled={!isItTraderCategoryEnabled || fromTraderCategoryOptions.length === 0}
+                    disabled={!isItTraderCategoryEnabled || (isModulo ? generalTransferCategoryOptions.length === 0 : fromTraderCategoryOptions.length === 0)}
                   >
                     <option value="">{f.traderCategoryPlaceholder}</option>
-                    {fromTraderCategoryOptions.map((category) => (
+                    {(isModulo ? generalTransferCategoryOptions : fromTraderCategoryOptions).map((category) => (
                       <option key={category.id} value={String(category.id)}>
                         {category.name}
                       </option>
@@ -853,14 +1020,15 @@ export function AddTraderMovementModal({
                     onChange={(event) => {
                       setGrade(event.target.value);
                       setPitamStatus('');
+                      setCustomerPitamStatus('');
                       setCustomerId('');
                       setCustomerCategoryId('');
                       setCustomerGrade('');
                     }}
-                    disabled={!isItGradeEnabled || fromTraderGradeOptions.length === 0}
+                    disabled={!isItGradeEnabled || (isModulo ? generalTransferGradeOptions.length === 0 : fromTraderGradeOptions.length === 0)}
                   >
                     <option value="">{f.gradePlaceholder}</option>
-                    {fromTraderGradeOptions.map((option) => (
+                    {(isModulo ? generalTransferGradeOptions : fromTraderGradeOptions).map((option) => (
                       <option key={option} value={option}>
                         {option}
                       </option>
@@ -875,20 +1043,38 @@ export function AddTraderMovementModal({
                     value={pitamStatus}
                     onChange={(event) => {
                       setPitamStatus(event.target.value as PitamStatus | '');
+                      setCustomerPitamStatus('');
                       setCustomerId('');
                       setCustomerCategoryId('');
                       setCustomerGrade('');
                     }}
-                    disabled={!isItPitamEnabled || fromTraderPitamStatusOptions.length === 0}
+                    disabled={!isItPitamEnabled || (isModulo ? generalTransferPitamStatusOptions.length === 0 : fromTraderPitamStatusOptions.length === 0)}
                   >
                     <option value="">{f.pitamStatusPlaceholder}</option>
-                    {fromTraderPitamStatusOptions.map((option) => (
+                    {(isModulo ? generalTransferPitamStatusOptions : fromTraderPitamStatusOptions).map((option) => (
                       <option key={option} value={option}>
                         {i18n.pitamStatuses[option] || option}
                       </option>
                     ))}
                   </select>
                 </div>
+
+                {/* The trader side can be a MIXED batch, but a customer can't own "mixed" stock —
+                    require picking the actual pitam status for the customer record in that case only. */}
+                {pitamStatus === 'MIXED' ? (
+                  <div style={FIELD_STYLE}>
+                    <label style={LABEL_STYLE}>{f.customerPitamStatusLabel}</label>
+                    <select
+                      className="seasons-manager__year-input"
+                      value={customerPitamStatus}
+                      onChange={(event) => setCustomerPitamStatus(event.target.value as PitamStatus | '')}
+                    >
+                      <option value="">{f.pitamStatusPlaceholder}</option>
+                      <option value="WITH_PITAM">{i18n.pitamStatuses.WITH_PITAM}</option>
+                      <option value="WITHOUT_PITAM">{i18n.pitamStatuses.WITHOUT_PITAM}</option>
+                    </select>
+                  </div>
+                ) : null}
               </div>
 
               <div style={ROW_STYLE}>
@@ -1150,10 +1336,10 @@ export function AddTraderMovementModal({
                       setGrade('');
                       setPitamStatus('');
                     }}
-                    disabled={isModulo ? !isWasteModuloCategoryEnabled : (!isWasteTraderCategoryEnabled || fromTraderCategoryOptions.length === 0)}
+                    disabled={isModulo ? (!isWasteModuloCategoryEnabled || generalCategoryOptions.length === 0) : (!isWasteTraderCategoryEnabled || fromTraderCategoryOptions.length === 0)}
                   >
                     <option value="">{f.traderCategoryPlaceholder}</option>
-                    {(isModulo ? traderCategories : fromTraderCategoryOptions).map((category) => (
+                    {(isModulo ? generalCategoryOptions : fromTraderCategoryOptions).map((category) => (
                       <option key={category.id} value={String(category.id)}>
                         {category.name}
                       </option>
@@ -1170,10 +1356,10 @@ export function AddTraderMovementModal({
                       setGrade(event.target.value);
                       setPitamStatus('');
                     }}
-                    disabled={isModulo ? !isWasteModuloGradeEnabled : (!isWasteTraderGradeEnabled || fromTraderGradeOptions.length === 0)}
+                    disabled={isModulo ? (!isWasteModuloGradeEnabled || generalGradeOptions.length === 0) : (!isWasteTraderGradeEnabled || fromTraderGradeOptions.length === 0)}
                   >
                     <option value="">{f.gradePlaceholder}</option>
-                    {(isModulo ? GRADE_OPTIONS : fromTraderGradeOptions).map((option) => (
+                    {(isModulo ? generalGradeOptions : fromTraderGradeOptions).map((option) => (
                       <option key={option} value={option}>
                         {option}
                       </option>
@@ -1187,10 +1373,10 @@ export function AddTraderMovementModal({
                     className="seasons-manager__year-input"
                     value={pitamStatus}
                     onChange={(event) => setPitamStatus(event.target.value as PitamStatus | '')}
-                    disabled={isModulo ? !isWasteModuloPitamEnabled : (!isWasteTraderPitamEnabled || fromTraderPitamStatusOptions.length === 0)}
+                    disabled={isModulo ? (!isWasteModuloPitamEnabled || generalPitamStatusOptions.length === 0) : (!isWasteTraderPitamEnabled || fromTraderPitamStatusOptions.length === 0)}
                   >
                     <option value="">{f.pitamStatusPlaceholder}</option>
-                    {(isModulo ? PITAM_STATUS_OPTIONS : fromTraderPitamStatusOptions).map((option) => (
+                    {(isModulo ? generalPitamStatusOptions : fromTraderPitamStatusOptions).map((option) => (
                       <option key={option} value={option}>
                         {i18n.pitamStatuses[option] || option}
                       </option>

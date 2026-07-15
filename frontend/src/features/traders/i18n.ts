@@ -313,6 +313,7 @@ export type TraderMovementsI18n = {
 		gradePlaceholder: string;
 		pitamStatusLabel: string;
 		pitamStatusPlaceholder: string;
+		customerPitamStatusLabel: string;
 		quantityLabel: string;
 		quantityPlaceholder: string;
 		availableQuantityHint: (quantity: number) => string;

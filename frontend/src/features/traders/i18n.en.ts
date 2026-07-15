@@ -358,6 +358,7 @@ export const TRADER_MOVEMENTS_I18N_EN: TraderMovementsI18n = {
 		gradePlaceholder: 'Select grade',
 		pitamStatusLabel: 'Pitam Status',
 		pitamStatusPlaceholder: 'Select pitam status',
+		customerPitamStatusLabel: 'Customer Pitam Status',
 		quantityLabel: 'Quantity',
 		quantityPlaceholder: 'Enter quantity',
 		availableQuantityHint: (quantity: number) => `Available: ${quantity}`,

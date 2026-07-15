@@ -49,6 +49,7 @@ export type CreateInternalTransferPayload = {
   fromCustomerCategoryId?: number;
   toTraderCategoryId?: number;
   toGrade?: Grade;
+  toPitamStatus?: PitamStatus;
   toCustomerCategoryId?: number;
   fromOwnerType: InventoryOwnerType;
   fromTraderId?: number;
@@ -62,6 +63,25 @@ export type CreateInternalTransferPayload = {
 
 export async function createInternalTransfer(payload: CreateInternalTransferPayload) {
   return apiClient('/inventory/internal-transfer', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export type CreateCustomerGeneralTransferPayload = {
+  date: string;
+  dateHebrew: string;
+  quantity: number;
+  pitamStatus: PitamStatus;
+  grade: Grade;
+  traderCategoryId: number;
+  customerId: number;
+  customerCategoryId: number;
+  notes?: string | null;
+};
+
+export async function createCustomerGeneralTransfer(payload: CreateCustomerGeneralTransferPayload) {
+  return apiClient('/inventory/customer-general-transfer', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

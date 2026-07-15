@@ -358,6 +358,7 @@ export const TRADER_MOVEMENTS_I18N_HE: TraderMovementsI18n = {
 		gradePlaceholder: 'בחר דרגה',
 		pitamStatusLabel: 'סטטוס פיטם',
 		pitamStatusPlaceholder: 'בחר סטטוס פיטם',
+		customerPitamStatusLabel: 'סטטוס פיטם ללקוח',
 		quantityLabel: 'כמות',
 		quantityPlaceholder: 'הזן כמות',
 		availableQuantityHint: (quantity: number) => `זמין: ${quantity}`,

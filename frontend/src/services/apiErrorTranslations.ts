@@ -37,6 +37,7 @@ const EXACT_TRANSLATIONS_HE: Record<string, string> = {
   'traderCategoryId is required': 'יש לבחור קטגוריית סוחר',
   'grade is required': 'יש לבחור דרגה',
   'pitamStatus is required': 'יש לבחור סטטוס פיטם',
+  'toPitamStatus cannot be MIXED': 'לא ניתן לבחור "מעורב" כסטטוס פיטם עבור הלקוח - יש לבחור עם פיטם או בלי פיטם',
   'INTERNAL_TRANSFER must be between TRADER and CUSTOMER': 'העברה ללקוח חייבת להיות בין סוחר לבין לקוח',
   'OWNERSHIP_TRANSFER must be TRADER -> TRADER': 'העברת בעלות חייבת להיות בין שני סוחרים',
   'fromTraderId and toTraderId must be different for OWNERSHIP_TRANSFER': 'סוחר המקור וסוחר המקבל חייבים להיות שונים',
