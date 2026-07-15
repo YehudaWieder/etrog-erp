@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { ComponentProps } from 'react';
 import { AuthForm } from '../../../components/forms/AuthForm';
@@ -26,6 +26,12 @@ export function useLoginPage() {
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotMessage, setForgotMessage] = useState('');
   const [isSendingReset, setIsSendingReset] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      navigate('/home', { replace: true });
+    }
+  }, [navigate]);
 
   const successNotice = (() => {
     const state = location.state as { notice?: string } | null;
