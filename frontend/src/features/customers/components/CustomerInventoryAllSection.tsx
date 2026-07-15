@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { ReactNode, RefObject } from 'react';
+import { FaScaleBalanced } from 'react-icons/fa6';
 import type { CustomerInventoryI18n } from '../i18n.inventory';
 import type {
   CustomerInventorySummaryRow,
@@ -67,6 +68,7 @@ export function CustomerInventoryAllSection({
 
       <div className={traderStyles.summaryGrid}>
         <article className={traderStyles.summaryCard}>
+          <div className={traderStyles.summaryIcon}><FaScaleBalanced aria-hidden="true" /></div>
           <span className={traderStyles.summaryLabel}>{labels.totals.totalQuantity}</span>
           <strong className={traderStyles.summaryValue}>
             {numberFormatter.format(Math.abs(totals.totalQuantity))}

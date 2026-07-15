@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { ReactNode, RefObject } from 'react';
+import { FaScaleBalanced, FaUserTie, FaLayerGroup } from 'react-icons/fa6';
 import type { AppLang, TraderInventoryI18n } from '../i18n';
 import type { TraderInventorySummaryRow, TraderInventorySummaryTotals } from '../traderInventory.types';
 import {
@@ -53,14 +54,17 @@ export function TraderInventoryAllSection({
 
       <div className={styles.summaryGrid}>
         <article className={styles.summaryCard}>
+          <div className={styles.summaryIcon}><FaScaleBalanced aria-hidden="true" /></div>
           <span className={styles.summaryLabel}>{labels.totals.totalQuantity}</span>
           <strong className={styles.summaryValue}>{numberFormatter.format(Math.abs(totals.totalQuantity))}</strong>
         </article>
         <article className={styles.summaryCard}>
+          <div className={styles.summaryIcon}><FaUserTie aria-hidden="true" /></div>
           <span className={styles.summaryLabel}>{labels.totals.traderQuantity}</span>
           <strong className={styles.summaryValue}>{numberFormatter.format(Math.abs(totals.traderQuantity))}</strong>
         </article>
         <article className={styles.summaryCard}>
+          <div className={styles.summaryIcon}><FaLayerGroup aria-hidden="true" /></div>
           <span className={styles.summaryLabel}>{labels.totals.moduloQuantity}</span>
           <strong className={styles.summaryValue}>{numberFormatter.format(Math.abs(totals.moduloQuantity))}</strong>
         </article>

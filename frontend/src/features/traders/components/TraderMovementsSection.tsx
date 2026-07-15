@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
+import { FaWarehouse, FaBoxOpen, FaBoxesStacked } from 'react-icons/fa6';
 import type { AppLang } from '../i18n';
 import { getTraderMovementsI18n } from '../i18n';
 import type { TraderMovement } from '../hooks/useTraderMovements';
@@ -569,14 +570,17 @@ export function TraderMovementsSection({
       {!isLoading && !error && filteredMovements.length > 0 && (
         <div className={summaryStyles.summaryGrid}>
           <article className={summaryStyles.summaryCard}>
+            <div className={summaryStyles.summaryIcon}><FaWarehouse aria-hidden="true" /></div>
             <span className={summaryStyles.summaryLabel}>{i18n.summary.totalInventory}</span>
             <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.totalInventory)}</strong>
           </article>
           <article className={summaryStyles.summaryCard}>
+            <div className={summaryStyles.summaryIcon}><FaBoxOpen aria-hidden="true" /></div>
             <span className={summaryStyles.summaryLabel}>{i18n.summary.notPacked}</span>
             <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.notPacked)}</strong>
           </article>
           <article className={summaryStyles.summaryCard}>
+            <div className={summaryStyles.summaryIcon}><FaBoxesStacked aria-hidden="true" /></div>
             <span className={summaryStyles.summaryLabel}>{i18n.summary.packed}</span>
             <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.packed)}</strong>
           </article>

@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react';
+import { FaWarehouse, FaBoxOpen, FaBoxesStacked } from 'react-icons/fa6';
 import { GlobalDataTable, type GlobalDataTableColumn, GLOBAL_DATA_TABLE_WIDTHS } from '../../../components/ui/GlobalDataTable';
 import { GlobalFiltersBar, type GlobalFilterControl } from '../../../components/ui/GlobalFiltersBar';
 import { downloadStyledExcel } from '../../../services/exportExcel';
@@ -542,14 +543,17 @@ export function CustomerMovementsSection({
       {!isLoading && !error && filteredMovements.length > 0 && (
         <div className={summaryStyles.summaryGrid}>
           <article className={summaryStyles.summaryCard}>
+            <div className={summaryStyles.summaryIcon}><FaWarehouse aria-hidden="true" /></div>
             <span className={summaryStyles.summaryLabel}>{labels.summary.totalInventory}</span>
             <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.totalInventory)}</strong>
           </article>
           <article className={summaryStyles.summaryCard}>
+            <div className={summaryStyles.summaryIcon}><FaBoxOpen aria-hidden="true" /></div>
             <span className={summaryStyles.summaryLabel}>{labels.summary.notPacked}</span>
             <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.notPacked)}</strong>
           </article>
           <article className={summaryStyles.summaryCard}>
+            <div className={summaryStyles.summaryIcon}><FaBoxesStacked aria-hidden="true" /></div>
             <span className={summaryStyles.summaryLabel}>{labels.summary.packed}</span>
             <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.packed)}</strong>
           </article>
