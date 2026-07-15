@@ -55,6 +55,21 @@ function initializeTheme(): void {
 
 initializeTheme();
 
+// Prevent the mouse wheel from changing the value of a focused number input;
+// quantity fields should only be editable via the keyboard.
+if (typeof window !== 'undefined') {
+  document.addEventListener(
+    'wheel',
+    () => {
+      const active = document.activeElement;
+      if (active instanceof HTMLInputElement && active.type === 'number') {
+        active.blur();
+      }
+    },
+    { passive: true },
+  );
+}
+
 type SetupRequirement = { path: string; step: 1 | 2 | 3 };
 
 const SETUP_ALLOWED_PATHS: Record<1 | 2 | 3, string[]> = {
