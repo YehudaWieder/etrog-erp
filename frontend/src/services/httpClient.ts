@@ -9,8 +9,23 @@ import { clearAuthSession, getAuthToken, signalSessionExpired } from './authSess
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '/api').replace(/\/+$/, '');
 
+export const API_LOADING_EVENT = 'api:loading-change';
+
+let activeRequestCount = 0;
+
+function updateActiveRequestCount(delta: number): void {
+  const wasLoading = activeRequestCount > 0;
+  activeRequestCount = Math.max(0, activeRequestCount + delta);
+  const isLoading = activeRequestCount > 0;
+
+  if (wasLoading !== isLoading) {
+    window.dispatchEvent(new CustomEvent(API_LOADING_EVENT, { detail: { isLoading } }));
+  }
+}
+
 export type ApiClientInit = RequestInit & {
   suppressGlobalFeedback?: boolean;
+  suppressGlobalLoading?: boolean;
   successMessage?: string;
   errorMessage?: string;
 };
@@ -38,6 +53,7 @@ function buildUrl(path: string): string {
 export async function apiClient<T>(path: string, init: ApiClientInit = {}): Promise<T> {
   const {
     suppressGlobalFeedback,
+    suppressGlobalLoading,
     successMessage,
     errorMessage,
     ...requestInit
@@ -60,69 +76,79 @@ export async function apiClient<T>(path: string, init: ApiClientInit = {}): Prom
     headers.set('Content-Type', 'application/json');
   }
 
-  let response: Response;
+  if (!suppressGlobalLoading) {
+    updateActiveRequestCount(1);
+  }
 
   try {
-    response = await fetch(buildUrl(path), {
-      ...requestInit,
-      headers,
-    });
-  } catch {
-    const networkMessage = buildNetworkErrorMessage(errorMessage);
+    let response: Response;
 
-    if (!suppressGlobalFeedback) {
-      dispatchApiFeedback({
-        variant: 'error',
-        message: networkMessage,
-      });
-    }
-
-    throw new ApiError(networkMessage, 0);
-  }
-
-  const rawText = await response.text();
-  let data: unknown = null;
-
-  if (rawText.length > 0) {
     try {
-      data = JSON.parse(rawText) as unknown;
+      response = await fetch(buildUrl(path), {
+        ...requestInit,
+        headers,
+      });
     } catch {
-      data = rawText;
+      const networkMessage = buildNetworkErrorMessage(errorMessage);
+
+      if (!suppressGlobalFeedback) {
+        dispatchApiFeedback({
+          variant: 'error',
+          message: networkMessage,
+        });
+      }
+
+      throw new ApiError(networkMessage, 0);
     }
-  }
 
-  if (!response.ok) {
-    const isSessionExpiry = response.status === 401 && requestHadAuthToken;
+    const rawText = await response.text();
+    let data: unknown = null;
 
-    if (isSessionExpiry) {
-      clearAuthSession();
-      signalSessionExpired();
+    if (rawText.length > 0) {
+      try {
+        data = JSON.parse(rawText) as unknown;
+      } catch {
+        data = rawText;
+      }
     }
 
-    const rawMessage =
-      data && typeof data === 'object' && 'message' in data
-        ? (data as { message?: string | string[] }).message
-        : undefined;
-    const serverMessage = Array.isArray(rawMessage) ? rawMessage.join(', ') : rawMessage;
+    if (!response.ok) {
+      const isSessionExpiry = response.status === 401 && requestHadAuthToken;
 
-    const safeMessage = buildSafeErrorMessage(response.status, serverMessage, errorMessage, isSessionExpiry);
+      if (isSessionExpiry) {
+        clearAuthSession();
+        signalSessionExpired();
+      }
 
-    if (!suppressGlobalFeedback) {
+      const rawMessage =
+        data && typeof data === 'object' && 'message' in data
+          ? (data as { message?: string | string[] }).message
+          : undefined;
+      const serverMessage = Array.isArray(rawMessage) ? rawMessage.join(', ') : rawMessage;
+
+      const safeMessage = buildSafeErrorMessage(response.status, serverMessage, errorMessage, isSessionExpiry);
+
+      if (!suppressGlobalFeedback) {
+        dispatchApiFeedback({
+          variant: 'error',
+          message: safeMessage,
+        });
+      }
+
+      throw new ApiError(safeMessage || `Request failed with status ${response.status}`, response.status, serverMessage);
+    }
+
+    if (!suppressGlobalFeedback && shouldNotifySuccess(requestMethod)) {
       dispatchApiFeedback({
-        variant: 'error',
-        message: safeMessage,
+        variant: 'success',
+        message: successMessage || buildSuccessMessage(requestMethod, path),
       });
     }
 
-    throw new ApiError(safeMessage || `Request failed with status ${response.status}`, response.status, serverMessage);
+    return data as T;
+  } finally {
+    if (!suppressGlobalLoading) {
+      updateActiveRequestCount(-1);
+    }
   }
-
-  if (!suppressGlobalFeedback && shouldNotifySuccess(requestMethod)) {
-    dispatchApiFeedback({
-      variant: 'success',
-      message: successMessage || buildSuccessMessage(requestMethod, path),
-    });
-  }
-
-  return data as T;
 }

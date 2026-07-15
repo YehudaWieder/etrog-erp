@@ -15,4 +15,4 @@ export {
   persistAuthSession,
   type StoredAuthUser,
 } from './authSession';
-export { ApiError, apiClient, type ApiClientInit } from './httpClient';
+export { ApiError, apiClient, API_LOADING_EVENT, type ApiClientInit } from './httpClient';

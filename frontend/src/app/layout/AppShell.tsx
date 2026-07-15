@@ -15,8 +15,11 @@ import {
 import { Sidebar } from '../../components/navigation/Sidebar';
 import { AppTopBar } from '../../components/navigation/AppTopBar';
 import { StickyHeaderBar } from '../../components/StickyHeaderBar';
+import { TopLoadingBar } from '../../components/ui/TopLoadingBar';
 import type { ProfileMenuProps } from '../../components/navigation/ProfileMenu';
 import { directionFromLanguage, getPreferredLanguage } from '../../utils/locale';
+import { useApiLoading } from '../../hooks/useApiLoading';
+import { useSettledBoolean } from '../../hooks/useSettledBoolean';
 import brandLogo from '../../assets/logo.svg';
 import styles from './AppShell.module.css';
 
@@ -67,6 +70,14 @@ export function AppShell({
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const location = useLocation();
+  const isApiLoading = useApiLoading();
+  // Most in-app navigation (top bar and sidebar) reuses already-loaded data or is gated by
+  // its own "already loaded for this season" guards, so it often triggers no new API call at
+  // all — yet the destination page can still take a moment to render. Pulse the loading bar
+  // for a short minimum window on every route change so navigation always gives feedback,
+  // and let it extend naturally via isApiLoading if a real fetch does follow.
+  const [isNavigating, setIsNavigating] = useState(false);
+  const navigatingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resetOnNavigateRef = useRef(false);
   const preferredLanguage = getPreferredLanguage('he');
   const resolvedDirection = direction ?? directionFromLanguage(preferredLanguage);
@@ -208,9 +219,9 @@ export function AppShell({
     const refreshUrgentMessages = async () => {
       try {
         const [nextUrgentMessages, inboxMessages, unreadCount] = await Promise.all([
-          fetchUnreadUrgentInboxMessages(),
-          fetchInboxMessages(),
-          fetchUnreadCount(),
+          fetchUnreadUrgentInboxMessages({ suppressGlobalLoading: true }),
+          fetchInboxMessages({ suppressGlobalLoading: true }),
+          fetchUnreadCount({ suppressGlobalLoading: true }),
         ]);
         if (!isMounted) {
           return;
@@ -334,6 +345,31 @@ export function AppShell({
     }
   }, [location.key, dispatch]);
 
+  useEffect(() => {
+    setIsNavigating(true);
+    if (navigatingTimeoutRef.current) {
+      clearTimeout(navigatingTimeoutRef.current);
+    }
+    navigatingTimeoutRef.current = setTimeout(() => {
+      setIsNavigating(false);
+    }, 500);
+
+    return () => {
+      if (navigatingTimeoutRef.current) {
+        clearTimeout(navigatingTimeoutRef.current);
+      }
+    };
+  }, [location.key]);
+
+  // A full page navigation is rarely one continuous request: many pages resolve the active
+  // season, dispatch a filter, wait for the resulting re-render, and only then fire their real
+  // data fetch — sometimes repeating that cycle more than once before everything is loaded.
+  // Each of those hand-offs leaves a real gap with zero requests in flight, even though the page
+  // is still nowhere near ready. Without bridging those gaps, the bar reports "done" after the
+  // first burst and restarts for every later one, instead of reading as a single load. 1500ms
+  // comfortably spans that hand-off latency without keeping the bar stuck on genuinely finished pages.
+  const isPageLoading = useSettledBoolean(isApiLoading || isNavigating, 1500);
+
   const handleTopBarNavigate = (item: NavItem) => {
     resetOnNavigateRef.current = true;
     navigate(item.href ?? `/${item.id}`);
@@ -365,6 +401,7 @@ export function AppShell({
         onProfile={topBarOptions.onProfile}
         userName={topBarOptions.userName}
       />
+      <TopLoadingBar isLoading={isPageLoading} placement="fixed-below-topbar" />
       <div className="app-shell__body">
         {!hideSidebar && (
           <Sidebar

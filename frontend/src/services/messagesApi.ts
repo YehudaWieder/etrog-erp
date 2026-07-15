@@ -1,4 +1,4 @@
-import { apiClient } from './apiClient';
+import { apiClient, type ApiClientInit } from './apiClient';
 
 export type Message = {
   id: number;
@@ -28,16 +28,20 @@ export async function fetchAllMessages(): Promise<Message[]> {
   return apiClient<Message[]>('/messages/all');
 }
 
-export async function fetchInboxMessages(): Promise<Message[]> {
-  return apiClient<Message[]>('/messages/inbox');
+export async function fetchInboxMessages(
+  init?: Pick<ApiClientInit, 'suppressGlobalLoading'>,
+): Promise<Message[]> {
+  return apiClient<Message[]>('/messages/inbox', { ...init });
 }
 
 export async function fetchOutboxMessages(): Promise<Message[]> {
   return apiClient<Message[]>('/messages/outbox');
 }
 
-export async function fetchUnreadCount(): Promise<{ count: number }> {
-  const response = await apiClient<number | { count?: number }>('/messages/unread-count');
+export async function fetchUnreadCount(
+  init?: Pick<ApiClientInit, 'suppressGlobalLoading'>,
+): Promise<{ count: number }> {
+  const response = await apiClient<number | { count?: number }>('/messages/unread-count', { ...init });
 
   if (typeof response === 'number') {
     return { count: response };
@@ -46,8 +50,10 @@ export async function fetchUnreadCount(): Promise<{ count: number }> {
   return { count: typeof response?.count === 'number' ? response.count : 0 };
 }
 
-export async function fetchUnreadUrgentInboxMessages(): Promise<Message[]> {
-  return apiClient<Message[]>('/messages/filter?box=inbox&isRead=false&priority=URGENT');
+export async function fetchUnreadUrgentInboxMessages(
+  init?: Pick<ApiClientInit, 'suppressGlobalLoading'>,
+): Promise<Message[]> {
+  return apiClient<Message[]>('/messages/filter?box=inbox&isRead=false&priority=URGENT', { ...init });
 }
 
 export async function fetchThread(messageId: number): Promise<Message[]> {
