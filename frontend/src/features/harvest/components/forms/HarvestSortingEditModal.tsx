@@ -10,6 +10,8 @@ type HarvestSortingEditModalProps = {
   formatGregorianDate: (value: string) => string;
   quantity: number;
   onQuantityChange: (value: number) => void;
+  isPartial: boolean;
+  onIsPartialChange: (value: boolean) => void;
   isSubmitting: boolean;
   error: string;
   onClose: () => void;
@@ -23,6 +25,8 @@ export function HarvestSortingEditModal({
   formatGregorianDate,
   quantity,
   onQuantityChange,
+  isPartial,
+  onIsPartialChange,
   isSubmitting,
   error,
   onClose,
@@ -57,8 +61,14 @@ export function HarvestSortingEditModal({
     return '';
   };
 
-  const isPartial = row.fieldHarvest?.isPartialClassification ?? false;
   const target = resolveTarget();
+
+  const totalAfterRejected = row.fieldHarvest?.totalAfterRejected;
+  const classifiedTotal = row.fieldHarvest?.classifiedTotal;
+  const requiredTotalForThisRow =
+    totalAfterRejected !== undefined && classifiedTotal !== undefined
+      ? Math.max(0, totalAfterRejected - (classifiedTotal - row.quantity))
+      : null;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -105,17 +115,39 @@ export function HarvestSortingEditModal({
           </label>
         </div>
 
-        <fieldset className={styles.classificationMode} disabled aria-label={form.classificationModeLabel}>
+        <fieldset className={styles.classificationMode} aria-label={form.classificationModeLabel}>
           <legend>{form.classificationModeLabel}</legend>
           <label>
-            <input type="radio" name="edit-classification-mode" disabled checked={!isPartial} onChange={() => void 0} />
+            <input
+              type="radio"
+              name="edit-classification-mode"
+              checked={!isPartial}
+              onChange={() => onIsPartialChange(false)}
+            />
             <span>{form.fullSorting}</span>
           </label>
           <label>
-            <input type="radio" name="edit-classification-mode" disabled checked={isPartial} onChange={() => void 0} />
+            <input
+              type="radio"
+              name="edit-classification-mode"
+              checked={isPartial}
+              onChange={() => onIsPartialChange(true)}
+            />
             <span>{form.partialSorting}</span>
           </label>
         </fieldset>
+
+        {requiredTotalForThisRow !== null ? (
+          <p className={`${styles.fullSortingTargetHint} ${quantity === requiredTotalForThisRow ? '' : styles.fullSortingTargetHintOff}`}>
+            {form.fullSortingRequiredHint(requiredTotalForThisRow)}
+            {' '}
+            {quantity > requiredTotalForThisRow
+              ? form.fullSortingReduceHint(quantity - requiredTotalForThisRow)
+              : quantity < requiredTotalForThisRow
+                ? form.fullSortingIncreaseHint(requiredTotalForThisRow - quantity)
+                : form.fullSortingMatchHint}
+          </p>
+        ) : null}
 
         <div className={`management-form-grid ${styles.grid} ${styles.gridPrimary}`}>
           <input

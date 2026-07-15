@@ -45,6 +45,8 @@ export class ClassificationRepository {
             dateGregorian: true,
             dateHebrew: true,
             isPartialClassification: true,
+            totalAfterRejected: true,
+            classifiedTotal: true,
             field: { select: { name: true } },
           },
         },

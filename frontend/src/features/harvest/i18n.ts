@@ -82,6 +82,10 @@ export type HarvestI18n = {
     notesLabel: string;
     sortingRowsTitle: string;
     sortingTotalQuantityLabel: string;
+    fullSortingRequiredHint: (requiredTotal: number) => string;
+    fullSortingReduceHint: (amount: number) => string;
+    fullSortingIncreaseHint: (amount: number) => string;
+    fullSortingMatchHint: string;
     addSortingRow: string;
     sortingRowPrefix: (index: number) => string;
     removeSortingRow: string;
@@ -124,8 +128,14 @@ export type HarvestI18n = {
     duplicateSortingRowError: string;
     existingClassificationCellBlockedHint: string;
     blockedQuantityFieldsHint: string;
-    editExistingClassificationCellLabel: string;
+    addExistingClassificationQuantityLabel: string;
     cancelExistingClassificationCellLabel: string;
+    addExistingClassificationQuantityPopupTitle: string;
+    addExistingClassificationQuantityPopupPrefix: string;
+    addExistingClassificationQuantityPopupGradeWord: string;
+    addExistingClassificationQuantityPopupInstruction: string;
+    addExistingClassificationQuantityConfirmLabel: string;
+    addExistingClassificationQuantityInvalidError: string;
     existingClassificationCellInvalidQuantityError: string;
     existingClassificationCellSaveError: string;
     cancel: string;
@@ -195,6 +205,8 @@ export type HarvestI18n = {
     instructions: string;
     harvestLabel: string;
     harvestPlaceholder: string;
+    loadingHarvestOptions: string;
+    selectHarvestHint: string;
     dateGregorianLabel: string;
     totalHarvestedLabel: string;
     totalRejectedLabel: string;

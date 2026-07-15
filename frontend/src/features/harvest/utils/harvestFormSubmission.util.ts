@@ -90,6 +90,9 @@ export type ClassificationComboIdentity = {
   traderName?: string | null;
   customerName?: string | null;
   categoryName?: string | null;
+  // Customer categories can share a display name across different grades (e.g. "מהודר" grade א vs. grade ב),
+  // so the combo key must include the grade to avoid conflating them as the same category.
+  categoryGrade?: string | null;
 };
 
 export function buildClassificationComboKey({
@@ -97,6 +100,7 @@ export function buildClassificationComboKey({
   traderName,
   customerName,
   categoryName,
+  categoryGrade,
 }: ClassificationComboIdentity): string | null {
   if (!categoryName) {
     return null;
@@ -107,7 +111,7 @@ export function buildClassificationComboKey({
   }
 
   if (assignmentType === 'CUSTOMER') {
-    return customerName ? `CUSTOMER:${customerName}:${categoryName}` : null;
+    return customerName ? `CUSTOMER:${customerName}:${categoryName}:${categoryGrade ?? ''}` : null;
   }
 
   return `GENERAL:${categoryName}`;

@@ -4,7 +4,7 @@ import { SubmitButton } from './SubmitButton';
 interface ConfirmDialogProps {
   open: boolean;
   title: string;
-  message: string;
+  message: ReactNode;
   confirmLabel: string;
   cancelLabel: string;
   onConfirm: () => void;
@@ -12,6 +12,7 @@ interface ConfirmDialogProps {
   children?: ReactNode;
   isConfirming?: boolean;
   confirmingLabel?: string;
+  dialogClassName?: string;
 }
 
 export function ConfirmDialog({
@@ -25,11 +26,12 @@ export function ConfirmDialog({
   children,
   isConfirming = false,
   confirmingLabel,
+  dialogClassName,
 }: ConfirmDialogProps) {
   if (!open) return null;
   return (
     <div className="modal-overlay">
-      <div className="modal-dialog">
+      <div className={`modal-dialog${dialogClassName ? ` ${dialogClassName}` : ''}`}>
         <h3 className="modal-title">{title}</h3>
         <div className="modal-message">{message}</div>
         {children}

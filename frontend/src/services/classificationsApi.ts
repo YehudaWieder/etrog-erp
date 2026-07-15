@@ -95,6 +95,8 @@ export type ClassificationListRecord = {
     dateGregorian: string;
     dateHebrew: string;
     isPartialClassification?: boolean | null;
+    totalAfterRejected?: number;
+    classifiedTotal?: number;
     field?: { name: string } | null;
   } | null;
 };

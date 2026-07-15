@@ -80,6 +80,9 @@ export function useHarvestFiltersAndRows({
     // Signal the reload effect to skip its next run (we are handling harvest data here).
     if (requiresHarvestData) {
       harvestLoadedByMainEffectRef.current = -1; // sentinel: loading in progress
+      // Set synchronously (not after the seasons/fields round-trip below) so consumers relying on
+      // this flag — e.g. the sorting form's harvest select — are disabled from the very first render.
+      setIsHarvestLoading(true);
     }
 
     let isMounted = true;
@@ -133,10 +136,9 @@ export function useHarvestFiltersAndRows({
 
         if (!requiresHarvestData || effectiveSeasonId === null) {
           harvestLoadedByMainEffectRef.current = null;
+          setIsHarvestLoading(false);
           return;
         }
-
-        setIsHarvestLoading(true);
 
         try {
           const [records, fieldTotals] = await Promise.all([
@@ -174,6 +176,7 @@ export function useHarvestFiltersAndRows({
 
         setHarvestLoadError(dailyLoadErrorMessage);
         harvestLoadedByMainEffectRef.current = null;
+        setIsHarvestLoading(false);
       }
     };
 

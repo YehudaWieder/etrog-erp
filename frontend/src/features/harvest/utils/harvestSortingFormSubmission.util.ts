@@ -141,3 +141,49 @@ export function buildHarvestSortingFormSubmissionPayload({
 
   return { payload };
 }
+
+type ValidateHarvestSortingEditQuantityParams = {
+  quantity: number;
+  isPartialClassification: boolean;
+  currentRowQuantity: number;
+  fieldHarvest: {
+    totalAfterRejected: number;
+    classifiedTotal: number;
+  };
+  t: HarvestI18n['formSubmission'];
+};
+
+export function validateHarvestSortingEditQuantity({
+  quantity,
+  isPartialClassification,
+  currentRowQuantity,
+  fieldHarvest,
+  t,
+}: ValidateHarvestSortingEditQuantityParams): string | null {
+  const availableSortingTotal = fieldHarvest.totalAfterRejected;
+  const otherRowsClassifiedTotal = Math.max(0, fieldHarvest.classifiedTotal - currentRowQuantity);
+  const remainingCapacityForThisRow = Math.max(0, availableSortingTotal - otherRowsClassifiedTotal);
+  const maximumPartialTotalForThisRow = Math.max(0, remainingCapacityForThisRow - 1);
+
+  if (quantity > remainingCapacityForThisRow) {
+    return t.sortingTotalExceedsAvailable(
+      remainingCapacityForThisRow,
+      otherRowsClassifiedTotal,
+      availableSortingTotal,
+    );
+  }
+
+  if (!isPartialClassification && quantity !== remainingCapacityForThisRow) {
+    return t.sortingTotalWithClassifiedMustMatchAvailableForFullSorting(availableSortingTotal);
+  }
+
+  if (isPartialClassification && quantity > maximumPartialTotalForThisRow) {
+    return t.sortingTotalMustBeAtMostAvailableMinusOneForPartialSorting(
+      maximumPartialTotalForThisRow,
+      otherRowsClassifiedTotal,
+      availableSortingTotal,
+    );
+  }
+
+  return null;
+}

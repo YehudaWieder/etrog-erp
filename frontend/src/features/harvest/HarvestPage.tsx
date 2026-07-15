@@ -35,6 +35,7 @@ import type { Customer } from '../../services/customersApi';
 import { setScopeFilter } from '../../store/globalFiltersSlice';
 import type { AppDispatch, RootState } from '../../store';
 import { HARVEST_I18N } from './i18n';
+import { validateHarvestSortingEditQuantity } from './utils/harvestSortingFormSubmission.util';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { HarvestBulkFormModal } from './components/forms/HarvestBulkFormModal';
 import { HarvestEditModal } from './components/forms/HarvestEditModal';
@@ -138,6 +139,7 @@ export function HarvestPage() {
   const [permanentDeleteSortingError, setPermanentDeleteSortingError] = useState('');
   const [isEditSortingListDialogOpen, setIsEditSortingListDialogOpen] = useState(false);
   const [editQuantityValue, setEditQuantityValue] = useState<number>(0);
+  const [editIsPartialValue, setEditIsPartialValue] = useState<boolean>(false);
   const [isEditingSortingListRow, setIsEditingSortingListRow] = useState(false);
   const [editSortingListError, setEditSortingListError] = useState<string>('');
   const [isDeleteSortingListDialogOpen, setIsDeleteSortingListDialogOpen] = useState(false);
@@ -1162,6 +1164,7 @@ export function HarvestPage() {
   const handleOpenEditSortingListDialog = () => {
     if (!selectedSortingListRow) return;
     setEditQuantityValue(selectedSortingListRow.quantity);
+    setEditIsPartialValue(selectedSortingListRow.fieldHarvest?.isPartialClassification ?? false);
     setEditSortingListError('');
     setIsEditSortingListDialogOpen(true);
   };
@@ -1169,16 +1172,32 @@ export function HarvestPage() {
   const handleEditSortingListRow = async () => {
     if (!selectedSortingListRow) return;
     const harvestId = selectedSortingListRow.fieldHarvest?.id;
-    const isPartialClassification = selectedSortingListRow.fieldHarvest?.isPartialClassification ?? false;
     if (!harvestId) return;
 
-    setIsEditingSortingListRow(true);
     setEditSortingListError('');
+
+    const totalAfterRejected = selectedSortingListRow.fieldHarvest?.totalAfterRejected;
+    const classifiedTotal = selectedSortingListRow.fieldHarvest?.classifiedTotal;
+    if (totalAfterRejected !== undefined && classifiedTotal !== undefined) {
+      const validationError = validateHarvestSortingEditQuantity({
+        quantity: editQuantityValue,
+        isPartialClassification: editIsPartialValue,
+        currentRowQuantity: selectedSortingListRow.quantity,
+        fieldHarvest: { totalAfterRejected, classifiedTotal },
+        t: t.formSubmission,
+      });
+      if (validationError) {
+        setEditSortingListError(validationError);
+        return;
+      }
+    }
+
+    setIsEditingSortingListRow(true);
     try {
       await updateHarvestClassificationQuantity({
         harvestId,
         classificationId: selectedSortingListRow.id,
-        isPartialClassification,
+        isPartialClassification: editIsPartialValue,
         quantity: editQuantityValue,
       });
       setSortingListRows((rows) =>
@@ -1617,6 +1636,8 @@ export function HarvestPage() {
           formatGregorianDate={formatGregorianDate}
           quantity={editQuantityValue}
           onQuantityChange={setEditQuantityValue}
+          isPartial={editIsPartialValue}
+          onIsPartialChange={setEditIsPartialValue}
           isSubmitting={isEditingSortingListRow}
           error={editSortingListError}
           onClose={() => { setIsEditSortingListDialogOpen(false); setEditSortingListError(''); }}
@@ -1703,6 +1724,7 @@ export function HarvestPage() {
         restoreMode={isRestoreSortingMode}
         t={t}
         harvestOptions={isRestoreSortingMode ? restoreHarvestOptions : harvestSortingOptions}
+        isLoadingHarvestOptions={!isRestoreSortingMode && isHarvestLoading}
         selectedHarvestSummary={isRestoreSortingMode ? restoreHarvestSummary : selectedHarvestSummary}
         rawTotals={
           selectedHarvestSummaryTotals

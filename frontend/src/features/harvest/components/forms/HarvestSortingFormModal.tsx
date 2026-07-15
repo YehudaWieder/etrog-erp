@@ -1,4 +1,5 @@
 import { SubmitButton } from '../../../../components/ui/SubmitButton';
+import { TopLoadingBar } from '../../../../components/ui/TopLoadingBar';
 import type { Customer } from '../../../../services/customersApi';
 import type { CustomerCategory } from '../../../../services/customerCategoriesApi';
 import type { ClassificationRecord } from '../../../../services/classificationsApi';
@@ -20,6 +21,7 @@ type HarvestSortingFormModalProps = {
   restoreMode?: boolean;
   t: HarvestI18n;
   harvestOptions: HarvestSortingFormHarvestOption[];
+  isLoadingHarvestOptions: boolean;
   selectedHarvestSummary: {
     dateGregorian: string;
     totalHarvested: string;
@@ -77,6 +79,7 @@ export function HarvestSortingFormModal({
   restoreMode = false,
   t,
   harvestOptions,
+  isLoadingHarvestOptions,
   selectedHarvestSummary,
   rawTotals,
   traders,
@@ -128,6 +131,8 @@ export function HarvestSortingFormModal({
   }
 
   const form = t.bulkForm;
+  const isHarvestSelected = harvestSortingFormHarvestId !== '';
+  const isFormReady = isHarvestSelected && !isLoadingHarvestOptions;
   const availableCustomerCategories = harvestSortingFormCustomerId
     ? harvestFormCustomerCategories.filter((category) => String(category.customerId) === harvestSortingFormCustomerId)
     : [];
@@ -182,7 +187,10 @@ export function HarvestSortingFormModal({
           X
         </button>
 
-        <h3 className="modal-title">{restoreMode ? t.sortingForm.restoreTitle : t.sortingForm.title}</h3>
+        <h3 className="modal-title" style={{ position: 'relative' }}>
+          {restoreMode ? t.sortingForm.restoreTitle : t.sortingForm.title}
+          <TopLoadingBar isLoading={isLoadingHarvestOptions} />
+        </h3>
         <p className="modal-message">{t.sortingForm.instructions}</p>
 
         <div className={`management-form-grid ${styles.grid} ${styles.gridPrimary}`}>
@@ -201,8 +209,9 @@ export function HarvestSortingFormModal({
                 className={`seasons-manager__year-input ${styles.compactSelect}`}
                 value={harvestSortingFormHarvestId}
                 onChange={(event) => onHarvestIdChange(event.target.value)}
+                disabled={isLoadingHarvestOptions}
               >
-                <option value="">{t.sortingForm.harvestPlaceholder}</option>
+                <option value="">{isLoadingHarvestOptions ? t.sortingForm.loadingHarvestOptions : t.sortingForm.harvestPlaceholder}</option>
                 {harvestOptions.map((option) => (
                   <option key={`sorting-form-harvest-${option.value}`} value={option.value}>
                     {option.label}
@@ -257,6 +266,12 @@ export function HarvestSortingFormModal({
           </label>
         </div>
 
+        {!isFormReady ? (
+          <p className="seasons-manager__hint" style={{ margin: 0 }}>
+            {isLoadingHarvestOptions ? t.sortingForm.loadingHarvestOptions : t.sortingForm.selectHarvestHint}
+          </p>
+        ) : (
+          <>
         <fieldset className={styles.classificationMode} aria-label={form.classificationModeLabel}>
           <legend>{form.classificationModeLabel}</legend>
           <p className={styles.classificationModeHint}>{form.classificationModeHint}</p>
@@ -437,6 +452,8 @@ export function HarvestSortingFormModal({
             </label>
           </div>
         ) : null}
+          </>
+        )}
 
         {harvestSortingFormError ? <p className="seasons-manager__error">{harvestSortingFormError}</p> : null}
 
@@ -448,6 +465,7 @@ export function HarvestSortingFormModal({
             type="button"
             className="btn btn-primary"
             onClick={onSubmit}
+            disabled={!isFormReady}
             isLoading={isSubmittingHarvestSortingForm}
             loadingText={restoreMode ? t.sortingForm.restoring : t.sortingForm.saving}
           >

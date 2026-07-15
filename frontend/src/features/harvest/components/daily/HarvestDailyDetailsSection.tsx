@@ -1,17 +1,17 @@
 ﻿import { useMemo } from 'react';
 import type { Dispatch, RefObject, SetStateAction } from 'react';
-import { FaPrint } from 'react-icons/fa6';
+import { FaPrint, FaLeaf, FaBan, FaScaleBalanced } from 'react-icons/fa6';
 import { GlobalDataTable, type GlobalDataTableColumn } from '../../../../components/ui/GlobalDataTable';
 import { GlobalLeftDetailsPanel } from '../../../../components/ui/GlobalLeftDetailsPanel';
 import { GlobalScopedFilters, type GlobalScopedFilterConfig } from '../../../../components/ui/GlobalScopedFilters';
 import type { HarvestRecord } from '../../../../services/harvestsApi';
 import { HarvestDailyDetailsContent, type DetailsSheetData, type RelatedSortingsLabels } from './HarvestDailyDetailsContent';
 import { HarvestPrintExportActions } from '../shared/HarvestPrintExportActions';
+import { HarvestStatCardGrid } from '../shared/HarvestStatCard';
 import { buildHarvestDailySummaryTotals } from '../../services/harvestDailySummary.service';
 import workspaceStyles from '../../../../components/ui/styles/WorkspaceSection.module.css';
 import panelStyles from '../styles/HarvestPanels.module.css';
 import sheetStyles from '../styles/HarvestDetailsSheet.module.css';
-import summaryStyles from '../styles/HarvestDailyDetailsSummary.module.css';
 
 type HarvestDailyDetailsSectionProps = {
   lang: 'he' | 'en';
@@ -119,20 +119,13 @@ export function HarvestDailyDetailsSection({
         </div>
       </header>
 
-      <div className={summaryStyles.summaryGrid}>
-        <article className={summaryStyles.summaryCard}>
-          <span className={summaryStyles.summaryLabel}>{summaryLabels.totalHarvested}</span>
-          <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.totalHarvested)}</strong>
-        </article>
-        <article className={summaryStyles.summaryCard}>
-          <span className={summaryStyles.summaryLabel}>{summaryLabels.totalRejected}</span>
-          <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.totalRejected)}</strong>
-        </article>
-        <article className={summaryStyles.summaryCard}>
-          <span className={summaryStyles.summaryLabel}>{summaryLabels.totalNet}</span>
-          <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.totalNet)}</strong>
-        </article>
-      </div>
+      <HarvestStatCardGrid
+        items={[
+          { key: 'totalHarvested', label: summaryLabels.totalHarvested, value: numberFormatter.format(summaryTotals.totalHarvested), icon: <FaLeaf aria-hidden="true" /> },
+          { key: 'totalRejected', label: summaryLabels.totalRejected, value: numberFormatter.format(summaryTotals.totalRejected), icon: <FaBan aria-hidden="true" /> },
+          { key: 'totalNet', label: summaryLabels.totalNet, value: numberFormatter.format(summaryTotals.totalNet), icon: <FaScaleBalanced aria-hidden="true" /> },
+        ]}
+      />
 
       <GlobalScopedFilters
         scope="harvest-daily-details"

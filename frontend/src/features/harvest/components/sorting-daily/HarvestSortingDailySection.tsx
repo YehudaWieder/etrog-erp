@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { Dispatch, RefObject, SetStateAction } from 'react';
-import { FaPrint } from 'react-icons/fa6';
+import { FaPrint, FaBoxesStacked, FaUserTie, FaUsers } from 'react-icons/fa6';
 import { GlobalDataTable, type GlobalDataTableColumn } from '../../../../components/ui/GlobalDataTable';
 import { GlobalLeftDetailsPanel } from '../../../../components/ui/GlobalLeftDetailsPanel';
 import { GlobalScopedFilters, type GlobalScopedFilterConfig } from '../../../../components/ui/GlobalScopedFilters';
@@ -12,11 +12,11 @@ import {
   type SortingDailyDetailsData,
 } from './HarvestSortingDailyDetailsContent';
 import { HarvestSortingPrintExportActions } from '../shared/HarvestSortingPrintExportActions';
+import { HarvestStatCardGrid } from '../shared/HarvestStatCard';
 import { buildHarvestSortingDailySummaryTotals } from '../../services/harvestSortingDailySummary.service';
 import workspaceStyles from '../../../../components/ui/styles/WorkspaceSection.module.css';
 import panelStyles from '../styles/HarvestPanels.module.css';
 import sheetStyles from '../styles/HarvestDetailsSheet.module.css';
-import summaryStyles from '../styles/HarvestSortingDailySummary.module.css';
 
 type HarvestSortingDailySectionProps = {
   lang: 'he' | 'en';
@@ -112,20 +112,13 @@ export function HarvestSortingDailySection({
         </div>
       </header>
 
-      <div className={summaryStyles.summaryGrid}>
-        <article className={summaryStyles.summaryCard}>
-          <span className={summaryStyles.summaryLabel}>{summaryLabels.totalSorted}</span>
-          <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.totalSorted)}</strong>
-        </article>
-        <article className={summaryStyles.summaryCard}>
-          <span className={summaryStyles.summaryLabel}>{summaryLabels.traderTotal}</span>
-          <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.traderTotal)}</strong>
-        </article>
-        <article className={summaryStyles.summaryCard}>
-          <span className={summaryStyles.summaryLabel}>{summaryLabels.customerTotal}</span>
-          <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.customerTotal)}</strong>
-        </article>
-      </div>
+      <HarvestStatCardGrid
+        items={[
+          { key: 'totalSorted', label: summaryLabels.totalSorted, value: numberFormatter.format(summaryTotals.totalSorted), icon: <FaBoxesStacked aria-hidden="true" /> },
+          { key: 'traderTotal', label: summaryLabels.traderTotal, value: numberFormatter.format(summaryTotals.traderTotal), icon: <FaUserTie aria-hidden="true" /> },
+          { key: 'customerTotal', label: summaryLabels.customerTotal, value: numberFormatter.format(summaryTotals.customerTotal), icon: <FaUsers aria-hidden="true" /> },
+        ]}
+      />
 
       <GlobalScopedFilters
         scope="harvest-daily-details"
