@@ -593,6 +593,7 @@ export function ShipmentsPage() {
         draftQuantityTotal={packingForm.draftQuantityTotal}
         totalPackedQuantity={packingForm.totalPackedQuantity}
         boxRemainingCapacity={packingForm.boxRemainingCapacity}
+        boxCapacity={packingForm.boxCapacity}
         onAddItemRow={packingForm.addItemRow}
         onRemoveItemRow={packingForm.removeItemRow}
         onUpdateItemRow={packingForm.updateItemRow}

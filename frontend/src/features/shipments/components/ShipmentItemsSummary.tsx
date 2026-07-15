@@ -112,11 +112,6 @@ export function ShipmentItemsSummary({ lang, labels, description, refreshKey }: 
           { key: 'total-shipments', label: labels.summary.totalShipments, value: summaryTotals.totalShipments },
           { key: 'total-boxes', label: labels.summary.totalBoxes, value: summaryTotals.totalBoxes },
           { key: 'total-quantity', label: labels.summary.totalQuantity, value: summaryTotals.totalQuantity },
-        ]}
-      />
-      <ShipmentsSummaryCards
-        lang={lang}
-        cards={[
           { key: 'general', label: labels.summary.generalQuantity, value: summaryTotals.generalQuantity },
           { key: 'private', label: labels.summary.privateSelectionQuantity, value: summaryTotals.privateSelectionQuantity },
           { key: 'customer', label: labels.summary.customerQuantity, value: summaryTotals.customerQuantity },

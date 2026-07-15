@@ -152,6 +152,7 @@ type UsePackingFormResult = {
   draftQuantityTotal: number;
   totalPackedQuantity: number;
   boxRemainingCapacity: number | null;
+  boxCapacity: number | null;
   addItemRow: () => void;
   removeItemRow: (id: string) => void;
   updateItemRow: (id: string, updater: Partial<PackingItemRowDraft>) => void;
@@ -728,8 +729,11 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
   const effectiveBoxTotalQuantity = boxTotalQuantity + pendingEditsQuantityDelta;
   const totalPackedQuantity = effectiveBoxTotalQuantity + draftQuantityTotal;
   const boxRemainingCapacity = boxCapacity !== null ? Math.max(0, boxCapacity - effectiveBoxTotalQuantity) : null;
-  const isBoxFull = boxRemainingCapacity !== null && draftQuantityTotal >= boxRemainingCapacity;
-  const isBoxOverCapacity = boxRemainingCapacity !== null && draftQuantityTotal > boxRemainingCapacity;
+  // Compared against the absolute capacity (not the clamped boxRemainingCapacity above), so an
+  // overage caused purely by a pending edit to an existing item — with no new draft rows at all —
+  // is still caught instead of silently clamping to "box full" with no over-capacity error.
+  const isBoxFull = boxCapacity !== null && totalPackedQuantity >= boxCapacity;
+  const isBoxOverCapacity = boxCapacity !== null && totalPackedQuantity > boxCapacity;
 
   const resetFields = useCallback(() => {
     setOriginalShipmentId('');
@@ -928,7 +932,7 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
     }
 
     if (isBoxOverCapacity) {
-      setError(t.boxOverCapacityHint(draftQuantityTotal, boxRemainingCapacity ?? 0));
+      setError(t.boxOverCapacityHint(totalPackedQuantity - boxTotalQuantity, Math.max(0, (boxCapacity ?? 0) - boxTotalQuantity)));
       return;
     }
 
@@ -1049,6 +1053,7 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
     draftQuantityTotal,
     totalPackedQuantity,
     boxRemainingCapacity,
+    boxCapacity,
     addItemRow,
     removeItemRow,
     updateItemRow,

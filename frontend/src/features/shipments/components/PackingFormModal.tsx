@@ -1,5 +1,6 @@
 import { FaXmark } from 'react-icons/fa6';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
+import { TopLoadingBar } from '../../../components/ui/TopLoadingBar';
 import type { BoxStatus } from '../../../services/boxesApi';
 import type { ShipmentRecord } from '../../../services/shipmentsApi';
 import type { Trader } from '../../../services/tradersApi';
@@ -31,6 +32,7 @@ type PackingFormModalText = {
   boxNumberPlaceholder: string;
   loadingBoxes: string;
   noBoxSelectedHint: string;
+  loadingBoxDetailsHint: string;
   noBoxMatchesHint: string;
   editBoxNumberLabel: string;
   editBoxNumberPlaceholder: string;
@@ -64,6 +66,7 @@ type PackingFormModalText = {
     removeRow: string;
     rowPrefix: (index: number) => string;
     emptyHint: string;
+    addRowDisabledHint: string;
     totalPackedQuantityLabel: string;
   };
 };
@@ -90,8 +93,16 @@ type PackingItemFieldsText = {
   quantityPlaceholder: string;
   availableQuantityHint: (n: number) => string;
   existingQuantityHint: (n: number) => string;
-  editExistingItemLabel: string;
+  addExistingItemQuantityLabel: string;
   cancelExistingItemEditLabel: string;
+  addExistingItemQuantityPopupTitle: string;
+  addExistingItemQuantityPopupPrefix: string;
+  addExistingItemQuantityPopupGradeWord: string;
+  addExistingItemQuantityPopupOwnerWord: string;
+  addExistingItemQuantityPopupInstruction: string;
+  addExistingItemQuantityConfirmLabel: string;
+  addExistingItemQuantityInvalidError: string;
+  cancel: string;
   remainingCapacityHint: (n: number) => string;
   notesLabel: string;
   notesPlaceholder: string;
@@ -142,6 +153,7 @@ type PackingFormModalProps = {
   draftQuantityTotal: number;
   totalPackedQuantity: number;
   boxRemainingCapacity: number | null;
+  boxCapacity: number | null;
   onAddItemRow: () => void;
   onRemoveItemRow: (id: string) => void;
   onUpdateItemRow: (id: string, updater: Partial<PackingItemRowDraft>) => void;
@@ -200,6 +212,7 @@ export function PackingFormModal({
   draftQuantityTotal,
   totalPackedQuantity,
   boxRemainingCapacity,
+  boxCapacity,
   onAddItemRow,
   onRemoveItemRow,
   onUpdateItemRow,
@@ -216,9 +229,10 @@ export function PackingFormModal({
   }
 
   const isBoxSelected = selectedBoxId !== '';
+  const isFieldsDisabled = !isBoxSelected || isLoadingOptions;
   const isBoxOpen = status === 'OPEN';
   const boxCapacityMessage = isBoxOverCapacity
-    ? t.boxOverCapacityHint(draftQuantityTotal, boxRemainingCapacity ?? 0)
+    ? t.boxOverCapacityHint(totalPackedQuantity - boxTotalQuantity, Math.max(0, (boxCapacity ?? 0) - boxTotalQuantity))
     : isBoxFull
       ? t.boxFullHint
       : null;
@@ -237,7 +251,10 @@ export function PackingFormModal({
           <FaXmark />
         </button>
 
-        <h3 className="modal-title">{t.title}</h3>
+        <h3 className="modal-title" style={{ position: 'relative' }}>
+          {t.title}
+          <TopLoadingBar isLoading={isLoadingBoxOptions || isLoadingOptions} />
+        </h3>
 
         <div className={gridStyles.topRow}>
           <div className={gridStyles.field}>
@@ -261,7 +278,7 @@ export function PackingFormModal({
               className="seasons-manager__year-input"
               value={selectedShipmentId}
               onChange={(e) => onShipmentIdChange(e.target.value)}
-              disabled={isLoadingOptions}
+              disabled={isFieldsDisabled}
             >
               <option value="">{t.shipmentPlaceholder}</option>
               {shipments.map((s) => (
@@ -283,7 +300,7 @@ export function PackingFormModal({
               onChange={(e) => onBoxNumberChange(e.target.value)}
               onWheel={(e) => e.currentTarget.blur()}
               placeholder={t.editBoxNumberPlaceholder}
-              disabled={!isBoxSelected}
+              disabled={isFieldsDisabled}
             />
           </div>
 
@@ -300,6 +317,7 @@ export function PackingFormModal({
                 className="seasons-manager__year-input"
                 value={status}
                 onChange={(e) => onStatusChange(e.target.value as BoxStatus)}
+                disabled={isFieldsDisabled}
               >
                 {(status === 'SHIPPED' || status === 'DELIVERED' ? BOX_STATUSES_SHIPPED_ONLY : ['OPEN', 'CLOSED'] as BoxStatus[]).map((s) => (
                   <option key={s} value={s}>
@@ -318,6 +336,7 @@ export function PackingFormModal({
                   className="seasons-manager__year-input"
                   value={boxType}
                   onChange={(e) => onBoxTypeChange(e.target.value)}
+                  disabled={isFieldsDisabled}
                 >
                   <option value="">{t.boxTypePlaceholder}</option>
                   {BOX_TYPES.map((type) => (
@@ -357,6 +376,7 @@ export function PackingFormModal({
                     className="seasons-manager__year-input"
                     value={ownershipType}
                     onChange={(e) => onOwnershipTypeChange(e.target.value)}
+                    disabled={isFieldsDisabled}
                   >
                     <option value="">{t.ownershipTypePlaceholder}</option>
                     {OWNERSHIP_TYPES.map((type) => (
@@ -380,7 +400,7 @@ export function PackingFormModal({
                       className="seasons-manager__year-input"
                       value={traderId}
                       onChange={(e) => onTraderIdChange(e.target.value)}
-                      disabled={isLoadingOptions}
+                      disabled={isFieldsDisabled}
                     >
                       <option value="">{t.traderPlaceholder}</option>
                       {traders.map((trader) => (
@@ -405,7 +425,7 @@ export function PackingFormModal({
                       className="seasons-manager__year-input"
                       value={customerId}
                       onChange={(e) => onCustomerIdChange(e.target.value)}
-                      disabled={isLoadingOptions}
+                      disabled={isFieldsDisabled}
                     >
                       <option value="">{t.customerPlaceholder}</option>
                       {customers.map((customer) => (
@@ -433,6 +453,7 @@ export function PackingFormModal({
               }}
               placeholder={t.notesPlaceholder}
               rows={1}
+              disabled={isFieldsDisabled}
             />
           </div>
         </div>
@@ -441,11 +462,17 @@ export function PackingFormModal({
           <p className="seasons-manager__hint" style={{ margin: 0 }}>{t.noBoxSelectedHint}</p>
         ) : null}
 
-        {isBoxSelected && !isShipped ? (
+        {isBoxSelected && isLoadingOptions ? (
+          <p className="seasons-manager__hint" style={{ margin: 0 }}>{t.loadingBoxDetailsHint}</p>
+        ) : null}
+
+        {isBoxSelected && !isShipped && !isLoadingOptions ? (
           <PackingItemRowsSection
             rowsT={t.itemRows}
             fieldsT={itemFieldsT}
             boxOwnershipType={ownershipType}
+            boxTraderId={traderId}
+            boxCustomerId={customerId}
             rows={itemRowsView}
             traders={traders}
             customers={customers}

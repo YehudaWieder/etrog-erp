@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { FaTrashCan } from 'react-icons/fa6';
+import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import type { Trader } from '../../../services/tradersApi';
 import type { Customer } from '../../../services/customersApi';
 import type { StockSource } from '../hooks/useNewShipmentItemForm';
@@ -8,6 +10,7 @@ import {
   PITAM_ROW_KEYS,
   SINGLE_GRADE_COLUMN_KEY,
   createEmptyGradeQuantityMatrix,
+  isMatrixEmpty,
   type PitamRowKey,
 } from '../utils/packingItemMatrix.util';
 import styles from './styles/NewShipmentItemFormModal.module.css';
@@ -18,6 +21,7 @@ type PackingItemRowsText = {
   removeRow: string;
   rowPrefix: (index: number) => string;
   emptyHint: string;
+  addRowDisabledHint: string;
   totalPackedQuantityLabel: string;
 };
 
@@ -42,8 +46,16 @@ type PackingItemFieldsText = {
   quantityPlaceholder: string;
   availableQuantityHint: (n: number) => string;
   existingQuantityHint: (n: number) => string;
-  editExistingItemLabel: string;
+  addExistingItemQuantityLabel: string;
   cancelExistingItemEditLabel: string;
+  addExistingItemQuantityPopupTitle: string;
+  addExistingItemQuantityPopupPrefix: string;
+  addExistingItemQuantityPopupGradeWord: string;
+  addExistingItemQuantityPopupOwnerWord: string;
+  addExistingItemQuantityPopupInstruction: string;
+  addExistingItemQuantityConfirmLabel: string;
+  addExistingItemQuantityInvalidError: string;
+  cancel: string;
   notesLabel: string;
   notesPlaceholder: string;
   loadingInventory: string;
@@ -55,6 +67,8 @@ type PackingItemRowsSectionProps = {
   rowsT: PackingItemRowsText;
   fieldsT: PackingItemFieldsText;
   boxOwnershipType: string;
+  boxTraderId: string;
+  boxCustomerId: string;
   rows: PackingItemRowView[];
   traders: Trader[];
   customers: Customer[];
@@ -79,6 +93,8 @@ export function PackingItemRowsSection({
   rowsT,
   fieldsT,
   boxOwnershipType,
+  boxTraderId,
+  boxCustomerId,
   rows,
   traders,
   customers,
@@ -98,25 +114,68 @@ export function PackingItemRowsSection({
 }: PackingItemRowsSectionProps) {
   const isSharedBox = boxOwnershipType === 'SHARED';
   const isCustomBox = boxOwnershipType === 'CUSTOM';
-  const [unlockedCellKeys, setUnlockedCellKeys] = useState<Set<string>>(new Set());
+  const [didTryAddRow, setDidTryAddRow] = useState(false);
+  const lastRow = rows[rows.length - 1];
+  const lastRowHasQuantity = lastRow
+    ? lastRow.isCustomFreeText
+      ? Number(lastRow.draft.quantity) > 0
+      : !isMatrixEmpty(lastRow.draft.quantities)
+    : true;
+  const canAddRow = !lastRow || (lastRow.hasCategorySelected && lastRowHasQuantity);
 
-  const handleUnlockCellForEdit = (cellKey: string) => {
-    setUnlockedCellKeys((prev) => {
-      const next = new Set(prev);
-      next.add(cellKey);
-      return next;
-    });
+  const handleAddRowClick = () => {
+    if (!canAddRow) {
+      setDidTryAddRow(true);
+      return;
+    }
+    setDidTryAddRow(false);
+    onAddRow();
+  };
+  const [addQuantityCell, setAddQuantityCell] = useState<{
+    itemId: number;
+    baseQuantity: number;
+    categoryName: string;
+    gradeLabel: string;
+    pitamLabel: string;
+    ownerName: string;
+  } | null>(null);
+  const [addQuantityValue, setAddQuantityValue] = useState('');
+  const [addQuantityError, setAddQuantityError] = useState('');
+
+  const handleOpenAddQuantityPopup = (params: {
+    itemId: number;
+    baseQuantity: number;
+    categoryName: string;
+    gradeLabel: string;
+    pitamLabel: string;
+    ownerName: string;
+  }) => {
+    setAddQuantityCell(params);
+    setAddQuantityValue('');
+    setAddQuantityError('');
   };
 
-  const handleRevertCellEdit = (cellKey: string, itemId: number) => {
-    setUnlockedCellKeys((prev) => {
-      if (!prev.has(cellKey)) {
-        return prev;
-      }
-      const next = new Set(prev);
-      next.delete(cellKey);
-      return next;
-    });
+  const handleCloseAddQuantityPopup = () => {
+    setAddQuantityCell(null);
+    setAddQuantityValue('');
+    setAddQuantityError('');
+  };
+
+  const handleConfirmAddQuantity = () => {
+    if (!addQuantityCell) {
+      return;
+    }
+    const parsedAddedQuantity = Number(addQuantityValue);
+    if (!Number.isFinite(parsedAddedQuantity) || parsedAddedQuantity <= 0) {
+      setAddQuantityError(fieldsT.addExistingItemQuantityInvalidError);
+      return;
+    }
+    const newTotal = addQuantityCell.baseQuantity + parsedAddedQuantity;
+    onStageExistingItemEdit(addQuantityCell.itemId, String(newTotal));
+    handleCloseAddQuantityPopup();
+  };
+
+  const handleRevertCellEdit = (itemId: number) => {
     onStageExistingItemEdit(itemId, null);
   };
 
@@ -144,6 +203,27 @@ export function PackingItemRowsSection({
         const { draft } = view;
         const isSharedCustomItem = isSharedBox && draft.itemOwnership === 'CUSTOM';
         const isSharedUnassignedItem = isSharedBox && draft.itemOwnership === 'GENERAL';
+        const selectedCustomerCategoryForRow = view.availableCustomerCategories.find(
+          (category) => String(category.id) === draft.customerCategoryId,
+        );
+        const rowCategoryName = view.isCustomerItem
+          ? selectedCustomerCategoryForRow?.name ?? ''
+          : view.availableTraderCategories.find((category) => String(category.id) === draft.traderCategoryId)?.name ?? '';
+        const rowOwnerName = isCustomBox
+          ? draft.itemOwnership
+          : isSharedCustomItem
+            ? draft.traderId
+            : isSharedBox
+              ? view.isCustomerItem
+                ? customers.find((customer) => String(customer.id) === draft.customerId)?.customerName ?? ''
+                : view.isTraderItem
+                  ? traders.find((trader) => String(trader.id) === draft.traderId)?.name ?? ''
+                  : ''
+              : boxOwnershipType === 'CUSTOMER'
+                ? customers.find((customer) => String(customer.id) === boxCustomerId)?.customerName ?? ''
+                : boxOwnershipType === 'TRADER'
+                  ? traders.find((trader) => String(trader.id) === boxTraderId)?.name ?? ''
+                  : '';
 
         return (
           <div key={draft.id} style={{ padding: '0.75rem 0', marginBottom: '0.75rem' }}>
@@ -347,9 +427,8 @@ export function PackingItemRowsSection({
                           const isLockedByFullBox = isBoxFull && !hasValue;
                           const existingItem = view.existingItemByCell[pitamKey]?.[gradeKey];
                           const isExistingCell = Boolean(existingItem);
-                          const cellKey = `${draft.id}:${pitamKey}:${gradeKey}`;
-                          const isCellUnlocked = isExistingCell && unlockedCellKeys.has(cellKey);
                           const pendingValue = existingItem ? pendingExistingItemEdits[existingItem.id] : undefined;
+                          const hasPendingAddition = pendingValue !== undefined;
 
                           if (isExistingCell && existingItem) {
                             return (
@@ -360,36 +439,47 @@ export function PackingItemRowsSection({
                                     type="number"
                                     min={1}
                                     step={1}
-                                    disabled={!isCellUnlocked}
-                                    readOnly={!isCellUnlocked}
+                                    disabled
+                                    readOnly
                                     value={pendingValue ?? existingItem.quantity}
-                                    onChange={(e) => {
-                                      if (isCellUnlocked) {
-                                        onStageExistingItemEdit(existingItem.id, e.target.value);
-                                      }
-                                    }}
                                     onWheel={(e) => e.currentTarget.blur()}
-                                    title={!isCellUnlocked ? fieldsT.existingQuantityHint(existingItem.quantity) : undefined}
+                                    title={fieldsT.existingQuantityHint(Number(pendingValue ?? existingItem.quantity))}
                                   />
-                                  {!isCellUnlocked ? (
+                                  {!hasPendingAddition ? (
                                     <button
                                       type="button"
-                                      className={styles.editExistingCellButton}
-                                      onClick={() => handleUnlockCellForEdit(cellKey)}
-                                      aria-label={fieldsT.editExistingItemLabel}
-                                      title={fieldsT.editExistingItemLabel}
+                                      className={styles.existingCellActionButton}
+                                      onClick={() =>
+                                        handleOpenAddQuantityPopup({
+                                          itemId: existingItem.id,
+                                          baseQuantity: existingItem.quantity,
+                                          categoryName: rowCategoryName,
+                                          gradeLabel:
+                                            gradeKey === SINGLE_GRADE_COLUMN_KEY
+                                              ? selectedCustomerCategoryForRow?.grade ?? ''
+                                              : gradeKey,
+                                          pitamLabel: fieldsT.pitamStatusLabels[pitamKey] ?? pitamKey,
+                                          ownerName: rowOwnerName,
+                                        })
+                                      }
+                                      aria-label={fieldsT.addExistingItemQuantityLabel}
+                                      title={fieldsT.addExistingItemQuantityLabel}
                                     >
-                                      ✎
+                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round">
+                                        <path d="M12 5v14M5 12h14" />
+                                      </svg>
                                     </button>
                                   ) : (
                                     <button
                                       type="button"
-                                      className={styles.editExistingCellButton}
-                                      onClick={() => handleRevertCellEdit(cellKey, existingItem.id)}
+                                      className={styles.existingCellActionButton}
+                                      onClick={() => handleRevertCellEdit(existingItem.id)}
                                       aria-label={fieldsT.cancelExistingItemEditLabel}
                                       title={fieldsT.cancelExistingItemEditLabel}
                                     >
-                                      ×
+                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round">
+                                        <path d="M6 6l12 12M18 6l-12 12" />
+                                      </svg>
                                     </button>
                                   )}
                                 </div>
@@ -438,7 +528,7 @@ export function PackingItemRowsSection({
                 <button
                   type="button"
                   className="btn btn-primary"
-                  onClick={onAddRow}
+                  onClick={handleAddRowClick}
                   disabled={!isBoxOpen || isBoxFull}
                   title={!isBoxOpen ? addItemDisabledHint : isBoxFull ? (boxCapacityMessage ?? undefined) : undefined}
                   style={{ flexShrink: 0 }}
@@ -452,6 +542,10 @@ export function PackingItemRowsSection({
                 <span>{rowsT.removeRow}</span>
               </button>
             </div>
+
+            {index === rows.length - 1 && didTryAddRow && !canAddRow ? (
+              <p className="seasons-manager__error" style={{ margin: '0.5rem 0 0' }}>{rowsT.addRowDisabledHint}</p>
+            ) : null}
           </div>
         );
       })}
@@ -466,6 +560,60 @@ export function PackingItemRowsSection({
       {isBoxOpen && boxCapacityMessage ? (
         <p className="seasons-manager__error" style={{ margin: '0.5rem 0 0' }}>{boxCapacityMessage}</p>
       ) : null}
+
+      {addQuantityCell
+        ? createPortal(
+            <ConfirmDialog
+              open
+              dialogClassName={`modal-dialog--form ${styles.addQuantityDialog}`}
+              title={fieldsT.addExistingItemQuantityPopupTitle}
+              message={
+                <>
+                  {fieldsT.addExistingItemQuantityPopupPrefix} <strong>{addQuantityCell.categoryName}</strong>
+                  {addQuantityCell.gradeLabel ? (
+                    <>
+                      {' '}
+                      {fieldsT.addExistingItemQuantityPopupGradeWord} <strong>{addQuantityCell.gradeLabel}</strong>
+                    </>
+                  ) : null}
+                  {' '}
+                  <strong>{addQuantityCell.pitamLabel}</strong>
+                  {addQuantityCell.ownerName ? (
+                    <>
+                      {' '}
+                      {fieldsT.addExistingItemQuantityPopupOwnerWord} <strong>{addQuantityCell.ownerName}</strong>
+                    </>
+                  ) : null}
+                  : <strong>{addQuantityCell.baseQuantity}</strong>.
+                  <br />
+                  {fieldsT.addExistingItemQuantityPopupInstruction}
+                </>
+              }
+              confirmLabel={fieldsT.addExistingItemQuantityConfirmLabel}
+              cancelLabel={fieldsT.cancel}
+              onConfirm={handleConfirmAddQuantity}
+              onCancel={handleCloseAddQuantityPopup}
+            >
+              <div className={styles.addQuantityInputRow}>
+                <input
+                  className="seasons-manager__year-input"
+                  type="number"
+                  min="0"
+                  autoFocus
+                  value={addQuantityValue}
+                  onChange={(event) => {
+                    setAddQuantityValue(event.target.value);
+                    setAddQuantityError('');
+                  }}
+                  placeholder={fieldsT.quantityPlaceholder}
+                  aria-label={fieldsT.addExistingItemQuantityPopupTitle}
+                />
+              </div>
+              {addQuantityError ? <p className="seasons-manager__error">{addQuantityError}</p> : null}
+            </ConfirmDialog>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
