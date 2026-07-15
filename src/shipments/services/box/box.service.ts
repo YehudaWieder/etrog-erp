@@ -396,6 +396,9 @@ export class BoxService {
         );
       }
 
+      // Soft-deleted items still reference this box via FK; purge them so the box can be deleted.
+      await tx.shipmentItem.deleteMany({ where: { boxId: id, isDeleted: true } });
+
       await tx.box.delete({ where: { id } });
       await this.shipmentsService.syncShipmentTotals(tx, box.shipmentId);
 
@@ -444,6 +447,9 @@ export class BoxService {
           `Cannot delete box(es) #${boxNumbers} — they have linked trader stock records.`,
         );
       }
+
+      // Soft-deleted items still reference these boxes via FK; purge them so the boxes can be deleted.
+      await tx.shipmentItem.deleteMany({ where: { boxId: { in: ids }, isDeleted: true } });
 
       await tx.box.deleteMany({ where: { id: { in: ids } } });
 
