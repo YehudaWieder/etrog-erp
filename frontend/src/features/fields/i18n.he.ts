@@ -22,4 +22,6 @@ export const FIELDS_I18N_HE: FieldsI18n = {
   save: 'שמור',
   updating: 'מעדכן...',
   adding: 'מוסיף...',
+  includeInRejectionSummary: 'לכלול באחוז יורדים כללי',
+  excludedFromRejectionSummaryBadge: 'לא נכלל באחוז יורדים כללי',
 };

@@ -22,4 +22,6 @@ export const FIELDS_I18N_EN: FieldsI18n = {
   save: 'Save',
   updating: 'Updating...',
   adding: 'Adding...',
+  includeInRejectionSummary: 'Include in overall rejection rate',
+  excludedFromRejectionSummaryBadge: 'Excluded from overall rejection rate',
 };

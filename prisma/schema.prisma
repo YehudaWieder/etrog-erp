@@ -41,6 +41,8 @@ model Field {
 
   slug String @unique // URL-friendly slug
 
+  includeInRejectionSummary Boolean @default(true)
+
   @@unique([name])
 }
 

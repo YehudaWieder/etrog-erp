@@ -17,7 +17,7 @@ export class FieldService {
   }
 
   // Add field
-  async addField(name: string) {
+  async addField(name: string, includeInRejectionSummary?: boolean) {
     const normalizedName = normalizeFieldName(name);
 
     try {
@@ -25,6 +25,7 @@ export class FieldService {
         data: {
           name: normalizedName,
           slug: createFieldSlug(normalizedName),
+          ...(includeInRejectionSummary !== undefined && { includeInRejectionSummary }),
         },
       });
     } catch (error) {
@@ -48,7 +49,7 @@ export class FieldService {
   }
 
   // Update field name
-  async updateFieldName(id: number, newName: string) {
+  async updateFieldName(id: number, newName: string, includeInRejectionSummary?: boolean) {
     const normalizedName = normalizeFieldName(newName);
 
     try {
@@ -57,6 +58,7 @@ export class FieldService {
         data: {
           name: normalizedName,
           slug: createFieldSlug(normalizedName),
+          ...(includeInRejectionSummary !== undefined && { includeInRejectionSummary }),
         },
       });
     } catch (error) {

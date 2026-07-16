@@ -4,15 +4,18 @@ export type Field = {
   id: number;
   name: string;
   slug: string;
+  includeInRejectionSummary: boolean;
 };
 
 export type CreateFieldPayload = {
   name: string;
+  includeInRejectionSummary?: boolean;
 };
 
 export type UpdateFieldPayload = {
   id: number;
   name: string;
+  includeInRejectionSummary?: boolean;
 };
 
 export async function getFields(): Promise<Field[]> {

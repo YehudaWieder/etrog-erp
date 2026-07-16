@@ -10,6 +10,7 @@ export function useFieldsManagement({ onHeaderStateChange }: FieldsManagementPro
   const dispatch = useDispatch<AppDispatch>();
   const { items: fields, loading, error } = useSelector((state: RootState) => state.fields);
   const [newFieldName, setNewFieldName] = useState('');
+  const [newFieldIncludeInRejectionSummary, setNewFieldIncludeInRejectionSummary] = useState(true);
   const [selectedFieldId, setSelectedFieldId] = useState<number | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -17,6 +18,7 @@ export function useFieldsManagement({ onHeaderStateChange }: FieldsManagementPro
   const [addError, setAddError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [editFieldName, setEditFieldName] = useState('');
+  const [editIncludeInRejectionSummary, setEditIncludeInRejectionSummary] = useState(true);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const t = getFieldsI18n();
@@ -49,10 +51,13 @@ export function useFieldsManagement({ onHeaderStateChange }: FieldsManagementPro
     setIsAdding(true);
 
     try {
-      const actionResult = await dispatch(addField({ name: trimmedName }));
+      const actionResult = await dispatch(
+        addField({ name: trimmedName, includeInRejectionSummary: newFieldIncludeInRejectionSummary }),
+      );
 
       if (addField.fulfilled.match(actionResult)) {
         setNewFieldName('');
+        setNewFieldIncludeInRejectionSummary(true);
         return;
       }
 
@@ -83,6 +88,7 @@ export function useFieldsManagement({ onHeaderStateChange }: FieldsManagementPro
 
     setEditError(null);
     setEditFieldName(selectedField.name);
+    setEditIncludeInRejectionSummary(selectedField.includeInRejectionSummary);
     setIsEditDialogOpen(true);
   };
 
@@ -98,7 +104,9 @@ export function useFieldsManagement({ onHeaderStateChange }: FieldsManagementPro
     }
 
     setIsSavingEdit(true);
-    const actionResult = await dispatch(editField({ id: selectedField.id, name: trimmedName }));
+    const actionResult = await dispatch(
+      editField({ id: selectedField.id, name: trimmedName, includeInRejectionSummary: editIncludeInRejectionSummary }),
+    );
 
     if (editField.fulfilled.match(actionResult)) {
       setEditError(null);
@@ -167,6 +175,8 @@ export function useFieldsManagement({ onHeaderStateChange }: FieldsManagementPro
     sortedFields,
     newFieldName,
     setNewFieldName,
+    newFieldIncludeInRejectionSummary,
+    setNewFieldIncludeInRejectionSummary,
     selectedField,
     selectedFieldId,
     setSelectedFieldId,
@@ -176,6 +186,8 @@ export function useFieldsManagement({ onHeaderStateChange }: FieldsManagementPro
     setIsEditDialogOpen,
     editFieldName,
     setEditFieldName,
+    editIncludeInRejectionSummary,
+    setEditIncludeInRejectionSummary,
     editError,
     isSavingEdit,
     isAdding,

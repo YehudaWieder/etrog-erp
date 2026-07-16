@@ -18,6 +18,8 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
     sortedFields,
     newFieldName,
     setNewFieldName,
+    newFieldIncludeInRejectionSummary,
+    setNewFieldIncludeInRejectionSummary,
     selectedField,
     selectedFieldId,
     setSelectedFieldId,
@@ -27,6 +29,8 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
     setIsEditDialogOpen,
     editFieldName,
     setEditFieldName,
+    editIncludeInRejectionSummary,
+    setEditIncludeInRejectionSummary,
     editError,
     isSavingEdit,
     isAdding,
@@ -46,6 +50,14 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
             onChange={(e) => setNewFieldName(e.target.value)}
             placeholder={t.newFieldPlaceholder}
           />
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <input
+              type="checkbox"
+              checked={newFieldIncludeInRejectionSummary}
+              onChange={(e) => setNewFieldIncludeInRejectionSummary(e.target.checked)}
+            />
+            {t.includeInRejectionSummary}
+          </label>
           <SubmitButton
             className="btn btn-primary"
             onClick={() => {
@@ -87,6 +99,9 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
                     <>
                       <span className="seasons-manager__year">{field.name}</span>
                       <span className="seasons-manager__meta">{t.fieldId}: {field.id}</span>
+                      {!field.includeInRejectionSummary ? (
+                        <span className="seasons-manager__meta">{t.excludedFromRejectionSummaryBadge}</span>
+                      ) : null}
                     </>
                   }
                 />
@@ -131,6 +146,15 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
               placeholder={t.editFieldPlaceholder}
               autoFocus
             />
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input
+                type="checkbox"
+                checked={editIncludeInRejectionSummary}
+                onChange={(e) => setEditIncludeInRejectionSummary(e.target.checked)}
+              />
+              {t.includeInRejectionSummary}
+            </label>
 
             {editError ? <p className="seasons-manager__error">{editError}</p> : null}
 
