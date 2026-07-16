@@ -30,10 +30,25 @@ export type SortingDailyCategoryBreakdown = {
 
 import styles from '../styles/HarvestDetailsSheet.module.css';
 
+export type SortingDailySummaryData = {
+  statusLabel: string;
+  rows: Array<{
+    key: string;
+    kind: 'regular' | 'summary';
+    label: string;
+    totalHarvested: string;
+    totalRejected: string;
+    totalAfterRejected: string;
+    classifiedTotal: string;
+    rejectionRate: string;
+  }>;
+};
+
 type HarvestSortingDailyDetailsContentProps = {
   lang: 'he' | 'en';
   t: import('../../i18n').HarvestI18n;
   data: SortingDailyDetailsData;
+  summary: SortingDailySummaryData | null;
   categoryBreakdown: SortingDailyCategoryBreakdown[];
   isDetailRowsLoading: boolean;
   detailRowsLoadError: string;
@@ -51,6 +66,7 @@ export function HarvestSortingDailyDetailsContent({
   lang,
   t,
   data,
+  summary,
   categoryBreakdown,
   isDetailRowsLoading,
   detailRowsLoadError,
@@ -59,6 +75,8 @@ export function HarvestSortingDailyDetailsContent({
   numberFormatter,
   labels,
 }: HarvestSortingDailyDetailsContentProps): JSX.Element {
+  const summaryFields = t.dailyDetails.detailsPanel.fields;
+
   return (
     <>
       <div className={`${styles.sheetCard} harvest-daily-workspace__sheet-card`}>
@@ -73,6 +91,39 @@ export function HarvestSortingDailyDetailsContent({
             <strong>{labels.fieldName}:</strong> {data.row.fieldName}
           </p>
         </div>
+
+        {summary ? (
+          <>
+            <div className={`${styles.sheetStatus} harvest-daily-workspace__sheet-status`}>{summary.statusLabel}</div>
+
+            <div className={styles.sheetTableWrap}>
+              <table className={`${styles.sheetTable} harvest-daily-workspace__sheet-table`}>
+                <thead>
+                  <tr>
+                    <th aria-label={t.dailyDetails.detailsPanel.values.rowType} />
+                    <th>{summaryFields.totalHarvested}</th>
+                    <th>{summaryFields.totalRejected}</th>
+                    <th>{summaryFields.totalAfterRejected}</th>
+                    <th>{summaryFields.classifiedTotal}</th>
+                    <th>{summaryFields.rejectionRate}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summary.rows.map((row) => (
+                    <tr key={row.key} className={row.kind === 'summary' ? `${styles.sheetRowSummary} harvest-daily-workspace__sheet-row--summary` : undefined}>
+                      <td>{row.label}</td>
+                      <td>{row.totalHarvested}</td>
+                      <td>{row.totalRejected}</td>
+                      <td>{row.totalAfterRejected}</td>
+                      <td>{row.classifiedTotal}</td>
+                      <td>{row.rejectionRate}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : null}
 
         <div className={styles.sheetTableWrap}>
           <table className={`${styles.sheetTable} harvest-daily-workspace__sheet-table`} style={{ marginTop: 18 }}>

@@ -10,6 +10,7 @@ import {
   HarvestSortingDailyDetailsContent,
   type SortingDailyCategoryBreakdown,
   type SortingDailyDetailsData,
+  type SortingDailySummaryData,
 } from './HarvestSortingDailyDetailsContent';
 import { HarvestSortingPrintExportActions } from '../shared/HarvestSortingPrintExportActions';
 import { HarvestStatCardGrid } from '../shared/HarvestStatCard';
@@ -40,6 +41,7 @@ type HarvestSortingDailySectionProps = {
   onCancelMenuClose: () => void;
   onScheduleMenuClose: (menu: HTMLDetailsElement) => void;
   sortingDailyDetailsData: SortingDailyDetailsData | null;
+  sortingDailySummaryData: SortingDailySummaryData | null;
   onCloseSortingDailyDetails: () => void;
   onPrintSortingDailyDetails: () => void;
   sortingDailyDetailsPrintRef: RefObject<HTMLDivElement>;
@@ -82,6 +84,7 @@ export function HarvestSortingDailySection({
   onCancelMenuClose,
   onScheduleMenuClose,
   sortingDailyDetailsData,
+  sortingDailySummaryData,
   onCloseSortingDailyDetails,
   onPrintSortingDailyDetails,
   sortingDailyDetailsPrintRef,
@@ -185,6 +188,7 @@ export function HarvestSortingDailySection({
                         lang={lang}
                         t={t}
                         data={sortingDailyDetailsData}
+                        summary={sortingDailySummaryData}
                         categoryBreakdown={sortingDailyCategoryBreakdown}
                         isDetailRowsLoading={isSortingDailyDetailRowsLoading}
                         detailRowsLoadError={sortingDailyDetailRowsLoadError}

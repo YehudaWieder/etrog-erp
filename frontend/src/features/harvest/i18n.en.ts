@@ -150,7 +150,7 @@ export const HARVEST_I18N_EN: HarvestI18n = {
       items: [
         {
           id: 'harvest-summary',
-          label: 'Harvest Summary',
+          label: 'Harvest Summary (by fields)',
           href: '/harvest/harvest-summary',
           icon: 'fa-lemon',
         },

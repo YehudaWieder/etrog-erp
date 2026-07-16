@@ -26,6 +26,78 @@ type UseHarvestDetailsDataParams = {
   isPartialClassificationFlag: (value: unknown) => boolean;
 };
 
+type RecordSummaryRow = {
+  key: string;
+  kind: 'regular' | 'summary';
+  label: string;
+  totalHarvested: string;
+  totalRejected: string;
+  totalAfterRejected: string;
+  classifiedTotal: string;
+  rejectionRate: string;
+};
+
+function buildRecordSummary(
+  record: HarvestRecord,
+  values: HarvestI18n['dailyDetails']['detailsPanel']['values'],
+  numberFormatter: Intl.NumberFormat,
+  formatRate: (value: number | string) => string,
+  isPartialClassificationFlag: (value: unknown) => boolean,
+): { statusLabel: string; rows: RecordSummaryRow[] } {
+  const hasOwnerRowData =
+    record.ownerHarvested > 0 ||
+    record.ownerRejected > 0 ||
+    record.ownerAfterRejected > 0 ||
+    Number(record.ownerRejectionRate) > 0;
+
+  const toNumericValue = (value: number | string) => {
+    const numeric = typeof value === 'string' ? Number(value) : value;
+    return Number.isFinite(numeric) ? numeric : 0;
+  };
+
+  const rows: RecordSummaryRow[] = [
+    {
+      key: 'general',
+      kind: 'regular',
+      label: values.generalRow,
+      totalHarvested: numberFormatter.format(record.totalHarvested),
+      totalRejected: numberFormatter.format(record.totalRejected),
+      totalAfterRejected: numberFormatter.format(record.totalAfterRejected),
+      classifiedTotal: numberFormatter.format(record.classifiedTotal),
+      rejectionRate: formatRate(record.rejectionRate),
+    },
+  ];
+
+  if (hasOwnerRowData) {
+    rows.push({
+      key: 'owner',
+      kind: 'regular',
+      label: values.ownerRow,
+      totalHarvested: numberFormatter.format(record.ownerHarvested),
+      totalRejected: numberFormatter.format(record.ownerRejected),
+      totalAfterRejected: numberFormatter.format(record.ownerAfterRejected),
+      classifiedTotal: values.none,
+      rejectionRate: formatRate(record.ownerRejectionRate),
+    });
+
+    rows.push({
+      key: 'difference',
+      kind: 'summary',
+      label: values.differenceRow,
+      totalHarvested: numberFormatter.format(record.totalHarvested - record.ownerHarvested),
+      totalRejected: numberFormatter.format(record.totalRejected - record.ownerRejected),
+      totalAfterRejected: numberFormatter.format(record.totalAfterRejected - record.ownerAfterRejected),
+      classifiedTotal: values.none,
+      rejectionRate: formatRate(toNumericValue(record.rejectionRate) - toNumericValue(record.ownerRejectionRate)),
+    });
+  }
+
+  const isPartialClassification = isPartialClassificationFlag(record.isPartialClassification as unknown);
+  const statusLabel = `${values.statusPrefix} ${isPartialClassification ? values.partial : values.final}`;
+
+  return { statusLabel, rows };
+}
+
 export function useHarvestDetailsData({
   lang,
   t,
@@ -68,6 +140,32 @@ export function useHarvestDetailsData({
       rowDailyTotal,
     };
   }, [filteredSortingDailyRows, lang, sortingDailyCategories, sortingDailyDetailsRowId]);
+
+  const sortingDailySummaryData = useMemo(() => {
+    if (sortingDailyDetailsRowId === null) {
+      return null;
+    }
+
+    const record = harvestRows.find((row) => row.id === sortingDailyDetailsRowId);
+    if (!record) {
+      return null;
+    }
+
+    return buildRecordSummary(
+      record,
+      t.dailyDetails.detailsPanel.values,
+      numberFormatter,
+      formatRate,
+      isPartialClassificationFlag,
+    );
+  }, [
+    formatRate,
+    harvestRows,
+    isPartialClassificationFlag,
+    numberFormatter,
+    sortingDailyDetailsRowId,
+    t.dailyDetails.detailsPanel.values,
+  ]);
 
   const sortingDailyCategoryBreakdown = useMemo(() => {
     if (!sortingDailyDetailsData) {
@@ -377,6 +475,7 @@ export function useHarvestDetailsData({
     fieldReportDetailsData,
     sortingDailyCategoryBreakdown,
     sortingDailyDetailsData,
+    sortingDailySummaryData,
   };
 }
 

@@ -150,7 +150,7 @@ export const HARVEST_I18N_HE: HarvestI18n = {
       items: [
         {
           id: 'harvest-summary',
-          label: 'סיכום קטיפים',
+          label: 'סיכום קטיפים (לפי שדות)',
           href: '/harvest/harvest-summary',
           icon: 'fa-lemon',
         },

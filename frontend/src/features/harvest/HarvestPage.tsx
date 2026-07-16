@@ -1025,6 +1025,7 @@ export function HarvestPage() {
 
   const {
     sortingDailyDetailsData,
+    sortingDailySummaryData,
     sortingDailyCategoryBreakdown,
     fieldReportDetailsData,
     detailsSheetData,
@@ -1524,6 +1525,7 @@ export function HarvestPage() {
           onCancelMenuClose={cancelSortingDownloadMenuClose}
           onScheduleMenuClose={scheduleSortingDownloadMenuClose}
           sortingDailyDetailsData={sortingDailyDetailsData}
+          sortingDailySummaryData={sortingDailySummaryData}
           onCloseSortingDailyDetails={() => setSortingDailyDetailsRowId(null)}
           onPrintSortingDailyDetails={handlePrintSortingDailyDetails}
           sortingDailyDetailsPrintRef={sortingDailyDetailsPrintRef}
