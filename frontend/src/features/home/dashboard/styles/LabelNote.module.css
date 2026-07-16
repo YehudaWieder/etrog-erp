@@ -1,0 +1,5 @@
+.noteText {
+  font-size: 0.8em;
+  font-style: italic;
+  color: var(--color-text-muted, #888);
+}

@@ -1,0 +1,99 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: var(--space-7);
+  padding-top: var(--space-6);
+  border-top: 2px dashed var(--color-border);
+}
+
+.title {
+  background: var(--color-primary-soft);
+  color: var(--color-text-accent);
+  border: 1px solid var(--color-primary);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  font-weight: 700;
+  align-self: flex-start;
+  white-space: nowrap;
+  margin: 0 0 var(--space-4);
+}
+
+.panel {
+  background: var(--card-bg);
+  border-radius: 16px;
+  border: 1px solid rgba(226, 230, 235, 0.95);
+  border-inline-start: 4px solid var(--color-text-accent);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+}
+
+.tabsBar {
+  display: flex;
+  width: 100%;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tabBtn {
+  flex: 1;
+  padding: var(--space-3) var(--space-5);
+  background-color: var(--color-bg-hover);
+  border: 1px solid var(--color-border);
+  border-top: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-main);
+  font-family: var(--font-family-base);
+  transition: background-color var(--easing-standard), border-color var(--easing-standard),
+    color var(--easing-standard), font-weight var(--easing-standard);
+  white-space: nowrap;
+  text-align: center;
+}
+
+.tabBtn:first-child {
+  border-inline-start: none;
+}
+
+.tabBtn:last-child {
+  border-inline-end: none;
+}
+
+.tabBtn:hover {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary-strong);
+  color: #000000;
+}
+
+.tabBtn.activeTab {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary-strong);
+  color: #000000;
+  font-weight: 700;
+}
+
+.content {
+  padding: var(--space-5);
+  min-height: 220px;
+}
+
+.tabContent {
+  display: none;
+}
+
+.tabContent.active {
+  display: block;
+}
+
+@media print {
+  .panel {
+    box-shadow: none;
+    border: 1px solid #d0d0d0;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

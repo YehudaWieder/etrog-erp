@@ -1,0 +1,36 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.netHarvestLine {
+  font-size: 1.05rem;
+  color: var(--color-text-main);
+}
+
+.netHarvestLine strong {
+  color: var(--color-text-accent);
+}
+
+.tableNote {
+  margin: 0;
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--color-text-muted, #888);
+}
+
+.footerLines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.footerLine {
+  font-size: 0.95rem;
+  color: var(--color-text-main);
+}
+
+.footerLine strong {
+  color: var(--color-text-accent);
+}

@@ -1,0 +1,57 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tabsBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.tabBtn {
+  padding: var(--space-2) var(--space-5);
+  background-color: var(--color-bg-hover);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-main);
+  font-family: var(--font-family-base);
+  transition: background-color var(--easing-standard), border-color var(--easing-standard),
+    color var(--easing-standard), font-weight var(--easing-standard);
+  white-space: nowrap;
+}
+
+.tabBtn:hover {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary-strong);
+  color: #000000;
+}
+
+.tabBtn.activeTab {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary-strong);
+  color: #000000;
+  font-weight: 700;
+}
+
+.totalLine {
+  font-size: 1.05rem;
+  color: var(--color-text-main);
+}
+
+.totalLine strong {
+  color: var(--color-text-accent);
+}
+
+.footerLine {
+  font-size: 0.95rem;
+  color: var(--color-text-main);
+}
+
+.footerLine strong {
+  color: var(--color-text-accent);
+}

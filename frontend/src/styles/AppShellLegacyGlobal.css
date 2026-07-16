@@ -154,6 +154,12 @@
   padding-inline-start: calc(var(--space-5) + 18px);
 }
 
+.app-shell__sidebar-subitem-hint {
+  font-size: 0.75em;
+  opacity: 0.75;
+  font-weight: 400;
+}
+
 .app-shell__sidebar-item:hover {
   background: rgba(255, 255, 255, 0.12);
   color: #ffffff;

@@ -1,7 +1,11 @@
-import { useState, useCallback, useMemo } from 'react';
-import { FaPrint, FaLeaf, FaArrowDown, FaScaleBalanced, FaArrowsUpDown, FaBox, FaTruck } from 'react-icons/fa6';
+import { useState, useCallback, useMemo, type ReactNode } from 'react';
+import { FaPrint, FaLeaf, FaArrowDown, FaScaleBalanced, FaArrowsUpDown, FaBox, FaTruck, FaCircleCheck } from 'react-icons/fa6';
 import styles from '../styles/HomeDashboard.module.css';
 import { ChartPanel } from './ChartPanel';
+import { SummarySection } from './SummarySection';
+import { HarvestSortingSummary } from './HarvestSortingSummary';
+import { ShipmentsSummary } from './ShipmentsSummary';
+import { InventorySummary } from './InventorySummary';
 import { SvgLineChart } from './SvgLineChart';
 import { SvgBarChart } from './SvgBarChart';
 import { GaugeCard } from './GaugeCard';
@@ -99,7 +103,7 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
     );
   }
 
-  const { production, traderDistribution, customerDistribution, metrics } = data;
+  const { production, traderDistribution, customerDistribution, sortingSummary, shipmentsSummary, inventorySummary, metrics } = data;
 
   const productionTabs = [
     {
@@ -153,16 +157,65 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
   const calcMax = (value: number, percent: number) =>
     percent > 0 ? Math.round((value * 100) / percent) : undefined;
 
-  const gaugeCards = [
+  const withX = (icon: ReactNode) => <span className={styles.iconWithX}>{icon}</span>;
+
+  const allGaugeCards = [
     { title: t.gauges.grossHarvest, ...metrics.grossHarvest, variant: 'default' as const, icon: <FaLeaf />, maxValue: calcMax(metrics.grossHarvest.value, metrics.grossHarvest.percent) },
     { title: t.gauges.rejects, ...metrics.rejects, variant: 'default' as const, icon: <FaArrowDown />, maxValue: metrics.grossHarvest.value },
+    { title: t.gauges.rejectsExcludingBadFields, ...metrics.rejectsExcludingBadFields, variant: 'default' as const, icon: <FaArrowDown />, maxValue: metrics.grossHarvestExcludingBadFields.value },
     { title: t.gauges.netHarvest, ...metrics.netHarvest, variant: 'default' as const, icon: <FaScaleBalanced />, maxValue: metrics.grossHarvest.value },
     { title: t.gauges.sorted, ...metrics.sorted, variant: 'default' as const, icon: <FaArrowsUpDown />, maxValue: metrics.netHarvest.value },
+    { title: t.gauges.notSorted, value: metrics.netHarvest.value - metrics.sorted.value, percent: 100 - metrics.sorted.percent, variant: 'default' as const, icon: withX(<FaArrowsUpDown />), maxValue: metrics.netHarvest.value },
     { title: t.gauges.packaged, ...metrics.packaged, variant: 'default' as const, icon: <FaBox />, maxValue: metrics.netHarvest.value },
+    { title: t.gauges.notPackaged, value: metrics.netHarvest.value - metrics.packaged.value, percent: 100 - metrics.packaged.percent, variant: 'default' as const, icon: withX(<FaBox />), maxValue: metrics.netHarvest.value },
     { title: t.gauges.shipped, ...metrics.shipped, variant: 'default' as const, icon: <FaTruck />, maxValue: metrics.netHarvest.value },
+    { title: t.gauges.notShipped, value: metrics.netHarvest.value - metrics.shipped.value, percent: 100 - metrics.shipped.percent, variant: 'default' as const, icon: withX(<FaTruck />), maxValue: metrics.netHarvest.value },
+    { title: t.gauges.delivered, ...metrics.delivered, variant: 'default' as const, icon: <FaCircleCheck />, maxValue: metrics.netHarvest.value },
   ];
 
+  const mainGaugeCards = allGaugeCards.slice(0, 6);
+  const extraGaugeCards = allGaugeCards.slice(6);
+
   const selectedSeasonLabel = seasonOptions.find((s) => s.value === String(resolvedSeasonId))?.label ?? '';
+
+  const summaryTabs = [
+    {
+      key: 'harvestSorting',
+      label: t.summary.harvestSortingTab,
+      content: (
+        <HarvestSortingSummary
+          lang={lang}
+          data={sortingSummary}
+          unit={t.unit}
+          labels={t.summary.harvestSorting}
+        />
+      ),
+    },
+    {
+      key: 'shipments',
+      label: t.summary.shipmentsTab,
+      content: (
+        <ShipmentsSummary
+          lang={lang}
+          data={shipmentsSummary}
+          unit={t.unit}
+          labels={t.summary.shipments}
+        />
+      ),
+    },
+    {
+      key: 'inventory',
+      label: t.summary.inventoryTab,
+      content: (
+        <InventorySummary
+          lang={lang}
+          data={inventorySummary}
+          unit={t.unit}
+          labels={t.summary.inventory}
+        />
+      ),
+    },
+  ];
 
   return (
     <>
@@ -208,18 +261,36 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
         </div>
 
         <div className={styles.metricsRow}>
-          {gaugeCards.map((card) => (
-            <GaugeCard
-              key={card.title}
-              title={card.title}
-              valueLabel={`${card.value.toLocaleString()} ${t.unit}`}
-              percent={card.percent}
-              variant={card.variant}
-              icon={card.icon}
-              maxValue={card.maxValue}
-            />
+          {mainGaugeCards.map((card) => (
+            <div key={card.title} className={styles.metricCell}>
+              <GaugeCard
+                title={card.title}
+                valueLabel={`${card.value.toLocaleString()} ${t.unit}`}
+                percent={card.percent}
+                variant={card.variant}
+                icon={card.icon}
+                maxValue={card.maxValue}
+              />
+            </div>
           ))}
         </div>
+
+        <div className={styles.metricsRowExtra}>
+          {extraGaugeCards.map((card) => (
+            <div key={card.title} className={styles.metricCell}>
+              <GaugeCard
+                title={card.title}
+                valueLabel={`${card.value.toLocaleString()} ${t.unit}`}
+                percent={card.percent}
+                variant={card.variant}
+                icon={card.icon}
+                maxValue={card.maxValue}
+              />
+            </div>
+          ))}
+        </div>
+
+        <SummarySection title={t.summary.title} tabs={summaryTabs} />
       </div>
     </>
   );

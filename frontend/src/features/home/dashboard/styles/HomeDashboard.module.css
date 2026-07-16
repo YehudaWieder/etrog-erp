@@ -36,6 +36,34 @@
   width: 100%;
 }
 
+.metricsRowExtra {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.metricCell {
+  flex: 0 1 calc((100% - 5 * var(--space-4)) / 6);
+  min-width: 0;
+}
+
+.iconWithX {
+  position: relative;
+  display: inline-flex;
+}
+
+.iconWithX::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 140%;
+  height: 2px;
+  background: currentColor;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
 .stateBox {
   display: flex;
   justify-content: center;
@@ -103,10 +131,15 @@
     flex: 1;
     min-width: 45%;
   }
-  .metricsRow {
+  .metricsRow,
+  .metricsRowExtra {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
+  }
+
+  .metricCell {
+    flex: unset;
   }
 }
 
@@ -122,11 +155,12 @@
     width: 100%;
   }
 
-  .metricsRow {
+  .metricsRow,
+  .metricsRowExtra {
     flex-wrap: wrap;
   }
 
-  .metricsRow > * {
+  .metricCell {
     flex: 1 1 calc(33.33% - var(--space-4));
     min-width: 140px;
   }

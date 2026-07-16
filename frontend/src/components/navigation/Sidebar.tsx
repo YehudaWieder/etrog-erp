@@ -10,6 +10,21 @@ type SidebarProps = {
   footerSlot?: React.ReactNode;
 };
 
+function renderSidebarItemLabel(label: string) {
+  const match = label.match(/^(.*\S)\s*(\([^)]*\))\s*$/);
+  if (!match) {
+    return label;
+  }
+
+  const [, mainText, parenthetical] = match;
+  return (
+    <>
+      {mainText}{' '}
+      <span className="app-shell__sidebar-subitem-hint">{parenthetical}</span>
+    </>
+  );
+}
+
 export function Sidebar({
   sections,
   activeItemId,
@@ -115,7 +130,7 @@ export function Sidebar({
                           })()}
                         </>
                       )}
-                      {item.label}
+                      {renderSidebarItemLabel(item.label)}
                     </span>
                     {typeof item.badge === 'number' ? (
                       <span className="app-shell__badge">{item.badge}</span>
