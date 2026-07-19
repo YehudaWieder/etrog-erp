@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
+import { TopLoadingBar } from '../../../components/ui/TopLoadingBar';
 import type { Customer } from '../../../services/customersApi';
 import type { Trader } from '../../../services/tradersApi';
 import type { TraderCategoryWithShares } from '../../../services/traderCategoriesApi';
@@ -461,7 +462,10 @@ export function AddCustomerMovementModal({
           ✕
         </button>
 
-        <h3 className="modal-title">{f.title}</h3>
+        <h3 className="modal-title" style={{ position: 'relative' }}>
+          {f.title}
+          <TopLoadingBar isLoading={isLoadingStock} />
+        </h3>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Row 1: movement type */}

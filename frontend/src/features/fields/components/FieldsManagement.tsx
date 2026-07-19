@@ -7,6 +7,7 @@ import SettingsInnerTemplate from '../../../components/ui/SettingsInnerTemplate'
 import { SubmitButton } from '../../../components/ui/SubmitButton';
 import type { FieldsManagementProps } from '../fieldsPage.types';
 import { useFieldsManagement } from '../hooks/useFieldsManagement';
+import styles from './styles/FieldsManagement.module.css';
 
 export type { FieldsHeaderState } from '../fieldsPage.types';
 
@@ -50,7 +51,7 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
             onChange={(e) => setNewFieldName(e.target.value)}
             placeholder={t.newFieldPlaceholder}
           />
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <label className={styles.checkboxItem}>
             <input
               type="checkbox"
               checked={newFieldIncludeInRejectionSummary}
@@ -147,7 +148,7 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
               autoFocus
             />
 
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <label className={styles.checkboxItem}>
               <input
                 type="checkbox"
                 checked={editIncludeInRejectionSummary}
