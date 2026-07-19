@@ -292,6 +292,7 @@ export type TraderMovementsI18n = {
 			SELF_PICKUP: string;
 			WASTE: string;
 			ADJUSTMENT: string;
+			PITAM_SPLIT: string;
 		};
 		fromTraderLabel: string;
 		toTraderLabel: string;
@@ -316,6 +317,13 @@ export type TraderMovementsI18n = {
 		customerPitamStatusLabel: string;
 		quantityLabel: string;
 		quantityPlaceholder: string;
+		pitamSplitSourceLabel: string;
+		pitamSplitSourcePlaceholder: string;
+		pitamSplitSourceOptions: { SPECIFIC_TRADER: string; MODULO: string; GENERAL: string };
+		pitamSplitWithLabel: string;
+		pitamSplitWithoutLabel: string;
+		pitamSplitAvailableLabel: (quantity: number) => string;
+		pitamSplitExceedsAvailableError: (quantity: number) => string;
 		availableQuantityHint: (quantity: number) => string;
 		adjustmentQuantityHint: string;
 		notesLabel: string;

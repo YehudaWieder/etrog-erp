@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
+import { TopLoadingBar } from '../../../components/ui/TopLoadingBar';
 import type { AppLang } from '../i18n';
 import { getTraderMovementsI18n } from '../i18n';
 import type { Trader } from '../../../services/tradersApi';
@@ -10,8 +11,10 @@ import {
   InventoryOwnerType,
   createCustomerGeneralTransfer,
   createInternalTransfer,
+  createPitamSplitMovement,
   createTraderAdjustmentMovement,
   type InternalTransferMovementType,
+  type PitamSplitSource,
   type PitamStatus,
   type TraderAdjustmentMovementType,
 } from '../../../services/inventoryMovementsApi';
@@ -22,7 +25,7 @@ import type { TraderInventorySummaryRow } from '../traderInventory.types';
 const GRADE_OPTIONS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו'] as const;
 const PITAM_STATUS_OPTIONS: PitamStatus[] = ['WITH_PITAM', 'WITHOUT_PITAM', 'MIXED'];
 
-type MovementType = InternalTransferMovementType | TraderAdjustmentMovementType;
+type MovementType = InternalTransferMovementType | TraderAdjustmentMovementType | 'PITAM_SPLIT';
 
 const MOVEMENT_TYPE_ORDER: Array<Exclude<MovementType, 'PRIVATE_SELECTION'>> = [
   'OWNERSHIP_TRANSFER',
@@ -30,6 +33,7 @@ const MOVEMENT_TYPE_ORDER: Array<Exclude<MovementType, 'PRIVATE_SELECTION'>> = [
   'INTERNAL_TRANSFER',
   'SELF_PICKUP',
   'WASTE',
+  'PITAM_SPLIT',
 ];
 
 const ADJUSTMENT_TYPES = new Set<MovementType>(['WASTE']);
@@ -95,6 +99,9 @@ export function AddTraderMovementModal({
   // can't stay "mixed", so the user must pick the actual resolved status for the customer record.
   const [customerPitamStatus, setCustomerPitamStatus] = useState<PitamStatus | ''>('');
   const [quantity, setQuantity] = useState('');
+  const [pitamSplitSource, setPitamSplitSource] = useState<PitamSplitSource | ''>('');
+  const [withQty, setWithQty] = useState('');
+  const [withoutQty, setWithoutQty] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -105,9 +112,9 @@ export function AddTraderMovementModal({
   const [generalTransferStock, setGeneralTransferStock] = useState<TraderInventorySummaryRow[]>([]);
   const [isLoadingGeneralTransferStock, setIsLoadingGeneralTransferStock] = useState(false);
 
-  // ASSIGNED and WASTE (general/modulo source) both allocate from MODULO stock — load it for either.
+  // ASSIGNED, WASTE (general/modulo source), and PITAM_SPLIT (MODULO source) all allocate from MODULO stock.
   useEffect(() => {
-    const needsGeneralStock = type === 'ASSIGNED' || (type === 'WASTE' && isModulo);
+    const needsGeneralStock = type === 'ASSIGNED' || (type === 'WASTE' && isModulo) || (type === 'PITAM_SPLIT' && pitamSplitSource === 'MODULO');
     if (!needsGeneralStock || !seasonId) {
       setGeneralStock([]);
       return;
@@ -138,13 +145,15 @@ export function AddTraderMovementModal({
     return () => {
       isActive = false;
     };
-  }, [type, isModulo, seasonId]);
+  }, [type, isModulo, pitamSplitSource, seasonId]);
 
   // INTERNAL_TRANSFER "General" (customer allocation from general pool) draws from MODULO first,
   // then proportionally from every trader's share — so what's actually offerable is the union of
-  // MODULO stock and stock held across all traders combined.
+  // MODULO stock and stock held across all traders combined. PITAM_SPLIT "GENERAL" reuses the same
+  // combined pool purely to compute an informational MIXED-availability hint (the server is the
+  // source of truth for the actual per-trader share split).
   useEffect(() => {
-    const needsCombinedStock = type === 'INTERNAL_TRANSFER' && isModulo;
+    const needsCombinedStock = (type === 'INTERNAL_TRANSFER' && isModulo) || (type === 'PITAM_SPLIT' && pitamSplitSource === 'GENERAL');
     if (!needsCombinedStock || !seasonId) {
       setGeneralTransferStock([]);
       return;
@@ -170,17 +179,19 @@ export function AddTraderMovementModal({
     return () => {
       isActive = false;
     };
-  }, [type, isModulo, seasonId]);
+  }, [type, isModulo, pitamSplitSource, seasonId]);
 
-  // Ownership, internal transfers, self-pickup and waste (trader) use the source trader's actual stock.
+  // Ownership, internal transfers, self-pickup, waste (trader), and PITAM_SPLIT (SPECIFIC_TRADER)
+  // all use the source trader's actual stock.
   useEffect(() => {
-    const activeFromTraderId = (type === 'SELF_PICKUP' || type === 'WASTE') ? traderId : fromTraderId;
+    const isPitamSplitTrader = type === 'PITAM_SPLIT' && pitamSplitSource === 'SPECIFIC_TRADER';
+    const activeFromTraderId = (type === 'SELF_PICKUP' || type === 'WASTE' || isPitamSplitTrader) ? traderId : fromTraderId;
     const isWaste = type === 'WASTE';
     const isInternalTransferGeneral = type === 'INTERNAL_TRANSFER' && isModulo;
-    const needsStockSource = type !== 'WASTE' || !isModulo;
+    const needsStockSource = type !== 'WASTE' && !isPitamSplitTrader || (type === 'WASTE' && !isModulo);
     if (
       isInternalTransferGeneral ||
-      (type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'SELF_PICKUP' && !isWaste) ||
+      (type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'SELF_PICKUP' && !isWaste && !isPitamSplitTrader) ||
       !activeFromTraderId || !seasonId ||
       (needsStockSource && !stockSource) ||
       (isWaste && isModulo)
@@ -358,6 +369,14 @@ export function AddTraderMovementModal({
     return match ? match.quantity : null;
   }, [type, isModulo, generalStock, generalTransferStock, fromTraderStock, stockSource, traderCategoryId, grade, pitamStatus]);
 
+  useEffect(() => {
+    if (type !== 'PITAM_SPLIT') return;
+    setTraderCategoryId('');
+    setGrade('');
+    setWithQty('');
+    setWithoutQty('');
+  }, [type, pitamSplitSource, traderId]);
+
   // Reset downstream selections whenever the source trader or stock source changes.
   useEffect(() => {
     if (type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER') return;
@@ -445,6 +464,66 @@ export function AddTraderMovementModal({
     }
   }, [type, isModulo, generalTransferPitamStatusOptions, pitamStatus]);
 
+  // PITAM_SPLIT reuses the same stock queries as the movement types above, selecting the right one
+  // per source and filtering to MIXED rows only (the only status a split can resolve).
+  const pitamSplitStockRows = useMemo(() => {
+    if (type !== 'PITAM_SPLIT') return [];
+    if (pitamSplitSource === 'SPECIFIC_TRADER') return fromTraderStock;
+    if (pitamSplitSource === 'MODULO') return generalStock;
+    if (pitamSplitSource === 'GENERAL') return generalTransferStock;
+    return [];
+  }, [type, pitamSplitSource, fromTraderStock, generalStock, generalTransferStock]);
+
+  const pitamSplitMixedRows = useMemo(
+    () => pitamSplitStockRows.filter((row) => row.pitamStatus === 'MIXED'),
+    [pitamSplitStockRows],
+  );
+
+  const pitamSplitCategoryOptions = useMemo(() => {
+    const seen = new Map<number, string>();
+    for (const row of pitamSplitMixedRows) {
+      if (!seen.has(row.traderCategoryId)) {
+        seen.set(row.traderCategoryId, row.traderCategoryName ?? `#${row.traderCategoryId}`);
+      }
+    }
+    return sortCategoryOptionsByPriority([...seen.entries()].map(([id, name]) => ({ id, name })));
+  }, [pitamSplitMixedRows, traderCategoryOrderById]);
+
+  const pitamSplitGradeOptions = useMemo(() => {
+    if (!traderCategoryId) return [];
+    return [...new Set(
+      pitamSplitMixedRows
+        .filter((row) => String(row.traderCategoryId) === traderCategoryId)
+        .map((row) => row.grade),
+    )];
+  }, [pitamSplitMixedRows, traderCategoryId]);
+
+  // Informational only — GENERAL sums MIXED stock across all traders (and modulo) combined, since
+  // the actual per-trader share split is computed authoritatively on the server.
+  const pitamSplitAvailable = useMemo(() => {
+    if (type !== 'PITAM_SPLIT' || !traderCategoryId || !grade) return null;
+    const total = pitamSplitMixedRows
+      .filter((row) => String(row.traderCategoryId) === traderCategoryId && row.grade === grade)
+      .reduce((sum, row) => sum + row.quantity, 0);
+    return total > 0 ? total : null;
+  }, [type, pitamSplitMixedRows, traderCategoryId, grade]);
+
+  const isPitamSplitLoading = pitamSplitSource === 'SPECIFIC_TRADER'
+    ? isLoadingFromTraderStock
+    : pitamSplitSource === 'MODULO'
+      ? isLoadingGeneralStock
+      : pitamSplitSource === 'GENERAL'
+        ? isLoadingGeneralTransferStock
+        : false;
+
+  const isPitamSplitSourceReady = pitamSplitSource === 'SPECIFIC_TRADER' ? Boolean(traderId) : Boolean(pitamSplitSource);
+  const isPitamSplitCategoryEnabled = type === 'PITAM_SPLIT' && isPitamSplitSourceReady && !isPitamSplitLoading;
+  const isPitamSplitGradeEnabled = isPitamSplitCategoryEnabled && Boolean(traderCategoryId);
+  const isPitamSplitQuantityEnabled = isPitamSplitGradeEnabled && Boolean(grade);
+
+  const pitamSplitTotalExceedsAvailable = pitamSplitAvailable !== null
+    && (Number(withQty || 0) + Number(withoutQty || 0)) > pitamSplitAvailable;
+
   const sortedTraders = useMemo(
     () => [...traders].sort((left, right) => left.name.localeCompare(right.name, undefined, { sensitivity: 'base' })),
     [traders],
@@ -522,7 +601,9 @@ export function AddTraderMovementModal({
         ? isSelfPickupQuantityEnabled && quantity !== ''
         : type === 'WASTE'
           ? (isModulo ? isWasteModuloQuantityEnabled : isWasteTraderQuantityEnabled) && quantity !== ''
-          : isQuantityEnabled && quantity !== '';
+          : type === 'PITAM_SPLIT'
+            ? isPitamSplitQuantityEnabled && (withQty !== '' || withoutQty !== '')
+            : isQuantityEnabled && quantity !== '';
 
   if (!isOpen) {
     return null;
@@ -543,6 +624,9 @@ export function AddTraderMovementModal({
     setPitamStatus('');
     setCustomerPitamStatus('');
     setQuantity('');
+    setPitamSplitSource('');
+    setWithQty('');
+    setWithoutQty('');
     setNotes('');
     setError(null);
   };
@@ -567,6 +651,9 @@ export function AddTraderMovementModal({
     setPitamStatus('');
     setCustomerPitamStatus('');
     setQuantity('');
+    setPitamSplitSource('');
+    setWithQty('');
+    setWithoutQty('');
     setError(null);
   };
 
@@ -575,6 +662,48 @@ export function AddTraderMovementModal({
 
     if (!type) {
       setError(f.validationRequired);
+      return;
+    }
+
+    if (type === 'PITAM_SPLIT') {
+      const withQtyNumber = Number(withQty || 0);
+      const withoutQtyNumber = Number(withoutQty || 0);
+
+      if (
+        !pitamSplitSource || !traderCategoryId || !grade ||
+        (pitamSplitSource === 'SPECIFIC_TRADER' && !traderId) ||
+        Number.isNaN(withQtyNumber) || Number.isNaN(withoutQtyNumber) ||
+        withQtyNumber < 0 || withoutQtyNumber < 0 ||
+        withQtyNumber + withoutQtyNumber <= 0
+      ) {
+        setError(f.validationRequired);
+        return;
+      }
+
+      if (pitamSplitAvailable !== null && withQtyNumber + withoutQtyNumber > pitamSplitAvailable) {
+        setError(f.pitamSplitExceedsAvailableError(pitamSplitAvailable));
+        return;
+      }
+
+      try {
+        setIsSubmitting(true);
+        await createPitamSplitMovement({
+          source: pitamSplitSource,
+          traderId: pitamSplitSource === 'SPECIFIC_TRADER' ? Number(traderId) : undefined,
+          traderCategoryId: Number(traderCategoryId),
+          grade,
+          withQty: withQtyNumber,
+          withoutQty: withoutQtyNumber,
+          notes: notes || null,
+        });
+
+        resetForm();
+        onSaved();
+      } catch (submitError) {
+        setError(submitError instanceof ApiError ? submitError.message : f.validationRequired);
+      } finally {
+        setIsSubmitting(false);
+      }
       return;
     }
 
@@ -735,7 +864,10 @@ export function AddTraderMovementModal({
           ✕
         </button>
 
-        <h3 className="modal-title">{f.title}</h3>
+        <h3 className="modal-title" style={{ position: 'relative' }}>
+          {f.title}
+          <TopLoadingBar isLoading={isLoadingFromTraderStock || isLoadingGeneralStock || isLoadingGeneralTransferStock} />
+        </h3>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Row 1: action type */}
@@ -1410,6 +1542,139 @@ export function AddTraderMovementModal({
             </>
           ) : null}
 
+          {type === 'PITAM_SPLIT' ? (
+            <>
+              <div style={ROW_STYLE}>
+                <div style={FIELD_STYLE}>
+                  <label style={LABEL_STYLE}>{f.pitamSplitSourceLabel}</label>
+                  <select
+                    className="seasons-manager__year-input"
+                    value={pitamSplitSource}
+                    onChange={(event) => {
+                      setPitamSplitSource(event.target.value as PitamSplitSource | '');
+                      setTraderId('');
+                      setTraderCategoryId('');
+                      setGrade('');
+                      setWithQty('');
+                      setWithoutQty('');
+                    }}
+                  >
+                    <option value="">{f.pitamSplitSourcePlaceholder}</option>
+                    <option value="SPECIFIC_TRADER">{f.pitamSplitSourceOptions.SPECIFIC_TRADER}</option>
+                    <option value="MODULO">{f.pitamSplitSourceOptions.MODULO}</option>
+                    <option value="GENERAL">{f.pitamSplitSourceOptions.GENERAL}</option>
+                  </select>
+                </div>
+
+                {pitamSplitSource === 'SPECIFIC_TRADER' ? (
+                  <div style={FIELD_STYLE}>
+                    <label style={LABEL_STYLE}>{f.traderLabel}</label>
+                    <select
+                      className="seasons-manager__year-input"
+                      value={traderId}
+                      onChange={(event) => setTraderId(event.target.value)}
+                    >
+                      <option value="">{f.traderPlaceholder}</option>
+                      {sortedTraders.map((trader) => (
+                        <option key={`pitam-split-trader-${trader.id}`} value={String(trader.id)}>
+                          {trader.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : null}
+              </div>
+
+              <div style={ROW_STYLE}>
+                <div style={FIELD_STYLE}>
+                  <label style={LABEL_STYLE}>{f.traderCategoryLabel}</label>
+                  <select
+                    className="seasons-manager__year-input"
+                    value={traderCategoryId}
+                    onChange={(event) => {
+                      setTraderCategoryId(event.target.value);
+                      setGrade('');
+                      setWithQty('');
+                      setWithoutQty('');
+                    }}
+                    disabled={!isPitamSplitCategoryEnabled || pitamSplitCategoryOptions.length === 0}
+                  >
+                    <option value="">{f.traderCategoryPlaceholder}</option>
+                    {pitamSplitCategoryOptions.map((category) => (
+                      <option key={category.id} value={String(category.id)}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={FIELD_STYLE}>
+                  <label style={LABEL_STYLE}>{f.gradeLabel}</label>
+                  <select
+                    className="seasons-manager__year-input"
+                    value={grade}
+                    onChange={(event) => {
+                      setGrade(event.target.value);
+                      setWithQty('');
+                      setWithoutQty('');
+                    }}
+                    disabled={!isPitamSplitGradeEnabled || pitamSplitGradeOptions.length === 0}
+                  >
+                    <option value="">{f.gradePlaceholder}</option>
+                    {pitamSplitGradeOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={FIELD_STYLE}>
+                  <label style={LABEL_STYLE}>{f.pitamSplitWithLabel}</label>
+                  <input
+                    className="seasons-manager__year-input"
+                    type="number"
+                    value={withQty}
+                    onChange={(event) => setWithQty(event.target.value)}
+                    placeholder={f.quantityPlaceholder}
+                    aria-label={f.pitamSplitWithLabel}
+                    max={pitamSplitAvailable ?? undefined}
+                    disabled={!isPitamSplitQuantityEnabled}
+                  />
+                </div>
+
+                <div style={FIELD_STYLE}>
+                  <label style={LABEL_STYLE}>{f.pitamSplitWithoutLabel}</label>
+                  <input
+                    className="seasons-manager__year-input"
+                    type="number"
+                    value={withoutQty}
+                    onChange={(event) => setWithoutQty(event.target.value)}
+                    placeholder={f.quantityPlaceholder}
+                    aria-label={f.pitamSplitWithoutLabel}
+                    max={pitamSplitAvailable ?? undefined}
+                    disabled={!isPitamSplitQuantityEnabled}
+                  />
+                </div>
+              </div>
+
+              {pitamSplitAvailable !== null ? (
+                <div style={ROW_STYLE}>
+                  <div style={{ ...FIELD_STYLE, gridColumn: '1 / -1' }}>
+                    <span
+                      className={pitamSplitTotalExceedsAvailable ? 'seasons-manager__error' : undefined}
+                      style={{ fontSize: 12, opacity: pitamSplitTotalExceedsAvailable ? 1 : 0.75 }}
+                    >
+                      {pitamSplitTotalExceedsAvailable
+                        ? f.pitamSplitExceedsAvailableError(pitamSplitAvailable)
+                        : f.pitamSplitAvailableLabel(pitamSplitAvailable)}
+                    </span>
+                  </div>
+                </div>
+              ) : null}
+            </>
+          ) : null}
+
           {type === 'OWNERSHIP_TRANSFER' ? (
             <div style={ROW_STYLE}>
               <div style={FIELD_STYLE}>
@@ -1488,7 +1753,7 @@ export function AddTraderMovementModal({
             </div>
           ) : null}
 
-          {type && type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'ASSIGNED' && type !== 'SELF_PICKUP' && type !== 'WASTE' ? (
+          {type && type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'ASSIGNED' && type !== 'SELF_PICKUP' && type !== 'WASTE' && type !== 'PITAM_SPLIT' ? (
             <div style={ROW_STYLE}>
               <div style={FIELD_STYLE}>
                 <label style={LABEL_STYLE}>{f.traderCategoryLabel}</label>

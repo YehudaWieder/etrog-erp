@@ -159,6 +159,8 @@ type UsePackingFormResult = {
   updateItemRowQuantity: (id: string, pitamKey: PitamRowKey, gradeKey: string, value: string) => void;
   pendingExistingItemEdits: Record<number, string>;
   stageExistingItemEdit: (itemId: number, value: string | null) => void;
+  invalidateTraderInventory: (traderId: number, stockSource: StockSource | '') => void;
+  invalidateAllTraderInventory: () => void;
 
   isSubmitting: boolean;
   error: string | null;
@@ -769,6 +771,29 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
     });
   }, []);
 
+  // Called after a PITAM_SPLIT resolution succeeds mid-packing (see PackingItemRowsSection), so the
+  // affected row's cached availability is refetched instead of staying stale until the box changes.
+  const invalidateTraderInventory = useCallback((traderIdVal: number, stockSource: StockSource | '') => {
+    if (!stockSource) return;
+    const key = `${traderIdVal}:${stockSource}`;
+    fetchedTraderKeysRef.current.delete(key);
+    setTraderInventoryCache((prev) => {
+      if (!prev.has(key)) return prev;
+      const next = new Map(prev);
+      next.delete(key);
+      return next;
+    });
+  }, []);
+
+  // Called after a GENERAL-source PITAM_SPLIT resolution succeeds mid-packing, so the aggregated
+  // all-traders pool backing GENERAL/unassigned rows is refetched instead of staying stale.
+  const invalidateAllTraderInventory = useCallback(() => {
+    if (ownershipType !== 'GENERAL' && ownershipType !== 'SHARED') return;
+    getAllTradersAvailableInventory()
+      .then((rows) => setAllTraderInventory(rows))
+      .catch(() => {});
+  }, [ownershipType]);
+
   const setSelectedBoxId = useCallback((v: string) => {
     setSelectedBoxIdRaw(v);
     resetFields();
@@ -1060,6 +1085,8 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
     updateItemRowQuantity,
     pendingExistingItemEdits,
     stageExistingItemEdit,
+    invalidateTraderInventory,
+    invalidateAllTraderInventory,
 
     isSubmitting,
     error,

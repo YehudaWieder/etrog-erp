@@ -107,3 +107,24 @@ export async function createCustomerAdjustmentMovement(payload: CreateCustomerAd
     body: JSON.stringify(payload),
   });
 }
+
+export type PitamSplitSource = 'SPECIFIC_TRADER' | 'MODULO' | 'GENERAL';
+
+// Trader-only: a customer always has a definite pitam status, so there is nothing to resolve there.
+export type CreatePitamSplitPayload = {
+  source: PitamSplitSource;
+  traderId?: number;
+  traderCategoryId: number;
+  grade: Grade;
+  withQty: number;
+  withoutQty: number;
+  date?: string;
+  notes?: string | null;
+};
+
+export async function createPitamSplitMovement(payload: CreatePitamSplitPayload) {
+  return apiClient('/inventory/pitam-split', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}

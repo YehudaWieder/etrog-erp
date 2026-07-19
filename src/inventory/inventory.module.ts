@@ -16,6 +16,7 @@ import { CombinedSummaryRepository } from './services/combined-summary/combined-
 import { TraderStockController } from './controllers/trader-stock/trader-stock.controller';
 import { CustomerAllocationController } from './controllers/customer-allocation/customer-allocation.controller';
 import { SeasonsModule } from 'src/seasons/seasons.module';
+import { PitamSplitService } from './services/pitam-split/pitam-split.service';
 
 @Module({
   imports: [SeasonsModule],
@@ -34,6 +35,7 @@ import { SeasonsModule } from 'src/seasons/seasons.module';
     InternalTransferService,
     CustomerGeneralTransferService,
     InventoryValidationService,
+    PitamSplitService,
   ],
   exports: [InventoryAvailabilityService],
 })

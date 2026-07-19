@@ -6,6 +6,7 @@ import type { ShipmentRecord } from '../../../services/shipmentsApi';
 import type { Trader } from '../../../services/tradersApi';
 import type { Customer } from '../../../services/customersApi';
 import type { PackingBoxOption, PackingItemRowDraft, PackingItemRowView } from '../hooks/usePackingForm';
+import type { StockSource } from '../hooks/useNewShipmentItemForm';
 import type { PitamRowKey } from '../utils/packingItemMatrix.util';
 import { PackingItemRowsSection } from './PackingItemRowsSection';
 import { BoxNumberTypeahead } from './BoxNumberTypeahead';
@@ -110,6 +111,16 @@ type PackingItemFieldsText = {
   ownershipLabels: Record<string, string>;
   pitamStatusLabels: Record<string, string>;
   boxOwnershipLabels: Record<string, string>;
+  pitamSplitHintLabel: (n: number) => string;
+  pitamSplitPopupTitle: string;
+  pitamSplitWithLabel: string;
+  pitamSplitWithoutLabel: string;
+  pitamSplitAvailableLabel: (n: number) => string;
+  pitamSplitExceedsAvailableError: (n: number) => string;
+  pitamSplitConfirmLabel: string;
+  pitamSplitConfirmingLabel: string;
+  pitamSplitInvalidError: string;
+  pitamSplitGenericError: string;
 };
 
 type PackingFormModalProps = {
@@ -160,6 +171,8 @@ type PackingFormModalProps = {
   onUpdateItemRowQuantity: (id: string, pitamKey: PitamRowKey, gradeKey: string, value: string) => void;
   pendingExistingItemEdits: Record<number, string>;
   onStageExistingItemEdit: (itemId: number, value: string | null) => void;
+  onInvalidateTraderInventory: (traderId: number, stockSource: StockSource | '') => void;
+  onInvalidateAllTraderInventory: () => void;
 
   isSubmitting: boolean;
   error: string | null;
@@ -219,6 +232,8 @@ export function PackingFormModal({
   onUpdateItemRowQuantity,
   pendingExistingItemEdits,
   onStageExistingItemEdit,
+  onInvalidateTraderInventory,
+  onInvalidateAllTraderInventory,
   isSubmitting,
   error,
   onSave,
@@ -489,6 +504,8 @@ export function PackingFormModal({
             onUpdateRow={onUpdateItemRow}
             onUpdateRowQuantity={onUpdateItemRowQuantity}
             onStageExistingItemEdit={onStageExistingItemEdit}
+            onInvalidateTraderInventory={onInvalidateTraderInventory}
+            onInvalidateAllTraderInventory={onInvalidateAllTraderInventory}
           />
         ) : null}
 

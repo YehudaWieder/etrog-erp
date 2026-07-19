@@ -687,6 +687,9 @@ enum MovementType {
   // --- Adjustments & Losses ---
   WASTE // Spoilage, damage, or quality rejection (Negative)
   ADJUSTMENT // Manual inventory correction for typos or audits (Positive/Negative)
+
+  // --- Pitam Classification ---
+  PITAM_SPLIT // Splits a MIXED pitam balance into WITH_PITAM/WITHOUT_PITAM without altering the original classification (Positive/Negative)
 }
 
 enum ShipmentStatus {

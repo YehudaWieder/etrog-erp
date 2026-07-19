@@ -167,13 +167,21 @@
 
 .addQuantityInputRow {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   margin: 12px 0;
 }
 
 .addQuantityInputRow input {
   text-align: center;
   max-width: 160px;
+}
+
+.addQuantityInputRow .field {
+  width: auto;
+  align-items: center;
+  text-align: center;
 }
 
 .existingCellActionButton {
@@ -204,4 +212,26 @@
 .existingCellActionButton:hover {
   transform: translateY(-50%) scale(1.15);
   color: #c99a10;
+}
+
+.pitamSplitHintButton {
+  display: block;
+  width: 100%;
+  margin-top: 2px;
+  padding: 1px 4px;
+  border: 1px solid var(--color-primary-strong, #E6B620);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-primary-strong, #E6B620);
+  font-size: 10px;
+  line-height: 1.3;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pitamSplitHintButton:hover {
+  background: var(--color-primary-strong, #E6B620);
+  color: #fff;
 }

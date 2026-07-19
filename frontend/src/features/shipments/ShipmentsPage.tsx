@@ -600,6 +600,8 @@ export function ShipmentsPage() {
         onUpdateItemRowQuantity={packingForm.updateItemRowQuantity}
         pendingExistingItemEdits={packingForm.pendingExistingItemEdits}
         onStageExistingItemEdit={packingForm.stageExistingItemEdit}
+        onInvalidateTraderInventory={packingForm.invalidateTraderInventory}
+        onInvalidateAllTraderInventory={packingForm.invalidateAllTraderInventory}
         isSubmitting={packingForm.isSubmitting}
         error={packingForm.error}
         onSave={packingForm.handleSaveAll}

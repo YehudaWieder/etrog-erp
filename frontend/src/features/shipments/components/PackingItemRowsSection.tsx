@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FaTrashCan } from 'react-icons/fa6';
-import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
+import { SubmitButton } from '../../../components/ui/SubmitButton';
 import type { Trader } from '../../../services/tradersApi';
 import type { Customer } from '../../../services/customersApi';
 import type { StockSource } from '../hooks/useNewShipmentItemForm';
 import type { PackingItemRowDraft, PackingItemRowView } from '../hooks/usePackingForm';
+import { createPitamSplitMovement } from '../../../services/inventoryMovementsApi';
+import { ApiError } from '../../../services/apiClient';
 import {
   PITAM_ROW_KEYS,
   SINGLE_GRADE_COLUMN_KEY,
@@ -61,6 +63,16 @@ type PackingItemFieldsText = {
   loadingInventory: string;
   ownershipLabels: Record<string, string>;
   pitamStatusLabels: Record<string, string>;
+  pitamSplitHintLabel: (n: number) => string;
+  pitamSplitPopupTitle: string;
+  pitamSplitWithLabel: string;
+  pitamSplitWithoutLabel: string;
+  pitamSplitAvailableLabel: (n: number) => string;
+  pitamSplitExceedsAvailableError: (n: number) => string;
+  pitamSplitConfirmLabel: string;
+  pitamSplitConfirmingLabel: string;
+  pitamSplitInvalidError: string;
+  pitamSplitGenericError: string;
 };
 
 type PackingItemRowsSectionProps = {
@@ -85,6 +97,8 @@ type PackingItemRowsSectionProps = {
   onUpdateRow: (id: string, updater: Partial<PackingItemRowDraft>) => void;
   onUpdateRowQuantity: (id: string, pitamKey: PitamRowKey, gradeKey: string, value: string) => void;
   onStageExistingItemEdit: (itemId: number, value: string | null) => void;
+  onInvalidateTraderInventory: (traderId: number, stockSource: StockSource | '') => void;
+  onInvalidateAllTraderInventory: () => void;
 };
 
 const ITEM_OWNERSHIP_OPTIONS = ['TRADER', 'CUSTOMER', 'GENERAL', 'CUSTOM'] as const;
@@ -111,6 +125,8 @@ export function PackingItemRowsSection({
   onUpdateRow,
   onUpdateRowQuantity,
   onStageExistingItemEdit,
+  onInvalidateTraderInventory,
+  onInvalidateAllTraderInventory,
 }: PackingItemRowsSectionProps) {
   const isSharedBox = boxOwnershipType === 'SHARED';
   const isCustomBox = boxOwnershipType === 'CUSTOM';
@@ -179,6 +195,81 @@ export function PackingItemRowsSection({
     onStageExistingItemEdit(itemId, null);
   };
 
+  // Trader-only / general-pool: a customer always has a definite pitam status, so there is nothing
+  // to resolve there. A row on a GENERAL (unassigned) box has no single owning trader — its MIXED
+  // split is resolved proportionally across every trader holding that category/grade instead.
+  const [pitamSplitCell, setPitamSplitCell] = useState<{
+    mixedAvailable: number;
+    traderId: number | null;
+    stockSource: StockSource | '';
+    traderCategoryId: number;
+    grade: string;
+  } | null>(null);
+  const [pitamSplitWithValue, setPitamSplitWithValue] = useState('');
+  const [pitamSplitWithoutValue, setPitamSplitWithoutValue] = useState('');
+  const [pitamSplitError, setPitamSplitError] = useState('');
+  const [pitamSplitSubmitting, setPitamSplitSubmitting] = useState(false);
+
+  const validatePitamSplitAmounts = (withValue: string, withoutValue: string) => {
+    if (!pitamSplitCell) return;
+    const withQty = Number(withValue || 0);
+    const withoutQty = Number(withoutValue || 0);
+    if (Number.isFinite(withQty) && Number.isFinite(withoutQty) && withQty + withoutQty > pitamSplitCell.mixedAvailable) {
+      setPitamSplitError(fieldsT.pitamSplitExceedsAvailableError(pitamSplitCell.mixedAvailable));
+    } else {
+      setPitamSplitError('');
+    }
+  };
+
+  const handleClosePitamSplitPopup = () => {
+    setPitamSplitCell(null);
+    setPitamSplitWithValue('');
+    setPitamSplitWithoutValue('');
+    setPitamSplitError('');
+  };
+
+  const handleConfirmPitamSplit = async () => {
+    if (!pitamSplitCell) return;
+
+    const withQty = Number(pitamSplitWithValue || 0);
+    const withoutQty = Number(pitamSplitWithoutValue || 0);
+    if (
+      Number.isNaN(withQty) || Number.isNaN(withoutQty) ||
+      withQty < 0 || withoutQty < 0 || withQty + withoutQty <= 0
+    ) {
+      setPitamSplitError(fieldsT.pitamSplitInvalidError);
+      return;
+    }
+
+    if (withQty + withoutQty > pitamSplitCell.mixedAvailable) {
+      setPitamSplitError(fieldsT.pitamSplitExceedsAvailableError(pitamSplitCell.mixedAvailable));
+      return;
+    }
+
+    try {
+      setPitamSplitSubmitting(true);
+      await createPitamSplitMovement({
+        source: pitamSplitCell.traderId !== null ? 'SPECIFIC_TRADER' : 'GENERAL',
+        traderId: pitamSplitCell.traderId ?? undefined,
+        traderCategoryId: pitamSplitCell.traderCategoryId,
+        grade: pitamSplitCell.grade,
+        withQty,
+        withoutQty,
+      });
+      if (pitamSplitCell.traderId !== null) {
+        onInvalidateTraderInventory(pitamSplitCell.traderId, pitamSplitCell.stockSource);
+      } else {
+        onInvalidateAllTraderInventory();
+      }
+
+      handleClosePitamSplitPopup();
+    } catch (submitError) {
+      setPitamSplitError(submitError instanceof ApiError ? submitError.message : fieldsT.pitamSplitGenericError);
+    } finally {
+      setPitamSplitSubmitting(false);
+    }
+  };
+
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', margin: '1rem 0 0.5rem' }}>
@@ -224,6 +315,10 @@ export function PackingItemRowsSection({
                 : boxOwnershipType === 'TRADER'
                   ? traders.find((trader) => String(trader.id) === boxTraderId)?.name ?? ''
                   : '';
+        // Same resolution as usePackingForm's resolveEffectiveTraderId, needed here to fire a
+        // PITAM_SPLIT resolution against the right trader when the user accepts the hint. Trader-only
+        // — a customer always has a definite pitam status, so no equivalent exists for customer rows.
+        const effTraderIdStr = view.isTraderItem ? (boxOwnershipType === 'TRADER' ? boxTraderId : draft.traderId) : '';
 
         return (
           <div key={draft.id} style={{ padding: '0.75rem 0', marginBottom: '0.75rem' }}>
@@ -487,6 +582,20 @@ export function PackingItemRowsSection({
                             );
                           }
 
+                          const mixedAvailable = view.cellAvailability.MIXED?.[gradeKey] ?? 0;
+                          // Trader rows resolve their own MIXED stock; rows on a GENERAL/unassigned
+                          // box or item have no single owning trader, so their split is resolved
+                          // proportionally across every trader holding that category/grade instead.
+                          // Customers always have a definite pitam status, so there is nothing to
+                          // resolve on customer rows.
+                          const isGeneralPoolItem = view.isUnassignedBox || view.isSharedUnassignedItem;
+                          const canSuggestPitamSplit =
+                            pitamKey === 'MIXED' &&
+                            mixedAvailable > 0 &&
+                            (view.isTraderItem ? Boolean(effTraderIdStr) : isGeneralPoolItem) &&
+                            Boolean(draft.traderCategoryId) &&
+                            gradeKey !== SINGLE_GRADE_COLUMN_KEY;
+
                           return (
                             <td key={`packing-cell-${draft.id}-${pitamKey}-${gradeKey}`}>
                               <input
@@ -502,6 +611,24 @@ export function PackingItemRowsSection({
                                 placeholder={fieldsT.availableQuantityHint(available)}
                                 title={isLockedByFullBox ? (boxCapacityMessage ?? undefined) : isEnabled ? fieldsT.availableQuantityHint(available) : undefined}
                               />
+                              {canSuggestPitamSplit ? (
+                                <button
+                                  type="button"
+                                  className={styles.pitamSplitHintButton}
+                                  onClick={() =>
+                                    setPitamSplitCell({
+                                      mixedAvailable,
+                                      traderId: view.isTraderItem ? Number(effTraderIdStr) : null,
+                                      stockSource: draft.stockSource,
+                                      traderCategoryId: Number(draft.traderCategoryId),
+                                      grade: gradeKey,
+                                    })
+                                  }
+                                  title={fieldsT.pitamSplitHintLabel(mixedAvailable)}
+                                >
+                                  {fieldsT.pitamSplitHintLabel(mixedAvailable)}
+                                </button>
+                              ) : null}
                             </td>
                           );
                         })}
@@ -563,12 +690,23 @@ export function PackingItemRowsSection({
 
       {addQuantityCell
         ? createPortal(
-            <ConfirmDialog
-              open
-              dialogClassName={`modal-dialog--form ${styles.addQuantityDialog}`}
-              title={fieldsT.addExistingItemQuantityPopupTitle}
-              message={
-                <>
+            <div className="modal-overlay" onClick={handleCloseAddQuantityPopup}>
+              <div
+                className={`modal-dialog modal-dialog--form ${styles.addQuantityDialog}`}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <button
+                  className="modal-close"
+                  type="button"
+                  aria-label={fieldsT.cancel}
+                  onClick={handleCloseAddQuantityPopup}
+                >
+                  ✕
+                </button>
+
+                <h3 className="modal-title">{fieldsT.addExistingItemQuantityPopupTitle}</h3>
+
+                <p className="modal-message">
                   {fieldsT.addExistingItemQuantityPopupPrefix} <strong>{addQuantityCell.categoryName}</strong>
                   {addQuantityCell.gradeLabel ? (
                     <>
@@ -587,30 +725,113 @@ export function PackingItemRowsSection({
                   : <strong>{addQuantityCell.baseQuantity}</strong>.
                   <br />
                   {fieldsT.addExistingItemQuantityPopupInstruction}
-                </>
-              }
-              confirmLabel={fieldsT.addExistingItemQuantityConfirmLabel}
-              cancelLabel={fieldsT.cancel}
-              onConfirm={handleConfirmAddQuantity}
-              onCancel={handleCloseAddQuantityPopup}
-            >
-              <div className={styles.addQuantityInputRow}>
-                <input
-                  className="seasons-manager__year-input"
-                  type="number"
-                  min="0"
-                  autoFocus
-                  value={addQuantityValue}
-                  onChange={(event) => {
-                    setAddQuantityValue(event.target.value);
-                    setAddQuantityError('');
-                  }}
-                  placeholder={fieldsT.quantityPlaceholder}
-                  aria-label={fieldsT.addExistingItemQuantityPopupTitle}
-                />
+                </p>
+
+                <div className={styles.addQuantityInputRow}>
+                  <input
+                    className="seasons-manager__year-input"
+                    type="number"
+                    min="0"
+                    autoFocus
+                    value={addQuantityValue}
+                    onChange={(event) => {
+                      setAddQuantityValue(event.target.value);
+                      setAddQuantityError('');
+                    }}
+                    placeholder={fieldsT.quantityPlaceholder}
+                    aria-label={fieldsT.addExistingItemQuantityPopupTitle}
+                  />
+                </div>
+                {addQuantityError ? <p className="seasons-manager__error">{addQuantityError}</p> : null}
+
+                <div className="modal-actions">
+                  <button className="btn btn-danger" type="button" onClick={handleCloseAddQuantityPopup}>
+                    {fieldsT.cancel}
+                  </button>
+                  <SubmitButton
+                    className="btn btn-success"
+                    onClick={handleConfirmAddQuantity}
+                    isLoading={false}
+                    loadingText={fieldsT.addExistingItemQuantityConfirmLabel}
+                  >
+                    {fieldsT.addExistingItemQuantityConfirmLabel}
+                  </SubmitButton>
+                </div>
               </div>
-              {addQuantityError ? <p className="seasons-manager__error">{addQuantityError}</p> : null}
-            </ConfirmDialog>,
+            </div>,
+            document.body,
+          )
+        : null}
+
+      {pitamSplitCell
+        ? createPortal(
+            <div className="modal-overlay" onClick={handleClosePitamSplitPopup}>
+              <div
+                className={`modal-dialog modal-dialog--form ${styles.addQuantityDialog}`}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <button
+                  className="modal-close"
+                  type="button"
+                  aria-label={fieldsT.cancel}
+                  onClick={handleClosePitamSplitPopup}
+                >
+                  ✕
+                </button>
+
+                <h3 className="modal-title">{fieldsT.pitamSplitPopupTitle}</h3>
+                <p className="modal-message">{fieldsT.pitamSplitAvailableLabel(pitamSplitCell.mixedAvailable)}</p>
+
+                <div className={styles.addQuantityInputRow}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>{fieldsT.pitamSplitWithLabel}</label>
+                    <input
+                      className="seasons-manager__year-input"
+                      type="number"
+                      min="0"
+                      max={pitamSplitCell.mixedAvailable}
+                      autoFocus
+                      value={pitamSplitWithValue}
+                      onChange={(event) => {
+                        setPitamSplitWithValue(event.target.value);
+                        validatePitamSplitAmounts(event.target.value, pitamSplitWithoutValue);
+                      }}
+                      aria-label={fieldsT.pitamSplitWithLabel}
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>{fieldsT.pitamSplitWithoutLabel}</label>
+                    <input
+                      className="seasons-manager__year-input"
+                      type="number"
+                      min="0"
+                      max={pitamSplitCell.mixedAvailable}
+                      value={pitamSplitWithoutValue}
+                      onChange={(event) => {
+                        setPitamSplitWithoutValue(event.target.value);
+                        validatePitamSplitAmounts(pitamSplitWithValue, event.target.value);
+                      }}
+                      aria-label={fieldsT.pitamSplitWithoutLabel}
+                    />
+                  </div>
+                </div>
+                {pitamSplitError ? <p className="seasons-manager__error">{pitamSplitError}</p> : null}
+
+                <div className="modal-actions">
+                  <button className="btn btn-danger" type="button" onClick={handleClosePitamSplitPopup} disabled={pitamSplitSubmitting}>
+                    {fieldsT.cancel}
+                  </button>
+                  <SubmitButton
+                    className="btn btn-success"
+                    onClick={handleConfirmPitamSplit}
+                    isLoading={pitamSplitSubmitting}
+                    loadingText={fieldsT.pitamSplitConfirmingLabel}
+                  >
+                    {fieldsT.pitamSplitConfirmLabel}
+                  </SubmitButton>
+                </div>
+              </div>
+            </div>,
             document.body,
           )
         : null}

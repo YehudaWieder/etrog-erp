@@ -21,6 +21,8 @@ import { Grade, PitamStatus } from '@prisma/client';
 import { InternalTransferRequestDto } from 'src/inventory/services/inventory-core/dto/internal-transfer.dto';
 import { CustomerGeneralAllocationRequestDto } from 'src/inventory/services/inventory-core/dto/customer-general-allocation.dto';
 import { parseOptionalInt } from 'src/inventory/services/inventory-core/utils/inventory-query-parse.util';
+import { PitamSplitService } from 'src/inventory/services/pitam-split/pitam-split.service';
+import { ResolvePitamSplitDto } from 'src/inventory/services/pitam-split/dto/resolve-pitam-split.dto';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('access-token')
@@ -28,7 +30,10 @@ import { parseOptionalInt } from 'src/inventory/services/inventory-core/utils/in
 @ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
 @Controller('inventory')
 export class InventoryController {
-	constructor(private readonly inventoryService: InventoryService) {}
+	constructor(
+		private readonly inventoryService: InventoryService,
+		private readonly pitamSplitService: PitamSplitService,
+	) {}
 
 	@Get('summary')
 	@ApiOperation({
@@ -292,5 +297,56 @@ export class InventoryController {
 	@ApiResponse({ status: 404, description: 'Internal transfer not found.' })
 	remove(@Param('operationId', ParseIntPipe) operationId: number) {
 		return this.inventoryService.removeInternalTransfer(operationId);
+	}
+
+	@Post('pitam-split')
+	@ApiOperation({
+		summary:
+			'Resolve part of a trader\'s MIXED pitam balance into WITH_PITAM/WITHOUT_PITAM as new ledger movements (type=PITAM_SPLIT), without touching the original Classification record. ' +
+			'Trader-only: a customer always has a definite pitam status, so there is nothing to resolve on that side. ' +
+			'source=SPECIFIC_TRADER resolves one trader\'s own stock, MODULO resolves only the unassigned pool, and GENERAL splits proportionally across every trader\'s own stock by their configured share, falling back to modulo for any remainder no trader can absorb.',
+	})
+	@ApiBody({
+		type: ResolvePitamSplitDto,
+		examples: {
+			specificTrader: {
+				summary: 'Resolve a specific trader\'s MIXED stock',
+				value: {
+					source: 'SPECIFIC_TRADER',
+					traderId: 4,
+					traderCategoryId: 3,
+					grade: 'א',
+					withQty: 6,
+					withoutQty: 4,
+					notes: 'Discovered during packing',
+				},
+			},
+			modulo: {
+				summary: 'Resolve unassigned (modulo) MIXED stock only',
+				value: {
+					source: 'MODULO',
+					traderCategoryId: 3,
+					grade: 'א',
+					withQty: 10,
+					withoutQty: 0,
+				},
+			},
+			general: {
+				summary: 'Resolve proportionally across all traders by their category share',
+				value: {
+					source: 'GENERAL',
+					traderCategoryId: 3,
+					grade: 'א',
+					withQty: 50,
+					withoutQty: 50,
+				},
+			},
+		},
+	})
+	@ApiResponse({ status: 201, description: 'Pitam split resolved successfully.' })
+	@ApiResponse({ status: 400, description: 'Invalid payload or insufficient MIXED stock.' })
+	resolvePitamSplit(@Body() data: ResolvePitamSplitDto, @Req() req: Request) {
+		const actor = req.user as AuthenticatedUser;
+		return this.pitamSplitService.resolve(data, actor.id);
 	}
 }
