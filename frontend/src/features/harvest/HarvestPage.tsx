@@ -328,6 +328,15 @@ export function HarvestPage() {
     setHarvestSortingFormAdditionalRejected,
     openAddRejectedQuantity,
     removeAddedRejectedQuantity,
+    isAddingOwnerRejectedQuantity,
+    harvestSortingFormAdditionalOwnerRejected,
+    setHarvestSortingFormAdditionalOwnerRejected,
+    openAddOwnerRejectedQuantity,
+    removeAddedOwnerRejectedQuantity,
+    harvestSortingFormTotalHarvested,
+    setHarvestSortingFormTotalHarvested,
+    harvestSortingFormOwnerHarvested,
+    setHarvestSortingFormOwnerHarvested,
     openHarvestSortingGlobalForm,
     closeHarvestSortingGlobalForm,
     prefillSortingFormForRestore,
@@ -626,6 +635,43 @@ export function HarvestPage() {
     return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
   }, [harvestSortingFormAdditionalRejected]);
 
+  const harvestSortingFormAdditionalOwnerRejectedAmount = useMemo(() => {
+    const parsed = Number(harvestSortingFormAdditionalOwnerRejected);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+  }, [harvestSortingFormAdditionalOwnerRejected]);
+
+  const selectedSortingHarvest = useMemo(() => {
+    const selectedHarvestId = Number(harvestSortingFormHarvestId);
+    if (!Number.isFinite(selectedHarvestId) || selectedHarvestId <= 0) {
+      return null;
+    }
+    return harvestRows.find((row) => row.id === selectedHarvestId) ?? null;
+  }, [harvestRows, harvestSortingFormHarvestId]);
+
+  // Prefill the directly-editable totalHarvested/ownerHarvested inputs with the selected harvest's
+  // current values, so the user edits from a real starting point rather than an empty field.
+  useEffect(() => {
+    if (isRestoreSortingMode || !selectedSortingHarvest) {
+      return;
+    }
+    setHarvestSortingFormTotalHarvested(String(selectedSortingHarvest.totalHarvested));
+    setHarvestSortingFormOwnerHarvested(String(selectedSortingHarvest.ownerHarvested));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRestoreSortingMode, selectedSortingHarvest?.id]);
+
+  const editedTotalHarvestedAmount = useMemo(() => {
+    const parsed = Number(harvestSortingFormTotalHarvested);
+    return selectedSortingHarvest && Number.isFinite(parsed) && parsed >= 0 ? parsed : selectedSortingHarvest?.totalHarvested ?? 0;
+  }, [harvestSortingFormTotalHarvested, selectedSortingHarvest]);
+
+  const editedOwnerHarvestedAmount = useMemo(() => {
+    const parsed = Number(harvestSortingFormOwnerHarvested);
+    return selectedSortingHarvest && Number.isFinite(parsed) && parsed >= 0 ? parsed : selectedSortingHarvest?.ownerHarvested ?? 0;
+  }, [harvestSortingFormOwnerHarvested, selectedSortingHarvest]);
+
+  const hasTotalHarvestedEdit = Boolean(selectedSortingHarvest) && editedTotalHarvestedAmount !== selectedSortingHarvest?.totalHarvested;
+  const hasOwnerHarvestedEdit = Boolean(selectedSortingHarvest) && editedOwnerHarvestedAmount !== selectedSortingHarvest?.ownerHarvested;
+
   const selectedHarvestSummaryTotals = useMemo(() => {
     if (isRestoreSortingMode && restoreHarvestSummary) {
       return {
@@ -635,27 +681,25 @@ export function HarvestPage() {
       };
     }
 
-    const selectedHarvestId = Number(harvestSortingFormHarvestId);
-    if (!Number.isFinite(selectedHarvestId) || selectedHarvestId <= 0) {
-      return null;
-    }
-
-    const selectedHarvest = harvestRows.find((row) => row.id === selectedHarvestId);
-    if (!selectedHarvest) {
+    if (!selectedSortingHarvest) {
       return null;
     }
 
     return {
-      totalHarvested: selectedHarvest.totalHarvested,
-      totalRejected: selectedHarvest.totalRejected + harvestSortingFormAdditionalRejectedAmount,
-      classifiedTotal: selectedHarvest.classifiedTotal,
+      totalHarvested: editedTotalHarvestedAmount,
+      totalRejected: selectedSortingHarvest.totalRejected + harvestSortingFormAdditionalRejectedAmount,
+      classifiedTotal: selectedSortingHarvest.classifiedTotal,
+      ownerHarvested: editedOwnerHarvestedAmount,
+      ownerRejected: selectedSortingHarvest.ownerRejected + harvestSortingFormAdditionalOwnerRejectedAmount,
     };
   }, [
     isRestoreSortingMode,
     restoreHarvestSummary,
-    harvestRows,
-    harvestSortingFormHarvestId,
+    selectedSortingHarvest,
+    editedTotalHarvestedAmount,
+    editedOwnerHarvestedAmount,
     harvestSortingFormAdditionalRejectedAmount,
+    harvestSortingFormAdditionalOwnerRejectedAmount,
   ]);
 
   const { handleSubmitHarvestGlobalForm } = useHarvestFormSubmission({
@@ -709,6 +753,9 @@ export function HarvestPage() {
     pendingExistingClassificationEdits,
     setPendingExistingClassificationEdits,
     additionalRejectedQuantity: harvestSortingFormAdditionalRejectedAmount,
+    additionalOwnerRejectedQuantity: harvestSortingFormAdditionalOwnerRejectedAmount,
+    hasTotalHarvestedEdit,
+    hasOwnerHarvestedEdit,
     setIsSubmittingHarvestSortingForm,
     setHarvestSortingFormError,
     setIsHarvestSortingFormOpen,
@@ -843,14 +890,15 @@ export function HarvestPage() {
       return null;
     }
 
+    const effectiveTotalHarvested = editedTotalHarvestedAmount;
     const effectiveTotalRejected = selectedHarvest.totalRejected + harvestSortingFormAdditionalRejectedAmount;
 
     return {
-      totalHarvestedValue: selectedHarvest.totalHarvested,
+      totalHarvestedValue: effectiveTotalHarvested,
       totalRejectedValue: effectiveTotalRejected,
       classifiedTotalValue: selectedHarvest.classifiedTotal,
       dateGregorian: formatGregorianDate(selectedHarvest.dateGregorian),
-      totalHarvested: numberFormatter.format(selectedHarvest.totalHarvested),
+      totalHarvested: numberFormatter.format(effectiveTotalHarvested),
       totalRejected: numberFormatter.format(effectiveTotalRejected),
       classifiedTotal: numberFormatter.format(selectedHarvest.classifiedTotal),
     };
@@ -860,6 +908,7 @@ export function HarvestPage() {
     harvestSortingFormHarvestId,
     numberFormatter,
     harvestSortingFormAdditionalRejectedAmount,
+    editedTotalHarvestedAmount,
   ]);
 
   const percentFormatter = useMemo(() => {
@@ -1733,6 +1782,7 @@ export function HarvestPage() {
             ? {
                 totalHarvested: selectedHarvestSummaryTotals.totalHarvested,
                 totalRejected: selectedHarvestSummaryTotals.totalRejected,
+                ownerRejected: selectedHarvestSummaryTotals.ownerRejected ?? 0,
               }
             : null
         }
@@ -1751,8 +1801,12 @@ export function HarvestPage() {
         harvestSortingFormQuantity={harvestSortingFormQuantity}
         harvestSortingFormNotes={harvestSortingFormNotes}
         harvestSortingFormIsPartialClassification={harvestSortingFormIsPartialClassification}
+        harvestSortingFormTotalHarvested={harvestSortingFormTotalHarvested}
+        harvestSortingFormOwnerHarvested={harvestSortingFormOwnerHarvested}
         isAddingRejectedQuantity={isAddingRejectedQuantity}
         harvestSortingFormAdditionalRejected={harvestSortingFormAdditionalRejected}
+        isAddingOwnerRejectedQuantity={isAddingOwnerRejectedQuantity}
+        harvestSortingFormAdditionalOwnerRejected={harvestSortingFormAdditionalOwnerRejected}
         harvestFormTraderCategories={harvestFormTraderCategories}
         harvestFormCustomerCategories={harvestFormCustomerCategories}
         harvestFormClassifications={harvestFormClassifications}
@@ -1771,9 +1825,14 @@ export function HarvestPage() {
         onQuantityChange={setHarvestSortingFormQuantity}
         onNotesChange={handleHarvestSortingNotesChange}
         onPartialClassificationChange={setHarvestSortingFormIsPartialClassification}
+        onTotalHarvestedChange={setHarvestSortingFormTotalHarvested}
+        onOwnerHarvestedChange={setHarvestSortingFormOwnerHarvested}
         onOpenAddRejectedQuantity={openAddRejectedQuantity}
         onAdditionalRejectedQuantityChange={setHarvestSortingFormAdditionalRejected}
         onRemoveAddedRejectedQuantity={removeAddedRejectedQuantity}
+        onOpenAddOwnerRejectedQuantity={openAddOwnerRejectedQuantity}
+        onAdditionalOwnerRejectedQuantityChange={setHarvestSortingFormAdditionalOwnerRejected}
+        onRemoveAddedOwnerRejectedQuantity={removeAddedOwnerRejectedQuantity}
         onAddClassificationDraft={addHarvestClassificationDraft}
         onRemoveClassificationDraft={removeHarvestClassificationDraft}
         onUpdateClassificationDraft={updateHarvestClassificationDraft}

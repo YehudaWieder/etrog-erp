@@ -94,6 +94,11 @@ export type HarvestI18n = {
     additionalRejectedPlaceholder: string;
     additionalRejectedNewTotalLabel: (newTotal: number) => string;
     removeAddedRejectedQuantity: string;
+    addOwnerRejectedQuantity: string;
+    additionalOwnerRejectedLabel: string;
+    additionalOwnerRejectedPlaceholder: string;
+    additionalOwnerRejectedNewTotalLabel: (newTotal: number) => string;
+    removeAddedOwnerRejectedQuantity: string;
     assignmentOptions: {
       general: string;
       trader: string;
@@ -209,7 +214,9 @@ export type HarvestI18n = {
     selectHarvestHint: string;
     dateGregorianLabel: string;
     totalHarvestedLabel: string;
+    ownerHarvestedLabel: string;
     totalRejectedLabel: string;
+    ownerRejectedLabel: string;
     classifiedTotalLabel: string;
     save: string;
     saving: string;

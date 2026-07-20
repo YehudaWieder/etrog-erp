@@ -40,6 +40,9 @@ type HarvestClassificationRowsSectionProps = {
   pendingExistingClassificationEdits?: Record<number, string>;
   isAddingRejectedQuantity?: boolean;
   additionalRejectedQuantity?: string;
+  ownerRejected?: string;
+  isAddingOwnerRejectedQuantity?: boolean;
+  additionalOwnerRejectedQuantity?: string;
   onAddClassificationDraft: () => void;
   onRemoveClassificationDraft: (draftId: string) => void;
   onUpdateClassificationDraft: (draftId: string, updater: Partial<HarvestFormClassificationDraft>) => void;
@@ -48,6 +51,9 @@ type HarvestClassificationRowsSectionProps = {
   onOpenAddRejectedQuantity?: () => void;
   onAdditionalRejectedQuantityChange?: (value: string) => void;
   onRemoveAddedRejectedQuantity?: () => void;
+  onOpenAddOwnerRejectedQuantity?: () => void;
+  onAdditionalOwnerRejectedQuantityChange?: (value: string) => void;
+  onRemoveAddedOwnerRejectedQuantity?: () => void;
 };
 
 export function HarvestClassificationRowsSection({
@@ -66,6 +72,9 @@ export function HarvestClassificationRowsSection({
   pendingExistingClassificationEdits = {},
   isAddingRejectedQuantity = false,
   additionalRejectedQuantity = '',
+  ownerRejected = '',
+  isAddingOwnerRejectedQuantity = false,
+  additionalOwnerRejectedQuantity = '',
   onAddClassificationDraft,
   onRemoveClassificationDraft,
   onUpdateClassificationDraft,
@@ -74,6 +83,9 @@ export function HarvestClassificationRowsSection({
   onOpenAddRejectedQuantity,
   onAdditionalRejectedQuantityChange,
   onRemoveAddedRejectedQuantity,
+  onOpenAddOwnerRejectedQuantity,
+  onAdditionalOwnerRejectedQuantityChange,
+  onRemoveAddedOwnerRejectedQuantity,
 }: HarvestClassificationRowsSectionProps) {
   const [didTryAddSortingRow, setDidTryAddSortingRow] = useState(false);
   const [addQuantityCell, setAddQuantityCell] = useState<{
@@ -247,6 +259,13 @@ export function HarvestClassificationRowsSection({
   const parsedTotalRejected = Number(totalRejected);
   const baseTotalRejected = (Number.isFinite(parsedTotalRejected) ? parsedTotalRejected : 0) - parsedAdditionalRejectedQuantity;
 
+  const parsedAdditionalOwnerRejectedQuantity = (() => {
+    const parsed = Number(additionalOwnerRejectedQuantity);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+  })();
+  const parsedOwnerRejected = Number(ownerRejected);
+  const baseOwnerRejected = (Number.isFinite(parsedOwnerRejected) ? parsedOwnerRejected : 0) - parsedAdditionalOwnerRejectedQuantity;
+
   const lastSortingRowDraft = harvestFormClassifications[harvestFormClassifications.length - 1] ?? null;
   const areTotalsFilled = areHarvestSortingTotalsFilled({ totalHarvested, totalRejected });
   const { reachedSortingQuantityLimit, maxSortingQuantity } = getHarvestSortingQuantityState({
@@ -312,14 +331,25 @@ export function HarvestClassificationRowsSection({
             <button type="button" className="btn btn-primary" onClick={handleAddSortingRowClick}>
               {form.addSortingRow}
             </button>
-            {!isAddingRejectedQuantity && onOpenAddRejectedQuantity ? (
-              <button type="button" className="btn btn-primary" onClick={onOpenAddRejectedQuantity}>
-                {form.addRejectedQuantity}
-              </button>
-            ) : null}
           </div>
         ) : null}
       </div>
+
+      {!harvestFormClassifications.length
+        && ((!isAddingRejectedQuantity && onOpenAddRejectedQuantity) || (!isAddingOwnerRejectedQuantity && onOpenAddOwnerRejectedQuantity)) ? (
+        <div className={styles.secondaryActions}>
+          {!isAddingRejectedQuantity && onOpenAddRejectedQuantity ? (
+            <button type="button" className="btn btn-primary" onClick={onOpenAddRejectedQuantity}>
+              {form.addRejectedQuantity}
+            </button>
+          ) : null}
+          {!isAddingOwnerRejectedQuantity && onOpenAddOwnerRejectedQuantity ? (
+            <button type="button" className="btn btn-primary" onClick={onOpenAddOwnerRejectedQuantity}>
+              {form.addOwnerRejectedQuantity}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
       {harvestFormClassifications.map((draft, index) => {
         const availableCustomerCategories = harvestFormCustomerCategories.filter(
@@ -602,11 +632,6 @@ export function HarvestClassificationRowsSection({
                     {form.addSortingRow}
                   </button>
                 ) : null}
-                {isLastSortingRow && !isAddingRejectedQuantity && onOpenAddRejectedQuantity ? (
-                  <button type="button" className="btn btn-primary" onClick={onOpenAddRejectedQuantity}>
-                    {form.addRejectedQuantity}
-                  </button>
-                ) : null}
                 <button
                   type="button"
                   className="btn btn-danger"
@@ -616,6 +641,21 @@ export function HarvestClassificationRowsSection({
                 </button>
               </div>
             </div>
+
+            {isLastSortingRow && ((!isAddingRejectedQuantity && onOpenAddRejectedQuantity) || (!isAddingOwnerRejectedQuantity && onOpenAddOwnerRejectedQuantity)) ? (
+              <div className={styles.secondaryActions}>
+                {!isAddingRejectedQuantity && onOpenAddRejectedQuantity ? (
+                  <button type="button" className="btn btn-primary" onClick={onOpenAddRejectedQuantity}>
+                    {form.addRejectedQuantity}
+                  </button>
+                ) : null}
+                {!isAddingOwnerRejectedQuantity && onOpenAddOwnerRejectedQuantity ? (
+                  <button type="button" className="btn btn-primary" onClick={onOpenAddOwnerRejectedQuantity}>
+                    {form.addOwnerRejectedQuantity}
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
 
             {isLastSortingRow && didTryAddSortingRow && rowAddSortingBlockReason && rowAddSortingBlockReason !== 'duplicate' ? (
               <p className={`seasons-manager__error ${styles.classificationAddError}`}>
@@ -652,6 +692,37 @@ export function HarvestClassificationRowsSection({
           {parsedAdditionalRejectedQuantity > 0 ? (
             <p className={styles.quantityMatrixHint}>
               {form.additionalRejectedNewTotalLabel(baseTotalRejected + parsedAdditionalRejectedQuantity)}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {isAddingOwnerRejectedQuantity ? (
+        <div className={styles.classificationRow}>
+          <div className={`management-form-grid ${styles.grid} ${styles.classificationGrid}`}>
+            <label className={styles.summaryField}>
+              <span>{form.additionalOwnerRejectedLabel}</span>
+              <input
+                className="seasons-manager__year-input harvest-bulk-form-number-input"
+                type="number"
+                min="0"
+                value={additionalOwnerRejectedQuantity}
+                onChange={(event) => onAdditionalOwnerRejectedQuantityChange?.(event.target.value)}
+                placeholder={form.additionalOwnerRejectedPlaceholder}
+                aria-label={form.additionalOwnerRejectedLabel}
+              />
+            </label>
+
+            <div className={styles.classificationActions}>
+              <button type="button" className="btn btn-danger" onClick={onRemoveAddedOwnerRejectedQuantity}>
+                {form.removeAddedOwnerRejectedQuantity}
+              </button>
+            </div>
+          </div>
+
+          {parsedAdditionalOwnerRejectedQuantity > 0 ? (
+            <p className={styles.quantityMatrixHint}>
+              {form.additionalOwnerRejectedNewTotalLabel(baseOwnerRejected + parsedAdditionalOwnerRejectedQuantity)}
             </p>
           ) : null}
         </div>

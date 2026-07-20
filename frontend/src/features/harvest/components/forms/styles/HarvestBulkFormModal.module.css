@@ -171,6 +171,14 @@
   gap: 8px;
 }
 
+.secondaryActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .classificationAddError {
   margin-top: 4px;
 }

@@ -24,6 +24,8 @@ type UseHarvestSortingFormSubmissionParams = {
     totalHarvested: number;
     totalRejected: number;
     classifiedTotal: number;
+    ownerHarvested?: number;
+    ownerRejected?: number;
   } | null;
   form: {
     harvestId: string;
@@ -43,6 +45,9 @@ type UseHarvestSortingFormSubmissionParams = {
   pendingExistingClassificationEdits: Record<number, string>;
   setPendingExistingClassificationEdits: (value: Record<number, string>) => void;
   additionalRejectedQuantity?: number;
+  additionalOwnerRejectedQuantity?: number;
+  hasTotalHarvestedEdit?: boolean;
+  hasOwnerHarvestedEdit?: boolean;
   setIsSubmittingHarvestSortingForm: (value: boolean) => void;
   setHarvestSortingFormError: (value: string) => void;
   setIsHarvestSortingFormOpen: (value: boolean) => void;
@@ -68,6 +73,9 @@ export function useHarvestSortingFormSubmission({
   pendingExistingClassificationEdits,
   setPendingExistingClassificationEdits,
   additionalRejectedQuantity = 0,
+  additionalOwnerRejectedQuantity = 0,
+  hasTotalHarvestedEdit = false,
+  hasOwnerHarvestedEdit = false,
   setIsSubmittingHarvestSortingForm,
   setHarvestSortingFormError,
   setIsHarvestSortingFormOpen,
@@ -195,18 +203,31 @@ export function useHarvestSortingFormSubmission({
 
         const parsedHarvestId = Number(form.harvestId);
 
-        // Edits to existing classifications, creation of new ones, and an added-rejected-quantity
-        // harvest update (if any) are all sent together so the backend can apply everything inside
-        // a single transaction — either everything lands, or nothing does.
+        const harvestUpdate = selectedHarvestSummary
+          ? {
+              ...(hasTotalHarvestedEdit ? { totalHarvested: selectedHarvestSummary.totalHarvested } : {}),
+              ...(additionalRejectedQuantity > 0 ? { totalRejected: selectedHarvestSummary.totalRejected } : {}),
+              ...(hasOwnerHarvestedEdit && selectedHarvestSummary.ownerHarvested !== undefined
+                ? { ownerHarvested: selectedHarvestSummary.ownerHarvested }
+                : {}),
+              ...(additionalOwnerRejectedQuantity > 0 && selectedHarvestSummary.ownerRejected !== undefined
+                ? { ownerRejected: selectedHarvestSummary.ownerRejected }
+                : {}),
+            }
+          : {};
+        const hasHarvestUpdate = Object.keys(harvestUpdate).length > 0;
+
+        // Edits to existing classifications, creation of new ones, and any inline harvest field
+        // updates (direct edits to harvested/owner-harvested, added rejected/owner-rejected quantities)
+        // are all sent together so the backend can apply everything inside a single transaction —
+        // either everything lands, or nothing does.
         try {
           await saveHarvestSortingBatch({
             harvestId: parsedHarvestId,
             isPartialClassification: form.isPartialClassification,
             edits,
             creates: submission.payloads.map(({ harvestId: _harvestId, isPartialClassification: _isPartial, ...item }) => item),
-            harvestUpdate: additionalRejectedQuantity > 0 && selectedHarvestSummary
-              ? { totalRejected: selectedHarvestSummary.totalRejected }
-              : undefined,
+            harvestUpdate: hasHarvestUpdate ? harvestUpdate : undefined,
           });
         } catch (error) {
           if (error instanceof Error && error.message.trim()) {
@@ -234,6 +255,9 @@ export function useHarvestSortingFormSubmission({
     }
   }, [
     additionalRejectedQuantity,
+    additionalOwnerRejectedQuantity,
+    hasTotalHarvestedEdit,
+    hasOwnerHarvestedEdit,
     deletedClassificationId,
     existingHarvestClassifications,
     form,

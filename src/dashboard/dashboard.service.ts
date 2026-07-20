@@ -14,16 +14,39 @@ function pct(n: number, d: number): number {
 export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async buildHarvestFieldSeries(seasonId: number, field: 'totalAfterRejected' | 'classifiedTotal'): Promise<DailyDataPoint[]> {
+  private async buildHarvestFieldSeries(seasonId: number, field: 'totalAfterRejected'): Promise<DailyDataPoint[]> {
     const records = await this.prisma.fieldHarvest.findMany({
       where: { seasonId, isDeleted: false },
-      select: { dateGregorian: true, totalAfterRejected: true, classifiedTotal: true },
+      select: { dateGregorian: true, totalAfterRejected: true },
       orderBy: { dateGregorian: 'asc' },
     });
     const byDate = new Map<string, number>();
     for (const r of records) {
       const key = r.dateGregorian.toISOString().split('T')[0];
       byDate.set(key, (byDate.get(key) ?? 0) + r[field]);
+    }
+    let cumulative = 0;
+    return Array.from(byDate.keys())
+      .sort()
+      .map((d, i) => {
+        cumulative += byDate.get(d)!;
+        return { label: `יום ${i + 1}`, value: cumulative };
+      });
+  }
+
+  private async buildSortedSeries(seasonId: number): Promise<DailyDataPoint[]> {
+    // Classification has no dedicated "sorting date" — createdAt reflects the
+    // day the sorting entry was actually recorded, unlike FieldHarvest.dateGregorian
+    // which is the harvest day and can precede the sorting by several days.
+    const records = await this.prisma.classification.findMany({
+      where: { seasonId, isDeleted: false },
+      select: { createdAt: true, quantity: true },
+      orderBy: { createdAt: 'asc' },
+    });
+    const byDate = new Map<string, number>();
+    for (const r of records) {
+      const key = r.createdAt.toISOString().split('T')[0];
+      byDate.set(key, (byDate.get(key) ?? 0) + r.quantity);
     }
     let cumulative = 0;
     return Array.from(byDate.keys())
@@ -71,7 +94,7 @@ export class DashboardService {
 
     const [netHarvestHistory, sortedHistory, packagedHistory] = await Promise.all([
       Promise.all(prevSeasons.map(async (s) => ({ yearName: s.yearName, data: await this.buildHarvestFieldSeries(s.id, 'totalAfterRejected') }))),
-      Promise.all(prevSeasons.map(async (s) => ({ yearName: s.yearName, data: await this.buildHarvestFieldSeries(s.id, 'classifiedTotal') }))),
+      Promise.all(prevSeasons.map(async (s) => ({ yearName: s.yearName, data: await this.buildSortedSeries(s.id) }))),
       Promise.all(prevSeasons.map(async (s) => ({ yearName: s.yearName, data: await this.buildPackagedSeries(s.id) }))),
     ]);
 
@@ -88,10 +111,7 @@ export class DashboardService {
       orderBy: { dateGregorian: 'asc' },
     });
 
-    const byDate = new Map<
-      string,
-      { totalHarvested: number; totalRejected: number; totalAfterRejected: number; classifiedTotal: number }
-    >();
+    const byDate = new Map<string, { totalHarvested: number; totalRejected: number; totalAfterRejected: number }>();
 
     let grandHarvested = 0;
     let grandRejected = 0;
@@ -106,13 +126,12 @@ export class DashboardService {
     for (const r of records) {
       const dateKey = r.dateGregorian.toISOString().split('T')[0];
       if (!byDate.has(dateKey)) {
-        byDate.set(dateKey, { totalHarvested: 0, totalRejected: 0, totalAfterRejected: 0, classifiedTotal: 0 });
+        byDate.set(dateKey, { totalHarvested: 0, totalRejected: 0, totalAfterRejected: 0 });
       }
       const e = byDate.get(dateKey)!;
       e.totalHarvested += r.totalHarvested;
       e.totalRejected += r.totalRejected;
       e.totalAfterRejected += r.totalAfterRejected;
-      e.classifiedTotal += r.classifiedTotal;
       grandHarvested += r.totalHarvested;
       grandRejected += r.totalRejected;
       grandNet += r.totalAfterRejected;
@@ -132,11 +151,7 @@ export class DashboardService {
       return { label: `יום ${i + 1}`, value: cumulativeNet };
     });
 
-    let cumulativeSorted = 0;
-    const sorted: DailyDataPoint[] = sortedDates.map((d, i) => {
-      cumulativeSorted += byDate.get(d)!.classifiedTotal;
-      return { label: `יום ${i + 1}`, value: cumulativeSorted };
-    });
+    const sorted = await this.buildSortedSeries(seasonId);
 
     const [allTraders, traderStockRecords, privateSelectionRecords, moduloRecords] = await Promise.all([
       this.prisma.trader.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),

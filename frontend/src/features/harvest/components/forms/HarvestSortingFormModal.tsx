@@ -28,7 +28,7 @@ type HarvestSortingFormModalProps = {
     totalRejected: string;
     classifiedTotal: string;
   } | null;
-  rawTotals: { totalHarvested: number; totalRejected: number } | null;
+  rawTotals: { totalHarvested: number; totalRejected: number; ownerRejected: number } | null;
   traders: Trader[];
   customers: Customer[];
   isSubmittingHarvestSortingForm: boolean;
@@ -44,8 +44,12 @@ type HarvestSortingFormModalProps = {
   harvestSortingFormQuantity: string;
   harvestSortingFormNotes: string;
   harvestSortingFormIsPartialClassification: boolean;
+  harvestSortingFormTotalHarvested: string;
+  harvestSortingFormOwnerHarvested: string;
   isAddingRejectedQuantity: boolean;
   harvestSortingFormAdditionalRejected: string;
+  isAddingOwnerRejectedQuantity: boolean;
+  harvestSortingFormAdditionalOwnerRejected: string;
   harvestFormTraderCategories: TraderCategoryWithShares[];
   harvestFormCustomerCategories: CustomerCategory[];
   harvestFormClassifications: HarvestFormClassificationDraft[];
@@ -64,9 +68,14 @@ type HarvestSortingFormModalProps = {
   onQuantityChange: (value: string) => void;
   onNotesChange: (nextNotes: string, textareaElement: HTMLTextAreaElement) => void;
   onPartialClassificationChange: (value: boolean) => void;
+  onTotalHarvestedChange: (value: string) => void;
+  onOwnerHarvestedChange: (value: string) => void;
   onOpenAddRejectedQuantity: () => void;
   onAdditionalRejectedQuantityChange: (value: string) => void;
   onRemoveAddedRejectedQuantity: () => void;
+  onOpenAddOwnerRejectedQuantity: () => void;
+  onAdditionalOwnerRejectedQuantityChange: (value: string) => void;
+  onRemoveAddedOwnerRejectedQuantity: () => void;
   onAddClassificationDraft: () => void;
   onRemoveClassificationDraft: (draftId: string) => void;
   onUpdateClassificationDraft: (draftId: string, updater: Partial<HarvestFormClassificationDraft>) => void;
@@ -97,8 +106,12 @@ export function HarvestSortingFormModal({
   harvestSortingFormQuantity,
   harvestSortingFormNotes,
   harvestSortingFormIsPartialClassification,
+  harvestSortingFormTotalHarvested,
+  harvestSortingFormOwnerHarvested,
   isAddingRejectedQuantity,
   harvestSortingFormAdditionalRejected,
+  isAddingOwnerRejectedQuantity,
+  harvestSortingFormAdditionalOwnerRejected,
   harvestFormTraderCategories,
   harvestFormCustomerCategories,
   harvestFormClassifications,
@@ -117,9 +130,14 @@ export function HarvestSortingFormModal({
   onQuantityChange,
   onNotesChange,
   onPartialClassificationChange,
+  onTotalHarvestedChange,
+  onOwnerHarvestedChange,
   onOpenAddRejectedQuantity,
   onAdditionalRejectedQuantityChange,
   onRemoveAddedRejectedQuantity,
+  onOpenAddOwnerRejectedQuantity,
+  onAdditionalOwnerRejectedQuantityChange,
+  onRemoveAddedOwnerRejectedQuantity,
   onAddClassificationDraft,
   onRemoveClassificationDraft,
   onUpdateClassificationDraft,
@@ -234,14 +252,41 @@ export function HarvestSortingFormModal({
 
           <label className={styles.summaryField}>
             <span>{t.sortingForm.totalHarvestedLabel}</span>
-            <input
-              className={`seasons-manager__year-input ${styles.readOnlyField}`}
-              type="text"
-              value={selectedHarvestSummary?.totalHarvested ?? ''}
-              readOnly
-              aria-label={t.sortingForm.totalHarvestedLabel}
-            />
+            {restoreMode ? (
+              <input
+                className={`seasons-manager__year-input ${styles.readOnlyField}`}
+                type="text"
+                value={selectedHarvestSummary?.totalHarvested ?? ''}
+                readOnly
+                aria-label={t.sortingForm.totalHarvestedLabel}
+              />
+            ) : (
+              <input
+                className="seasons-manager__year-input harvest-bulk-form-number-input"
+                type="number"
+                min="0"
+                disabled={!isHarvestSelected}
+                value={harvestSortingFormTotalHarvested}
+                onChange={(event) => onTotalHarvestedChange(event.target.value)}
+                aria-label={t.sortingForm.totalHarvestedLabel}
+              />
+            )}
           </label>
+
+          {!restoreMode ? (
+            <label className={styles.summaryField}>
+              <span>{t.sortingForm.ownerHarvestedLabel}</span>
+              <input
+                className="seasons-manager__year-input harvest-bulk-form-number-input"
+                type="number"
+                min="0"
+                disabled={!isHarvestSelected}
+                value={harvestSortingFormOwnerHarvested}
+                onChange={(event) => onOwnerHarvestedChange(event.target.value)}
+                aria-label={t.sortingForm.ownerHarvestedLabel}
+              />
+            </label>
+          ) : null}
 
           <label className={styles.summaryField}>
             <span>{t.sortingForm.totalRejectedLabel}</span>
@@ -253,6 +298,19 @@ export function HarvestSortingFormModal({
               aria-label={t.sortingForm.totalRejectedLabel}
             />
           </label>
+
+          {!restoreMode ? (
+            <label className={styles.summaryField}>
+              <span>{t.sortingForm.ownerRejectedLabel}</span>
+              <input
+                className={`seasons-manager__year-input ${styles.readOnlyField}`}
+                type="text"
+                value={rawTotals ? String(rawTotals.ownerRejected) : ''}
+                readOnly
+                aria-label={t.sortingForm.ownerRejectedLabel}
+              />
+            </label>
+          ) : null}
 
           <label className={styles.summaryField}>
             <span>{t.sortingForm.classifiedTotalLabel}</span>
@@ -418,6 +476,7 @@ export function HarvestSortingFormModal({
             customers={customers}
             totalHarvested={rawTotals ? String(rawTotals.totalHarvested) : ''}
             totalRejected={rawTotals ? String(rawTotals.totalRejected) : ''}
+            ownerRejected={rawTotals ? String(rawTotals.ownerRejected) : ''}
             isPartialClassification={harvestSortingFormIsPartialClassification}
             harvestFormClassifications={harvestFormClassifications}
             harvestFormTraderCategories={harvestFormTraderCategories}
@@ -426,6 +485,8 @@ export function HarvestSortingFormModal({
             pendingExistingClassificationEdits={pendingExistingClassificationEdits}
             isAddingRejectedQuantity={isAddingRejectedQuantity}
             additionalRejectedQuantity={harvestSortingFormAdditionalRejected}
+            isAddingOwnerRejectedQuantity={isAddingOwnerRejectedQuantity}
+            additionalOwnerRejectedQuantity={harvestSortingFormAdditionalOwnerRejected}
             onAddClassificationDraft={onAddClassificationDraft}
             onRemoveClassificationDraft={onRemoveClassificationDraft}
             onUpdateClassificationDraft={onUpdateClassificationDraft}
@@ -434,6 +495,9 @@ export function HarvestSortingFormModal({
             onOpenAddRejectedQuantity={onOpenAddRejectedQuantity}
             onAdditionalRejectedQuantityChange={onAdditionalRejectedQuantityChange}
             onRemoveAddedRejectedQuantity={onRemoveAddedRejectedQuantity}
+            onOpenAddOwnerRejectedQuantity={onOpenAddOwnerRejectedQuantity}
+            onAdditionalOwnerRejectedQuantityChange={onAdditionalOwnerRejectedQuantityChange}
+            onRemoveAddedOwnerRejectedQuantity={onRemoveAddedOwnerRejectedQuantity}
           />
         )}
 

@@ -18,6 +18,10 @@ export function useHarvestSortingFormState() {
   const [harvestSortingFormIsPartialClassification, setHarvestSortingFormIsPartialClassification] = useState(false);
   const [isAddingRejectedQuantity, setIsAddingRejectedQuantity] = useState(false);
   const [harvestSortingFormAdditionalRejected, setHarvestSortingFormAdditionalRejected] = useState('');
+  const [isAddingOwnerRejectedQuantity, setIsAddingOwnerRejectedQuantity] = useState(false);
+  const [harvestSortingFormAdditionalOwnerRejected, setHarvestSortingFormAdditionalOwnerRejected] = useState('');
+  const [harvestSortingFormTotalHarvested, setHarvestSortingFormTotalHarvested] = useState('');
+  const [harvestSortingFormOwnerHarvested, setHarvestSortingFormOwnerHarvested] = useState('');
 
   const resetHarvestSortingForm = (initialHarvestId: number | null = null) => {
     const nextHarvestId = initialHarvestId !== null ? String(initialHarvestId) : '';
@@ -36,6 +40,10 @@ export function useHarvestSortingFormState() {
     setHarvestSortingFormIsPartialClassification(false);
     setIsAddingRejectedQuantity(false);
     setHarvestSortingFormAdditionalRejected('');
+    setIsAddingOwnerRejectedQuantity(false);
+    setHarvestSortingFormAdditionalOwnerRejected('');
+    setHarvestSortingFormTotalHarvested('');
+    setHarvestSortingFormOwnerHarvested('');
   };
 
   const openAddRejectedQuantity = () => {
@@ -45,6 +53,15 @@ export function useHarvestSortingFormState() {
   const removeAddedRejectedQuantity = () => {
     setIsAddingRejectedQuantity(false);
     setHarvestSortingFormAdditionalRejected('');
+  };
+
+  const openAddOwnerRejectedQuantity = () => {
+    setIsAddingOwnerRejectedQuantity(true);
+  };
+
+  const removeAddedOwnerRejectedQuantity = () => {
+    setIsAddingOwnerRejectedQuantity(false);
+    setHarvestSortingFormAdditionalOwnerRejected('');
   };
 
   const openHarvestSortingGlobalForm = (initialHarvestId: number | null = null) => {
@@ -142,6 +159,15 @@ export function useHarvestSortingFormState() {
     setHarvestSortingFormAdditionalRejected,
     openAddRejectedQuantity,
     removeAddedRejectedQuantity,
+    isAddingOwnerRejectedQuantity,
+    harvestSortingFormAdditionalOwnerRejected,
+    setHarvestSortingFormAdditionalOwnerRejected,
+    openAddOwnerRejectedQuantity,
+    removeAddedOwnerRejectedQuantity,
+    harvestSortingFormTotalHarvested,
+    setHarvestSortingFormTotalHarvested,
+    harvestSortingFormOwnerHarvested,
+    setHarvestSortingFormOwnerHarvested,
     openHarvestSortingGlobalForm,
     closeHarvestSortingGlobalForm,
     prefillSortingFormForRestore,
