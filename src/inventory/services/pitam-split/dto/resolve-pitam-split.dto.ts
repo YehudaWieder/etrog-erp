@@ -11,9 +11,10 @@ export class ResolvePitamSplitDto {
     enum: ['SPECIFIC_TRADER', 'MODULO', 'GENERAL'],
     description:
       'SPECIFIC_TRADER splits one trader\'s own MIXED stock. ' +
-      'MODULO splits only the unassigned/modulo MIXED stock. GENERAL splits proportionally across every ' +
-      'trader\'s own MIXED stock by their TraderCategoryShare percent, falling back to modulo for any ' +
-      'remainder no trader can absorb (same fallback behavior as ordinary general packing/sorting).',
+      'MODULO splits only the unassigned/modulo MIXED stock. GENERAL splits the quantity exactly and ' +
+      'evenly across every trader by their TraderCategoryShare percent (no trader gets 0, no rounding ' +
+      'remainder dumped on one trader) when possible; otherwise the entire quantity is taken from modulo ' +
+      'instead, and if modulo can\'t cover it either the request fails with the minimum fair quantity.',
   })
   source!: PitamSplitSource;
 

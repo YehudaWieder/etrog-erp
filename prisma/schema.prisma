@@ -386,6 +386,11 @@ model TraderStock {
 
   MovementReferenceId Int? // classificationId, shipmentItemId or customerAllocationsId
 
+  // Groups every row created by a single pitam-split resolve() call (one negative/positive triple
+  // per affected trader, plus modulo) so the whole action can be undone in one shot. Null for
+  // every other movement type.
+  pitamSplitBatchId String? @db.Uuid
+
   shipmentId Int?
   boxId      Int?
   box        Box?    @relation(fields: [boxId], references: [id])
@@ -404,6 +409,7 @@ model TraderStock {
   @@index([seasonId, traderId, type])
   @@index([traderCategoryId, grade, pitamStatus, type])
   @@index([isDeleted])
+  @@index([pitamSplitBatchId])
 }
 
 // -----------------------------------------------------------------------------

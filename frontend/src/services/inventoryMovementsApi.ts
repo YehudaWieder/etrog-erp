@@ -128,3 +128,44 @@ export async function createPitamSplitMovement(payload: CreatePitamSplitPayload)
     body: JSON.stringify(payload),
   });
 }
+
+export type PitamSplitBatchSource = 'SPECIFIC_TRADER' | 'MODULO' | 'GENERAL';
+
+export type PitamSplitBatch = {
+  batchId: string;
+  seasonId: number;
+  date: string;
+  traderCategoryId: number;
+  grade: Grade;
+  source: PitamSplitBatchSource;
+  traderId: number | null;
+  traderName: string | null;
+  affectedCount: number;
+  withQty: number;
+  withoutQty: number;
+  notes: string | null;
+};
+
+export type FetchPitamSplitBatchesParams = {
+  seasonId?: number;
+  traderCategoryId?: number;
+  grade?: Grade;
+};
+
+export async function fetchPitamSplitBatches(params: FetchPitamSplitBatchesParams = {}): Promise<PitamSplitBatch[]> {
+  const query = new URLSearchParams();
+  if (params.seasonId) query.set('seasonId', String(params.seasonId));
+  if (params.traderCategoryId) query.set('traderCategoryId', String(params.traderCategoryId));
+  if (params.grade) query.set('grade', params.grade);
+
+  const queryString = query.toString();
+  return apiClient<PitamSplitBatch[]>(`/inventory/pitam-split${queryString ? `?${queryString}` : ''}`, {
+    suppressGlobalFeedback: true,
+  });
+}
+
+export async function undoPitamSplitBatch(batchId: string) {
+  return apiClient(`/inventory/pitam-split/${batchId}`, {
+    method: 'DELETE',
+  });
+}

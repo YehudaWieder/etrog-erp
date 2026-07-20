@@ -304,7 +304,7 @@ export class InventoryController {
 		summary:
 			'Resolve part of a trader\'s MIXED pitam balance into WITH_PITAM/WITHOUT_PITAM as new ledger movements (type=PITAM_SPLIT), without touching the original Classification record. ' +
 			'Trader-only: a customer always has a definite pitam status, so there is nothing to resolve on that side. ' +
-			'source=SPECIFIC_TRADER resolves one trader\'s own stock, MODULO resolves only the unassigned pool, and GENERAL splits proportionally across every trader\'s own stock by their configured share, falling back to modulo for any remainder no trader can absorb.',
+			'source=SPECIFIC_TRADER resolves one trader\'s own stock, MODULO resolves only the unassigned pool, and GENERAL splits the quantity exactly and evenly across every trader by their configured share when possible, otherwise takes the entire amount from modulo, otherwise fails with the minimum fair quantity.',
 	})
 	@ApiBody({
 		type: ResolvePitamSplitDto,
@@ -348,5 +348,40 @@ export class InventoryController {
 	resolvePitamSplit(@Body() data: ResolvePitamSplitDto, @Req() req: Request) {
 		const actor = req.user as AuthenticatedUser;
 		return this.pitamSplitService.resolve(data, actor.id);
+	}
+
+	@Get('pitam-split')
+	@ApiOperation({
+		summary:
+			'List pitam split batches available to undo (each groups every ledger row created by a single resolve() call — one negative/positive triple per affected trader, plus modulo).',
+	})
+	@ApiQuery({ name: 'seasonId', type: Number, required: false, description: 'Defaults to active season.' })
+	@ApiQuery({ name: 'traderCategoryId', type: Number, required: false })
+	@ApiQuery({ name: 'grade', enum: Grade, enumName: 'Grade', required: false })
+	@ApiResponse({ status: 200, description: 'Pitam split batches.' })
+	listPitamSplitBatches(
+		@Query('seasonId') seasonId?: string,
+		@Query('traderCategoryId') traderCategoryId?: string,
+		@Query('grade') grade?: Grade,
+	) {
+		return this.pitamSplitService.listBatches({
+			seasonId: parseOptionalInt(seasonId),
+			traderCategoryId: parseOptionalInt(traderCategoryId),
+			grade,
+		});
+	}
+
+	@Delete('pitam-split/:batchId')
+	@ApiOperation({
+		summary:
+			'Undo a pitam split batch: permanently deletes every ledger row it created, resolving MIXED stock back to what it was before the split. ' +
+			'Fails if the WITH_PITAM/WITHOUT_PITAM stock it created has since been consumed downstream (e.g. packed into a shipment).',
+	})
+	@ApiParam({ name: 'batchId', type: String })
+	@ApiResponse({ status: 200, description: 'Pitam split batch undone (rows permanently deleted).' })
+	@ApiResponse({ status: 400, description: 'Split stock was already partially consumed and can no longer be undone.' })
+	@ApiResponse({ status: 404, description: 'Batch not found.' })
+	undoPitamSplit(@Param('batchId') batchId: string) {
+		return this.pitamSplitService.undoBatch(batchId);
 	}
 }

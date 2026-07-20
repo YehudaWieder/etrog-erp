@@ -13,6 +13,7 @@ import {
   createInternalTransfer,
   createPitamSplitMovement,
   createTraderAdjustmentMovement,
+  undoPitamSplitBatch,
   type InternalTransferMovementType,
   type PitamSplitSource,
   type PitamStatus,
@@ -20,12 +21,14 @@ import {
 } from '../../../services/inventoryMovementsApi';
 import { ApiError } from '../../../services/apiClient';
 import { fetchTraderInventorySummary } from '../services/traderInventorySummary.service';
+import { usePitamSplitBatches } from '../hooks/usePitamSplitBatches';
+import { PitamSplitUndoBatchPicker } from './PitamSplitUndoBatchPicker';
 import type { TraderInventorySummaryRow } from '../traderInventory.types';
 
 const GRADE_OPTIONS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו'] as const;
 const PITAM_STATUS_OPTIONS: PitamStatus[] = ['WITH_PITAM', 'WITHOUT_PITAM', 'MIXED'];
 
-type MovementType = InternalTransferMovementType | TraderAdjustmentMovementType | 'PITAM_SPLIT';
+type MovementType = InternalTransferMovementType | TraderAdjustmentMovementType | 'PITAM_SPLIT' | 'PITAM_SPLIT_UNDO';
 
 const MOVEMENT_TYPE_ORDER: Array<Exclude<MovementType, 'PRIVATE_SELECTION'>> = [
   'OWNERSHIP_TRANSFER',
@@ -34,6 +37,7 @@ const MOVEMENT_TYPE_ORDER: Array<Exclude<MovementType, 'PRIVATE_SELECTION'>> = [
   'SELF_PICKUP',
   'WASTE',
   'PITAM_SPLIT',
+  'PITAM_SPLIT_UNDO',
 ];
 
 const ADJUSTMENT_TYPES = new Set<MovementType>(['WASTE']);
@@ -102,6 +106,7 @@ export function AddTraderMovementModal({
   const [pitamSplitSource, setPitamSplitSource] = useState<PitamSplitSource | ''>('');
   const [withQty, setWithQty] = useState('');
   const [withoutQty, setWithoutQty] = useState('');
+  const [pitamSplitUndoBatchId, setPitamSplitUndoBatchId] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -228,6 +233,11 @@ export function AddTraderMovementModal({
       isActive = false;
     };
   }, [type, fromTraderId, traderId, stockSource, isModulo, seasonId]);
+
+  const { batches: pitamSplitUndoBatches, isLoading: isPitamSplitUndoLoading } = usePitamSplitBatches(
+    type === 'PITAM_SPLIT_UNDO',
+    { seasonId },
+  );
 
   const traderCategoryOrderById = useMemo(() => {
     const map = new Map<number, number>();
@@ -627,6 +637,7 @@ export function AddTraderMovementModal({
     setPitamSplitSource('');
     setWithQty('');
     setWithoutQty('');
+    setPitamSplitUndoBatchId('');
     setNotes('');
     setError(null);
   };
@@ -654,6 +665,7 @@ export function AddTraderMovementModal({
     setPitamSplitSource('');
     setWithQty('');
     setWithoutQty('');
+    setPitamSplitUndoBatchId('');
     setError(null);
   };
 
@@ -696,6 +708,26 @@ export function AddTraderMovementModal({
           withoutQty: withoutQtyNumber,
           notes: notes || null,
         });
+
+        resetForm();
+        onSaved();
+      } catch (submitError) {
+        setError(submitError instanceof ApiError ? submitError.message : f.validationRequired);
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
+    if (type === 'PITAM_SPLIT_UNDO') {
+      if (!pitamSplitUndoBatchId) {
+        setError(f.validationRequired);
+        return;
+      }
+
+      try {
+        setIsSubmitting(true);
+        await undoPitamSplitBatch(pitamSplitUndoBatchId);
 
         resetForm();
         onSaved();
@@ -866,7 +898,7 @@ export function AddTraderMovementModal({
 
         <h3 className="modal-title" style={{ position: 'relative' }}>
           {f.title}
-          <TopLoadingBar isLoading={isLoadingFromTraderStock || isLoadingGeneralStock || isLoadingGeneralTransferStock} />
+          <TopLoadingBar isLoading={isLoadingFromTraderStock || isLoadingGeneralStock || isLoadingGeneralTransferStock || isPitamSplitUndoLoading} />
         </h3>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -1675,6 +1707,23 @@ export function AddTraderMovementModal({
             </>
           ) : null}
 
+          {type === 'PITAM_SPLIT_UNDO' ? (
+            <div style={ROW_STYLE}>
+              <div style={{ ...FIELD_STYLE, gridColumn: '1 / -1' }}>
+                <label style={LABEL_STYLE}>{f.pitamSplitUndoBatchLabel}</label>
+                <PitamSplitUndoBatchPicker
+                  lang={lang}
+                  labels={f}
+                  batches={pitamSplitUndoBatches}
+                  traderCategories={traderCategories}
+                  value={pitamSplitUndoBatchId}
+                  onChange={setPitamSplitUndoBatchId}
+                  isLoading={isPitamSplitUndoLoading}
+                />
+              </div>
+            </div>
+          ) : null}
+
           {type === 'OWNERSHIP_TRANSFER' ? (
             <div style={ROW_STYLE}>
               <div style={FIELD_STYLE}>
@@ -1753,7 +1802,7 @@ export function AddTraderMovementModal({
             </div>
           ) : null}
 
-          {type && type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'ASSIGNED' && type !== 'SELF_PICKUP' && type !== 'WASTE' && type !== 'PITAM_SPLIT' ? (
+          {type && type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'ASSIGNED' && type !== 'SELF_PICKUP' && type !== 'WASTE' && type !== 'PITAM_SPLIT' && type !== 'PITAM_SPLIT_UNDO' ? (
             <div style={ROW_STYLE}>
               <div style={FIELD_STYLE}>
                 <label style={LABEL_STYLE}>{f.traderCategoryLabel}</label>
