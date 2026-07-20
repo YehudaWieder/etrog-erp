@@ -169,3 +169,10 @@ export async function undoPitamSplitBatch(batchId: string) {
     method: 'DELETE',
   });
 }
+
+export async function updatePitamSplitBatch(batchId: string, payload: CreatePitamSplitPayload) {
+  return apiClient(`/inventory/pitam-split/${batchId}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}

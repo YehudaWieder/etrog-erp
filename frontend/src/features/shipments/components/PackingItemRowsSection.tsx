@@ -72,6 +72,7 @@ type PackingItemFieldsText = {
   pitamSplitConfirmLabel: string;
   pitamSplitConfirmingLabel: string;
   pitamSplitInvalidError: string;
+  pitamSplitInsufficientStockError: string;
   pitamSplitGenericError: string;
 };
 
@@ -264,7 +265,13 @@ export function PackingItemRowsSection({
 
       handleClosePitamSplitPopup();
     } catch (submitError) {
-      setPitamSplitError(submitError instanceof ApiError ? submitError.message : fieldsT.pitamSplitGenericError);
+      setPitamSplitError(
+        submitError instanceof ApiError
+          ? submitError.message.toLowerCase().includes('insufficient')
+            ? fieldsT.pitamSplitInsufficientStockError
+            : submitError.message
+          : fieldsT.pitamSplitGenericError,
+      );
     } finally {
       setPitamSplitSubmitting(false);
     }
@@ -835,6 +842,7 @@ export function PackingItemRowsSection({
             document.body,
           )
         : null}
+
     </div>
   );
 }

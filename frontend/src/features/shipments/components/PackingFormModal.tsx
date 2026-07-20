@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { FaXmark } from 'react-icons/fa6';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
 import { TopLoadingBar } from '../../../components/ui/TopLoadingBar';
@@ -8,6 +10,16 @@ import type { Customer } from '../../../services/customersApi';
 import type { PackingBoxOption, PackingItemRowDraft, PackingItemRowView } from '../hooks/usePackingForm';
 import type { StockSource } from '../hooks/useNewShipmentItemForm';
 import type { PitamRowKey } from '../utils/packingItemMatrix.util';
+import {
+  fetchPitamSplitBatches,
+  undoPitamSplitBatch,
+  updatePitamSplitBatch,
+  type PitamSplitBatch,
+} from '../../../services/inventoryMovementsApi';
+import { ApiError } from '../../../services/apiClient';
+import { getActiveSeason } from '../../../services/seasonsApi';
+import { getTraderCategoriesWithShares, type TraderCategoryWithShares } from '../../../services/traderCategoriesApi';
+import { PitamSplitUndoBatchPicker } from '../../traders/components/PitamSplitUndoBatchPicker';
 import { PackingItemRowsSection } from './PackingItemRowsSection';
 import { BoxNumberTypeahead } from './BoxNumberTypeahead';
 import gridStyles from './styles/NewShipmentItemFormModal.module.css';
@@ -120,11 +132,27 @@ type PackingItemFieldsText = {
   pitamSplitConfirmLabel: string;
   pitamSplitConfirmingLabel: string;
   pitamSplitInvalidError: string;
+  pitamSplitInsufficientStockError: string;
   pitamSplitGenericError: string;
+  pitamSplitManageTriggerButtonLabel: string;
+  pitamSplitManagePopupTitle: string;
+  pitamSplitManageLoadingLabel: string;
+  pitamSplitManageNoBatchesLabel: string;
+  pitamSplitManageGenericError: string;
+  pitamSplitManageSelectPlaceholder: string;
+  pitamSplitManageSourceLabels: Record<'SPECIFIC_TRADER' | 'MODULO' | 'GENERAL', string>;
+  pitamSplitManageUpdateLabel: string;
+  pitamSplitManageCancelSplitLabel: string;
+  pitamSplitManageCancelingLabel: string;
+  pitamSplitManageSaveLabel: string;
+  pitamSplitManageSavingLabel: string;
+  pitamSplitManageDiscardEditLabel: string;
+  pitamSplitManageCloseLabel: string;
 };
 
 type PackingFormModalProps = {
   isOpen: boolean;
+  lang: 'he' | 'en';
   t: PackingFormModalText;
   itemFieldsT: PackingItemFieldsText;
   boxOptions: PackingBoxOption[];
@@ -187,6 +215,7 @@ const BOX_TYPE_SHORT: Record<string, string> = { SMALL: 'S', MEDIUM: 'M', LARGE:
 
 export function PackingFormModal({
   isOpen,
+  lang,
   t,
   itemFieldsT,
   boxOptions,
@@ -239,6 +268,136 @@ export function PackingFormModal({
   onSave,
   onClose,
 }: PackingFormModalProps): JSX.Element | null {
+  // Global "manage classified mixed stock" popup — lets the user pick any existing PITAM_SPLIT
+  // batch for the active season and either update its with/without split or cancel it outright,
+  // mirroring the batch picker used on the trader movements screen. Declared above the `isOpen`
+  // early return so hook order stays stable regardless of whether the modal is shown.
+  const [isManagePopupOpen, setIsManagePopupOpen] = useState(false);
+  const [manageBatches, setManageBatches] = useState<PitamSplitBatch[]>([]);
+  const [manageLoading, setManageLoading] = useState(false);
+  const [manageError, setManageError] = useState('');
+  const [manageTraderCategories, setManageTraderCategories] = useState<TraderCategoryWithShares[]>([]);
+  const [selectedBatchId, setSelectedBatchId] = useState('');
+  const [manageMode, setManageMode] = useState<'select' | 'edit'>('select');
+  const [manageActionSubmitting, setManageActionSubmitting] = useState(false);
+  const [manageEditWithValue, setManageEditWithValue] = useState('');
+  const [manageEditWithoutValue, setManageEditWithoutValue] = useState('');
+  const [manageEditError, setManageEditError] = useState('');
+
+  const selectedManageBatch = manageBatches.find((batch) => batch.batchId === selectedBatchId) ?? null;
+
+  const loadManageBatches = async () => {
+    setManageLoading(true);
+    setManageError('');
+    try {
+      const [batches, activeSeason] = await Promise.all([
+        fetchPitamSplitBatches({}),
+        manageTraderCategories.length === 0 ? getActiveSeason() : Promise.resolve(null),
+      ]);
+      setManageBatches(batches);
+      if (activeSeason) {
+        const categories = await getTraderCategoriesWithShares(activeSeason.id);
+        setManageTraderCategories(categories);
+      }
+    } catch (loadError) {
+      setManageError(loadError instanceof ApiError ? loadError.message : itemFieldsT.pitamSplitManageGenericError);
+    } finally {
+      setManageLoading(false);
+    }
+  };
+
+  const handleOpenManagePopup = () => {
+    setIsManagePopupOpen(true);
+    setManageMode('select');
+    setSelectedBatchId('');
+    setManageError('');
+    setManageEditWithValue('');
+    setManageEditWithoutValue('');
+    setManageEditError('');
+    void loadManageBatches();
+  };
+
+  const handleCloseManagePopup = () => {
+    setIsManagePopupOpen(false);
+    setManageBatches([]);
+    setSelectedBatchId('');
+    setManageMode('select');
+    setManageError('');
+    setManageEditWithValue('');
+    setManageEditWithoutValue('');
+    setManageEditError('');
+  };
+
+  const invalidateForManageBatch = (batch: PitamSplitBatch) => {
+    if (batch.traderId !== null) {
+      onInvalidateTraderInventory(batch.traderId, '');
+    } else {
+      onInvalidateAllTraderInventory();
+    }
+  };
+
+  const handleStartEditSelectedBatch = () => {
+    if (!selectedManageBatch) return;
+    setManageEditWithValue(String(selectedManageBatch.withQty));
+    setManageEditWithoutValue(String(selectedManageBatch.withoutQty));
+    setManageEditError('');
+    setManageMode('edit');
+  };
+
+  const handleDiscardEditSelectedBatch = () => {
+    setManageMode('select');
+    setManageEditWithValue('');
+    setManageEditWithoutValue('');
+    setManageEditError('');
+  };
+
+  const handleConfirmEditSelectedBatch = async () => {
+    if (!selectedManageBatch) return;
+
+    const withQty = Number(manageEditWithValue || 0);
+    const withoutQty = Number(manageEditWithoutValue || 0);
+    if (
+      Number.isNaN(withQty) || Number.isNaN(withoutQty) ||
+      withQty < 0 || withoutQty < 0 || withQty + withoutQty <= 0
+    ) {
+      setManageEditError(itemFieldsT.pitamSplitInvalidError);
+      return;
+    }
+
+    try {
+      setManageActionSubmitting(true);
+      await updatePitamSplitBatch(selectedManageBatch.batchId, {
+        source: selectedManageBatch.source,
+        traderId: selectedManageBatch.traderId ?? undefined,
+        traderCategoryId: selectedManageBatch.traderCategoryId,
+        grade: selectedManageBatch.grade,
+        withQty,
+        withoutQty,
+      });
+      invalidateForManageBatch(selectedManageBatch);
+      handleCloseManagePopup();
+    } catch (updateError) {
+      setManageEditError(updateError instanceof ApiError ? updateError.message : itemFieldsT.pitamSplitGenericError);
+    } finally {
+      setManageActionSubmitting(false);
+    }
+  };
+
+  const handleCancelSelectedBatch = async () => {
+    if (!selectedManageBatch) return;
+    setManageError('');
+    try {
+      setManageActionSubmitting(true);
+      await undoPitamSplitBatch(selectedManageBatch.batchId);
+      invalidateForManageBatch(selectedManageBatch);
+      handleCloseManagePopup();
+    } catch (cancelError) {
+      setManageError(cancelError instanceof ApiError ? cancelError.message : itemFieldsT.pitamSplitManageGenericError);
+    } finally {
+      setManageActionSubmitting(false);
+    }
+  };
+
   if (!isOpen) {
     return null;
   }
@@ -512,6 +671,14 @@ export function PackingFormModal({
         {error ? <p className="seasons-manager__error">{error}</p> : null}
 
         <div className="modal-actions">
+          <button
+            className="btn btn-primary"
+            type="button"
+            onClick={handleOpenManagePopup}
+            style={{ marginInlineEnd: 'auto' }}
+          >
+            {itemFieldsT.pitamSplitManageTriggerButtonLabel}
+          </button>
           <button className="btn btn-danger" type="button" onClick={onClose}>
             {t.cancel}
           </button>
@@ -526,6 +693,138 @@ export function PackingFormModal({
           </SubmitButton>
         </div>
       </div>
+
+      {isManagePopupOpen
+        ? createPortal(
+            <div className="modal-overlay" onClick={handleCloseManagePopup}>
+              <div
+                className={`modal-dialog modal-dialog--form ${gridStyles.manageDialog}`}
+                style={{ width: 'min(600px, 94vw)', minHeight: '420px' }}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <button
+                  className="modal-close"
+                  type="button"
+                  aria-label={itemFieldsT.pitamSplitManageCloseLabel}
+                  onClick={handleCloseManagePopup}
+                >
+                  ✕
+                </button>
+
+                <h3 className="modal-title" style={{ position: 'relative' }}>
+                  {itemFieldsT.pitamSplitManagePopupTitle}
+                  <TopLoadingBar isLoading={manageLoading} />
+                </h3>
+
+                <div className={gridStyles.addQuantityInputRow} style={{ width: '100%' }}>
+                  <div className={`${gridStyles.field} ${gridStyles.fieldFull}`} style={{ width: '100%', maxWidth: 'none' }}>
+                    <PitamSplitUndoBatchPicker
+                      lang={lang}
+                      labels={{
+                        pitamSplitUndoSourceLabels: itemFieldsT.pitamSplitManageSourceLabels,
+                        pitamSplitUndoLoading: itemFieldsT.pitamSplitManageLoadingLabel,
+                        pitamSplitUndoNoBatches: itemFieldsT.pitamSplitManageNoBatchesLabel,
+                        pitamSplitUndoBatchPlaceholder: itemFieldsT.pitamSplitManageSelectPlaceholder,
+                        pitamSplitWithLabel: itemFieldsT.pitamSplitWithLabel,
+                        pitamSplitWithoutLabel: itemFieldsT.pitamSplitWithoutLabel,
+                      }}
+                      batches={manageBatches}
+                      traderCategories={manageTraderCategories}
+                      value={selectedBatchId}
+                      onChange={(batchId) => {
+                        setSelectedBatchId(batchId);
+                        setManageMode('select');
+                        setManageError('');
+                      }}
+                      isLoading={manageLoading}
+                    />
+                  </div>
+                </div>
+
+                {selectedManageBatch && manageMode === 'edit' ? (
+                  <>
+                    <div className={gridStyles.addQuantityInputRow}>
+                      <div className={gridStyles.field}>
+                        <label className={gridStyles.label}>{itemFieldsT.pitamSplitWithLabel}</label>
+                        <input
+                          className="seasons-manager__year-input"
+                          type="number"
+                          min="0"
+                          autoFocus
+                          value={manageEditWithValue}
+                          onChange={(event) => {
+                            setManageEditWithValue(event.target.value);
+                            setManageEditError('');
+                          }}
+                          aria-label={itemFieldsT.pitamSplitWithLabel}
+                        />
+                      </div>
+                      <div className={gridStyles.field}>
+                        <label className={gridStyles.label}>{itemFieldsT.pitamSplitWithoutLabel}</label>
+                        <input
+                          className="seasons-manager__year-input"
+                          type="number"
+                          min="0"
+                          value={manageEditWithoutValue}
+                          onChange={(event) => {
+                            setManageEditWithoutValue(event.target.value);
+                            setManageEditError('');
+                          }}
+                          aria-label={itemFieldsT.pitamSplitWithoutLabel}
+                        />
+                      </div>
+                    </div>
+                    {manageEditError ? <p className="seasons-manager__error">{manageEditError}</p> : null}
+                  </>
+                ) : null}
+
+                {manageError ? <p className="seasons-manager__error">{manageError}</p> : null}
+
+                <div className="modal-actions" style={{ marginTop: 'auto' }}>
+                  {selectedManageBatch && manageMode === 'select' ? (
+                    <>
+                      <button className="btn btn-success" type="button" onClick={handleStartEditSelectedBatch}>
+                        {itemFieldsT.pitamSplitManageUpdateLabel}
+                      </button>
+                      <SubmitButton
+                        className="btn btn-success"
+                        onClick={handleCancelSelectedBatch}
+                        isLoading={manageActionSubmitting}
+                        loadingText={itemFieldsT.pitamSplitManageCancelingLabel}
+                      >
+                        {itemFieldsT.pitamSplitManageCancelSplitLabel}
+                      </SubmitButton>
+                    </>
+                  ) : null}
+                  {selectedManageBatch && manageMode === 'edit' ? (
+                    <>
+                      <button
+                        className="btn btn-secondary"
+                        type="button"
+                        onClick={handleDiscardEditSelectedBatch}
+                        disabled={manageActionSubmitting}
+                      >
+                        {itemFieldsT.pitamSplitManageDiscardEditLabel}
+                      </button>
+                      <SubmitButton
+                        className="btn btn-success"
+                        onClick={handleConfirmEditSelectedBatch}
+                        isLoading={manageActionSubmitting}
+                        loadingText={itemFieldsT.pitamSplitManageSavingLabel}
+                      >
+                        {itemFieldsT.pitamSplitManageSaveLabel}
+                      </SubmitButton>
+                    </>
+                  ) : null}
+                  <button className="btn btn-danger" type="button" onClick={handleCloseManagePopup}>
+                    {itemFieldsT.pitamSplitManageCloseLabel}
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

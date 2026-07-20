@@ -14,6 +14,7 @@ import {
   createPitamSplitMovement,
   createTraderAdjustmentMovement,
   undoPitamSplitBatch,
+  updatePitamSplitBatch,
   type InternalTransferMovementType,
   type PitamSplitSource,
   type PitamStatus,
@@ -28,7 +29,7 @@ import type { TraderInventorySummaryRow } from '../traderInventory.types';
 const GRADE_OPTIONS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו'] as const;
 const PITAM_STATUS_OPTIONS: PitamStatus[] = ['WITH_PITAM', 'WITHOUT_PITAM', 'MIXED'];
 
-type MovementType = InternalTransferMovementType | TraderAdjustmentMovementType | 'PITAM_SPLIT' | 'PITAM_SPLIT_UNDO';
+type MovementType = InternalTransferMovementType | TraderAdjustmentMovementType | 'PITAM_SPLIT' | 'PITAM_SPLIT_MANAGE';
 
 const MOVEMENT_TYPE_ORDER: Array<Exclude<MovementType, 'PRIVATE_SELECTION'>> = [
   'OWNERSHIP_TRANSFER',
@@ -37,7 +38,7 @@ const MOVEMENT_TYPE_ORDER: Array<Exclude<MovementType, 'PRIVATE_SELECTION'>> = [
   'SELF_PICKUP',
   'WASTE',
   'PITAM_SPLIT',
-  'PITAM_SPLIT_UNDO',
+  'PITAM_SPLIT_MANAGE',
 ];
 
 const ADJUSTMENT_TYPES = new Set<MovementType>(['WASTE']);
@@ -60,6 +61,22 @@ const LABEL_STYLE: CSSProperties = {
   fontWeight: 500,
   color: 'var(--color-text-secondary, #4b5563)',
 };
+
+// Most pitam-split validation errors are already Hebrew (thrown directly by pitam-split.service.ts),
+// but the shared inventory-availability stock check it also calls is an English message reused across
+// many unrelated flows (packing, transfers, adjustments) that pattern-match on the word "insufficient" —
+// so it can't be translated at the source. Substitute a Hebrew message for that one case here instead.
+function describePitamSplitError(
+  error: unknown,
+  f: { pitamSplitInsufficientStockError: string; validationRequired: string },
+): string {
+  if (!(error instanceof ApiError)) {
+    return f.validationRequired;
+  }
+  return error.message.toLowerCase().includes('insufficient')
+    ? f.pitamSplitInsufficientStockError
+    : error.message;
+}
 
 type AddTraderMovementModalProps = {
   lang: AppLang;
@@ -107,6 +124,14 @@ export function AddTraderMovementModal({
   const [withQty, setWithQty] = useState('');
   const [withoutQty, setWithoutQty] = useState('');
   const [pitamSplitUndoBatchId, setPitamSplitUndoBatchId] = useState('');
+  // Update/cancel an existing PITAM_SPLIT batch — mirrors the "manage classified mixed stock"
+  // popup on the shipments packing form: pick a batch, then either edit its with/without split
+  // (delete+recreate in one backend transaction) or cancel it outright.
+  const [pitamManageMode, setPitamManageMode] = useState<'select' | 'edit'>('select');
+  const [pitamManageEditWithValue, setPitamManageEditWithValue] = useState('');
+  const [pitamManageEditWithoutValue, setPitamManageEditWithoutValue] = useState('');
+  const [pitamManageEditError, setPitamManageEditError] = useState('');
+  const [pitamManageActionSubmitting, setPitamManageActionSubmitting] = useState(false);
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -234,10 +259,12 @@ export function AddTraderMovementModal({
     };
   }, [type, fromTraderId, traderId, stockSource, isModulo, seasonId]);
 
-  const { batches: pitamSplitUndoBatches, isLoading: isPitamSplitUndoLoading } = usePitamSplitBatches(
-    type === 'PITAM_SPLIT_UNDO',
+  const { batches: pitamSplitUndoBatches, isLoading: isPitamSplitUndoLoading, reload: reloadPitamSplitUndoBatches } = usePitamSplitBatches(
+    type === 'PITAM_SPLIT_MANAGE',
     { seasonId },
   );
+
+  const selectedManageBatch = pitamSplitUndoBatches.find((batch) => batch.batchId === pitamSplitUndoBatchId) ?? null;
 
   const traderCategoryOrderById = useMemo(() => {
     const map = new Map<number, number>();
@@ -638,6 +665,10 @@ export function AddTraderMovementModal({
     setWithQty('');
     setWithoutQty('');
     setPitamSplitUndoBatchId('');
+    setPitamManageMode('select');
+    setPitamManageEditWithValue('');
+    setPitamManageEditWithoutValue('');
+    setPitamManageEditError('');
     setNotes('');
     setError(null);
   };
@@ -666,7 +697,78 @@ export function AddTraderMovementModal({
     setWithQty('');
     setWithoutQty('');
     setPitamSplitUndoBatchId('');
+    setPitamManageMode('select');
+    setPitamManageEditWithValue('');
+    setPitamManageEditWithoutValue('');
+    setPitamManageEditError('');
     setError(null);
+  };
+
+  const handleStartEditSelectedManageBatch = () => {
+    if (!selectedManageBatch) return;
+    setPitamManageEditWithValue(String(selectedManageBatch.withQty));
+    setPitamManageEditWithoutValue(String(selectedManageBatch.withoutQty));
+    setPitamManageEditError('');
+    setPitamManageMode('edit');
+  };
+
+  const handleDiscardEditSelectedManageBatch = () => {
+    setPitamManageMode('select');
+    setPitamManageEditWithValue('');
+    setPitamManageEditWithoutValue('');
+    setPitamManageEditError('');
+  };
+
+  const handleConfirmEditSelectedManageBatch = async () => {
+    if (!selectedManageBatch) return;
+
+    const nextWithQty = Number(pitamManageEditWithValue || 0);
+    const nextWithoutQty = Number(pitamManageEditWithoutValue || 0);
+    if (
+      Number.isNaN(nextWithQty) || Number.isNaN(nextWithoutQty) ||
+      nextWithQty < 0 || nextWithoutQty < 0 || nextWithQty + nextWithoutQty <= 0
+    ) {
+      setPitamManageEditError(f.validationRequired);
+      return;
+    }
+
+    try {
+      setPitamManageActionSubmitting(true);
+      await updatePitamSplitBatch(selectedManageBatch.batchId, {
+        source: selectedManageBatch.source,
+        traderId: selectedManageBatch.traderId ?? undefined,
+        traderCategoryId: selectedManageBatch.traderCategoryId,
+        grade: selectedManageBatch.grade,
+        withQty: nextWithQty,
+        withoutQty: nextWithoutQty,
+      });
+      setPitamSplitUndoBatchId('');
+      setPitamManageMode('select');
+      setPitamManageEditWithValue('');
+      setPitamManageEditWithoutValue('');
+      reloadPitamSplitUndoBatches();
+      onSaved();
+    } catch (updateError) {
+      setPitamManageEditError(describePitamSplitError(updateError, f));
+    } finally {
+      setPitamManageActionSubmitting(false);
+    }
+  };
+
+  const handleCancelSelectedManageBatch = async () => {
+    if (!selectedManageBatch) return;
+    setError(null);
+    try {
+      setPitamManageActionSubmitting(true);
+      await undoPitamSplitBatch(selectedManageBatch.batchId);
+      setPitamSplitUndoBatchId('');
+      reloadPitamSplitUndoBatches();
+      onSaved();
+    } catch (cancelError) {
+      setError(cancelError instanceof ApiError ? cancelError.message : f.validationRequired);
+    } finally {
+      setPitamManageActionSubmitting(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -712,30 +814,16 @@ export function AddTraderMovementModal({
         resetForm();
         onSaved();
       } catch (submitError) {
-        setError(submitError instanceof ApiError ? submitError.message : f.validationRequired);
+        setError(describePitamSplitError(submitError, f));
       } finally {
         setIsSubmitting(false);
       }
       return;
     }
 
-    if (type === 'PITAM_SPLIT_UNDO') {
-      if (!pitamSplitUndoBatchId) {
-        setError(f.validationRequired);
-        return;
-      }
-
-      try {
-        setIsSubmitting(true);
-        await undoPitamSplitBatch(pitamSplitUndoBatchId);
-
-        resetForm();
-        onSaved();
-      } catch (submitError) {
-        setError(submitError instanceof ApiError ? submitError.message : f.validationRequired);
-      } finally {
-        setIsSubmitting(false);
-      }
+    if (type === 'PITAM_SPLIT_MANAGE') {
+      // Update/cancel are self-contained actions triggered by their own buttons (see the
+      // PITAM_SPLIT_MANAGE fields below) — the generic Save button doesn't apply here.
       return;
     }
 
@@ -889,7 +977,7 @@ export function AddTraderMovementModal({
         aria-modal="true"
         aria-label={f.title}
         dir={lang === 'he' ? 'rtl' : 'ltr'}
-        style={{ width: 820 }}
+        style={{ width: 820, minHeight: type === 'PITAM_SPLIT_MANAGE' ? 420 : undefined }}
         onClick={(event) => event.stopPropagation()}
       >
         <button className="modal-close" type="button" aria-label={f.closeLabel} onClick={handleClose}>
@@ -1707,21 +1795,62 @@ export function AddTraderMovementModal({
             </>
           ) : null}
 
-          {type === 'PITAM_SPLIT_UNDO' ? (
-            <div style={ROW_STYLE}>
-              <div style={{ ...FIELD_STYLE, gridColumn: '1 / -1' }}>
-                <label style={LABEL_STYLE}>{f.pitamSplitUndoBatchLabel}</label>
-                <PitamSplitUndoBatchPicker
-                  lang={lang}
-                  labels={f}
-                  batches={pitamSplitUndoBatches}
-                  traderCategories={traderCategories}
-                  value={pitamSplitUndoBatchId}
-                  onChange={setPitamSplitUndoBatchId}
-                  isLoading={isPitamSplitUndoLoading}
-                />
+          {type === 'PITAM_SPLIT_MANAGE' ? (
+            <>
+              <div style={ROW_STYLE}>
+                <div style={{ ...FIELD_STYLE, gridColumn: '1 / -1' }}>
+                  <label style={LABEL_STYLE}>{f.pitamSplitUndoBatchLabel}</label>
+                  <PitamSplitUndoBatchPicker
+                    lang={lang}
+                    labels={f}
+                    batches={pitamSplitUndoBatches}
+                    traderCategories={traderCategories}
+                    value={pitamSplitUndoBatchId}
+                    onChange={(batchId) => {
+                      setPitamSplitUndoBatchId(batchId);
+                      setPitamManageMode('select');
+                      setPitamManageEditError('');
+                    }}
+                    isLoading={isPitamSplitUndoLoading}
+                  />
+                </div>
               </div>
-            </div>
+
+              {selectedManageBatch && pitamManageMode === 'edit' ? (
+                <div style={ROW_STYLE}>
+                  <div style={FIELD_STYLE}>
+                    <label style={LABEL_STYLE}>{f.pitamSplitWithLabel}</label>
+                    <input
+                      className="seasons-manager__year-input"
+                      type="number"
+                      value={pitamManageEditWithValue}
+                      onChange={(event) => {
+                        setPitamManageEditWithValue(event.target.value);
+                        setPitamManageEditError('');
+                      }}
+                      placeholder={f.quantityPlaceholder}
+                      aria-label={f.pitamSplitWithLabel}
+                    />
+                  </div>
+                  <div style={FIELD_STYLE}>
+                    <label style={LABEL_STYLE}>{f.pitamSplitWithoutLabel}</label>
+                    <input
+                      className="seasons-manager__year-input"
+                      type="number"
+                      value={pitamManageEditWithoutValue}
+                      onChange={(event) => {
+                        setPitamManageEditWithoutValue(event.target.value);
+                        setPitamManageEditError('');
+                      }}
+                      placeholder={f.quantityPlaceholder}
+                      aria-label={f.pitamSplitWithoutLabel}
+                    />
+                  </div>
+                </div>
+              ) : null}
+
+              {pitamManageEditError ? <p className="seasons-manager__error">{pitamManageEditError}</p> : null}
+            </>
           ) : null}
 
           {type === 'OWNERSHIP_TRANSFER' ? (
@@ -1802,7 +1931,7 @@ export function AddTraderMovementModal({
             </div>
           ) : null}
 
-          {type && type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'ASSIGNED' && type !== 'SELF_PICKUP' && type !== 'WASTE' && type !== 'PITAM_SPLIT' && type !== 'PITAM_SPLIT_UNDO' ? (
+          {type && type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'ASSIGNED' && type !== 'SELF_PICKUP' && type !== 'WASTE' && type !== 'PITAM_SPLIT' && type !== 'PITAM_SPLIT_MANAGE' ? (
             <div style={ROW_STYLE}>
               <div style={FIELD_STYLE}>
                 <label style={LABEL_STYLE}>{f.traderCategoryLabel}</label>
@@ -1870,7 +1999,7 @@ export function AddTraderMovementModal({
             </div>
           ) : null}
 
-          {type ? (
+          {type && type !== 'PITAM_SPLIT_MANAGE' ? (
             <div style={ROW_STYLE}>
               <div style={{ ...FIELD_STYLE, gridColumn: '1 / -1' }}>
                 <label style={LABEL_STYLE}>{f.notesLabel}</label>
@@ -1890,19 +2019,58 @@ export function AddTraderMovementModal({
 
 {error ? <p className="seasons-manager__error">{error}</p> : null}
 
-        <div className="modal-actions">
+        <div className="modal-actions" style={{ marginTop: 'auto' }}>
+          {type === 'PITAM_SPLIT_MANAGE' && selectedManageBatch && pitamManageMode === 'select' ? (
+            <>
+              <button className="btn btn-success" type="button" onClick={handleStartEditSelectedManageBatch}>
+                {f.pitamSplitManageUpdateLabel}
+              </button>
+              <SubmitButton
+                className="btn btn-success"
+                type="button"
+                onClick={handleCancelSelectedManageBatch}
+                isLoading={pitamManageActionSubmitting}
+                loadingText={f.pitamSplitManageCancelingLabel}
+              >
+                {f.pitamSplitManageCancelSplitLabel}
+              </SubmitButton>
+            </>
+          ) : null}
+          {type === 'PITAM_SPLIT_MANAGE' && selectedManageBatch && pitamManageMode === 'edit' ? (
+            <>
+              <button
+                className="btn btn-secondary"
+                type="button"
+                onClick={handleDiscardEditSelectedManageBatch}
+                disabled={pitamManageActionSubmitting}
+              >
+                {f.pitamSplitManageDiscardEditLabel}
+              </button>
+              <SubmitButton
+                className="btn btn-success"
+                type="button"
+                onClick={handleConfirmEditSelectedManageBatch}
+                isLoading={pitamManageActionSubmitting}
+                loadingText={f.pitamSplitManageSavingLabel}
+              >
+                {f.pitamSplitManageSaveLabel}
+              </SubmitButton>
+            </>
+          ) : null}
           <button className="btn btn-danger" type="button" onClick={handleClose}>
             {f.cancel}
           </button>
-          <SubmitButton
-            className="btn btn-success"
-            type="button"
-            onClick={handleSubmit}
-            isLoading={isSubmitting}
-            loadingText={f.saving}
-          >
-            {f.save}
-          </SubmitButton>
+          {type !== 'PITAM_SPLIT_MANAGE' ? (
+            <SubmitButton
+              className="btn btn-success"
+              type="button"
+              onClick={handleSubmit}
+              isLoading={isSubmitting}
+              loadingText={f.saving}
+            >
+              {f.save}
+            </SubmitButton>
+          ) : null}
         </div>
       </div>
     </div>

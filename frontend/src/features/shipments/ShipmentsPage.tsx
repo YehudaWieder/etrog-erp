@@ -555,6 +555,7 @@ export function ShipmentsPage() {
 
       <PackingFormModal
         isOpen={isPackingModalOpen}
+        lang={lang}
         t={t.packingModal}
         itemFieldsT={t.newShipmentItemModal}
         boxOptions={packingForm.boxOptions}

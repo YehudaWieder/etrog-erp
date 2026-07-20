@@ -1,12 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PitamSplitBatch } from '../../../services/inventoryMovementsApi';
 import type { TraderCategoryWithShares } from '../../../services/traderCategoriesApi';
-import type { AppLang, TraderMovementsI18n } from '../i18n';
+import type { AppLang } from '../i18n';
 import styles from './styles/PitamSplitUndoBatchPicker.module.css';
+
+// Kept minimal (rather than importing the whole trader-movements i18n type) so other features
+// (e.g. shipments) can reuse this picker's styling without pulling in trader-specific i18n.
+export type PitamSplitUndoBatchPickerLabels = {
+  pitamSplitUndoSourceLabels: Record<'SPECIFIC_TRADER' | 'MODULO' | 'GENERAL', string>;
+  pitamSplitUndoLoading: string;
+  pitamSplitUndoNoBatches: string;
+  pitamSplitUndoBatchPlaceholder: string;
+  pitamSplitWithLabel: string;
+  pitamSplitWithoutLabel: string;
+};
 
 type PitamSplitUndoBatchPickerProps = {
   lang: AppLang;
-  labels: TraderMovementsI18n['addMovementForm'];
+  labels: PitamSplitUndoBatchPickerLabels;
   batches: PitamSplitBatch[];
   traderCategories: TraderCategoryWithShares[];
   value: string;

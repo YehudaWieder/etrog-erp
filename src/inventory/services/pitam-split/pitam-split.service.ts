@@ -21,69 +21,92 @@ export class PitamSplitService {
   ) {}
 
   async resolve(dto: ResolvePitamSplitDto, actorId: number) {
+    const batchId = randomUUID();
+
+    const movements = await this.prisma.$transaction(async (tx) => this.resolveInTx(tx, dto, batchId, actorId));
+
+    return { batchId, movements };
+  }
+
+  // Replaces an existing batch with a new resolution in one transaction: deletes every row of
+  // batchId (after the same "not yet consumed downstream" check undoBatch performs), then creates
+  // a fresh batch from dto. If dto is invalid the whole transaction rolls back and the original
+  // batch is left untouched.
+  async updateBatch(batchId: string, dto: ResolvePitamSplitDto, actorId: number) {
+    const newBatchId = randomUUID();
+
+    const movements = await this.prisma.$transaction(async (tx) => {
+      await this.deleteBatchInTx(tx, batchId);
+      return this.resolveInTx(tx, dto, newBatchId, actorId);
+    });
+
+    return { batchId: newBatchId, previousBatchId: batchId, movements };
+  }
+
+  private async resolveInTx(
+    tx: Prisma.TransactionClient,
+    dto: ResolvePitamSplitDto,
+    batchId: string,
+    actorId: number,
+  ) {
     this.validateQuantities(dto.withQty, dto.withoutQty);
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
     const date = dto.date ? new Date(dto.date) : new Date();
-    const batchId = randomUUID();
 
     if (!dto.traderCategoryId || !dto.grade) {
-      throw new BadRequestException('traderCategoryId and grade are required');
+      throw new BadRequestException('יש לבחור קטגוריית סוחר ודרגה.');
     }
 
-    const movements = await this.prisma.$transaction(async (tx) => {
-      switch (dto.source) {
-        case 'SPECIFIC_TRADER': {
-          if (!dto.traderId) {
-            throw new BadRequestException('traderId is required when source=SPECIFIC_TRADER');
-          }
-          return this.createTraderStockSplitTriple(tx, {
-            seasonId,
-            batchId,
-            traderId: dto.traderId,
-            isModulo: false,
-            traderCategoryId: dto.traderCategoryId,
-            grade: dto.grade,
-            withQty: dto.withQty,
-            withoutQty: dto.withoutQty,
-            date,
-            notes: dto.notes,
-            updatedById: actorId,
-          });
+    switch (dto.source) {
+      case 'SPECIFIC_TRADER': {
+        if (!dto.traderId) {
+          throw new BadRequestException('יש לבחור סוחר כאשר המקור הוא "סוחר ספציפי".');
         }
-        case 'MODULO': {
-          return this.createTraderStockSplitTriple(tx, {
-            seasonId,
-            batchId,
-            traderId: null,
-            isModulo: true,
-            traderCategoryId: dto.traderCategoryId,
-            grade: dto.grade,
-            withQty: dto.withQty,
-            withoutQty: dto.withoutQty,
-            date,
-            notes: dto.notes,
-            updatedById: actorId,
-          });
-        }
-        case 'GENERAL': {
-          return this.resolveGeneralSplit(tx, {
-            seasonId,
-            batchId,
-            traderCategoryId: dto.traderCategoryId,
-            grade: dto.grade,
-            withQty: dto.withQty,
-            withoutQty: dto.withoutQty,
-            date,
-            notes: dto.notes,
-            updatedById: actorId,
-          });
-        }
-        default:
-          throw new BadRequestException('source must be one of SPECIFIC_TRADER, MODULO, GENERAL');
+        return this.createTraderStockSplitTriple(tx, {
+          seasonId,
+          batchId,
+          traderId: dto.traderId,
+          isModulo: false,
+          traderCategoryId: dto.traderCategoryId,
+          grade: dto.grade,
+          withQty: dto.withQty,
+          withoutQty: dto.withoutQty,
+          date,
+          notes: dto.notes,
+          updatedById: actorId,
+        });
       }
-    });
-
-    return { batchId, movements };
+      case 'MODULO': {
+        return this.createTraderStockSplitTriple(tx, {
+          seasonId,
+          batchId,
+          traderId: null,
+          isModulo: true,
+          traderCategoryId: dto.traderCategoryId,
+          grade: dto.grade,
+          withQty: dto.withQty,
+          withoutQty: dto.withoutQty,
+          date,
+          notes: dto.notes,
+          updatedById: actorId,
+        });
+      }
+      case 'GENERAL': {
+        return this.resolveGeneralSplit(tx, {
+          seasonId,
+          batchId,
+          traderCategoryId: dto.traderCategoryId,
+          grade: dto.grade,
+          withQty: dto.withQty,
+          withoutQty: dto.withoutQty,
+          date,
+          notes: dto.notes,
+          updatedById: actorId,
+        });
+      }
+      default:
+        throw new BadRequestException('יש לבחור מקור: סוחר ספציפי, מודולו או כללי.');
+    }
   }
 
   async listBatches(query: { seasonId?: number; traderCategoryId?: number; grade?: Grade }) {
@@ -105,38 +128,40 @@ export class PitamSplitService {
   }
 
   async undoBatch(batchId: string) {
-    return this.prisma.$transaction(async (tx) => {
-      const rows = await tx.traderStock.findMany({
-        where: { pitamSplitBatchId: batchId, type: MovementType.PITAM_SPLIT },
-      });
+    return this.prisma.$transaction(async (tx) => this.deleteBatchInTx(tx, batchId));
+  }
 
-      if (rows.length === 0) {
-        throw new NotFoundException(`Pitam split batch ${batchId} not found`);
-      }
-
-      const { seasonId } = rows[0];
-
-      // Undoing removes the positive WITH_PITAM/WITHOUT_PITAM rows this batch created — assert
-      // that quantity hasn't since been consumed downstream (e.g. packed into a shipment), or the
-      // ledger would be left short.
-      const positiveRows = rows.filter((row) => row.quantity > 0);
-      for (const row of positiveRows) {
-        await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
-          seasonId,
-          traderId: row.traderId,
-          traderCategoryId: row.traderCategoryId,
-          grade: row.grade,
-          pitamStatus: row.pitamStatus,
-          isModulo: row.isModulo,
-          requiredQuantity: row.quantity,
-          contextLabel: 'Undo pitam split',
-        });
-      }
-
-      await tx.traderStock.deleteMany({ where: { pitamSplitBatchId: batchId } });
-
-      return { batchId, deletedCount: rows.length };
+  private async deleteBatchInTx(tx: Prisma.TransactionClient, batchId: string) {
+    const rows = await tx.traderStock.findMany({
+      where: { pitamSplitBatchId: batchId, type: MovementType.PITAM_SPLIT },
     });
+
+    if (rows.length === 0) {
+      throw new NotFoundException(`פעולת הסיווג המבוקשת (${batchId}) לא נמצאה.`);
+    }
+
+    const { seasonId } = rows[0];
+
+    // Undoing removes the positive WITH_PITAM/WITHOUT_PITAM rows this batch created — assert
+    // that quantity hasn't since been consumed downstream (e.g. packed into a shipment), or the
+    // ledger would be left short.
+    const positiveRows = rows.filter((row) => row.quantity > 0);
+    for (const row of positiveRows) {
+      await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
+        seasonId,
+        traderId: row.traderId,
+        traderCategoryId: row.traderCategoryId,
+        grade: row.grade,
+        pitamStatus: row.pitamStatus,
+        isModulo: row.isModulo,
+        requiredQuantity: row.quantity,
+        contextLabel: 'Undo pitam split',
+      });
+    }
+
+    await tx.traderStock.deleteMany({ where: { pitamSplitBatchId: batchId } });
+
+    return { batchId, deletedCount: rows.length };
   }
 
   // Case (א)/(ב) from the plan: a single party (one trader, or the modulo pool itself) resolving
@@ -243,13 +268,14 @@ export class PitamSplitService {
   // packing/sorting, this does NOT dump a rounding remainder onto whichever trader has the highest
   // share — that produced unfair results for small quantities (e.g. splitting 1 unit took the whole
   // thing from a single trader). Instead:
-  //   1. Try to split the total *exactly* and *positively* across every trader by their configured
-  //      share (no trader gets 0, no leftover unit dumped on one trader) — and only accept that split
-  //      if every trader actually holds enough MIXED stock to cover their exact share.
-  //   2. If that's not possible (doesn't divide evenly, or some trader lacks enough stock), the
-  //      *entire* quantity is taken from modulo instead (not a partial trader/modulo mix).
-  //   3. If modulo doesn't have enough either, fail with the minimum quantity that *would* divide
-  //      fairly, so the user can either request that amount or resolve from a specific trader/modulo.
+  //   1. Find the largest amount that CAN be split exactly and positively across every trader by their
+  //      configured share (no trader gets 0, no leftover unit dumped on one trader) — and that every
+  //      trader actually holds enough MIXED stock to cover. This is always a multiple of the smallest
+  //      "fair step" for these shares (e.g. 50/50 shares → steps of 2), and may be less than the full
+  //      requested quantity if some trader doesn't have enough for a bigger fair split.
+  //   2. Whatever's left over (didn't fit into a fair multiple, or a trader was short) is taken from
+  //      modulo — so trader shares stay fair while the odd/uncovered remainder is still resolved.
+  //   3. If modulo can't cover that remainder either, fail with a clear message.
   private async resolveGeneralSplit(
     tx: Prisma.TransactionClient,
     params: {
@@ -273,7 +299,7 @@ export class PitamSplitService {
     });
 
     if (shares.length === 0) {
-      throw new BadRequestException('No trader shares defined for this category in the current season');
+      throw new BadRequestException('לא הוגדרה חלוקת אחוזים בין סוחרים עבור קטגוריה זו בעונה הנוכחית.');
     }
 
     const positiveShares = shares
@@ -281,117 +307,137 @@ export class PitamSplitService {
       .filter((s) => Number(s.percentText) > 0);
 
     if (positiveShares.length === 0) {
-      throw new BadRequestException('All configured trader shares are zero or negative for this category');
+      throw new BadRequestException('כל האחוזים המוגדרים לסוחרים בקטגוריה זו הם אפס או שליליים.');
     }
 
-    const exactAllocations = this.tryExactShareAllocations(totalQty, positiveShares);
+    const percentTexts = positiveShares.map((s) => s.percentText);
+    const fairStep = calculateMinimalGrossByShares(1, percentTexts);
 
-    if (exactAllocations) {
-      const availabilityRows = await this.inventoryAvailabilityService.getTraderUnshippedAvailabilityByCategory(tx, {
-        seasonId: params.seasonId,
-        traderCategoryId: params.traderCategoryId,
-        grade: params.grade,
-        pitamStatus: PitamStatus.MIXED,
-      });
-      const availability = new Map(availabilityRows.map((r) => [r.traderId, r.available]));
-
-      const everyoneHasEnough = exactAllocations.every(
-        (allocation) => (availability.get(allocation.traderId) ?? 0) >= allocation.quantity,
-      );
-
-      if (everyoneHasEnough) {
-        const results: Prisma.PromiseReturnType<typeof tx.traderStock.create>[] = [];
-        for (const { traderId, quantity } of exactAllocations) {
-          const traderWithQty = totalQty === 0 ? 0 : Math.floor((quantity * params.withQty) / totalQty);
-          const traderWithoutQty = quantity - traderWithQty;
-
-          const rows = await this.createTraderStockSplitTriple(tx, {
-            seasonId: params.seasonId,
-            batchId: params.batchId,
-            traderId,
-            isModulo: false,
-            traderCategoryId: params.traderCategoryId,
-            grade: params.grade,
-            withQty: traderWithQty,
-            withoutQty: traderWithoutQty,
-            date: params.date,
-            notes: params.notes,
-            updatedById: params.updatedById,
-          });
-          results.push(...rows);
-        }
-        return results;
-      }
-    }
-
-    // Can't fairly split across every trader — take the entire quantity from modulo instead.
-    const moduloAvailable = await this.inventoryAvailabilityService.getTraderUnshippedBalance(tx, {
+    const availabilityRows = await this.inventoryAvailabilityService.getTraderUnshippedAvailabilityByCategory(tx, {
       seasonId: params.seasonId,
-      traderId: null,
       traderCategoryId: params.traderCategoryId,
       grade: params.grade,
       pitamStatus: PitamStatus.MIXED,
-      isModulo: true,
     });
+    const availability = new Map(availabilityRows.map((r) => [r.traderId, r.available]));
 
-    if (moduloAvailable >= totalQty) {
-      return this.createTraderStockSplitTriple(tx, {
+    // Try the largest fair multiple ≤ totalQty first; if some trader can't cover their exact share of
+    // it, step down to the next smaller fair multiple, down to 0 (everything falls to modulo).
+    let traderPortion = Math.floor(totalQty / fairStep) * fairStep;
+    let traderAllocations: Array<{ traderId: number; quantity: number }> = [];
+    while (traderPortion > 0) {
+      const candidate = positiveShares.map((share) => ({
+        traderId: share.traderId,
+        quantity: calculateExactShareQuantity(traderPortion, share.percentText),
+      }));
+      const everyoneHasEnough = candidate.every((a) => (availability.get(a.traderId) ?? 0) >= a.quantity);
+      if (everyoneHasEnough) {
+        traderAllocations = candidate;
+        break;
+      }
+      traderPortion -= fairStep;
+    }
+
+    const moduloRemainder = totalQty - traderPortion;
+
+    if (moduloRemainder > 0) {
+      const moduloAvailable = await this.inventoryAvailabilityService.getTraderUnshippedBalance(tx, {
         seasonId: params.seasonId,
-        batchId: params.batchId,
         traderId: null,
-        isModulo: true,
         traderCategoryId: params.traderCategoryId,
         grade: params.grade,
-        withQty: params.withQty,
-        withoutQty: params.withoutQty,
+        pitamStatus: PitamStatus.MIXED,
+        isModulo: true,
+      });
+
+      if (moduloAvailable < moduloRemainder) {
+        throw new BadRequestException(
+          traderPortion > 0
+            ? `לא ניתן לסווג ${totalQty} יחידות כ"כללי": רק ${traderPortion} יחידות ניתנות לחלוקה הוגנת בין הסוחרים (לפי היתרה בפועל של כל סוחר), ` +
+              `וה-${moduloRemainder} הנותרות אמורות להגיע מהמודולו — אך במודולו יש רק ${moduloAvailable} יחידות מעורב. ` +
+              `אפשר לבקש כמות קטנה יותר, או לסווג את ההפרש ממקור ספציפי (סוחר/מודולו).`
+            : `לא ניתן לסווג ${totalQty} יחידות כ"כללי": הכמות אינה מתחלקת בצורה הוגנת בין הסוחרים (נדרשת כמות שהיא כפולה של ${fairStep}), ` +
+              `ובמודולו יש רק ${moduloAvailable} מתוך ${moduloRemainder} הדרושות. ` +
+              `אפשר לבקש כפולה של ${fairStep} יחידות לחלוקה הוגנת, או לסווג ממקור ספציפי (סוחר/מודולו).`,
+        );
+      }
+    }
+
+    // Splitting each party's (trader/modulo) allocated quantity into with/without independently via
+    // plain floor() loses units whenever a party's share is small relative to totalQty — e.g. 1 unit
+    // requested as WITH_PITAM out of 3 total, spread across 3 parties, floors to 0 everywhere and the
+    // WITH_PITAM unit vanishes into WITHOUT_PITAM. Distribute the two statuses across all parties
+    // together instead, so the totals always add up to exactly params.withQty/params.withoutQty.
+    const parties: Array<{ traderId: number | null; isModulo: boolean; quantity: number }> = [
+      ...traderAllocations.map((a) => ({ traderId: a.traderId, isModulo: false, quantity: a.quantity })),
+      ...(moduloRemainder > 0 ? [{ traderId: null, isModulo: true, quantity: moduloRemainder }] : []),
+    ];
+    const withQtyByParty = this.distributeAcrossParties(
+      parties.map((p) => p.quantity),
+      params.withQty,
+    );
+
+    const results: Prisma.PromiseReturnType<typeof tx.traderStock.create>[] = [];
+
+    for (let i = 0; i < parties.length; i++) {
+      const party = parties[i];
+      const partyWithQty = withQtyByParty[i];
+      const partyWithoutQty = party.quantity - partyWithQty;
+
+      const rows = await this.createTraderStockSplitTriple(tx, {
+        seasonId: params.seasonId,
+        batchId: params.batchId,
+        traderId: party.traderId,
+        isModulo: party.isModulo,
+        traderCategoryId: params.traderCategoryId,
+        grade: params.grade,
+        withQty: partyWithQty,
+        withoutQty: partyWithoutQty,
         date: params.date,
         notes: params.notes,
         updatedById: params.updatedById,
       });
+      results.push(...rows);
     }
 
-    const minimalFairQuantity = calculateMinimalGrossByShares(
-      1,
-      positiveShares.map((s) => s.percentText),
-    );
-    throw new BadRequestException(
-      `Cannot resolve ${totalQty} unit(s) as GENERAL: they can't be split fairly across all traders (each must receive an equal whole share), and the modulo pool doesn't hold enough MIXED stock to cover the full amount either. ` +
-        `Request a multiple of ${minimalFairQuantity} unit(s) for a fair general split, or resolve from a specific trader or modulo instead.`,
-    );
+    return results;
   }
 
-  // Returns each trader's exact, positive, whole-number share of totalQty — or null if the amount
-  // can't be split that way (doesn't divide evenly for some trader, or would give someone 0).
-  private tryExactShareAllocations(
-    totalQty: number,
-    shares: Array<{ traderId: number; percentText: string }>,
-  ): Array<{ traderId: number; quantity: number }> | null {
-    if (totalQty <= 0) {
-      return null;
+  // Largest-remainder apportionment: distributes `total` across parties proportional to their
+  // `quantities`, guaranteeing the results sum to exactly `total` (never losing units to independent
+  // rounding) and never assigning a party more than its own quantity.
+  private distributeAcrossParties(quantities: number[], total: number): number[] {
+    const grandTotal = quantities.reduce((sum, q) => sum + q, 0);
+    if (grandTotal === 0 || total <= 0) {
+      return quantities.map(() => 0);
     }
 
-    const allocations: Array<{ traderId: number; quantity: number }> = [];
-    for (const share of shares) {
-      try {
-        const quantity = calculateExactShareQuantity(totalQty, share.percentText);
-        if (quantity <= 0) {
-          return null;
-        }
-        allocations.push({ traderId: share.traderId, quantity });
-      } catch {
-        return null;
+    const raw = quantities.map((q) => (q * total) / grandTotal);
+    const floors = raw.map(Math.floor);
+    let remainder = total - floors.reduce((sum, f) => sum + f, 0);
+
+    const order = raw
+      .map((value, index) => ({ index, fraction: value - floors[index] }))
+      .sort((a, b) => b.fraction - a.fraction);
+
+    const result = [...floors];
+    for (const { index } of order) {
+      if (remainder <= 0) break;
+      if (result[index] < quantities[index]) {
+        result[index] += 1;
+        remainder -= 1;
       }
     }
 
-    return allocations;
+    return result;
   }
 
   private validateQuantities(withQty: number, withoutQty: number) {
     if (!Number.isInteger(withQty) || !Number.isInteger(withoutQty) || withQty < 0 || withoutQty < 0) {
-      throw new BadRequestException('withQty and withoutQty must be non-negative integers');
+      throw new BadRequestException('הכמויות "עם פיטם" ו"בלי פיטם" חייבות להיות מספרים שלמים וחיוביים.');
     }
     if (withQty + withoutQty <= 0) {
-      throw new BadRequestException('withQty + withoutQty must be greater than zero');
+      throw new BadRequestException('סכום הכמויות "עם פיטם" ו"בלי פיטם" חייב להיות גדול מאפס.');
     }
   }
 }

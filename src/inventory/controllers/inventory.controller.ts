@@ -1,4 +1,4 @@
-﻿import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, Req } from '@nestjs/common';
+﻿import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Put, Query, Req } from '@nestjs/common';
 import {
 	ApiBearerAuth,
 	ApiBody,
@@ -383,5 +383,21 @@ export class InventoryController {
 	@ApiResponse({ status: 404, description: 'Batch not found.' })
 	undoPitamSplit(@Param('batchId') batchId: string) {
 		return this.pitamSplitService.undoBatch(batchId);
+	}
+
+	@Put('pitam-split/:batchId')
+	@ApiOperation({
+		summary:
+			'Update a pitam split batch: in a single transaction, deletes every ledger row the previous batch created and creates a new batch from the given payload. ' +
+			'Fails (leaving the original batch untouched) if the previous batch\'s WITH_PITAM/WITHOUT_PITAM stock has since been consumed downstream, or if the new payload is invalid.',
+	})
+	@ApiParam({ name: 'batchId', type: String })
+	@ApiBody({ type: ResolvePitamSplitDto })
+	@ApiResponse({ status: 200, description: 'Pitam split batch updated (old rows deleted, new batch created).' })
+	@ApiResponse({ status: 400, description: 'Invalid payload, insufficient MIXED stock, or previous batch already consumed downstream.' })
+	@ApiResponse({ status: 404, description: 'Batch not found.' })
+	updatePitamSplit(@Param('batchId') batchId: string, @Body() data: ResolvePitamSplitDto, @Req() req: Request) {
+		const actor = req.user as AuthenticatedUser;
+		return this.pitamSplitService.updateBatch(batchId, data, actor.id);
 	}
 }
