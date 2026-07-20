@@ -26,6 +26,8 @@ import { PaymentsRoute } from './app/routes/PaymentsRoute';
 import { AuthCallbackRoute } from './app/routes/AuthCallbackRoute';
 import { ResetPasswordRoute } from './app/routes/ResetPasswordRoute';
 import { AUTH_SESSION_EXPIRED_EVENT } from './services/apiClient';
+import { SessionExpiryDialog } from './components/ui/SessionExpiryDialog';
+import { useSessionExpiryWarning } from './hooks/useSessionExpiryWarning';
 import SettingsPage from './features/settings/SettingsPage';
 import { isAuthenticated, getCurrentUser, isManagerRole } from './services/authService';
 import { getSetupStatus } from './services/setupApi';
@@ -85,6 +87,30 @@ function getSetupRequirement(status: { hasTraders: boolean; hasDefaultCategories
   return null;
 }
 
+const PUBLIC_PATHS = ['/login', '/register', '/auth/callback', '/auth/reset-password'];
+
+// Blocks rendering of any protected route (and the API calls its children would fire)
+// until a valid, non-expired token is confirmed — deep-linking straight into a page
+// must not get further than the login screen does.
+function AuthGuard({ children }: { children: React.ReactNode }): JSX.Element | null {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isExempt = PUBLIC_PATHS.includes(location.pathname);
+  const authed = isAuthenticated();
+
+  useEffect(() => {
+    if (!authed && !isExempt) {
+      navigate('/login', { replace: true });
+    }
+  }, [authed, isExempt, location.pathname, navigate]);
+
+  if (!authed && !isExempt) {
+    return null;
+  }
+
+  return <>{children}</>;
+}
+
 function SetupGuard({ children }: { children: React.ReactNode }): JSX.Element | null {
   const navigate = useNavigate();
   const location = useLocation();
@@ -135,6 +161,19 @@ function SetupGuard({ children }: { children: React.ReactNode }): JSX.Element | 
   return ready ? <>{children}</> : null;
 }
 
+function SessionExpiryWarning(): JSX.Element | null {
+  const { showWarning, isExtending, extendSession, dismissSession } = useSessionExpiryWarning();
+
+  return (
+    <SessionExpiryDialog
+      open={showWarning}
+      isExtending={isExtending}
+      onExtend={() => void extendSession()}
+      onDismiss={dismissSession}
+    />
+  );
+}
+
 function AppRouter(): JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
@@ -153,27 +192,29 @@ function AppRouter(): JSX.Element {
   }, [location.pathname, navigate]);
 
   return (
-    <SetupGuard>
-      <Routes>
-        <Route path="/login" element={<LoginRoute />} />
-        <Route path="/register" element={<RegisterRoute />} />
-        <Route path="/auth/callback" element={<AuthCallbackRoute />} />
-        <Route path="/auth/reset-password" element={<ResetPasswordRoute />} />
-        <Route path="/home" element={<HomeRoute />} />
-        <Route path="/profile/*" element={<ProfileRoute />} />
-        <Route path="/messages/*" element={<MessagesRoute />} />
-        <Route path="/harvest/*" element={<HarvestRoute />} />
-        <Route path="/traders/*" element={<TraderInventoryRoute />} />
-        <Route path="/partners/*" element={<Navigate to="/traders" replace />} />
-        <Route path="/customers/*" element={<CustomerInventoryRoute />} />
-        <Route path="/shipments/*" element={<ShipmentsRoute />} />
-        <Route path="/workers/*" element={<WorkersRoute />} />
-        <Route path="/payments/*" element={<PaymentsRoute />} />
-        <Route path="/settings/*" element={<SettingsPage />} />
-        {/* <Route path="/seasons" element={<Navigate to="/settings/system/seasons" replace />} /> removed as per request */}
-        <Route path="*" element={<Navigate to="/home" replace />} />
-      </Routes>
-    </SetupGuard>
+    <AuthGuard>
+      <SetupGuard>
+        <Routes>
+          <Route path="/login" element={<LoginRoute />} />
+          <Route path="/register" element={<RegisterRoute />} />
+          <Route path="/auth/callback" element={<AuthCallbackRoute />} />
+          <Route path="/auth/reset-password" element={<ResetPasswordRoute />} />
+          <Route path="/home" element={<HomeRoute />} />
+          <Route path="/profile/*" element={<ProfileRoute />} />
+          <Route path="/messages/*" element={<MessagesRoute />} />
+          <Route path="/harvest/*" element={<HarvestRoute />} />
+          <Route path="/traders/*" element={<TraderInventoryRoute />} />
+          <Route path="/partners/*" element={<Navigate to="/traders" replace />} />
+          <Route path="/customers/*" element={<CustomerInventoryRoute />} />
+          <Route path="/shipments/*" element={<ShipmentsRoute />} />
+          <Route path="/workers/*" element={<WorkersRoute />} />
+          <Route path="/payments/*" element={<PaymentsRoute />} />
+          <Route path="/settings/*" element={<SettingsPage />} />
+          {/* <Route path="/seasons" element={<Navigate to="/settings/system/seasons" replace />} /> removed as per request */}
+          <Route path="*" element={<Navigate to="/home" replace />} />
+        </Routes>
+      </SetupGuard>
+    </AuthGuard>
   );
 }
 
@@ -182,6 +223,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <Provider store={store}>
       <BrowserRouter>
         <AppRouter />
+        <SessionExpiryWarning />
       </BrowserRouter>
     </Provider>
   </React.StrictMode>,

@@ -3,6 +3,7 @@ import { supabase } from './supabaseClient';
 export const AUTH_TOKEN_STORAGE_KEY = 'auth.accessToken';
 export const AUTH_USER_STORAGE_KEY = 'auth.user';
 export const AUTH_SESSION_EXPIRED_EVENT = 'auth:session-expired';
+export const AUTH_TOKEN_UPDATED_EVENT = 'auth:token-updated';
 
 let hasSignaledSessionExpiry = false;
 
@@ -22,6 +23,7 @@ supabase.auth.onAuthStateChange((event, session) => {
   if (session?.access_token) {
     window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, session.access_token);
     hasSignaledSessionExpiry = false;
+    window.dispatchEvent(new CustomEvent(AUTH_TOKEN_UPDATED_EVENT));
   } else {
     window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
     window.localStorage.removeItem(AUTH_USER_STORAGE_KEY);
@@ -46,8 +48,39 @@ export function getStoredAuthUser(): StoredAuthUser | null {
   }
 }
 
+// Decodes the JWT payload without verifying the signature — expiration is enforced
+// server-side on every request; this is only used to avoid rendering protected UI
+// with a token we already know is stale.
+function getTokenExpiry(token: string): number | null {
+  try {
+    const payloadSegment = token.split('.')[1];
+    if (!payloadSegment) return null;
+    const base64 = payloadSegment.replace(/-/g, '+').replace(/_/g, '/');
+    const json = window.atob(base64);
+    const payload = JSON.parse(json) as { exp?: number };
+    return typeof payload.exp === 'number' ? payload.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
+// Expiry timestamp (ms) of the currently stored token, or null if there is none / it can't be read.
+export function getTokenExpiresAt(): number | null {
+  const token = getAuthToken();
+  return token ? getTokenExpiry(token) : null;
+}
+
 export function isAuthenticated(): boolean {
-  return Boolean(getAuthToken());
+  const token = getAuthToken();
+  if (!token) return false;
+
+  const expiresAt = getTokenExpiry(token);
+  if (expiresAt !== null && expiresAt <= Date.now()) {
+    clearAuthSession();
+    return false;
+  }
+
+  return true;
 }
 
 export function persistAuthSession(user: StoredAuthUser): void {
