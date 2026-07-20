@@ -47,3 +47,19 @@
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
+
+.excludedBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  min-width: 86px;
+  border-radius: var(--radius-pill);
+  border: 1px solid #f0b7b7;
+  background: #fbeaea;
+  color: #a12727;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 0 14px;
+  text-align: center;
+}

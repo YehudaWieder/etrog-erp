@@ -10,7 +10,6 @@ export function useFieldsManagement({ onHeaderStateChange }: FieldsManagementPro
   const dispatch = useDispatch<AppDispatch>();
   const { items: fields, loading, error } = useSelector((state: RootState) => state.fields);
   const [newFieldName, setNewFieldName] = useState('');
-  const [newFieldIncludeInRejectionSummary, setNewFieldIncludeInRejectionSummary] = useState(true);
   const [selectedFieldId, setSelectedFieldId] = useState<number | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -52,12 +51,11 @@ export function useFieldsManagement({ onHeaderStateChange }: FieldsManagementPro
 
     try {
       const actionResult = await dispatch(
-        addField({ name: trimmedName, includeInRejectionSummary: newFieldIncludeInRejectionSummary }),
+        addField({ name: trimmedName, includeInRejectionSummary: true }),
       );
 
       if (addField.fulfilled.match(actionResult)) {
         setNewFieldName('');
-        setNewFieldIncludeInRejectionSummary(true);
         return;
       }
 
@@ -175,8 +173,6 @@ export function useFieldsManagement({ onHeaderStateChange }: FieldsManagementPro
     sortedFields,
     newFieldName,
     setNewFieldName,
-    newFieldIncludeInRejectionSummary,
-    setNewFieldIncludeInRejectionSummary,
     selectedField,
     selectedFieldId,
     setSelectedFieldId,
