@@ -13,7 +13,8 @@ export type InventoryMovementScope =
   | 'ASSIGNED'
   | 'PRIVATE_SELECTION'
   | 'WASTE'
-  | 'ADJUSTMENT';
+  | 'ADJUSTMENT'
+  | 'REMAINS_IN_ITALY';
 export type InventoryTraderSortBy =
   | 'category'
   | 'trader'

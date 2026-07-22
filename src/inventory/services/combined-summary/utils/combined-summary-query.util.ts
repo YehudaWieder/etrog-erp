@@ -1,4 +1,4 @@
-﻿import { Prisma } from '@prisma/client';
+﻿import { MovementType, Prisma } from '@prisma/client';
 import { CombinedInventorySummaryQuery } from 'src/inventory/services/inventory-core/dto/combined-inventory-summary.dto';
 import { buildMovementFilter } from 'src/inventory/services/validation/summary-query-rules';
 import { InventoryMovementScope, InventoryOwnerScope } from 'src/inventory/services/inventory-core/types/inventory-query.types';
@@ -25,6 +25,11 @@ export function buildCombinedTraderWhere(
   if (query.excludePrivateSelection) {
     applyExcludePrivateSelection(traderWhere);
   }
+
+  // REMAINS_IN_ITALY is a permanent regional-retention bucket (traderId: null, isModulo: false) -
+  // never part of trader-owned or modulo-pool stock summaries. TRADER/MODULO ownerScope already
+  // exclude it naturally via traderId/isModulo, but the default ALL scope with no traderId does not.
+  excludeRemainsInItaly(traderWhere);
 
   return traderWhere;
 }
@@ -94,4 +99,28 @@ function applyExcludePrivateSelection(where: Prisma.TraderStockWhereInput) {
     return;
   }
   // exact-match string scope (e.g. 'HARVEST_IN') already excludes PRIVATE_SELECTION — nothing to do
+}
+
+function excludeRemainsInItaly(where: Prisma.TraderStockWhereInput) {
+  const existing = where.type as Prisma.EnumMovementTypeFilter | string | undefined;
+
+  if (!existing) {
+    where.type = { not: MovementType.REMAINS_IN_ITALY } as Prisma.EnumMovementTypeFilter;
+    return;
+  }
+
+  if (typeof existing === 'object' && 'notIn' in existing && Array.isArray(existing.notIn)) {
+    if (!(existing.notIn as string[]).includes(MovementType.REMAINS_IN_ITALY)) {
+      (existing.notIn as string[]).push(MovementType.REMAINS_IN_ITALY);
+    }
+    return;
+  }
+
+  if (typeof existing === 'object' && 'not' in existing) {
+    where.type = {
+      notIn: [existing.not as string, MovementType.REMAINS_IN_ITALY],
+    } as Prisma.EnumMovementTypeFilter;
+    return;
+  }
+  // exact-match string scope (e.g. 'HARVEST_IN') already excludes REMAINS_IN_ITALY — nothing to do
 }

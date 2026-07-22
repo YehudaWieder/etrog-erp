@@ -71,7 +71,9 @@ export class TraderStockSummaryService {
         ? 'MODULO'
         : row.traderId
           ? (traderMap.get(row.traderId) ?? null)
-          : null,
+          : shipmentScope === 'REMAINS_IN_ITALY'
+            ? 'REMAINS_IN_ITALY'
+            : null,
       isModulo: row.isModulo,
       traderCategoryId: row.traderCategoryId,
       traderCategoryName: categoryMap.get(row.traderCategoryId) ?? null,
@@ -86,14 +88,16 @@ export class TraderStockSummaryService {
     const totals: InventorySummaryTotals = sorted.reduce(
       (accumulator, row) => {
         accumulator.totalQuantity += row.quantity;
-        if (row.isModulo) {
+        if (shipmentScope === 'REMAINS_IN_ITALY') {
+          accumulator.remainsInItalyQuantity += row.quantity;
+        } else if (row.isModulo) {
           accumulator.moduloQuantity += row.quantity;
         } else {
           accumulator.traderQuantity += row.quantity;
         }
         return accumulator;
       },
-      { totalQuantity: 0, moduloQuantity: 0, traderQuantity: 0 },
+      { totalQuantity: 0, moduloQuantity: 0, traderQuantity: 0, remainsInItalyQuantity: 0 },
     );
 
     return { rows: sorted, totals };

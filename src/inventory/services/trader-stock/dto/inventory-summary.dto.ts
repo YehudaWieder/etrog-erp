@@ -25,6 +25,7 @@ export interface InventorySummaryTotals {
   totalQuantity: number;
   moduloQuantity: number;
   traderQuantity: number;
+  remainsInItalyQuantity: number;
 }
 
 export interface InventorySummaryResult {

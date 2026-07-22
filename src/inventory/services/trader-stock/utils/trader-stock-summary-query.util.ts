@@ -8,6 +8,21 @@ export function buildTraderStockSummaryWhere(
   ownerScope: InventoryOwnerScope,
   shipmentScope: InventoryMovementScope,
 ): Prisma.TraderStockWhereInput {
+  if (shipmentScope === 'REMAINS_IN_ITALY') {
+    // Regional-retention bucket is never trader/modulo owned - ownerScope/traderId from the
+    // client are irrelevant here and intentionally ignored.
+    return {
+      seasonId,
+      isDeleted: false,
+      traderCategoryId: query.traderCategoryId,
+      grade: query.grade,
+      pitamStatus: query.pitamStatus,
+      traderId: null,
+      isModulo: false,
+      type: MovementType.REMAINS_IN_ITALY,
+    };
+  }
+
   const where: Prisma.TraderStockWhereInput = {
     seasonId,
     isDeleted: false,
@@ -18,8 +33,16 @@ export function buildTraderStockSummaryWhere(
 
   applyOwnerScope(where, ownerScope, query.traderId);
 
+  // REMAINS_IN_ITALY is a permanent regional-retention bucket - never part of packing-availability
+  // or general stock summaries. UNSHIPPED/PACKED_SHIPPED are box-status scopes handled entirely by
+  // the repository (no where.type set below for them), so exclude it here explicitly for UNSHIPPED;
+  // PACKED_SHIPPED naturally excludes it since REMAINS_IN_ITALY rows never get a boxId.
+  if (shipmentScope === 'UNSHIPPED') {
+    where.type = { not: MovementType.REMAINS_IN_ITALY };
+  }
+
   // For non-box-based filters, apply type filter
-  // For box-based filters (PACKED_SHIPPED, SHIPPED, UNSHIPPED), 
+  // For box-based filters (PACKED_SHIPPED, SHIPPED, UNSHIPPED),
   // the repository will handle filtering by box.status
   applyNonBoxTypeFilters(where, shipmentScope);
 
@@ -60,8 +83,9 @@ function applyNonBoxTypeFilters(
   if (shipmentScope === 'ALL') {
     // Exclude delivery movements so they don't cancel the trader's gross inventory total.
     // Only INTERNAL_TRANSFER, OWNERSHIP_TRANSFER, and WASTE negatives reduce this view.
+    // REMAINS_IN_ITALY is also excluded - it's never part of tradeable/packable stock.
     where.type = {
-      notIn: ['SELF_PICKUP', 'PACKED_SHIPPED'],
+      notIn: [MovementType.SELF_PICKUP, MovementType.PACKED_SHIPPED, MovementType.REMAINS_IN_ITALY],
     };
     return;
   }

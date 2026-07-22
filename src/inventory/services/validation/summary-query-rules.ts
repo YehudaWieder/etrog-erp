@@ -29,10 +29,11 @@ export function validateTraderSummaryQuery(
     'PRIVATE_SELECTION',
     'WASTE',
     'ADJUSTMENT',
+    'REMAINS_IN_ITALY',
   ];
   if (!validShipmentScopes.includes(shipmentScope)) {
     throw new BadRequestException(
-      'shipmentScope must be one of: ALL, SHIPPED, UNSHIPPED, PACKED_SHIPPED, SELF_PICKUP, HARVEST_IN, INTERNAL_TRANSFER, OWNERSHIP_TRANSFER, ASSIGNED, PRIVATE_SELECTION, WASTE, ADJUSTMENT',
+      'shipmentScope must be one of: ALL, SHIPPED, UNSHIPPED, PACKED_SHIPPED, SELF_PICKUP, HARVEST_IN, INTERNAL_TRANSFER, OWNERSHIP_TRANSFER, ASSIGNED, PRIVATE_SELECTION, WASTE, ADJUSTMENT, REMAINS_IN_ITALY',
     );
   }
 
