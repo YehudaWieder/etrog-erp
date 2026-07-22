@@ -47,6 +47,9 @@ export class PackBoxDto {
   @ApiPropertyOptional({ description: 'Required when ownershipType=CUSTOMER. Pass null to clear.', example: 7 })
   customerId?: number | null;
 
+  @ApiPropertyOptional({ description: 'Required when ownershipType=EXTERNAL_TRADER. Pass null to clear.', example: 'Yosef Cohen' })
+  externalOwnerName?: string | null;
+
   @ApiProperty({ type: [PackBoxItemDto], description: 'Shipment items to create in this box. May be empty for a box-only edit.' })
   items!: PackBoxItemDto[];
 

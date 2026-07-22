@@ -18,6 +18,7 @@ type NewBoxFormText = {
   validationOwnershipTypeRequired: string;
   validationTraderRequired: string;
   validationCustomerRequired: string;
+  validationExternalOwnerNameRequired: string;
   validationStartNumberRequired: string;
   validationEndNumberRequired: string;
   validationRangeInvalid: string;
@@ -53,6 +54,10 @@ type UseNewBoxFormResult = {
   setTraderId: (v: string) => void;
   customerId: string;
   setCustomerId: (v: string) => void;
+  externalOwnerName: string;
+  setExternalOwnerName: (v: string) => void;
+  status: 'OPEN' | 'CLOSED';
+  setStatus: (v: 'OPEN' | 'CLOSED') => void;
   notes: string;
   setNotes: (v: string) => void;
   startNumber: string;
@@ -78,6 +83,8 @@ export function useNewBoxForm({ isOpen, t, onSuccess, onClose }: UseNewBoxFormPr
   const [ownershipType, setOwnershipType] = useState('');
   const [traderId, setTraderId] = useState('');
   const [customerId, setCustomerId] = useState('');
+  const [externalOwnerName, setExternalOwnerName] = useState('');
+  const [status, setStatus] = useState<'OPEN' | 'CLOSED'>('OPEN');
   const [notes, setNotes] = useState('');
   const [startNumber, setStartNumber] = useState('');
   const [endNumber, setEndNumber] = useState('');
@@ -138,6 +145,8 @@ export function useNewBoxForm({ isOpen, t, onSuccess, onClose }: UseNewBoxFormPr
     setOwnershipType('');
     setTraderId('');
     setCustomerId('');
+    setExternalOwnerName('');
+    setStatus('OPEN');
     setNotes('');
     setStartNumber('');
     setEndNumber('');
@@ -227,13 +236,13 @@ export function useNewBoxForm({ isOpen, t, onSuccess, onClose }: UseNewBoxFormPr
       return;
     }
 
-    if (!boxType) {
-      setError(t.validationBoxTypeRequired);
+    if (!ownershipType) {
+      setError(t.validationOwnershipTypeRequired);
       return;
     }
 
-    if (!ownershipType) {
-      setError(t.validationOwnershipTypeRequired);
+    if (ownershipType !== 'EXTERNAL_TRADER' && !boxType) {
+      setError(t.validationBoxTypeRequired);
       return;
     }
 
@@ -247,6 +256,11 @@ export function useNewBoxForm({ isOpen, t, onSuccess, onClose }: UseNewBoxFormPr
       return;
     }
 
+    if (ownershipType === 'EXTERNAL_TRADER' && !externalOwnerName.trim()) {
+      setError(t.validationExternalOwnerNameRequired);
+      return;
+    }
+
     setError(null);
     setIsSubmitting(true);
 
@@ -255,10 +269,12 @@ export function useNewBoxForm({ isOpen, t, onSuccess, onClose }: UseNewBoxFormPr
         {
           shipmentId: Number(selectedShipmentId),
           boxNumber: boxNumberValue,
-          boxType: boxType as 'SMALL' | 'MEDIUM' | 'LARGE' | 'CUSTOM',
+          boxType: ownershipType === 'EXTERNAL_TRADER' ? undefined : (boxType as 'SMALL' | 'MEDIUM' | 'LARGE' | 'CUSTOM'),
+          status: ownershipType === 'EXTERNAL_TRADER' ? status : undefined,
           ownershipType: ownershipType as BoxOwnership,
           traderId: ownershipType === 'TRADER' ? Number(traderId) : undefined,
           customerId: ownershipType === 'CUSTOMER' ? Number(customerId) : undefined,
+          externalOwnerName: ownershipType === 'EXTERNAL_TRADER' ? externalOwnerName.trim() : undefined,
           notes: notes.trim() || undefined,
         },
         { suppressGlobalFeedback: true },
@@ -273,7 +289,7 @@ export function useNewBoxForm({ isOpen, t, onSuccess, onClose }: UseNewBoxFormPr
     } finally {
       setIsSubmitting(false);
     }
-  }, [boxNumber, boxType, customerId, notes, onClose, onSuccess, ownershipType, resetForm, selectedShipmentId, t, traderId]);
+  }, [boxNumber, boxType, customerId, externalOwnerName, notes, onClose, onSuccess, ownershipType, resetForm, selectedShipmentId, status, t, traderId]);
 
   const handleSave = useCallback(async () => {
     if (mode === 'BULK') {
@@ -302,6 +318,10 @@ export function useNewBoxForm({ isOpen, t, onSuccess, onClose }: UseNewBoxFormPr
     setTraderId,
     customerId,
     setCustomerId,
+    externalOwnerName,
+    setExternalOwnerName,
+    status,
+    setStatus,
     notes,
     setNotes,
     startNumber,

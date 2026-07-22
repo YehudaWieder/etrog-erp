@@ -8,6 +8,7 @@ import type { NewBoxFormMode } from '../hooks/useNewBoxForm';
 import styles from './styles/NewBoxFormModal.module.css';
 
 type BoxType = 'SMALL' | 'MEDIUM' | 'LARGE' | 'CUSTOM';
+type NewBoxStatus = 'OPEN' | 'CLOSED';
 
 type NewBoxFormModalText = {
   title: string;
@@ -26,6 +27,9 @@ type NewBoxFormModalText = {
   traderPlaceholder: string;
   customerLabel: string;
   customerPlaceholder: string;
+  ownerNameLabel: string;
+  ownerNamePlaceholder: string;
+  statusLabel: string;
   notesLabel: string;
   notesPlaceholder: string;
   startNumberLabel: string;
@@ -37,6 +41,7 @@ type NewBoxFormModalText = {
   cancel: string;
   boxTypeOptions: Record<BoxType, string>;
   ownershipTypeOptions: Record<BoxOwnership, string>;
+  statusOptions: Record<NewBoxStatus, string>;
 };
 
 type NewBoxFormModalProps = {
@@ -60,6 +65,10 @@ type NewBoxFormModalProps = {
   onTraderIdChange: (v: string) => void;
   customerId: string;
   onCustomerIdChange: (v: string) => void;
+  externalOwnerName: string;
+  onExternalOwnerNameChange: (v: string) => void;
+  status: NewBoxStatus;
+  onStatusChange: (v: NewBoxStatus) => void;
   notes: string;
   onNotesChange: (v: string) => void;
   startNumber: string;
@@ -73,7 +82,8 @@ type NewBoxFormModalProps = {
 };
 
 const BOX_TYPES: BoxType[] = ['SMALL', 'MEDIUM', 'LARGE', 'CUSTOM'];
-const OWNERSHIP_TYPES: BoxOwnership[] = ['GENERAL', 'TRADER', 'CUSTOMER', 'SHARED', 'CUSTOM'];
+const OWNERSHIP_TYPES: BoxOwnership[] = ['GENERAL', 'TRADER', 'CUSTOMER', 'SHARED', 'EXTERNAL_TRADER'];
+const NEW_BOX_STATUSES: NewBoxStatus[] = ['OPEN', 'CLOSED'];
 
 export function NewBoxFormModal({
   isOpen,
@@ -96,6 +106,10 @@ export function NewBoxFormModal({
   onTraderIdChange,
   customerId,
   onCustomerIdChange,
+  externalOwnerName,
+  onExternalOwnerNameChange,
+  status,
+  onStatusChange,
   notes,
   onNotesChange,
   startNumber,
@@ -222,21 +236,23 @@ export function NewBoxFormModal({
                   />
                 </div>
 
-                <div className={styles.field}>
-                  <label className={styles.label}>{t.boxTypeLabel}</label>
-                  <select
-                    className="seasons-manager__year-input"
-                    value={boxType}
-                    onChange={(e) => onBoxTypeChange(e.target.value)}
-                  >
-                    <option value="">{t.boxTypePlaceholder}</option>
-                    {BOX_TYPES.map((type) => (
-                      <option key={type} value={type}>
-                        {t.boxTypeOptions[type]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {ownershipType !== 'EXTERNAL_TRADER' ? (
+                  <div className={styles.field}>
+                    <label className={styles.label}>{t.boxTypeLabel}</label>
+                    <select
+                      className="seasons-manager__year-input"
+                      value={boxType}
+                      onChange={(e) => onBoxTypeChange(e.target.value)}
+                    >
+                      <option value="">{t.boxTypePlaceholder}</option>
+                      {BOX_TYPES.map((type) => (
+                        <option key={type} value={type}>
+                          {t.boxTypeOptions[type]}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : null}
               </div>
 
               <div className={styles.formRow}>
@@ -255,6 +271,36 @@ export function NewBoxFormModal({
                     ))}
                   </select>
                 </div>
+
+                {ownershipType === 'EXTERNAL_TRADER' ? (
+                  <>
+                    <div className={styles.field}>
+                      <label className={styles.label}>{t.ownerNameLabel}</label>
+                      <input
+                        className="seasons-manager__year-input"
+                        type="text"
+                        value={externalOwnerName}
+                        onChange={(e) => onExternalOwnerNameChange(e.target.value)}
+                        placeholder={t.ownerNamePlaceholder}
+                      />
+                    </div>
+
+                    <div className={styles.field}>
+                      <label className={styles.label}>{t.statusLabel}</label>
+                      <select
+                        className="seasons-manager__year-input"
+                        value={status}
+                        onChange={(e) => onStatusChange(e.target.value as NewBoxStatus)}
+                      >
+                        {NEW_BOX_STATUSES.map((s) => (
+                          <option key={s} value={s}>
+                            {t.statusOptions[s]}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                ) : null}
 
                 {ownershipType === 'TRADER' ? (
                   <div className={styles.field}>

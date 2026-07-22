@@ -1,7 +1,7 @@
 import { apiClient, type ApiClientInit } from './apiClient';
 
 export type BoxStatus = 'OPEN' | 'CLOSED' | 'SHIPPED' | 'DELIVERED';
-export type BoxOwnership = 'TRADER' | 'CUSTOMER' | 'SHARED' | 'GENERAL' | 'CUSTOM';
+export type BoxOwnership = 'TRADER' | 'CUSTOMER' | 'SHARED' | 'GENERAL' | 'CUSTOM' | 'EXTERNAL_TRADER';
 
 export type OpenBoxRecord = {
   id: number;
@@ -12,6 +12,7 @@ export type OpenBoxRecord = {
   ownershipType: BoxOwnership;
   traderId: number | null;
   customerId: number | null;
+  externalOwnerName: string | null;
   trader: { name: string } | null;
   customer: { customerName: string } | null;
   shipment: { id: number; shipmentNumber: number };
@@ -28,6 +29,7 @@ export type BoxRecord = {
   ownershipType: BoxOwnership;
   traderId: number | null;
   customerId: number | null;
+  externalOwnerName: string | null;
   trader?: { name: string } | null;
   customer?: { customerName: string } | null;
   updatedBy?: { name: string } | null;
@@ -39,10 +41,12 @@ export type BoxRecord = {
 export type CreateBoxPayload = {
   shipmentId: number;
   boxNumber: number;
-  boxType: 'SMALL' | 'MEDIUM' | 'LARGE' | 'CUSTOM';
+  boxType?: 'SMALL' | 'MEDIUM' | 'LARGE' | 'CUSTOM';
+  status?: BoxStatus;
   ownershipType?: BoxOwnership;
   traderId?: number;
   customerId?: number;
+  externalOwnerName?: string;
   notes?: string;
 };
 
@@ -62,6 +66,7 @@ export type UpdateBoxPayload = {
   ownershipType?: BoxOwnership;
   traderId?: number | null;
   customerId?: number | null;
+  externalOwnerName?: string | null;
 };
 
 export async function getOpenBoxes(): Promise<OpenBoxRecord[]> {

@@ -210,6 +210,7 @@ export function useNewShipmentItemForm({
             ownershipType: box.ownershipType,
             traderId: box.traderId,
             customerId: box.customerId,
+            externalOwnerName: box.externalOwnerName,
             trader: box.trader ?? null,
             customer: box.customer ?? null,
             shipment: { id: initialValues.shipmentId, shipmentNumber: initialValues.shipmentNumber },

@@ -61,6 +61,7 @@ export class BoxService {
         box = await tx.box.create({
           data: {
             ...data,
+            boxType: data.boxType ?? 'SMALL',
             updatedById: actorId,
             seasonId,
             totalQuantity: 0,

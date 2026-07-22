@@ -8,8 +8,13 @@ export class CreateBoxDto {
   @ApiProperty({ description: 'Box sequence number within the shipment.', example: 3 })
   boxNumber!: number;
 
-  @ApiProperty({ enum: BoxType, enumName: 'BoxType', description: 'Physical box type.', example: 'MEDIUM' })
-  boxType!: BoxType;
+  @ApiPropertyOptional({
+    enum: BoxType,
+    enumName: 'BoxType',
+    description: 'Physical box type. Required unless ownershipType=EXTERNAL_TRADER, which defaults to SMALL.',
+    example: 'MEDIUM',
+  })
+  boxType?: BoxType;
 
   @ApiPropertyOptional({ enum: BoxStatus, enumName: 'BoxStatus', description: 'Box status. Defaults to OPEN.', example: 'OPEN' })
   status?: BoxStatus;
@@ -20,7 +25,8 @@ export class CreateBoxDto {
   @ApiPropertyOptional({
     enum: BoxOwnership,
     enumName: 'BoxOwnership',
-    description: 'Ownership model. Defaults to GENERAL. TRADER requires traderId, CUSTOMER requires customerId.',
+    description:
+      'Ownership model. Defaults to GENERAL. TRADER requires traderId, CUSTOMER requires customerId, EXTERNAL_TRADER requires externalOwnerName.',
     example: 'TRADER',
   })
   ownershipType?: BoxOwnership;
@@ -30,4 +36,7 @@ export class CreateBoxDto {
 
   @ApiPropertyOptional({ description: 'Required when ownershipType=CUSTOMER.', example: null })
   customerId?: number;
+
+  @ApiPropertyOptional({ description: 'Required when ownershipType=EXTERNAL_TRADER.', example: 'Yosef Cohen' })
+  externalOwnerName?: string;
 }

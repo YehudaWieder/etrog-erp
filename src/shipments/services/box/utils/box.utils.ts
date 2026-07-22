@@ -4,12 +4,13 @@ import { BoxOwnership, BoxStatus, BoxType } from '@prisma/client';
 export type CreateBoxInput = {
   shipmentId: number;
   boxNumber: number;
-  boxType: BoxType;
+  boxType?: BoxType;
   status?: BoxStatus;
   notes?: string;
   ownershipType?: BoxOwnership;
   traderId?: number;
   customerId?: number;
+  externalOwnerName?: string;
 };
 
 export type BulkCreateBoxInput = {
@@ -29,6 +30,7 @@ export type UpdateBoxInput = {
   ownershipType?: BoxOwnership;
   traderId?: number | null;
   customerId?: number | null;
+  externalOwnerName?: string | null;
 };
 
 export function assertPositiveInt(value: unknown, fieldName: string): void {
@@ -52,6 +54,7 @@ export function validateBoxOwnership(
   ownershipType: unknown,
   traderId: unknown,
   customerId: unknown,
+  externalOwnerName?: unknown,
 ): void {
   if (ownershipType !== undefined && !Object.values(BoxOwnership).includes(ownershipType as BoxOwnership)) {
     throw new BadRequestException('ownershipType is invalid');
@@ -80,20 +83,39 @@ export function validateBoxOwnership(
   if (ownershipType !== BoxOwnership.CUSTOMER && ownershipType !== BoxOwnership.CUSTOM && customerId !== undefined && customerId !== null) {
     throw new BadRequestException('customerId must be empty unless ownershipType=CUSTOMER or ownershipType=CUSTOM');
   }
+
+  if (
+    ownershipType === BoxOwnership.EXTERNAL_TRADER &&
+    (typeof externalOwnerName !== 'string' || externalOwnerName.trim().length === 0)
+  ) {
+    throw new BadRequestException('externalOwnerName is required when ownershipType=EXTERNAL_TRADER');
+  }
+
+  if (
+    ownershipType !== BoxOwnership.EXTERNAL_TRADER &&
+    externalOwnerName !== undefined &&
+    externalOwnerName !== null
+  ) {
+    throw new BadRequestException('externalOwnerName must be empty unless ownershipType=EXTERNAL_TRADER');
+  }
 }
 
 export function validateCreateBoxInput(data: CreateBoxInput): void {
   assertOnlyAllowedFields(
     data as Record<string, unknown>,
-    ['shipmentId', 'boxNumber', 'boxType', 'status', 'notes', 'ownershipType', 'traderId', 'customerId'],
-    'Only shipmentId, boxNumber, boxType, status, notes, ownershipType, traderId, customerId are allowed on create. seasonId, totalQuantity, and updatedById are managed by the server',
+    ['shipmentId', 'boxNumber', 'boxType', 'status', 'notes', 'ownershipType', 'traderId', 'customerId', 'externalOwnerName'],
+    'Only shipmentId, boxNumber, boxType, status, notes, ownershipType, traderId, customerId, externalOwnerName are allowed on create. seasonId, totalQuantity, and updatedById are managed by the server',
   );
 
   assertPositiveInt(data.shipmentId, 'shipmentId');
   assertPositiveInt(data.boxNumber, 'boxNumber');
 
-  if (!Object.values(BoxType).includes(data.boxType as BoxType)) {
-    throw new BadRequestException('boxType is invalid');
+  // boxType is irrelevant for EXTERNAL_TRADER boxes (they never hold items, so capacity doesn't
+  // apply) — the server defaults it instead of requiring the caller to pick one.
+  if (data.boxType !== undefined || data.ownershipType !== BoxOwnership.EXTERNAL_TRADER) {
+    if (!Object.values(BoxType).includes(data.boxType as BoxType)) {
+      throw new BadRequestException('boxType is invalid');
+    }
   }
 
   if (data.status !== undefined && !Object.values(BoxStatus).includes(data.status as BoxStatus)) {
@@ -104,7 +126,7 @@ export function validateCreateBoxInput(data: CreateBoxInput): void {
     throw new BadRequestException('notes must be a string');
   }
 
-  validateBoxOwnership(data.ownershipType, data.traderId, data.customerId);
+  validateBoxOwnership(data.ownershipType, data.traderId, data.customerId, data.externalOwnerName);
 }
 
 export function validateBulkCreateBoxInput(data: BulkCreateBoxInput): void {
@@ -147,8 +169,8 @@ export function validateUpdateBoxInput(data: UpdateBoxInput): void {
 
   assertOnlyAllowedFields(
     data as Record<string, unknown>,
-    ['shipmentId', 'boxNumber', 'boxType', 'status', 'notes', 'ownershipType', 'traderId', 'customerId'],
-    'Only shipmentId, boxNumber, boxType, status, notes, ownershipType, traderId, customerId can be updated here.',
+    ['shipmentId', 'boxNumber', 'boxType', 'status', 'notes', 'ownershipType', 'traderId', 'customerId', 'externalOwnerName'],
+    'Only shipmentId, boxNumber, boxType, status, notes, ownershipType, traderId, customerId, externalOwnerName can be updated here.',
   );
 
   if (data.shipmentId !== undefined) {
@@ -171,5 +193,5 @@ export function validateUpdateBoxInput(data: UpdateBoxInput): void {
     throw new BadRequestException('notes must be a string');
   }
 
-  validateBoxOwnership(data.ownershipType, data.traderId, data.customerId);
+  validateBoxOwnership(data.ownershipType, data.traderId, data.customerId, data.externalOwnerName);
 }

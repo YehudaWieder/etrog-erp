@@ -19,7 +19,7 @@ const infoStyle: React.CSSProperties = {
 };
 
 type BoxType = 'SMALL' | 'MEDIUM' | 'LARGE' | 'CUSTOM';
-type BoxOwnership = 'GENERAL' | 'TRADER' | 'CUSTOMER' | 'SHARED' | 'CUSTOM';
+type BoxOwnership = 'GENERAL' | 'TRADER' | 'CUSTOMER' | 'SHARED' | 'CUSTOM' | 'EXTERNAL_TRADER';
 
 type EditBoxFormModalText = {
   title: (num: number) => string;
@@ -38,6 +38,8 @@ type EditBoxFormModalText = {
   traderPlaceholder: string;
   customerLabel: string;
   customerPlaceholder: string;
+  ownerNameLabel: string;
+  ownerNamePlaceholder: string;
   notesLabel: string;
   notesPlaceholder: string;
   save: string;
@@ -71,6 +73,8 @@ type EditBoxFormModalProps = {
   onTraderIdChange: (v: string) => void;
   customerId: string;
   onCustomerIdChange: (v: string) => void;
+  externalOwnerName: string;
+  onExternalOwnerNameChange: (v: string) => void;
   notes: string;
   onNotesChange: (v: string) => void;
   isShipped: boolean;
@@ -86,7 +90,7 @@ type EditBoxFormModalProps = {
 const BOX_STATUSES: BoxStatus[] = ['OPEN', 'CLOSED', 'SHIPPED', 'DELIVERED'];
 const BOX_STATUSES_SHIPPED_ONLY: BoxStatus[] = ['SHIPPED', 'DELIVERED'];
 const BOX_TYPES: BoxType[] = ['SMALL', 'MEDIUM', 'LARGE', 'CUSTOM'];
-const OWNERSHIP_TYPES: BoxOwnership[] = ['GENERAL', 'TRADER', 'CUSTOMER', 'SHARED', 'CUSTOM'];
+const OWNERSHIP_TYPES: BoxOwnership[] = ['GENERAL', 'TRADER', 'CUSTOMER', 'SHARED', 'EXTERNAL_TRADER'];
 
 export function EditBoxFormModal({
   isOpen,
@@ -111,6 +115,8 @@ export function EditBoxFormModal({
   onTraderIdChange,
   customerId,
   onCustomerIdChange,
+  externalOwnerName,
+  onExternalOwnerNameChange,
   notes,
   onNotesChange,
   isShipped,
@@ -192,21 +198,23 @@ export function EditBoxFormModal({
 
           {!isShipped ? (
             <>
-              <div className={styles.field}>
-                <label className={styles.label}>{t.boxTypeLabel}</label>
-                <select
-                  className="seasons-manager__year-input"
-                  value={boxType}
-                  onChange={(e) => onBoxTypeChange(e.target.value)}
-                >
-                  <option value="">{t.boxTypePlaceholder}</option>
-                  {BOX_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {t.boxTypeOptions[type]}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {ownershipType !== 'EXTERNAL_TRADER' ? (
+                <div className={styles.field}>
+                  <label className={styles.label}>{t.boxTypeLabel}</label>
+                  <select
+                    className="seasons-manager__year-input"
+                    value={boxType}
+                    onChange={(e) => onBoxTypeChange(e.target.value)}
+                  >
+                    <option value="">{t.boxTypePlaceholder}</option>
+                    {BOX_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {t.boxTypeOptions[type]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
 
               <p
                 className="seasons-manager__hint"
@@ -287,6 +295,23 @@ export function EditBoxFormModal({
                         </option>
                       ))}
                     </select>
+                  )}
+                </div>
+              ) : null}
+
+              {ownershipType === 'EXTERNAL_TRADER' ? (
+                <div className={styles.field}>
+                  <label className={styles.label}>{t.ownerNameLabel}</label>
+                  {hasItems ? (
+                    <div style={infoStyle}>{externalOwnerName || '—'}</div>
+                  ) : (
+                    <input
+                      className="seasons-manager__year-input"
+                      type="text"
+                      value={externalOwnerName}
+                      onChange={(e) => onExternalOwnerNameChange(e.target.value)}
+                      placeholder={t.ownerNamePlaceholder}
+                    />
                   )}
                 </div>
               ) : null}

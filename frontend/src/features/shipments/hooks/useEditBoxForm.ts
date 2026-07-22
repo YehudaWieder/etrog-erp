@@ -14,6 +14,7 @@ type EditBoxFormText = {
   validationBoxNumberPositive: string;
   validationTraderRequired: string;
   validationCustomerRequired: string;
+  validationExternalOwnerNameRequired: string;
   duplicateBoxNumber: string;
   errorOwnershipLocked: string;
   errorBoxTypeCapacity: (quantity: number, capacity: number) => string;
@@ -50,6 +51,8 @@ type UseEditBoxFormResult = {
   setTraderId: (v: string) => void;
   customerId: string;
   setCustomerId: (v: string) => void;
+  externalOwnerName: string;
+  setExternalOwnerName: (v: string) => void;
   notes: string;
   setNotes: (v: string) => void;
   isShipped: boolean;
@@ -73,6 +76,7 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
   const [ownershipType, setOwnershipType] = useState('');
   const [traderId, setTraderId] = useState('');
   const [customerId, setCustomerId] = useState('');
+  const [externalOwnerName, setExternalOwnerName] = useState('');
   const [notes, setNotes] = useState('');
   const [hasItems, setHasItems] = useState(false);
   const [systemConfig, setSystemConfig] = useState<SystemConfig | null>(null);
@@ -129,6 +133,7 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
         setOwnershipType(fullBox.ownershipType);
         setTraderId(fullBox.traderId !== null && fullBox.traderId !== undefined ? String(fullBox.traderId) : '');
         setCustomerId(fullBox.customerId !== null && fullBox.customerId !== undefined ? String(fullBox.customerId) : '');
+        setExternalOwnerName(fullBox.externalOwnerName ?? '');
         setNotes(fullBox.notes ?? '');
       } catch {
         if (!isMounted) {
@@ -182,6 +187,11 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
       return;
     }
 
+    if (ownershipType === 'EXTERNAL_TRADER' && !externalOwnerName.trim()) {
+      setError(t.validationExternalOwnerNameRequired);
+      return;
+    }
+
     if (boxType && boxType !== 'CUSTOM' && systemConfig) {
       const capacityMap: Record<string, number | null> = {
         SMALL: systemConfig.smallBoxCapacity,
@@ -206,9 +216,10 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
           boxNumber: boxNumberValue,
           status,
           boxType: boxType as 'SMALL' | 'MEDIUM' | 'LARGE' | 'CUSTOM' | undefined,
-          ownershipType: ownershipType as 'TRADER' | 'CUSTOMER' | 'SHARED' | 'GENERAL' | 'CUSTOM' | undefined,
+          ownershipType: ownershipType as 'TRADER' | 'CUSTOMER' | 'SHARED' | 'GENERAL' | 'CUSTOM' | 'EXTERNAL_TRADER' | undefined,
           traderId: ownershipType === 'TRADER' ? Number(traderId) : null,
           customerId: ownershipType === 'CUSTOMER' ? Number(customerId) : null,
+          externalOwnerName: ownershipType === 'EXTERNAL_TRADER' ? externalOwnerName.trim() : null,
           notes: notes.trim() || null,
         },
         { suppressGlobalFeedback: true },
@@ -231,7 +242,7 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
     } finally {
       setIsSubmitting(false);
     }
-  }, [boxNumber, boxRow, boxType, boxTotalQuantity, customerId, notes, onClose, onSuccess, ownershipType, selectedShipmentId, status, systemConfig, t, traderId]);
+  }, [boxNumber, boxRow, boxType, boxTotalQuantity, customerId, externalOwnerName, notes, onClose, onSuccess, ownershipType, selectedShipmentId, status, systemConfig, t, traderId]);
 
   return {
     shipments,
@@ -255,6 +266,8 @@ export function useEditBoxForm({ boxRow, t, onSuccess, onClose }: UseEditBoxForm
     setTraderId,
     customerId,
     setCustomerId,
+    externalOwnerName,
+    setExternalOwnerName,
     notes,
     setNotes,
     isChangingShipment: selectedShipmentId !== originalShipmentId,

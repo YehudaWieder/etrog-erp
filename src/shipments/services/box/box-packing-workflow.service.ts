@@ -38,6 +38,10 @@ export class BoxPackingWorkflowService {
         throw new BadRequestException('Cannot add items to a box that is not OPEN');
       }
 
+      if (items.length > 0 && box.ownershipType === 'EXTERNAL_TRADER') {
+        throw new BadRequestException('Cannot add items to an external-trader box');
+      }
+
       const editedItems = [] as Awaited<ReturnType<ItemService['updateInTx']>>[];
       for (const edit of itemEdits) {
         const item = await this.itemService.updateInTx(tx, edit.id, { quantity: edit.quantity }, actorId);

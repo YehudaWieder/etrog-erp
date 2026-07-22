@@ -33,4 +33,7 @@ export class UpdateBoxDto {
 
   @ApiPropertyOptional({ description: 'Required when ownershipType=CUSTOMER. Pass null to clear.', example: 7 })
   customerId?: number | null;
+
+  @ApiPropertyOptional({ description: 'Required when ownershipType=EXTERNAL_TRADER. Pass null to clear.', example: 'Yosef Cohen' })
+  externalOwnerName?: string | null;
 }
