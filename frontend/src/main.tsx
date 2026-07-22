@@ -76,13 +76,13 @@ type SetupRequirement = { path: string; step: 1 | 2 | 3 };
 
 const SETUP_ALLOWED_PATHS: Record<1 | 2 | 3, string[]> = {
   1: ['/settings/traders'],
-  2: ['/settings/traders', '/settings/traders/default-categories'],
-  3: ['/settings/traders', '/settings/traders/default-categories', '/settings/system/seasons'],
+  2: ['/settings/traders', '/settings/system/default-categories'],
+  3: ['/settings/traders', '/settings/system/default-categories', '/settings/system/seasons'],
 };
 
 function getSetupRequirement(status: { hasTraders: boolean; hasDefaultCategories: boolean; hasSeasons: boolean }): SetupRequirement | null {
   if (!status.hasTraders) return { path: '/settings/traders', step: 1 };
-  if (!status.hasDefaultCategories) return { path: '/settings/traders/default-categories', step: 2 };
+  if (!status.hasDefaultCategories) return { path: '/settings/system/default-categories', step: 2 };
   if (!status.hasSeasons) return { path: '/settings/system/seasons', step: 3 };
   return null;
 }
