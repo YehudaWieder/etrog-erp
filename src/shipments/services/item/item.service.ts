@@ -614,6 +614,10 @@ export class ItemService {
       throw new BadRequestException('Cannot add items to a box that is not OPEN');
     }
 
+    if (box.ownershipType === 'EXTERNAL_TRADER') {
+      throw new BadRequestException('Cannot add items to an external-trader box');
+    }
+
     if (box.boxType !== 'CUSTOM') {
       const systemConfig = await tx.systemConfig.findFirst({ where: { seasonId: item.seasonId } });
       const capacityMap: Record<string, number | null | undefined> = {
