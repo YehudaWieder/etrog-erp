@@ -12,6 +12,7 @@ import {
     requireAdjustmentQuantity,
     validateAdjustmentType,
 } from 'src/inventory/services/inventory-core/utils/adjustment-movement.util';
+import { calculateExactShareQuantity, calculateMinimalGrossByShares } from '../validation/share-math';
 
 @Injectable()
 export class TraderStockService {
@@ -116,7 +117,25 @@ export class TraderStockService {
     }
 
     async createAdjustment(data: Prisma.TraderStockUncheckedCreateInput & { stockSource?: 'GENERAL' | 'PRIVATE_SELECTION' }, actorId: number) {
-        const { stockSource, ...rest } = data as typeof data & { stockSource?: 'GENERAL' | 'PRIVATE_SELECTION' };
+        const { stockSource: requestedStockSource, ...rest } = data as typeof data & { stockSource?: 'GENERAL' | 'PRIVATE_SELECTION' };
+
+        validateAdjustmentType(rest.type);
+        const { id: seasonId } = await this.seasonsService.findActiveSeason();
+        const movementType = rest.type as MovementType;
+        const quantity = requireAdjustmentQuantity(rest.quantity);
+        const normalizedQuantity = normalizeAdjustmentQuantity(movementType, quantity);
+        const isModulo = Boolean(rest.isModulo);
+
+        // WASTE with no specific trader ("כללי") draws from the combined MODULO + all-traders
+        // pool by category share — a different shape (possibly several ledger rows) than the
+        // single-row path below, so it's handled entirely separately.
+        if (movementType === MovementType.WASTE && isModulo) {
+            return this.createGeneralWaste(rest, seasonId, normalizedQuantity, actorId);
+        }
+
+        // WASTE against a specific trader always targets that trader's private-selection pool —
+        // never their share of the general pool — regardless of what the client sends.
+        const stockSource = movementType === MovementType.WASTE && !isModulo ? 'PRIVATE_SELECTION' : requestedStockSource;
         const isFromPrivateSelection = stockSource === 'PRIVATE_SELECTION';
 
         const createPayload: Prisma.TraderStockUncheckedCreateInput = {
@@ -124,12 +143,6 @@ export class TraderStockService {
             updatedById: actorId,
             isFromPrivateSelection,
         };
-
-        validateAdjustmentType(createPayload.type);
-        const { id: seasonId } = await this.seasonsService.findActiveSeason();
-        const movementType = createPayload.type as MovementType;
-        const quantity = requireAdjustmentQuantity(createPayload.quantity);
-        const normalizedQuantity = normalizeAdjustmentQuantity(movementType, quantity);
 
         return this.prisma.$transaction(async (tx) => {
             await this.assertNegativeTraderMovementHasStock(tx, {
@@ -150,6 +163,186 @@ export class TraderStockService {
         });
     }
 
+    // "כללי" WASTE: drain MODULO first, then split any deficit across traders by their
+    // TraderCategoryShare percent (mirrors CustomerGeneralTransferService.applyMovementsTx),
+    // excluding each trader's private-selection stock. A rounding overage from the fair-share
+    // step is returned to MODULO. All rows from a multi-row split share a MovementReferenceId
+    // (self-linked to the first row) so they can be deleted together as one batch.
+    private async createGeneralWaste(
+        data: Prisma.TraderStockUncheckedCreateInput,
+        seasonId: number,
+        normalizedQuantity: number,
+        actorId: number,
+    ) {
+        const traderCategoryId = Number(data.traderCategoryId);
+        const grade = data.grade as Grade;
+        const pitamStatus = data.pitamStatus as PitamStatus;
+        const requestQuantity = Math.abs(normalizedQuantity);
+        const date = data.date;
+        const notes = data.notes as string | null | undefined;
+
+        if (!traderCategoryId || !grade || !pitamStatus) {
+            throw new BadRequestException('Negative trader movement requires traderCategoryId, grade, and pitamStatus');
+        }
+
+        return this.prisma.$transaction(async (tx) => {
+            const moduloAvailable = Math.max(
+                0,
+                await this.inventoryAvailabilityService.getTraderUnshippedBalance(tx, {
+                    seasonId,
+                    traderId: null,
+                    traderCategoryId,
+                    grade,
+                    pitamStatus,
+                    isModulo: true,
+                }),
+            );
+            const moduloUsed = Math.min(moduloAvailable, requestQuantity);
+            const deficit = requestQuantity - moduloUsed;
+
+            const createdRows: { id: number }[] = [];
+
+            if (moduloUsed > 0) {
+                createdRows.push(
+                    await tx.traderStock.create({
+                        data: {
+                            seasonId,
+                            date,
+                            traderId: null,
+                            traderCategoryId,
+                            grade,
+                            pitamStatus,
+                            quantity: -moduloUsed,
+                            isModulo: true,
+                            type: MovementType.WASTE,
+                            isFromPrivateSelection: false,
+                            shipmentId: null,
+                            boxId: null,
+                            updatedById: actorId,
+                            notes,
+                        },
+                    }),
+                );
+            }
+
+            if (deficit > 0) {
+                const shares = await tx.traderCategoryShare.findMany({
+                    where: { seasonId, traderCategoryId },
+                    orderBy: { traderId: 'asc' },
+                });
+
+                if (shares.length === 0) {
+                    throw new BadRequestException('לא הוגדרה חלוקת אחוזים בין הסוחרים עבור קטגוריה זו.');
+                }
+
+                const normalizedShares = shares.map((share) => ({
+                    traderId: share.traderId,
+                    percent: Number(share.percent),
+                    percentText: share.percent.toString(),
+                }));
+
+                const totalPercent = normalizedShares.reduce((sum, share) => sum + share.percent, 0);
+                if (Math.abs(totalPercent - 100) > 1e-9) {
+                    throw new BadRequestException(`סכום האחוזים בין הסוחרים עבור קטגוריה ${traderCategoryId} חייב להיות 100.`);
+                }
+
+                const grossFromTraders = calculateMinimalGrossByShares(
+                    deficit,
+                    normalizedShares.map((share) => share.percentText),
+                );
+                const traderAllocations = normalizedShares.map((share) => ({
+                    traderId: share.traderId,
+                    quantity: calculateExactShareQuantity(grossFromTraders, share.percentText),
+                }));
+
+                if (traderAllocations.some((allocation) => allocation.quantity <= 0)) {
+                    throw new BadRequestException('לא ניתן לחלק את הכמות המבוקשת בין כל הסוחרים לפי האחוזים שהוגדרו; יש להגדיל את הכמות או לעדכן את האחוזים.');
+                }
+
+                for (const allocation of traderAllocations) {
+                    await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
+                        seasonId,
+                        traderId: allocation.traderId,
+                        traderCategoryId,
+                        grade,
+                        pitamStatus,
+                        isModulo: false,
+                        requiredQuantity: allocation.quantity,
+                        excludePrivateSelection: true,
+                        contextLabel: `פחת כללי (סוחר ${allocation.traderId})`,
+                    });
+                }
+
+                for (const allocation of traderAllocations) {
+                    createdRows.push(
+                        await tx.traderStock.create({
+                            data: {
+                                seasonId,
+                                date,
+                                traderId: allocation.traderId,
+                                traderCategoryId,
+                                grade,
+                                pitamStatus,
+                                quantity: -allocation.quantity,
+                                isModulo: false,
+                                type: MovementType.WASTE,
+                                isFromPrivateSelection: false,
+                                shipmentId: null,
+                                boxId: null,
+                                updatedById: actorId,
+                                notes,
+                            },
+                        }),
+                    );
+                }
+
+                const traderTakenTotal = traderAllocations.reduce((sum, allocation) => sum + allocation.quantity, 0);
+                const moduloRemainder = traderTakenTotal - deficit;
+
+                if (moduloRemainder > 0) {
+                    createdRows.push(
+                        await tx.traderStock.create({
+                            data: {
+                                seasonId,
+                                date,
+                                traderId: null,
+                                traderCategoryId,
+                                grade,
+                                pitamStatus,
+                                quantity: moduloRemainder,
+                                isModulo: true,
+                                type: MovementType.ASSIGNED,
+                                isFromPrivateSelection: false,
+                                shipmentId: null,
+                                boxId: null,
+                                updatedById: actorId,
+                                notes,
+                            },
+                        }),
+                    );
+                }
+            }
+
+            if (createdRows.length === 0) {
+                throw new BadRequestException(
+                    `פחת כללי: אין מספיק מלאי לא ארוז. נדרש=${requestQuantity}, זמין=${moduloAvailable}`,
+                );
+            }
+
+            if (createdRows.length > 1) {
+                const referenceId = createdRows[0].id;
+                await tx.traderStock.updateMany({
+                    where: { id: { in: createdRows.map((row) => row.id) } },
+                    data: { MovementReferenceId: referenceId },
+                });
+            }
+
+            return createdRows.length === 1
+                ? tx.traderStock.findUniqueOrThrow({ where: { id: createdRows[0].id } })
+                : { batchId: createdRows[0].id, movements: createdRows };
+        });
+    }
+
     async updateAdjustment(id: number, data: Prisma.TraderStockUncheckedUpdateInput, actorId: number) {
         const updatePayload: Prisma.TraderStockUncheckedUpdateInput = {
             ...data,
@@ -167,6 +360,12 @@ export class TraderStockService {
 
             if (!existing) {
                 throw new NotFoundException(`Trader adjustment ${id} not found`);
+            }
+
+            if (existing.type === MovementType.WASTE && existing.MovementReferenceId !== null) {
+                throw new BadRequestException(
+                    'תנועת פחת כללי מפוצלת בין מספר סוחרים לא ניתנת לעריכה — יש למחוק ולהזין מחדש.',
+                );
             }
 
             const nextType = (updatePayload.type ?? existing.type) as MovementType;
@@ -215,11 +414,53 @@ export class TraderStockService {
                 throw new NotFoundException(`Trader adjustment ${id} not found`);
             }
 
+            if (existing.type === MovementType.WASTE && existing.MovementReferenceId !== null) {
+                return this.removeGeneralWasteBatch(tx, existing.MovementReferenceId);
+            }
+
             return tx.traderStock.update({
                 where: { id },
                 data: { isDeleted: true },
             });
         });
+    }
+
+    // Undoes a multi-row "כללי" WASTE split (see createGeneralWaste) — every row sharing the
+    // batch's MovementReferenceId is soft-deleted together, mirroring PitamSplitService.deleteBatchInTx.
+    private async removeGeneralWasteBatch(tx: Prisma.TransactionClient, referenceId: number) {
+        const rows = await tx.traderStock.findMany({
+            where: { MovementReferenceId: referenceId, type: { in: [MovementType.WASTE, MovementType.ASSIGNED] }, isDeleted: false },
+        });
+
+        if (rows.length === 0) {
+            throw new NotFoundException(`Trader adjustment batch ${referenceId} not found`);
+        }
+
+        const { seasonId } = rows[0];
+
+        // Undoing removes the positive "overage returned to modulo" row this batch may have
+        // created — assert that quantity hasn't since been consumed downstream, or the ledger
+        // would be left short.
+        const positiveRows = rows.filter((row) => row.quantity > 0);
+        for (const row of positiveRows) {
+            await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
+                seasonId,
+                traderId: row.traderId,
+                traderCategoryId: row.traderCategoryId,
+                grade: row.grade,
+                pitamStatus: row.pitamStatus,
+                isModulo: row.isModulo,
+                requiredQuantity: row.quantity,
+                contextLabel: 'Undo general waste split',
+            });
+        }
+
+        await tx.traderStock.updateMany({
+            where: { id: { in: rows.map((row) => row.id) } },
+            data: { isDeleted: true },
+        });
+
+        return { batchId: referenceId, deletedCount: rows.length };
     }
 
     // Hard delete a movement
