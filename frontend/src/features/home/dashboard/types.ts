@@ -41,21 +41,28 @@ export type MetricGauge = {
 
 export type DashboardMetrics = {
   grossHarvest: MetricGauge;
-  grossHarvestExcludingBadFields: MetricGauge;
+  grossHarvestExcludingBadPicks: MetricGauge;
   rejects: MetricGauge;
-  rejectsExcludingBadFields: MetricGauge;
+  rejectsExcludingBadPicks: MetricGauge;
   netHarvest: MetricGauge;
   sorted: MetricGauge;
   packaged: MetricGauge;
   shipped: MetricGauge;
   delivered: MetricGauge;
+  remainingInItaly: MetricGauge;
+};
+
+export type PitamGradeCell = {
+  withPitam: number;
+  withoutPitam: number;
+  mixed: number;
 };
 
 export type SortingSummaryData = {
   netHarvest: number;
   categories: string[];
   grades: string[];
-  matrix: Record<string, Record<string, number>>;
+  matrix: Record<string, Record<string, PitamGradeCell>>;
   privateSortTotal: number;
   customerSortTotal: number;
 };
@@ -64,7 +71,7 @@ export type ShipmentStatusSummary = {
   total: number;
   categories: string[];
   grades: string[];
-  matrix: Record<string, Record<string, number>>;
+  matrix: Record<string, Record<string, PitamGradeCell>>;
   customerTotal: number;
 };
 
@@ -79,7 +86,7 @@ export type InventoryGeneralSummary = {
   total: number;
   categories: string[];
   grades: string[];
-  matrix: Record<string, Record<string, number>>;
+  matrix: Record<string, Record<string, PitamGradeCell>>;
   customerTotal: number;
 };
 
@@ -87,7 +94,7 @@ export type InventoryTraderSummary = {
   total: number;
   categories: string[];
   grades: string[];
-  matrix: Record<string, Record<string, number>>;
+  matrix: Record<string, Record<string, PitamGradeCell>>;
   privateTotal: number;
 };
 

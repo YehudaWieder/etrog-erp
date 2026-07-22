@@ -16,6 +16,11 @@ type HarvestSortingSummaryProps = {
     customerSort: string;
     empty: string;
     tableNote: string;
+    columns: {
+      withPitam: string;
+      withoutPitam: string;
+      mixed: string;
+    };
   };
 };
 
@@ -37,6 +42,7 @@ export function HarvestSortingSummary({ lang, data, unit, labels }: HarvestSorti
         categoryColumnLabel={labels.categoryColumn}
         totalColumnLabel={labels.totalColumn}
         emptyLabel={labels.empty}
+        columnLabels={labels.columns}
       />
 
       <p className={styles.tableNote}>{labels.tableNote}</p>

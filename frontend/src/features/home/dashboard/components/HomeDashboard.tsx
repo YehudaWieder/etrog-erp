@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, type ReactNode } from 'react';
-import { FaPrint, FaLeaf, FaArrowDown, FaScaleBalanced, FaArrowsUpDown, FaBox, FaTruck, FaCircleCheck } from 'react-icons/fa6';
+import { FaPrint, FaLeaf, FaArrowDown, FaScaleBalanced, FaArrowsUpDown, FaBox, FaTruck, FaCircleCheck, FaMapPin } from 'react-icons/fa6';
 import styles from '../styles/HomeDashboard.module.css';
 import { ChartPanel } from './ChartPanel';
 import { SummarySection } from './SummarySection';
@@ -162,7 +162,7 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
   const allGaugeCards = [
     { title: t.gauges.grossHarvest, ...metrics.grossHarvest, variant: 'default' as const, icon: <FaLeaf />, maxValue: calcMax(metrics.grossHarvest.value, metrics.grossHarvest.percent) },
     { title: t.gauges.rejects, ...metrics.rejects, variant: 'default' as const, icon: <FaArrowDown />, maxValue: metrics.grossHarvest.value },
-    { title: t.gauges.rejectsExcludingBadFields, ...metrics.rejectsExcludingBadFields, variant: 'default' as const, icon: <FaArrowDown />, maxValue: metrics.grossHarvestExcludingBadFields.value },
+    { title: t.gauges.rejectsExcludingBadPicks, ...metrics.rejectsExcludingBadPicks, variant: 'default' as const, icon: <FaArrowDown />, maxValue: metrics.grossHarvestExcludingBadPicks.value },
     { title: t.gauges.netHarvest, ...metrics.netHarvest, variant: 'default' as const, icon: <FaScaleBalanced />, maxValue: metrics.grossHarvest.value },
     { title: t.gauges.sorted, ...metrics.sorted, variant: 'default' as const, icon: <FaArrowsUpDown />, maxValue: metrics.netHarvest.value },
     { title: t.gauges.notSorted, value: metrics.netHarvest.value - metrics.sorted.value, percent: 100 - metrics.sorted.percent, variant: 'default' as const, icon: withX(<FaArrowsUpDown />), maxValue: metrics.netHarvest.value },
@@ -171,6 +171,7 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
     { title: t.gauges.shipped, ...metrics.shipped, variant: 'default' as const, icon: <FaTruck />, maxValue: metrics.netHarvest.value },
     { title: t.gauges.notShipped, value: metrics.netHarvest.value - metrics.shipped.value, percent: 100 - metrics.shipped.percent, variant: 'default' as const, icon: withX(<FaTruck />), maxValue: metrics.netHarvest.value },
     { title: t.gauges.delivered, ...metrics.delivered, variant: 'default' as const, icon: <FaCircleCheck />, maxValue: metrics.netHarvest.value },
+    { title: t.gauges.remainingInItaly, ...metrics.remainingInItaly, variant: 'default' as const, icon: <FaMapPin />, maxValue: metrics.sorted.value },
   ];
 
   const mainGaugeCards = allGaugeCards.slice(0, 6);

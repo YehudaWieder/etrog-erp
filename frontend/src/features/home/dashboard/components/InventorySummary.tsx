@@ -18,6 +18,11 @@ type InventorySummaryProps = {
     empty: string;
     customerNote: string;
     privateNote: string;
+    columns: {
+      withPitam: string;
+      withoutPitam: string;
+      mixed: string;
+    };
   };
 };
 
@@ -65,6 +70,7 @@ export function InventorySummary({ lang, data, unit, labels }: InventorySummaryP
             categoryColumnLabel={labels.categoryColumn}
             totalColumnLabel={labels.totalColumn}
             emptyLabel={labels.empty}
+            columnLabels={labels.columns}
           />
 
           {isGeneral ? (

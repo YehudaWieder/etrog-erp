@@ -44,6 +44,11 @@ export const HOME_I18N_EN = {
         customerSort: 'Customer Sort (not included in the table)',
         empty: 'No sorting data to display',
         tableNote: 'The table shows general sorting only, and does not include private or customer sorting',
+        columns: {
+          withPitam: 'With Pitam',
+          withoutPitam: 'Without Pitam',
+          mixed: 'Mixed',
+        },
       },
       shipments: {
         statusTabs: {
@@ -62,6 +67,11 @@ export const HOME_I18N_EN = {
         tableNote: 'The table shows general/trader shipments only, by category and grade',
         customerNote: 'Customer shipments (not included in the table)',
         selfPickupNote: "Self pickup (doesn't go through shipments, not included in the table)",
+        columns: {
+          withPitam: 'With Pitam',
+          withoutPitam: 'Without Pitam',
+          mixed: 'Mixed',
+        },
       },
       inventory: {
         generalTab: 'General',
@@ -71,12 +81,17 @@ export const HOME_I18N_EN = {
         empty: 'No inventory data to display',
         customerNote: 'Customer inventory (not included in the table)',
         privateNote: 'Of which private sorting',
+        columns: {
+          withPitam: 'With Pitam',
+          withoutPitam: 'Without Pitam',
+          mixed: 'Mixed',
+        },
       },
     },
     gauges: {
       grossHarvest: 'Gross Harvest',
       rejects: 'Rejects',
-      rejectsExcludingBadFields: 'Rejects Excluding Bad Fields',
+      rejectsExcludingBadPicks: 'Rejects Excluding Bad Picks',
       netHarvest: 'Net Harvest',
       sorted: 'Sorted',
       packaged: 'Packaged',
@@ -85,6 +100,7 @@ export const HOME_I18N_EN = {
       notPackaged: 'Not Packaged',
       notShipped: 'Not Shipped',
       delivered: 'Delivered',
+      remainingInItaly: 'Remaining in Italy',
     },
   },
 } as const;

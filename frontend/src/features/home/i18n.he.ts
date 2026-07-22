@@ -44,6 +44,11 @@ export const HOME_I18N_HE = {
         customerSort: 'מיון לקוחות (לא נכלל בטבלה)',
         empty: 'אין נתוני מיון להצגה',
         tableNote: 'הטבלה מציגה מיון כללי בלבד, ואינה כוללת מיון פרטי או מיון לקוחות',
+        columns: {
+          withPitam: 'פיטם',
+          withoutPitam: 'בל"פ',
+          mixed: 'מעורב',
+        },
       },
       shipments: {
         statusTabs: {
@@ -62,6 +67,11 @@ export const HOME_I18N_HE = {
         tableNote: 'הטבלה מציגה משלוחים כלליים/סוחרים בלבד, לפי קטגוריה ודרגה',
         customerNote: 'משלוחי לקוחות (לא נכללים בטבלה)',
         selfPickupNote: 'איסוף עצמי (לא עובר דרך משלוחים ואינו נכלל בטבלה)',
+        columns: {
+          withPitam: 'פיטם',
+          withoutPitam: 'בל"פ',
+          mixed: 'מעורב',
+        },
       },
       inventory: {
         generalTab: 'כללי',
@@ -71,12 +81,17 @@ export const HOME_I18N_HE = {
         empty: 'אין נתוני מלאי להצגה',
         customerNote: 'מלאי לקוחות (לא נכלל בטבלה)',
         privateNote: 'מתוך זה מיון פרטי',
+        columns: {
+          withPitam: 'פיטם',
+          withoutPitam: 'בל"פ',
+          mixed: 'מעורב',
+        },
       },
     },
     gauges: {
       grossHarvest: 'קטיף ברוטו',
       rejects: 'יורדים',
-      rejectsExcludingBadFields: 'יורדים ללא שדות גרועים',
+      rejectsExcludingBadPicks: 'יורדים ללא קטיפים גרועים',
       netHarvest: 'קטיף נטו',
       sorted: 'ממוין',
       packaged: 'נארז',
@@ -85,6 +100,7 @@ export const HOME_I18N_HE = {
       notPackaged: 'לא נארז',
       notShipped: 'לא נשלח',
       delivered: 'נמסר',
+      remainingInItaly: 'נשארים באיטליה',
     },
   },
 } as const;

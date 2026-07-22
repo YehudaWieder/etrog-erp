@@ -25,14 +25,15 @@ function getEmptyDashboard(): DashboardData {
     },
     metrics: {
       grossHarvest: { value: 0, percent: 0 },
-      grossHarvestExcludingBadFields: { value: 0, percent: 0 },
+      grossHarvestExcludingBadPicks: { value: 0, percent: 0 },
       rejects: { value: 0, percent: 0 },
-      rejectsExcludingBadFields: { value: 0, percent: 0 },
+      rejectsExcludingBadPicks: { value: 0, percent: 0 },
       netHarvest: { value: 0, percent: 0 },
       sorted: { value: 0, percent: 0 },
       packaged: { value: 0, percent: 0 },
       shipped: { value: 0, percent: 0 },
       delivered: { value: 0, percent: 0 },
+      remainingInItaly: { value: 0, percent: 0 },
     },
   };
 }

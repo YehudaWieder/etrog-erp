@@ -21,6 +21,11 @@ type ShipmentsSummaryProps = {
     tableNote: string;
     customerNote: string;
     selfPickupNote: string;
+    columns: {
+      withPitam: string;
+      withoutPitam: string;
+      mixed: string;
+    };
   };
 };
 
@@ -57,6 +62,7 @@ export function ShipmentsSummary({ lang, data, unit, labels }: ShipmentsSummaryP
         categoryColumnLabel={labels.categoryColumn}
         totalColumnLabel={labels.totalColumn}
         emptyLabel={labels.empty}
+        columnLabels={labels.columns}
       />
 
       <p className={styles.tableNote}>{labels.tableNote}</p>

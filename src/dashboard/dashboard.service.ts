@@ -106,7 +106,7 @@ export class DashboardService {
         totalRejected: true,
         totalAfterRejected: true,
         classifiedTotal: true,
-        field: { select: { includeInRejectionSummary: true } },
+        isBadPick: true,
       },
       orderBy: { dateGregorian: 'asc' },
     });
@@ -118,8 +118,9 @@ export class DashboardService {
     let grandNet = 0;
     let grandClassified = 0;
 
-    // Rejection-rate summary can exclude specific fields (Field.includeInRejectionSummary)
-    // so an outlier field doesn't skew the general rejection percentage.
+    // Rejection-rate summary can exclude specific harvest records (FieldHarvest.isBadPick):
+    // their harvested quantity still counts toward the denominator, only their rejected
+    // quantity is dropped from the numerator, so an outlier pick doesn't skew the percentage.
     let grandHarvestedForRejectionRate = 0;
     let grandRejectedForRejectionRate = 0;
 
@@ -137,8 +138,8 @@ export class DashboardService {
       grandNet += r.totalAfterRejected;
       grandClassified += r.classifiedTotal;
 
-      if (r.field.includeInRejectionSummary) {
-        grandHarvestedForRejectionRate += r.totalHarvested;
+      grandHarvestedForRejectionRate += r.totalHarvested;
+      if (!r.isBadPick) {
         grandRejectedForRejectionRate += r.totalRejected;
       }
     }
@@ -168,6 +169,7 @@ export class DashboardService {
           traderId: true,
           quantity: true,
           grade: true,
+          pitamStatus: true,
           traderCategory: { select: { name: true } },
         },
       }),
@@ -183,6 +185,7 @@ export class DashboardService {
           traderId: true,
           quantity: true,
           grade: true,
+          pitamStatus: true,
           traderCategory: { select: { name: true } },
         },
       }),
@@ -198,26 +201,57 @@ export class DashboardService {
         select: {
           quantity: true,
           grade: true,
+          pitamStatus: true,
           traderCategory: { select: { name: true } },
         },
       }),
     ]);
 
+    const GRADE_ORDER = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ללא'];
+
+    type PitamGradeCell = { withPitam: number; withoutPitam: number; mixed: number };
+    type PitamStatusLike = 'WITH_PITAM' | 'WITHOUT_PITAM' | 'MIXED';
+
+    const addToPitamMatrix = (
+      matrix: Map<string, Map<string, PitamGradeCell>>,
+      cat: string,
+      grade: string,
+      pitamStatus: PitamStatusLike,
+      quantity: number,
+    ) => {
+      if (!matrix.has(cat)) matrix.set(cat, new Map());
+      const row = matrix.get(cat)!;
+      if (!row.has(grade)) row.set(grade, { withPitam: 0, withoutPitam: 0, mixed: 0 });
+      const cell = row.get(grade)!;
+      if (pitamStatus === 'WITH_PITAM') cell.withPitam += quantity;
+      else if (pitamStatus === 'WITHOUT_PITAM') cell.withoutPitam += quantity;
+      else cell.mixed += quantity;
+    };
+
+    const flattenPitamMatrix = (matrix: Map<string, Map<string, PitamGradeCell>>): Record<string, Record<string, PitamGradeCell>> => {
+      const result: Record<string, Record<string, PitamGradeCell>> = {};
+      for (const [cat, row] of matrix.entries()) {
+        result[cat] = Object.fromEntries(row);
+      }
+      return result;
+    };
+
+    const gradesUsedIn = (matrix: Map<string, Map<string, PitamGradeCell>>): string[] => {
+      const used = new Set<string>();
+      for (const row of matrix.values()) {
+        for (const g of row.keys()) used.add(g);
+      }
+      return GRADE_ORDER.filter((g) => used.has(g));
+    };
+
     const traderMap = new Map<number, { total: number; byCategory: Map<string, number>; privateSort: number }>(
       allTraders.map((t) => [t.id, { total: 0, byCategory: new Map(), privateSort: 0 }]),
     );
 
-    type InventoryBucket = { total: number; matrix: Map<string, Map<string, number>>; privateTotal: number };
+    type InventoryBucket = { total: number; matrix: Map<string, Map<string, PitamGradeCell>>; privateTotal: number };
     const traderInventoryMap = new Map<number, InventoryBucket>(
       allTraders.map((t) => [t.id, { total: 0, matrix: new Map(), privateTotal: 0 }]),
     );
-
-    const addToInventoryMatrix = (bucket: InventoryBucket, cat: string, grade: string, quantity: number) => {
-      if (!bucket.matrix.has(cat)) bucket.matrix.set(cat, new Map());
-      const row = bucket.matrix.get(cat)!;
-      row.set(grade, (row.get(grade) ?? 0) + quantity);
-      bucket.total += quantity;
-    };
 
     for (const stock of traderStockRecords) {
       if (stock.traderId == null) continue;
@@ -228,7 +262,10 @@ export class DashboardService {
       entry.byCategory.set(cat, (entry.byCategory.get(cat) ?? 0) + stock.quantity);
 
       const invBucket = traderInventoryMap.get(stock.traderId);
-      if (invBucket) addToInventoryMatrix(invBucket, cat, stock.grade, stock.quantity);
+      if (invBucket) {
+        addToPitamMatrix(invBucket.matrix, cat, stock.grade, stock.pitamStatus, stock.quantity);
+        invBucket.total += stock.quantity;
+      }
     }
 
     for (const ps of privateSelectionRecords) {
@@ -238,54 +275,34 @@ export class DashboardService {
 
       const invBucket = traderInventoryMap.get(ps.traderId);
       if (invBucket) {
-        addToInventoryMatrix(invBucket, ps.traderCategory.name, ps.grade, ps.quantity);
+        addToPitamMatrix(invBucket.matrix, ps.traderCategory.name, ps.grade, ps.pitamStatus, ps.quantity);
+        invBucket.total += ps.quantity;
         invBucket.privateTotal += ps.quantity;
       }
     }
 
-    const GRADE_ORDER = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ללא'];
-
-    const categoryGradeMatrix = new Map<string, Map<string, number>>();
+    // Live inventory (general trader-owned + modulo pool stock), not sorting - feeds
+    // inventorySummary.general below. Excludes REMAINS_IN_ITALY (traderId: null, isModulo: false
+    // rows never match traderStockRecords' traderId:{not:null} filter nor moduloRecords' isModulo:true
+    // filter) and reflects post-transfer balances, unlike sortingSummary (Classification-based, below).
+    const generalInventoryMatrix = new Map<string, Map<string, PitamGradeCell>>();
     let generalInventoryTotal = 0;
     for (const stock of [...traderStockRecords, ...moduloRecords]) {
-      const cat = stock.traderCategory.name;
-      const grade = stock.grade;
-      if (!categoryGradeMatrix.has(cat)) categoryGradeMatrix.set(cat, new Map());
-      const row = categoryGradeMatrix.get(cat)!;
-      row.set(grade, (row.get(grade) ?? 0) + stock.quantity);
+      addToPitamMatrix(generalInventoryMatrix, stock.traderCategory.name, stock.grade, stock.pitamStatus, stock.quantity);
       generalInventoryTotal += stock.quantity;
     }
 
-    const gradesUsed = new Set<string>();
-    for (const row of categoryGradeMatrix.values()) {
-      for (const g of row.keys()) gradesUsed.add(g);
-    }
-    const generalSortingGrades = GRADE_ORDER.filter((g) => gradesUsed.has(g));
-    const generalSortingCategories = Array.from(categoryGradeMatrix.keys());
-    const generalSortingMatrix: Record<string, Record<string, number>> = {};
-    for (const [cat, row] of categoryGradeMatrix.entries()) {
-      generalSortingMatrix[cat] = Object.fromEntries(row);
-    }
+    const generalInventoryGrades = gradesUsedIn(generalInventoryMatrix);
+    const generalInventoryCategories = Array.from(generalInventoryMatrix.keys());
+    const generalInventoryMatrixFlat = flattenPitamMatrix(generalInventoryMatrix);
 
-    const buildInventorySummary = (bucket: InventoryBucket) => {
-      const bucketGradesUsed = new Set<string>();
-      for (const row of bucket.matrix.values()) {
-        for (const g of row.keys()) bucketGradesUsed.add(g);
-      }
-      const matrix: Record<string, Record<string, number>> = {};
-      for (const [cat, row] of bucket.matrix.entries()) {
-        matrix[cat] = Object.fromEntries(row);
-      }
-      return {
-        total: bucket.total,
-        categories: Array.from(bucket.matrix.keys()),
-        grades: GRADE_ORDER.filter((g) => bucketGradesUsed.has(g)),
-        matrix,
-        privateTotal: bucket.privateTotal,
-      };
-    };
-
-    const privateSortTotal = privateSelectionRecords.reduce((sum, r) => sum + r.quantity, 0);
+    const buildInventorySummary = (bucket: InventoryBucket) => ({
+      total: bucket.total,
+      categories: Array.from(bucket.matrix.keys()),
+      grades: gradesUsedIn(bucket.matrix),
+      matrix: flattenPitamMatrix(bucket.matrix),
+      privateTotal: bucket.privateTotal,
+    });
 
     const MODULO_LABEL = 'לא משויך';
 
@@ -359,7 +376,9 @@ export class DashboardService {
     const byCustomer: Record<string, DailyDataPoint[]> = {};
     const customerNames: string[] = [];
 
-    const customerSortTotal = customerAllocationRecords.reduce((sum, r) => sum + r.quantity, 0);
+    // Live CustomerAllocation total (post-transfer), feeds inventorySummary.general.customerTotal
+    // below - not to be confused with sortingSummary.customerSortTotal (Classification-based).
+    const customerAllocationTotal = customerAllocationRecords.reduce((sum, r) => sum + r.quantity, 0);
 
     for (const customer of allCustomers) {
       const entry = customerMap.get(customer.id)!;
@@ -397,6 +416,7 @@ export class DashboardService {
         select: {
           quantity: true,
           grade: true,
+          pitamStatus: true,
           ownershipType: true,
           traderCategory: { select: { name: true } },
           shipment: { select: { status: true } },
@@ -412,7 +432,51 @@ export class DashboardService {
       }),
     ]);
 
-    type ShipmentBucket = { matrix: Map<string, Map<string, number>>; customerTotal: number };
+    const remainsInItalyAgg = await this.prisma.traderStock.aggregate({
+      where: { seasonId, isDeleted: false, type: MovementType.REMAINS_IN_ITALY },
+      _sum: { quantity: true },
+    });
+    const remainingInItaly = remainsInItalyAgg._sum.quantity ?? 0;
+
+    // "קטיף ומיון" (sortingSummary) must reflect what was actually sorted, unaffected by later
+    // inventory movements (transfers to customers, remains-in-Italy, etc.) - so it's built directly
+    // from Classification, not from TraderStock/CustomerAllocation balances. Those balances (which do
+    // reflect post-transfer state) are still the correct source for inventorySummary/traderDistribution
+    // below - this query and its derived matrix are used only for sortingSummary.
+    const classificationRecords = await this.prisma.classification.findMany({
+      where: { seasonId, isDeleted: false },
+      select: {
+        quantity: true,
+        grade: true,
+        pitamStatus: true,
+        assignmentType: true,
+        traderCategory: { select: { name: true } },
+      },
+    });
+
+    const classificationGeneralMatrix = new Map<string, Map<string, PitamGradeCell>>();
+    let classificationPrivateTotal = 0;
+    let classificationCustomerTotal = 0;
+
+    for (const record of classificationRecords) {
+      if (record.quantity <= 0) continue;
+      const grade = record.grade ?? 'ללא';
+
+      if (record.assignmentType === 'GENERAL') {
+        const catName = record.traderCategory?.name?.trim() || '—';
+        addToPitamMatrix(classificationGeneralMatrix, catName, grade, record.pitamStatus, record.quantity);
+      } else if (record.assignmentType === 'TRADER') {
+        classificationPrivateTotal += record.quantity;
+      } else if (record.assignmentType === 'CUSTOMER') {
+        classificationCustomerTotal += record.quantity;
+      }
+    }
+
+    const classificationGrades = gradesUsedIn(classificationGeneralMatrix);
+    const classificationCategories = Array.from(classificationGeneralMatrix.keys());
+    const classificationMatrixFlat = flattenPitamMatrix(classificationGeneralMatrix);
+
+    type ShipmentBucket = { matrix: Map<string, Map<string, PitamGradeCell>>; customerTotal: number };
     const makeShipmentBucket = (): ShipmentBucket => ({ matrix: new Map(), customerTotal: 0 });
     const shipmentBuckets = {
       packaged: makeShipmentBucket(),
@@ -432,31 +496,18 @@ export class DashboardService {
           bucket.customerTotal += item.quantity;
         } else if (item.ownershipType === ItemOwnership.GENERAL || item.ownershipType === ItemOwnership.TRADER) {
           if (!item.traderCategory || !item.grade) continue;
-          const cat = item.traderCategory.name;
-          if (!bucket.matrix.has(cat)) bucket.matrix.set(cat, new Map());
-          const row = bucket.matrix.get(cat)!;
-          row.set(item.grade, (row.get(item.grade) ?? 0) + item.quantity);
+          addToPitamMatrix(bucket.matrix, item.traderCategory.name, item.grade, item.pitamStatus, item.quantity);
         }
       }
     }
 
-    const buildShipmentStatusSummary = (total: number, bucket: ShipmentBucket) => {
-      const gradesUsed = new Set<string>();
-      for (const row of bucket.matrix.values()) {
-        for (const g of row.keys()) gradesUsed.add(g);
-      }
-      const matrix: Record<string, Record<string, number>> = {};
-      for (const [cat, row] of bucket.matrix.entries()) {
-        matrix[cat] = Object.fromEntries(row);
-      }
-      return {
-        total,
-        categories: Array.from(bucket.matrix.keys()),
-        grades: GRADE_ORDER.filter((g) => gradesUsed.has(g)),
-        matrix,
-        customerTotal: bucket.customerTotal,
-      };
-    };
+    const buildShipmentStatusSummary = (total: number, bucket: ShipmentBucket) => ({
+      total,
+      categories: Array.from(bucket.matrix.keys()),
+      grades: gradesUsedIn(bucket.matrix),
+      matrix: flattenPitamMatrix(bucket.matrix),
+      customerTotal: bucket.customerTotal,
+    });
 
     const selfPickupTotal =
       Math.abs(traderSelfPickupAgg._sum.quantity ?? 0) + Math.abs(customerSelfPickupAgg._sum.quantity ?? 0);
@@ -470,9 +521,9 @@ export class DashboardService {
 
     const metrics: Record<string, MetricGauge> = {
       grossHarvest: { value: grandHarvested, percent: 100 },
-      grossHarvestExcludingBadFields: { value: grandHarvestedForRejectionRate, percent: 100 },
+      grossHarvestExcludingBadPicks: { value: grandHarvestedForRejectionRate, percent: 100 },
       rejects: { value: grandRejected, percent: pct(grandRejected, grandHarvested) },
-      rejectsExcludingBadFields: {
+      rejectsExcludingBadPicks: {
         value: grandRejectedForRejectionRate,
         percent: pct(grandRejectedForRejectionRate, grandHarvestedForRejectionRate),
       },
@@ -481,6 +532,7 @@ export class DashboardService {
       packaged: { value: packaged, percent: pct(packaged, grandNet) },
       shipped: { value: shipped, percent: pct(shipped, grandNet) },
       delivered: { value: delivered, percent: pct(delivered, grandNet) },
+      remainingInItaly: { value: remainingInItaly, percent: pct(remainingInItaly, grandClassified) },
     };
 
     return {
@@ -504,11 +556,11 @@ export class DashboardService {
       },
       sortingSummary: {
         netHarvest: grandNet,
-        categories: generalSortingCategories,
-        grades: generalSortingGrades,
-        matrix: generalSortingMatrix,
-        privateSortTotal,
-        customerSortTotal,
+        categories: classificationCategories,
+        grades: classificationGrades,
+        matrix: classificationMatrixFlat,
+        privateSortTotal: classificationPrivateTotal,
+        customerSortTotal: classificationCustomerTotal,
       },
       shipmentsSummary: {
         packaged: buildShipmentStatusSummary(packaged, shipmentBuckets.packaged),
@@ -519,10 +571,10 @@ export class DashboardService {
       inventorySummary: {
         general: {
           total: generalInventoryTotal,
-          categories: generalSortingCategories,
-          grades: generalSortingGrades,
-          matrix: generalSortingMatrix,
-          customerTotal: customerSortTotal,
+          categories: generalInventoryCategories,
+          grades: generalInventoryGrades,
+          matrix: generalInventoryMatrixFlat,
+          customerTotal: customerAllocationTotal,
         },
         byTrader: inventoryByTrader,
         traderNames: allTraders.map((t) => t.name),
