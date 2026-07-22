@@ -38,8 +38,9 @@ export function useRegisterPage() {
     navigate('/login');
   };
 
-  const handleTopNavClick = (item: { id: string }) => {
+  const handleTopNavClick = (item: { id: string; href?: string }) => {
     setActiveTopId(item.id);
+    navigate(item.href ?? `/${item.id}`);
   };
 
   const handleChange = (name: string, value: string) => {

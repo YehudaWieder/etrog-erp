@@ -98,6 +98,7 @@ export function useLoginPage() {
   const topBarProps: ComponentProps<typeof AppTopBar> = {
     links: t.topNav,
     activeId: undefined,
+    onNavigate: (item) => navigate(item.href ?? `/${item.id}`),
     onBrandClick: () => navigate('/home'),
     lang,
     isAuthenticated: isAuthenticated(),
