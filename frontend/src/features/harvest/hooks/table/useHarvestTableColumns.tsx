@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { FaCheck, FaXmark } from 'react-icons/fa6';
 import {
   GLOBAL_DATA_TABLE_WIDTHS,
   type GlobalDataTableColumn,
@@ -108,6 +109,18 @@ export function useHarvestTableColumns({
         render: (row) => numberFormatter.format(row.totalRejected),
       },
       {
+        id: 'rejectionRate',
+        header: t.dailyDetails.columns.rejectionRate,
+        headerLabel: t.dailyDetails.columns.rejectionRate,
+        sortKey: 'rejectionRate',
+        sortLabel: `${t.dailyDetails.columns.rejectionRate} - ${t.tableLabels.sort}`,
+        defaultSortDirection: 'desc',
+        sortAccessor: (row) => Number(row.rejectionRate),
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericPercent,
+        align: 'center',
+        render: (row) => formatRate(row.rejectionRate),
+      },
+      {
         id: 'totalAfterRejected',
         header: t.dailyDetails.columns.netHarvest,
         headerLabel: t.dailyDetails.columns.netHarvest,
@@ -137,8 +150,26 @@ export function useHarvestTableColumns({
           </span>
         ),
       },
+      {
+        id: 'isBadPick',
+        header: t.dailyDetails.columns.isBadPick,
+        headerLabel: t.dailyDetails.columns.isBadPick,
+        sortKey: 'isBadPick',
+        sortLabel: `${t.dailyDetails.columns.isBadPick} - ${t.tableLabels.sort}`,
+        defaultSortDirection: 'desc',
+        sortAccessor: (row) => (row.isBadPick ? 1 : 0),
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
+        align: 'center',
+        render: (row) => (
+          row.isBadPick ? (
+            <FaCheck aria-label={t.dailyDetails.badPickYes} className={interactiveStyles.badPickYes} />
+          ) : (
+            <FaXmark aria-label={t.dailyDetails.badPickNo} className={interactiveStyles.badPickNo} />
+          )
+        ),
+      },
     ];
-  }, [formatGregorianDate, isPartialClassificationFlag, lang, numberFormatter, setDetailsRecord, t]);
+  }, [formatGregorianDate, formatRate, isPartialClassificationFlag, lang, numberFormatter, setDetailsRecord, t]);
 
   const fieldReportColumns = useMemo<GlobalDataTableColumn<HarvestFieldReportRow>[]>(() => {
     return [
@@ -178,6 +209,26 @@ export function useHarvestTableColumns({
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
         align: 'center',
         render: (row) => numberFormatter.format(row.recordCount),
+      },
+      {
+        id: 'badPickCount',
+        header: t.fieldReport.headers.badPickCount,
+        headerLabel: t.fieldReport.headers.badPickCount,
+        sortKey: 'badPickCount',
+        sortLabel: `${t.fieldReport.headers.badPickCount} - ${t.tableLabels.sort}`,
+        defaultSortDirection: 'desc',
+        sortAccessor: (row) => row.badPickCount,
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
+        align: 'center',
+        render: (row) => (
+          row.badPickCount > 0 ? (
+            <span className={`${interactiveStyles.classifiedTotal} ${interactiveStyles.classifiedTotalPartial}`}>
+              {numberFormatter.format(row.badPickCount)}
+            </span>
+          ) : (
+            numberFormatter.format(row.badPickCount)
+          )
+        ),
       },
       ...(fieldReportMethod === 'franco'
         ? [

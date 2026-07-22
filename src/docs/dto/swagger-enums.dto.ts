@@ -169,9 +169,6 @@ export class TraderCategoryWithSharesResponseSwaggerDto {
 export class TraderCreateSwaggerDto {
   @ApiProperty({ description: 'Unique trader name.', example: 'Trader Cohen' })
   name!: string;
-
-  @ApiProperty({ description: 'Payment percentage for the trader.', example: 12.5 })
-  paymentPercent!: number;
 }
 
 export class TraderUpdateSwaggerDto {
@@ -180,9 +177,6 @@ export class TraderUpdateSwaggerDto {
 
   @ApiPropertyOptional({ description: 'Updated unique trader name.', example: 'Trader Levi' })
   name?: string;
-
-  @ApiProperty({ description: 'Updated payment percentage for the trader.', example: 15 })
-  paymentPercent!: number;
 }
 
 export class MessageMarkAsReadSwaggerDto {
@@ -518,8 +512,13 @@ export class CreateBoxSwaggerDto {
   @ApiProperty({ description: 'Box sequence number within the shipment.', example: 3 })
   boxNumber!: number;
 
-  @ApiProperty({ enum: BoxType, enumName: 'BoxType', description: 'Physical box type.', example: 'MEDIUM' })
-  boxType!: BoxType;
+  @ApiPropertyOptional({
+    enum: BoxType,
+    enumName: 'BoxType',
+    description: 'Physical box type. Required unless ownershipType=EXTERNAL_TRADER, which defaults to SMALL.',
+    example: 'MEDIUM',
+  })
+  boxType?: BoxType;
 
   @ApiProperty({ description: 'User ID who creates/updates the record.', example: 1 })
   updatedById!: number;
@@ -543,6 +542,9 @@ export class CreateBoxSwaggerDto {
 
   @ApiPropertyOptional({ description: 'Required when ownershipType=CUSTOMER.', example: null })
   customerId?: number;
+
+  @ApiPropertyOptional({ description: 'Required when ownershipType=EXTERNAL_TRADER.', example: 'Yosef Cohen' })
+  externalOwnerName?: string;
 }
 
 export class UpdateBoxSwaggerDto {
@@ -571,6 +573,9 @@ export class UpdateBoxSwaggerDto {
 
   @ApiPropertyOptional({ description: 'Required when ownershipType=CUSTOMER. Pass null to clear.', example: 7 })
   customerId?: number | null;
+
+  @ApiPropertyOptional({ description: 'Required when ownershipType=EXTERNAL_TRADER. Pass null to clear.', example: 'Yosef Cohen' })
+  externalOwnerName?: string | null;
 }
 
 export class BoxResponseSwaggerDto {
@@ -606,6 +611,9 @@ export class BoxResponseSwaggerDto {
 
   @ApiPropertyOptional({ description: 'Customer ID (set when ownershipType=CUSTOMER).' })
   customerId?: number | null;
+
+  @ApiPropertyOptional({ description: 'External owner name (set when ownershipType=EXTERNAL_TRADER).' })
+  externalOwnerName?: string | null;
 
   @ApiProperty({ description: 'User ID of last updater.', example: 1 })
   updatedById!: number;
@@ -950,6 +958,9 @@ export class HarvestInlineUpdateDto {
 
   @ApiPropertyOptional({ description: 'Update harvest notes', example: 'Received another 10 after recount' })
   notes?: string;
+
+  @ApiPropertyOptional({ description: 'Update whether this harvest is flagged as a bad pick', example: false })
+  isBadPick?: boolean;
 
   @ApiPropertyOptional({ description: 'User ID that performs this harvest update', example: 1 })
   updatedById?: number;

@@ -22,6 +22,9 @@ export function useHarvestSortingFormState() {
   const [harvestSortingFormAdditionalOwnerRejected, setHarvestSortingFormAdditionalOwnerRejected] = useState('');
   const [harvestSortingFormTotalHarvested, setHarvestSortingFormTotalHarvested] = useState('');
   const [harvestSortingFormOwnerHarvested, setHarvestSortingFormOwnerHarvested] = useState('');
+  const [harvestSortingFormIsBadPick, setHarvestSortingFormIsBadPick] = useState(false);
+  const [harvestSortingFormRemainsInItalyGradeH, setHarvestSortingFormRemainsInItalyGradeH] = useState(true);
+  const [harvestSortingFormRemainsInItalyGradeV, setHarvestSortingFormRemainsInItalyGradeV] = useState(true);
 
   const resetHarvestSortingForm = (initialHarvestId: number | null = null) => {
     const nextHarvestId = initialHarvestId !== null ? String(initialHarvestId) : '';
@@ -44,6 +47,9 @@ export function useHarvestSortingFormState() {
     setHarvestSortingFormAdditionalOwnerRejected('');
     setHarvestSortingFormTotalHarvested('');
     setHarvestSortingFormOwnerHarvested('');
+    setHarvestSortingFormIsBadPick(false);
+    setHarvestSortingFormRemainsInItalyGradeH(true);
+    setHarvestSortingFormRemainsInItalyGradeV(true);
   };
 
   const openAddRejectedQuantity = () => {
@@ -168,6 +174,12 @@ export function useHarvestSortingFormState() {
     setHarvestSortingFormTotalHarvested,
     harvestSortingFormOwnerHarvested,
     setHarvestSortingFormOwnerHarvested,
+    harvestSortingFormIsBadPick,
+    setHarvestSortingFormIsBadPick,
+    harvestSortingFormRemainsInItalyGradeH,
+    setHarvestSortingFormRemainsInItalyGradeH,
+    harvestSortingFormRemainsInItalyGradeV,
+    setHarvestSortingFormRemainsInItalyGradeV,
     openHarvestSortingGlobalForm,
     closeHarvestSortingGlobalForm,
     prefillSortingFormForRestore,

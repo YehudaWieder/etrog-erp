@@ -8,6 +8,7 @@ type FieldHarvestTotalsRow = {
   fieldId: number;
   fieldName: string;
   recordCount: number;
+  badPickCount: number;
   totalHarvested: number;
   totalRejected: number;
   totalAfterRejected: number;
@@ -23,6 +24,10 @@ type FieldHarvestTotalsRow = {
   differenceRejectionRate: number;
   hasOwnerOverrides: boolean;
   isPartialClassification: boolean;
+  totalHarvestedExcludingBadPicks: number;
+  totalRejectedExcludingBadPicks: number;
+  ownerHarvestedExcludingBadPicks: number;
+  ownerRejectedExcludingBadPicks: number;
 };
 
 type FieldHarvestReportDetails = FieldHarvestTotalsRow & {
@@ -77,6 +82,7 @@ export class HarvestQueryService {
           fieldId,
           fieldName,
           recordCount: 0,
+          badPickCount: 0,
           totalHarvested: 0,
           totalRejected: 0,
           totalAfterRejected: 0,
@@ -92,6 +98,10 @@ export class HarvestQueryService {
           differenceRejectionRate: 0,
           hasOwnerOverrides: false,
           isPartialClassification: false,
+          totalHarvestedExcludingBadPicks: 0,
+          totalRejectedExcludingBadPicks: 0,
+          ownerHarvestedExcludingBadPicks: 0,
+          ownerRejectedExcludingBadPicks: 0,
         });
       }
 
@@ -109,6 +119,9 @@ export class HarvestQueryService {
       const effectiveOwnerRejected = hasExplicitOwnerDataValue ? row.ownerRejected : row.totalRejected;
       const effectiveOwnerAfterRejected = hasExplicitOwnerDataValue ? row.ownerAfterRejected : row.totalAfterRejected;
       target.recordCount += 1;
+      if (row.isBadPick) {
+        target.badPickCount += 1;
+      }
       target.totalHarvested += row.totalHarvested;
       target.totalRejected += row.totalRejected;
       target.totalAfterRejected += row.totalAfterRejected;
@@ -118,6 +131,15 @@ export class HarvestQueryService {
       target.ownerAfterRejected += effectiveOwnerAfterRejected;
       target.hasOwnerOverrides = target.hasOwnerOverrides || hasExplicitOwnerDataValue;
       target.isPartialClassification = target.isPartialClassification || Boolean(row.isPartialClassification);
+
+      // Bad picks still count toward the harvested total (denominator) — only their rejected
+      // quantity is dropped from the "excluding bad picks" rejection-rate numerator.
+      target.totalHarvestedExcludingBadPicks += row.totalHarvested;
+      target.ownerHarvestedExcludingBadPicks += effectiveOwnerHarvested;
+      if (!row.isBadPick) {
+        target.totalRejectedExcludingBadPicks += row.totalRejected;
+        target.ownerRejectedExcludingBadPicks += effectiveOwnerRejected;
+      }
     }
 
     return Array.from(grouped.values())

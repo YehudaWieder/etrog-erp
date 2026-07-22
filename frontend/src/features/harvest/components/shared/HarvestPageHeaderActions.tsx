@@ -8,8 +8,10 @@ type HarvestPageHeaderActionsProps = {
   onAdd: () => void;
   onEdit?: () => void;
   onDelete: () => void;
+  addDisabled?: boolean;
   editDisabled: boolean;
   deleteDisabled: boolean;
+  addTitle?: string;
   deleteTitle?: string;
   showAdd?: boolean;
   showEdit?: boolean;
@@ -23,8 +25,10 @@ export function HarvestPageHeaderActions({
   onAdd,
   onEdit,
   onDelete,
+  addDisabled = false,
   editDisabled,
   deleteDisabled,
+  addTitle,
   deleteTitle,
   showAdd = true,
   showEdit = true,
@@ -37,7 +41,9 @@ export function HarvestPageHeaderActions({
           type="button"
           className={`${styles.button} ${styles.success}`}
           onClick={onAdd}
+          disabled={addDisabled}
           aria-label={addActionLabel}
+          title={addTitle}
         >
           <FaCirclePlus />
           <span>{addActionLabel}</span>

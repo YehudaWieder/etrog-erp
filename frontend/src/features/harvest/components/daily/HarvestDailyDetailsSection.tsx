@@ -31,6 +31,7 @@ type HarvestDailyDetailsSectionProps = {
   onHarvestSortedRowsChange: (rows: HarvestRecord[]) => void;
   selectedHarvestRowId: number | null;
   onSelectHarvestRow: Dispatch<SetStateAction<HarvestRecord | null>>;
+  isSelectionDisabled?: boolean;
   onPrintHarvestTable: () => void;
   onExportHarvestTableToExcel: () => void;
   detailsRecordOpen: boolean;
@@ -79,6 +80,7 @@ export function HarvestDailyDetailsSection({
   onHarvestSortedRowsChange,
   selectedHarvestRowId,
   onSelectHarvestRow,
+  isSelectionDisabled,
   onPrintHarvestTable,
   onExportHarvestTableToExcel,
   detailsRecordOpen,
@@ -161,7 +163,7 @@ export function HarvestDailyDetailsSection({
                   emptyLabel={emptyLabel}
                   defaultSortState={{ key: 'dateGregorian', direction: 'desc' }}
                   selectedRowKey={selectedHarvestRowId}
-                  onRowClick={(row) => {
+                  onRowClick={isSelectionDisabled ? undefined : (row) => {
                     onSelectHarvestRow((previousSelectedRow) => (previousSelectedRow?.id === row.id ? null : row));
                   }}
                   onSortedRowsChange={onHarvestSortedRowsChange}

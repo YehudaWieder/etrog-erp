@@ -44,6 +44,7 @@ type UseHarvestPageControlsParams = {
   onRestoreDeletedSortingListRow: () => void;
   onPermanentDeleteSortingListRow: () => void;
   activeSeasonId: number | null;
+  seasonFilterId: number | null;
   seasons: Season[];
   fields: Field[];
   sortingAssignmentFilterOptions: SortingAssignmentFilterOption[];
@@ -73,6 +74,7 @@ export function useHarvestPageControls({
   onRestoreDeletedSortingListRow,
   onPermanentDeleteSortingListRow,
   activeSeasonId,
+  seasonFilterId,
   seasons,
   fields,
   sortingAssignmentFilterOptions,
@@ -83,6 +85,8 @@ export function useHarvestPageControls({
   const editActionLabel = t.pageControls.edit;
   const deleteActionLabel = t.pageControls.delete;
   const deleteHarvestBlockedTitle = t.pageControls.deleteHarvestBlockedTitle;
+  const nonActiveSeasonDisabledTitle = t.pageControls.nonActiveSeasonDisabled;
+  const isViewingNonActiveSeason = seasonFilterId !== null && seasonFilterId !== activeSeasonId;
 
   const pageHeaderActions = useMemo<ReactNode>(() => {
     if (isDailyDetailsTab) {
@@ -95,9 +99,17 @@ export function useHarvestPageControls({
           onAdd={openHarvestGlobalForm}
           onEdit={onEditHarvestRow}
           onDelete={onDeleteHarvest}
-          editDisabled={!selectedHarvestRow}
-          deleteDisabled={!selectedHarvestRow || harvestHasSortings}
-          deleteTitle={harvestHasSortings ? deleteHarvestBlockedTitle : undefined}
+          addDisabled={isViewingNonActiveSeason}
+          editDisabled={!selectedHarvestRow || isViewingNonActiveSeason}
+          deleteDisabled={!selectedHarvestRow || harvestHasSortings || isViewingNonActiveSeason}
+          addTitle={isViewingNonActiveSeason ? nonActiveSeasonDisabledTitle : undefined}
+          deleteTitle={
+            isViewingNonActiveSeason
+              ? nonActiveSeasonDisabledTitle
+              : harvestHasSortings
+                ? deleteHarvestBlockedTitle
+                : undefined
+          }
         />
       );
     }
@@ -110,6 +122,8 @@ export function useHarvestPageControls({
           deleteActionLabel={deleteActionLabel}
           onAdd={openHarvestSortingGlobalForm}
           onDelete={() => void 0}
+          addDisabled={isViewingNonActiveSeason}
+          addTitle={isViewingNonActiveSeason ? nonActiveSeasonDisabledTitle : undefined}
           editDisabled={false}
           deleteDisabled
           showEdit={false}
@@ -125,6 +139,8 @@ export function useHarvestPageControls({
           addSortingLabel={addSortingActionLabel}
           onAddHarvest={openHarvestGlobalForm}
           onAddSorting={openHarvestSortingGlobalForm}
+          addDisabled={isViewingNonActiveSeason}
+          addTitle={isViewingNonActiveSeason ? nonActiveSeasonDisabledTitle : undefined}
         />
       );
     }
@@ -138,8 +154,11 @@ export function useHarvestPageControls({
           onAdd={openHarvestSortingGlobalForm}
           onEdit={onEditSortingListRow}
           onDelete={onDeleteSortingListRow}
-          editDisabled={!selectedSortingListRow}
-          deleteDisabled={!selectedSortingListRow}
+          addDisabled={isViewingNonActiveSeason}
+          editDisabled={!selectedSortingListRow || isViewingNonActiveSeason}
+          deleteDisabled={!selectedSortingListRow || isViewingNonActiveSeason}
+          addTitle={isViewingNonActiveSeason ? nonActiveSeasonDisabledTitle : undefined}
+          deleteTitle={isViewingNonActiveSeason ? nonActiveSeasonDisabledTitle : undefined}
         />
       );
     }
@@ -154,8 +173,9 @@ export function useHarvestPageControls({
           onEdit={onRestoreDeletedSortingListRow}
           onDelete={onPermanentDeleteSortingListRow}
           showAdd={false}
-          editDisabled={!selectedDeletedSortingListRow}
-          deleteDisabled={!selectedDeletedSortingListRow}
+          editDisabled={!selectedDeletedSortingListRow || isViewingNonActiveSeason}
+          deleteDisabled={!selectedDeletedSortingListRow || isViewingNonActiveSeason}
+          deleteTitle={isViewingNonActiveSeason ? nonActiveSeasonDisabledTitle : undefined}
         />
       );
     }
@@ -166,6 +186,8 @@ export function useHarvestPageControls({
     addSortingActionLabel,
     deleteActionLabel,
     deleteHarvestBlockedTitle,
+    nonActiveSeasonDisabledTitle,
+    isViewingNonActiveSeason,
     detailsRecord,
     editActionLabel,
     isDailyDetailsTab,

@@ -25,6 +25,15 @@ export class FieldHarvestCreateDto {
 
   @ApiPropertyOptional({ example: 'Field 2 harvest' })
   notes?: string;
+
+  @ApiPropertyOptional({ example: false, description: 'Manually flag this harvest record as a bad pick, excluding it from the "excluding bad picks" rejection-rate summary.' })
+  isBadPick?: boolean;
+
+  @ApiPropertyOptional({ example: true, description: 'Whether grade ה quantities from this harvest remain in Italy instead of entering the general share allocation.' })
+  remainsInItalyGradeH?: boolean;
+
+  @ApiPropertyOptional({ example: true, description: 'Whether grade ו quantities from this harvest remain in Italy instead of entering the general share allocation.' })
+  remainsInItalyGradeV?: boolean;
 }
 
 export class FieldHarvestUpdateDto {
@@ -57,6 +66,15 @@ export class FieldHarvestUpdateDto {
 
   @ApiPropertyOptional({ example: false, description: 'Explicitly confirm the new partial/final classification mode when this update makes net harvested quantity exactly equal to the already classified total.' })
   isPartialClassification?: boolean;
+
+  @ApiPropertyOptional({ example: false, description: 'Manually flag this harvest record as a bad pick, excluding it from the "excluding bad picks" rejection-rate summary.' })
+  isBadPick?: boolean;
+
+  @ApiPropertyOptional({ example: true, description: 'Whether grade ה quantities from this harvest remain in Italy instead of entering the general share allocation.' })
+  remainsInItalyGradeH?: boolean;
+
+  @ApiPropertyOptional({ example: true, description: 'Whether grade ו quantities from this harvest remain in Italy instead of entering the general share allocation.' })
+  remainsInItalyGradeV?: boolean;
 }
 
 export class ClassificationBulkItemDto {
@@ -103,6 +121,15 @@ export class HarvestInlineUpdateDto {
 
   @ApiPropertyOptional()
   notes?: string;
+
+  @ApiPropertyOptional()
+  isBadPick?: boolean;
+
+  @ApiPropertyOptional()
+  remainsInItalyGradeH?: boolean;
+
+  @ApiPropertyOptional()
+  remainsInItalyGradeV?: boolean;
 
   @ApiPropertyOptional()
   updatedById?: number;
@@ -239,6 +266,15 @@ export class HarvestBulkCreateDto {
 
   @ApiPropertyOptional({ example: true })
   isPartialClassification?: boolean;
+
+  @ApiPropertyOptional({ example: false, description: 'Manually flag this harvest record as a bad pick, excluding it from the "excluding bad picks" rejection-rate summary.' })
+  isBadPick?: boolean;
+
+  @ApiPropertyOptional({ example: true, description: 'Whether grade ה quantities from this harvest remain in Italy instead of entering the general share allocation.' })
+  remainsInItalyGradeH?: boolean;
+
+  @ApiPropertyOptional({ example: true, description: 'Whether grade ו quantities from this harvest remain in Italy instead of entering the general share allocation.' })
+  remainsInItalyGradeV?: boolean;
 
   @ApiPropertyOptional({ type: [ClassificationBulkItemDto] })
   classifications?: ClassificationBulkItemDto[];

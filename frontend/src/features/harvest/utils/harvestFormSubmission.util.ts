@@ -21,6 +21,9 @@ type BuildHarvestFormSubmissionPayloadParams = {
     ownerRejected: string;
     notes: string;
     isPartialClassification: boolean;
+    isBadPick: boolean;
+    remainsInItalyGradeH: boolean;
+    remainsInItalyGradeV: boolean;
     classifications: HarvestFormClassificationDraft[];
   };
 };
@@ -412,6 +415,9 @@ export function buildHarvestFormSubmissionPayload({
     fieldId: parsedFieldId,
     updatedById: currentUserId,
     isPartialClassification: form.isPartialClassification,
+    isBadPick: form.isBadPick,
+    remainsInItalyGradeH: form.remainsInItalyGradeH,
+    remainsInItalyGradeV: form.remainsInItalyGradeV,
     totalHarvested,
     totalRejected,
     classifications: parsedClassifications,

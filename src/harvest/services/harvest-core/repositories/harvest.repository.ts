@@ -41,6 +41,7 @@ export class HarvestRepository {
         ownerAfterRejected: true,
         ownerRejectionRate: true,
         isPartialClassification: true,
+        isBadPick: true,
       },
     });
   }

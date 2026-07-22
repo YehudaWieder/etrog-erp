@@ -1,5 +1,7 @@
-﻿import type { ClassificationRecord } from '../../../../services/classificationsApi';
+﻿import { FaCheck, FaXmark } from 'react-icons/fa6';
+import type { ClassificationRecord } from '../../../../services/classificationsApi';
 import styles from '../styles/HarvestDetailsSheet.module.css';
+import interactiveStyles from '../styles/HarvestInteractive.module.css';
 
 export type DetailsSheetData = {
   dateGregorian: string;
@@ -10,6 +12,7 @@ export type DetailsSheetData = {
   fieldName: string;
   statusLabel: string;
   notes: string;
+  isBadPick: boolean;
   labels: {
     season: string;
     harvestNumber: string;
@@ -21,10 +24,13 @@ export type DetailsSheetData = {
     classifiedTotal: string;
     rejectionRate: string;
     notes: string;
+    isBadPick: string;
   };
   values: {
     rowType: string;
     none: string;
+    badPickYes: string;
+    badPickNo: string;
   };
   rows: Array<{
     key: string;
@@ -102,6 +108,14 @@ export function HarvestDailyDetailsContent({
           </p>
           <p>
             <strong>{detailsSheetData.labels.field}:</strong> {detailsSheetData.fieldName}
+          </p>
+          <p style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <strong>{detailsSheetData.labels.isBadPick}:</strong>
+            {detailsSheetData.isBadPick ? (
+              <FaCheck aria-label={detailsSheetData.values.badPickYes} className={interactiveStyles.badPickYes} />
+            ) : (
+              <FaXmark aria-label={detailsSheetData.values.badPickNo} className={interactiveStyles.badPickNo} />
+            )}
           </p>
         </div>
 

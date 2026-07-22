@@ -6,6 +6,8 @@ type HarvestSummaryHeaderActionsProps = {
   addSortingLabel: string;
   onAddHarvest: () => void;
   onAddSorting: () => void;
+  addDisabled?: boolean;
+  addTitle?: string;
 };
 
 export function HarvestSummaryHeaderActions({
@@ -13,6 +15,8 @@ export function HarvestSummaryHeaderActions({
   addSortingLabel,
   onAddHarvest,
   onAddSorting,
+  addDisabled = false,
+  addTitle,
 }: HarvestSummaryHeaderActionsProps): JSX.Element {
   return (
     <div className={styles.actions}>
@@ -20,7 +24,9 @@ export function HarvestSummaryHeaderActions({
         type="button"
         className={`${styles.button} ${styles.success}`}
         onClick={onAddHarvest}
+        disabled={addDisabled}
         aria-label={addHarvestLabel}
+        title={addTitle}
       >
         <FaCirclePlus />
         <span>{addHarvestLabel}</span>
@@ -29,7 +35,9 @@ export function HarvestSummaryHeaderActions({
         type="button"
         className={`${styles.button} ${styles.success}`}
         onClick={onAddSorting}
+        disabled={addDisabled}
         aria-label={addSortingLabel}
+        title={addTitle}
       >
         <FaCirclePlus />
         <span>{addSortingLabel}</span>

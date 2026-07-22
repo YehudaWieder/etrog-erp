@@ -187,6 +187,9 @@ export type HarvestSortingBatchHarvestUpdate = {
   ownerHarvested?: number;
   ownerRejected?: number;
   notes?: string;
+  isBadPick?: boolean;
+  remainsInItalyGradeH?: boolean;
+  remainsInItalyGradeV?: boolean;
 };
 
 // Edits existing classifications, creates new ones, and optionally applies an inline harvest field

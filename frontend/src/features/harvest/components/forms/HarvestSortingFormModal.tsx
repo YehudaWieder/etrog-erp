@@ -46,6 +46,9 @@ type HarvestSortingFormModalProps = {
   harvestSortingFormIsPartialClassification: boolean;
   harvestSortingFormTotalHarvested: string;
   harvestSortingFormOwnerHarvested: string;
+  harvestSortingFormIsBadPick: boolean;
+  harvestSortingFormRemainsInItalyGradeH: boolean;
+  harvestSortingFormRemainsInItalyGradeV: boolean;
   isAddingRejectedQuantity: boolean;
   harvestSortingFormAdditionalRejected: string;
   isAddingOwnerRejectedQuantity: boolean;
@@ -70,6 +73,9 @@ type HarvestSortingFormModalProps = {
   onPartialClassificationChange: (value: boolean) => void;
   onTotalHarvestedChange: (value: string) => void;
   onOwnerHarvestedChange: (value: string) => void;
+  onIsBadPickChange: (value: boolean) => void;
+  onRemainsInItalyGradeHChange: (value: boolean) => void;
+  onRemainsInItalyGradeVChange: (value: boolean) => void;
   onOpenAddRejectedQuantity: () => void;
   onAdditionalRejectedQuantityChange: (value: string) => void;
   onRemoveAddedRejectedQuantity: () => void;
@@ -108,6 +114,9 @@ export function HarvestSortingFormModal({
   harvestSortingFormIsPartialClassification,
   harvestSortingFormTotalHarvested,
   harvestSortingFormOwnerHarvested,
+  harvestSortingFormIsBadPick,
+  harvestSortingFormRemainsInItalyGradeH,
+  harvestSortingFormRemainsInItalyGradeV,
   isAddingRejectedQuantity,
   harvestSortingFormAdditionalRejected,
   isAddingOwnerRejectedQuantity,
@@ -132,6 +141,9 @@ export function HarvestSortingFormModal({
   onPartialClassificationChange,
   onTotalHarvestedChange,
   onOwnerHarvestedChange,
+  onIsBadPickChange,
+  onRemainsInItalyGradeHChange,
+  onRemainsInItalyGradeVChange,
   onOpenAddRejectedQuantity,
   onAdditionalRejectedQuantityChange,
   onRemoveAddedRejectedQuantity,
@@ -183,6 +195,26 @@ export function HarvestSortingFormModal({
   const restoreCustomerCategoryText = restoreCustomerCategoryLabel
     ? `${restoreCustomerCategoryLabel.name} — ${restoreCustomerCategoryLabel.grade}`
     : '';
+
+  const formatRejectionRate = (rejected: number | string, harvested: number | string) => {
+    const rejectedValue = Number(rejected);
+    const harvestedValue = Number(harvested);
+
+    if (!harvestedValue || !Number.isFinite(harvestedValue) || harvestedValue <= 0 || !Number.isFinite(rejectedValue)) {
+      return '';
+    }
+
+    return `${((rejectedValue / harvestedValue) * 100).toFixed(2)}%`;
+  };
+
+  const totalRejectionRate = formatRejectionRate(
+    selectedHarvestSummary?.totalRejected ?? '',
+    selectedHarvestSummary?.totalHarvested ?? '',
+  );
+  const ownerRejectionRate = formatRejectionRate(
+    rawTotals?.ownerRejected ?? '',
+    harvestSortingFormOwnerHarvested,
+  );
 
   const restorePitamStatusLabel = harvestSortingFormPitamStatus === 'WITH_PITAM'
     ? form.pitamOptions.withPitam
@@ -273,6 +305,28 @@ export function HarvestSortingFormModal({
             )}
           </label>
 
+          <label className={styles.summaryField}>
+            <span>{t.sortingForm.totalRejectedLabel}</span>
+            <input
+              className={`seasons-manager__year-input ${styles.readOnlyField}`}
+              type="text"
+              value={selectedHarvestSummary?.totalRejected ?? ''}
+              readOnly
+              aria-label={t.sortingForm.totalRejectedLabel}
+            />
+          </label>
+
+          <label className={styles.summaryField}>
+            <span>{form.rejectionRateLabel}</span>
+            <input
+              className={`seasons-manager__year-input ${styles.readOnlyField}`}
+              type="text"
+              value={totalRejectionRate}
+              disabled
+              aria-label={form.rejectionRateLabel}
+            />
+          </label>
+
           {!restoreMode ? (
             <label className={styles.summaryField}>
               <span>{t.sortingForm.ownerHarvestedLabel}</span>
@@ -288,17 +342,6 @@ export function HarvestSortingFormModal({
             </label>
           ) : null}
 
-          <label className={styles.summaryField}>
-            <span>{t.sortingForm.totalRejectedLabel}</span>
-            <input
-              className={`seasons-manager__year-input ${styles.readOnlyField}`}
-              type="text"
-              value={selectedHarvestSummary?.totalRejected ?? ''}
-              readOnly
-              aria-label={t.sortingForm.totalRejectedLabel}
-            />
-          </label>
-
           {!restoreMode ? (
             <label className={styles.summaryField}>
               <span>{t.sortingForm.ownerRejectedLabel}</span>
@@ -308,6 +351,19 @@ export function HarvestSortingFormModal({
                 value={rawTotals ? String(rawTotals.ownerRejected) : ''}
                 readOnly
                 aria-label={t.sortingForm.ownerRejectedLabel}
+              />
+            </label>
+          ) : null}
+
+          {!restoreMode ? (
+            <label className={styles.summaryField}>
+              <span>{form.ownerRejectionRateLabel}</span>
+              <input
+                className={`seasons-manager__year-input ${styles.readOnlyField}`}
+                type="text"
+                value={ownerRejectionRate}
+                disabled
+                aria-label={form.ownerRejectionRateLabel}
               />
             </label>
           ) : null}
@@ -322,6 +378,42 @@ export function HarvestSortingFormModal({
               aria-label={t.sortingForm.classifiedTotalLabel}
             />
           </label>
+
+          {!restoreMode ? (
+            <label className={styles.badPickField}>
+              <input
+                type="checkbox"
+                checked={harvestSortingFormIsBadPick}
+                disabled={!isHarvestSelected}
+                onChange={(event) => onIsBadPickChange(event.target.checked)}
+              />
+              <span>{form.isBadPickLabel}</span>
+            </label>
+          ) : null}
+
+          {!restoreMode ? (
+            <label className={styles.badPickField}>
+              <input
+                type="checkbox"
+                checked={harvestSortingFormRemainsInItalyGradeH}
+                disabled={!isHarvestSelected}
+                onChange={(event) => onRemainsInItalyGradeHChange(event.target.checked)}
+              />
+              <span>{form.remainsInItalyGradeHLabel}</span>
+            </label>
+          ) : null}
+
+          {!restoreMode ? (
+            <label className={styles.badPickField}>
+              <input
+                type="checkbox"
+                checked={harvestSortingFormRemainsInItalyGradeV}
+                disabled={!isHarvestSelected}
+                onChange={(event) => onRemainsInItalyGradeVChange(event.target.checked)}
+              />
+              <span>{form.remainsInItalyGradeVLabel}</span>
+            </label>
+          ) : null}
         </div>
 
         {!isFormReady ? (

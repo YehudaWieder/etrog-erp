@@ -451,6 +451,7 @@ export function useHarvestDetailsData({
       harvestNumber: harvestNumberDisplay,
       fieldName: detailsRecord.field?.name ?? values.none,
       updatedByName: detailsRecord.updatedBy?.name ?? values.none,
+      isBadPick: detailsRecord.isBadPick,
       statusLabel: `${values.statusPrefix} ${isPartialClassification ? values.partial : values.final}`,
       notes: detailsRecord.notes?.trim() || '',
       rows: summaryRows,

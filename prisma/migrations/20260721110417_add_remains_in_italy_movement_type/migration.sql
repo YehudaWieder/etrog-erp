@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "MovementType" ADD VALUE 'REMAINS_IN_ITALY';

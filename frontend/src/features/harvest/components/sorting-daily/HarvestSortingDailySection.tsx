@@ -34,6 +34,7 @@ type HarvestSortingDailySectionProps = {
   onSortingDailySortedRowsChange: (rows: ClassificationDailySummaryRow[]) => void;
   selectedSortingDailyRowId: number | null;
   onSelectSortingDailyRow: Dispatch<SetStateAction<number | null>>;
+  isSelectionDisabled?: boolean;
   onPrintSummary: () => void;
   onExportSummary: () => void;
   onExportExpanded: () => void;
@@ -77,6 +78,7 @@ export function HarvestSortingDailySection({
   onSortingDailySortedRowsChange,
   selectedSortingDailyRowId,
   onSelectSortingDailyRow,
+  isSelectionDisabled,
   onPrintSummary,
   onExportSummary,
   onExportExpanded,
@@ -158,7 +160,7 @@ export function HarvestSortingDailySection({
                   emptyLabel={emptyLabel}
                   defaultSortState={{ key: 'dateGregorian', direction: 'desc' }}
                   selectedRowKey={selectedSortingDailyRowId}
-                  onRowClick={(row) => {
+                  onRowClick={isSelectionDisabled ? undefined : (row) => {
                     onSelectSortingDailyRow((previousSelectedRowId) =>
                       previousSelectedRowId === row.harvestId ? null : row.harvestId,
                     );

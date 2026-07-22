@@ -105,6 +105,7 @@ export function createHarvestExportRowBuilders({
     const header = [
       t.dailyDetails.columns.fieldName,
       t.fieldReport.headers.recordCount,
+      t.fieldReport.headers.badPickCount,
       t.dailyDetails.columns.totalHarvested,
       t.dailyDetails.columns.totalRejected,
       t.dailyDetails.columns.netHarvest,
@@ -126,6 +127,7 @@ export function createHarvestExportRowBuilders({
     const rows = rowsSource.map((row) => [
       row.fieldName,
       row.recordCount,
+      row.badPickCount,
       row.totalHarvested,
       row.totalRejected,
       row.totalAfterRejected,

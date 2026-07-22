@@ -23,6 +23,7 @@ export type HarvestFieldReportRow = {
   id: number;
   fieldName: string;
   recordCount: number;
+  badPickCount: number;
   totalHarvested: number;
   totalRejected: number;
   totalAfterRejected: number;
@@ -38,6 +39,10 @@ export type HarvestFieldReportRow = {
   differenceRejectionRate: number;
   hasOwnerOverrides: boolean;
   isPartialClassification: boolean;
+  totalHarvestedExcludingBadPicks: number;
+  totalRejectedExcludingBadPicks: number;
+  ownerHarvestedExcludingBadPicks: number;
+  ownerRejectedExcludingBadPicks: number;
 };
 
 export type HarvestExportTableData = {

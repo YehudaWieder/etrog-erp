@@ -71,7 +71,7 @@ export class FieldController {
     description: 'Invalid input or duplicate field name.',
   })
   addField(@Body() body: FieldCreateDto) {
-    return this.fieldService.addField(body.name, body.includeInRejectionSummary);
+    return this.fieldService.addField(body.name);
   }
 
   @Delete(':id')
@@ -111,6 +111,6 @@ export class FieldController {
     description: 'Field with the given ID not found.',
   })
   updateField(@Body() body: FieldUpdateDto) {
-    return this.fieldService.updateFieldName(body.id, body.name, body.includeInRejectionSummary);
+    return this.fieldService.updateFieldName(body.id, body.name);
   }
 }

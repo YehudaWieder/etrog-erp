@@ -22,7 +22,7 @@ import {
 } from 'src/harvest/services/harvest-core/rules/harvest-validation.rules';
 import { HarvestAllocationService } from 'src/harvest/services/workflows/harvest-allocation.service';
 import { InventoryAvailabilityService } from 'src/inventory/services/inventory-availability.service';
-import { Grade, PitamStatus } from '@prisma/client';
+import { Grade, MovementType, PitamStatus } from '@prisma/client';
 
 @Injectable()
 export class HarvestBulkWorkflowService {
@@ -56,6 +56,8 @@ export class HarvestBulkWorkflowService {
       harvestDate: Date;
       harvestDateHebrew: string;
       updatedById: number;
+      remainsInItalyGradeH: boolean;
+      remainsInItalyGradeV: boolean;
     },
   ) {
     const classItem = params.classificationItem;
@@ -94,6 +96,8 @@ export class HarvestBulkWorkflowService {
       classificationItem: classItem,
       harvestDate: params.harvestDate,
       updatedById: params.updatedById,
+      remainsInItalyGradeH: params.remainsInItalyGradeH,
+      remainsInItalyGradeV: params.remainsInItalyGradeV,
     });
 
     return classification;
@@ -114,6 +118,9 @@ export class HarvestBulkWorkflowService {
       harvestUpdate.ownerHarvested !== undefined ||
       harvestUpdate.ownerRejected !== undefined ||
       harvestUpdate.notes !== undefined ||
+      harvestUpdate.isBadPick !== undefined ||
+      harvestUpdate.remainsInItalyGradeH !== undefined ||
+      harvestUpdate.remainsInItalyGradeV !== undefined ||
       harvestUpdate.updatedById !== undefined;
 
     if (!hasAnyField) {
@@ -160,6 +167,9 @@ export class HarvestBulkWorkflowService {
         ownerHarvested,
         ownerRejected,
         notes: harvestUpdate.notes,
+        isBadPick: harvestUpdate.isBadPick,
+        remainsInItalyGradeH: harvestUpdate.remainsInItalyGradeH,
+        remainsInItalyGradeV: harvestUpdate.remainsInItalyGradeV,
         updatedById: harvestUpdate.updatedById,
         rejectionRate: totalHarvested > 0 ? (totalRejected / totalHarvested) * 100 : 0,
         ownerRejectionRate: ownerHarvested > 0 ? (ownerRejected / ownerHarvested) * 100 : 0,
@@ -257,6 +267,8 @@ export class HarvestBulkWorkflowService {
     harvestDate: Date,
     item: ClassificationBulkItemDto,
     updatedById: number,
+    remainsInItalyGradeH: boolean,
+    remainsInItalyGradeV: boolean,
   ) {
     const duplicateKey = buildClassificationDuplicateKey(item);
 
@@ -312,6 +324,8 @@ export class HarvestBulkWorkflowService {
       classificationItem: this.mapToClassificationBulkItem(classification),
       harvestDate,
       updatedById,
+      remainsInItalyGradeH,
+      remainsInItalyGradeV,
     });
 
     return classification;
@@ -326,7 +340,7 @@ export class HarvestBulkWorkflowService {
   ) {
     const harvest = await tx.fieldHarvest.findUnique({
       where: { id: harvestId },
-      select: { id: true, dateGregorian: true },
+      select: { id: true, dateGregorian: true, remainsInItalyGradeH: true, remainsInItalyGradeV: true },
     });
 
     if (!harvest) {
@@ -349,6 +363,8 @@ export class HarvestBulkWorkflowService {
       harvest.dateGregorian,
       createPayload,
       createPayload.updatedById,
+      createPayload.harvestUpdate?.remainsInItalyGradeH ?? harvest.remainsInItalyGradeH,
+      createPayload.harvestUpdate?.remainsInItalyGradeV ?? harvest.remainsInItalyGradeV,
     );
 
     await this.syncHarvestClassificationProgress(tx, harvestId, createPayload.isPartialClassification);
@@ -421,6 +437,9 @@ export class HarvestBulkWorkflowService {
           ownerHarvested,
           ownerRejected,
           notes: bulkPayload.notes,
+          isBadPick: bulkPayload.isBadPick ?? false,
+          remainsInItalyGradeH: bulkPayload.remainsInItalyGradeH ?? true,
+          remainsInItalyGradeV: bulkPayload.remainsInItalyGradeV ?? true,
           slug,
           ...rates,
         },
@@ -436,6 +455,8 @@ export class HarvestBulkWorkflowService {
           harvestDate: new Date(bulkPayload.dateGregorian),
           harvestDateHebrew: bulkPayload.dateHebrew,
           updatedById: bulkPayload.updatedById,
+          remainsInItalyGradeH: harvest.remainsInItalyGradeH,
+          remainsInItalyGradeV: harvest.remainsInItalyGradeV,
         });
 
         classifications.push(classification);
@@ -584,6 +605,8 @@ export class HarvestBulkWorkflowService {
         classificationItem: this.mapToClassificationBulkItem(updatedClassification),
         harvestDate: harvest.dateGregorian,
         updatedById: updatePayload.updatedById,
+        remainsInItalyGradeH: updatePayload.harvestUpdate?.remainsInItalyGradeH ?? harvest.remainsInItalyGradeH,
+        remainsInItalyGradeV: updatePayload.harvestUpdate?.remainsInItalyGradeV ?? harvest.remainsInItalyGradeV,
       });
 
       await this.syncHarvestClassificationProgress(tx, harvestId, updatePayload.isPartialClassification);
@@ -610,6 +633,8 @@ export class HarvestBulkWorkflowService {
     classificationId: number,
     newQuantity: number,
     updatedById: number,
+    remainsInItalyGradeH: boolean,
+    remainsInItalyGradeV: boolean,
   ) {
     const oldClassification = await tx.classification.findFirst({
       where: { id: classificationId, isDeleted: false },
@@ -648,6 +673,8 @@ export class HarvestBulkWorkflowService {
       classificationItem: this.mapToClassificationBulkItem(updatedClassification),
       harvestDate,
       updatedById,
+      remainsInItalyGradeH,
+      remainsInItalyGradeV,
     });
 
     return updatedClassification;
@@ -671,7 +698,7 @@ export class HarvestBulkWorkflowService {
     return this.prisma.$transaction(async (tx) => {
       const harvest = await tx.fieldHarvest.findUnique({
         where: { id: harvestId },
-        select: { id: true, dateGregorian: true },
+        select: { id: true, dateGregorian: true, remainsInItalyGradeH: true, remainsInItalyGradeV: true },
       });
 
       if (!harvest) {
@@ -679,6 +706,9 @@ export class HarvestBulkWorkflowService {
       }
 
       await this.applyHarvestInlineUpdate(tx, harvestId, harvestUpdate);
+
+      const remainsInItalyGradeH = harvestUpdate?.remainsInItalyGradeH ?? harvest.remainsInItalyGradeH;
+      const remainsInItalyGradeV = harvestUpdate?.remainsInItalyGradeV ?? harvest.remainsInItalyGradeV;
 
       for (const edit of edits) {
         await this.applyClassificationQuantityEditInTx(
@@ -689,6 +719,8 @@ export class HarvestBulkWorkflowService {
           edit.classificationId,
           edit.quantity,
           actorId,
+          remainsInItalyGradeH,
+          remainsInItalyGradeV,
         );
       }
 
@@ -702,6 +734,8 @@ export class HarvestBulkWorkflowService {
           harvest.dateGregorian,
           item,
           actorId,
+          remainsInItalyGradeH,
+          remainsInItalyGradeV,
         );
         created.push(classification);
       }
@@ -837,6 +871,7 @@ export class HarvestBulkWorkflowService {
           grade: classification.grade as Grade,
           pitamStatus: classification.pitamStatus as PitamStatus,
           isDeleted: false,
+          type: { not: MovementType.REMAINS_IN_ITALY },
         },
         _sum: { quantity: true },
       });

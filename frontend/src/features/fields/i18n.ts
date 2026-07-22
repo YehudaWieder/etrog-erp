@@ -26,8 +26,6 @@ export type FieldsI18n = {
   save: string;
   updating: string;
   adding: string;
-  includeInRejectionSummary: string;
-  excludedFromRejectionSummaryBadge: string;
 };
 
 const FIELDS_I18N: Record<AppLang, FieldsI18n> = {

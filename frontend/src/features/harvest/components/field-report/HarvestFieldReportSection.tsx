@@ -86,6 +86,7 @@ export function HarvestFieldReportSection({
           { key: 'totalRejected', label: summaryLabels.totalRejected, value: numberFormatter.format(summaryTotals.totalRejected), icon: <FaBan aria-hidden="true" /> },
           { key: 'totalNet', label: summaryLabels.totalNet, value: numberFormatter.format(summaryTotals.totalNet), icon: <FaScaleBalanced aria-hidden="true" /> },
           { key: 'avgRejectionRate', label: summaryLabels.avgRejectionRate, value: formatRate(summaryTotals.avgRejectionRate), icon: <FaPercent aria-hidden="true" /> },
+          { key: 'avgRejectionRateExcludingBadPicks', label: summaryLabels.avgRejectionRateExcludingBadPicks, value: formatRate(summaryTotals.avgRejectionRateExcludingBadPicks), icon: <FaPercent aria-hidden="true" /> },
           { key: 'totalRecordCount', label: summaryLabels.totalRecordCount, value: numberFormatter.format(summaryTotals.totalRecordCount), icon: <FaListCheck aria-hidden="true" /> },
           { key: 'totalFields', label: summaryLabels.totalFields, value: numberFormatter.format(summaryTotals.totalFields), icon: <FaMapLocationDot aria-hidden="true" /> },
         ]}

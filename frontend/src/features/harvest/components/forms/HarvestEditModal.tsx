@@ -21,6 +21,8 @@ type HarvestEditModalProps = {
   isPartialClassification: boolean;
   markAsFullClassification: boolean;
   onMarkAsFullClassificationChange: (value: boolean) => void;
+  isBadPick: boolean;
+  onIsBadPickChange: (value: boolean) => void;
   isSubmitting: boolean;
   error: string;
   onDateGregorianChange: (value: string) => void;
@@ -51,6 +53,8 @@ export function HarvestEditModal({
   isPartialClassification,
   markAsFullClassification,
   onMarkAsFullClassificationChange,
+  isBadPick,
+  onIsBadPickChange,
   isSubmitting,
   error,
   onDateGregorianChange,
@@ -67,6 +71,17 @@ export function HarvestEditModal({
 
   const ed = t.pageControls.editHarvestDialog;
   const bf = t.bulkForm;
+
+  const formatRejectionRate = (rejected: number, harvested: number) => {
+    if (!Number.isFinite(harvested) || harvested <= 0 || !Number.isFinite(rejected)) {
+      return '';
+    }
+
+    return `${((rejected / harvested) * 100).toFixed(2)}%`;
+  };
+
+  const totalRejectionRate = formatRejectionRate(totalRejected, totalHarvested);
+  const ownerRejectionRate = formatRejectionRate(ownerRejected, ownerHarvested);
 
   const netQuantity = totalHarvested - totalRejected;
   const hasSortings = classifiedTotal > 0;
@@ -154,6 +169,15 @@ export function HarvestEditModal({
             />
           </label>
           <label className={styles.summaryField}>
+            <span>{bf.rejectionRateLabel}</span>
+            <input
+              className={`seasons-manager__year-input ${styles.readOnlyField}`}
+              type="text"
+              value={totalRejectionRate}
+              disabled
+            />
+          </label>
+          <label className={styles.summaryField}>
             <span>{ed.ownerHarvestedLabel}</span>
             <input
               className="seasons-manager__year-input harvest-bulk-form-number-input"
@@ -172,6 +196,23 @@ export function HarvestEditModal({
               value={ownerRejected}
               onChange={(e) => onOwnerRejectedChange(Number(e.target.value))}
             />
+          </label>
+          <label className={styles.summaryField}>
+            <span>{bf.ownerRejectionRateLabel}</span>
+            <input
+              className={`seasons-manager__year-input ${styles.readOnlyField}`}
+              type="text"
+              value={ownerRejectionRate}
+              disabled
+            />
+          </label>
+          <label className={styles.badPickField}>
+            <input
+              type="checkbox"
+              checked={isBadPick}
+              onChange={(e) => onIsBadPickChange(e.target.checked)}
+            />
+            <span>{ed.isBadPickLabel}</span>
           </label>
         </div>
 

@@ -32,6 +32,9 @@ type UseHarvestFormSubmissionParams = {
     ownerRejected: string;
     notes: string;
     isPartialClassification: boolean;
+    isBadPick: boolean;
+    remainsInItalyGradeH: boolean;
+    remainsInItalyGradeV: boolean;
     classifications: HarvestFormClassificationDraft[];
   };
   setIsSubmittingHarvestForm: (value: boolean) => void;
@@ -84,6 +87,7 @@ export function useHarvestFormSubmission({
         id: row.fieldId,
         fieldName: row.fieldName,
         recordCount: row.recordCount,
+        badPickCount: row.badPickCount,
         totalHarvested: row.totalHarvested,
         totalRejected: row.totalRejected,
         totalAfterRejected: row.totalAfterRejected,
@@ -99,6 +103,10 @@ export function useHarvestFormSubmission({
         differenceRejectionRate: row.differenceRejectionRate,
         hasOwnerOverrides: row.hasOwnerOverrides,
         isPartialClassification: row.isPartialClassification,
+        totalHarvestedExcludingBadPicks: row.totalHarvestedExcludingBadPicks,
+        totalRejectedExcludingBadPicks: row.totalRejectedExcludingBadPicks,
+        ownerHarvestedExcludingBadPicks: row.ownerHarvestedExcludingBadPicks,
+        ownerRejectedExcludingBadPicks: row.ownerRejectedExcludingBadPicks,
       })),
     );
 

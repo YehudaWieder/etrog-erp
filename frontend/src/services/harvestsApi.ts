@@ -22,6 +22,9 @@ export type HarvestRecord = {
   ownerAfterRejected: number;
   classifiedTotal: number;
   isPartialClassification: boolean;
+  isBadPick: boolean;
+  remainsInItalyGradeH: boolean;
+  remainsInItalyGradeV: boolean;
   notes: string | null;
   updatedAt: string;
   rejectionRate: number | string;
@@ -34,6 +37,7 @@ export type HarvestFieldTotalsRecord = {
   fieldId: number;
   fieldName: string;
   recordCount: number;
+  badPickCount: number;
   totalHarvested: number;
   totalRejected: number;
   totalAfterRejected: number;
@@ -49,6 +53,10 @@ export type HarvestFieldTotalsRecord = {
   differenceRejectionRate: number;
   hasOwnerOverrides: boolean;
   isPartialClassification: boolean;
+  totalHarvestedExcludingBadPicks: number;
+  totalRejectedExcludingBadPicks: number;
+  ownerHarvestedExcludingBadPicks: number;
+  ownerRejectedExcludingBadPicks: number;
 };
 
 export type HarvestFieldReportDetailsRecord = HarvestFieldTotalsRecord & {
@@ -79,6 +87,9 @@ export type CreateHarvestWithClassificationsPayload = {
   ownerRejected?: number;
   notes?: string;
   isPartialClassification?: boolean;
+  isBadPick?: boolean;
+  remainsInItalyGradeH?: boolean;
+  remainsInItalyGradeV?: boolean;
   classifications: HarvestBulkClassificationPayload[];
 };
 
@@ -125,6 +136,9 @@ export type UpdateHarvestPayload = {
   ownerRejected?: number;
   notes?: string;
   isPartialClassification?: boolean;
+  isBadPick?: boolean;
+  remainsInItalyGradeH?: boolean;
+  remainsInItalyGradeV?: boolean;
 };
 
 export async function updateHarvest(payload: UpdateHarvestPayload): Promise<HarvestRecord> {

@@ -7,7 +7,6 @@ import SettingsInnerTemplate from '../../../components/ui/SettingsInnerTemplate'
 import { SubmitButton } from '../../../components/ui/SubmitButton';
 import type { FieldsManagementProps } from '../fieldsPage.types';
 import { useFieldsManagement } from '../hooks/useFieldsManagement';
-import styles from './styles/FieldsManagement.module.css';
 
 export type { FieldsHeaderState } from '../fieldsPage.types';
 
@@ -28,8 +27,6 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
     setIsEditDialogOpen,
     editFieldName,
     setEditFieldName,
-    editIncludeInRejectionSummary,
-    setEditIncludeInRejectionSummary,
     editError,
     isSavingEdit,
     isAdding,
@@ -92,11 +89,6 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
                       <span className="seasons-manager__meta">{t.fieldId}: {field.id}</span>
                     </>
                   }
-                  topAside={
-                    !field.includeInRejectionSummary ? (
-                      <span className={styles.excludedBadge}>{t.excludedFromRejectionSummaryBadge}</span>
-                    ) : undefined
-                  }
                 />
               </li>
             );
@@ -139,15 +131,6 @@ const FieldsManagement: React.FC<FieldsManagementProps> = ({ onHeaderStateChange
               placeholder={t.editFieldPlaceholder}
               autoFocus
             />
-
-            <label className={styles.checkboxItem}>
-              <input
-                type="checkbox"
-                checked={editIncludeInRejectionSummary}
-                onChange={(e) => setEditIncludeInRejectionSummary(e.target.checked)}
-              />
-              {t.includeInRejectionSummary}
-            </label>
 
             {editError ? <p className="seasons-manager__error">{editError}</p> : null}
 

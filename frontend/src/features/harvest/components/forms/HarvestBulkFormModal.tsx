@@ -28,6 +28,9 @@ type HarvestBulkFormModalProps = {
   harvestFormOwnerHarvested: string;
   harvestFormOwnerRejected: string;
   harvestFormIsPartialClassification: boolean;
+  harvestFormIsBadPick: boolean;
+  harvestFormRemainsInItalyGradeH: boolean;
+  harvestFormRemainsInItalyGradeV: boolean;
   harvestFormNotes: string;
   harvestFormClassifications: HarvestFormClassificationDraft[];
   harvestFormTraderCategories: TraderCategoryWithShares[];
@@ -41,6 +44,9 @@ type HarvestBulkFormModalProps = {
   onOwnerHarvestedChange: (value: string) => void;
   onOwnerRejectedChange: (value: string) => void;
   onPartialClassificationChange: (value: boolean) => void;
+  onIsBadPickChange: (value: boolean) => void;
+  onRemainsInItalyGradeHChange: (value: boolean) => void;
+  onRemainsInItalyGradeVChange: (value: boolean) => void;
   onNotesChange: (nextNotes: string, textareaElement: HTMLTextAreaElement) => void;
   onAddClassificationDraft: () => void;
   onRemoveClassificationDraft: (draftId: string) => void;
@@ -65,6 +71,9 @@ export function HarvestBulkFormModal({
   harvestFormOwnerHarvested,
   harvestFormOwnerRejected,
   harvestFormIsPartialClassification,
+  harvestFormIsBadPick,
+  harvestFormRemainsInItalyGradeH,
+  harvestFormRemainsInItalyGradeV,
   harvestFormNotes,
   harvestFormClassifications,
   harvestFormTraderCategories,
@@ -78,6 +87,9 @@ export function HarvestBulkFormModal({
   onOwnerHarvestedChange,
   onOwnerRejectedChange,
   onPartialClassificationChange,
+  onIsBadPickChange,
+  onRemainsInItalyGradeHChange,
+  onRemainsInItalyGradeVChange,
   onNotesChange,
   onAddClassificationDraft,
   onRemoveClassificationDraft,
@@ -89,6 +101,20 @@ export function HarvestBulkFormModal({
   }
 
   const form = t.bulkForm;
+
+  const formatRejectionRate = (rejected: string, harvested: string) => {
+    const rejectedValue = Number(rejected);
+    const harvestedValue = Number(harvested);
+
+    if (!harvested || !Number.isFinite(harvestedValue) || harvestedValue <= 0 || !Number.isFinite(rejectedValue)) {
+      return '';
+    }
+
+    return `${((rejectedValue / harvestedValue) * 100).toFixed(2)}%`;
+  };
+
+  const totalRejectionRate = formatRejectionRate(harvestFormTotalRejected, harvestFormTotalHarvested);
+  const ownerRejectionRate = formatRejectionRate(harvestFormOwnerRejected, harvestFormOwnerHarvested);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -178,6 +204,17 @@ export function HarvestBulkFormModal({
           </label>
 
           <label className={styles.summaryField}>
+            <span>{form.rejectionRateLabel}</span>
+            <input
+              className={`seasons-manager__year-input ${styles.readOnlyField}`}
+              type="text"
+              value={totalRejectionRate}
+              disabled
+              aria-label={form.rejectionRateLabel}
+            />
+          </label>
+
+          <label className={styles.summaryField}>
             <span>{form.ownerHarvestedLabel}</span>
             <input
               className="seasons-manager__year-input harvest-bulk-form-number-input"
@@ -201,6 +238,44 @@ export function HarvestBulkFormModal({
               placeholder={form.ownerRejectedPlaceholder}
               aria-label={form.ownerRejectedLabel}
             />
+          </label>
+
+          <label className={styles.summaryField}>
+            <span>{form.ownerRejectionRateLabel}</span>
+            <input
+              className={`seasons-manager__year-input ${styles.readOnlyField}`}
+              type="text"
+              value={ownerRejectionRate}
+              disabled
+              aria-label={form.ownerRejectionRateLabel}
+            />
+          </label>
+
+          <label className={styles.badPickField}>
+            <input
+              type="checkbox"
+              checked={harvestFormIsBadPick}
+              onChange={(event) => onIsBadPickChange(event.target.checked)}
+            />
+            <span>{form.isBadPickLabel}</span>
+          </label>
+
+          <label className={styles.badPickField}>
+            <input
+              type="checkbox"
+              checked={harvestFormRemainsInItalyGradeH}
+              onChange={(event) => onRemainsInItalyGradeHChange(event.target.checked)}
+            />
+            <span>{form.remainsInItalyGradeHLabel}</span>
+          </label>
+
+          <label className={styles.badPickField}>
+            <input
+              type="checkbox"
+              checked={harvestFormRemainsInItalyGradeV}
+              onChange={(event) => onRemainsInItalyGradeVChange(event.target.checked)}
+            />
+            <span>{form.remainsInItalyGradeVLabel}</span>
           </label>
 
           <fieldset className={styles.classificationMode} aria-label={form.classificationModeLabel}>

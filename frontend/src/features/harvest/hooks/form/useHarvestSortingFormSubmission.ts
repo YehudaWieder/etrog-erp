@@ -39,6 +39,9 @@ type UseHarvestSortingFormSubmissionParams = {
     quantity: string;
     notes: string;
     isPartialClassification: boolean;
+    isBadPick: boolean;
+    remainsInItalyGradeH: boolean;
+    remainsInItalyGradeV: boolean;
   };
   harvestFormClassifications: HarvestFormClassificationDraft[];
   existingHarvestClassifications: ClassificationRecord[];
@@ -48,6 +51,9 @@ type UseHarvestSortingFormSubmissionParams = {
   additionalOwnerRejectedQuantity?: number;
   hasTotalHarvestedEdit?: boolean;
   hasOwnerHarvestedEdit?: boolean;
+  hasIsBadPickEdit?: boolean;
+  hasRemainsInItalyGradeHEdit?: boolean;
+  hasRemainsInItalyGradeVEdit?: boolean;
   setIsSubmittingHarvestSortingForm: (value: boolean) => void;
   setHarvestSortingFormError: (value: string) => void;
   setIsHarvestSortingFormOpen: (value: boolean) => void;
@@ -76,6 +82,9 @@ export function useHarvestSortingFormSubmission({
   additionalOwnerRejectedQuantity = 0,
   hasTotalHarvestedEdit = false,
   hasOwnerHarvestedEdit = false,
+  hasIsBadPickEdit = false,
+  hasRemainsInItalyGradeHEdit = false,
+  hasRemainsInItalyGradeVEdit = false,
   setIsSubmittingHarvestSortingForm,
   setHarvestSortingFormError,
   setIsHarvestSortingFormOpen,
@@ -117,6 +126,7 @@ export function useHarvestSortingFormSubmission({
         id: row.fieldId,
         fieldName: row.fieldName,
         recordCount: row.recordCount,
+        badPickCount: row.badPickCount,
         totalHarvested: row.totalHarvested,
         totalRejected: row.totalRejected,
         totalAfterRejected: row.totalAfterRejected,
@@ -132,6 +142,10 @@ export function useHarvestSortingFormSubmission({
         differenceRejectionRate: row.differenceRejectionRate,
         hasOwnerOverrides: row.hasOwnerOverrides,
         isPartialClassification: row.isPartialClassification,
+        totalHarvestedExcludingBadPicks: row.totalHarvestedExcludingBadPicks,
+        totalRejectedExcludingBadPicks: row.totalRejectedExcludingBadPicks,
+        ownerHarvestedExcludingBadPicks: row.ownerHarvestedExcludingBadPicks,
+        ownerRejectedExcludingBadPicks: row.ownerRejectedExcludingBadPicks,
       })),
     );
     setSortingDailyRows(sortingSummary.rows);
@@ -213,6 +227,9 @@ export function useHarvestSortingFormSubmission({
               ...(additionalOwnerRejectedQuantity > 0 && selectedHarvestSummary.ownerRejected !== undefined
                 ? { ownerRejected: selectedHarvestSummary.ownerRejected }
                 : {}),
+              ...(hasIsBadPickEdit ? { isBadPick: form.isBadPick } : {}),
+              ...(hasRemainsInItalyGradeHEdit ? { remainsInItalyGradeH: form.remainsInItalyGradeH } : {}),
+              ...(hasRemainsInItalyGradeVEdit ? { remainsInItalyGradeV: form.remainsInItalyGradeV } : {}),
             }
           : {};
         const hasHarvestUpdate = Object.keys(harvestUpdate).length > 0;
@@ -258,6 +275,9 @@ export function useHarvestSortingFormSubmission({
     additionalOwnerRejectedQuantity,
     hasTotalHarvestedEdit,
     hasOwnerHarvestedEdit,
+    hasIsBadPickEdit,
+    hasRemainsInItalyGradeHEdit,
+    hasRemainsInItalyGradeVEdit,
     deletedClassificationId,
     existingHarvestClassifications,
     form,

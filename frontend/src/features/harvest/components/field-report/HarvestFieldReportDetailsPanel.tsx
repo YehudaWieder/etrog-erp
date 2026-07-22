@@ -1,5 +1,7 @@
-﻿import type { HarvestRecord } from '../../../../services/harvestsApi';
+﻿import { FaCheck, FaXmark } from 'react-icons/fa6';
+import type { HarvestRecord } from '../../../../services/harvestsApi';
 import styles from '../styles/HarvestDetailsSheet.module.css';
+import interactiveStyles from '../styles/HarvestInteractive.module.css';
 
 export type HarvestFieldReportDetailsData = {
   fieldName: string;
@@ -38,7 +40,9 @@ export type HarvestFieldReportDetailsPanelLabels = {
   netHarvest: string;
   classifiedTotal: string;
   rejectionRate: string;
-  updatedBy: string;
+  isBadPick: string;
+  badPickYes: string;
+  badPickNo: string;
   notes: string;
   none: string;
   emptyRows: string;
@@ -107,7 +111,7 @@ export function HarvestFieldReportDetailsPanel({ data, locale, labels }: Harvest
                   <th>{labels.netHarvest}</th>
                   <th>{labels.classifiedTotal}</th>
                   <th>{labels.rejectionRate}</th>
-                  <th>{labels.updatedBy}</th>
+                  <th>{labels.isBadPick}</th>
                   <th>{labels.notes}</th>
                 </tr>
               </thead>
@@ -124,7 +128,13 @@ export function HarvestFieldReportDetailsPanel({ data, locale, labels }: Harvest
                       <td>{row.totalAfterRejected.toLocaleString(locale)}</td>
                       <td>{row.classifiedTotal.toLocaleString(locale)}</td>
                       <td>{`${Number(row.rejectionRate).toLocaleString(locale, { maximumFractionDigits: 2 })}%`}</td>
-                      <td>{row.updatedBy?.name ?? labels.none}</td>
+                      <td>
+                        {row.isBadPick ? (
+                          <FaCheck aria-label={labels.badPickYes} className={interactiveStyles.badPickYes} />
+                        ) : (
+                          <FaXmark aria-label={labels.badPickNo} className={interactiveStyles.badPickNo} />
+                        )}
+                      </td>
                       <td>
                         {note ? (
                           <span

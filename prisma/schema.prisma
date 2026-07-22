@@ -41,8 +41,6 @@ model Field {
 
   slug String @unique // URL-friendly slug
 
-  includeInRejectionSummary Boolean @default(true)
-
   @@unique([name])
 }
 
@@ -107,6 +105,7 @@ model Season {
   shipment             Shipment[]
   box                  Box[]
   shipmentItem         ShipmentItem[]
+  traderSeasonSettings TraderSeasonSettings[]
 }
 
 // -----------------------------------------------------------------------------
@@ -144,8 +143,6 @@ model Trader {
   id   Int    @id @default(autoincrement())
   name String @unique
 
-  paymentPercent Decimal @default(0)
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -159,10 +156,33 @@ model Trader {
   customerAllocations  CustomerAllocation[]
   box                  Box[]
   shipmentItem         ShipmentItem[]
+  seasonSettings       TraderSeasonSettings[]
 }
 
 // -----------------------------------------------------------------------------
-// 8. Customer
+// 8. Trader Season Settings (expense % + flat price per etrog, not category-scoped)
+// -----------------------------------------------------------------------------
+model TraderSeasonSettings {
+  id Int @id @default(autoincrement())
+
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  traderId Int
+  trader   Trader @relation(fields: [traderId], references: [id])
+
+  paymentPercent Decimal  @default(0) // % participation in shared expenses
+  pricePerEtrog  Decimal  @default(0) // flat price per etrog, not category-dependent
+  currency       Currency
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([traderId, seasonId])
+}
+
+// -----------------------------------------------------------------------------
+// 9. Customer
 // -----------------------------------------------------------------------------
 model Customer {
   id           Int     @id @default(autoincrement())
@@ -186,7 +206,7 @@ model Customer {
 }
 
 // -----------------------------------------------------------------------------
-// 9. Traders categories
+// 10. Traders categories
 // -----------------------------------------------------------------------------
 model TradersCategories {
   id              Int     @id @default(autoincrement())
@@ -211,7 +231,7 @@ model TradersCategories {
 }
 
 // -----------------------------------------------------------------------------
-// 10. Customer categories and prices
+// 11. Customer categories and prices
 // -----------------------------------------------------------------------------
 model CustomerCategories {
   id       Int    @id @default(autoincrement())
@@ -237,7 +257,7 @@ model CustomerCategories {
 }
 
 // -----------------------------------------------------------------------------
-// 11. Trader Category Share (%)
+// 12. Trader Category Share (%)
 // -----------------------------------------------------------------------------
 model TraderCategoryShare {
   id Int @id @default(autoincrement())
@@ -260,7 +280,7 @@ model TraderCategoryShare {
 }
 
 // -----------------------------------------------------------------------------
-// 12. Field Operations
+// 13. Field Operations
 // -----------------------------------------------------------------------------
 model FieldHarvest {
   id Int @id @default(autoincrement())
@@ -291,6 +311,11 @@ model FieldHarvest {
   classifiedTotal         Int     @default(0)
   isPartialClassification Boolean @default(false)
 
+  isBadPick Boolean @default(false)
+
+  remainsInItalyGradeH Boolean @default(true)
+  remainsInItalyGradeV Boolean @default(true)
+
   notes String?
 
   slug String @unique // URL-friendly ID (date-field-season)
@@ -310,7 +335,7 @@ model FieldHarvest {
 }
 
 // -----------------------------------------------------------------------------
-// 13. Grading & Classification
+// 14. Grading & Classification
 // -----------------------------------------------------------------------------
 model Classification {
   id Int @id @default(autoincrement())
@@ -359,7 +384,7 @@ model Classification {
 }
 
 // -----------------------------------------------------------------------------
-// 14. Trader Inventory & Buffer Management
+// 15. Trader Inventory & Buffer Management
 // -----------------------------------------------------------------------------
 model TraderStock {
   id Int @id @default(autoincrement())
@@ -413,7 +438,7 @@ model TraderStock {
 }
 
 // -----------------------------------------------------------------------------
-// 15. Customer Allocations (Sales)
+// 16. Customer Allocations (Sales)
 // -----------------------------------------------------------------------------
 model CustomerAllocation {
   id Int @id @default(autoincrement())
@@ -462,7 +487,7 @@ model CustomerAllocation {
 }
 
 // -----------------------------------------------------------------------------
-// 16. Shipment
+// 17. Shipment
 // -----------------------------------------------------------------------------
 model Shipment {
   id       Int    @id @default(autoincrement())
@@ -501,7 +526,7 @@ model Shipment {
 }
 
 // -----------------------------------------------------------------------------
-// 17. Box - Container
+// 18. Box - Container
 // -----------------------------------------------------------------------------
 model Box {
   id         Int      @id @default(autoincrement())
@@ -524,11 +549,12 @@ model Box {
   traderStocks TraderStock[]
 
   // Ownership
-  ownershipType BoxOwnership @default(GENERAL)
-  traderId      Int? // optional, if ownershipType = TRADER
-  trader        Trader?      @relation(fields: [traderId], references: [id])
-  customerId    Int? // optional, if ownershipType = CUSTOMER
-  customer      Customer?    @relation(fields: [customerId], references: [id])
+  ownershipType     BoxOwnership @default(GENERAL)
+  traderId          Int? // optional, if ownershipType = TRADER
+  trader            Trader?      @relation(fields: [traderId], references: [id])
+  customerId        Int? // optional, if ownershipType = CUSTOMER
+  customer          Customer?    @relation(fields: [customerId], references: [id])
+  externalOwnerName String? // required, if ownershipType = EXTERNAL_TRADER
 
   updatedById Int
   updatedBy   User @relation(fields: [updatedById], references: [id])
@@ -550,7 +576,7 @@ model Box {
 }
 
 // -----------------------------------------------------------------------------
-// 18. Items - Products
+// 19. Items - Products
 // -----------------------------------------------------------------------------
 model ShipmentItem {
   id         Int      @id @default(autoincrement())
@@ -607,7 +633,7 @@ model ShipmentItem {
 }
 
 // -----------------------------------------------------------------------------
-// 19. Internal Messaging System
+// 20. Internal Messaging System
 // -----------------------------------------------------------------------------
 model Message {
   id Int @id @default(autoincrement())
@@ -696,6 +722,9 @@ enum MovementType {
 
   // --- Pitam Classification ---
   PITAM_SPLIT // Splits a MIXED pitam balance into WITH_PITAM/WITHOUT_PITAM without altering the original classification (Positive/Negative)
+
+  // --- Regional Retention ---
+  REMAINS_IN_ITALY // Grade ה/ו sorted under GENERAL assignment; stays in Italy, not split among traders (Positive)
 }
 
 enum ShipmentStatus {
@@ -725,6 +754,7 @@ enum BoxOwnership {
   SHARED
   GENERAL
   CUSTOM
+  EXTERNAL_TRADER
 }
 
 enum ItemOwnership {

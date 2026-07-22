@@ -33,6 +33,9 @@ export function useHarvestFormState({
   const isOwnerHarvestedTouchedRef = useRef(false);
   const isOwnerRejectedTouchedRef = useRef(false);
   const [harvestFormIsPartialClassification, setHarvestFormIsPartialClassification] = useState(false);
+  const [harvestFormIsBadPick, setHarvestFormIsBadPick] = useState(false);
+  const [harvestFormRemainsInItalyGradeH, setHarvestFormRemainsInItalyGradeH] = useState(true);
+  const [harvestFormRemainsInItalyGradeV, setHarvestFormRemainsInItalyGradeV] = useState(true);
   const [harvestFormClassifications, setHarvestFormClassifications] = useState<HarvestFormClassificationDraft[]>([]);
   const [harvestFormTraderCategories, setHarvestFormTraderCategories] = useState<TraderCategoryWithShares[]>([]);
   const [harvestFormCustomerCategories, setHarvestFormCustomerCategories] = useState<CustomerCategory[]>([]);
@@ -100,6 +103,9 @@ export function useHarvestFormState({
     setHarvestFormOwnerRejected('');
     setHarvestFormNotes('');
     setHarvestFormIsPartialClassification(false);
+    setHarvestFormIsBadPick(false);
+    setHarvestFormRemainsInItalyGradeH(true);
+    setHarvestFormRemainsInItalyGradeV(true);
     setHarvestFormClassifications([]);
     isOwnerHarvestedTouchedRef.current = false;
     isOwnerRejectedTouchedRef.current = false;
@@ -188,6 +194,12 @@ export function useHarvestFormState({
     setHarvestFormNotes,
     harvestFormIsPartialClassification,
     setHarvestFormIsPartialClassification,
+    harvestFormIsBadPick,
+    setHarvestFormIsBadPick,
+    harvestFormRemainsInItalyGradeH,
+    setHarvestFormRemainsInItalyGradeH,
+    harvestFormRemainsInItalyGradeV,
+    setHarvestFormRemainsInItalyGradeV,
     harvestFormClassifications,
     setHarvestFormClassifications,
     harvestFormTraderCategories,

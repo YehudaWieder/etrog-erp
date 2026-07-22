@@ -77,6 +77,58 @@
   justify-self: start;
 }
 
+.badPickField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  align-self: end;
+  height: 42px;
+  font-weight: 700;
+  color: #27482f;
+  cursor: pointer;
+}
+
+.badPickField input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  border: 2px solid #c8d0d8;
+  border-radius: 6px;
+  background: var(--color-bg-surface);
+  cursor: pointer;
+  position: relative;
+  transition: background var(--easing-standard), border-color var(--easing-standard);
+}
+
+.badPickField input[type='checkbox']:hover {
+  border-color: var(--color-primary);
+}
+
+.badPickField input[type='checkbox']:checked {
+  background: var(--color-text-accent);
+  border-color: var(--color-text-accent);
+}
+
+.badPickField input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  width: 5px;
+  height: 10px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.badPickField input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .classificationMode {
   min-height: 42px;
   margin: 0;
@@ -113,11 +165,49 @@
 .classificationMode label {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-weight: 600;
   color: #27482f;
+  cursor: pointer;
+}
+
+.classificationMode input[type='radio'] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  border: 2px solid #c8d0d8;
+  border-radius: 50%;
+  background: var(--color-bg-surface);
+  cursor: pointer;
   position: relative;
-  right: 8px;
+  transition: background var(--easing-standard), border-color var(--easing-standard);
+}
+
+.classificationMode input[type='radio']:hover {
+  border-color: var(--color-primary);
+}
+
+.classificationMode input[type='radio']:checked {
+  border-color: var(--color-text-accent);
+}
+
+.classificationMode input[type='radio']:checked::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-text-accent);
+}
+
+.classificationMode input[type='radio']:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .classifications {
