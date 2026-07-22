@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { ReactNode, RefObject } from 'react';
-import { FaScaleBalanced, FaUserTie, FaLayerGroup } from 'react-icons/fa6';
+import { FaScaleBalanced, FaUserTie, FaLayerGroup, FaMapPin } from 'react-icons/fa6';
 import type { AppLang, TraderInventoryI18n } from '../i18n';
 import type { TraderInventorySummaryRow, TraderInventorySummaryTotals } from '../traderInventory.types';
 import {
@@ -67,6 +67,11 @@ export function TraderInventoryAllSection({
           <div className={styles.summaryIcon}><FaLayerGroup aria-hidden="true" /></div>
           <span className={styles.summaryLabel}>{labels.totals.moduloQuantity}</span>
           <strong className={styles.summaryValue}>{numberFormatter.format(Math.abs(totals.moduloQuantity))}</strong>
+        </article>
+        <article className={styles.summaryCard}>
+          <div className={styles.summaryIcon}><FaMapPin aria-hidden="true" /></div>
+          <span className={styles.summaryLabel}>{labels.totals.remainsInItalyQuantity}</span>
+          <strong className={styles.summaryValue}>{numberFormatter.format(Math.abs(totals.remainsInItalyQuantity))}</strong>
         </article>
       </div>
 

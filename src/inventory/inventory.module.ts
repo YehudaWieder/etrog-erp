@@ -17,6 +17,8 @@ import { TraderStockController } from './controllers/trader-stock/trader-stock.c
 import { CustomerAllocationController } from './controllers/customer-allocation/customer-allocation.controller';
 import { SeasonsModule } from 'src/seasons/seasons.module';
 import { PitamSplitService } from './services/pitam-split/pitam-split.service';
+import { GeneralShareAllocationService } from './services/general-share-allocation/general-share-allocation.service';
+import { RemainsInItalyWithdrawalService } from './services/remains-in-italy-withdrawal/remains-in-italy-withdrawal.service';
 
 @Module({
   imports: [SeasonsModule],
@@ -36,7 +38,9 @@ import { PitamSplitService } from './services/pitam-split/pitam-split.service';
     CustomerGeneralTransferService,
     InventoryValidationService,
     PitamSplitService,
+    GeneralShareAllocationService,
+    RemainsInItalyWithdrawalService,
   ],
-  exports: [InventoryAvailabilityService],
+  exports: [InventoryAvailabilityService, GeneralShareAllocationService],
 })
 export class InventoryModule {}

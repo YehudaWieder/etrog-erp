@@ -23,6 +23,8 @@ import { CustomerGeneralAllocationRequestDto } from 'src/inventory/services/inve
 import { parseOptionalInt } from 'src/inventory/services/inventory-core/utils/inventory-query-parse.util';
 import { PitamSplitService } from 'src/inventory/services/pitam-split/pitam-split.service';
 import { ResolvePitamSplitDto } from 'src/inventory/services/pitam-split/dto/resolve-pitam-split.dto';
+import { RemainsInItalyWithdrawalService } from 'src/inventory/services/remains-in-italy-withdrawal/remains-in-italy-withdrawal.service';
+import { CreateRemainsInItalyWithdrawalDto } from 'src/inventory/services/remains-in-italy-withdrawal/dto/create-remains-in-italy-withdrawal.dto';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('access-token')
@@ -33,6 +35,7 @@ export class InventoryController {
 	constructor(
 		private readonly inventoryService: InventoryService,
 		private readonly pitamSplitService: PitamSplitService,
+		private readonly remainsInItalyWithdrawalService: RemainsInItalyWithdrawalService,
 	) {}
 
 	@Get('summary')
@@ -399,5 +402,114 @@ export class InventoryController {
 	updatePitamSplit(@Param('batchId') batchId: string, @Body() data: ResolvePitamSplitDto, @Req() req: Request) {
 		const actor = req.user as AuthenticatedUser;
 		return this.pitamSplitService.updateBatch(batchId, data, actor.id);
+	}
+
+	@Post('remains-in-italy-withdrawal')
+	@ApiOperation({
+		summary:
+			'Withdraw a quantity from the REMAINS_IN_ITALY bucket (traderId: null, isModulo: false) and route it to a destination. ' +
+			'TRADER/CUSTOMER land directly in that owner\'s stock as a HARVEST_IN entry. ' +
+			'GENERAL re-runs the same trader-share split every GENERAL classification goes through.',
+	})
+	@ApiBody({
+		type: CreateRemainsInItalyWithdrawalDto,
+		examples: {
+			toTrader: {
+				summary: 'Withdraw to a specific trader',
+				value: {
+					traderCategoryId: 3,
+					grade: 'ה',
+					pitamStatus: 'WITHOUT_PITAM',
+					quantity: 10,
+					destinationType: 'TRADER',
+					traderId: 4,
+				},
+			},
+			toCustomer: {
+				summary: 'Withdraw to a specific customer',
+				value: {
+					traderCategoryId: 3,
+					grade: 'ה',
+					pitamStatus: 'WITHOUT_PITAM',
+					quantity: 10,
+					destinationType: 'CUSTOMER',
+					customerId: 5,
+					customerCategoryId: 11,
+				},
+			},
+			toGeneral: {
+				summary: 'Withdraw and split across every trader by their configured category share',
+				value: {
+					traderCategoryId: 3,
+					grade: 'ה',
+					pitamStatus: 'WITHOUT_PITAM',
+					quantity: 10,
+					destinationType: 'GENERAL',
+				},
+			},
+		},
+	})
+	@ApiResponse({ status: 201, description: 'Withdrawal created successfully.' })
+	@ApiResponse({ status: 400, description: 'Invalid payload or insufficient remains-in-Italy stock.' })
+	createRemainsInItalyWithdrawal(@Body() data: CreateRemainsInItalyWithdrawalDto, @Req() req: Request) {
+		const actor = req.user as AuthenticatedUser;
+		return this.remainsInItalyWithdrawalService.create(data, actor.id);
+	}
+
+	@Get('remains-in-italy-withdrawal')
+	@ApiOperation({
+		summary:
+			'List remains-in-Italy withdrawals available to manage (each groups the negative REMAINS_IN_ITALY row with everything it created at its destination).',
+	})
+	@ApiQuery({ name: 'seasonId', type: Number, required: false, description: 'Defaults to active season.' })
+	@ApiQuery({ name: 'traderCategoryId', type: Number, required: false })
+	@ApiQuery({ name: 'grade', enum: Grade, enumName: 'Grade', required: false })
+	@ApiQuery({ name: 'pitamStatus', enum: PitamStatus, enumName: 'PitamStatus', required: false })
+	@ApiResponse({ status: 200, description: 'Remains-in-Italy withdrawals.' })
+	listRemainsInItalyWithdrawals(
+		@Query('seasonId') seasonId?: string,
+		@Query('traderCategoryId') traderCategoryId?: string,
+		@Query('grade') grade?: Grade,
+		@Query('pitamStatus') pitamStatus?: PitamStatus,
+	) {
+		return this.remainsInItalyWithdrawalService.listWithdrawals({
+			seasonId: parseOptionalInt(seasonId),
+			traderCategoryId: parseOptionalInt(traderCategoryId),
+			grade,
+			pitamStatus,
+		});
+	}
+
+	@Delete('remains-in-italy-withdrawal/:id')
+	@ApiOperation({
+		summary:
+			'Undo a remains-in-Italy withdrawal: permanently deletes the negative REMAINS_IN_ITALY row and everything it created at its destination. ' +
+			'Fails if that destination stock has since been consumed downstream (e.g. packed into a shipment).',
+	})
+	@ApiParam({ name: 'id', type: Number })
+	@ApiResponse({ status: 200, description: 'Withdrawal undone (rows permanently deleted).' })
+	@ApiResponse({ status: 400, description: 'Destination stock was already partially consumed and can no longer be undone.' })
+	@ApiResponse({ status: 404, description: 'Withdrawal not found.' })
+	undoRemainsInItalyWithdrawal(@Param('id', ParseIntPipe) id: number) {
+		return this.remainsInItalyWithdrawalService.undoWithdrawal(id);
+	}
+
+	@Put('remains-in-italy-withdrawal/:id')
+	@ApiOperation({
+		summary:
+			'Update a remains-in-Italy withdrawal: in a single transaction, deletes everything the previous withdrawal created and creates a new one from the given payload.',
+	})
+	@ApiParam({ name: 'id', type: Number })
+	@ApiBody({ type: CreateRemainsInItalyWithdrawalDto })
+	@ApiResponse({ status: 200, description: 'Withdrawal updated (old rows deleted, new withdrawal created).' })
+	@ApiResponse({ status: 400, description: 'Invalid payload, insufficient stock, or previous withdrawal already consumed downstream.' })
+	@ApiResponse({ status: 404, description: 'Withdrawal not found.' })
+	updateRemainsInItalyWithdrawal(
+		@Param('id', ParseIntPipe) id: number,
+		@Body() data: CreateRemainsInItalyWithdrawalDto,
+		@Req() req: Request,
+	) {
+		const actor = req.user as AuthenticatedUser;
+		return this.remainsInItalyWithdrawalService.updateWithdrawal(id, data, actor.id);
 	}
 }

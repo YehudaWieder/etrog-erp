@@ -3,6 +3,7 @@ import {
 	DEFAULT_TRADER_CATEGORIES_I18N_EN,
 	TRADER_CATEGORIES_I18N_EN,
 	TRADERS_I18N_EN,
+	TRADER_SEASON_SETTINGS_I18N_EN,
 	TRADER_INVENTORY_I18N_EN,
 	TRADER_MOVEMENTS_I18N_EN,
 } from './i18n.en';
@@ -10,6 +11,7 @@ import {
 	DEFAULT_TRADER_CATEGORIES_I18N_HE,
 	TRADER_CATEGORIES_I18N_HE,
 	TRADERS_I18N_HE,
+	TRADER_SEASON_SETTINGS_I18N_HE,
 	TRADER_INVENTORY_I18N_HE,
 	TRADER_MOVEMENTS_I18N_HE,
 } from './i18n.he';
@@ -53,6 +55,7 @@ export type TraderInventoryI18n = {
 				arrivedOption: string;
 				selfPickupOption: string;
 				privateSelectionOption: string;
+				remainsInItalyOption: string;
 			};
 		loading: string;
 		loadFailed: string;
@@ -62,6 +65,7 @@ export type TraderInventoryI18n = {
 			totalQuantity: string;
 			traderQuantity: string;
 			moduloQuantity: string;
+			remainsInItalyQuantity: string;
 		};
 		matrix: {
 			title: string;
@@ -102,19 +106,15 @@ export const TRADER_INVENTORY_I18N = {
 } as const;
 
 export type TradersI18n = {
-	paymentRequired: string;
 	addFailed: string;
 	emptyName: string;
-	invalidPercent: string;
 	editFailed: string;
 	deleteFailed: string;
 	newTraderPlaceholder: string;
-	paymentPlaceholder: string;
 	addTrader: string;
 	loading: string;
 	empty: string;
 	traderId: string;
-	paymentPercentLabel: string;
 	deleteTitle: string;
 	deleteMessage: (name: string) => string;
 	deleteFallback: string;
@@ -129,13 +129,55 @@ export type TradersI18n = {
 	adding: string;
 };
 
+export type TraderSeasonSettingsI18n = {
+	title: string;
+	warningNotice: string;
+	seasonFilterLabel: string;
+	activeSeasonBadge: string;
+	noActiveSeason: string;
+	loading: string;
+	noTraders: string;
+	noAvailableTraders: string;
+	loadFailed: string;
+	addFailed: string;
+	editFailed: string;
+	deleteFailed: string;
+	empty: string;
+	seasonEmpty: string;
+	traderLabel: string;
+	selectTrader: string;
+	traderIdLabel: string;
+	paymentPercentLabel: string;
+	paymentPercentPlaceholder: string;
+	pricePerEtrogLabel: string;
+	pricePerEtrogPlaceholder: string;
+	currencyLabel: string;
+	selectCurrency: string;
+	invalidPercent: string;
+	invalidPrice: string;
+	addTitle: string;
+	editTitle: string;
+	addMessage: string;
+	editMessage: (name: string) => string;
+	editFallback: string;
+	deleteTitle: string;
+	deleteMessage: (name: string) => string;
+	deleteFallback: string;
+	deleteConfirm: string;
+	cancel: string;
+	save: string;
+	saving: string;
+};
+
 export type TraderCategoriesI18n = {
+	warningNotice: string;
 	seasonFilterLabel: string;
 	traderFilterLabel: string;
 	activeSeasonBadge: string;
 	allTradersOption: string;
 	noActiveSeason: string;
 	noSeasonSelected: string;
+	nonActiveSeasonSelectionDisabled: string;
 	addTitle: string;
 	editTitle: string;
 	addMessage: string;
@@ -184,6 +226,7 @@ export type TraderCategoriesI18n = {
 };
 
 export type DefaultTraderCategoriesI18n = {
+	warningNotice: string;
 	addTitle: string;
 	editTitle: string;
 	addMessage: string;
@@ -236,6 +279,7 @@ export type DefaultTraderCategoriesI18n = {
 
 export type TraderMovementsI18n = {
 	addMovementButton: string;
+	nonActiveSeasonDisabled: string;
 	columns: {
 		date: string;
 		type: string;
@@ -294,12 +338,17 @@ export type TraderMovementsI18n = {
 			ADJUSTMENT: string;
 			PITAM_SPLIT: string;
 			PITAM_SPLIT_MANAGE: string;
+			REMAINS_IN_ITALY_WITHDRAWAL: string;
+			REMAINS_IN_ITALY_WITHDRAWAL_MANAGE: string;
 		};
 		fromTraderLabel: string;
 		toTraderLabel: string;
 		traderLabel: string;
 		traderPlaceholder: string;
 		moduloOption: string;
+		destinationLabel: string;
+		destinationPlaceholder: string;
+		destinationOptions: { TRADER: string; CUSTOMER: string; GENERAL: string };
 		wasteSourceLabel: string;
 		wasteSourcePlaceholder: string;
 		itemStockSourceLabel: string;
@@ -337,6 +386,16 @@ export type TraderMovementsI18n = {
 		pitamSplitManageSaveLabel: string;
 		pitamSplitManageSavingLabel: string;
 		pitamSplitManageDiscardEditLabel: string;
+		riwUndoBatchLabel: string;
+		riwUndoBatchPlaceholder: string;
+		riwUndoNoBatches: string;
+		riwUndoLoading: string;
+		riwManageUpdateLabel: string;
+		riwManageCancelLabel: string;
+		riwManageCancelingLabel: string;
+		riwManageSaveLabel: string;
+		riwManageSavingLabel: string;
+		riwManageDiscardEditLabel: string;
 		availableQuantityHint: (quantity: number) => string;
 		adjustmentQuantityHint: string;
 		notesLabel: string;
@@ -352,6 +411,11 @@ export type TraderMovementsI18n = {
 const TRADERS_I18N: Record<AppLang, TradersI18n> = {
 	he: TRADERS_I18N_HE,
 	en: TRADERS_I18N_EN,
+};
+
+const TRADER_SEASON_SETTINGS_I18N: Record<AppLang, TraderSeasonSettingsI18n> = {
+	he: TRADER_SEASON_SETTINGS_I18N_HE,
+	en: TRADER_SEASON_SETTINGS_I18N_EN,
 };
 
 const TRADER_CATEGORIES_I18N: Record<AppLang, TraderCategoriesI18n> = {
@@ -379,6 +443,10 @@ export function resolveTradersAppLang(): AppLang {
 
 export function getTradersI18n() {
 	return TRADERS_I18N[resolveAppLang()];
+}
+
+export function getTraderSeasonSettingsI18n() {
+	return TRADER_SEASON_SETTINGS_I18N[resolveAppLang()];
 }
 
 export function getTraderCategoriesI18n() {

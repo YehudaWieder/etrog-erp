@@ -1,4 +1,4 @@
-import type { DefaultTraderCategoriesI18n, TraderCategoriesI18n, TradersI18n, TraderInventoryI18n, TraderMovementsI18n } from './i18n';
+import type { DefaultTraderCategoriesI18n, TraderCategoriesI18n, TradersI18n, TraderInventoryI18n, TraderMovementsI18n, TraderSeasonSettingsI18n } from './i18n';
 
 export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
 	userNameFallback: 'My Profile',
@@ -47,6 +47,7 @@ export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
 			arrivedOption: 'Arrived',
 			selfPickupOption: 'Self-Pickup',
 				privateSelectionOption: 'Private Selection',
+				remainsInItalyOption: 'Remains in Italy',
 		},
 		loading: 'Loading trader inventory summary...',
 		loadFailed: 'Failed to load trader inventory summary.',
@@ -56,6 +57,7 @@ export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
 			totalQuantity: 'Total Inventory',
 			traderQuantity: 'Trader Inventory Total',
 			moduloQuantity: 'Modulo Inventory Total',
+			remainsInItalyQuantity: 'Remains in Italy',
 		},
 		matrix: {
 			title: 'Inventory Summary by Category',
@@ -128,19 +130,15 @@ export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
 };
 
 export const TRADERS_I18N_EN: TradersI18n = {
-	paymentRequired: 'Payment percent is required.',
 	addFailed: 'Failed to add trader.',
 	emptyName: 'Trader name cannot be empty.',
-	invalidPercent: 'Payment percent must be between 0 and 100.',
 	editFailed: 'Failed to update trader.',
 	deleteFailed: 'Unable to delete the selected trader.',
 	newTraderPlaceholder: 'New trader name',
-	paymentPlaceholder: 'Expense payment percent',
 	addTrader: 'Add trader',
 	loading: 'Loading traders...',
 	empty: 'No traders to display yet.',
 	traderId: 'Trader ID',
-	paymentPercentLabel: 'Payment percent',
 	deleteTitle: 'Delete trader',
 	deleteMessage: (name) => `Delete trader ${name}? This action cannot be undone.`,
 	deleteFallback: 'Delete the selected trader?',
@@ -155,13 +153,55 @@ export const TRADERS_I18N_EN: TradersI18n = {
 	adding: 'Adding...',
 };
 
+export const TRADER_SEASON_SETTINGS_I18N_EN: TraderSeasonSettingsI18n = {
+	title: 'Trader pricing',
+	warningNotice: 'These settings only apply to the selected season, and do not affect other seasons.',
+	seasonFilterLabel: 'Season',
+	activeSeasonBadge: 'Active',
+	noActiveSeason: 'No active season selected.',
+	loading: 'Loading trader pricing...',
+	noTraders: 'No traders in the system yet. Add a trader before setting pricing.',
+	noAvailableTraders: 'All traders already have pricing set for this season.',
+	loadFailed: 'Failed to load trader pricing.',
+	addFailed: 'Failed to add trader pricing.',
+	editFailed: 'Failed to update trader pricing.',
+	deleteFailed: 'Failed to delete trader pricing.',
+	empty: 'Select a season to manage trader pricing.',
+	seasonEmpty: 'No trader pricing set for this season yet.',
+	traderLabel: 'Trader',
+	selectTrader: 'Select trader',
+	traderIdLabel: 'Entry ID',
+	paymentPercentLabel: 'Expense participation percent',
+	paymentPercentPlaceholder: 'Expense participation percent',
+	pricePerEtrogLabel: 'Price per etrog',
+	pricePerEtrogPlaceholder: 'Price per etrog',
+	currencyLabel: 'Currency',
+	selectCurrency: 'Select currency',
+	invalidPercent: 'Payment percent must be between 0 and 100.',
+	invalidPrice: 'Price per etrog must be zero or greater.',
+	addTitle: 'Add trader pricing',
+	editTitle: 'Edit trader pricing',
+	addMessage: 'Set a trader\'s expense participation percent and price per etrog for this season.',
+	editMessage: (name) => `Update pricing for ${name}`,
+	editFallback: 'Update the selected trader pricing',
+	deleteTitle: 'Delete trader pricing',
+	deleteMessage: (name) => `Delete pricing for ${name}? This action cannot be undone.`,
+	deleteFallback: 'Delete the selected trader pricing?',
+	deleteConfirm: 'Delete',
+	cancel: 'Cancel',
+	save: 'Save',
+	saving: 'Saving...',
+};
+
 export const TRADER_CATEGORIES_I18N_EN: TraderCategoriesI18n = {
+	warningNotice: 'Changing these settings only affects the current season, and does not affect other seasons at all.',
 	seasonFilterLabel: 'Filter by season',
 	traderFilterLabel: 'Filter by trader',
 	activeSeasonBadge: 'Active',
 	allTradersOption: 'All traders',
 	noActiveSeason: 'No active season right now',
 	noSeasonSelected: 'Select a season to manage trader categories.',
+	nonActiveSeasonSelectionDisabled: 'You can only select, edit, or delete categories in the active season',
 	addTitle: 'Add trader category',
 	editTitle: 'Edit trader category',
 	addMessage: 'Create a seasonal category with trader allocation rows. Total of all rows must be 100%.',
@@ -210,6 +250,7 @@ export const TRADER_CATEGORIES_I18N_EN: TraderCategoriesI18n = {
 };
 
 export const DEFAULT_TRADER_CATEGORIES_I18N_EN: DefaultTraderCategoriesI18n = {
+	warningNotice: 'Changing these settings affects the categories that will be created automatically in a new season, and does not affect the current season at all.',
 	addTitle: 'Add default trader category',
 	editTitle: 'Edit default trader category',
 	addMessage: 'Create a category with trader allocation rows. Total of all rows must be 100%.',
@@ -262,6 +303,7 @@ export const DEFAULT_TRADER_CATEGORIES_I18N_EN: DefaultTraderCategoriesI18n = {
 
 export const TRADER_MOVEMENTS_I18N_EN: TraderMovementsI18n = {
 	addMovementButton: 'Add Movement',
+	nonActiveSeasonDisabled: 'You can only add a movement to the active season',
 	columns: {
 		date: 'Date',
 		type: 'Movement Type',
@@ -339,12 +381,17 @@ export const TRADER_MOVEMENTS_I18N_EN: TraderMovementsI18n = {
 			ADJUSTMENT: 'Manual Adjustment / Recount',
 			PITAM_SPLIT: 'Resolve Mixed (With/Without Pitam)',
 			PITAM_SPLIT_MANAGE: 'Update / Cancel Mixed Split',
+			REMAINS_IN_ITALY_WITHDRAWAL: 'Withdraw from Remains in Italy',
+			REMAINS_IN_ITALY_WITHDRAWAL_MANAGE: 'Update / Cancel Remains-in-Italy Withdrawal',
 		},
 		fromTraderLabel: 'From Trader',
 		toTraderLabel: 'To Trader',
 		traderLabel: 'Trader',
 		traderPlaceholder: 'Select trader',
 		moduloOption: 'General',
+		destinationLabel: 'Destination',
+		destinationPlaceholder: 'Select destination',
+		destinationOptions: { TRADER: 'Trader', CUSTOMER: 'Customer', GENERAL: 'General (by share)' },
 		wasteSourceLabel: 'Waste Source',
 		wasteSourcePlaceholder: 'Select source',
 		itemStockSourceLabel: 'Stock Source',
@@ -390,6 +437,16 @@ export const TRADER_MOVEMENTS_I18N_EN: TraderMovementsI18n = {
 		pitamSplitManageSaveLabel: 'Save Update',
 		pitamSplitManageSavingLabel: 'Saving...',
 		pitamSplitManageDiscardEditLabel: 'Back',
+		riwUndoBatchLabel: 'Withdrawal to Manage',
+		riwUndoBatchPlaceholder: 'Select an existing withdrawal...',
+		riwUndoNoBatches: 'No existing remains-in-Italy withdrawals to manage.',
+		riwUndoLoading: 'Loading existing withdrawals...',
+		riwManageUpdateLabel: 'Update',
+		riwManageCancelLabel: 'Cancel Withdrawal',
+		riwManageCancelingLabel: 'Canceling...',
+		riwManageSaveLabel: 'Save Update',
+		riwManageSavingLabel: 'Saving...',
+		riwManageDiscardEditLabel: 'Back',
 		availableQuantityHint: (quantity: number) => `Available: ${quantity}`,
 		adjustmentQuantityHint: 'Enter a negative number to deduct from stock or a positive number to add',
 		notesLabel: 'Notes',

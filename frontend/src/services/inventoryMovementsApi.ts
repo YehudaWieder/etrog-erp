@@ -108,6 +108,81 @@ export async function createCustomerAdjustmentMovement(payload: CreateCustomerAd
   });
 }
 
+export type RemainsInItalyDestinationType = 'TRADER' | 'CUSTOMER' | 'GENERAL';
+
+export type CreateRemainsInItalyWithdrawalPayload = {
+  date?: string;
+  quantity: number;
+  traderCategoryId: number;
+  grade: Grade;
+  pitamStatus: PitamStatus;
+  destinationType: RemainsInItalyDestinationType;
+  traderId?: number;
+  customerId?: number;
+  customerCategoryId?: number;
+  notes?: string | null;
+};
+
+export async function createRemainsInItalyWithdrawal(payload: CreateRemainsInItalyWithdrawalPayload) {
+  return apiClient('/inventory/remains-in-italy-withdrawal', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export type RemainsInItalyWithdrawalBatch = {
+  id: number;
+  seasonId: number;
+  date: string;
+  traderCategoryId: number;
+  grade: Grade;
+  pitamStatus: PitamStatus;
+  quantity: number;
+  destinationType: RemainsInItalyDestinationType;
+  traderId: number | null;
+  traderName: string | null;
+  customerId: number | null;
+  customerCategoryId: number | null;
+  customerName: string | null;
+  notes: string | null;
+};
+
+export type FetchRemainsInItalyWithdrawalBatchesParams = {
+  seasonId?: number;
+  traderCategoryId?: number;
+  grade?: Grade;
+  pitamStatus?: PitamStatus;
+};
+
+export async function fetchRemainsInItalyWithdrawalBatches(
+  params: FetchRemainsInItalyWithdrawalBatchesParams = {},
+): Promise<RemainsInItalyWithdrawalBatch[]> {
+  const query = new URLSearchParams();
+  if (params.seasonId) query.set('seasonId', String(params.seasonId));
+  if (params.traderCategoryId) query.set('traderCategoryId', String(params.traderCategoryId));
+  if (params.grade) query.set('grade', params.grade);
+  if (params.pitamStatus) query.set('pitamStatus', params.pitamStatus);
+
+  const queryString = query.toString();
+  return apiClient<RemainsInItalyWithdrawalBatch[]>(
+    `/inventory/remains-in-italy-withdrawal${queryString ? `?${queryString}` : ''}`,
+    { suppressGlobalFeedback: true },
+  );
+}
+
+export async function undoRemainsInItalyWithdrawal(id: number) {
+  return apiClient(`/inventory/remains-in-italy-withdrawal/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function updateRemainsInItalyWithdrawal(id: number, payload: CreateRemainsInItalyWithdrawalPayload) {
+  return apiClient(`/inventory/remains-in-italy-withdrawal/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
 export type PitamSplitSource = 'SPECIFIC_TRADER' | 'MODULO' | 'GENERAL';
 
 // Trader-only: a customer always has a definite pitam status, so there is nothing to resolve there.

@@ -12,24 +12,37 @@ import {
   createCustomerGeneralTransfer,
   createInternalTransfer,
   createPitamSplitMovement,
+  createRemainsInItalyWithdrawal,
   createTraderAdjustmentMovement,
   undoPitamSplitBatch,
+  undoRemainsInItalyWithdrawal,
   updatePitamSplitBatch,
+  updateRemainsInItalyWithdrawal,
   type InternalTransferMovementType,
   type PitamSplitSource,
   type PitamStatus,
+  type RemainsInItalyDestinationType,
   type TraderAdjustmentMovementType,
 } from '../../../services/inventoryMovementsApi';
 import { ApiError } from '../../../services/apiClient';
 import { fetchTraderInventorySummary } from '../services/traderInventorySummary.service';
 import { usePitamSplitBatches } from '../hooks/usePitamSplitBatches';
+import { useRemainsInItalyWithdrawalBatches } from '../hooks/useRemainsInItalyWithdrawalBatches';
 import { PitamSplitUndoBatchPicker } from './PitamSplitUndoBatchPicker';
+import { RemainsInItalyWithdrawalBatchPicker } from './RemainsInItalyWithdrawalBatchPicker';
 import type { TraderInventorySummaryRow } from '../traderInventory.types';
 
 const GRADE_OPTIONS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו'] as const;
+const GRADE_ORDER = new Map<string, number>(GRADE_OPTIONS.map((grade, index) => [grade, index]));
+
+// Grade dropdowns are built from whatever order stock rows come back in (DB/insertion order),
+// which reads as scrambled to a user expecting א/ב/ג/... — always sort to the canonical order.
+function sortGrades<T extends string>(grades: T[]): T[] {
+  return [...grades].sort((a, b) => (GRADE_ORDER.get(a) ?? 99) - (GRADE_ORDER.get(b) ?? 99));
+}
 const PITAM_STATUS_OPTIONS: PitamStatus[] = ['WITH_PITAM', 'WITHOUT_PITAM', 'MIXED'];
 
-type MovementType = InternalTransferMovementType | TraderAdjustmentMovementType | 'PITAM_SPLIT' | 'PITAM_SPLIT_MANAGE';
+type MovementType = InternalTransferMovementType | TraderAdjustmentMovementType | 'PITAM_SPLIT' | 'PITAM_SPLIT_MANAGE' | 'REMAINS_IN_ITALY_WITHDRAWAL' | 'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE';
 
 const MOVEMENT_TYPE_ORDER: Array<Exclude<MovementType, 'PRIVATE_SELECTION'>> = [
   'OWNERSHIP_TRANSFER',
@@ -37,6 +50,8 @@ const MOVEMENT_TYPE_ORDER: Array<Exclude<MovementType, 'PRIVATE_SELECTION'>> = [
   'INTERNAL_TRANSFER',
   'SELF_PICKUP',
   'WASTE',
+  'REMAINS_IN_ITALY_WITHDRAWAL',
+  'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE',
   'PITAM_SPLIT',
   'PITAM_SPLIT_MANAGE',
 ];
@@ -141,10 +156,25 @@ export function AddTraderMovementModal({
   const [isLoadingGeneralStock, setIsLoadingGeneralStock] = useState(false);
   const [generalTransferStock, setGeneralTransferStock] = useState<TraderInventorySummaryRow[]>([]);
   const [isLoadingGeneralTransferStock, setIsLoadingGeneralTransferStock] = useState(false);
+  const [remainsInItalyDestination, setRemainsInItalyDestination] = useState<RemainsInItalyDestinationType | ''>('');
+  const [remainsInItalyStock, setRemainsInItalyStock] = useState<TraderInventorySummaryRow[]>([]);
+  const [isLoadingRemainsInItalyStock, setIsLoadingRemainsInItalyStock] = useState(false);
+  // Update/cancel an existing REMAINS_IN_ITALY_WITHDRAWAL — mirrors PITAM_SPLIT_MANAGE: pick a
+  // withdrawal, then either edit its destination/quantity (delete+recreate in one backend
+  // transaction) or cancel it outright. Category/grade/pitamStatus stay fixed on edit.
+  const [riwManageBatchId, setRiwManageBatchId] = useState('');
+  const [riwManageMode, setRiwManageMode] = useState<'select' | 'edit'>('select');
+  const [riwManageEditDestination, setRiwManageEditDestination] = useState<RemainsInItalyDestinationType | ''>('');
+  const [riwManageEditTraderId, setRiwManageEditTraderId] = useState('');
+  const [riwManageEditCustomerId, setRiwManageEditCustomerId] = useState('');
+  const [riwManageEditCustomerCategoryId, setRiwManageEditCustomerCategoryId] = useState('');
+  const [riwManageEditQuantity, setRiwManageEditQuantity] = useState('');
+  const [riwManageEditError, setRiwManageEditError] = useState('');
+  const [riwManageActionSubmitting, setRiwManageActionSubmitting] = useState(false);
 
-  // ASSIGNED, WASTE (general/modulo source), and PITAM_SPLIT (MODULO source) all allocate from MODULO stock.
+  // ASSIGNED and PITAM_SPLIT (MODULO source) allocate from MODULO stock only.
   useEffect(() => {
-    const needsGeneralStock = type === 'ASSIGNED' || (type === 'WASTE' && isModulo) || (type === 'PITAM_SPLIT' && pitamSplitSource === 'MODULO');
+    const needsGeneralStock = type === 'ASSIGNED' || (type === 'PITAM_SPLIT' && pitamSplitSource === 'MODULO');
     if (!needsGeneralStock || !seasonId) {
       setGeneralStock([]);
       return;
@@ -177,13 +207,13 @@ export function AddTraderMovementModal({
     };
   }, [type, isModulo, pitamSplitSource, seasonId]);
 
-  // INTERNAL_TRANSFER "General" (customer allocation from general pool) draws from MODULO first,
-  // then proportionally from every trader's share — so what's actually offerable is the union of
-  // MODULO stock and stock held across all traders combined. PITAM_SPLIT "GENERAL" reuses the same
-  // combined pool purely to compute an informational MIXED-availability hint (the server is the
-  // source of truth for the actual per-trader share split).
+  // INTERNAL_TRANSFER "General" (customer allocation from general pool) and WASTE "כללי" both draw
+  // from MODULO first, then proportionally from every trader's share — so what's actually offerable
+  // is the union of MODULO stock and stock held across all traders combined. PITAM_SPLIT "GENERAL"
+  // reuses the same combined pool purely to compute an informational MIXED-availability hint (the
+  // server is the source of truth for the actual per-trader share split).
   useEffect(() => {
-    const needsCombinedStock = (type === 'INTERNAL_TRANSFER' && isModulo) || (type === 'PITAM_SPLIT' && pitamSplitSource === 'GENERAL');
+    const needsCombinedStock = (type === 'INTERNAL_TRANSFER' && isModulo) || (type === 'WASTE' && isModulo) || (type === 'PITAM_SPLIT' && pitamSplitSource === 'GENERAL');
     if (!needsCombinedStock || !seasonId) {
       setGeneralTransferStock([]);
       return;
@@ -217,8 +247,9 @@ export function AddTraderMovementModal({
     const isPitamSplitTrader = type === 'PITAM_SPLIT' && pitamSplitSource === 'SPECIFIC_TRADER';
     const activeFromTraderId = (type === 'SELF_PICKUP' || type === 'WASTE' || isPitamSplitTrader) ? traderId : fromTraderId;
     const isWaste = type === 'WASTE';
+    const isWasteTrader = isWaste && !isModulo;
     const isInternalTransferGeneral = type === 'INTERNAL_TRANSFER' && isModulo;
-    const needsStockSource = type !== 'WASTE' && !isPitamSplitTrader || (type === 'WASTE' && !isModulo);
+    const needsStockSource = type !== 'WASTE' && !isPitamSplitTrader;
     if (
       isInternalTransferGeneral ||
       (type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'SELF_PICKUP' && !isWaste && !isPitamSplitTrader) ||
@@ -230,7 +261,8 @@ export function AddTraderMovementModal({
       return;
     }
 
-    const shipmentScope = stockSource === 'PRIVATE_SELECTION' ? 'PRIVATE_SELECTION' : 'UNSHIPPED';
+    // WASTE against a specific trader always draws from that trader's private-selection pool only.
+    const shipmentScope = isWasteTrader || stockSource === 'PRIVATE_SELECTION' ? 'PRIVATE_SELECTION' : 'UNSHIPPED';
 
     let isActive = true;
     setIsLoadingFromTraderStock(true);
@@ -259,12 +291,53 @@ export function AddTraderMovementModal({
     };
   }, [type, fromTraderId, traderId, stockSource, isModulo, seasonId]);
 
+  // REMAINS_IN_ITALY_WITHDRAWAL draws from the regional-retention bucket (traderId: null, isModulo: false).
+  useEffect(() => {
+    if (type !== 'REMAINS_IN_ITALY_WITHDRAWAL' || !seasonId) {
+      setRemainsInItalyStock([]);
+      return;
+    }
+
+    let isActive = true;
+    setIsLoadingRemainsInItalyStock(true);
+
+    fetchTraderInventorySummary({
+      seasonId,
+      traderId: null,
+      ownerScope: 'ALL',
+      shipmentScope: 'REMAINS_IN_ITALY',
+    })
+      .then((result) => {
+        if (!isActive) return;
+        setRemainsInItalyStock(result.rows.filter((row) => row.quantity > 0));
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setRemainsInItalyStock([]);
+      })
+      .finally(() => {
+        if (!isActive) return;
+        setIsLoadingRemainsInItalyStock(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [type, seasonId]);
+
   const { batches: pitamSplitUndoBatches, isLoading: isPitamSplitUndoLoading, reload: reloadPitamSplitUndoBatches } = usePitamSplitBatches(
     type === 'PITAM_SPLIT_MANAGE',
     { seasonId },
   );
 
   const selectedManageBatch = pitamSplitUndoBatches.find((batch) => batch.batchId === pitamSplitUndoBatchId) ?? null;
+
+  const { batches: riwBatches, isLoading: isRiwUndoLoading, reload: reloadRiwBatches } = useRemainsInItalyWithdrawalBatches(
+    type === 'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE',
+    { seasonId },
+  );
+
+  const selectedRiwManageBatch = riwBatches.find((batch) => String(batch.id) === riwManageBatchId) ?? null;
 
   const traderCategoryOrderById = useMemo(() => {
     const map = new Map<number, number>();
@@ -296,11 +369,11 @@ export function AddTraderMovementModal({
 
   const fromTraderGradeOptions = useMemo(() => {
     if (!traderCategoryId) return [];
-    return [...new Set(
+    return sortGrades([...new Set(
       fromTraderStock
         .filter((row) => String(row.traderCategoryId) === traderCategoryId)
         .map((row) => row.grade),
-    )];
+    )]);
   }, [fromTraderStock, traderCategoryId]);
 
   const fromTraderPitamStatusOptions = useMemo(() => {
@@ -325,11 +398,11 @@ export function AddTraderMovementModal({
 
   const generalGradeOptions = useMemo(() => {
     if (!traderCategoryId) return [];
-    return [...new Set(
+    return sortGrades([...new Set(
       generalStock
         .filter((row) => String(row.traderCategoryId) === traderCategoryId)
         .map((row) => row.grade),
-    )];
+    )]);
   }, [generalStock, traderCategoryId]);
 
   const generalPitamStatusOptions = useMemo(() => {
@@ -354,11 +427,11 @@ export function AddTraderMovementModal({
 
   const generalTransferGradeOptions = useMemo(() => {
     if (!traderCategoryId) return [];
-    return [...new Set(
+    return sortGrades([...new Set(
       generalTransferStock
         .filter((row) => String(row.traderCategoryId) === traderCategoryId)
         .map((row) => row.grade),
-    )];
+    )]);
   }, [generalTransferStock, traderCategoryId]);
 
   const generalTransferPitamStatusOptions = useMemo(() => {
@@ -369,6 +442,42 @@ export function AddTraderMovementModal({
         .map((row) => row.pitamStatus),
     )];
   }, [generalTransferStock, traderCategoryId, grade]);
+
+  const remainsInItalyCategoryOptions = useMemo(() => {
+    const seen = new Map<number, string>();
+    for (const row of remainsInItalyStock) {
+      if (!seen.has(row.traderCategoryId)) {
+        seen.set(row.traderCategoryId, row.traderCategoryName ?? `#${row.traderCategoryId}`);
+      }
+    }
+    return sortCategoryOptionsByPriority([...seen.entries()].map(([id, name]) => ({ id, name })));
+  }, [remainsInItalyStock, traderCategoryOrderById]);
+
+  const remainsInItalyGradeOptions = useMemo(() => {
+    if (!traderCategoryId) return [];
+    return sortGrades([...new Set(
+      remainsInItalyStock
+        .filter((row) => String(row.traderCategoryId) === traderCategoryId)
+        .map((row) => row.grade),
+    )]);
+  }, [remainsInItalyStock, traderCategoryId]);
+
+  const remainsInItalyPitamStatusOptions = useMemo(() => {
+    if (!traderCategoryId || !grade) return [];
+    return [...new Set(
+      remainsInItalyStock
+        .filter((row) => String(row.traderCategoryId) === traderCategoryId && row.grade === grade)
+        .map((row) => row.pitamStatus),
+    )];
+  }, [remainsInItalyStock, traderCategoryId, grade]);
+
+  const availableQuantityForRemainsInItaly = useMemo(() => {
+    if (type !== 'REMAINS_IN_ITALY_WITHDRAWAL' || !traderCategoryId || !grade || !pitamStatus) return null;
+    const match = remainsInItalyStock.find(
+      (row) => String(row.traderCategoryId) === traderCategoryId && row.grade === grade && row.pitamStatus === pitamStatus,
+    );
+    return match ? match.quantity : null;
+  }, [type, remainsInItalyStock, traderCategoryId, grade, pitamStatus]);
 
   const availableQuantityForAssigned = useMemo(() => {
     if (type !== 'ASSIGNED' || !traderCategoryId || !grade || !pitamStatus) return null;
@@ -381,22 +490,17 @@ export function AddTraderMovementModal({
   const availableQuantityForSelection = useMemo(() => {
     if (!traderCategoryId || !grade || !pitamStatus) return null;
 
-    if (type === 'WASTE' && isModulo) {
-      const match = generalStock.find(
-        (row) => String(row.traderCategoryId) === traderCategoryId && row.grade === grade && row.pitamStatus === pitamStatus,
-      );
-      return match ? match.quantity : null;
-    }
-
-    if (type === 'INTERNAL_TRANSFER' && isModulo) {
-      // Combined MODULO + all-traders pool can have several matching rows (one per trader) — sum them.
+    if ((type === 'WASTE' && isModulo) || (type === 'INTERNAL_TRANSFER' && isModulo)) {
+      // "כללי" WASTE draws from MODULO first, then proportionally from every trader's share —
+      // so the offerable total is the combined MODULO + all-traders pool (same pool INTERNAL_TRANSFER's
+      // general branch already uses). This is only a UI hint; the server is the source of truth.
       const total = generalTransferStock
         .filter((row) => String(row.traderCategoryId) === traderCategoryId && row.grade === grade && row.pitamStatus === pitamStatus)
         .reduce((sum, row) => sum + row.quantity, 0);
       return total > 0 ? total : null;
     }
 
-    const isWasteTrader = type === 'WASTE' && !isModulo && Boolean(stockSource);
+    const isWasteTrader = type === 'WASTE' && !isModulo;
     if (type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'SELF_PICKUP' && !isWasteTrader) {
       return null;
     }
@@ -448,6 +552,18 @@ export function AddTraderMovementModal({
     setPitamStatus('');
   }, [type, seasonId]);
 
+  // Reset destination-specific and product fields whenever the destination changes.
+  useEffect(() => {
+    if (type !== 'REMAINS_IN_ITALY_WITHDRAWAL') return;
+    setTraderId('');
+    setCustomerId('');
+    setCustomerCategoryId('');
+    setCustomerGrade('');
+    setTraderCategoryId('');
+    setGrade('');
+    setPitamStatus('');
+  }, [type, remainsInItalyDestination]);
+
   // When isModulo is set (WASTE general or INTERNAL_TRANSFER "General"), grade/pitam come from a
   // different pool entirely (generalStock / generalTransferStock, not fromTraderStock) — those
   // cases are validated by their own dedicated effects below, so skip this trader-stock check then.
@@ -467,9 +583,9 @@ export function AddTraderMovementModal({
     }
   }, [type, fromTraderPitamStatusOptions, pitamStatus, isModulo]);
 
-  // ASSIGNED and WASTE (general/modulo source) both offer grade/pitam filtered to actual MODULO stock.
+  // ASSIGNED offers grade/pitam filtered to actual MODULO stock.
   useEffect(() => {
-    const usesGeneralStock = type === 'ASSIGNED' || (type === 'WASTE' && isModulo);
+    const usesGeneralStock = type === 'ASSIGNED';
     if (!usesGeneralStock || !grade) return;
     if (!generalGradeOptions.includes(grade)) {
       setGrade('');
@@ -477,16 +593,17 @@ export function AddTraderMovementModal({
   }, [type, isModulo, generalGradeOptions, grade]);
 
   useEffect(() => {
-    const usesGeneralStock = type === 'ASSIGNED' || (type === 'WASTE' && isModulo);
+    const usesGeneralStock = type === 'ASSIGNED';
     if (!usesGeneralStock || !pitamStatus) return;
     if (!(generalPitamStatusOptions as string[]).includes(pitamStatus)) {
       setPitamStatus('');
     }
   }, [type, isModulo, generalPitamStatusOptions, pitamStatus]);
 
-  // INTERNAL_TRANSFER "General" offers grade/pitam filtered to the combined MODULO + all-traders pool.
+  // INTERNAL_TRANSFER "General" and WASTE "כללי" both offer grade/pitam filtered to the combined
+  // MODULO + all-traders pool.
   useEffect(() => {
-    const usesGeneralTransferStock = type === 'INTERNAL_TRANSFER' && isModulo;
+    const usesGeneralTransferStock = (type === 'INTERNAL_TRANSFER' || type === 'WASTE') && isModulo;
     if (!usesGeneralTransferStock || !grade) return;
     if (!generalTransferGradeOptions.includes(grade)) {
       setGrade('');
@@ -494,7 +611,7 @@ export function AddTraderMovementModal({
   }, [type, isModulo, generalTransferGradeOptions, grade]);
 
   useEffect(() => {
-    const usesGeneralTransferStock = type === 'INTERNAL_TRANSFER' && isModulo;
+    const usesGeneralTransferStock = (type === 'INTERNAL_TRANSFER' || type === 'WASTE') && isModulo;
     if (!usesGeneralTransferStock || !pitamStatus) return;
     if (!(generalTransferPitamStatusOptions as string[]).includes(pitamStatus)) {
       setPitamStatus('');
@@ -528,11 +645,11 @@ export function AddTraderMovementModal({
 
   const pitamSplitGradeOptions = useMemo(() => {
     if (!traderCategoryId) return [];
-    return [...new Set(
+    return sortGrades([...new Set(
       pitamSplitMixedRows
         .filter((row) => String(row.traderCategoryId) === traderCategoryId)
         .map((row) => row.grade),
-    )];
+    )]);
   }, [pitamSplitMixedRows, traderCategoryId]);
 
   // Informational only — GENERAL sums MIXED stock across all traders (and modulo) combined, since
@@ -574,6 +691,11 @@ export function AddTraderMovementModal({
   const availableCustomerCategories = useMemo(
     () => (customerId ? customerCategories.filter((category) => String(category.customerId) === customerId) : []),
     [customerCategories, customerId],
+  );
+
+  const riwManageEditCustomerCategories = useMemo(
+    () => (riwManageEditCustomerId ? customerCategories.filter((category) => String(category.customerId) === riwManageEditCustomerId) : []),
+    [customerCategories, riwManageEditCustomerId],
   );
 
   // Sequential gating: each field unlocks only once the field(s) before it are filled in.
@@ -620,15 +742,27 @@ export function AddTraderMovementModal({
   const isSelfPickupPitamEnabled = isSelfPickupGradeEnabled && Boolean(grade);
   const isSelfPickupQuantityEnabled = isSelfPickupPitamEnabled && Boolean(pitamStatus);
 
-  const isWasteTraderCategoryEnabled = type === 'WASTE' && !isModulo && Boolean(traderId) && Boolean(stockSource) && !isLoadingFromTraderStock;
+  const isWasteTraderCategoryEnabled = type === 'WASTE' && !isModulo && Boolean(traderId) && !isLoadingFromTraderStock;
   const isWasteTraderGradeEnabled = isWasteTraderCategoryEnabled && Boolean(traderCategoryId);
   const isWasteTraderPitamEnabled = isWasteTraderGradeEnabled && Boolean(grade);
   const isWasteTraderQuantityEnabled = isWasteTraderPitamEnabled && Boolean(pitamStatus);
 
-  const isWasteModuloCategoryEnabled = type === 'WASTE' && isModulo && !isLoadingGeneralStock;
+  const isWasteModuloCategoryEnabled = type === 'WASTE' && isModulo && !isLoadingGeneralTransferStock;
   const isWasteModuloGradeEnabled = isWasteModuloCategoryEnabled && Boolean(traderCategoryId);
   const isWasteModuloPitamEnabled = isWasteModuloGradeEnabled && Boolean(grade);
   const isWasteModuloQuantityEnabled = isWasteModuloPitamEnabled && Boolean(pitamStatus);
+
+  // REMAINS_IN_ITALY_WITHDRAWAL gating: destination first (and who, for TRADER/CUSTOMER), then product fields.
+  const isRiwDestinationReady = remainsInItalyDestination === 'TRADER'
+    ? Boolean(traderId)
+    : remainsInItalyDestination === 'CUSTOMER'
+      ? Boolean(customerId && customerCategoryId)
+      : remainsInItalyDestination === 'GENERAL';
+  const isRiwCategoryEnabled = type === 'REMAINS_IN_ITALY_WITHDRAWAL' && isRiwDestinationReady && !isLoadingRemainsInItalyStock;
+  const isRiwGradeEnabled = isRiwCategoryEnabled && Boolean(traderCategoryId);
+  const isRiwPitamEnabled = isRiwGradeEnabled && Boolean(grade);
+  const isRiwQuantityEnabled = isRiwPitamEnabled && Boolean(pitamStatus);
+  const isRiwCustomerCategoryEnabled = remainsInItalyDestination === 'CUSTOMER' && Boolean(customerId);
 
   const isNotesEnabled = type === 'INTERNAL_TRANSFER'
     ? isItQuantityEnabled && quantity !== ''
@@ -640,7 +774,9 @@ export function AddTraderMovementModal({
           ? (isModulo ? isWasteModuloQuantityEnabled : isWasteTraderQuantityEnabled) && quantity !== ''
           : type === 'PITAM_SPLIT'
             ? isPitamSplitQuantityEnabled && (withQty !== '' || withoutQty !== '')
-            : isQuantityEnabled && quantity !== '';
+            : type === 'REMAINS_IN_ITALY_WITHDRAWAL'
+              ? isRiwQuantityEnabled && quantity !== ''
+              : isQuantityEnabled && quantity !== '';
 
   if (!isOpen) {
     return null;
@@ -669,6 +805,15 @@ export function AddTraderMovementModal({
     setPitamManageEditWithValue('');
     setPitamManageEditWithoutValue('');
     setPitamManageEditError('');
+    setRemainsInItalyDestination('');
+    setRiwManageBatchId('');
+    setRiwManageMode('select');
+    setRiwManageEditDestination('');
+    setRiwManageEditTraderId('');
+    setRiwManageEditCustomerId('');
+    setRiwManageEditCustomerCategoryId('');
+    setRiwManageEditQuantity('');
+    setRiwManageEditError('');
     setNotes('');
     setError(null);
   };
@@ -701,6 +846,15 @@ export function AddTraderMovementModal({
     setPitamManageEditWithValue('');
     setPitamManageEditWithoutValue('');
     setPitamManageEditError('');
+    setRemainsInItalyDestination('');
+    setRiwManageBatchId('');
+    setRiwManageMode('select');
+    setRiwManageEditDestination('');
+    setRiwManageEditTraderId('');
+    setRiwManageEditCustomerId('');
+    setRiwManageEditCustomerCategoryId('');
+    setRiwManageEditQuantity('');
+    setRiwManageEditError('');
     setError(null);
   };
 
@@ -771,6 +925,82 @@ export function AddTraderMovementModal({
     }
   };
 
+  const handleStartEditSelectedRiwBatch = () => {
+    if (!selectedRiwManageBatch) return;
+    setRiwManageEditDestination(selectedRiwManageBatch.destinationType);
+    setRiwManageEditTraderId(selectedRiwManageBatch.traderId ? String(selectedRiwManageBatch.traderId) : '');
+    setRiwManageEditCustomerId(selectedRiwManageBatch.customerId ? String(selectedRiwManageBatch.customerId) : '');
+    setRiwManageEditCustomerCategoryId(selectedRiwManageBatch.customerCategoryId ? String(selectedRiwManageBatch.customerCategoryId) : '');
+    setRiwManageEditQuantity(String(selectedRiwManageBatch.quantity));
+    setRiwManageEditError('');
+    setRiwManageMode('edit');
+  };
+
+  const handleDiscardEditSelectedRiwBatch = () => {
+    setRiwManageMode('select');
+    setRiwManageEditDestination('');
+    setRiwManageEditTraderId('');
+    setRiwManageEditCustomerId('');
+    setRiwManageEditCustomerCategoryId('');
+    setRiwManageEditQuantity('');
+    setRiwManageEditError('');
+  };
+
+  const handleConfirmEditSelectedRiwBatch = async () => {
+    if (!selectedRiwManageBatch) return;
+
+    const nextQuantity = Number(riwManageEditQuantity || 0);
+    if (
+      !riwManageEditDestination ||
+      Number.isNaN(nextQuantity) || !Number.isInteger(nextQuantity) || nextQuantity <= 0 ||
+      (riwManageEditDestination === 'TRADER' && !riwManageEditTraderId) ||
+      (riwManageEditDestination === 'CUSTOMER' && (!riwManageEditCustomerId || !riwManageEditCustomerCategoryId))
+    ) {
+      setRiwManageEditError(f.validationRequired);
+      return;
+    }
+
+    try {
+      setRiwManageActionSubmitting(true);
+      await updateRemainsInItalyWithdrawal(selectedRiwManageBatch.id, {
+        date: selectedRiwManageBatch.date,
+        traderCategoryId: selectedRiwManageBatch.traderCategoryId,
+        grade: selectedRiwManageBatch.grade,
+        pitamStatus: selectedRiwManageBatch.pitamStatus,
+        quantity: nextQuantity,
+        destinationType: riwManageEditDestination,
+        traderId: riwManageEditDestination === 'TRADER' ? Number(riwManageEditTraderId) : undefined,
+        customerId: riwManageEditDestination === 'CUSTOMER' ? Number(riwManageEditCustomerId) : undefined,
+        customerCategoryId: riwManageEditDestination === 'CUSTOMER' ? Number(riwManageEditCustomerCategoryId) : undefined,
+        notes: selectedRiwManageBatch.notes,
+      });
+      setRiwManageBatchId('');
+      handleDiscardEditSelectedRiwBatch();
+      reloadRiwBatches();
+      onSaved();
+    } catch (updateError) {
+      setRiwManageEditError(updateError instanceof ApiError ? updateError.message : f.validationRequired);
+    } finally {
+      setRiwManageActionSubmitting(false);
+    }
+  };
+
+  const handleCancelSelectedRiwBatch = async () => {
+    if (!selectedRiwManageBatch) return;
+    setError(null);
+    try {
+      setRiwManageActionSubmitting(true);
+      await undoRemainsInItalyWithdrawal(selectedRiwManageBatch.id);
+      setRiwManageBatchId('');
+      reloadRiwBatches();
+      onSaved();
+    } catch (cancelError) {
+      setError(cancelError instanceof ApiError ? cancelError.message : f.validationRequired);
+    } finally {
+      setRiwManageActionSubmitting(false);
+    }
+  };
+
   const handleSubmit = async () => {
     setError(null);
 
@@ -821,9 +1051,9 @@ export function AddTraderMovementModal({
       return;
     }
 
-    if (type === 'PITAM_SPLIT_MANAGE') {
+    if (type === 'PITAM_SPLIT_MANAGE' || type === 'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE') {
       // Update/cancel are self-contained actions triggered by their own buttons (see the
-      // PITAM_SPLIT_MANAGE fields below) — the generic Save button doesn't apply here.
+      // *_MANAGE fields below) — the generic Save button doesn't apply here.
       return;
     }
 
@@ -871,7 +1101,8 @@ export function AddTraderMovementModal({
           quantity: quantityNumber,
           isModulo,
           type: type as TraderAdjustmentMovementType,
-          stockSource: (!isModulo && stockSource) ? stockSource : undefined,
+          // WASTE against a specific trader always targets private-selection stock server-side —
+          // no stockSource choice is offered in this form anymore.
           notes: notes || null,
         });
       } else if (type === 'OWNERSHIP_TRANSFER') {
@@ -958,6 +1189,28 @@ export function AddTraderMovementModal({
             notes: notes || null,
           });
         }
+      } else if (type === 'REMAINS_IN_ITALY_WITHDRAWAL') {
+        if (
+          !remainsInItalyDestination || !traderCategoryId || !grade || !pitamStatus ||
+          (remainsInItalyDestination === 'TRADER' && !traderId) ||
+          (remainsInItalyDestination === 'CUSTOMER' && (!customerId || !customerCategoryId))
+        ) {
+          setError(f.validationRequired);
+          return;
+        }
+
+        await createRemainsInItalyWithdrawal({
+          date: nowIso,
+          quantity: quantityNumber,
+          traderCategoryId: Number(traderCategoryId),
+          grade,
+          pitamStatus,
+          destinationType: remainsInItalyDestination,
+          traderId: remainsInItalyDestination === 'TRADER' ? Number(traderId) : undefined,
+          customerId: remainsInItalyDestination === 'CUSTOMER' ? Number(customerId) : undefined,
+          customerCategoryId: remainsInItalyDestination === 'CUSTOMER' ? Number(customerCategoryId) : undefined,
+          notes: notes || null,
+        });
       }
 
       resetForm();
@@ -977,7 +1230,7 @@ export function AddTraderMovementModal({
         aria-modal="true"
         aria-label={f.title}
         dir={lang === 'he' ? 'rtl' : 'ltr'}
-        style={{ width: 820, minHeight: type === 'PITAM_SPLIT_MANAGE' ? 420 : undefined }}
+        style={{ width: 820, minHeight: 480 }}
         onClick={(event) => event.stopPropagation()}
       >
         <button className="modal-close" type="button" aria-label={f.closeLabel} onClick={handleClose}>
@@ -989,7 +1242,7 @@ export function AddTraderMovementModal({
           <TopLoadingBar isLoading={isLoadingFromTraderStock || isLoadingGeneralStock || isLoadingGeneralTransferStock || isPitamSplitUndoLoading} />
         </h3>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, flex: 1 }}>
           {/* Row 1: action type */}
           <div style={ROW_STYLE}>
             <div style={{ ...FIELD_STYLE, gridColumn: '1 / -1' }}>
@@ -1008,6 +1261,21 @@ export function AddTraderMovementModal({
               </select>
             </div>
           </div>
+
+          {!type ? (
+            <div
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--color-text-secondary, #6b7280)',
+                fontSize: '0.95rem',
+              }}
+            >
+              {f.typePlaceholder}
+            </div>
+          ) : null}
 
           {type === 'OWNERSHIP_TRANSFER' ? (
             <>
@@ -1559,21 +1827,6 @@ export function AddTraderMovementModal({
                     ))}
                   </select>
                 </div>
-
-                {/* Stock source — disabled until a specific trader (not modulo) is selected */}
-                <div style={FIELD_STYLE}>
-                  <label style={LABEL_STYLE}>{f.itemStockSourceLabel}</label>
-                  <select
-                    className="seasons-manager__year-input"
-                    value={stockSource}
-                    onChange={(event) => setStockSource(event.target.value as 'GENERAL' | 'PRIVATE_SELECTION')}
-                    disabled={isModulo || !traderId}
-                  >
-                    <option value="">{f.itemStockSourcePlaceholder}</option>
-                    <option value="GENERAL">{f.itemStockSourceOptions.GENERAL}</option>
-                    <option value="PRIVATE_SELECTION">{f.itemStockSourceOptions.PRIVATE_SELECTION}</option>
-                  </select>
-                </div>
               </div>
 
               {/* Row 2: product fields */}
@@ -1588,10 +1841,10 @@ export function AddTraderMovementModal({
                       setGrade('');
                       setPitamStatus('');
                     }}
-                    disabled={isModulo ? (!isWasteModuloCategoryEnabled || generalCategoryOptions.length === 0) : (!isWasteTraderCategoryEnabled || fromTraderCategoryOptions.length === 0)}
+                    disabled={isModulo ? (!isWasteModuloCategoryEnabled || generalTransferCategoryOptions.length === 0) : (!isWasteTraderCategoryEnabled || fromTraderCategoryOptions.length === 0)}
                   >
                     <option value="">{f.traderCategoryPlaceholder}</option>
-                    {(isModulo ? generalCategoryOptions : fromTraderCategoryOptions).map((category) => (
+                    {(isModulo ? generalTransferCategoryOptions : fromTraderCategoryOptions).map((category) => (
                       <option key={category.id} value={String(category.id)}>
                         {category.name}
                       </option>
@@ -1608,10 +1861,10 @@ export function AddTraderMovementModal({
                       setGrade(event.target.value);
                       setPitamStatus('');
                     }}
-                    disabled={isModulo ? (!isWasteModuloGradeEnabled || generalGradeOptions.length === 0) : (!isWasteTraderGradeEnabled || fromTraderGradeOptions.length === 0)}
+                    disabled={isModulo ? (!isWasteModuloGradeEnabled || generalTransferGradeOptions.length === 0) : (!isWasteTraderGradeEnabled || fromTraderGradeOptions.length === 0)}
                   >
                     <option value="">{f.gradePlaceholder}</option>
-                    {(isModulo ? generalGradeOptions : fromTraderGradeOptions).map((option) => (
+                    {(isModulo ? generalTransferGradeOptions : fromTraderGradeOptions).map((option) => (
                       <option key={option} value={option}>
                         {option}
                       </option>
@@ -1625,10 +1878,10 @@ export function AddTraderMovementModal({
                     className="seasons-manager__year-input"
                     value={pitamStatus}
                     onChange={(event) => setPitamStatus(event.target.value as PitamStatus | '')}
-                    disabled={isModulo ? (!isWasteModuloPitamEnabled || generalPitamStatusOptions.length === 0) : (!isWasteTraderPitamEnabled || fromTraderPitamStatusOptions.length === 0)}
+                    disabled={isModulo ? (!isWasteModuloPitamEnabled || generalTransferPitamStatusOptions.length === 0) : (!isWasteTraderPitamEnabled || fromTraderPitamStatusOptions.length === 0)}
                   >
                     <option value="">{f.pitamStatusPlaceholder}</option>
-                    {(isModulo ? generalPitamStatusOptions : fromTraderPitamStatusOptions).map((option) => (
+                    {(isModulo ? generalTransferPitamStatusOptions : fromTraderPitamStatusOptions).map((option) => (
                       <option key={option} value={option}>
                         {i18n.pitamStatuses[option] || option}
                       </option>
@@ -1656,6 +1909,173 @@ export function AddTraderMovementModal({
                     }}
                   >
                     {availableQuantityForSelection !== null ? f.availableQuantityHint(availableQuantityForSelection) : ' '}
+                  </span>
+                </div>
+              </div>
+            </>
+          ) : null}
+
+          {type === 'REMAINS_IN_ITALY_WITHDRAWAL' ? (
+            <>
+              <div style={ROW_STYLE}>
+                <div style={FIELD_STYLE}>
+                  <label style={LABEL_STYLE}>{f.destinationLabel}</label>
+                  <select
+                    className="seasons-manager__year-input"
+                    value={remainsInItalyDestination}
+                    onChange={(event) => setRemainsInItalyDestination(event.target.value as RemainsInItalyDestinationType | '')}
+                  >
+                    <option value="">{f.destinationPlaceholder}</option>
+                    <option value="TRADER">{f.destinationOptions.TRADER}</option>
+                    <option value="CUSTOMER">{f.destinationOptions.CUSTOMER}</option>
+                    <option value="GENERAL">{f.destinationOptions.GENERAL}</option>
+                  </select>
+                </div>
+
+                {remainsInItalyDestination === 'TRADER' ? (
+                  <div style={FIELD_STYLE}>
+                    <label style={LABEL_STYLE}>{f.traderLabel}</label>
+                    <select
+                      className="seasons-manager__year-input"
+                      value={traderId}
+                      onChange={(event) => setTraderId(event.target.value)}
+                    >
+                      <option value="">{f.traderPlaceholder}</option>
+                      {sortedTraders.map((trader) => (
+                        <option key={`riw-trader-${trader.id}`} value={String(trader.id)}>
+                          {trader.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : null}
+
+                {remainsInItalyDestination === 'CUSTOMER' ? (
+                  <>
+                    <div style={FIELD_STYLE}>
+                      <label style={LABEL_STYLE}>{f.customerLabel}</label>
+                      <select
+                        className="seasons-manager__year-input"
+                        value={customerId}
+                        onChange={(event) => {
+                          setCustomerId(event.target.value);
+                          setCustomerCategoryId('');
+                          setCustomerGrade('');
+                        }}
+                      >
+                        <option value="">{f.customerPlaceholder}</option>
+                        {sortedCustomers.map((customer) => (
+                          <option key={`riw-customer-${customer.id}`} value={String(customer.id)}>
+                            {customer.customerName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div style={FIELD_STYLE}>
+                      <label style={LABEL_STYLE}>{f.customerCategoryLabel}</label>
+                      <select
+                        className="seasons-manager__year-input"
+                        value={customerCategoryId}
+                        onChange={(event) => {
+                          const id = event.target.value;
+                          setCustomerCategoryId(id);
+                          const cat = availableCustomerCategories.find((c) => String(c.id) === id);
+                          setCustomerGrade(cat?.grade ?? '');
+                        }}
+                        disabled={!isRiwCustomerCategoryEnabled}
+                      >
+                        <option value="">{f.customerCategoryPlaceholder}</option>
+                        {availableCustomerCategories.map((category) => (
+                          <option key={category.id} value={String(category.id)}>
+                            {category.name} - {category.grade}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                ) : null}
+              </div>
+
+              <div style={ROW_STYLE}>
+                <div style={FIELD_STYLE}>
+                  <label style={LABEL_STYLE}>{f.traderCategoryLabel}</label>
+                  <select
+                    className="seasons-manager__year-input"
+                    value={traderCategoryId}
+                    onChange={(event) => {
+                      setTraderCategoryId(event.target.value);
+                      setGrade('');
+                      setPitamStatus('');
+                    }}
+                    disabled={!isRiwCategoryEnabled || remainsInItalyCategoryOptions.length === 0}
+                  >
+                    <option value="">{f.traderCategoryPlaceholder}</option>
+                    {remainsInItalyCategoryOptions.map((category) => (
+                      <option key={category.id} value={String(category.id)}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={FIELD_STYLE}>
+                  <label style={LABEL_STYLE}>{f.gradeLabel}</label>
+                  <select
+                    className="seasons-manager__year-input"
+                    value={grade}
+                    onChange={(event) => {
+                      setGrade(event.target.value);
+                      setPitamStatus('');
+                    }}
+                    disabled={!isRiwGradeEnabled || remainsInItalyGradeOptions.length === 0}
+                  >
+                    <option value="">{f.gradePlaceholder}</option>
+                    {remainsInItalyGradeOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={FIELD_STYLE}>
+                  <label style={LABEL_STYLE}>{f.pitamStatusLabel}</label>
+                  <select
+                    className="seasons-manager__year-input"
+                    value={pitamStatus}
+                    onChange={(event) => setPitamStatus(event.target.value as PitamStatus | '')}
+                    disabled={!isRiwPitamEnabled || remainsInItalyPitamStatusOptions.length === 0}
+                  >
+                    <option value="">{f.pitamStatusPlaceholder}</option>
+                    {remainsInItalyPitamStatusOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {i18n.pitamStatuses[option] || option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={FIELD_STYLE}>
+                  <label style={LABEL_STYLE}>{f.quantityLabel}</label>
+                  <input
+                    className="seasons-manager__year-input"
+                    type="number"
+                    value={quantity}
+                    onChange={(event) => setQuantity(event.target.value)}
+                    placeholder={f.quantityPlaceholder}
+                    aria-label={f.quantityLabel}
+                    max={availableQuantityForRemainsInItaly ?? undefined}
+                    disabled={!isRiwQuantityEnabled}
+                  />
+                  <span
+                    style={{
+                      fontSize: 12,
+                      opacity: 0.75,
+                      visibility: availableQuantityForRemainsInItaly !== null ? 'visible' : 'hidden',
+                    }}
+                  >
+                    {availableQuantityForRemainsInItaly !== null ? f.availableQuantityHint(availableQuantityForRemainsInItaly) : ' '}
                   </span>
                 </div>
               </div>
@@ -1853,6 +2273,133 @@ export function AddTraderMovementModal({
             </>
           ) : null}
 
+          {type === 'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE' ? (
+            <>
+              <div style={ROW_STYLE}>
+                <div style={{ ...FIELD_STYLE, gridColumn: '1 / -1' }}>
+                  <label style={LABEL_STYLE}>{f.riwUndoBatchLabel}</label>
+                  <RemainsInItalyWithdrawalBatchPicker
+                    lang={lang}
+                    labels={f}
+                    pitamStatusLabels={i18n.pitamStatuses}
+                    batches={riwBatches}
+                    traderCategories={traderCategories}
+                    value={riwManageBatchId}
+                    onChange={(id) => {
+                      setRiwManageBatchId(id);
+                      setRiwManageMode('select');
+                      setRiwManageEditError('');
+                    }}
+                    isLoading={isRiwUndoLoading}
+                  />
+                </div>
+              </div>
+
+              {selectedRiwManageBatch && riwManageMode === 'edit' ? (
+                <>
+                  <div style={ROW_STYLE}>
+                    <div style={FIELD_STYLE}>
+                      <label style={LABEL_STYLE}>{f.destinationLabel}</label>
+                      <select
+                        className="seasons-manager__year-input"
+                        value={riwManageEditDestination}
+                        onChange={(event) => {
+                          setRiwManageEditDestination(event.target.value as RemainsInItalyDestinationType | '');
+                          setRiwManageEditTraderId('');
+                          setRiwManageEditCustomerId('');
+                          setRiwManageEditCustomerCategoryId('');
+                          setRiwManageEditError('');
+                        }}
+                      >
+                        <option value="">{f.destinationPlaceholder}</option>
+                        <option value="TRADER">{f.destinationOptions.TRADER}</option>
+                        <option value="CUSTOMER">{f.destinationOptions.CUSTOMER}</option>
+                        <option value="GENERAL">{f.destinationOptions.GENERAL}</option>
+                      </select>
+                    </div>
+
+                    {riwManageEditDestination === 'TRADER' ? (
+                      <div style={FIELD_STYLE}>
+                        <label style={LABEL_STYLE}>{f.traderLabel}</label>
+                        <select
+                          className="seasons-manager__year-input"
+                          value={riwManageEditTraderId}
+                          onChange={(event) => setRiwManageEditTraderId(event.target.value)}
+                        >
+                          <option value="">{f.traderPlaceholder}</option>
+                          {sortedTraders.map((trader) => (
+                            <option key={`riw-manage-trader-${trader.id}`} value={String(trader.id)}>
+                              {trader.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : null}
+
+                    {riwManageEditDestination === 'CUSTOMER' ? (
+                      <>
+                        <div style={FIELD_STYLE}>
+                          <label style={LABEL_STYLE}>{f.customerLabel}</label>
+                          <select
+                            className="seasons-manager__year-input"
+                            value={riwManageEditCustomerId}
+                            onChange={(event) => {
+                              setRiwManageEditCustomerId(event.target.value);
+                              setRiwManageEditCustomerCategoryId('');
+                            }}
+                          >
+                            <option value="">{f.customerPlaceholder}</option>
+                            {sortedCustomers.map((customer) => (
+                              <option key={`riw-manage-customer-${customer.id}`} value={String(customer.id)}>
+                                {customer.customerName}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div style={FIELD_STYLE}>
+                          <label style={LABEL_STYLE}>{f.customerCategoryLabel}</label>
+                          <select
+                            className="seasons-manager__year-input"
+                            value={riwManageEditCustomerCategoryId}
+                            onChange={(event) => setRiwManageEditCustomerCategoryId(event.target.value)}
+                            disabled={!riwManageEditCustomerId}
+                          >
+                            <option value="">{f.customerCategoryPlaceholder}</option>
+                            {riwManageEditCustomerCategories.map((category) => (
+                              <option key={category.id} value={String(category.id)}>
+                                {category.name} - {category.grade}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </>
+                    ) : null}
+                  </div>
+
+                  <div style={ROW_STYLE}>
+                    <div style={FIELD_STYLE}>
+                      <label style={LABEL_STYLE}>{f.quantityLabel}</label>
+                      <input
+                        className="seasons-manager__year-input"
+                        type="number"
+                        value={riwManageEditQuantity}
+                        onChange={(event) => {
+                          setRiwManageEditQuantity(event.target.value);
+                          setRiwManageEditError('');
+                        }}
+                        placeholder={f.quantityPlaceholder}
+                        aria-label={f.quantityLabel}
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : null}
+
+              {riwManageEditError ? <p className="seasons-manager__error">{riwManageEditError}</p> : null}
+            </>
+          ) : null}
+
           {type === 'OWNERSHIP_TRANSFER' ? (
             <div style={ROW_STYLE}>
               <div style={FIELD_STYLE}>
@@ -1931,7 +2478,7 @@ export function AddTraderMovementModal({
             </div>
           ) : null}
 
-          {type && type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'ASSIGNED' && type !== 'SELF_PICKUP' && type !== 'WASTE' && type !== 'PITAM_SPLIT' && type !== 'PITAM_SPLIT_MANAGE' ? (
+          {type && type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'ASSIGNED' && type !== 'SELF_PICKUP' && type !== 'WASTE' && type !== 'PITAM_SPLIT' && type !== 'PITAM_SPLIT_MANAGE' && type !== 'REMAINS_IN_ITALY_WITHDRAWAL' && type !== 'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE' ? (
             <div style={ROW_STYLE}>
               <div style={FIELD_STYLE}>
                 <label style={LABEL_STYLE}>{f.traderCategoryLabel}</label>
@@ -1999,7 +2546,7 @@ export function AddTraderMovementModal({
             </div>
           ) : null}
 
-          {type && type !== 'PITAM_SPLIT_MANAGE' ? (
+          {type && type !== 'PITAM_SPLIT_MANAGE' && type !== 'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE' ? (
             <div style={ROW_STYLE}>
               <div style={{ ...FIELD_STYLE, gridColumn: '1 / -1' }}>
                 <label style={LABEL_STYLE}>{f.notesLabel}</label>
@@ -2057,10 +2604,47 @@ export function AddTraderMovementModal({
               </SubmitButton>
             </>
           ) : null}
+          {type === 'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE' && selectedRiwManageBatch && riwManageMode === 'select' ? (
+            <>
+              <button className="btn btn-success" type="button" onClick={handleStartEditSelectedRiwBatch}>
+                {f.riwManageUpdateLabel}
+              </button>
+              <SubmitButton
+                className="btn btn-success"
+                type="button"
+                onClick={handleCancelSelectedRiwBatch}
+                isLoading={riwManageActionSubmitting}
+                loadingText={f.riwManageCancelingLabel}
+              >
+                {f.riwManageCancelLabel}
+              </SubmitButton>
+            </>
+          ) : null}
+          {type === 'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE' && selectedRiwManageBatch && riwManageMode === 'edit' ? (
+            <>
+              <button
+                className="btn btn-secondary"
+                type="button"
+                onClick={handleDiscardEditSelectedRiwBatch}
+                disabled={riwManageActionSubmitting}
+              >
+                {f.riwManageDiscardEditLabel}
+              </button>
+              <SubmitButton
+                className="btn btn-success"
+                type="button"
+                onClick={handleConfirmEditSelectedRiwBatch}
+                isLoading={riwManageActionSubmitting}
+                loadingText={f.riwManageSavingLabel}
+              >
+                {f.riwManageSaveLabel}
+              </SubmitButton>
+            </>
+          ) : null}
           <button className="btn btn-danger" type="button" onClick={handleClose}>
             {f.cancel}
           </button>
-          {type !== 'PITAM_SPLIT_MANAGE' ? (
+          {type !== 'PITAM_SPLIT_MANAGE' && type !== 'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE' ? (
             <SubmitButton
               className="btn btn-success"
               type="button"
