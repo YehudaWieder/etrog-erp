@@ -37,7 +37,7 @@ const infoStyle: React.CSSProperties = {
 };
 
 type BoxType = 'SMALL' | 'MEDIUM' | 'LARGE' | 'CUSTOM';
-type BoxOwnership = 'GENERAL' | 'TRADER' | 'CUSTOMER' | 'SHARED' | 'CUSTOM';
+type BoxOwnership = 'GENERAL' | 'TRADER' | 'CUSTOMER' | 'SHARED' | 'CUSTOM' | 'EXTERNAL_TRADER';
 
 type PackingFormModalText = {
   title: string;
@@ -65,6 +65,9 @@ type PackingFormModalText = {
   traderPlaceholder: string;
   customerLabel: string;
   customerPlaceholder: string;
+  ownerNameLabel: string;
+  ownerNamePlaceholder: string;
+  addItemDisabledExternalTraderHint: string;
   notesLabel: string;
   notesPlaceholder: string;
   save: string;
@@ -179,6 +182,8 @@ type PackingFormModalProps = {
   onTraderIdChange: (v: string) => void;
   customerId: string;
   onCustomerIdChange: (v: string) => void;
+  externalOwnerName: string;
+  onExternalOwnerNameChange: (v: string) => void;
   notes: string;
   onNotesChange: (v: string) => void;
   isShipped: boolean;
@@ -210,7 +215,7 @@ type PackingFormModalProps = {
 
 const BOX_STATUSES_SHIPPED_ONLY: BoxStatus[] = ['SHIPPED', 'DELIVERED'];
 const BOX_TYPES: BoxType[] = ['SMALL', 'MEDIUM', 'LARGE', 'CUSTOM'];
-const OWNERSHIP_TYPES: BoxOwnership[] = ['GENERAL', 'TRADER', 'CUSTOMER', 'SHARED', 'CUSTOM'];
+const OWNERSHIP_TYPES: BoxOwnership[] = ['GENERAL', 'TRADER', 'CUSTOMER', 'SHARED', 'EXTERNAL_TRADER'];
 const BOX_TYPE_SHORT: Record<string, string> = { SMALL: 'S', MEDIUM: 'M', LARGE: 'L', CUSTOM: 'C' };
 
 export function PackingFormModal({
@@ -242,6 +247,8 @@ export function PackingFormModal({
   onTraderIdChange,
   customerId,
   onCustomerIdChange,
+  externalOwnerName,
+  onExternalOwnerNameChange,
   notes,
   onNotesChange,
   isShipped,
@@ -504,22 +511,24 @@ export function PackingFormModal({
 
           {!isShipped ? (
             <>
-              <div className={gridStyles.field}>
-                <label className={gridStyles.label}>{t.boxTypeLabel}</label>
-                <select
-                  className="seasons-manager__year-input"
-                  value={boxType}
-                  onChange={(e) => onBoxTypeChange(e.target.value)}
-                  disabled={isFieldsDisabled}
-                >
-                  <option value="">{t.boxTypePlaceholder}</option>
-                  {BOX_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {t.boxTypeOptions[type]}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {ownershipType !== 'EXTERNAL_TRADER' ? (
+                <div className={gridStyles.field}>
+                  <label className={gridStyles.label}>{t.boxTypeLabel}</label>
+                  <select
+                    className="seasons-manager__year-input"
+                    value={boxType}
+                    onChange={(e) => onBoxTypeChange(e.target.value)}
+                    disabled={isFieldsDisabled}
+                  >
+                    <option value="">{t.boxTypePlaceholder}</option>
+                    {BOX_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {t.boxTypeOptions[type]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
 
               {hasItems ? (
                 <div className={gridStyles.field}>
@@ -611,6 +620,24 @@ export function PackingFormModal({
                   )}
                 </div>
               ) : null}
+
+              {ownershipType === 'EXTERNAL_TRADER' ? (
+                <div className={gridStyles.field}>
+                  <label className={gridStyles.label}>{t.ownerNameLabel}</label>
+                  {hasItems ? (
+                    <div style={infoStyle}>{externalOwnerName || '—'}</div>
+                  ) : (
+                    <input
+                      className="seasons-manager__year-input"
+                      type="text"
+                      value={externalOwnerName}
+                      onChange={(e) => onExternalOwnerNameChange(e.target.value)}
+                      placeholder={t.ownerNamePlaceholder}
+                      disabled={isFieldsDisabled}
+                    />
+                  )}
+                </div>
+              ) : null}
             </>
           ) : null}
 
@@ -651,11 +678,11 @@ export function PackingFormModal({
             traders={traders}
             customers={customers}
             isLoadingInventory={isLoadingRowInventory}
-            isBoxOpen={isBoxOpen}
+            isBoxOpen={isBoxOpen && ownershipType !== 'EXTERNAL_TRADER'}
             isBoxFull={isBoxFull}
             boxCapacityMessage={boxCapacityMessage}
             remainingCapacityMessage={remainingCapacityMessage}
-            addItemDisabledHint={t.addItemDisabledHint}
+            addItemDisabledHint={ownershipType === 'EXTERNAL_TRADER' ? t.addItemDisabledExternalTraderHint : t.addItemDisabledHint}
             totalPackedQuantity={totalPackedQuantity}
             pendingExistingItemEdits={pendingExistingItemEdits}
             onAddRow={onAddItemRow}

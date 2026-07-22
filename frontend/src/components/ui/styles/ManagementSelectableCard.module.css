@@ -32,6 +32,19 @@
   box-shadow: 0 0 0 3px rgba(255, 202, 43, 0.05), 0 10px 24px rgba(0, 0, 0, 0.05);
 }
 
+.card:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.card:disabled:hover {
+  border-color: rgba(226, 230, 235, 0.95);
+  border-right-color: var(--color-text-accent);
+  background: var(--card-bg);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+  transform: none;
+}
+
 :global(.app-shell[data-direction='ltr']) .card {
   direction: ltr;
   border-right: 1px solid rgba(226, 230, 235, 0.95);

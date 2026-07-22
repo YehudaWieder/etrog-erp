@@ -126,6 +126,8 @@ export function CustomerInventoryPage() {
     return Number.isFinite(parsed) ? parsed : null;
   }, [filterValues.seasonId]);
 
+  const isViewingNonActiveSeason = selectedSeasonId !== null && selectedSeasonId !== activeSeasonId;
+
   const selectedCustomerId = useMemo(() => {
     if (filterValues.customerId === 'ALL') {
       return null;
@@ -569,7 +571,13 @@ export function CustomerInventoryPage() {
       pageHeaderActions={
         !isWorker && (isInventoryTab || isMovementsTab) ? (
           <div className="action-buttons">
-            <button className="btn btn-primary" type="button" onClick={() => setIsAddMovementModalOpen(true)}>
+            <button
+              className="btn btn-primary"
+              type="button"
+              disabled={isViewingNonActiveSeason}
+              title={isViewingNonActiveSeason ? t.movements.nonActiveSeasonDisabled : undefined}
+              onClick={() => setIsAddMovementModalOpen(true)}
+            >
               <FaCirclePlus />
               <span>{t.movements.addMovementButton}</span>
             </button>
@@ -664,7 +672,7 @@ export function CustomerInventoryPage() {
     <AddCustomerMovementModal
       lang={lang}
       isOpen={isAddMovementModalOpen}
-      seasonId={selectedSeasonId ?? activeSeasonId}
+      seasonId={activeSeasonId}
       customers={customers}
       customerCategories={customerCategories}
       traders={traders}

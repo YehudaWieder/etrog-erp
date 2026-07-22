@@ -12,6 +12,7 @@ type AllShipmentsFilterValues = {
 type UseAllShipmentsFiltersResult = {
   filters: GlobalScopedFilterConfig[];
   seasons: Season[];
+  activeSeasonId: number | null;
   selectedSeasonId: number | null;
   selectedStatus: 'all' | ShipmentStatus;
   filterDisplayValues: { seasonLabel: string | null; statusLabel: string | null };
@@ -130,6 +131,7 @@ export function useAllShipmentsFilters(labels: ShipmentsTableLabels): UseAllShip
   return {
     filters,
     seasons,
+    activeSeasonId,
     selectedSeasonId,
     selectedStatus,
     filterDisplayValues,

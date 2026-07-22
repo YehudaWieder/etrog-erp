@@ -31,6 +31,7 @@ export const CUSTOMERS_I18N_EN: CustomersI18n = {
 };
 
 export const CUSTOMER_CATEGORIES_I18N_EN: CustomerCategoriesI18n = {
+  warningNotice: 'Changing these settings only affects the selected season, and does not affect other seasons at all.',
   activeSeason: (yearName) => `Active season: ${yearName}`,
   activeSeasonBadge: 'Active',
   noActiveSeason: 'No active season right now',
@@ -39,6 +40,7 @@ export const CUSTOMER_CATEGORIES_I18N_EN: CustomerCategoriesI18n = {
   customerFilterLabel: 'Filter by customer',
   allCustomersOption: 'All customers',
   noActiveSeasonForAdd: 'No active season found. Set an active season before adding categories.',
+  nonActiveSeasonSelectionDisabled: 'You can only select, edit, or delete categories in the active season',
   noCustomers: 'No customers found. Add a customer before creating a category.',
   selectCustomer: 'Please select a customer.',
   selectGrade: 'Please select a grade.',

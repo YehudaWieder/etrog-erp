@@ -28,11 +28,13 @@ type AllBoxesTableProps = {
   onPruneSelection?: (validIds: Set<number>) => void;
   refreshKey?: number;
   onRowCountChange?: (count: number) => void;
+  onSeasonInfoChange?: (info: { selectedSeasonId: number | null; activeSeasonId: number | null }) => void;
 };
 
-export function AllBoxesTable({ lang, labels, selectedBoxIds, onSelectBox, onToggleBoxSelection, onPruneSelection, refreshKey, onRowCountChange }: AllBoxesTableProps): JSX.Element {
+export function AllBoxesTable({ lang, labels, selectedBoxIds, onSelectBox, onToggleBoxSelection, onPruneSelection, refreshKey, onRowCountChange, onSeasonInfoChange }: AllBoxesTableProps): JSX.Element {
   const {
     filters,
+    activeSeasonId,
     selectedSeasonId,
     selectedShipmentNumber,
     selectedBoxNumber,
@@ -42,6 +44,7 @@ export function AllBoxesTable({ lang, labels, selectedBoxIds, onSelectBox, onTog
     handleFilterValuesChange,
     handleFiltersApiReady,
   } = useAllBoxesFilters(labels);
+  const isViewingNonActiveSeason = selectedSeasonId !== null && selectedSeasonId !== activeSeasonId;
   const [detailsRow, setDetailsRow] = useState<BoxesTableRow | null>(null);
   const { rows, columns, isLoading, error } = useAllBoxesTable(
     labels,
@@ -123,6 +126,10 @@ export function AllBoxesTable({ lang, labels, selectedBoxIds, onSelectBox, onTog
       onRowCountChangeRef.current?.(rows.length);
     }
   }, [rows.length, isLoading]);
+
+  useEffect(() => {
+    onSeasonInfoChange?.({ selectedSeasonId, activeSeasonId });
+  }, [onSeasonInfoChange, selectedSeasonId, activeSeasonId]);
 
   useEffect(() => {
     if (selectedBoxIds.length === 0 || !onPruneSelection) {
@@ -208,8 +215,8 @@ export function AllBoxesTable({ lang, labels, selectedBoxIds, onSelectBox, onTog
             getRowKey={(row) => row.id}
             emptyLabel={labels.empty}
             selectedRowKeys={selectedBoxIds}
-            onRowClick={onSelectBox}
-            onToggleRowSelection={onToggleBoxSelection}
+            onRowClick={isViewingNonActiveSeason ? undefined : onSelectBox}
+            onToggleRowSelection={isViewingNonActiveSeason ? undefined : onToggleBoxSelection}
             selectionColumnLabel={labels.selectRowAriaLabel}
             defaultSortState={{ key: 'boxNumber', direction: 'asc' }}
           />

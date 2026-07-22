@@ -68,6 +68,7 @@ export type CustomerInventoryI18n = {
   };
   movements: {
     addMovementButton: string;
+    nonActiveSeasonDisabled: string;
     columns: {
       date: string;
       type: string;

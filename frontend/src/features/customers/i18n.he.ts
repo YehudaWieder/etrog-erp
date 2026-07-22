@@ -31,6 +31,7 @@ export const CUSTOMERS_I18N_HE: CustomersI18n = {
 };
 
 export const CUSTOMER_CATEGORIES_I18N_HE: CustomerCategoriesI18n = {
+  warningNotice: 'שינוי הגדרות אלו משפיע רק על העונה הנבחרת, ואינו משפיע כלל על עונות אחרות.',
   activeSeason: (yearName) => `עונה פעילה: ${yearName}`,
   activeSeasonBadge: 'פעילה',
   noActiveSeason: 'אין עונה פעילה כרגע',
@@ -39,6 +40,7 @@ export const CUSTOMER_CATEGORIES_I18N_HE: CustomerCategoriesI18n = {
   customerFilterLabel: 'סינון לפי לקוח',
   allCustomersOption: 'כל הלקוחות',
   noActiveSeasonForAdd: 'לא נמצאה עונה פעילה. יש להגדיר עונה פעילה לפני הוספת קטגוריות.',
+  nonActiveSeasonSelectionDisabled: 'ניתן לבחור, לערוך או למחוק קטגוריות רק בעונה הפעילה',
   noCustomers: 'אין לקוחות במערכת. יש להוסיף לקוח לפני הגדרת קטגוריה.',
   selectCustomer: 'יש לבחור לקוח.',
   selectGrade: 'יש לבחור דרגה.',

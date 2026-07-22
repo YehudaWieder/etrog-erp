@@ -86,6 +86,7 @@ export const CUSTOMER_INVENTORY_I18N_HE: CustomerInventoryI18n = {
   },
   movements: {
     addMovementButton: 'הוספת תנועה',
+    nonActiveSeasonDisabled: 'ניתן להוסיף תנועה רק לעונה הפעילה',
     columns: {
       date: 'תאריך',
       type: 'סוג תנועה',

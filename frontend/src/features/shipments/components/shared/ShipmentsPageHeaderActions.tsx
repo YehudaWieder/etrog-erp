@@ -4,6 +4,7 @@ import styles from '../../../../components/ui/styles/HeaderActionButtons.module.
 type ExtraAction = {
   label: string;
   onClick: () => void;
+  disabled?: boolean;
 };
 
 type PackAction = {
@@ -19,8 +20,12 @@ type ShipmentsPageHeaderActionsProps = {
   onAdd: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  addDisabled?: boolean;
   editDisabled: boolean;
   deleteDisabled: boolean;
+  addTitle?: string;
+  editTitle?: string;
+  deleteTitle?: string;
   showAddAction?: boolean;
   showRowActions?: boolean;
   extraActions?: ExtraAction[];
@@ -34,8 +39,12 @@ export function ShipmentsPageHeaderActions({
   onAdd,
   onEdit,
   onDelete,
+  addDisabled = false,
   editDisabled,
   deleteDisabled,
+  addTitle,
+  editTitle,
+  deleteTitle,
   showAddAction = true,
   showRowActions = true,
   extraActions,
@@ -49,7 +58,9 @@ export function ShipmentsPageHeaderActions({
           type="button"
           className={`${styles.button} ${styles.success}`}
           onClick={action.onClick}
+          disabled={action.disabled}
           aria-label={action.label}
+          title={action.disabled ? addTitle : undefined}
         >
           <FaCirclePlus />
           <span>{action.label}</span>
@@ -60,7 +71,9 @@ export function ShipmentsPageHeaderActions({
           type="button"
           className={`${styles.button} ${styles.success}`}
           onClick={onAdd}
+          disabled={addDisabled}
           aria-label={addActionLabel}
+          title={addTitle}
         >
           <FaCirclePlus />
           <span>{addActionLabel}</span>
@@ -74,6 +87,7 @@ export function ShipmentsPageHeaderActions({
             onClick={onEdit}
             disabled={editDisabled}
             aria-label={editActionLabel}
+            title={editTitle}
           >
             <FaPenToSquare />
             <span>{editActionLabel}</span>
@@ -96,6 +110,7 @@ export function ShipmentsPageHeaderActions({
             onClick={onDelete}
             disabled={deleteDisabled}
             aria-label={deleteActionLabel}
+            title={deleteTitle}
           >
             <FaTrashCan />
             <span>{deleteActionLabel}</span>

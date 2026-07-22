@@ -19,11 +19,24 @@ type DeletedShipmentItemsTableProps = {
   onRawItemSelect?: (item: DeletedShipmentItemRecord | null) => void;
   refreshKey?: number;
   onRowCountChange?: (count: number) => void;
+  onSeasonInfoChange?: (info: { selectedSeasonId: number | null; activeSeasonId: number | null }) => void;
 };
 
-export function DeletedShipmentItemsTable({ lang, labels, selectedItemId, onSelectItem, onRawItemSelect, refreshKey, onRowCountChange }: DeletedShipmentItemsTableProps): JSX.Element {
+export function DeletedShipmentItemsTable({ lang, labels, selectedItemId, onSelectItem, onRawItemSelect, refreshKey, onRowCountChange, onSeasonInfoChange }: DeletedShipmentItemsTableProps): JSX.Element {
   const [detailsRow, setDetailsRow] = useState<ShipmentItemsTableRow | null>(null);
-  const { rows, rawItems, columns, filters, isLoading, error, handleFilterValuesChange, handleFiltersApiReady } = useDeletedShipmentItemsFilters(labels, refreshKey, setDetailsRow);
+  const {
+    rows,
+    rawItems,
+    columns,
+    filters,
+    activeSeasonId,
+    selectedSeasonId,
+    isLoading,
+    error,
+    handleFilterValuesChange,
+    handleFiltersApiReady,
+  } = useDeletedShipmentItemsFilters(labels, refreshKey, setDetailsRow);
+  const isViewingNonActiveSeason = selectedSeasonId !== null && selectedSeasonId !== activeSeasonId;
   const onRowCountChangeRef = useRef(onRowCountChange);
   onRowCountChangeRef.current = onRowCountChange;
   const detailsPrintRef = useRef<HTMLDivElement>(null);
@@ -44,6 +57,10 @@ export function DeletedShipmentItemsTable({ lang, labels, selectedItemId, onSele
   useEffect(() => {
     if (!isLoading) onRowCountChangeRef.current?.(rows.length);
   }, [rows.length, isLoading]);
+
+  useEffect(() => {
+    onSeasonInfoChange?.({ selectedSeasonId, activeSeasonId });
+  }, [onSeasonInfoChange, selectedSeasonId, activeSeasonId]);
 
   useEffect(() => {
     if (selectedItemId === null) return;
@@ -85,7 +102,7 @@ export function DeletedShipmentItemsTable({ lang, labels, selectedItemId, onSele
             getRowKey={(row) => row.id}
             emptyLabel={labels.trashEmpty}
             selectedRowKey={selectedItemId}
-            onRowClick={(row) => {
+            onRowClick={isViewingNonActiveSeason ? undefined : (row) => {
               onSelectItem(row);
               onRawItemSelect?.(row ? (rawItems.find((r) => r.id === row.id) ?? null) : null);
             }}

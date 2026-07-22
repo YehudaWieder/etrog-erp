@@ -23,6 +23,10 @@ function resolveOwnershipLabel(row: BoxRecord, labels: BoxesTableLabels): string
     return row.customer?.customerName || labels.ownershipLabels.CUSTOMER;
   }
 
+  if (row.ownershipType === 'EXTERNAL_TRADER') {
+    return row.externalOwnerName || labels.ownershipLabels.EXTERNAL_TRADER;
+  }
+
   return labels.ownershipLabels[row.ownershipType];
 }
 

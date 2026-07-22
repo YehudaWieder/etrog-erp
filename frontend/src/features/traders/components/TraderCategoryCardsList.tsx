@@ -30,6 +30,8 @@ type TraderCategoryCardsListProps = {
   onToggleCategory: (id: number) => void;
   onReorder?: (orderedIds: number[]) => void;
   isReorderDisabled?: boolean;
+  isSelectionDisabled?: boolean;
+  selectionDisabledTitle?: string;
   t: TraderCategoryCardsListText;
 };
 
@@ -39,6 +41,8 @@ export function TraderCategoryCardsList({
   onToggleCategory,
   onReorder,
   isReorderDisabled,
+  isSelectionDisabled,
+  selectionDisabledTitle,
   t,
 }: TraderCategoryCardsListProps): JSX.Element | null {
   const [draggedId, setDraggedId] = useState<number | null>(null);
@@ -117,6 +121,8 @@ export function TraderCategoryCardsList({
                 </span>
               }
               onToggle={() => onToggleCategory(category.id)}
+              disabled={isSelectionDisabled}
+              title={isSelectionDisabled ? selectionDisabledTitle : undefined}
               topAside={
                 canReorder ? (
                   <span className={styles.dragHandle} title={t.dragHandleLabel} aria-label={t.dragHandleLabel}>

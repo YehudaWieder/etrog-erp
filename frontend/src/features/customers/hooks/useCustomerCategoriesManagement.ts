@@ -377,9 +377,11 @@ export function useCustomerCategoriesManagement({ onHeaderStateChange }: Custome
     setIsDeleteDialogOpen(false);
   };
 
-  const isAddDisabled = loading || isSubmitting || !seasonFilterId || sortedCustomers.length === 0;
-  const isEditDisabled = !selectedCategory || loading || isSubmitting;
-  const isDeleteDisabled = !selectedCategory || loading || isSubmitting;
+  const isViewingNonActiveSeason = seasonFilterId !== null && seasonFilterId !== activeSeasonId;
+  const isAddDisabled =
+    loading || isSubmitting || !seasonFilterId || sortedCustomers.length === 0 || isViewingNonActiveSeason;
+  const isEditDisabled = !selectedCategory || loading || isSubmitting || isViewingNonActiveSeason;
+  const isDeleteDisabled = !selectedCategory || loading || isSubmitting || isViewingNonActiveSeason;
   const shownError = addError ?? editError ?? deleteError ?? error;
 
   useEffect(() => {
@@ -409,6 +411,7 @@ export function useCustomerCategoriesManagement({ onHeaderStateChange }: Custome
     shownError,
     seasonFilterId,
     selectedSeason,
+    isViewingNonActiveSeason,
     categoriesByCustomer,
     filteredCategoriesCount: filteredCategories.length,
     selectedCategory,

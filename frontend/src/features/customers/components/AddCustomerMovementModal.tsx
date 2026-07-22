@@ -455,7 +455,7 @@ export function AddCustomerMovementModal({
         aria-modal="true"
         aria-label={f.title}
         dir={lang === 'he' ? 'rtl' : 'ltr'}
-        style={{ width: 820 }}
+        style={{ width: 820, minHeight: 480 }}
         onClick={(event) => event.stopPropagation()}
       >
         <button className="modal-close" type="button" aria-label={f.closeLabel} onClick={handleClose}>
@@ -467,7 +467,7 @@ export function AddCustomerMovementModal({
           <TopLoadingBar isLoading={isLoadingStock} />
         </h3>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, flex: 1 }}>
           {/* Row 1: movement type */}
           <div style={ROW_STYLE}>
             <div style={{ ...FIELD_STYLE, gridColumn: '1 / -1' }}>
@@ -489,6 +489,21 @@ export function AddCustomerMovementModal({
               </select>
             </div>
           </div>
+
+          {!type ? (
+            <div
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--color-text-secondary, #6b7280)',
+                fontSize: '0.95rem',
+              }}
+            >
+              {f.typePlaceholder}
+            </div>
+          ) : null}
 
           {type ? (
             <>
@@ -698,7 +713,7 @@ export function AddCustomerMovementModal({
 
         {error ? <p className="seasons-manager__error">{error}</p> : null}
 
-        <div className="modal-actions">
+        <div className="modal-actions" style={{ marginTop: 'auto' }}>
           <button className="btn btn-danger" type="button" onClick={handleClose}>
             {f.cancel}
           </button>

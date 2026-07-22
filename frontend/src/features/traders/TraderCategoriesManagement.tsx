@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaTriangleExclamation } from 'react-icons/fa6';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { GlobalScopedFilters } from '../../components/ui/GlobalScopedFilters';
 import SettingsInnerTemplate from '../../components/ui/SettingsInnerTemplate';
@@ -6,6 +7,7 @@ import { TraderCategoryCardsList } from './components/TraderCategoryCardsList';
 import { TraderCategoryFormModal } from './components/TraderCategoryFormModal';
 import { useTraderCategoriesManagement } from './hooks/useTraderCategoriesManagement';
 import type { TraderCategoriesHeaderState, TraderCategoriesManagementProps } from './tradersManagement.types';
+import styles from './components/styles/TraderCategoriesShared.module.css';
 
 export type { TraderCategoriesHeaderState };
 
@@ -16,6 +18,7 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
     t,
     loading,
     shownError,
+    isViewingNonActiveSeason,
     sortedTraders,
     filteredCategories,
     selectedCategory,
@@ -64,14 +67,25 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
       errorMessage={shownError ?? (sortedTraders.length === 0 && !loading ? t.noTraders : null)}
       emptyMessage={filteredCategories.length === 0 && !loading ? t.empty : null}
     >
+      <p className={styles.warningNotice}>
+        <FaTriangleExclamation aria-hidden="true" />
+        <span>{t.warningNotice}</span>
+        <FaTriangleExclamation aria-hidden="true" />
+      </p>
+
       <TraderCategoryCardsList
         categories={filteredCategories}
         selectedCategoryId={selectedCategoryId}
         onToggleCategory={(id) => {
+          if (isViewingNonActiveSeason) {
+            return;
+          }
           setSelectedCategoryId((currentId) => (currentId === id ? null : id));
         }}
         onReorder={onReorderCategories}
         isReorderDisabled={isReorderDisabled}
+        isSelectionDisabled={isViewingNonActiveSeason}
+        selectionDisabledTitle={t.nonActiveSeasonSelectionDisabled}
         t={{
           categoryId: t.categoryId,
           notesLabel: t.notesLabel,

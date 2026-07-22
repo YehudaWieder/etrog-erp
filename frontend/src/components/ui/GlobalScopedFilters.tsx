@@ -11,6 +11,7 @@ export type GlobalScopedFilterConfig = {
   type?: 'calendar' | 'text';
   placeholder?: string;
   lang?: 'he' | 'en';
+  disabled?: boolean;
 };
 
 export type GlobalScopedFiltersApi = {
@@ -69,6 +70,7 @@ export const GlobalScopedFilters: React.FC<GlobalScopedFiltersProps> = ({
         type: filter.type,
         placeholder: filter.placeholder,
         lang: filter.lang,
+        disabled: filter.disabled,
       })),
     [filters, scope, setFilterValue, values],
   );

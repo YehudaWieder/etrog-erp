@@ -22,11 +22,13 @@ type ShipmentItemsTableProps = {
   onSelectItem: (row: ShipmentItemsTableRow | null) => void;
   refreshKey?: number;
   onRowCountChange?: (count: number) => void;
+  onSeasonInfoChange?: (info: { selectedSeasonId: number | null; activeSeasonId: number | null }) => void;
 };
 
-export function ShipmentItemsTable({ lang, labels, selectedItemId, onSelectItem, refreshKey, onRowCountChange }: ShipmentItemsTableProps): JSX.Element {
+export function ShipmentItemsTable({ lang, labels, selectedItemId, onSelectItem, refreshKey, onRowCountChange, onSeasonInfoChange }: ShipmentItemsTableProps): JSX.Element {
   const {
     filters,
+    activeSeasonId,
     selectedSeasonId,
     selectedBoxNumber,
     selectedShipmentNumber,
@@ -35,6 +37,7 @@ export function ShipmentItemsTable({ lang, labels, selectedItemId, onSelectItem,
     handleFilterValuesChange,
     handleFiltersApiReady,
   } = useShipmentItemsFilters(labels);
+  const isViewingNonActiveSeason = selectedSeasonId !== null && selectedSeasonId !== activeSeasonId;
   const [detailsRow, setDetailsRow] = useState<ShipmentItemsTableRow | null>(null);
   const { rows, columns, isLoading, error } = useShipmentItemsTable(
     labels,
@@ -83,6 +86,10 @@ export function ShipmentItemsTable({ lang, labels, selectedItemId, onSelectItem,
       onRowCountChangeRef.current?.(rows.length);
     }
   }, [rows.length, isLoading]);
+
+  useEffect(() => {
+    onSeasonInfoChange?.({ selectedSeasonId, activeSeasonId });
+  }, [onSeasonInfoChange, selectedSeasonId, activeSeasonId]);
 
   useEffect(() => {
     if (selectedItemId === null) {
@@ -167,7 +174,7 @@ export function ShipmentItemsTable({ lang, labels, selectedItemId, onSelectItem,
             getRowKey={(row) => row.id}
             emptyLabel={labels.empty}
             selectedRowKey={selectedItemId}
-            onRowClick={onSelectItem}
+            onRowClick={isViewingNonActiveSeason ? undefined : onSelectItem}
             defaultSortState={{ key: 'boxNumber', direction: 'desc' }}
           />
 

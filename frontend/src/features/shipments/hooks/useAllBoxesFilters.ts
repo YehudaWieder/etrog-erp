@@ -16,6 +16,7 @@ type AllBoxesFilterValues = {
 
 type UseAllBoxesFiltersResult = {
   filters: GlobalScopedFilterConfig[];
+  activeSeasonId: number | null;
   selectedSeasonId: number | null;
   selectedShipmentNumber: 'all' | number;
   selectedBoxNumber: string;
@@ -292,6 +293,7 @@ export function useAllBoxesFilters(labels: BoxesTableLabels): UseAllBoxesFilters
 
   return {
     filters,
+    activeSeasonId,
     selectedSeasonId,
     selectedShipmentNumber,
     selectedBoxNumber,

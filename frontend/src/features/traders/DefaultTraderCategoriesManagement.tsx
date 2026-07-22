@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaTriangleExclamation } from 'react-icons/fa6';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import SettingsInnerTemplate from '../../components/ui/SettingsInnerTemplate';
 import { TraderCategoryCardsList } from './components/TraderCategoryCardsList';
@@ -8,6 +9,7 @@ import type {
   DefaultTraderCategoriesHeaderState,
   DefaultTraderCategoriesManagementProps,
 } from './tradersManagement.types';
+import styles from './components/styles/TraderCategoriesShared.module.css';
 
 export type { DefaultTraderCategoriesHeaderState };
 
@@ -55,6 +57,12 @@ const DefaultTraderCategoriesManagement: React.FC<DefaultTraderCategoriesManagem
       errorMessage={shownError ?? (sortedTraders.length === 0 && !loading ? t.noTraders : null)}
       emptyMessage={sortedCategories.length === 0 && !loading ? t.empty : null}
     >
+      <p className={styles.warningNotice}>
+        <FaTriangleExclamation aria-hidden="true" />
+        <span>{t.warningNotice}</span>
+        <FaTriangleExclamation aria-hidden="true" />
+      </p>
+
       <TraderCategoryCardsList
         categories={sortedCategories}
         selectedCategoryId={selectedCategoryId}

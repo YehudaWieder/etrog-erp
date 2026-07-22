@@ -51,6 +51,8 @@ type UseDeletedShipmentItemsFiltersResult = {
   rawItems: DeletedShipmentItemRecord[];
   columns: GlobalDataTableColumn<ShipmentItemsTableRow>[];
   filters: GlobalScopedFilterConfig[];
+  activeSeasonId: number | null;
+  selectedSeasonId: number | null;
   isLoading: boolean;
   error: string;
   handleFilterValuesChange: (values: Record<string, string>) => void;
@@ -303,5 +305,16 @@ export function useDeletedShipmentItemsFilters(
     },
   ], [labels, onOpenDetails]);
 
-  return { rows, rawItems, columns, filters, isLoading, error, handleFilterValuesChange, handleFiltersApiReady };
+  return {
+    rows,
+    rawItems,
+    columns,
+    filters,
+    activeSeasonId,
+    selectedSeasonId,
+    isLoading,
+    error,
+    handleFilterValuesChange,
+    handleFiltersApiReady,
+  };
 }

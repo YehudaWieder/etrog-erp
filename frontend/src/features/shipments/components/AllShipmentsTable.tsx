@@ -32,18 +32,21 @@ type AllShipmentsTableProps = {
   onSelectShipment: (row: ShipmentRecord | null) => void;
   refreshKey?: number;
   onRowCountChange?: (count: number) => void;
+  onSeasonInfoChange?: (info: { selectedSeasonId: number | null; activeSeasonId: number | null }) => void;
 };
 
-export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectShipment, refreshKey, onRowCountChange }: AllShipmentsTableProps): JSX.Element {
+export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectShipment, refreshKey, onRowCountChange, onSeasonInfoChange }: AllShipmentsTableProps): JSX.Element {
   const {
     filters,
     seasons,
+    activeSeasonId,
     selectedSeasonId,
     selectedStatus,
     filterDisplayValues,
     handleFilterValuesChange,
     handleFiltersApiReady,
   } = useAllShipmentsFilters(labels);
+  const isViewingNonActiveSeason = selectedSeasonId !== null && selectedSeasonId !== activeSeasonId;
   const [detailsRow, setDetailsRow] = useState<ShipmentRecord | null>(null);
   const detailsSeasonName = useMemo(
     () => (detailsRow ? seasons.find((season) => season.id === detailsRow.seasonId)?.yearName ?? null : null),
@@ -140,6 +143,10 @@ export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectSh
   }, [rows.length, isLoading]);
 
   useEffect(() => {
+    onSeasonInfoChange?.({ selectedSeasonId, activeSeasonId });
+  }, [onSeasonInfoChange, selectedSeasonId, activeSeasonId]);
+
+  useEffect(() => {
     if (selectedShipmentId === null) {
       return;
     }
@@ -222,7 +229,7 @@ export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectSh
             getRowKey={(row) => row.id}
             emptyLabel={labels.empty}
             selectedRowKey={selectedShipmentId}
-            onRowClick={onSelectShipment}
+            onRowClick={isViewingNonActiveSeason ? undefined : onSelectShipment}
             defaultSortState={{ key: 'shipmentNumber', direction: 'asc' }}
           />
 

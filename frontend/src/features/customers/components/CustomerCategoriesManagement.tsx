@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaXmark } from 'react-icons/fa6';
+import { FaTriangleExclamation, FaXmark } from 'react-icons/fa6';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
 import { GlobalScopedFilters } from '../../../components/ui/GlobalScopedFilters';
@@ -28,6 +28,7 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
     shownError,
     seasonFilterId,
     selectedSeason,
+    isViewingNonActiveSeason,
     categoriesByCustomer,
     filteredCategoriesCount,
     selectedCategory,
@@ -69,6 +70,12 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
       errorMessage={shownError}
       emptyMessage={!seasonFilterId ? t.empty : seasonFilterId && filteredCategoriesCount === 0 && !loading ? t.categoryForSeasonEmpty : null}
     >
+      <p className={styles.warningNotice}>
+        <FaTriangleExclamation aria-hidden="true" />
+        <span>{t.warningNotice}</span>
+        <FaTriangleExclamation aria-hidden="true" />
+      </p>
+
       {categoriesByCustomer.length > 0 ? (
         <div className={styles.groups}>
           {categoriesByCustomer.map((group) => (
@@ -85,8 +92,13 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
                         isSelected={isSelected}
                         badgeLabel={badgeLabel}
                         onToggle={() => {
+                          if (isViewingNonActiveSeason) {
+                            return;
+                          }
                           setSelectedCategoryId((previousId) => (previousId === category.id ? null : category.id));
                         }}
+                        disabled={isViewingNonActiveSeason}
+                        title={isViewingNonActiveSeason ? t.nonActiveSeasonSelectionDisabled : undefined}
                         topContent={
                           <>
                             <span className="seasons-manager__year">

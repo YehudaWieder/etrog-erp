@@ -10,6 +10,8 @@ type ManagementSelectableCardProps = {
   selector?: React.ReactNode;
   topAside?: React.ReactNode;
   className?: string;
+  disabled?: boolean;
+  title?: string;
 };
 
 const ManagementSelectableCard: React.FC<ManagementSelectableCardProps> = ({
@@ -21,12 +23,16 @@ const ManagementSelectableCard: React.FC<ManagementSelectableCardProps> = ({
   selector,
   topAside,
   className,
+  disabled,
+  title,
 }) => {
   return (
     <button
       type="button"
       className={`seasons-manager__card ${styles.card}${isSelected ? ` is-selected ${styles.cardSelected}` : ''}${className ? ` ${className}` : ''}`}
       onClick={onToggle}
+      disabled={disabled}
+      title={title}
     >
       <span className={`seasons-manager__card-shell ${styles.cardShell}`}>
         <span className={`seasons-manager__card-top ${styles.cardTop}`}>

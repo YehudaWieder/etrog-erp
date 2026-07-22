@@ -1,3 +1,41 @@
+.centeredCard :global(.seasons-manager__card-top) {
+  align-items: center;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+}
+
+.metaLine {
+  line-height: 1.35;
+}
+
+.warningNotice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-4);
+  color: #7c5414;
+  background: #fff4dd;
+  border: 1px solid #f4ddb0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.warningNotice svg {
+  flex-shrink: 0;
+  font-size: 1.1rem;
+}
+
+.warningNotice span {
+  font-weight: 700;
+}
+
 .formGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(260px, 360px));

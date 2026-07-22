@@ -160,6 +160,11 @@
   font-weight: 400;
 }
 
+.app-shell__sidebar-subitem-hint--strong {
+  opacity: 1;
+  font-weight: 700;
+}
+
 .app-shell__sidebar-item:hover {
   background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
@@ -415,13 +420,19 @@
   transform: translateY(-1px);
 }
 
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .btn-primary {
   background: var(--color-primary);
   color: #3B6C25;
   box-shadow: 0 2px 7px rgba(0, 0, 0, 0.08);
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background: var(--color-primary-strong);
 }
 

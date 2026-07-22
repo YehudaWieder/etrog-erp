@@ -35,6 +35,7 @@ export type CustomersI18n = {
 };
 
 export type CustomerCategoriesI18n = {
+  warningNotice: string;
   activeSeason: (yearName: number) => string;
   activeSeasonBadge: string;
   noActiveSeason: string;
@@ -43,6 +44,7 @@ export type CustomerCategoriesI18n = {
   customerFilterLabel: string;
   allCustomersOption: string;
   noActiveSeasonForAdd: string;
+  nonActiveSeasonSelectionDisabled: string;
   noCustomers: string;
   selectCustomer: string;
   selectGrade: string;

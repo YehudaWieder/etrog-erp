@@ -23,17 +23,23 @@ type ShipmentItemsSummaryProps = {
   labels: ShipmentItemsTableLabels;
   description: string;
   refreshKey?: number;
+  onSeasonInfoChange?: (info: { selectedSeasonId: number | null; activeSeasonId: number | null }) => void;
 };
 
-export function ShipmentItemsSummary({ lang, labels, description, refreshKey }: ShipmentItemsSummaryProps) {
+export function ShipmentItemsSummary({ lang, labels, description, refreshKey, onSeasonInfoChange }: ShipmentItemsSummaryProps) {
   const {
     filters,
+    activeSeasonId,
     selectedSeasonId,
     selectedOwnership,
     filterDisplayValues,
     handleFilterValuesChange,
     handleFiltersApiReady,
   } = useShipmentItemsFilters(labels);
+
+  useEffect(() => {
+    onSeasonInfoChange?.({ selectedSeasonId, activeSeasonId });
+  }, [onSeasonInfoChange, selectedSeasonId, activeSeasonId]);
 
   const summaryFilters = useMemo(
     () => filters.filter((f) => f.key === 'seasonId' || f.key === 'ownership'),

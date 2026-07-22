@@ -63,6 +63,10 @@ export function ShipmentsPage() {
   const [itemsRefreshKey, setItemsRefreshKey] = useState(0);
   const [tableRowCount, setTableRowCount] = useState<number | null>(null);
   const [activeSeasonYearName, setActiveSeasonYearName] = useState<number | null>(null);
+  const [currentTabSeasonInfo, setCurrentTabSeasonInfo] = useState<{
+    selectedSeasonId: number | null;
+    activeSeasonId: number | null;
+  }>({ selectedSeasonId: null, activeSeasonId: null });
 
   useEffect(() => {
     // טען כמות הודעות שלא נקראו
@@ -134,6 +138,7 @@ export function ShipmentsPage() {
 
   useEffect(() => {
     setTableRowCount(null);
+    setCurrentTabSeasonInfo({ selectedSeasonId: null, activeSeasonId: null });
   }, [activeSidebarId]);
 
   useEffect(() => {
@@ -175,7 +180,11 @@ export function ShipmentsPage() {
   const isShipmentItemsSummaryActive = activeSidebarId === 'shipment-items-summary';
   const selectedBoxIds = useMemo(() => selectedBoxRows.map((row) => row.id), [selectedBoxRows]);
   const selectedBoxRow = selectedBoxRows.length === 1 ? selectedBoxRows[0] : null;
+  const isViewingNonActiveSeason =
+    currentTabSeasonInfo.selectedSeasonId !== null &&
+    currentTabSeasonInfo.selectedSeasonId !== currentTabSeasonInfo.activeSeasonId;
   const areRowActionsDisabled = useMemo(() => {
+    if (isViewingNonActiveSeason) return true;
     if (isShipmentTableActive) return selectedShipmentRow === null;
     if (isBoxesTableActive) return selectedBoxRows.length === 0;
     if (isTrashActive) return selectedItemRow === null;
@@ -184,7 +193,7 @@ export function ShipmentsPage() {
       return selectedItemRow.boxStatus === 'SHIPPED' || selectedItemRow.boxStatus === 'DELIVERED';
     }
     return true;
-  }, [isBoxesTableActive, isShipmentItemsTableActive, isTrashActive, isShipmentTableActive, selectedBoxRows, selectedItemRow, selectedShipmentRow]);
+  }, [isBoxesTableActive, isShipmentItemsTableActive, isTrashActive, isShipmentTableActive, isViewingNonActiveSeason, selectedBoxRows, selectedItemRow, selectedShipmentRow]);
   const editRowActionDisabled = areRowActionsDisabled || (isBoxesTableActive && selectedBoxRows.length > 1);
 
   useEffect(() => {
@@ -442,16 +451,20 @@ export function ShipmentsPage() {
               handleCreateAction(t.pageControls.delete);
             }
           }}
+          addDisabled={isViewingNonActiveSeason}
           editDisabled={editRowActionDisabled}
           deleteDisabled={areRowActionsDisabled}
+          addTitle={isViewingNonActiveSeason ? t.pageControls.nonActiveSeasonDisabled : undefined}
+          editTitle={isViewingNonActiveSeason ? t.pageControls.nonActiveSeasonDisabled : undefined}
+          deleteTitle={isViewingNonActiveSeason ? t.pageControls.nonActiveSeasonDisabled : undefined}
           packAction={isBoxesTableActive ? {
             label: t.pageControls.packItems,
             onClick: handlePackSelectedBox,
             disabled: editRowActionDisabled,
           } : undefined}
           extraActions={isShipmentItemsSummaryActive ? [
-            { label: t.pageControls.addShipment, onClick: () => setIsNewShipmentModalOpen(true) },
-            { label: t.pageControls.addBox, onClick: () => setIsNewBoxModalOpen(true) },
+            { label: t.pageControls.addShipment, onClick: () => setIsNewShipmentModalOpen(true), disabled: isViewingNonActiveSeason },
+            { label: t.pageControls.addBox, onClick: () => setIsNewBoxModalOpen(true), disabled: isViewingNonActiveSeason },
           ] : undefined}
         />
       ) : null}
@@ -541,6 +554,8 @@ export function ShipmentsPage() {
         onTraderIdChange={editBoxForm.setTraderId}
         customerId={editBoxForm.customerId}
         onCustomerIdChange={editBoxForm.setCustomerId}
+        externalOwnerName={editBoxForm.externalOwnerName}
+        onExternalOwnerNameChange={editBoxForm.setExternalOwnerName}
         notes={editBoxForm.notes}
         onNotesChange={editBoxForm.setNotes}
         isShipped={editBoxForm.isShipped}
@@ -582,6 +597,8 @@ export function ShipmentsPage() {
         onTraderIdChange={packingForm.setTraderId}
         customerId={packingForm.customerId}
         onCustomerIdChange={packingForm.setCustomerId}
+        externalOwnerName={packingForm.externalOwnerName}
+        onExternalOwnerNameChange={packingForm.setExternalOwnerName}
         notes={packingForm.notes}
         onNotesChange={packingForm.setNotes}
         isShipped={packingForm.isShipped}
@@ -674,6 +691,10 @@ export function ShipmentsPage() {
         onTraderIdChange={newBoxForm.setTraderId}
         customerId={newBoxForm.customerId}
         onCustomerIdChange={newBoxForm.setCustomerId}
+        externalOwnerName={newBoxForm.externalOwnerName}
+        onExternalOwnerNameChange={newBoxForm.setExternalOwnerName}
+        status={newBoxForm.status}
+        onStatusChange={newBoxForm.setStatus}
         notes={newBoxForm.notes}
         onNotesChange={newBoxForm.setNotes}
         startNumber={newBoxForm.startNumber}
@@ -799,6 +820,7 @@ export function ShipmentsPage() {
           onSelectShipment={handleShipmentRowSelect}
           refreshKey={shipmentsRefreshKey}
           onRowCountChange={setTableRowCount}
+          onSeasonInfoChange={setCurrentTabSeasonInfo}
         />
       ) : activeSidebarId === 'all-boxes' ? (
         <AllBoxesTable
@@ -810,6 +832,7 @@ export function ShipmentsPage() {
           onPruneSelection={handlePruneBoxSelection}
           refreshKey={boxesRefreshKey}
           onRowCountChange={setTableRowCount}
+          onSeasonInfoChange={setCurrentTabSeasonInfo}
         />
       ) : isShipmentItemsSummaryActive ? (
         <ShipmentItemsSummary
@@ -817,6 +840,7 @@ export function ShipmentsPage() {
           labels={t.shipmentItemsTableLabels}
           description={content.description}
           refreshKey={itemsRefreshKey}
+          onSeasonInfoChange={setCurrentTabSeasonInfo}
         />
       ) : activeSidebarId === 'shipment-items' ? (
         <ShipmentItemsTable
@@ -826,6 +850,7 @@ export function ShipmentsPage() {
           onSelectItem={handleItemRowSelect}
           refreshKey={itemsRefreshKey}
           onRowCountChange={setTableRowCount}
+          onSeasonInfoChange={setCurrentTabSeasonInfo}
         />
       ) : activeSidebarId === 'shipment-items-trash' ? (
         <DeletedShipmentItemsTable
@@ -836,6 +861,7 @@ export function ShipmentsPage() {
           onRawItemSelect={setSelectedDeletedItemRaw}
           refreshKey={itemsRefreshKey}
           onRowCountChange={setTableRowCount}
+          onSeasonInfoChange={setCurrentTabSeasonInfo}
         />
       ) : (
         <section className="shipments-empty-state">

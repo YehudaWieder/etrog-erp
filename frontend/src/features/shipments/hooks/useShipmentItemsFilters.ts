@@ -16,6 +16,7 @@ type ShipmentItemsFilterValues = {
 
 type UseShipmentItemsFiltersResult = {
   filters: GlobalScopedFilterConfig[];
+  activeSeasonId: number | null;
   selectedSeasonId: number | null;
   selectedBoxNumber: 'all' | number;
   selectedShipmentNumber: 'all' | number;
@@ -294,6 +295,7 @@ export function useShipmentItemsFilters(labels: ShipmentItemsTableLabels): UseSh
 
   return {
     filters,
+    activeSeasonId,
     selectedSeasonId,
     selectedBoxNumber,
     selectedShipmentNumber,

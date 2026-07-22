@@ -412,10 +412,12 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
     }
   };
 
-  const isAddDisabled = loading || isSubmitting || sortedTraders.length === 0 || !seasonFilterId;
-  const isEditDisabled = loading || isSubmitting || !selectedCategory;
-  const isDeleteDisabled = loading || isSubmitting || !selectedCategory;
-  const isReorderDisabled = traderFilterId !== 'all';
+  const isViewingNonActiveSeason = seasonFilterId !== null && seasonFilterId !== activeSeasonId;
+  const isAddDisabled =
+    loading || isSubmitting || sortedTraders.length === 0 || !seasonFilterId || isViewingNonActiveSeason;
+  const isEditDisabled = loading || isSubmitting || !selectedCategory || isViewingNonActiveSeason;
+  const isDeleteDisabled = loading || isSubmitting || !selectedCategory || isViewingNonActiveSeason;
+  const isReorderDisabled = traderFilterId !== 'all' || isViewingNonActiveSeason;
   const shownError = addError ?? editError ?? deleteError ?? reorderError ?? error;
 
   const reorderCategories = async (orderedIds: number[]) => {
@@ -473,6 +475,7 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
     t,
     loading,
     shownError,
+    isViewingNonActiveSeason,
     sortedTraders,
     filteredCategories,
     selectedCategory,

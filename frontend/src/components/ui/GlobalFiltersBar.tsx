@@ -17,6 +17,7 @@ export type GlobalFilterControl = {
   type?: 'calendar' | 'text';
   placeholder?: string;
   lang?: 'he' | 'en';
+  disabled?: boolean;
 };
 
 type GlobalFiltersBarProps = {
@@ -79,6 +80,7 @@ export const GlobalFiltersBar: React.FC<GlobalFiltersBarProps> = ({
             className={`seasons-manager__year-input global-filters-bar__select ${styles.select}`}
             value={control.value}
             onChange={(event) => control.onChange(event.target.value)}
+            disabled={control.disabled}
           >
             {(() => {
               const hasGroupedOptions = control.options.some((option) => Boolean(option.group));
