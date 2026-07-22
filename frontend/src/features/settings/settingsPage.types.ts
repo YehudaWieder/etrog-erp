@@ -11,6 +11,7 @@ export type SettingsChildKey =
   | 'pricing'
   | 'traders'
   | 'traderCategories'
+  | 'traderPricing'
   | 'defaultTraderCategories'
   | 'customers'
   | 'customerCategories';

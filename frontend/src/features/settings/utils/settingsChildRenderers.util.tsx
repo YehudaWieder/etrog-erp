@@ -5,6 +5,7 @@ import FieldsManagement, { type FieldsHeaderState } from '../../fields/component
 import SeasonsManagement, { type SeasonsHeaderState } from '../../seasons/SeasonsManagement';
 import DefaultTraderCategoriesManagement, { type DefaultTraderCategoriesHeaderState } from '../../traders/DefaultTraderCategoriesManagement';
 import TraderCategoriesManagement, { type TraderCategoriesHeaderState } from '../../traders/TraderCategoriesManagement';
+import TraderSeasonSettingsManagement, { type TraderSeasonSettingsHeaderState } from '../../traders/TraderSeasonSettingsManagement';
 import TradersManagement, { type TradersHeaderState } from '../../traders/TradersManagement';
 import SystemConfigManagement from '../../system-config/components/SystemConfigManagement';
 import PricingManagement from '../../system-config/components/PricingManagement';
@@ -20,6 +21,7 @@ type RenderSettingsActiveChildParams = {
   setPricingHeaderState: Dispatch<SetStateAction<import('../../system-config/components/PricingManagement').PricingHeaderState | null>>;
   setTradersHeaderState: Dispatch<SetStateAction<TradersHeaderState | null>>;
   setTraderCategoriesHeaderState: Dispatch<SetStateAction<TraderCategoriesHeaderState | null>>;
+  setTraderPricingHeaderState: Dispatch<SetStateAction<TraderSeasonSettingsHeaderState | null>>;
   setDefaultTraderCategoriesHeaderState: Dispatch<SetStateAction<DefaultTraderCategoriesHeaderState | null>>;
   setCustomersHeaderState: Dispatch<SetStateAction<CustomersHeaderState | null>>;
   setCustomerCategoriesHeaderState: Dispatch<SetStateAction<CustomerCategoriesHeaderState | null>>;
@@ -35,6 +37,7 @@ export function renderSettingsActiveChild({
   setFieldsHeaderState,
   setTradersHeaderState,
   setTraderCategoriesHeaderState,
+  setTraderPricingHeaderState,
   setDefaultTraderCategoriesHeaderState,
   setCustomersHeaderState,
   setCustomerCategoriesHeaderState,
@@ -50,6 +53,7 @@ export function renderSettingsActiveChild({
     pricing: () => <PricingManagement lang={lang} onHeaderStateChange={setPricingHeaderState} />,
     traders: () => <TradersManagement onHeaderStateChange={setTradersHeaderState} />,
     traderCategories: () => <TraderCategoriesManagement onHeaderStateChange={setTraderCategoriesHeaderState} />,
+    traderPricing: () => <TraderSeasonSettingsManagement onHeaderStateChange={setTraderPricingHeaderState} />,
     defaultTraderCategories: () => (
       <DefaultTraderCategoriesManagement onHeaderStateChange={setDefaultTraderCategoriesHeaderState} />
     ),

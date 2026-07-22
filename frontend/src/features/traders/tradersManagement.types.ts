@@ -32,8 +32,29 @@ export type DefaultTraderCategoriesHeaderState = {
   onDelete: () => void;
 };
 
+export type TraderSeasonSettingsHeaderState = {
+  count: number;
+  isAddDisabled: boolean;
+  isEditDisabled: boolean;
+  isDeleteDisabled: boolean;
+  onAdd: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+};
+
+export type TraderSeasonSettingsFormState = {
+  traderId: number | '';
+  paymentPercent: string;
+  pricePerEtrog: string;
+  currency: 'ILS' | 'USD' | 'EUR' | '';
+};
+
 export type TradersManagementProps = {
   onHeaderStateChange?: (state: TradersHeaderState | null) => void;
+};
+
+export type TraderSeasonSettingsManagementProps = {
+  onHeaderStateChange?: (state: TraderSeasonSettingsHeaderState | null) => void;
 };
 
 export type TraderCategoriesManagementProps = {

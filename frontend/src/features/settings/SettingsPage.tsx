@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { AppShell } from '../../app/layout/AppShell';
-import type { NavItem } from '../../types/navigation';
+import type { NavItem, SidebarSection } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
 import { SettingsSeasonsHeaderActions } from './components/SettingsSeasonsHeaderActions';
 import { SettingsSitePreferencesPanel } from './components/SettingsSitePreferencesPanel';
@@ -10,14 +11,27 @@ import { useSettingsHeaderState } from './hooks/useSettingsHeaderState';
 import { useSettingsPreferences } from './hooks/useSettingsPreferences';
 import { normalizeSettingsChildId } from './utils/normalizeSettingsChildId.util';
 import { renderSettingsActiveChild } from './utils/settingsChildRenderers.util';
+import { fetchSeasons } from '../../store/seasonsSlice';
+import type { AppDispatch, RootState } from '../../store';
 import feedbackStyles from './styles/SettingsWorkspaceFeedback.module.css';
 import workspaceStyles from '../../components/ui/styles/WorkspaceSection.module.css';
 
 export default function SettingsPage(): JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch<AppDispatch>();
   const currentUser = getCurrentUser();
   const [alertsCount, setAlertsCount] = useState<number>(0);
+
+  const seasons = useSelector((state: RootState) => state.seasons.items);
+  const activeSeasonYearName = useMemo(
+    () => seasons.find((season) => season.isActive)?.yearName ?? null,
+    [seasons],
+  );
+
+  useEffect(() => {
+    void dispatch(fetchSeasons());
+  }, [dispatch]);
 
   const {
     lang,
@@ -50,7 +64,21 @@ export default function SettingsPage(): JSX.Element {
 
   const t = getSettingsI18n(lang);
   const isManager = isManagerRole(currentUser?.role);
-  const sidebarSections = isManager ? t.sidebarManager : t.sidebarWorker;
+  const baseSidebarSections = isManager ? t.sidebarManager : t.sidebarWorker;
+  const sidebarSections = useMemo<SidebarSection[]>(() => {
+    if (activeSeasonYearName == null) {
+      return baseSidebarSections;
+    }
+
+    return baseSidebarSections.map((section) => ({
+      ...section,
+      items: section.items.map((item) =>
+        item.id === 'traderCategories' || item.id === 'traderPricing' || item.id === 'customerCategories'
+          ? { ...item, label: `${item.label} (${activeSeasonYearName})` }
+          : item,
+      ),
+    }));
+  }, [baseSidebarSections, activeSeasonYearName]);
   const activeChildId = normalizeSettingsChildId(location.pathname, isManager);
   const content = t.content[activeChildId];
 
@@ -71,6 +99,8 @@ export default function SettingsPage(): JSX.Element {
     setTradersHeaderState,
     traderCategoriesHeaderState,
     setTraderCategoriesHeaderState,
+    traderPricingHeaderState,
+    setTraderPricingHeaderState,
     defaultTraderCategoriesHeaderState,
     setDefaultTraderCategoriesHeaderState,
     customersHeaderState,
@@ -102,6 +132,7 @@ export default function SettingsPage(): JSX.Element {
       pricingHeaderState={pricingHeaderState}
       tradersHeaderState={tradersHeaderState}
       traderCategoriesHeaderState={traderCategoriesHeaderState}
+      traderPricingHeaderState={traderPricingHeaderState}
       defaultTraderCategoriesHeaderState={defaultTraderCategoriesHeaderState}
       customersHeaderState={customersHeaderState}
       customerCategoriesHeaderState={customerCategoriesHeaderState}
@@ -165,6 +196,7 @@ export default function SettingsPage(): JSX.Element {
           setPricingHeaderState,
           setTradersHeaderState,
           setTraderCategoriesHeaderState,
+          setTraderPricingHeaderState,
           setDefaultTraderCategoriesHeaderState,
           setCustomersHeaderState,
           setCustomerCategoriesHeaderState,

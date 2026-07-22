@@ -1,6 +1,6 @@
 // src/partners/services/traders/traders.service.ts
 
-import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma, Role } from '@prisma/client';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
@@ -8,10 +8,8 @@ import { CreateTraderDto } from './dto/create-trader.dto';
 import { UpdateTraderDto } from './dto/update-trader.dto';
 import {
   createTraderSlug,
-  decimalToNumber,
   isManagerOrAbove,
   normalizeTraderName,
-  validatePaymentPercentInput,
 } from './utils/traders.utils';
 
 @Injectable()
@@ -21,20 +19,13 @@ export class TradersService {
   // Create a new trader
   async create(data: CreateTraderDto) {
     const name = normalizeTraderName(data.name);
-    const paymentPercent = data.paymentPercent;
-
-    validatePaymentPercentInput(paymentPercent);
 
     const existing = await this.prisma.trader.findUnique({ where: { name } });
     if (existing) throw new ConflictException(`Trader with name ${name} already exists`);
 
-    // Validate payment percent
-    await this.validateTotalPaymentPercent(paymentPercent);
-
     return this.prisma.trader.create({
       data: {
         name,
-        paymentPercent,
         slug: createTraderSlug(name),
       },
     });
@@ -75,25 +66,8 @@ export class TradersService {
     const updateData: Partial<Prisma.TraderUpdateInput> = { ...data };
     delete (updateData as Record<string, unknown>).id;
 
-    if (updateData.paymentPercent === undefined || typeof updateData.paymentPercent !== 'number') {
-      throw new BadRequestException('paymentPercent is required');
-    }
-
-    validatePaymentPercentInput(updateData.paymentPercent);
-
-    // If paymentPercent is being updated, validate the total
-    if (typeof updateData.paymentPercent === 'number') {
-      // Get the current trader's old payment percent
-      const currentTrader = await this.prisma.trader.findUnique({ where: { id } });
-      if (!currentTrader) throw new NotFoundException('Trader not found');
-
-      // Calculate the difference in payment percent (convert Decimal to number)
-      const currentPercentNumber = decimalToNumber(currentTrader.paymentPercent);
-      const percentDifference = (updateData.paymentPercent as number) - currentPercentNumber;
-      
-      // Validate against the new total
-      await this.validateTotalPaymentPercent(percentDifference, id);
-    }
+    const currentTrader = await this.prisma.trader.findUnique({ where: { id } });
+    if (!currentTrader) throw new NotFoundException('Trader not found');
 
     // If name is changed, update the slug accordingly
     if (updateData.name && typeof updateData.name === 'string') {
@@ -106,31 +80,6 @@ export class TradersService {
       where: { id },
       data: updateData,
     });
-  }
-
-  // Private helper method to validate total payment percent across all traders
-  private async validateTotalPaymentPercent(additionalPercent: number, excludeTrader?: number) {
-    // Get sum of all traders' payment percentages (excluding the one being updated if provided)
-    const traders = await this.prisma.trader.findMany({
-      select: { id: true, paymentPercent: true },
-    });
-
-    let totalPercent = additionalPercent;
-    for (const trader of traders) {
-      if (excludeTrader && trader.id === excludeTrader) {
-        // Skip the trader being updated
-        continue;
-      }
-      // Convert Decimal to number for calculation
-      const traderPercent = decimalToNumber(trader.paymentPercent);
-      totalPercent += traderPercent;
-    }
-
-    if (totalPercent > 100) {
-      throw new BadRequestException(
-        `Total payment percentage would exceed 100%. Current: ${totalPercent.toFixed(2)}%`,
-      );
-    }
   }
 
   // Remove a trader

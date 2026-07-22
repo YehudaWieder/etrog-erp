@@ -7,6 +7,7 @@ import type { CartonsHeaderState } from '../../system-config/components/SystemCo
 import type { PricingHeaderState } from '../../system-config/components/PricingManagement';
 import type { DefaultTraderCategoriesHeaderState } from '../../traders/DefaultTraderCategoriesManagement';
 import type { TraderCategoriesHeaderState } from '../../traders/TraderCategoriesManagement';
+import type { TraderSeasonSettingsHeaderState } from '../../traders/TraderSeasonSettingsManagement';
 import type { TradersHeaderState } from '../../traders/TradersManagement';
 import type { SettingsChildKey } from '../settingsPage.types';
 import styles from '../../../components/ui/styles/HeaderActionButtons.module.css';
@@ -29,6 +30,7 @@ type SettingsSeasonsHeaderActionsProps = {
   pricingHeaderState: PricingHeaderState | null;
   tradersHeaderState: TradersHeaderState | null;
   traderCategoriesHeaderState: TraderCategoriesHeaderState | null;
+  traderPricingHeaderState: TraderSeasonSettingsHeaderState | null;
   defaultTraderCategoriesHeaderState: DefaultTraderCategoriesHeaderState | null;
   customersHeaderState: CustomersHeaderState | null;
   customerCategoriesHeaderState: CustomerCategoriesHeaderState | null;
@@ -118,6 +120,7 @@ export function SettingsSeasonsHeaderActions({
   pricingHeaderState,
   tradersHeaderState,
   traderCategoriesHeaderState,
+  traderPricingHeaderState,
   defaultTraderCategoriesHeaderState,
   customersHeaderState,
   customerCategoriesHeaderState,
@@ -231,6 +234,18 @@ export function SettingsSeasonsHeaderActions({
       traderCategoriesHeaderState.isEditDisabled,
       traderCategoriesHeaderState.onDelete,
       traderCategoriesHeaderState.isDeleteDisabled,
+      actionText,
+    );
+  }
+
+  if (activeChildId === 'traderPricing' && traderPricingHeaderState) {
+    return renderAddEditDeleteActions(
+      traderPricingHeaderState.onAdd,
+      traderPricingHeaderState.isAddDisabled,
+      traderPricingHeaderState.onEdit,
+      traderPricingHeaderState.isEditDisabled,
+      traderPricingHeaderState.onDelete,
+      traderPricingHeaderState.isDeleteDisabled,
       actionText,
     );
   }

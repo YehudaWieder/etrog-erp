@@ -4,18 +4,15 @@ export type Trader = {
   id: number;
   name: string;
   slug?: string;
-  paymentPercent?: number;
 };
 
 export type CreateTraderPayload = {
   name: string;
-  paymentPercent: number;
 };
 
 export type UpdateTraderPayload = {
   id: number;
   name?: string;
-  paymentPercent: number;
 };
 
 export async function getTraders(): Promise<Trader[]> {

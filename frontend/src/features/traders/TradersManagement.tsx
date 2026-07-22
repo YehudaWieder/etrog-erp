@@ -7,7 +7,6 @@ import SettingsInnerTemplate from '../../components/ui/SettingsInnerTemplate';
 import { SubmitButton } from '../../components/ui/SubmitButton';
 import { useTradersManagement } from './hooks/useTradersManagement';
 import type { TradersHeaderState, TradersManagementProps } from './tradersManagement.types';
-import { MAX_PAYMENT_PERCENT, MIN_PAYMENT_PERCENT } from './utils/traderPayments.util';
 
 export type { TradersHeaderState };
 
@@ -17,8 +16,6 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
     loading,
     newTraderName,
     setNewTraderName,
-    newTraderPercent,
-    setNewTraderPercent,
     selectedTraderId,
     setSelectedTraderId,
     isDeleteDialogOpen,
@@ -29,14 +26,11 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
     selectedTrader,
     editTraderName,
     setEditTraderName,
-    editTraderPercent,
-    setEditTraderPercent,
     editError,
     shownError,
     handleAdd,
     handleDeleteTrader,
     handleEditTrader,
-    isValidPaymentPercent,
     isSubmitting,
     isAdding,
   } = useTradersManagement({ onHeaderStateChange });
@@ -51,16 +45,6 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
             value={newTraderName}
             onChange={(e) => setNewTraderName(e.target.value)}
             placeholder={t.newTraderPlaceholder}
-          />
-          <input
-            className="seasons-manager__year-input"
-            type="number"
-            min={MIN_PAYMENT_PERCENT}
-            max={MAX_PAYMENT_PERCENT}
-            step="0.01"
-            value={newTraderPercent}
-            onChange={(e) => setNewTraderPercent(e.target.value)}
-            placeholder={t.paymentPlaceholder}
           />
           <SubmitButton
             className="btn btn-primary"
@@ -81,12 +65,6 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
     >
       {newTraderName.trim() === '' && newTraderName !== '' ? (
         <p className="seasons-manager__error">{t.emptyName}</p>
-      ) : null}
-      {newTraderPercent.trim() === '' && newTraderName.trim() !== '' ? (
-        <p className="seasons-manager__error">{t.paymentRequired}</p>
-      ) : null}
-      {newTraderPercent.trim() !== '' && !isValidPaymentPercent(newTraderPercent) ? (
-        <p className="seasons-manager__error">{t.invalidPercent}</p>
       ) : null}
 
       {sortedTraders.length > 0 ? (
@@ -110,11 +88,6 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
                       <span className="seasons-manager__year">{trader.name}</span>
                       <span className="seasons-manager__meta">{t.traderId}: {trader.id}</span>
                     </>
-                  }
-                  bottomContent={
-                    typeof trader.paymentPercent === 'number' ? (
-                      <span className="seasons-manager__meta">{t.paymentPercentLabel}: {trader.paymentPercent}%</span>
-                    ) : null
                   }
                 />
               </li>
@@ -158,17 +131,6 @@ const TradersManagement: React.FC<TradersManagementProps> = ({ onHeaderStateChan
                 onChange={(event) => setEditTraderName(event.target.value)}
                 placeholder={t.traderPlaceholder}
                 autoFocus
-              />
-
-              <input
-                className="seasons-manager__year-input"
-                type="number"
-                min={MIN_PAYMENT_PERCENT}
-                max={MAX_PAYMENT_PERCENT}
-                step="0.01"
-                value={editTraderPercent}
-                onChange={(event) => setEditTraderPercent(event.target.value)}
-                placeholder={t.paymentPlaceholder}
               />
             </div>
 

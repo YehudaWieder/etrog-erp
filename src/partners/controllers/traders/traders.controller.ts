@@ -1,6 +1,6 @@
 // src/partners/controllers/traders/traders.controller.ts
 
-import { BadRequestException, Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Req } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { TradersService } from '../../services/traders/traders.service';
 import { Role } from '@prisma/client';
@@ -27,7 +27,6 @@ export class TradersController {
         summary: 'Create a new trader',
         value: {
           name: 'Trader Cohen',
-          paymentPercent: 12.5,
         },
       },
     },
@@ -36,10 +35,6 @@ export class TradersController {
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate trader name.' })
   @Roles(Role.OWNER, Role.MANAGER)
   create(@Body() data: CreateTraderDto) {
-    if (data.paymentPercent === undefined || data.paymentPercent === null) {
-      throw new BadRequestException('paymentPercent is required');
-    }
-
     return this.tradersService.create(data);
   }
 
@@ -61,7 +56,7 @@ export class TradersController {
   }
 
   @Patch()
-  @ApiOperation({ summary: 'Update trader details (name, payment percentage) by ID' })
+  @ApiOperation({ summary: 'Update trader details (name) by ID' })
   @ApiBody({
     type: UpdateTraderDto,
     examples: {
@@ -70,7 +65,6 @@ export class TradersController {
         value: {
           id: 1,
           name: 'Trader Levi',
-          paymentPercent: 15,
         },
       },
     },
@@ -80,10 +74,6 @@ export class TradersController {
   @ApiResponse({ status: 404, description: 'Trader not found.' })
   @Roles(Role.OWNER, Role.MANAGER)
   update(@Body() updateData: UpdateTraderDto) {
-    if (updateData.paymentPercent === undefined || updateData.paymentPercent === null) {
-      throw new BadRequestException('paymentPercent is required');
-    }
-
     return this.tradersService.update(updateData);
   }
 

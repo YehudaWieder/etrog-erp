@@ -5,13 +5,11 @@ import type { AppDispatch, RootState } from '../../../store';
 import { getTradersI18n } from '../i18n';
 import { sortByHebrewName } from '../services/traderCollections.service';
 import type { TradersManagementProps } from '../tradersManagement.types';
-import { isValidPaymentPercent } from '../utils/traderPayments.util';
 
 export function useTradersManagement({ onHeaderStateChange }: TradersManagementProps) {
   const dispatch = useDispatch<AppDispatch>();
   const { items: traders, loading, error } = useSelector((state: RootState) => state.traders);
   const [newTraderName, setNewTraderName] = useState('');
-  const [newTraderPercent, setNewTraderPercent] = useState('');
   const [selectedTraderId, setSelectedTraderId] = useState<number | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -21,7 +19,6 @@ export function useTradersManagement({ onHeaderStateChange }: TradersManagementP
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [editTraderName, setEditTraderName] = useState('');
-  const [editTraderPercent, setEditTraderPercent] = useState('');
   const t = getTradersI18n();
 
   useEffect(() => {
@@ -43,20 +40,8 @@ export function useTradersManagement({ onHeaderStateChange }: TradersManagementP
 
   const handleAdd = async () => {
     const trimmedName = newTraderName.trim();
-    const trimmedPercent = newTraderPercent.trim();
 
     if (!trimmedName) {
-      return;
-    }
-
-    if (trimmedPercent === '') {
-      setAddError(t.paymentRequired);
-      return;
-    }
-
-    const parsedPercent = Number(trimmedPercent);
-
-    if (!isValidPaymentPercent(trimmedPercent)) {
       return;
     }
 
@@ -67,13 +52,11 @@ export function useTradersManagement({ onHeaderStateChange }: TradersManagementP
       const actionResult = await dispatch(
         addTrader({
           name: trimmedName,
-          paymentPercent: parsedPercent,
         }),
       );
 
       if (addTrader.fulfilled.match(actionResult)) {
         setNewTraderName('');
-        setNewTraderPercent('');
         return;
       }
 
@@ -104,11 +87,6 @@ export function useTradersManagement({ onHeaderStateChange }: TradersManagementP
 
     setEditError(null);
     setEditTraderName(selectedTrader.name);
-    setEditTraderPercent(
-      typeof selectedTrader.paymentPercent === 'number'
-        ? String(selectedTrader.paymentPercent)
-        : '',
-    );
     setIsEditDialogOpen(true);
   };
 
@@ -118,24 +96,11 @@ export function useTradersManagement({ onHeaderStateChange }: TradersManagementP
     }
 
     const trimmedName = editTraderName.trim();
-    const trimmedPercent = editTraderPercent.trim();
 
     if (!trimmedName) {
       setEditError(t.emptyName);
       return;
     }
-
-    if (trimmedPercent === '') {
-      setEditError(t.paymentRequired);
-      return;
-    }
-
-    if (!isValidPaymentPercent(trimmedPercent)) {
-      setEditError(t.invalidPercent);
-      return;
-    }
-
-    const parsedPercent = Number(trimmedPercent);
 
     setIsSubmitting(true);
 
@@ -144,7 +109,6 @@ export function useTradersManagement({ onHeaderStateChange }: TradersManagementP
         editTrader({
           id: selectedTrader.id,
           name: trimmedName,
-          paymentPercent: parsedPercent,
         }),
       );
 
@@ -214,8 +178,6 @@ export function useTradersManagement({ onHeaderStateChange }: TradersManagementP
     loading,
     newTraderName,
     setNewTraderName,
-    newTraderPercent,
-    setNewTraderPercent,
     selectedTraderId,
     setSelectedTraderId,
     isDeleteDialogOpen,
@@ -226,8 +188,6 @@ export function useTradersManagement({ onHeaderStateChange }: TradersManagementP
     selectedTrader,
     editTraderName,
     setEditTraderName,
-    editTraderPercent,
-    setEditTraderPercent,
     editError,
     isEditDisabled,
     isSubmitting,
@@ -236,6 +196,5 @@ export function useTradersManagement({ onHeaderStateChange }: TradersManagementP
     handleAdd,
     handleDeleteTrader,
     handleEditTrader,
-    isValidPaymentPercent,
   };
 }

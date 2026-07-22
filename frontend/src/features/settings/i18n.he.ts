@@ -62,6 +62,7 @@ export const SETTINGS_I18N_HE: SettingsI18n = {
         { id: 'fields', label: 'שדות', href: '/settings/system/fields', icon: 'fa-grip' },
         { id: 'cartons', label: 'קרטונים', href: '/settings/system/cartons', icon: 'fa-box' },
         { id: 'pricing', label: 'מחירים', href: '/settings/system/pricing', icon: 'fa-money-bill' },
+        { id: 'defaultTraderCategories', label: 'קטגוריות סוחרים ברירת מחדל', href: '/settings/system/default-categories', icon: 'fa-bookmark' },
       ],
     },
     {
@@ -72,7 +73,7 @@ export const SETTINGS_I18N_HE: SettingsI18n = {
       items: [
         { id: 'traders', label: 'סוחרים', href: '/settings/traders', icon: 'fa-handshake' },
         { id: 'traderCategories', label: 'קטגוריות סוחרים', href: '/settings/traders/categories', icon: 'fa-tag' },
-        { id: 'defaultTraderCategories', label: 'קטגוריות סוחרים ברירת מחדל', href: '/settings/traders/default-categories', icon: 'fa-bookmark' },
+        { id: 'traderPricing', label: 'תמחור סוחרים', href: '/settings/traders/pricing', icon: 'fa-money-bill' },
       ],
     },
     {
@@ -118,6 +119,10 @@ export const SETTINGS_I18N_HE: SettingsI18n = {
     traderCategories: {
       title: 'קטגוריות סוחרים',
       description: 'הגדר וארגן קטגוריות לסוחרים (לדוגמה: יאנעווע, חזו"א); כל קטגוריה נוצרת לעונה הפעילה.',
+    },
+    traderPricing: {
+      title: 'תמחור סוחרים',
+      description: 'הגדר לכל סוחר אחוז השתתפות בהוצאות ומחיר אחיד לאתרוג עבור העונה הנבחרת.',
     },
     defaultTraderCategories: {
       title: 'קטגוריות סוחרים ברירת מחדל',

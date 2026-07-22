@@ -17,10 +17,13 @@ function renderSidebarItemLabel(label: string) {
   }
 
   const [, mainText, parenthetical] = match;
+  const isYearHint = /^\(\d+\)$/.test(parenthetical);
   return (
     <>
       {mainText}{' '}
-      <span className="app-shell__sidebar-subitem-hint">{parenthetical}</span>
+      <span className={`app-shell__sidebar-subitem-hint${isYearHint ? ' app-shell__sidebar-subitem-hint--strong' : ''}`}>
+        {parenthetical}
+      </span>
     </>
   );
 }

@@ -62,6 +62,7 @@ export const SETTINGS_I18N_EN: SettingsI18n = {
         { id: 'fields', label: 'Fields', href: '/settings/system/fields', icon: 'fa-grip' },
         { id: 'cartons', label: 'Cartons', href: '/settings/system/cartons', icon: 'fa-box' },
         { id: 'pricing', label: 'Pricing', href: '/settings/system/pricing', icon: 'fa-money-bill' },
+        { id: 'defaultTraderCategories', label: 'Default Trader Categories', href: '/settings/system/default-categories', icon: 'fa-bookmark' },
       ],
     },
     {
@@ -72,7 +73,7 @@ export const SETTINGS_I18N_EN: SettingsI18n = {
       items: [
         { id: 'traders', label: 'Traders', href: '/settings/traders', icon: 'fa-handshake' },
         { id: 'traderCategories', label: 'Trader Categories', href: '/settings/traders/categories', icon: 'fa-tag' },
-        { id: 'defaultTraderCategories', label: 'Default Trader Categories', href: '/settings/traders/default-categories', icon: 'fa-bookmark' },
+        { id: 'traderPricing', label: 'Trader Pricing', href: '/settings/traders/pricing', icon: 'fa-money-bill' },
       ],
     },
     {
@@ -118,6 +119,10 @@ export const SETTINGS_I18N_EN: SettingsI18n = {
     traderCategories: {
       title: 'Trader Categories',
       description: 'Define and organize trader categories (for example: Yanueve, Chazon Ish); each category is created for the active season.',
+    },
+    traderPricing: {
+      title: 'Trader Pricing',
+      description: 'Set each trader\'s expense participation percent and flat price per etrog for the selected season.',
     },
     defaultTraderCategories: {
       title: 'Default Trader Categories',
