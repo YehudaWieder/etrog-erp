@@ -33,7 +33,7 @@ export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
 	pageTitle: 'Partners Inventory',
 	summary: {
 		description: 'The table shows the net balance by trader, category, grade, and pitam status, including negative movements that reduce inventory.',
-		focusedExplanation: 'Inventory summary grouped by category, grade, and pitam status.',
+		focusedExplanation: 'Inventory summary grouped by category, grade, and pitam status. "Remains in Italy" is not included in the inventory totals below.',
 		filters: {
 			seasonLabel: 'Year',
 			traderLabel: 'Trader',
@@ -58,6 +58,7 @@ export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
 			traderQuantity: 'Trader Inventory Total',
 			moduloQuantity: 'Modulo Inventory Total',
 			remainsInItalyQuantity: 'Remains in Italy',
+			remainsInItalyNote: 'Not included in inventory',
 		},
 		matrix: {
 			title: 'Inventory Summary by Category',

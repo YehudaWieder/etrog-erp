@@ -17,9 +17,20 @@ export function buildCombinedTraderWhere(
 
   applyOwnerScope(traderWhere, ownerScope, query.traderId);
 
-  const typeFilter = buildMovementFilter(movementScope);
-  if (typeFilter !== undefined) {
-    traderWhere.type = typeFilter;
+  if (movementScope === 'PRIVATE_SELECTION') {
+    // Remaining private-selection balance: the initial pool entries (type=PRIVATE_SELECTION)
+    // netted against every deduction drawn from that pool (isFromPrivateSelection=true),
+    // including deliveries (PACKED_SHIPPED, SELF_PICKUP) and waste — otherwise this would overstate
+    // what's actually left, since InventoryAvailabilityService's stock check nets those in too.
+    traderWhere.OR = [
+      { type: MovementType.PRIVATE_SELECTION },
+      { isFromPrivateSelection: true },
+    ];
+  } else {
+    const typeFilter = buildMovementFilter(movementScope);
+    if (typeFilter !== undefined) {
+      traderWhere.type = typeFilter;
+    }
   }
 
   if (query.excludePrivateSelection) {

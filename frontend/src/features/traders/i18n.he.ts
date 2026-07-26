@@ -33,7 +33,7 @@ export const TRADER_INVENTORY_I18N_HE: TraderInventoryI18n = {
 	pageTitle: 'מלאי סוחרים',
 	summary: {
 		description: 'הטבלה מציגה את היתרה נטו לפי סוחר, קטגוריה, דרגה וסטטוס פיטם, כולל תנועות שליליות שמפחיתות מהמלאי.',
-		focusedExplanation: 'סיכום מלאי לפי קטגוריה, דרגה וסטטוס פיטם.',
+		focusedExplanation: 'סיכום מלאי לפי קטגוריה, דרגה וסטטוס פיטם. "נשאר באיטליה" אינו נכלל בסך המלאי המוצג למטה.',
 		filters: {
 			seasonLabel: 'שנה',
 			traderLabel: 'סוחר',
@@ -58,6 +58,7 @@ export const TRADER_INVENTORY_I18N_HE: TraderInventoryI18n = {
 			traderQuantity: 'סה"כ מלאי סוחרים',
 			moduloQuantity: 'מלאי לא משוייך',
 			remainsInItalyQuantity: 'נשאר באיטליה',
+			remainsInItalyNote: 'לא נכלל במלאי',
 		},
 		matrix: {
 			title: 'סיכום מלאי לפי קטגוריה',

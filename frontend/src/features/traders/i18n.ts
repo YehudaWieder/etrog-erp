@@ -66,6 +66,7 @@ export type TraderInventoryI18n = {
 			traderQuantity: string;
 			moduloQuantity: string;
 			remainsInItalyQuantity: string;
+			remainsInItalyNote: string;
 		};
 		matrix: {
 			title: string;

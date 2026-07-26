@@ -122,12 +122,13 @@ function applyNonBoxTypeFilters(
   }
 
   if (shipmentScope === 'PRIVATE_SELECTION') {
-    // Include the initial private-selection pool entries (type=PRIVATE_SELECTION)
-    // plus any movement drawn from the pool (isFromPrivateSelection=true),
-    // but exclude PACKED_SHIPPED and SELF_PICKUP — delivery movements are tracked separately.
+    // Remaining private-selection balance: the initial pool entries (type=PRIVATE_SELECTION)
+    // netted against every deduction drawn from that pool (isFromPrivateSelection=true),
+    // including deliveries (PACKED_SHIPPED, SELF_PICKUP) — otherwise this would overstate what's
+    // actually left, since InventoryAvailabilityService's stock check nets those in too.
     where.OR = [
       { type: MovementType.PRIVATE_SELECTION },
-      { isFromPrivateSelection: true, type: { notIn: [MovementType.PACKED_SHIPPED, MovementType.SELF_PICKUP] } },
+      { isFromPrivateSelection: true },
     ];
     return;
   }

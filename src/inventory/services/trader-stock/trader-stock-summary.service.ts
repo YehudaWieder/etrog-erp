@@ -41,7 +41,14 @@ export class TraderStockSummaryService {
       shipmentScope as InventoryMovementScope,
     );
 
-    const rows = await this.repository.groupSummary(where, shipmentScope as InventoryMovementScope);
+    // The "remains in Italy" total is always shown regardless of the active shipment-scope
+    // filter, so it's fetched independently rather than derived from the filtered rows below.
+    const remainsInItalyWhere = buildTraderStockSummaryWhere(query, seasonId, ownerScope, 'REMAINS_IN_ITALY');
+
+    const [rows, remainsInItalyQuantity] = await Promise.all([
+      this.repository.groupSummary(where, shipmentScope as InventoryMovementScope),
+      this.repository.sumQuantity(remainsInItalyWhere),
+    ]);
 
     const filteredRows = rows.filter((row) => (row._sum.quantity ?? 0) !== 0);
 
@@ -88,16 +95,16 @@ export class TraderStockSummaryService {
     const totals: InventorySummaryTotals = sorted.reduce(
       (accumulator, row) => {
         accumulator.totalQuantity += row.quantity;
-        if (shipmentScope === 'REMAINS_IN_ITALY') {
-          accumulator.remainsInItalyQuantity += row.quantity;
-        } else if (row.isModulo) {
-          accumulator.moduloQuantity += row.quantity;
-        } else {
-          accumulator.traderQuantity += row.quantity;
+        if (shipmentScope !== 'REMAINS_IN_ITALY') {
+          if (row.isModulo) {
+            accumulator.moduloQuantity += row.quantity;
+          } else {
+            accumulator.traderQuantity += row.quantity;
+          }
         }
         return accumulator;
       },
-      { totalQuantity: 0, moduloQuantity: 0, traderQuantity: 0, remainsInItalyQuantity: 0 },
+      { totalQuantity: 0, moduloQuantity: 0, traderQuantity: 0, remainsInItalyQuantity },
     );
 
     return { rows: sorted, totals };

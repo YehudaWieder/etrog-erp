@@ -63,6 +63,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.summaryNote {
+  color: #8a6d1d;
+  font-size: 0.66rem;
+  font-weight: 600;
+}
+
 .loadingText {
   padding: 24px 0;
   color: var(--color-text-main);

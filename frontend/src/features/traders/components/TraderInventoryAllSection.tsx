@@ -72,6 +72,7 @@ export function TraderInventoryAllSection({
           <div className={styles.summaryIcon}><FaMapPin aria-hidden="true" /></div>
           <span className={styles.summaryLabel}>{labels.totals.remainsInItalyQuantity}</span>
           <strong className={styles.summaryValue}>{numberFormatter.format(Math.abs(totals.remainsInItalyQuantity))}</strong>
+          <span className={styles.summaryNote}>{labels.totals.remainsInItalyNote}</span>
         </article>
       </div>
 

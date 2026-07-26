@@ -100,6 +100,15 @@ export class TraderStockSummaryRepository {
     }));
   }
 
+  async sumQuantity(where: Prisma.TraderStockWhereInput): Promise<number> {
+    const result = await this.prisma.traderStock.aggregate({
+      where,
+      _sum: { quantity: true },
+    });
+
+    return result._sum.quantity ?? 0;
+  }
+
   findTradersByIds(traderIds: number[]) {
     if (!traderIds.length) {
       return Promise.resolve([] as { id: number; name: string }[]);
