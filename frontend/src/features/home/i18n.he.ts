@@ -75,12 +75,14 @@ export const HOME_I18N_HE = {
       },
       inventory: {
         generalTab: 'כללי',
+        moduloTab: 'לא משויך',
         totalLabel: 'סך הכל',
         categoryColumn: 'קטגוריה',
         totalColumn: 'סה"כ',
         empty: 'אין נתוני מלאי להצגה',
         customerNote: 'מלאי לקוחות (לא נכלל בטבלה)',
         privateNote: 'מתוך זה מיון פרטי',
+        moduloNote: 'מתוך זה לא משויך',
         columns: {
           withPitam: 'פיטם',
           withoutPitam: 'בל"פ',
@@ -101,6 +103,7 @@ export const HOME_I18N_HE = {
       notShipped: 'לא נשלח',
       delivered: 'נמסר',
       remainingInItaly: 'נשארים באיטליה',
+      selfPickup: 'איסוף עצמי',
     },
   },
 } as const;

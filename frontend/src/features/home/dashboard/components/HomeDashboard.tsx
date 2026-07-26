@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, type ReactNode } from 'react';
-import { FaPrint, FaLeaf, FaArrowDown, FaScaleBalanced, FaArrowsUpDown, FaBox, FaTruck, FaCircleCheck, FaMapPin } from 'react-icons/fa6';
+import { FaPrint, FaLeaf, FaArrowDown, FaScaleBalanced, FaArrowsUpDown, FaBox, FaTruck, FaCircleCheck, FaMapPin, FaHandHolding } from 'react-icons/fa6';
 import styles from '../styles/HomeDashboard.module.css';
 import { ChartPanel } from './ChartPanel';
 import { SummarySection } from './SummarySection';
@@ -159,6 +159,12 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
 
   const withX = (icon: ReactNode) => <span className={styles.iconWithX}>{icon}</span>;
 
+  // Packaged/shipped/delivered track what's left the country via the normal packaging/shipment
+  // pipeline, so remains-in-Italy stock and self-pickup stock (which bypasses that pipeline
+  // entirely) must both come out of their base, not just netHarvest.
+  const netBeforeSelfPickup = metrics.netHarvest.value - metrics.remainingInItaly.value;
+  const netAvailableForShipping = netBeforeSelfPickup - metrics.selfPickup.value;
+
   const allGaugeCards = [
     { title: t.gauges.grossHarvest, ...metrics.grossHarvest, variant: 'default' as const, icon: <FaLeaf />, maxValue: calcMax(metrics.grossHarvest.value, metrics.grossHarvest.percent) },
     { title: t.gauges.rejects, ...metrics.rejects, variant: 'default' as const, icon: <FaArrowDown />, maxValue: metrics.grossHarvest.value },
@@ -166,12 +172,13 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
     { title: t.gauges.netHarvest, ...metrics.netHarvest, variant: 'default' as const, icon: <FaScaleBalanced />, maxValue: metrics.grossHarvest.value },
     { title: t.gauges.sorted, ...metrics.sorted, variant: 'default' as const, icon: <FaArrowsUpDown />, maxValue: metrics.netHarvest.value },
     { title: t.gauges.notSorted, value: metrics.netHarvest.value - metrics.sorted.value, percent: 100 - metrics.sorted.percent, variant: 'default' as const, icon: withX(<FaArrowsUpDown />), maxValue: metrics.netHarvest.value },
-    { title: t.gauges.packaged, ...metrics.packaged, variant: 'default' as const, icon: <FaBox />, maxValue: metrics.netHarvest.value },
-    { title: t.gauges.notPackaged, value: metrics.netHarvest.value - metrics.packaged.value, percent: 100 - metrics.packaged.percent, variant: 'default' as const, icon: withX(<FaBox />), maxValue: metrics.netHarvest.value },
-    { title: t.gauges.shipped, ...metrics.shipped, variant: 'default' as const, icon: <FaTruck />, maxValue: metrics.netHarvest.value },
-    { title: t.gauges.notShipped, value: metrics.netHarvest.value - metrics.shipped.value, percent: 100 - metrics.shipped.percent, variant: 'default' as const, icon: withX(<FaTruck />), maxValue: metrics.netHarvest.value },
-    { title: t.gauges.delivered, ...metrics.delivered, variant: 'default' as const, icon: <FaCircleCheck />, maxValue: metrics.netHarvest.value },
-    { title: t.gauges.remainingInItaly, ...metrics.remainingInItaly, variant: 'default' as const, icon: <FaMapPin />, maxValue: metrics.sorted.value },
+    { title: t.gauges.remainingInItaly, ...metrics.remainingInItaly, variant: 'default' as const, icon: <FaMapPin />, maxValue: metrics.netHarvest.value },
+    { title: t.gauges.selfPickup, ...metrics.selfPickup, variant: 'default' as const, icon: <FaHandHolding />, maxValue: netBeforeSelfPickup },
+    { title: t.gauges.packaged, ...metrics.packaged, variant: 'default' as const, icon: <FaBox />, maxValue: netAvailableForShipping },
+    { title: t.gauges.notPackaged, value: netAvailableForShipping - metrics.packaged.value, percent: 100 - metrics.packaged.percent, variant: 'default' as const, icon: withX(<FaBox />), maxValue: netAvailableForShipping },
+    { title: t.gauges.shipped, ...metrics.shipped, variant: 'default' as const, icon: <FaTruck />, maxValue: netAvailableForShipping },
+    { title: t.gauges.notShipped, value: netAvailableForShipping - metrics.shipped.value, percent: 100 - metrics.shipped.percent, variant: 'default' as const, icon: withX(<FaTruck />), maxValue: netAvailableForShipping },
+    { title: t.gauges.delivered, ...metrics.delivered, variant: 'default' as const, icon: <FaCircleCheck />, maxValue: netAvailableForShipping },
   ];
 
   const mainGaugeCards = allGaugeCards.slice(0, 6);

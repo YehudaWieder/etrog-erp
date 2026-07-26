@@ -19,9 +19,10 @@ function getEmptyDashboard(): DashboardData {
       selfPickupTotal: 0,
     },
     inventorySummary: {
-      general: { total: 0, categories: [], grades: [], matrix: {}, customerTotal: 0 },
+      general: { total: 0, categories: [], grades: [], matrix: {}, customerTotal: 0, privateTotal: 0 },
       byTrader: {},
       traderNames: [],
+      modulo: { total: 0, categories: [], grades: [], matrix: {} },
     },
     metrics: {
       grossHarvest: { value: 0, percent: 0 },
@@ -34,6 +35,7 @@ function getEmptyDashboard(): DashboardData {
       shipped: { value: 0, percent: 0 },
       delivered: { value: 0, percent: 0 },
       remainingInItaly: { value: 0, percent: 0 },
+      selfPickup: { value: 0, percent: 0 },
     },
   };
 }

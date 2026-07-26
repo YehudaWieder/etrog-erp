@@ -281,15 +281,21 @@ export class DashboardService {
       }
     }
 
-    // Live inventory (general trader-owned + modulo pool stock), not sorting - feeds
-    // inventorySummary.general below. Excludes REMAINS_IN_ITALY (traderId: null, isModulo: false
-    // rows never match traderStockRecords' traderId:{not:null} filter nor moduloRecords' isModulo:true
-    // filter) and reflects post-transfer balances, unlike sortingSummary (Classification-based, below).
+    // Live inventory (general trader-owned + private-selection + modulo pool stock), not sorting -
+    // feeds inventorySummary.general below. Mirrors the per-trader total, which also folds private
+    // selection in and just breaks it out via privateTotal below. Excludes REMAINS_IN_ITALY
+    // (traderId: null, isModulo: false rows never match traderStockRecords' traderId:{not:null}
+    // filter nor moduloRecords' isModulo:true filter) and reflects post-transfer balances, unlike
+    // sortingSummary (Classification-based, below).
     const generalInventoryMatrix = new Map<string, Map<string, PitamGradeCell>>();
     let generalInventoryTotal = 0;
-    for (const stock of [...traderStockRecords, ...moduloRecords]) {
+    let generalPrivateTotal = 0;
+    for (const stock of [...traderStockRecords, ...privateSelectionRecords, ...moduloRecords]) {
       addToPitamMatrix(generalInventoryMatrix, stock.traderCategory.name, stock.grade, stock.pitamStatus, stock.quantity);
       generalInventoryTotal += stock.quantity;
+    }
+    for (const ps of privateSelectionRecords) {
+      generalPrivateTotal += ps.quantity;
     }
 
     const generalInventoryGrades = gradesUsedIn(generalInventoryMatrix);
@@ -308,11 +314,16 @@ export class DashboardService {
 
     const moduloByCat = new Map<string, number>();
     let moduloTotal = 0;
+    const moduloMatrix = new Map<string, Map<string, PitamGradeCell>>();
     for (const r of moduloRecords) {
       moduloTotal += r.quantity;
       const cat = r.traderCategory.name;
       moduloByCat.set(cat, (moduloByCat.get(cat) ?? 0) + r.quantity);
+      addToPitamMatrix(moduloMatrix, cat, r.grade, r.pitamStatus, r.quantity);
     }
+    const moduloGrades = gradesUsedIn(moduloMatrix);
+    const moduloCategories = Array.from(moduloMatrix.keys());
+    const moduloMatrixFlat = flattenPitamMatrix(moduloMatrix);
 
     const traderDistributionGeneral: DailyDataPoint[] = [];
     const byTrader: Record<string, DailyDataPoint[]> = {};
@@ -519,6 +530,13 @@ export class DashboardService {
 
     const packagedSeries = await this.buildPackagedSeries(seasonId);
 
+    // Packaged/shipped/delivered gauges track what's left the country via the normal
+    // packaging/shipment pipeline: net harvest that stayed in Italy (REMAINS_IN_ITALY) never
+    // enters it, and neither does self-pickup stock (it leaves inventory directly) - so both
+    // must be excluded from the denominator, not just from netHarvest itself.
+    const netBeforeSelfPickup = grandNet - remainingInItaly;
+    const netAvailableForShipping = netBeforeSelfPickup - selfPickupTotal;
+
     const metrics: Record<string, MetricGauge> = {
       grossHarvest: { value: grandHarvested, percent: 100 },
       grossHarvestExcludingBadPicks: { value: grandHarvestedForRejectionRate, percent: 100 },
@@ -529,10 +547,11 @@ export class DashboardService {
       },
       netHarvest: { value: grandNet, percent: pct(grandNet, grandHarvested) },
       sorted: { value: grandClassified, percent: pct(grandClassified, grandNet) },
-      packaged: { value: packaged, percent: pct(packaged, grandNet) },
-      shipped: { value: shipped, percent: pct(shipped, grandNet) },
-      delivered: { value: delivered, percent: pct(delivered, grandNet) },
-      remainingInItaly: { value: remainingInItaly, percent: pct(remainingInItaly, grandClassified) },
+      packaged: { value: packaged, percent: pct(packaged, netAvailableForShipping) },
+      shipped: { value: shipped, percent: pct(shipped, netAvailableForShipping) },
+      delivered: { value: delivered, percent: pct(delivered, netAvailableForShipping) },
+      remainingInItaly: { value: remainingInItaly, percent: pct(remainingInItaly, grandNet) },
+      selfPickup: { value: selfPickupTotal, percent: pct(selfPickupTotal, netBeforeSelfPickup) },
     };
 
     return {
@@ -575,9 +594,16 @@ export class DashboardService {
           grades: generalInventoryGrades,
           matrix: generalInventoryMatrixFlat,
           customerTotal: customerAllocationTotal,
+          privateTotal: generalPrivateTotal,
         },
         byTrader: inventoryByTrader,
         traderNames: allTraders.map((t) => t.name),
+        modulo: {
+          total: moduloTotal,
+          categories: moduloCategories,
+          grades: moduloGrades,
+          matrix: moduloMatrixFlat,
+        },
       },
       metrics,
     };

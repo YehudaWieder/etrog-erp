@@ -50,6 +50,7 @@ export type DashboardMetrics = {
   shipped: MetricGauge;
   delivered: MetricGauge;
   remainingInItaly: MetricGauge;
+  selfPickup: MetricGauge;
 };
 
 export type PitamGradeCell = {
@@ -88,6 +89,7 @@ export type InventoryGeneralSummary = {
   grades: string[];
   matrix: Record<string, Record<string, PitamGradeCell>>;
   customerTotal: number;
+  privateTotal: number;
 };
 
 export type InventoryTraderSummary = {
@@ -98,10 +100,18 @@ export type InventoryTraderSummary = {
   privateTotal: number;
 };
 
+export type InventoryModuloSummary = {
+  total: number;
+  categories: string[];
+  grades: string[];
+  matrix: Record<string, Record<string, PitamGradeCell>>;
+};
+
 export type InventorySummaryData = {
   general: InventoryGeneralSummary;
   byTrader: Record<string, InventoryTraderSummary>;
   traderNames: string[];
+  modulo: InventoryModuloSummary;
 };
 
 export type DashboardData = {

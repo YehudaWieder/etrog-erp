@@ -75,12 +75,14 @@ export const HOME_I18N_EN = {
       },
       inventory: {
         generalTab: 'General',
+        moduloTab: 'Unassigned',
         totalLabel: 'Total',
         categoryColumn: 'Category',
         totalColumn: 'Total',
         empty: 'No inventory data to display',
         customerNote: 'Customer inventory (not included in the table)',
         privateNote: 'Of which private sorting',
+        moduloNote: 'Of which unassigned',
         columns: {
           withPitam: 'With Pitam',
           withoutPitam: 'Without Pitam',
@@ -101,6 +103,7 @@ export const HOME_I18N_EN = {
       notShipped: 'Not Shipped',
       delivered: 'Delivered',
       remainingInItaly: 'Remaining in Italy',
+      selfPickup: 'Self Pickup',
     },
   },
 } as const;

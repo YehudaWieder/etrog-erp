@@ -5,6 +5,7 @@ import { LabelNote } from './LabelNote';
 import styles from '../styles/InventorySummary.module.css';
 
 const GENERAL_KEY = '__general__';
+const MODULO_KEY = '__modulo__';
 
 type InventorySummaryProps = {
   lang: 'he' | 'en';
@@ -12,12 +13,14 @@ type InventorySummaryProps = {
   unit: string;
   labels: {
     generalTab: string;
+    moduloTab: string;
     totalLabel: string;
     categoryColumn: string;
     totalColumn: string;
     empty: string;
     customerNote: string;
     privateNote: string;
+    moduloNote: string;
     columns: {
       withPitam: string;
       withoutPitam: string;
@@ -32,7 +35,8 @@ export function InventorySummary({ lang, data, unit, labels }: InventorySummaryP
   const formatter = useMemo(() => new Intl.NumberFormat(locale), [locale]);
 
   const isGeneral = activeKey === GENERAL_KEY;
-  const activeData = isGeneral ? data.general : data.byTrader[activeKey];
+  const isModulo = activeKey === MODULO_KEY;
+  const activeData = isGeneral ? data.general : isModulo ? data.modulo : data.byTrader[activeKey];
 
   return (
     <div className={styles.section}>
@@ -54,6 +58,13 @@ export function InventorySummary({ lang, data, unit, labels }: InventorySummaryP
             {name}
           </button>
         ))}
+        <button
+          type="button"
+          className={`${styles.tabBtn} ${isModulo ? styles.activeTab : ''}`}
+          onClick={() => setActiveKey(MODULO_KEY)}
+        >
+          {labels.moduloTab}
+        </button>
       </div>
 
       {activeData && (
@@ -73,11 +84,20 @@ export function InventorySummary({ lang, data, unit, labels }: InventorySummaryP
             columnLabels={labels.columns}
           />
 
-          {isGeneral ? (
-            <div className={styles.footerLine}>
-              <LabelNote label={labels.customerNote} />: <strong>{formatter.format(data.general.customerTotal)} {unit}</strong>
-            </div>
-          ) : (
+          {isGeneral && (
+            <>
+              <div className={styles.footerLine}>
+                <LabelNote label={labels.customerNote} />: <strong>{formatter.format(data.general.customerTotal)} {unit}</strong>
+              </div>
+              <div className={styles.footerLine}>
+                <LabelNote label={labels.privateNote} />: <strong>{formatter.format(data.general.privateTotal)} {unit}</strong>
+              </div>
+              <div className={styles.footerLine}>
+                <LabelNote label={labels.moduloNote} />: <strong>{formatter.format(data.modulo.total)} {unit}</strong>
+              </div>
+            </>
+          )}
+          {!isGeneral && !isModulo && (
             <div className={styles.footerLine}>
               <LabelNote label={labels.privateNote} />: <strong>{formatter.format(data.byTrader[activeKey].privateTotal)} {unit}</strong>
             </div>
