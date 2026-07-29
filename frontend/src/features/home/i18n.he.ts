@@ -83,6 +83,8 @@ export const HOME_I18N_HE = {
         customerNote: 'מלאי לקוחות (לא נכלל בטבלה)',
         privateNote: 'מתוך זה מיון פרטי',
         moduloNote: 'מתוך זה לא משויך',
+        remainsInItalyNote: 'לא כולל {value} הנשארים באיטליה',
+        remainsInItalyFooterNote: "דרגה ה' ו-ו' הנשארים באיטליה (לא נכלל בטבלה)",
         columns: {
           withPitam: 'פיטם',
           withoutPitam: 'בל"פ',

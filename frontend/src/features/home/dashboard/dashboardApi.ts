@@ -19,7 +19,7 @@ function getEmptyDashboard(): DashboardData {
       selfPickupTotal: 0,
     },
     inventorySummary: {
-      general: { total: 0, categories: [], grades: [], matrix: {}, customerTotal: 0, privateTotal: 0 },
+      general: { total: 0, categories: [], grades: [], matrix: {}, customerTotal: 0, privateTotal: 0, remainsInItalyTotal: 0 },
       byTrader: {},
       traderNames: [],
       modulo: { total: 0, categories: [], grades: [], matrix: {} },

@@ -90,6 +90,7 @@ export type InventoryGeneralSummary = {
   matrix: Record<string, Record<string, PitamGradeCell>>;
   customerTotal: number;
   privateTotal: number;
+  remainsInItalyTotal: number;
 };
 
 export type InventoryTraderSummary = {

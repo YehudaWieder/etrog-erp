@@ -21,6 +21,8 @@ type InventorySummaryProps = {
     customerNote: string;
     privateNote: string;
     moduloNote: string;
+    remainsInItalyNote: string;
+    remainsInItalyFooterNote: string;
     columns: {
       withPitam: string;
       withoutPitam: string;
@@ -71,6 +73,12 @@ export function InventorySummary({ lang, data, unit, labels }: InventorySummaryP
         <>
           <div className={styles.totalLine}>
             {labels.totalLabel}: <strong>{formatter.format(activeData.total)} {unit}</strong>
+            {isGeneral && data.general.remainsInItalyTotal > 0 && (
+              <span className={styles.remainsInItalyNote}>
+                {' '}
+                ({labels.remainsInItalyNote.replace('{value}', `${formatter.format(data.general.remainsInItalyTotal)} ${unit}`)})
+              </span>
+            )}
           </div>
 
           <CategoryGradeTable
@@ -88,6 +96,9 @@ export function InventorySummary({ lang, data, unit, labels }: InventorySummaryP
             <>
               <div className={styles.footerLine}>
                 <LabelNote label={labels.customerNote} />: <strong>{formatter.format(data.general.customerTotal)} {unit}</strong>
+              </div>
+              <div className={styles.footerLine}>
+                <LabelNote label={labels.remainsInItalyFooterNote} />: <strong>{formatter.format(data.general.remainsInItalyTotal)} {unit}</strong>
               </div>
               <div className={styles.footerLine}>
                 <LabelNote label={labels.privateNote} />: <strong>{formatter.format(data.general.privateTotal)} {unit}</strong>

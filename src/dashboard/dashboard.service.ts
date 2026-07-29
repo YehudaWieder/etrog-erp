@@ -595,6 +595,7 @@ export class DashboardService {
           matrix: generalInventoryMatrixFlat,
           customerTotal: customerAllocationTotal,
           privateTotal: generalPrivateTotal,
+          remainsInItalyTotal: remainingInItaly,
         },
         byTrader: inventoryByTrader,
         traderNames: allTraders.map((t) => t.name),

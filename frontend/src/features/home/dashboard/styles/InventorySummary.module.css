@@ -47,6 +47,11 @@
   color: var(--color-text-accent);
 }
 
+.remainsInItalyNote {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
 .footerLine {
   font-size: 0.95rem;
   color: var(--color-text-main);

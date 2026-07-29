@@ -83,6 +83,8 @@ export const HOME_I18N_EN = {
         customerNote: 'Customer inventory (not included in the table)',
         privateNote: 'Of which private sorting',
         moduloNote: 'Of which unassigned',
+        remainsInItalyNote: 'excluding {value} remaining in Italy',
+        remainsInItalyFooterNote: 'Grade E & F remaining in Italy (not included in the table)',
         columns: {
           withPitam: 'With Pitam',
           withoutPitam: 'Without Pitam',
