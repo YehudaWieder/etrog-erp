@@ -1,12 +1,6 @@
-import { useCallback, useMemo } from 'react';
-import {
-  restoreHarvestClassification,
-  saveHarvestSortingBatch,
-  getClassificationDailySummaryBySeason,
-  getClassificationsBySeason,
-  type ClassificationListRecord,
-} from '../../../../services/classificationsApi';
-import { getHarvestFieldTotalsBySeason, getHarvestsBySeason, type HarvestRecord } from '../../../../services/harvestsApi';
+import { useCallback } from 'react';
+import { restoreHarvestClassification, saveHarvestSortingBatch, type ClassificationListRecord } from '../../../../services/classificationsApi';
+import type { HarvestRecord } from '../../../../services/harvestsApi';
 import type { ClassificationDailySummaryCategory, ClassificationDailySummaryRow, ClassificationRecord } from '../../../../services/classificationsApi';
 import type { TraderCategoryWithShares } from '../../../../services/traderCategoriesApi';
 import type { HarvestFieldReportRow, HarvestFormClassificationDraft } from '../../harvestPage.types';
@@ -14,7 +8,7 @@ import type { HarvestI18n } from '../../i18n';
 import { buildHarvestSortingFormSubmissionPayload } from '../../utils/harvestSortingFormSubmission.util';
 import { buildExistingHarvestClassificationsPayload } from '../../utils/harvestFormSubmission.util';
 import { translateHarvestApiError } from '../../utils/translateHarvestApiError';
-import { sortSortingDailyCategories } from '../../utils/harvestPage.utils';
+import { useRefreshHarvestWorkspaceData } from './useRefreshHarvestWorkspaceData';
 
 type UseHarvestSortingFormSubmissionParams = {
   lang: 'he' | 'en';
@@ -98,69 +92,16 @@ export function useHarvestSortingFormSubmission({
   onRestoreSuccess,
   traderCategories = [],
 }: UseHarvestSortingFormSubmissionParams) {
-  const traderCategoryOrder = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const category of traderCategories) {
-      map.set(category.name, category.orderIndex);
-    }
-    return map;
-  }, [traderCategories]);
-  const refreshHarvestWorkspaceData = useCallback(async () => {
-    if (!seasonFilterId) {
-      return;
-    }
-
-    const [records, fieldTotals, sortingSummary, sortingListRows] = await Promise.all([
-      getHarvestsBySeason(seasonFilterId),
-      getHarvestFieldTotalsBySeason(seasonFilterId),
-      getClassificationDailySummaryBySeason(seasonFilterId),
-      setSortingListRows ? getClassificationsBySeason(seasonFilterId) : Promise.resolve(null),
-    ]);
-
-    setHarvestRows(records);
-    if (sortingListRows) {
-      setSortingListRows?.(sortingListRows);
-    }
-    setFieldReportRows(
-      fieldTotals.map((row) => ({
-        id: row.fieldId,
-        fieldName: row.fieldName,
-        recordCount: row.recordCount,
-        badPickCount: row.badPickCount,
-        totalHarvested: row.totalHarvested,
-        totalRejected: row.totalRejected,
-        totalAfterRejected: row.totalAfterRejected,
-        classifiedTotal: row.classifiedTotal,
-        rejectionRate: row.rejectionRate,
-        ownerHarvested: row.ownerHarvested,
-        ownerRejected: row.ownerRejected,
-        ownerAfterRejected: row.ownerAfterRejected,
-        ownerRejectionRate: row.ownerRejectionRate,
-        differenceHarvested: row.differenceHarvested,
-        differenceRejected: row.differenceRejected,
-        differenceAfterRejected: row.differenceAfterRejected,
-        differenceRejectionRate: row.differenceRejectionRate,
-        hasOwnerOverrides: row.hasOwnerOverrides,
-        isPartialClassification: row.isPartialClassification,
-        totalHarvestedExcludingBadPicks: row.totalHarvestedExcludingBadPicks,
-        totalRejectedExcludingBadPicks: row.totalRejectedExcludingBadPicks,
-        ownerHarvestedExcludingBadPicks: row.ownerHarvestedExcludingBadPicks,
-        ownerRejectedExcludingBadPicks: row.ownerRejectedExcludingBadPicks,
-      })),
-    );
-    setSortingDailyRows(sortingSummary.rows);
-    setSortingDailyCategories(sortSortingDailyCategories(sortingSummary.categories, traderCategoryOrder));
-    setSortingDailyLoadError('');
-  }, [
+  const { refreshHarvestWorkspaceData } = useRefreshHarvestWorkspaceData({
     seasonFilterId,
-    setFieldReportRows,
     setHarvestRows,
+    setFieldReportRows,
+    setSortingDailyRows,
     setSortingDailyCategories,
     setSortingDailyLoadError,
-    setSortingDailyRows,
     setSortingListRows,
-    traderCategoryOrder,
-  ]);
+    traderCategories,
+  });
 
   const handleSubmitHarvestSortingGlobalForm = useCallback(async (): Promise<boolean> => {
     setIsSubmittingHarvestSortingForm(true);

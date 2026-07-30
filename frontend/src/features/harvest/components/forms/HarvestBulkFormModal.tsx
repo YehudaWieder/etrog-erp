@@ -223,9 +223,11 @@ export function HarvestBulkFormModal({
               max={harvestFormTotalRejected || undefined}
               value={harvestFormUncalculatedRejected}
               onChange={(event) => onUncalculatedRejectedChange(event.target.value)}
-              placeholder={form.uncalculatedRejectedPlaceholder(Number(harvestFormTotalRejected) || 0)}
               aria-label={form.uncalculatedRejectedLabel}
             />
+            <p className={styles.quantityMatrixHint}>
+              {form.uncalculatedRejectedPlaceholder(Number(harvestFormTotalRejected) || 0)}
+            </p>
           </label>
 
           <label className={`${styles.summaryField} ${styles.numberInputFirst}`}>

@@ -277,6 +277,14 @@ export function buildExistingHarvestClassificationsPayload({
     return { error: parsed.error };
   }
 
+  // Nothing new is being classified in this submission, so there's nothing here to validate against
+  // capacity/full-vs-partial matching — that constraint is about what a batch of *new* rows must add
+  // up to, not a standing requirement whenever this function happens to be called (e.g. the harvest
+  // edit dialog calls this on every save even when the user only changed totals and touched no rows).
+  if (parsed.items.length === 0) {
+    return { payloads: [] };
+  }
+
   const availableSortingTotal = selectedHarvestSummary.totalHarvested - selectedHarvestSummary.totalRejected;
   // Remaining room for new rows: the net harvested total minus what's already classified on this harvest
   // (including any pending edits to existing rows the caller has folded into classifiedTotal).

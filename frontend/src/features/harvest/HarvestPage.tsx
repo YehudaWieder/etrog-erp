@@ -13,7 +13,6 @@ import {
   type HarvestFieldReportDetailsRecord,
   type HarvestRecord,
   deleteHarvest,
-  updateHarvest,
 } from '../../services/harvestsApi';
 import {
   type ClassificationListRecord,
@@ -62,6 +61,9 @@ import { useHarvestFormState } from './hooks/form/useHarvestFormState';
 import { useHarvestSortingFormState } from './hooks/form/useHarvestSortingFormState';
 import { useHarvestFormSubmission } from './hooks/form/useHarvestFormSubmission';
 import { useHarvestSortingFormSubmission } from './hooks/form/useHarvestSortingFormSubmission';
+import { useHarvestClassificationDrafts } from './hooks/form/useHarvestClassificationDrafts';
+import { useHarvestEditFormSubmission } from './hooks/form/useHarvestEditFormSubmission';
+import { useRefreshHarvestWorkspaceData } from './hooks/form/useRefreshHarvestWorkspaceData';
 import {
   buildHarvestFieldReportDetailsLabels,
   formatHarvestGregorianDate,
@@ -85,6 +87,7 @@ import {
   resolveSortingCategoryOwnerType,
   canAttachSortingToHarvest,
   formatHebrewDateFromGregorianInput,
+  buildInitialClassificationDraftsFromExisting,
 } from './utils/harvestPage.utils';
 
 const EMPTY_FILTERS: Record<string, string> = {};
@@ -168,8 +171,13 @@ export function HarvestPage() {
   const [editHarvestOwnerHarvested, setEditHarvestOwnerHarvested] = useState(0);
   const [editHarvestOwnerRejected, setEditHarvestOwnerRejected] = useState(0);
   const [editHarvestNotes, setEditHarvestNotes] = useState('');
-  const [editHarvestMarkFullClassification, setEditHarvestMarkFullClassification] = useState(false);
+  const [editHarvestIsPartialClassification, setEditHarvestIsPartialClassification] = useState(false);
   const [editHarvestUncalculatedRejected, setEditHarvestUncalculatedRejected] = useState(0);
+  const [editHarvestRemainsInItalyGradeH, setEditHarvestRemainsInItalyGradeH] = useState(true);
+  const [editHarvestRemainsInItalyGradeV, setEditHarvestRemainsInItalyGradeV] = useState(true);
+  const [editHarvestExistingClassifications, setEditHarvestExistingClassifications] = useState<ClassificationRecord[]>([]);
+  const [editHarvestPendingClassificationEdits, setEditHarvestPendingClassificationEdits] = useState<Record<number, string>>({});
+  const [editHarvestClassificationDeletionIds, setEditHarvestClassificationDeletionIds] = useState<number[]>([]);
   const globalFilterValues = useSelector(
     (state: RootState) => state.globalFilters.scopes[HARVEST_DAILY_FILTER_SCOPE] ?? EMPTY_FILTERS,
   );
@@ -303,6 +311,15 @@ export function HarvestPage() {
     fieldFilterId,
     fields,
   });
+
+  const {
+    classifications: editHarvestClassificationDrafts,
+    setClassifications: setEditHarvestClassificationDrafts,
+    addDraft: addEditHarvestClassificationDraft,
+    removeDraft: removeEditHarvestClassificationDraft,
+    updateDraft: updateEditHarvestClassificationDraft,
+    updateDraftQuantity: updateEditHarvestClassificationDraftQuantity,
+  } = useHarvestClassificationDrafts();
 
   const {
     isHarvestSortingFormOpen,
@@ -1220,46 +1237,152 @@ export function HarvestPage() {
     setEditHarvestOwnerHarvested(selectedHarvestRow.ownerHarvested);
     setEditHarvestOwnerRejected(selectedHarvestRow.ownerRejected);
     setEditHarvestNotes(selectedHarvestRow.notes ?? '');
-    setEditHarvestMarkFullClassification(false);
+    setEditHarvestIsPartialClassification(selectedHarvestRow.isPartialClassification);
     setEditHarvestUncalculatedRejected(selectedHarvestRow.uncalculatedRejected);
+    setEditHarvestRemainsInItalyGradeH(selectedHarvestRow.remainsInItalyGradeH);
+    setEditHarvestRemainsInItalyGradeV(selectedHarvestRow.remainsInItalyGradeV);
     setEditHarvestError('');
+    setEditHarvestPendingClassificationEdits({});
+    setEditHarvestClassificationDeletionIds([]);
+    setEditHarvestClassificationDrafts([]);
+    setEditHarvestExistingClassifications([]);
+    getClassificationsByHarvest(selectedHarvestRow.id)
+      .then((rows) => {
+        setEditHarvestExistingClassifications(rows);
+        setEditHarvestClassificationDrafts(
+          buildInitialClassificationDraftsFromExisting(rows, traders, customers, harvestFormTraderCategories, harvestFormCustomerCategories),
+        );
+      })
+      .catch(() => setEditHarvestExistingClassifications([]));
     setIsEditHarvestDialogOpen(true);
   };
 
-  const handleEditHarvest = async () => {
-    if (!selectedHarvestRow) return;
-    if (editHarvestUncalculatedRejected > editHarvestTotalRejected) {
-      setEditHarvestError(
-        t.formSubmission.uncalculatedRejectedExceedsTotal(editHarvestUncalculatedRejected, editHarvestTotalRejected),
-      );
-      return;
-    }
-    setIsEditingHarvest(true);
-    setEditHarvestError('');
-    try {
-      const updated = await updateHarvest({
-        id: selectedHarvestRow.id,
-        dateGregorian: editHarvestDateGregorian,
-        dateHebrew: editHarvestDateHebrew,
-        fieldId: editHarvestFieldId,
-        totalHarvested: editHarvestTotalHarvested,
-        totalRejected: editHarvestTotalRejected,
-        ownerHarvested: editHarvestOwnerHarvested,
-        ownerRejected: editHarvestOwnerRejected,
-        notes: editHarvestNotes || undefined,
-        isPartialClassification: editHarvestMarkFullClassification ? false : undefined,
-        uncalculatedRejected: editHarvestUncalculatedRejected,
-      });
-      setHarvestRows((rows) => rows.map((row) => (row.id === updated.id ? { ...row, ...updated } : row)));
-      setSelectedHarvestRow((prev) => (prev ? { ...prev, ...updated } : prev));
-      setDetailsRecord((prev) => (prev?.id === updated.id ? { ...prev, ...updated } : prev));
-      setIsEditHarvestDialogOpen(false);
-    } catch {
-      setEditHarvestError(t.formSubmission.saveFailed);
-    } finally {
-      setIsEditingHarvest(false);
-    }
+  const handleStageEditHarvestClassificationQuantity = (classificationId: number, value: string | null) => {
+    setEditHarvestPendingClassificationEdits((prev) => {
+      if (value === null) {
+        if (!(classificationId in prev)) {
+          return prev;
+        }
+        const next = { ...prev };
+        delete next[classificationId];
+        return next;
+      }
+      return { ...prev, [classificationId]: value };
+    });
   };
+
+  const handleRemoveEditHarvestClassificationDraft = (draftId: string) => {
+    const draft = editHarvestClassificationDrafts.find((row) => row.id === draftId);
+    const idsToDelete = draft?.existingClassificationIds ?? [];
+
+    if (idsToDelete.length) {
+      setEditHarvestClassificationDeletionIds((prev) => [...prev, ...idsToDelete]);
+      setEditHarvestPendingClassificationEdits((prev) => {
+        const next = { ...prev };
+        for (const id of idsToDelete) {
+          delete next[id];
+        }
+        return next;
+      });
+    }
+
+    removeEditHarvestClassificationDraft(draftId);
+  };
+
+  // The full existingHarvestClassifications list (including rows the user just deleted) is still needed
+  // for the submit calculations in useHarvestEditFormSubmission (it looks up each deleted row's quantity
+  // to adjust the classified-total capacity); this filtered view is only for what the form displays, so
+  // the "total sorting quantity" summary reacts to a deletion immediately instead of still counting it.
+  const editHarvestVisibleExistingClassifications = useMemo(
+    () => editHarvestExistingClassifications.filter((record) => !editHarvestClassificationDeletionIds.includes(record.id)),
+    [editHarvestExistingClassifications, editHarvestClassificationDeletionIds],
+  );
+
+  // Lets the user undo a row removal before saving: as long as the form hasn't been submitted, the
+  // deleted classification records are still sitting in editHarvestExistingClassifications untouched,
+  // so restoring is just clearing the deletion marks and re-adding a scaffold row for that combo.
+  const editHarvestRemovedClassificationGroups = useMemo(() => {
+    const deletedRecords = editHarvestExistingClassifications.filter((record) =>
+      editHarvestClassificationDeletionIds.includes(record.id),
+    );
+    const groups = new Map<string, { ids: number[]; label: string }>();
+    for (const record of deletedRecords) {
+      const categoryName = record.traderCategory?.name ?? record.customerCategory?.name ?? '';
+      const targetName =
+        record.assignmentType === 'TRADER'
+          ? record.trader?.name ?? ''
+          : record.assignmentType === 'CUSTOMER'
+            ? record.customer?.customerName ?? ''
+            : '';
+      const grade = record.customerCategory?.grade ?? '';
+      const key = `${record.assignmentType}:${targetName}:${categoryName}:${grade}`;
+      const label = [targetName, categoryName, grade].filter(Boolean).join(' — ');
+      const existingGroup = groups.get(key);
+      if (existingGroup) {
+        existingGroup.ids.push(record.id);
+      } else {
+        groups.set(key, { ids: [record.id], label });
+      }
+    }
+    return [...groups.values()];
+  }, [editHarvestExistingClassifications, editHarvestClassificationDeletionIds]);
+
+  const handleRestoreEditHarvestClassificationDraft = (ids: number[]) => {
+    setEditHarvestClassificationDeletionIds((prev) => prev.filter((id) => !ids.includes(id)));
+    setEditHarvestClassificationDrafts((prev) => [
+      ...prev,
+      ...buildInitialClassificationDraftsFromExisting(
+        editHarvestExistingClassifications.filter((record) => ids.includes(record.id)),
+        traders,
+        customers,
+        harvestFormTraderCategories,
+        harvestFormCustomerCategories,
+      ),
+    ]);
+  };
+
+  const { refreshHarvestWorkspaceData: refreshHarvestWorkspaceDataAfterEdit } = useRefreshHarvestWorkspaceData({
+    seasonFilterId,
+    setHarvestRows,
+    setFieldReportRows,
+    setSortingDailyRows,
+    setSortingDailyCategories,
+    setSortingDailyLoadError,
+    setSortingListRows,
+    traderCategories: harvestFormTraderCategories,
+  });
+
+  const { handleEditHarvest } = useHarvestEditFormSubmission({
+    t,
+    selectedHarvestRow,
+    form: {
+      dateGregorian: editHarvestDateGregorian,
+      dateHebrew: editHarvestDateHebrew,
+      fieldId: editHarvestFieldId,
+      totalHarvested: editHarvestTotalHarvested,
+      totalRejected: editHarvestTotalRejected,
+      ownerHarvested: editHarvestOwnerHarvested,
+      ownerRejected: editHarvestOwnerRejected,
+      notes: editHarvestNotes,
+      isPartialClassification: editHarvestIsPartialClassification,
+      uncalculatedRejected: editHarvestUncalculatedRejected,
+      remainsInItalyGradeH: editHarvestRemainsInItalyGradeH,
+      remainsInItalyGradeV: editHarvestRemainsInItalyGradeV,
+    },
+    classificationDrafts: editHarvestClassificationDrafts,
+    existingHarvestClassifications: editHarvestExistingClassifications,
+    pendingExistingClassificationEdits: editHarvestPendingClassificationEdits,
+    setPendingExistingClassificationEdits: setEditHarvestPendingClassificationEdits,
+    setClassificationDrafts: setEditHarvestClassificationDrafts,
+    deletionClassificationIds: editHarvestClassificationDeletionIds,
+    setDeletionClassificationIds: setEditHarvestClassificationDeletionIds,
+    setIsEditingHarvest,
+    setEditHarvestError,
+    setIsEditHarvestDialogOpen,
+    setSelectedHarvestRow,
+    setDetailsRecord,
+    refreshHarvestWorkspaceData: refreshHarvestWorkspaceDataAfterEdit,
+  });
 
   const handleOpenEditSortingListDialog = () => {
     if (!selectedSortingListRow) return;
@@ -1715,12 +1838,14 @@ export function HarvestPage() {
           ownerHarvested={editHarvestOwnerHarvested}
           ownerRejected={editHarvestOwnerRejected}
           notes={editHarvestNotes}
-          classifiedTotal={selectedHarvestRow.classifiedTotal}
-          isPartialClassification={selectedHarvestRow.isPartialClassification}
-          markAsFullClassification={editHarvestMarkFullClassification}
-          onMarkAsFullClassificationChange={setEditHarvestMarkFullClassification}
+          isPartialClassification={editHarvestIsPartialClassification}
+          onIsPartialClassificationChange={setEditHarvestIsPartialClassification}
           uncalculatedRejected={editHarvestUncalculatedRejected}
           onUncalculatedRejectedChange={setEditHarvestUncalculatedRejected}
+          remainsInItalyGradeH={editHarvestRemainsInItalyGradeH}
+          onRemainsInItalyGradeHChange={setEditHarvestRemainsInItalyGradeH}
+          remainsInItalyGradeV={editHarvestRemainsInItalyGradeV}
+          onRemainsInItalyGradeVChange={setEditHarvestRemainsInItalyGradeV}
           isSubmitting={isEditingHarvest}
           error={editHarvestError}
           onDateGregorianChange={handleEditHarvestGregorianDateChange}
@@ -1730,8 +1855,22 @@ export function HarvestPage() {
           onOwnerHarvestedChange={setEditHarvestOwnerHarvested}
           onOwnerRejectedChange={setEditHarvestOwnerRejected}
           onNotesChange={setEditHarvestNotes}
-          onClose={() => { setIsEditHarvestDialogOpen(false); setEditHarvestError(''); setEditHarvestMarkFullClassification(false); }}
+          onClose={() => { setIsEditHarvestDialogOpen(false); setEditHarvestError(''); }}
           onSubmit={() => { void handleEditHarvest(); }}
+          traders={traders}
+          customers={customers}
+          harvestFormTraderCategories={harvestFormTraderCategories}
+          harvestFormCustomerCategories={harvestFormCustomerCategories}
+          classificationDrafts={editHarvestClassificationDrafts}
+          existingHarvestClassifications={editHarvestVisibleExistingClassifications}
+          pendingExistingClassificationEdits={editHarvestPendingClassificationEdits}
+          onAddClassificationDraft={addEditHarvestClassificationDraft}
+          onRemoveClassificationDraft={handleRemoveEditHarvestClassificationDraft}
+          onUpdateClassificationDraft={updateEditHarvestClassificationDraft}
+          onUpdateClassificationDraftQuantity={updateEditHarvestClassificationDraftQuantity}
+          onStageExistingClassificationQuantity={handleStageEditHarvestClassificationQuantity}
+          removedClassificationGroups={editHarvestRemovedClassificationGroups}
+          onRestoreClassificationGroup={handleRestoreEditHarvestClassificationDraft}
         />
       ) : null}
 

@@ -2,13 +2,8 @@
 import type { CustomerCategory } from '../../../../services/customerCategoriesApi';
 import type { Field } from '../../../../services/fieldsApi';
 import type { TraderCategoryWithShares } from '../../../../services/traderCategoriesApi';
-import type { HarvestFormClassificationDraft } from '../../harvestPage.types';
-import {
-  applyHarvestClassificationDraftUpdate,
-  createEmptyHarvestClassificationDraft,
-  formatHebrewDateFromGregorianInput,
-} from '../../utils/harvestPage.utils';
-import { setMatrixQuantity, type PitamRowKey } from '../../utils/harvestClassificationMatrix.util';
+import { formatHebrewDateFromGregorianInput } from '../../utils/harvestPage.utils';
+import { useHarvestClassificationDrafts } from './useHarvestClassificationDrafts';
 
 type UseHarvestFormStateParams = {
   fieldFilterId: number | 'all';
@@ -36,17 +31,16 @@ export function useHarvestFormState({
   const [harvestFormUncalculatedRejected, setHarvestFormUncalculatedRejected] = useState('');
   const [harvestFormRemainsInItalyGradeH, setHarvestFormRemainsInItalyGradeH] = useState(true);
   const [harvestFormRemainsInItalyGradeV, setHarvestFormRemainsInItalyGradeV] = useState(true);
-  const [harvestFormClassifications, setHarvestFormClassifications] = useState<HarvestFormClassificationDraft[]>([]);
+  const {
+    classifications: harvestFormClassifications,
+    setClassifications: setHarvestFormClassifications,
+    addDraft: addHarvestClassificationDraft,
+    removeDraft: removeHarvestClassificationDraft,
+    updateDraft: updateHarvestClassificationDraft,
+    updateDraftQuantity: updateHarvestClassificationDraftQuantity,
+  } = useHarvestClassificationDrafts();
   const [harvestFormTraderCategories, setHarvestFormTraderCategories] = useState<TraderCategoryWithShares[]>([]);
   const [harvestFormCustomerCategories, setHarvestFormCustomerCategories] = useState<CustomerCategory[]>([]);
-
-  const classificationDraftCounterRef = useRef(1);
-
-  const createNextHarvestClassificationDraft = (): HarvestFormClassificationDraft => {
-    const nextId = classificationDraftCounterRef.current;
-    classificationDraftCounterRef.current += 1;
-    return createEmptyHarvestClassificationDraft(`draft-${nextId}`);
-  };
 
   const handleHarvestGregorianDateChange = (nextGregorianDate: string) => {
     setHarvestFormDateGregorian(nextGregorianDate);
@@ -123,50 +117,6 @@ export function useHarvestFormState({
 
     setIsHarvestFormOpen(false);
     setHarvestFormError('');
-  };
-
-  const addHarvestClassificationDraft = () => {
-    setHarvestFormClassifications((previous) => [...previous, createNextHarvestClassificationDraft()]);
-  };
-
-  const removeHarvestClassificationDraft = (draftId: string) => {
-    setHarvestFormClassifications((previous) => {
-      if (previous.length <= 0) {
-        return previous;
-      }
-
-      return previous.filter((draft) => draft.id !== draftId);
-    });
-  };
-
-  const updateHarvestClassificationDraft = (
-    draftId: string,
-    updater: Partial<HarvestFormClassificationDraft>,
-  ) => {
-    setHarvestFormClassifications((previous) =>
-      previous.map((draft) => {
-        if (draft.id !== draftId) {
-          return draft;
-        }
-
-        return applyHarvestClassificationDraftUpdate(draft, updater);
-      }),
-    );
-  };
-
-  const updateHarvestClassificationDraftQuantity = (
-    draftId: string,
-    pitamKey: PitamRowKey,
-    gradeKey: string,
-    value: string,
-  ) => {
-    setHarvestFormClassifications((previous) =>
-      previous.map((draft) =>
-        draft.id === draftId
-          ? { ...draft, quantities: setMatrixQuantity(draft.quantities, pitamKey, gradeKey, value) }
-          : draft,
-      ),
-    );
   };
 
   return {

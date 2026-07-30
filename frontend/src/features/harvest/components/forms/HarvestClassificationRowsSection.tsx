@@ -38,6 +38,10 @@ type HarvestClassificationRowsSectionProps = {
   harvestFormCustomerCategories: CustomerCategory[];
   existingHarvestClassifications?: ClassificationRecord[];
   pendingExistingClassificationEdits?: Record<number, string>;
+  // Only enabled for the harvest edit dialog: lets the user choose to subtract from an existing cell's
+  // quantity as well as add to it, instead of only being able to add (the Add-Harvest and Add-Sorting
+  // forms keep the add-only popup).
+  allowSubtractExistingQuantity?: boolean;
   isAddingRejectedQuantity?: boolean;
   additionalRejectedQuantity?: string;
   ownerRejected?: string;
@@ -70,6 +74,7 @@ export function HarvestClassificationRowsSection({
   harvestFormCustomerCategories,
   existingHarvestClassifications = [],
   pendingExistingClassificationEdits = {},
+  allowSubtractExistingQuantity = false,
   isAddingRejectedQuantity = false,
   additionalRejectedQuantity = '',
   ownerRejected = '',
@@ -97,6 +102,7 @@ export function HarvestClassificationRowsSection({
   } | null>(null);
   const [addQuantityValue, setAddQuantityValue] = useState('');
   const [addQuantityError, setAddQuantityError] = useState('');
+  const [addQuantityMode, setAddQuantityMode] = useState<'add' | 'subtract'>('add');
 
   useEffect(() => {
     if (isOpen) {
@@ -104,6 +110,7 @@ export function HarvestClassificationRowsSection({
       setAddQuantityCell(null);
       setAddQuantityValue('');
       setAddQuantityError('');
+      setAddQuantityMode('add');
     }
   }, [isOpen]);
 
@@ -216,6 +223,12 @@ export function HarvestClassificationRowsSection({
     return getDraftCellExistingRecord(draft, pitamKey, gradeKey) !== undefined;
   };
 
+  // A scaffold row auto-populated for an already-saved combo (see buildInitialClassificationDraftsFromExisting)
+  // represents data that's already saved, so leaving it untouched should never block adding a new row —
+  // the user may just want to add another sorting without editing any existing one.
+  const isDraftEffectivelyComplete = (draft: HarvestFormClassificationDraft): boolean =>
+    Boolean(draft.isExistingScaffold) || isHarvestClassificationDraftComplete(draft);
+
   const handleOpenAddQuantityPopup = (params: {
     classificationId: number;
     baseQuantity: number;
@@ -226,24 +239,37 @@ export function HarvestClassificationRowsSection({
     setAddQuantityCell(params);
     setAddQuantityValue('');
     setAddQuantityError('');
+    setAddQuantityMode('add');
   };
 
   const handleCloseAddQuantityPopup = () => {
     setAddQuantityCell(null);
     setAddQuantityValue('');
     setAddQuantityError('');
+    setAddQuantityMode('add');
   };
 
   const handleConfirmAddQuantity = () => {
     if (!addQuantityCell) {
       return;
     }
-    const parsedAddedQuantity = Number(addQuantityValue);
-    if (!Number.isFinite(parsedAddedQuantity) || parsedAddedQuantity <= 0) {
-      setAddQuantityError(form.addExistingClassificationQuantityInvalidError);
+    const isSubtractMode = allowSubtractExistingQuantity && addQuantityMode === 'subtract';
+    const parsedQuantity = Number(addQuantityValue);
+    if (!Number.isFinite(parsedQuantity) || parsedQuantity <= 0) {
+      setAddQuantityError(
+        isSubtractMode
+          ? form.subtractExistingClassificationQuantityInvalidError
+          : form.addExistingClassificationQuantityInvalidError,
+      );
       return;
     }
-    const newTotal = addQuantityCell.baseQuantity + parsedAddedQuantity;
+    if (isSubtractMode && parsedQuantity > addQuantityCell.baseQuantity) {
+      setAddQuantityError(form.subtractExistingClassificationQuantityExceedsBaseError(addQuantityCell.baseQuantity));
+      return;
+    }
+    const newTotal = isSubtractMode
+      ? addQuantityCell.baseQuantity - parsedQuantity
+      : addQuantityCell.baseQuantity + parsedQuantity;
     onStageExistingClassificationQuantity?.(addQuantityCell.classificationId, String(newTotal));
     handleCloseAddQuantityPopup();
   };
@@ -276,7 +302,7 @@ export function HarvestClassificationRowsSection({
   });
   const canAddSortingRow =
     areTotalsFilled
-    && (lastSortingRowDraft ? isHarvestClassificationDraftComplete(lastSortingRowDraft) : true)
+    && (lastSortingRowDraft ? isDraftEffectivelyComplete(lastSortingRowDraft) : true)
     && (lastSortingRowDraft ? !isDraftComboDuplicate(lastSortingRowDraft) : true)
     && !reachedSortingQuantityLimit;
 
@@ -369,7 +395,7 @@ export function HarvestClassificationRowsSection({
           Boolean(draft.customerCategoryId),
         );
         const isLastSortingRow = index === harvestFormClassifications.length - 1;
-        const canAddNextSortingRow = isHarvestClassificationDraftComplete(draft);
+        const canAddNextSortingRow = isDraftEffectivelyComplete(draft);
         const isDuplicateCombo = isDraftComboDuplicate(draft);
         const rowAddSortingBlockReason = !areTotalsFilled
           ? 'totals-missing'
@@ -570,8 +596,8 @@ export function HarvestClassificationRowsSection({
                                         ],
                                     })
                                   }
-                                  aria-label={form.addExistingClassificationQuantityLabel}
-                                  title={form.addExistingClassificationQuantityLabel}
+                                  aria-label={allowSubtractExistingQuantity ? form.editExistingClassificationQuantityLabel : form.addExistingClassificationQuantityLabel}
+                                  title={allowSubtractExistingQuantity ? form.editExistingClassificationQuantityLabel : form.addExistingClassificationQuantityLabel}
                                 >
                                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round">
                                     <path d="M12 5v14M5 12h14" />
@@ -758,7 +784,7 @@ export function HarvestClassificationRowsSection({
             <ConfirmDialog
               open
               dialogClassName={`modal-dialog--form ${styles.addQuantityDialog}`}
-              title={form.addExistingClassificationQuantityPopupTitle}
+              title={allowSubtractExistingQuantity ? form.editExistingClassificationQuantityPopupTitle : form.addExistingClassificationQuantityPopupTitle}
               message={
                 <>
                   {form.addExistingClassificationQuantityPopupPrefix} <strong>{addQuantityCell.categoryName}</strong>
@@ -771,14 +797,38 @@ export function HarvestClassificationRowsSection({
                   {' '}
                   <strong>{addQuantityCell.pitamLabel}</strong>: <strong>{addQuantityCell.baseQuantity}</strong>.
                   <br />
-                  {form.addExistingClassificationQuantityPopupInstruction}
+                  {allowSubtractExistingQuantity
+                    ? form.editExistingClassificationQuantityPopupInstruction
+                    : form.addExistingClassificationQuantityPopupInstruction}
                 </>
               }
-              confirmLabel={form.addExistingClassificationQuantityConfirmLabel}
+              confirmLabel={
+                allowSubtractExistingQuantity && addQuantityMode === 'subtract'
+                  ? form.subtractExistingClassificationQuantityConfirmLabel
+                  : form.addExistingClassificationQuantityConfirmLabel
+              }
               cancelLabel={form.cancel}
               onConfirm={handleConfirmAddQuantity}
               onCancel={handleCloseAddQuantityPopup}
             >
+              {allowSubtractExistingQuantity ? (
+                <div className={styles.addQuantityModeToggle}>
+                  <button
+                    type="button"
+                    className={`btn ${addQuantityMode === 'add' ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => setAddQuantityMode('add')}
+                  >
+                    {form.existingClassificationQuantityAddModeLabel}
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn ${addQuantityMode === 'subtract' ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => setAddQuantityMode('subtract')}
+                  >
+                    {form.existingClassificationQuantitySubtractModeLabel}
+                  </button>
+                </div>
+              ) : null}
               <div className={styles.addQuantityInputRow}>
                 <input
                   className="seasons-manager__year-input harvest-bulk-form-number-input"
@@ -791,7 +841,7 @@ export function HarvestClassificationRowsSection({
                     setAddQuantityError('');
                   }}
                   placeholder={form.quantityPlaceholder}
-                  aria-label={form.addExistingClassificationQuantityPopupTitle}
+                  aria-label={allowSubtractExistingQuantity ? form.editExistingClassificationQuantityPopupTitle : form.addExistingClassificationQuantityPopupTitle}
                 />
               </div>
               {addQuantityError ? <p className="seasons-manager__error">{addQuantityError}</p> : null}

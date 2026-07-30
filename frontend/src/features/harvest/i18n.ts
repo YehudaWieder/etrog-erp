@@ -29,11 +29,6 @@ export type HarvestI18n = {
       ownerHarvestedLabel: string;
       ownerRejectedLabel: string;
       notesLabel: string;
-      classifiedExceedsNetError: (classifiedTotal: number) => string;
-      exactNetRequiresFullClassificationError: string;
-      netIncreaseSwitchesToPartialWarning: string;
-      markAsFullClassificationLabel: string;
-      uncalculatedRejectedLabel: string;
       uncalculatedRejectedPlaceholder: (totalRejected: number) => string;
       confirm: string;
       cancel: string;
@@ -98,6 +93,9 @@ export type HarvestI18n = {
     addSortingRow: string;
     sortingRowPrefix: (index: number) => string;
     removeSortingRow: string;
+    pendingRemovedSortingRowsTitle: string;
+    pendingRemovedSortingRowsHint: string;
+    restorePendingRemovedSortingRow: string;
     addRejectedQuantity: string;
     additionalRejectedLabel: string;
     additionalRejectedPlaceholder: string;
@@ -150,6 +148,14 @@ export type HarvestI18n = {
     addExistingClassificationQuantityPopupInstruction: string;
     addExistingClassificationQuantityConfirmLabel: string;
     addExistingClassificationQuantityInvalidError: string;
+    editExistingClassificationQuantityLabel: string;
+    editExistingClassificationQuantityPopupTitle: string;
+    editExistingClassificationQuantityPopupInstruction: string;
+    existingClassificationQuantityAddModeLabel: string;
+    existingClassificationQuantitySubtractModeLabel: string;
+    subtractExistingClassificationQuantityConfirmLabel: string;
+    subtractExistingClassificationQuantityInvalidError: string;
+    subtractExistingClassificationQuantityExceedsBaseError: (baseQuantity: number) => string;
     existingClassificationCellInvalidQuantityError: string;
     existingClassificationCellSaveError: string;
     cancel: string;

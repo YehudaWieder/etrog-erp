@@ -381,6 +381,13 @@
   width: min(360px, 90vw);
 }
 
+.addQuantityModeToggle {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 .addQuantityInputRow {
   display: flex;
   justify-content: center;

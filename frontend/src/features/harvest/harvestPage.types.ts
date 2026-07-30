@@ -17,6 +17,12 @@ export type HarvestFormClassificationDraft = {
   customerCategoryId: string;
   notes: string;
   quantities: GradeQuantityMatrix;
+  // Set on scaffold rows auto-populated from a harvest's already-saved sortings (see
+  // buildInitialClassificationDraftsFromExisting), so leaving one untouched never blocks adding a new row.
+  isExistingScaffold?: boolean;
+  // Ids of the already-saved classification records this scaffold row stands for (one per grade/pitam
+  // cell within the same combo), so removing the row can delete all of them on submit.
+  existingClassificationIds?: number[];
 };
 
 export type HarvestFieldReportRow = {

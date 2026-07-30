@@ -1,4 +1,8 @@
-import type { ClassificationDailySummaryCategory, ClassificationDailySummaryRow } from '../../../services/classificationsApi';
+import type { ClassificationDailySummaryCategory, ClassificationDailySummaryRow, ClassificationRecord } from '../../../services/classificationsApi';
+import type { Trader } from '../../../services/tradersApi';
+import type { Customer } from '../../../services/customersApi';
+import type { TraderCategoryWithShares } from '../../../services/traderCategoriesApi';
+import type { CustomerCategory } from '../../../services/customerCategoriesApi';
 import type {
   HarvestFormClassificationDraft,
   SortingAssignmentFilter,
@@ -271,6 +275,79 @@ export function createEmptyHarvestClassificationDraft(id: string): HarvestFormCl
   };
 }
 
+// Builds one scaffold draft row per already-saved combo (assignment + trader/customer + category) found
+// among a harvest's existing classifications, so the edit dialog can show them as editable rows right
+// away instead of requiring the user to manually recreate a matching row first. Quantities are left
+// empty on purpose: HarvestClassificationRowsSection renders the actual saved quantities for these
+// combos as blocked/existing cells once a draft row with a matching identity is present.
+//
+// ClassificationRecord only carries display names for the trader/customer/category (no ids), so the
+// matching ids for the draft's selects have to be resolved back from the reference lists by name (and,
+// for customer categories, also by grade, since two categories can share a name across different grades).
+export function buildInitialClassificationDraftsFromExisting(
+  existingClassifications: ClassificationRecord[],
+  traders: Trader[],
+  customers: Customer[],
+  traderCategories: TraderCategoryWithShares[],
+  customerCategories: CustomerCategory[],
+): HarvestFormClassificationDraft[] {
+  const draftsByIdentityKey = new Map<string, HarvestFormClassificationDraft>();
+
+  for (const record of existingClassifications) {
+    const traderId = record.trader?.name
+      ? String(traders.find((trader) => trader.name === record.trader?.name)?.id ?? '')
+      : '';
+    const customerId = record.customer?.customerName
+      ? String(customers.find((customer) => customer.customerName === record.customer?.customerName)?.id ?? '')
+      : '';
+    const traderCategoryId = record.traderCategory?.name
+      ? String(traderCategories.find((category) => category.name === record.traderCategory?.name)?.id ?? '')
+      : '';
+    const customerCategoryId = record.customerCategory?.name
+      ? String(
+          customerCategories.find(
+            (category) =>
+              category.name === record.customerCategory?.name
+              && category.grade === record.customerCategory?.grade
+              && (!customerId || String(category.customerId) === customerId),
+          )?.id ?? '',
+        )
+      : '';
+
+    const identityKey =
+      record.assignmentType === 'TRADER'
+        ? (traderId && traderCategoryId ? `TRADER:${traderId}:${traderCategoryId}` : null)
+        : record.assignmentType === 'CUSTOMER'
+          ? (customerId && customerCategoryId ? `CUSTOMER:${customerId}:${customerCategoryId}` : null)
+          : (traderCategoryId ? `GENERAL:${traderCategoryId}` : null);
+
+    if (!identityKey) {
+      continue;
+    }
+
+    const existingDraft = draftsByIdentityKey.get(identityKey);
+    if (existingDraft) {
+      existingDraft.existingClassificationIds = [...(existingDraft.existingClassificationIds ?? []), record.id];
+      continue;
+    }
+
+    draftsByIdentityKey.set(identityKey, {
+      id: `existing-${identityKey}`,
+      assignmentType: record.assignmentType === 'TRADER' || record.assignmentType === 'CUSTOMER' ? record.assignmentType : 'GENERAL',
+      traderId,
+      customerId,
+      traderCategoryId,
+      customerCategoryId,
+      notes: '',
+      quantities: createEmptyGradeQuantityMatrix(),
+      isExistingScaffold: true,
+      existingClassificationIds: [record.id],
+    });
+  }
+
+  return [...draftsByIdentityKey.values()];
+}
+
 export function applyHarvestClassificationDraftUpdate(
   draft: HarvestFormClassificationDraft,
   updater: Partial<HarvestFormClassificationDraft>,
@@ -279,6 +356,19 @@ export function applyHarvestClassificationDraftUpdate(
     ...draft,
     ...updater,
   };
+
+  // Once the user starts picking a different assignment/trader/customer/category on a scaffold row, it
+  // no longer represents the originally saved combo, so it should go back to needing to be filled in
+  // normally like any other new row.
+  if (
+    updater.assignmentType !== undefined
+    || updater.traderId !== undefined
+    || updater.customerId !== undefined
+    || updater.traderCategoryId !== undefined
+    || updater.customerCategoryId !== undefined
+  ) {
+    nextDraft.isExistingScaffold = false;
+  }
 
   if (updater.assignmentType === 'GENERAL') {
     nextDraft.traderId = '';

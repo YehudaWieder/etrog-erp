@@ -361,9 +361,11 @@ export function HarvestSortingFormModal({
                 value={harvestSortingFormUncalculatedRejected}
                 disabled={!isHarvestSelected}
                 onChange={(event) => onUncalculatedRejectedChange(event.target.value)}
-                placeholder={form.uncalculatedRejectedPlaceholder(rawTotals?.totalRejected ?? 0)}
                 aria-label={form.uncalculatedRejectedLabel}
               />
+              <p className={styles.quantityMatrixHint}>
+                {form.uncalculatedRejectedPlaceholder(rawTotals?.totalRejected ?? 0)}
+              </p>
             </label>
           ) : null}
 
