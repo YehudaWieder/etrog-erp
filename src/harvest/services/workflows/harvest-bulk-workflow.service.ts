@@ -547,15 +547,6 @@ export class HarvestBulkWorkflowService {
     return this.prisma.$transaction(async (tx) => {
       const newQuantity = updatePayload.quantity ?? oldClassification.quantity;
 
-      // If quantity is being reduced, assert enough unpackaged inventory exists to absorb the decrease
-      if (newQuantity < oldClassification.quantity) {
-        const delta = oldClassification.quantity - newQuantity;
-        await this.assertInventoryCanRelease(tx, oldClassification, delta, 'Update classification quantity');
-      }
-
-      // Delete all old movements linked to this classification
-      await this.allocationService.deleteLinkedMovements(tx, classificationId);
-
       // Get the harvest to update quantities
       const harvest = await tx.fieldHarvest.findUnique({
         where: { id: harvestId },
@@ -564,6 +555,27 @@ export class HarvestBulkWorkflowService {
       if (!harvest) {
         throw new NotFoundException(`Harvest ${harvestId} not found`);
       }
+
+      const remainsInItalyGradeH =
+        updatePayload.harvestUpdate?.remainsInItalyGradeH ?? harvest.remainsInItalyGradeH;
+      const remainsInItalyGradeV =
+        updatePayload.harvestUpdate?.remainsInItalyGradeV ?? harvest.remainsInItalyGradeV;
+
+      // If quantity is being reduced, assert enough unpackaged inventory exists to absorb the decrease
+      if (newQuantity < oldClassification.quantity) {
+        const delta = oldClassification.quantity - newQuantity;
+        await this.assertInventoryCanRelease(
+          tx,
+          oldClassification,
+          delta,
+          'Update classification quantity',
+          remainsInItalyGradeH,
+          remainsInItalyGradeV,
+        );
+      }
+
+      // Delete all old movements linked to this classification
+      await this.allocationService.deleteLinkedMovements(tx, classificationId);
 
       await this.applyHarvestInlineUpdate(tx, harvestId, updatePayload.harvestUpdate);
 
@@ -610,8 +622,8 @@ export class HarvestBulkWorkflowService {
         classificationItem: this.mapToClassificationBulkItem(updatedClassification),
         harvestDate: harvest.dateGregorian,
         updatedById: updatePayload.updatedById,
-        remainsInItalyGradeH: updatePayload.harvestUpdate?.remainsInItalyGradeH ?? harvest.remainsInItalyGradeH,
-        remainsInItalyGradeV: updatePayload.harvestUpdate?.remainsInItalyGradeV ?? harvest.remainsInItalyGradeV,
+        remainsInItalyGradeH,
+        remainsInItalyGradeV,
       });
 
       await this.syncHarvestClassificationProgress(tx, harvestId, updatePayload.isPartialClassification);
@@ -662,7 +674,14 @@ export class HarvestBulkWorkflowService {
     // If quantity is being reduced, assert enough unpackaged inventory exists to absorb the decrease
     if (newQuantity < oldClassification.quantity) {
       const delta = oldClassification.quantity - newQuantity;
-      await this.assertInventoryCanRelease(tx, oldClassification, delta, 'Update classification quantity');
+      await this.assertInventoryCanRelease(
+        tx,
+        oldClassification,
+        delta,
+        'Update classification quantity',
+        remainsInItalyGradeH,
+        remainsInItalyGradeV,
+      );
     }
 
     await this.allocationService.deleteLinkedMovements(tx, classificationId);
@@ -796,7 +815,26 @@ export class HarvestBulkWorkflowService {
           );
         }
 
-        await this.assertInventoryAvailableForDeletion(tx, classification);
+        const harvest = await tx.fieldHarvest.findUnique({
+          where: { id: harvestId },
+          select: { remainsInItalyGradeH: true, remainsInItalyGradeV: true },
+        });
+
+        if (!harvest) {
+          throw new NotFoundException(`Harvest ${harvestId} not found`);
+        }
+
+        const remainsInItalyGradeH =
+          deletePayload.harvestUpdate?.remainsInItalyGradeH ?? harvest.remainsInItalyGradeH;
+        const remainsInItalyGradeV =
+          deletePayload.harvestUpdate?.remainsInItalyGradeV ?? harvest.remainsInItalyGradeV;
+
+        await this.assertInventoryAvailableForDeletion(
+          tx,
+          classification,
+          remainsInItalyGradeH,
+          remainsInItalyGradeV,
+        );
 
         await this.applyHarvestInlineUpdate(tx, harvestId, deletePayload.harvestUpdate);
 
@@ -839,6 +877,8 @@ export class HarvestBulkWorkflowService {
     },
     releasedQuantity: number,
     contextLabel: string,
+    remainsInItalyGradeH: boolean,
+    remainsInItalyGradeV: boolean,
   ) {
     const { assignmentType, seasonId } = classification;
 
@@ -869,6 +909,10 @@ export class HarvestBulkWorkflowService {
     }
 
     if (assignmentType === AssignmentType.GENERAL) {
+      const isRemainsInItaly =
+        (classification.grade === Grade.ה && remainsInItalyGradeH) ||
+        (classification.grade === Grade.ו && remainsInItalyGradeV);
+
       const result = await tx.traderStock.aggregate({
         where: {
           seasonId,
@@ -876,7 +920,12 @@ export class HarvestBulkWorkflowService {
           grade: classification.grade as Grade,
           pitamStatus: classification.pitamStatus as PitamStatus,
           isDeleted: false,
-          type: { not: MovementType.REMAINS_IN_ITALY },
+          // Stock kept in Italy isn't shippable, so it's normally excluded from "available to
+          // release" checks. But when this classification's own grade is flagged remains-in-Italy,
+          // its backing stock was written as REMAINS_IN_ITALY (see
+          // HarvestAllocationService.processAllocationsForClassification) and must be included, or
+          // the check always sees 0 available and blocks legitimate quantity reductions.
+          ...(isRemainsInItaly ? {} : { type: { not: MovementType.REMAINS_IN_ITALY } }),
         },
         _sum: { quantity: true },
       });
@@ -913,7 +962,16 @@ export class HarvestBulkWorkflowService {
       quantity: number;
       seasonId: number;
     },
+    remainsInItalyGradeH: boolean,
+    remainsInItalyGradeV: boolean,
   ) {
-    await this.assertInventoryCanRelease(tx, classification, classification.quantity, 'Delete classification');
+    await this.assertInventoryCanRelease(
+      tx,
+      classification,
+      classification.quantity,
+      'Delete classification',
+      remainsInItalyGradeH,
+      remainsInItalyGradeV,
+    );
   }
 }
