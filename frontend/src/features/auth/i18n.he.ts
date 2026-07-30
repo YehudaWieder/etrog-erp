@@ -8,7 +8,7 @@ export const AUTH_I18N_HE: AuthI18n = {
   registrationEndpointNotFound: 'נתיב ההרשמה לא נמצא בשרת.',
   invalidPhone: 'מספר טלפון לא תקין.',
   emailLabel: 'אימייל',
-  emailPlaceholder: 'הזן את הימייל שלך',
+  emailPlaceholder: 'הזן את כתובת האימייל שלך',
   passwordLabel: 'סיסמא',
   passwordPlaceholder: 'הזן את הסיסמא שלך',
   newPasswordLabel: 'סיסמה חדשה',
