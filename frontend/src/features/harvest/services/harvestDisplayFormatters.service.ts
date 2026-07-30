@@ -56,12 +56,13 @@ export function buildHarvestFieldReportDetailsLabels(
     netHarvest: t.dailyDetails.columns.netHarvest,
     classifiedTotal: t.dailyDetails.columns.classifiedTotal,
     rejectionRate: t.dailyDetails.detailsPanel.fields.rejectionRate,
-    isBadPick: t.dailyDetails.columns.isBadPick,
-    badPickYes: t.dailyDetails.badPickYes,
-    badPickNo: t.dailyDetails.badPickNo,
+    uncalculatedRejected: t.dailyDetails.columns.uncalculatedRejected,
+    rejectionRateExcludingBadPicks: t.fieldReport.headers.rejectionRateExcludingBadPicks,
+    harvestExcludingBadPicks: t.fieldReport.headers.harvestExcludingBadPicks,
     notes: t.dailyDetails.detailsPanel.fields.notes,
     none: t.dailyDetails.detailsPanel.values.none,
     emptyRows: t.dailyDetails.empty,
+    badPickQuantity: t.dailyDetails.detailsPanel.fields.badPickQuantity,
   };
 }
 

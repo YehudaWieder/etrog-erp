@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { FaCheck, FaXmark } from 'react-icons/fa6';
 import {
   GLOBAL_DATA_TABLE_WIDTHS,
   type GlobalDataTableColumn,
@@ -151,22 +150,46 @@ export function useHarvestTableColumns({
         ),
       },
       {
-        id: 'isBadPick',
-        header: t.dailyDetails.columns.isBadPick,
-        headerLabel: t.dailyDetails.columns.isBadPick,
-        sortKey: 'isBadPick',
-        sortLabel: `${t.dailyDetails.columns.isBadPick} - ${t.tableLabels.sort}`,
+        id: 'harvestExcludingBadPicks',
+        header: t.dailyDetails.columns.harvestExcludingBadPicks,
+        headerLabel: t.dailyDetails.columns.harvestExcludingBadPicks,
+        sortKey: 'harvestExcludingBadPicks',
+        sortLabel: `${t.dailyDetails.columns.harvestExcludingBadPicks} - ${t.tableLabels.sort}`,
         defaultSortDirection: 'desc',
-        sortAccessor: (row) => (row.isBadPick ? 1 : 0),
+        sortAccessor: (row) => row.totalHarvested - row.uncalculatedRejected,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
         align: 'center',
-        render: (row) => (
-          row.isBadPick ? (
-            <FaCheck aria-label={t.dailyDetails.badPickYes} className={interactiveStyles.badPickYes} />
-          ) : (
-            <FaXmark aria-label={t.dailyDetails.badPickNo} className={interactiveStyles.badPickNo} />
-          )
-        ),
+        render: (row) => numberFormatter.format(row.totalHarvested - row.uncalculatedRejected),
+      },
+      {
+        id: 'uncalculatedRejected',
+        header: t.dailyDetails.columns.uncalculatedRejected,
+        headerLabel: t.dailyDetails.columns.uncalculatedRejected,
+        sortKey: 'uncalculatedRejected',
+        sortLabel: `${t.dailyDetails.columns.uncalculatedRejected} - ${t.tableLabels.sort}`,
+        defaultSortDirection: 'desc',
+        sortAccessor: (row) => row.totalRejected - row.uncalculatedRejected,
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
+        align: 'center',
+        render: (row) => numberFormatter.format(row.totalRejected - row.uncalculatedRejected),
+      },
+      {
+        id: 'rejectionRateExcludingBadPicks',
+        header: t.dailyDetails.columns.rejectionRateExcludingBadPicks,
+        headerLabel: t.dailyDetails.columns.rejectionRateExcludingBadPicks,
+        sortKey: 'rejectionRateExcludingBadPicks',
+        sortLabel: `${t.dailyDetails.columns.rejectionRateExcludingBadPicks} - ${t.tableLabels.sort}`,
+        defaultSortDirection: 'desc',
+        sortAccessor: (row) => {
+          const harvestedExcl = row.totalHarvested - row.uncalculatedRejected;
+          return harvestedExcl > 0 ? ((row.totalRejected - row.uncalculatedRejected) / harvestedExcl) * 100 : 0;
+        },
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericPercent,
+        align: 'center',
+        render: (row) => {
+          const harvestedExcl = row.totalHarvested - row.uncalculatedRejected;
+          return formatRate(harvestedExcl > 0 ? ((row.totalRejected - row.uncalculatedRejected) / harvestedExcl) * 100 : 0);
+        },
       },
     ];
   }, [formatGregorianDate, formatRate, isPartialClassificationFlag, lang, numberFormatter, setDetailsRecord, t]);
@@ -331,6 +354,54 @@ export function useHarvestTableColumns({
               render: (row: HarvestFieldReportRow) => formatRate(row.rejectionRate),
             },
           ]),
+      {
+        id: 'harvestExcludingBadPicks',
+        header: t.fieldReport.headers.harvestExcludingBadPicks,
+        headerLabel: t.fieldReport.headers.harvestExcludingBadPicks,
+        sortKey: 'harvestExcludingBadPicks',
+        sortLabel: `${t.fieldReport.headers.harvestExcludingBadPicks} - ${t.tableLabels.sort}`,
+        defaultSortDirection: 'desc',
+        sortAccessor: (row) => (fieldReportMethod === 'franco' ? row.ownerHarvestedExcludingBadPicks : row.totalHarvestedExcludingBadPicks),
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
+        align: 'center',
+        render: (row) => numberFormatter.format(fieldReportMethod === 'franco' ? row.ownerHarvestedExcludingBadPicks : row.totalHarvestedExcludingBadPicks),
+      },
+      {
+        id: 'uncalculatedRejected',
+        header: t.fieldReport.headers.uncalculatedRejected,
+        headerLabel: t.fieldReport.headers.uncalculatedRejected,
+        sortKey: 'uncalculatedRejected',
+        sortLabel: `${t.fieldReport.headers.uncalculatedRejected} - ${t.tableLabels.sort}`,
+        defaultSortDirection: 'desc',
+        sortAccessor: (row) => (fieldReportMethod === 'franco'
+          ? row.ownerRejectedExcludingBadPicks
+          : row.totalRejectedExcludingBadPicks),
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
+        align: 'center',
+        render: (row) => numberFormatter.format(fieldReportMethod === 'franco'
+          ? row.ownerRejectedExcludingBadPicks
+          : row.totalRejectedExcludingBadPicks),
+      },
+      {
+        id: 'rejectionRateExcludingBadPicks',
+        header: t.fieldReport.headers.rejectionRateExcludingBadPicks,
+        headerLabel: t.fieldReport.headers.rejectionRateExcludingBadPicks,
+        sortKey: 'rejectionRateExcludingBadPicks',
+        sortLabel: `${t.fieldReport.headers.rejectionRateExcludingBadPicks} - ${t.tableLabels.sort}`,
+        defaultSortDirection: 'desc',
+        sortAccessor: (row) => {
+          const harvested = fieldReportMethod === 'franco' ? row.ownerHarvestedExcludingBadPicks : row.totalHarvestedExcludingBadPicks;
+          const rejected = fieldReportMethod === 'franco' ? row.ownerRejectedExcludingBadPicks : row.totalRejectedExcludingBadPicks;
+          return harvested > 0 ? (rejected / harvested) * 100 : 0;
+        },
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.numericPercent,
+        align: 'center',
+        render: (row) => {
+          const harvested = fieldReportMethod === 'franco' ? row.ownerHarvestedExcludingBadPicks : row.totalHarvestedExcludingBadPicks;
+          const rejected = fieldReportMethod === 'franco' ? row.ownerRejectedExcludingBadPicks : row.totalRejectedExcludingBadPicks;
+          return formatRate(harvested > 0 ? (rejected / harvested) * 100 : 0);
+        },
+      },
     ];
   }, [
     fieldReportMethod,

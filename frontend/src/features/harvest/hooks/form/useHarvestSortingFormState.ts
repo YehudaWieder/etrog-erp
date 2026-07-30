@@ -22,7 +22,7 @@ export function useHarvestSortingFormState() {
   const [harvestSortingFormAdditionalOwnerRejected, setHarvestSortingFormAdditionalOwnerRejected] = useState('');
   const [harvestSortingFormTotalHarvested, setHarvestSortingFormTotalHarvested] = useState('');
   const [harvestSortingFormOwnerHarvested, setHarvestSortingFormOwnerHarvested] = useState('');
-  const [harvestSortingFormIsBadPick, setHarvestSortingFormIsBadPick] = useState(false);
+  const [harvestSortingFormUncalculatedRejected, setHarvestSortingFormUncalculatedRejected] = useState('');
   const [harvestSortingFormRemainsInItalyGradeH, setHarvestSortingFormRemainsInItalyGradeH] = useState(true);
   const [harvestSortingFormRemainsInItalyGradeV, setHarvestSortingFormRemainsInItalyGradeV] = useState(true);
 
@@ -47,7 +47,7 @@ export function useHarvestSortingFormState() {
     setHarvestSortingFormAdditionalOwnerRejected('');
     setHarvestSortingFormTotalHarvested('');
     setHarvestSortingFormOwnerHarvested('');
-    setHarvestSortingFormIsBadPick(false);
+    setHarvestSortingFormUncalculatedRejected('');
     setHarvestSortingFormRemainsInItalyGradeH(true);
     setHarvestSortingFormRemainsInItalyGradeV(true);
   };
@@ -174,8 +174,8 @@ export function useHarvestSortingFormState() {
     setHarvestSortingFormTotalHarvested,
     harvestSortingFormOwnerHarvested,
     setHarvestSortingFormOwnerHarvested,
-    harvestSortingFormIsBadPick,
-    setHarvestSortingFormIsBadPick,
+    harvestSortingFormUncalculatedRejected,
+    setHarvestSortingFormUncalculatedRejected,
     harvestSortingFormRemainsInItalyGradeH,
     setHarvestSortingFormRemainsInItalyGradeH,
     harvestSortingFormRemainsInItalyGradeV,

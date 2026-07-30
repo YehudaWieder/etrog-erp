@@ -1,6 +1,6 @@
 ﻿import { useMemo } from 'react';
 import type { Dispatch, RefObject, SetStateAction } from 'react';
-import { FaPrint, FaLeaf, FaBan, FaScaleBalanced } from 'react-icons/fa6';
+import { FaPrint, FaLeaf, FaBan, FaScaleBalanced, FaCircleMinus } from 'react-icons/fa6';
 import { GlobalDataTable, type GlobalDataTableColumn } from '../../../../components/ui/GlobalDataTable';
 import { GlobalLeftDetailsPanel } from '../../../../components/ui/GlobalLeftDetailsPanel';
 import { GlobalScopedFilters, type GlobalScopedFilterConfig } from '../../../../components/ui/GlobalScopedFilters';
@@ -58,6 +58,9 @@ type HarvestDailyDetailsSectionProps = {
   summaryLabels: {
     totalHarvested: string;
     totalRejected: string;
+    uncalculatedRejected: string;
+    harvestExcludingBadPicks: string;
+    rejectedExcludingBadPicks: string;
     totalNet: string;
   };
 };
@@ -125,6 +128,9 @@ export function HarvestDailyDetailsSection({
         items={[
           { key: 'totalHarvested', label: summaryLabels.totalHarvested, value: numberFormatter.format(summaryTotals.totalHarvested), icon: <FaLeaf aria-hidden="true" /> },
           { key: 'totalRejected', label: summaryLabels.totalRejected, value: numberFormatter.format(summaryTotals.totalRejected), icon: <FaBan aria-hidden="true" /> },
+          { key: 'uncalculatedRejected', label: summaryLabels.uncalculatedRejected, value: numberFormatter.format(summaryTotals.uncalculatedRejected), icon: <FaCircleMinus aria-hidden="true" /> },
+          { key: 'harvestExcludingBadPicks', label: summaryLabels.harvestExcludingBadPicks, value: numberFormatter.format(summaryTotals.harvestExcludingBadPicks), icon: <FaLeaf aria-hidden="true" /> },
+          { key: 'rejectedExcludingBadPicks', label: summaryLabels.rejectedExcludingBadPicks, value: numberFormatter.format(summaryTotals.rejectedExcludingBadPicks), icon: <FaBan aria-hidden="true" /> },
           { key: 'totalNet', label: summaryLabels.totalNet, value: numberFormatter.format(summaryTotals.totalNet), icon: <FaScaleBalanced aria-hidden="true" /> },
         ]}
       />

@@ -311,7 +311,7 @@ model FieldHarvest {
   classifiedTotal         Int     @default(0)
   isPartialClassification Boolean @default(false)
 
-  isBadPick Boolean @default(false)
+  uncalculatedRejected Int @default(0)
 
   remainsInItalyGradeH Boolean @default(true)
   remainsInItalyGradeV Boolean @default(true)

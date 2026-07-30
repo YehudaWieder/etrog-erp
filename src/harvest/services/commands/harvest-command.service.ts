@@ -12,6 +12,7 @@ import { ClassificationRepository } from 'src/harvest/services/harvest-core/repo
 import {
   assertFinalClassificationConsistency,
   assertHarvestNetVsClassified,
+  assertUncalculatedRejectedWithinTotal,
 } from 'src/harvest/services/harvest-core/rules/harvest-validation.rules';
 import { calculateHarvestFields } from 'src/harvest/services/harvest-core/utils/harvest-fields.util';
 import {
@@ -45,6 +46,7 @@ export class HarvestCommandService {
 
     const totalHarvested = Number(data.totalHarvested) || 0;
     const totalRejected = Number(data.totalRejected) || 0;
+    assertUncalculatedRejectedWithinTotal(totalRejected, Number(data.uncalculatedRejected) || 0);
     const normalizedOwners = normalizeOwnerInputs({
       totalHarvested,
       totalRejected,
@@ -82,6 +84,7 @@ export class HarvestCommandService {
     const mergedData = { ...current, ...data };
     const totalHarvested = Number(mergedData.totalHarvested) || 0;
     const totalRejected = Number(mergedData.totalRejected) || 0;
+    assertUncalculatedRejectedWithinTotal(totalRejected, Number(mergedData.uncalculatedRejected) || 0);
     const ownerFieldsProvided = data.ownerHarvested !== undefined || data.ownerRejected !== undefined;
     const currentHasExplicitOwnerData = hasExplicitOwnerData({
       totalHarvested: current.totalHarvested,

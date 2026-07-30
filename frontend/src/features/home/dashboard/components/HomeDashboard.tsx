@@ -168,6 +168,7 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
   const allGaugeCards = [
     { title: t.gauges.grossHarvest, ...metrics.grossHarvest, variant: 'default' as const, icon: <FaLeaf />, maxValue: calcMax(metrics.grossHarvest.value, metrics.grossHarvest.percent) },
     { title: t.gauges.rejects, ...metrics.rejects, variant: 'default' as const, icon: <FaArrowDown />, maxValue: metrics.grossHarvest.value },
+    { title: t.gauges.grossHarvestExcludingBadPicks, ...metrics.grossHarvestExcludingBadPicks, variant: 'default' as const, icon: <FaLeaf />, maxValue: metrics.grossHarvestExcludingBadPicks.value },
     { title: t.gauges.rejectsExcludingBadPicks, ...metrics.rejectsExcludingBadPicks, variant: 'default' as const, icon: <FaArrowDown />, maxValue: metrics.grossHarvestExcludingBadPicks.value },
     { title: t.gauges.netHarvest, ...metrics.netHarvest, variant: 'default' as const, icon: <FaScaleBalanced />, maxValue: metrics.grossHarvest.value },
     { title: t.gauges.sorted, ...metrics.sorted, variant: 'default' as const, icon: <FaArrowsUpDown />, maxValue: metrics.netHarvest.value },
@@ -181,8 +182,8 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
     { title: t.gauges.delivered, ...metrics.delivered, variant: 'default' as const, icon: <FaCircleCheck />, maxValue: netAvailableForShipping },
   ];
 
-  const mainGaugeCards = allGaugeCards.slice(0, 6);
-  const extraGaugeCards = allGaugeCards.slice(6);
+  const mainGaugeCards = allGaugeCards.slice(0, 7);
+  const extraGaugeCards = allGaugeCards.slice(7);
 
   const selectedSeasonLabel = seasonOptions.find((s) => s.value === String(resolvedSeasonId))?.label ?? '';
 

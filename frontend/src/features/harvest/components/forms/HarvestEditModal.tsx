@@ -21,8 +21,8 @@ type HarvestEditModalProps = {
   isPartialClassification: boolean;
   markAsFullClassification: boolean;
   onMarkAsFullClassificationChange: (value: boolean) => void;
-  isBadPick: boolean;
-  onIsBadPickChange: (value: boolean) => void;
+  uncalculatedRejected: number;
+  onUncalculatedRejectedChange: (value: number) => void;
   isSubmitting: boolean;
   error: string;
   onDateGregorianChange: (value: string) => void;
@@ -53,8 +53,8 @@ export function HarvestEditModal({
   isPartialClassification,
   markAsFullClassification,
   onMarkAsFullClassificationChange,
-  isBadPick,
-  onIsBadPickChange,
+  uncalculatedRejected,
+  onUncalculatedRejectedChange,
   isSubmitting,
   error,
   onDateGregorianChange,
@@ -206,13 +206,17 @@ export function HarvestEditModal({
               disabled
             />
           </label>
-          <label className={styles.badPickField}>
+          <label className={styles.summaryField}>
+            <span>{ed.uncalculatedRejectedLabel}</span>
             <input
-              type="checkbox"
-              checked={isBadPick}
-              onChange={(e) => onIsBadPickChange(e.target.checked)}
+              className="seasons-manager__year-input harvest-bulk-form-number-input"
+              type="number"
+              min={0}
+              max={totalRejected}
+              value={uncalculatedRejected}
+              onChange={(e) => onUncalculatedRejectedChange(Number(e.target.value))}
+              placeholder={ed.uncalculatedRejectedPlaceholder(totalRejected)}
             />
-            <span>{ed.isBadPickLabel}</span>
           </label>
         </div>
 

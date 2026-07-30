@@ -33,7 +33,8 @@ export type HarvestI18n = {
       exactNetRequiresFullClassificationError: string;
       netIncreaseSwitchesToPartialWarning: string;
       markAsFullClassificationLabel: string;
-      isBadPickLabel: string;
+      uncalculatedRejectedLabel: string;
+      uncalculatedRejectedPlaceholder: (totalRejected: number) => string;
       confirm: string;
       cancel: string;
     };
@@ -84,7 +85,8 @@ export type HarvestI18n = {
     partialSorting: string;
     notesPlaceholder: string;
     notesLabel: string;
-    isBadPickLabel: string;
+    uncalculatedRejectedLabel: string;
+    uncalculatedRejectedPlaceholder: (totalRejected: number) => string;
     remainsInItalyGradeHLabel: string;
     remainsInItalyGradeVLabel: string;
     sortingRowsTitle: string;
@@ -206,6 +208,7 @@ export type HarvestI18n = {
     apiClassificationsMustEqualNetFinal: (classificationsTotal: number, netHarvested: number) => string;
     apiDuplicateClassification: string;
     apiHarvestYearMismatch: (harvestYear: number, seasonYear: number) => string;
+    uncalculatedRejectedExceedsTotal: (uncalculatedRejected: number, totalRejected: number) => string;
     saveFailed: string;
     sortingSaveFailed: string;
   };
@@ -220,6 +223,7 @@ export type HarvestI18n = {
     loadingHarvestOptions: string;
     selectHarvestHint: string;
     dateGregorianLabel: string;
+    dateHebrewLabel: string;
     totalHarvestedLabel: string;
     ownerHarvestedLabel: string;
     totalRejectedLabel: string;
@@ -258,6 +262,9 @@ export type HarvestI18n = {
     summary: {
       totalHarvested: string;
       totalRejected: string;
+      uncalculatedRejected: string;
+      harvestExcludingBadPicks: string;
+      rejectedExcludingBadPicks: string;
       totalNet: string;
     };
     detailsPanel: {
@@ -311,7 +318,10 @@ export type HarvestI18n = {
         updatedBy: string;
         updatedAt: string;
         notes: string;
-        isBadPick: string;
+        uncalculatedRejected: string;
+        rejectionRateExcludingBadPicks: string;
+        harvestExcludingBadPicks: string;
+        badPickQuantity: string;
       };
       values: {
         partial: string;
@@ -321,8 +331,6 @@ export type HarvestI18n = {
         rowType: string;
         generalRow: string;
         ownerRow: string;
-        badPickYes: string;
-        badPickNo: string;
         differenceRow: string;
       };
     };
@@ -339,11 +347,11 @@ export type HarvestI18n = {
       mode: string;
       updatedBy: string;
       notes: string;
-      isBadPick: string;
+      uncalculatedRejected: string;
       rejectionRate: string;
+      rejectionRateExcludingBadPicks: string;
+      harvestExcludingBadPicks: string;
     };
-    badPickYes: string;
-    badPickNo: string;
   };
   sortingDailyDetails: {
     description: string;
@@ -430,6 +438,9 @@ export type HarvestI18n = {
       differenceRejected: string;
       differenceNet: string;
       differenceRate: string;
+      uncalculatedRejected: string;
+      rejectionRateExcludingBadPicks: string;
+      harvestExcludingBadPicks: string;
     };
     filters: {
       methodFilterLabel: string;

@@ -1,7 +1,5 @@
-﻿import { FaCheck, FaXmark } from 'react-icons/fa6';
-import type { ClassificationRecord } from '../../../../services/classificationsApi';
+﻿import type { ClassificationRecord } from '../../../../services/classificationsApi';
 import styles from '../styles/HarvestDetailsSheet.module.css';
-import interactiveStyles from '../styles/HarvestInteractive.module.css';
 
 export type DetailsSheetData = {
   dateGregorian: string;
@@ -12,7 +10,8 @@ export type DetailsSheetData = {
   fieldName: string;
   statusLabel: string;
   notes: string;
-  isBadPick: boolean;
+  uncalculatedRejected: number;
+  badPickQuantity: number;
   labels: {
     season: string;
     harvestNumber: string;
@@ -24,13 +23,14 @@ export type DetailsSheetData = {
     classifiedTotal: string;
     rejectionRate: string;
     notes: string;
-    isBadPick: string;
+    uncalculatedRejected: string;
+    rejectionRateExcludingBadPicks: string;
+    harvestExcludingBadPicks: string;
+    badPickQuantity: string;
   };
   values: {
     rowType: string;
     none: string;
-    badPickYes: string;
-    badPickNo: string;
   };
   rows: Array<{
     key: string;
@@ -41,6 +41,9 @@ export type DetailsSheetData = {
     totalAfterRejected: string;
     classifiedTotal: string;
     rejectionRate: string;
+    uncalculatedRejected: string;
+    rejectionRateExcludingBadPicks: string;
+    harvestExcludingBadPicks: string;
   }>;
 };
 
@@ -110,12 +113,8 @@ export function HarvestDailyDetailsContent({
             <strong>{detailsSheetData.labels.field}:</strong> {detailsSheetData.fieldName}
           </p>
           <p style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <strong>{detailsSheetData.labels.isBadPick}:</strong>
-            {detailsSheetData.isBadPick ? (
-              <FaCheck aria-label={detailsSheetData.values.badPickYes} className={interactiveStyles.badPickYes} />
-            ) : (
-              <FaXmark aria-label={detailsSheetData.values.badPickNo} className={interactiveStyles.badPickNo} />
-            )}
+            <strong>{detailsSheetData.labels.badPickQuantity}:</strong>
+            {detailsSheetData.badPickQuantity}
           </p>
         </div>
 
@@ -131,6 +130,13 @@ export function HarvestDailyDetailsContent({
                 <th>{detailsSheetData.labels.totalAfterRejected}</th>
                 <th>{detailsSheetData.labels.classifiedTotal}</th>
                 <th>{detailsSheetData.labels.rejectionRate}</th>
+                {detailsSheetData.badPickQuantity > 0 ? (
+                  <>
+                    <th>{detailsSheetData.labels.harvestExcludingBadPicks}</th>
+                    <th>{detailsSheetData.labels.uncalculatedRejected}</th>
+                    <th>{detailsSheetData.labels.rejectionRateExcludingBadPicks}</th>
+                  </>
+                ) : null}
               </tr>
             </thead>
             <tbody>
@@ -142,6 +148,13 @@ export function HarvestDailyDetailsContent({
                   <td>{row.totalAfterRejected}</td>
                   <td>{row.classifiedTotal}</td>
                   <td>{row.rejectionRate}</td>
+                  {detailsSheetData.badPickQuantity > 0 ? (
+                    <>
+                      <td>{row.harvestExcludingBadPicks}</td>
+                      <td>{row.uncalculatedRejected}</td>
+                      <td>{row.rejectionRateExcludingBadPicks}</td>
+                    </>
+                  ) : null}
                 </tr>
               ))}
             </tbody>

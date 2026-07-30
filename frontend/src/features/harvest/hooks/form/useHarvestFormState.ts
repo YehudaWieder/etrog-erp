@@ -33,7 +33,7 @@ export function useHarvestFormState({
   const isOwnerHarvestedTouchedRef = useRef(false);
   const isOwnerRejectedTouchedRef = useRef(false);
   const [harvestFormIsPartialClassification, setHarvestFormIsPartialClassification] = useState(false);
-  const [harvestFormIsBadPick, setHarvestFormIsBadPick] = useState(false);
+  const [harvestFormUncalculatedRejected, setHarvestFormUncalculatedRejected] = useState('');
   const [harvestFormRemainsInItalyGradeH, setHarvestFormRemainsInItalyGradeH] = useState(true);
   const [harvestFormRemainsInItalyGradeV, setHarvestFormRemainsInItalyGradeV] = useState(true);
   const [harvestFormClassifications, setHarvestFormClassifications] = useState<HarvestFormClassificationDraft[]>([]);
@@ -103,7 +103,7 @@ export function useHarvestFormState({
     setHarvestFormOwnerRejected('');
     setHarvestFormNotes('');
     setHarvestFormIsPartialClassification(false);
-    setHarvestFormIsBadPick(false);
+    setHarvestFormUncalculatedRejected('');
     setHarvestFormRemainsInItalyGradeH(true);
     setHarvestFormRemainsInItalyGradeV(true);
     setHarvestFormClassifications([]);
@@ -194,8 +194,8 @@ export function useHarvestFormState({
     setHarvestFormNotes,
     harvestFormIsPartialClassification,
     setHarvestFormIsPartialClassification,
-    harvestFormIsBadPick,
-    setHarvestFormIsBadPick,
+    harvestFormUncalculatedRejected,
+    setHarvestFormUncalculatedRejected,
     harvestFormRemainsInItalyGradeH,
     setHarvestFormRemainsInItalyGradeH,
     harvestFormRemainsInItalyGradeV,

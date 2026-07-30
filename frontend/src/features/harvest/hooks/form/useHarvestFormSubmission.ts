@@ -32,7 +32,7 @@ type UseHarvestFormSubmissionParams = {
     ownerRejected: string;
     notes: string;
     isPartialClassification: boolean;
-    isBadPick: boolean;
+    uncalculatedRejected: string;
     remainsInItalyGradeH: boolean;
     remainsInItalyGradeV: boolean;
     classifications: HarvestFormClassificationDraft[];

@@ -959,8 +959,8 @@ export class HarvestInlineUpdateDto {
   @ApiPropertyOptional({ description: 'Update harvest notes', example: 'Received another 10 after recount' })
   notes?: string;
 
-  @ApiPropertyOptional({ description: 'Update whether this harvest is flagged as a bad pick', example: false })
-  isBadPick?: boolean;
+  @ApiPropertyOptional({ description: 'How much of totalRejected is not calculated into the "excluding bad picks" rejection-rate summary', example: 0 })
+  uncalculatedRejected?: number;
 
   @ApiPropertyOptional({ description: 'User ID that performs this harvest update', example: 1 })
   updatedById?: number;

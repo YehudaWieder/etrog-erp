@@ -130,6 +130,7 @@ export function HarvestPage() {
     totalRejectedValue: number;
     classifiedTotalValue: number;
     dateGregorian: string;
+    dateHebrew: string;
     totalHarvested: string;
     totalRejected: string;
     classifiedTotal: string;
@@ -168,7 +169,7 @@ export function HarvestPage() {
   const [editHarvestOwnerRejected, setEditHarvestOwnerRejected] = useState(0);
   const [editHarvestNotes, setEditHarvestNotes] = useState('');
   const [editHarvestMarkFullClassification, setEditHarvestMarkFullClassification] = useState(false);
-  const [editHarvestIsBadPick, setEditHarvestIsBadPick] = useState(false);
+  const [editHarvestUncalculatedRejected, setEditHarvestUncalculatedRejected] = useState(0);
   const globalFilterValues = useSelector(
     (state: RootState) => state.globalFilters.scopes[HARVEST_DAILY_FILTER_SCOPE] ?? EMPTY_FILTERS,
   );
@@ -274,8 +275,8 @@ export function HarvestPage() {
     harvestFormNotes,
     harvestFormIsPartialClassification,
     setHarvestFormIsPartialClassification,
-    harvestFormIsBadPick,
-    setHarvestFormIsBadPick,
+    harvestFormUncalculatedRejected,
+    setHarvestFormUncalculatedRejected,
     harvestFormRemainsInItalyGradeH,
     setHarvestFormRemainsInItalyGradeH,
     harvestFormRemainsInItalyGradeV,
@@ -346,8 +347,8 @@ export function HarvestPage() {
     setHarvestSortingFormTotalHarvested,
     harvestSortingFormOwnerHarvested,
     setHarvestSortingFormOwnerHarvested,
-    harvestSortingFormIsBadPick,
-    setHarvestSortingFormIsBadPick,
+    harvestSortingFormUncalculatedRejected,
+    setHarvestSortingFormUncalculatedRejected,
     harvestSortingFormRemainsInItalyGradeH,
     setHarvestSortingFormRemainsInItalyGradeH,
     harvestSortingFormRemainsInItalyGradeV,
@@ -677,7 +678,7 @@ export function HarvestPage() {
     }
     setHarvestSortingFormTotalHarvested(String(selectedSortingHarvest.totalHarvested));
     setHarvestSortingFormOwnerHarvested(String(selectedSortingHarvest.ownerHarvested));
-    setHarvestSortingFormIsBadPick(selectedSortingHarvest.isBadPick);
+    setHarvestSortingFormUncalculatedRejected(String(selectedSortingHarvest.uncalculatedRejected));
     setHarvestSortingFormRemainsInItalyGradeH(selectedSortingHarvest.remainsInItalyGradeH);
     setHarvestSortingFormRemainsInItalyGradeV(selectedSortingHarvest.remainsInItalyGradeV);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -695,7 +696,7 @@ export function HarvestPage() {
 
   const hasTotalHarvestedEdit = Boolean(selectedSortingHarvest) && editedTotalHarvestedAmount !== selectedSortingHarvest?.totalHarvested;
   const hasOwnerHarvestedEdit = Boolean(selectedSortingHarvest) && editedOwnerHarvestedAmount !== selectedSortingHarvest?.ownerHarvested;
-  const hasIsBadPickEdit = Boolean(selectedSortingHarvest) && harvestSortingFormIsBadPick !== selectedSortingHarvest?.isBadPick;
+  const hasUncalculatedRejectedEdit = Boolean(selectedSortingHarvest) && Number(harvestSortingFormUncalculatedRejected || 0) !== selectedSortingHarvest?.uncalculatedRejected;
   const hasRemainsInItalyGradeHEdit = Boolean(selectedSortingHarvest) && harvestSortingFormRemainsInItalyGradeH !== selectedSortingHarvest?.remainsInItalyGradeH;
   const hasRemainsInItalyGradeVEdit = Boolean(selectedSortingHarvest) && harvestSortingFormRemainsInItalyGradeV !== selectedSortingHarvest?.remainsInItalyGradeV;
 
@@ -744,7 +745,7 @@ export function HarvestPage() {
       ownerRejected: harvestFormOwnerRejected,
       notes: harvestFormNotes,
       isPartialClassification: harvestFormIsPartialClassification,
-      isBadPick: harvestFormIsBadPick,
+      uncalculatedRejected: harvestFormUncalculatedRejected,
       remainsInItalyGradeH: harvestFormRemainsInItalyGradeH,
       remainsInItalyGradeV: harvestFormRemainsInItalyGradeV,
       classifications: harvestFormClassifications,
@@ -777,7 +778,7 @@ export function HarvestPage() {
       quantity: harvestSortingFormQuantity,
       notes: harvestSortingFormNotes,
       isPartialClassification: harvestSortingFormIsPartialClassification,
-      isBadPick: harvestSortingFormIsBadPick,
+      uncalculatedRejected: harvestSortingFormUncalculatedRejected,
       remainsInItalyGradeH: harvestSortingFormRemainsInItalyGradeH,
       remainsInItalyGradeV: harvestSortingFormRemainsInItalyGradeV,
     },
@@ -789,7 +790,7 @@ export function HarvestPage() {
     additionalOwnerRejectedQuantity: harvestSortingFormAdditionalOwnerRejectedAmount,
     hasTotalHarvestedEdit,
     hasOwnerHarvestedEdit,
-    hasIsBadPickEdit,
+    hasUncalculatedRejectedEdit,
     hasRemainsInItalyGradeHEdit,
     hasRemainsInItalyGradeVEdit,
     setIsSubmittingHarvestSortingForm,
@@ -934,6 +935,7 @@ export function HarvestPage() {
       totalRejectedValue: effectiveTotalRejected,
       classifiedTotalValue: selectedHarvest.classifiedTotal,
       dateGregorian: formatGregorianDate(selectedHarvest.dateGregorian),
+      dateHebrew: selectedHarvest.dateHebrew,
       totalHarvested: numberFormatter.format(effectiveTotalHarvested),
       totalRejected: numberFormatter.format(effectiveTotalRejected),
       classifiedTotal: numberFormatter.format(selectedHarvest.classifiedTotal),
@@ -1060,7 +1062,9 @@ export function HarvestPage() {
 
   const {
     createHarvestExportRows,
+    createHarvestPrintTables,
     createFieldReportExportRows,
+    createFieldReportPrintTables,
     createSortingDailyExportRows,
     createSortingDailyExpandedMatrixData,
     createSortingListExportRows,
@@ -1099,7 +1103,9 @@ export function HarvestPage() {
     numberFormatter,
     sortingDownloadMenuCloseTimeoutRef,
     createHarvestExportRows,
+    createHarvestPrintTables,
     createFieldReportExportRows,
+    createFieldReportPrintTables,
     createSortingDailyExportRows,
     createSortingDailyExpandedMatrixData,
     createSortingListExportRows,
@@ -1215,13 +1221,19 @@ export function HarvestPage() {
     setEditHarvestOwnerRejected(selectedHarvestRow.ownerRejected);
     setEditHarvestNotes(selectedHarvestRow.notes ?? '');
     setEditHarvestMarkFullClassification(false);
-    setEditHarvestIsBadPick(selectedHarvestRow.isBadPick);
+    setEditHarvestUncalculatedRejected(selectedHarvestRow.uncalculatedRejected);
     setEditHarvestError('');
     setIsEditHarvestDialogOpen(true);
   };
 
   const handleEditHarvest = async () => {
     if (!selectedHarvestRow) return;
+    if (editHarvestUncalculatedRejected > editHarvestTotalRejected) {
+      setEditHarvestError(
+        t.formSubmission.uncalculatedRejectedExceedsTotal(editHarvestUncalculatedRejected, editHarvestTotalRejected),
+      );
+      return;
+    }
     setIsEditingHarvest(true);
     setEditHarvestError('');
     try {
@@ -1236,7 +1248,7 @@ export function HarvestPage() {
         ownerRejected: editHarvestOwnerRejected,
         notes: editHarvestNotes || undefined,
         isPartialClassification: editHarvestMarkFullClassification ? false : undefined,
-        isBadPick: editHarvestIsBadPick,
+        uncalculatedRejected: editHarvestUncalculatedRejected,
       });
       setHarvestRows((rows) => rows.map((row) => (row.id === updated.id ? { ...row, ...updated } : row)));
       setSelectedHarvestRow((prev) => (prev ? { ...prev, ...updated } : prev));
@@ -1349,6 +1361,7 @@ export function HarvestPage() {
         totalRejectedValue: harvest.totalRejected,
         classifiedTotalValue: harvest.classifiedTotal,
         dateGregorian: formatGregorianDate(harvest.dateGregorian),
+        dateHebrew: harvest.dateHebrew,
         totalHarvested: numberFormatter.format(harvest.totalHarvested),
         totalRejected: numberFormatter.format(harvest.totalRejected),
         classifiedTotal: numberFormatter.format(harvest.classifiedTotal),
@@ -1706,8 +1719,8 @@ export function HarvestPage() {
           isPartialClassification={selectedHarvestRow.isPartialClassification}
           markAsFullClassification={editHarvestMarkFullClassification}
           onMarkAsFullClassificationChange={setEditHarvestMarkFullClassification}
-          isBadPick={editHarvestIsBadPick}
-          onIsBadPickChange={setEditHarvestIsBadPick}
+          uncalculatedRejected={editHarvestUncalculatedRejected}
+          onUncalculatedRejectedChange={setEditHarvestUncalculatedRejected}
           isSubmitting={isEditingHarvest}
           error={editHarvestError}
           onDateGregorianChange={handleEditHarvestGregorianDateChange}
@@ -1791,7 +1804,7 @@ export function HarvestPage() {
         harvestFormOwnerHarvested={harvestFormOwnerHarvested}
         harvestFormOwnerRejected={harvestFormOwnerRejected}
         harvestFormIsPartialClassification={harvestFormIsPartialClassification}
-        harvestFormIsBadPick={harvestFormIsBadPick}
+        harvestFormUncalculatedRejected={harvestFormUncalculatedRejected}
         harvestFormRemainsInItalyGradeH={harvestFormRemainsInItalyGradeH}
         harvestFormRemainsInItalyGradeV={harvestFormRemainsInItalyGradeV}
         harvestFormNotes={harvestFormNotes}
@@ -1809,7 +1822,7 @@ export function HarvestPage() {
         onOwnerHarvestedChange={handleHarvestOwnerHarvestedChange}
         onOwnerRejectedChange={handleHarvestOwnerRejectedChange}
         onPartialClassificationChange={setHarvestFormIsPartialClassification}
-        onIsBadPickChange={setHarvestFormIsBadPick}
+        onUncalculatedRejectedChange={setHarvestFormUncalculatedRejected}
         onRemainsInItalyGradeHChange={setHarvestFormRemainsInItalyGradeH}
         onRemainsInItalyGradeVChange={setHarvestFormRemainsInItalyGradeV}
         onNotesChange={handleHarvestNotesChange}
@@ -1852,7 +1865,7 @@ export function HarvestPage() {
         harvestSortingFormIsPartialClassification={harvestSortingFormIsPartialClassification}
         harvestSortingFormTotalHarvested={harvestSortingFormTotalHarvested}
         harvestSortingFormOwnerHarvested={harvestSortingFormOwnerHarvested}
-        harvestSortingFormIsBadPick={harvestSortingFormIsBadPick}
+        harvestSortingFormUncalculatedRejected={harvestSortingFormUncalculatedRejected}
         harvestSortingFormRemainsInItalyGradeH={harvestSortingFormRemainsInItalyGradeH}
         harvestSortingFormRemainsInItalyGradeV={harvestSortingFormRemainsInItalyGradeV}
         isAddingRejectedQuantity={isAddingRejectedQuantity}
@@ -1879,7 +1892,7 @@ export function HarvestPage() {
         onPartialClassificationChange={setHarvestSortingFormIsPartialClassification}
         onTotalHarvestedChange={setHarvestSortingFormTotalHarvested}
         onOwnerHarvestedChange={setHarvestSortingFormOwnerHarvested}
-        onIsBadPickChange={setHarvestSortingFormIsBadPick}
+        onUncalculatedRejectedChange={setHarvestSortingFormUncalculatedRejected}
         onRemainsInItalyGradeHChange={setHarvestSortingFormRemainsInItalyGradeH}
         onRemainsInItalyGradeVChange={setHarvestSortingFormRemainsInItalyGradeV}
         onOpenAddRejectedQuantity={openAddRejectedQuantity}

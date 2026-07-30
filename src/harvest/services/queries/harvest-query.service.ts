@@ -106,6 +106,7 @@ export class HarvestQueryService {
       }
 
       const target = grouped.get(fieldId)!;
+      const uncalculatedRejected = row.uncalculatedRejected;
       const hasExplicitOwnerDataValue = hasExplicitOwnerData({
         totalHarvested: row.totalHarvested,
         totalRejected: row.totalRejected,
@@ -119,7 +120,7 @@ export class HarvestQueryService {
       const effectiveOwnerRejected = hasExplicitOwnerDataValue ? row.ownerRejected : row.totalRejected;
       const effectiveOwnerAfterRejected = hasExplicitOwnerDataValue ? row.ownerAfterRejected : row.totalAfterRejected;
       target.recordCount += 1;
-      if (row.isBadPick) {
+      if (uncalculatedRejected > 0) {
         target.badPickCount += 1;
       }
       target.totalHarvested += row.totalHarvested;
@@ -132,14 +133,13 @@ export class HarvestQueryService {
       target.hasOwnerOverrides = target.hasOwnerOverrides || hasExplicitOwnerDataValue;
       target.isPartialClassification = target.isPartialClassification || Boolean(row.isPartialClassification);
 
-      // Bad picks still count toward the harvested total (denominator) — only their rejected
-      // quantity is dropped from the "excluding bad picks" rejection-rate numerator.
-      target.totalHarvestedExcludingBadPicks += row.totalHarvested;
-      target.ownerHarvestedExcludingBadPicks += effectiveOwnerHarvested;
-      if (!row.isBadPick) {
-        target.totalRejectedExcludingBadPicks += row.totalRejected;
-        target.ownerRejectedExcludingBadPicks += effectiveOwnerRejected;
-      }
+      // A record's uncalculated-rejected quantity is treated as if it never happened for the
+      // "excluding bad picks" summary: dropped from both the harvested denominator and the
+      // rejected numerator, not just the numerator.
+      target.totalHarvestedExcludingBadPicks += row.totalHarvested - uncalculatedRejected;
+      target.ownerHarvestedExcludingBadPicks += effectiveOwnerHarvested - uncalculatedRejected;
+      target.totalRejectedExcludingBadPicks += row.totalRejected - uncalculatedRejected;
+      target.ownerRejectedExcludingBadPicks += effectiveOwnerRejected - uncalculatedRejected;
     }
 
     return Array.from(grouped.values())

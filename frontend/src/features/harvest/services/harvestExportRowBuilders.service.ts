@@ -47,6 +47,17 @@ export function createHarvestExportRowBuilders({
     const fields = t.dailyDetails.detailsPanel.fields;
     const values = t.dailyDetails.detailsPanel.values;
 
+    const getClassificationStatus = (isPartialClassification: unknown) => {
+      const isPartial =
+        typeof isPartialClassification === 'boolean'
+          ? isPartialClassification
+          : Number(isPartialClassification) === 1 || String(isPartialClassification).trim().toLowerCase() === 'true';
+
+      return isPartial ? values.partial : values.final;
+    };
+
+    const rowsSource = visibleHarvestRowsRef.current.length > 0 ? visibleHarvestRowsRef.current : filteredHarvestRows;
+
     const header = [
       t.dailyDetails.columns.fieldName,
       t.dailyDetails.columns.dateGregorian,
@@ -61,9 +72,48 @@ export function createHarvestExportRowBuilders({
       fields.classificationStatus,
       fields.rejectionRate,
       fields.ownerRejectionRate,
+      fields.harvestExcludingBadPicks,
+      fields.uncalculatedRejected,
+      fields.rejectionRateExcludingBadPicks,
       fields.updatedBy,
       fields.notes,
     ];
+
+    const rows = rowsSource.map((row) => {
+      const harvestExcludingBadPicks = row.totalHarvested - row.uncalculatedRejected;
+      const rejectedExcludingBadPicks = row.totalRejected - row.uncalculatedRejected;
+      const rejectionRateExcludingBadPicks = harvestExcludingBadPicks > 0
+        ? Number(((rejectedExcludingBadPicks / harvestExcludingBadPicks) * 100).toFixed(2))
+        : 0;
+
+      return [
+        row.field?.name ?? values.none,
+        formatGregorianDate(row.dateGregorian),
+        row.dateHebrew,
+        row.totalHarvested,
+        row.totalRejected,
+        row.totalAfterRejected,
+        row.ownerHarvested,
+        row.ownerRejected,
+        row.ownerAfterRejected,
+        row.classifiedTotal,
+        getClassificationStatus(row.isPartialClassification),
+        row.rejectionRate,
+        row.ownerRejectionRate,
+        harvestExcludingBadPicks,
+        rejectedExcludingBadPicks,
+        rejectionRateExcludingBadPicks,
+        row.updatedBy?.name ?? values.none,
+        row.notes ?? values.none,
+      ];
+    });
+
+    return { header, rows };
+  };
+
+  const createHarvestPrintTables = (): Array<{ title: string; header: Array<string | number>; rows: Array<Array<string | number>> }> => {
+    const fields = t.dailyDetails.detailsPanel.fields;
+    const values = t.dailyDetails.detailsPanel.values;
 
     const getClassificationStatus = (isPartialClassification: unknown) => {
       const isPartial =
@@ -75,32 +125,98 @@ export function createHarvestExportRowBuilders({
     };
 
     const rowsSource = visibleHarvestRowsRef.current.length > 0 ? visibleHarvestRowsRef.current : filteredHarvestRows;
+    const hasBadPicks = rowsSource.some((row) => row.uncalculatedRejected > 0);
 
-    const rows = rowsSource.map((row) => [
+    const coreHeader = [
+      t.dailyDetails.columns.fieldName,
+      t.dailyDetails.columns.dateGregorian,
+      fields.dateHebrew,
+      t.dailyDetails.columns.totalHarvested,
+      t.dailyDetails.columns.totalRejected,
+      fields.totalAfterRejected,
+      t.dailyDetails.columns.classifiedTotal,
+      fields.classificationStatus,
+      fields.rejectionRate,
+      fields.updatedBy,
+      fields.notes,
+    ];
+
+    const coreRows = rowsSource.map((row) => [
       row.field?.name ?? values.none,
       formatGregorianDate(row.dateGregorian),
       row.dateHebrew,
       row.totalHarvested,
       row.totalRejected,
       row.totalAfterRejected,
-      row.ownerHarvested,
-      row.ownerRejected,
-      row.ownerAfterRejected,
       row.classifiedTotal,
       getClassificationStatus(row.isPartialClassification),
       row.rejectionRate,
-      row.ownerRejectionRate,
       row.updatedBy?.name ?? values.none,
       row.notes ?? values.none,
     ]);
 
-    return { header, rows };
+    const ownerHeader = [
+      t.dailyDetails.columns.fieldName,
+      t.dailyDetails.columns.dateGregorian,
+      fields.ownerHarvested,
+      fields.ownerRejected,
+      fields.ownerAfterRejected,
+      fields.ownerRejectionRate,
+      ...(hasBadPicks ? [fields.harvestExcludingBadPicks, fields.uncalculatedRejected, fields.rejectionRateExcludingBadPicks] : []),
+    ];
+
+    const ownerRows = rowsSource.map((row) => {
+      const harvestExcludingBadPicks = row.totalHarvested - row.uncalculatedRejected;
+      const rejectedExcludingBadPicks = row.totalRejected - row.uncalculatedRejected;
+      const rejectionRateExcludingBadPicks = harvestExcludingBadPicks > 0
+        ? Number(((rejectedExcludingBadPicks / harvestExcludingBadPicks) * 100).toFixed(2))
+        : 0;
+
+      return [
+        row.field?.name ?? values.none,
+        formatGregorianDate(row.dateGregorian),
+        row.ownerHarvested,
+        row.ownerRejected,
+        row.ownerAfterRejected,
+        row.ownerRejectionRate,
+        ...(hasBadPicks ? [harvestExcludingBadPicks, rejectedExcludingBadPicks, rejectionRateExcludingBadPicks] : []),
+      ];
+    });
+
+    return [
+      { title: lang === 'he' ? 'נתוני קטיף' : 'Harvest Data', header: coreHeader, rows: coreRows },
+      { title: lang === 'he' ? 'נתוני בעלים (פרנקו) וקטיף גרוע' : 'Owner (Franco) & Bad Picks Data', header: ownerHeader, rows: ownerRows },
+    ];
+  };
+
+  const fieldReportExcludingBadPicksValues = (row: HarvestFieldReportRow) => {
+    const harvestExcludingBadPicks = row.totalHarvestedExcludingBadPicks;
+    const rejectedExcludingBadPicks = row.totalRejectedExcludingBadPicks;
+    const rejectionRateExcludingBadPicks = harvestExcludingBadPicks > 0
+      ? Number(((rejectedExcludingBadPicks / harvestExcludingBadPicks) * 100).toFixed(2))
+      : 0;
+    const ownerHarvestExcludingBadPicks = row.ownerHarvestedExcludingBadPicks;
+    const ownerRejectedExcludingBadPicks = row.ownerRejectedExcludingBadPicks;
+    const ownerRejectionRateExcludingBadPicks = ownerHarvestExcludingBadPicks > 0
+      ? Number(((ownerRejectedExcludingBadPicks / ownerHarvestExcludingBadPicks) * 100).toFixed(2))
+      : 0;
+
+    return {
+      harvestExcludingBadPicks,
+      rejectedExcludingBadPicks,
+      rejectionRateExcludingBadPicks,
+      ownerHarvestExcludingBadPicks,
+      ownerRejectedExcludingBadPicks,
+      ownerRejectionRateExcludingBadPicks,
+    };
   };
 
   const createFieldReportExportRows = (): HarvestExportTableData => {
     const fields = t.dailyDetails.detailsPanel.fields;
     const values = t.dailyDetails.detailsPanel.values;
     const franco = t.fieldReport.francoColumns;
+    const ourLabel = t.fieldReport.filters.ourMethod;
+    const francoLabel = t.fieldReport.filters.franco;
 
     const header = [
       t.dailyDetails.columns.fieldName,
@@ -111,10 +227,16 @@ export function createHarvestExportRowBuilders({
       t.dailyDetails.columns.netHarvest,
       t.dailyDetails.columns.classifiedTotal,
       fields.rejectionRate,
+      `${fields.harvestExcludingBadPicks} (${ourLabel})`,
+      `${fields.uncalculatedRejected} (${ourLabel})`,
+      `${fields.rejectionRateExcludingBadPicks} (${ourLabel})`,
       franco.harvested,
       franco.rejected,
       franco.net,
       franco.rejectionRate,
+      `${fields.harvestExcludingBadPicks} (${francoLabel})`,
+      `${fields.uncalculatedRejected} (${francoLabel})`,
+      `${fields.rejectionRateExcludingBadPicks} (${francoLabel})`,
       values.differenceRow,
       t.fieldReport.headers.differenceRejected,
       t.fieldReport.headers.differenceNet,
@@ -124,27 +246,116 @@ export function createHarvestExportRowBuilders({
 
     const rowsSource = visibleFieldReportRowsRef.current.length > 0 ? visibleFieldReportRowsRef.current : fieldReportRows;
 
-    const rows = rowsSource.map((row) => [
-      row.fieldName,
-      row.recordCount,
-      row.badPickCount,
-      row.totalHarvested,
-      row.totalRejected,
-      row.totalAfterRejected,
-      row.classifiedTotal,
-      row.rejectionRate,
-      row.ownerHarvested,
-      row.ownerRejected,
-      row.ownerAfterRejected,
-      row.ownerRejectionRate,
-      row.differenceHarvested,
-      row.differenceRejected,
-      row.differenceAfterRejected,
-      row.differenceRejectionRate,
-      row.isPartialClassification ? values.partial : values.final,
-    ]);
+    const rows = rowsSource.map((row) => {
+      const excl = fieldReportExcludingBadPicksValues(row);
+
+      return [
+        row.fieldName,
+        row.recordCount,
+        row.badPickCount,
+        row.totalHarvested,
+        row.totalRejected,
+        row.totalAfterRejected,
+        row.classifiedTotal,
+        row.rejectionRate,
+        excl.harvestExcludingBadPicks,
+        excl.rejectedExcludingBadPicks,
+        excl.rejectionRateExcludingBadPicks,
+        row.ownerHarvested,
+        row.ownerRejected,
+        row.ownerAfterRejected,
+        row.ownerRejectionRate,
+        excl.ownerHarvestExcludingBadPicks,
+        excl.ownerRejectedExcludingBadPicks,
+        excl.ownerRejectionRateExcludingBadPicks,
+        row.differenceHarvested,
+        row.differenceRejected,
+        row.differenceAfterRejected,
+        row.differenceRejectionRate,
+        row.isPartialClassification ? values.partial : values.final,
+      ];
+    });
 
     return { header, rows };
+  };
+
+  const createFieldReportPrintTables = (): Array<{ title: string; header: Array<string | number>; rows: Array<Array<string | number>> }> => {
+    const fields = t.dailyDetails.detailsPanel.fields;
+    const values = t.dailyDetails.detailsPanel.values;
+    const franco = t.fieldReport.francoColumns;
+
+    const rowsSource = visibleFieldReportRowsRef.current.length > 0 ? visibleFieldReportRowsRef.current : fieldReportRows;
+
+    const coreHeader = [
+      t.dailyDetails.columns.fieldName,
+      t.fieldReport.headers.recordCount,
+      t.fieldReport.headers.badPickCount,
+      t.dailyDetails.columns.totalHarvested,
+      t.dailyDetails.columns.totalRejected,
+      t.dailyDetails.columns.netHarvest,
+      t.dailyDetails.columns.classifiedTotal,
+      fields.rejectionRate,
+      fields.classificationStatus,
+      fields.harvestExcludingBadPicks,
+      fields.uncalculatedRejected,
+      fields.rejectionRateExcludingBadPicks,
+    ];
+
+    const coreRows = rowsSource.map((row) => {
+      const excl = fieldReportExcludingBadPicksValues(row);
+      return [
+        row.fieldName,
+        row.recordCount,
+        row.badPickCount,
+        row.totalHarvested,
+        row.totalRejected,
+        row.totalAfterRejected,
+        row.classifiedTotal,
+        row.rejectionRate,
+        row.isPartialClassification ? values.partial : values.final,
+        excl.harvestExcludingBadPicks,
+        excl.rejectedExcludingBadPicks,
+        excl.rejectionRateExcludingBadPicks,
+      ];
+    });
+
+    const ownerHeader = [
+      t.dailyDetails.columns.fieldName,
+      franco.harvested,
+      franco.rejected,
+      franco.net,
+      franco.rejectionRate,
+      fields.harvestExcludingBadPicks,
+      fields.uncalculatedRejected,
+      fields.rejectionRateExcludingBadPicks,
+      values.differenceRow,
+      t.fieldReport.headers.differenceRejected,
+      t.fieldReport.headers.differenceNet,
+      t.fieldReport.headers.differenceRate,
+    ];
+
+    const ownerRows = rowsSource.map((row) => {
+      const excl = fieldReportExcludingBadPicksValues(row);
+      return [
+        row.fieldName,
+        row.ownerHarvested,
+        row.ownerRejected,
+        row.ownerAfterRejected,
+        row.ownerRejectionRate,
+        excl.ownerHarvestExcludingBadPicks,
+        excl.ownerRejectedExcludingBadPicks,
+        excl.ownerRejectionRateExcludingBadPicks,
+        row.differenceHarvested,
+        row.differenceRejected,
+        row.differenceAfterRejected,
+        row.differenceRejectionRate,
+      ];
+    });
+
+    return [
+      { title: lang === 'he' ? 'נתוני קטיף' : 'Harvest Data', header: coreHeader, rows: coreRows },
+      { title: lang === 'he' ? 'נתוני בעלים (פרנקו) והפרשים' : 'Owner (Franco) & Differences', header: ownerHeader, rows: ownerRows },
+    ];
   };
 
   const createSortingDailyExportRows = (): HarvestExportTableData => {
@@ -274,7 +485,9 @@ export function createHarvestExportRowBuilders({
 
   return {
     createHarvestExportRows,
+    createHarvestPrintTables,
     createFieldReportExportRows,
+    createFieldReportPrintTables,
     createSortingDailyExportRows,
     createSortingDailyExpandedMatrixData,
     createSortingListExportRows,

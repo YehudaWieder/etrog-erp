@@ -24,6 +24,7 @@ type HarvestSortingFormModalProps = {
   isLoadingHarvestOptions: boolean;
   selectedHarvestSummary: {
     dateGregorian: string;
+    dateHebrew: string;
     totalHarvested: string;
     totalRejected: string;
     classifiedTotal: string;
@@ -46,7 +47,7 @@ type HarvestSortingFormModalProps = {
   harvestSortingFormIsPartialClassification: boolean;
   harvestSortingFormTotalHarvested: string;
   harvestSortingFormOwnerHarvested: string;
-  harvestSortingFormIsBadPick: boolean;
+  harvestSortingFormUncalculatedRejected: string;
   harvestSortingFormRemainsInItalyGradeH: boolean;
   harvestSortingFormRemainsInItalyGradeV: boolean;
   isAddingRejectedQuantity: boolean;
@@ -73,7 +74,7 @@ type HarvestSortingFormModalProps = {
   onPartialClassificationChange: (value: boolean) => void;
   onTotalHarvestedChange: (value: string) => void;
   onOwnerHarvestedChange: (value: string) => void;
-  onIsBadPickChange: (value: boolean) => void;
+  onUncalculatedRejectedChange: (value: string) => void;
   onRemainsInItalyGradeHChange: (value: boolean) => void;
   onRemainsInItalyGradeVChange: (value: boolean) => void;
   onOpenAddRejectedQuantity: () => void;
@@ -114,7 +115,7 @@ export function HarvestSortingFormModal({
   harvestSortingFormIsPartialClassification,
   harvestSortingFormTotalHarvested,
   harvestSortingFormOwnerHarvested,
-  harvestSortingFormIsBadPick,
+  harvestSortingFormUncalculatedRejected,
   harvestSortingFormRemainsInItalyGradeH,
   harvestSortingFormRemainsInItalyGradeV,
   isAddingRejectedQuantity,
@@ -141,7 +142,7 @@ export function HarvestSortingFormModal({
   onPartialClassificationChange,
   onTotalHarvestedChange,
   onOwnerHarvestedChange,
-  onIsBadPickChange,
+  onUncalculatedRejectedChange,
   onRemainsInItalyGradeHChange,
   onRemainsInItalyGradeVChange,
   onOpenAddRejectedQuantity,
@@ -283,6 +284,28 @@ export function HarvestSortingFormModal({
           </label>
 
           <label className={styles.summaryField}>
+            <span>{t.sortingForm.dateHebrewLabel}</span>
+            <input
+              className={`seasons-manager__year-input ${styles.readOnlyField}`}
+              type="text"
+              value={selectedHarvestSummary?.dateHebrew ?? ''}
+              readOnly
+              aria-label={t.sortingForm.dateHebrewLabel}
+            />
+          </label>
+
+          <label className={styles.summaryField}>
+            <span>{t.sortingForm.classifiedTotalLabel}</span>
+            <input
+              className={`seasons-manager__year-input ${styles.readOnlyField}`}
+              type="text"
+              value={selectedHarvestSummary?.classifiedTotal ?? ''}
+              readOnly
+              aria-label={t.sortingForm.classifiedTotalLabel}
+            />
+          </label>
+
+          <label className={`${styles.summaryField} ${styles.numberInputFirst}`}>
             <span>{t.sortingForm.totalHarvestedLabel}</span>
             {restoreMode ? (
               <input
@@ -329,6 +352,23 @@ export function HarvestSortingFormModal({
 
           {!restoreMode ? (
             <label className={styles.summaryField}>
+              <span>{form.uncalculatedRejectedLabel}</span>
+              <input
+                className="seasons-manager__year-input harvest-bulk-form-number-input"
+                type="number"
+                min="0"
+                max={rawTotals?.totalRejected ?? undefined}
+                value={harvestSortingFormUncalculatedRejected}
+                disabled={!isHarvestSelected}
+                onChange={(event) => onUncalculatedRejectedChange(event.target.value)}
+                placeholder={form.uncalculatedRejectedPlaceholder(rawTotals?.totalRejected ?? 0)}
+                aria-label={form.uncalculatedRejectedLabel}
+              />
+            </label>
+          ) : null}
+
+          {!restoreMode ? (
+            <label className={`${styles.summaryField} ${styles.numberInputFirst}`}>
               <span>{t.sortingForm.ownerHarvestedLabel}</span>
               <input
                 className="seasons-manager__year-input harvest-bulk-form-number-input"
@@ -368,31 +408,8 @@ export function HarvestSortingFormModal({
             </label>
           ) : null}
 
-          <label className={styles.summaryField}>
-            <span>{t.sortingForm.classifiedTotalLabel}</span>
-            <input
-              className={`seasons-manager__year-input ${styles.readOnlyField}`}
-              type="text"
-              value={selectedHarvestSummary?.classifiedTotal ?? ''}
-              readOnly
-              aria-label={t.sortingForm.classifiedTotalLabel}
-            />
-          </label>
-
           {!restoreMode ? (
-            <label className={styles.badPickField}>
-              <input
-                type="checkbox"
-                checked={harvestSortingFormIsBadPick}
-                disabled={!isHarvestSelected}
-                onChange={(event) => onIsBadPickChange(event.target.checked)}
-              />
-              <span>{form.isBadPickLabel}</span>
-            </label>
-          ) : null}
-
-          {!restoreMode ? (
-            <label className={styles.badPickField}>
+            <label className={`${styles.badPickField} ${styles.numberInputFirst}`}>
               <input
                 type="checkbox"
                 checked={harvestSortingFormRemainsInItalyGradeH}

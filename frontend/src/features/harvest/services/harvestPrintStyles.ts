@@ -13,30 +13,45 @@ export const HARVEST_PRINT_BASE_STYLE = `
     color: #1f4f29;
     text-align: center;
   }
+  h2 {
+    margin: 18px 0 8px;
+    font-size: 14px;
+    color: #1f4f29;
+    break-before: auto;
+  }
+  h2:first-of-type {
+    margin-top: 0;
+  }
+  table + h2 {
+    break-before: page;
+    page-break-before: always;
+  }
   table {
     width: 100%;
     border-collapse: collapse;
-    table-layout: auto;
+    table-layout: fixed;
     font-size: 10px;
   }
   th,
   td {
     border: 1px solid #ccd9cf;
-    padding: 5px;
+    padding: 5px 4px;
     text-align: center;
-    white-space: nowrap;
+    word-break: break-word;
+    line-height: 1.25;
   }
   th {
     background: #1f5a32;
     color: #fff;
     font-weight: 700;
+    font-size: 9.5px;
   }
   tbody tr:nth-child(even) {
     background: #f8fcf9;
   }
   @page {
     size: A4 landscape;
-    margin: 8mm;
+    margin: 6mm;
   }
 `;
 

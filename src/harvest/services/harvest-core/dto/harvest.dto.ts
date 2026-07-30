@@ -26,8 +26,8 @@ export class FieldHarvestCreateDto {
   @ApiPropertyOptional({ example: 'Field 2 harvest' })
   notes?: string;
 
-  @ApiPropertyOptional({ example: false, description: 'Manually flag this harvest record as a bad pick, excluding it from the "excluding bad picks" rejection-rate summary.' })
-  isBadPick?: boolean;
+  @ApiPropertyOptional({ example: 0, description: 'How much of totalRejected is not calculated into the "excluding bad picks" rejection-rate summary (e.g. 70 out of 100 rejected).' })
+  uncalculatedRejected?: number;
 
   @ApiPropertyOptional({ example: true, description: 'Whether grade ה quantities from this harvest remain in Italy instead of entering the general share allocation.' })
   remainsInItalyGradeH?: boolean;
@@ -67,8 +67,8 @@ export class FieldHarvestUpdateDto {
   @ApiPropertyOptional({ example: false, description: 'Explicitly confirm the new partial/final classification mode when this update makes net harvested quantity exactly equal to the already classified total.' })
   isPartialClassification?: boolean;
 
-  @ApiPropertyOptional({ example: false, description: 'Manually flag this harvest record as a bad pick, excluding it from the "excluding bad picks" rejection-rate summary.' })
-  isBadPick?: boolean;
+  @ApiPropertyOptional({ example: 0, description: 'How much of totalRejected is not calculated into the "excluding bad picks" rejection-rate summary (e.g. 70 out of 100 rejected).' })
+  uncalculatedRejected?: number;
 
   @ApiPropertyOptional({ example: true, description: 'Whether grade ה quantities from this harvest remain in Italy instead of entering the general share allocation.' })
   remainsInItalyGradeH?: boolean;
@@ -123,7 +123,7 @@ export class HarvestInlineUpdateDto {
   notes?: string;
 
   @ApiPropertyOptional()
-  isBadPick?: boolean;
+  uncalculatedRejected?: number;
 
   @ApiPropertyOptional()
   remainsInItalyGradeH?: boolean;
@@ -267,8 +267,8 @@ export class HarvestBulkCreateDto {
   @ApiPropertyOptional({ example: true })
   isPartialClassification?: boolean;
 
-  @ApiPropertyOptional({ example: false, description: 'Manually flag this harvest record as a bad pick, excluding it from the "excluding bad picks" rejection-rate summary.' })
-  isBadPick?: boolean;
+  @ApiPropertyOptional({ example: 0, description: 'How much of totalRejected is not calculated into the "excluding bad picks" rejection-rate summary (e.g. 70 out of 100 rejected).' })
+  uncalculatedRejected?: number;
 
   @ApiPropertyOptional({ example: true, description: 'Whether grade ה quantities from this harvest remain in Italy instead of entering the general share allocation.' })
   remainsInItalyGradeH?: boolean;

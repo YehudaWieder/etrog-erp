@@ -95,6 +95,7 @@ export const HOME_I18N_HE = {
     gauges: {
       grossHarvest: 'קטיף ברוטו',
       rejects: 'יורדים',
+      grossHarvestExcludingBadPicks: 'קטיף ברוטו ללא קטיפים גרועים',
       rejectsExcludingBadPicks: 'יורדים ללא קטיפים גרועים',
       netHarvest: 'קטיף נטו',
       sorted: 'ממוין',

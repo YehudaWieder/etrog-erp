@@ -95,6 +95,7 @@ export const HOME_I18N_EN = {
     gauges: {
       grossHarvest: 'Gross Harvest',
       rejects: 'Rejects',
+      grossHarvestExcludingBadPicks: 'Gross Harvest Excluding Bad Picks',
       rejectsExcludingBadPicks: 'Rejects Excluding Bad Picks',
       netHarvest: 'Net Harvest',
       sorted: 'Sorted',

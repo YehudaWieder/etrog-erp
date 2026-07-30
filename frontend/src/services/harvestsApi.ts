@@ -22,7 +22,7 @@ export type HarvestRecord = {
   ownerAfterRejected: number;
   classifiedTotal: number;
   isPartialClassification: boolean;
-  isBadPick: boolean;
+  uncalculatedRejected: number;
   remainsInItalyGradeH: boolean;
   remainsInItalyGradeV: boolean;
   notes: string | null;
@@ -87,7 +87,7 @@ export type CreateHarvestWithClassificationsPayload = {
   ownerRejected?: number;
   notes?: string;
   isPartialClassification?: boolean;
-  isBadPick?: boolean;
+  uncalculatedRejected?: number;
   remainsInItalyGradeH?: boolean;
   remainsInItalyGradeV?: boolean;
   classifications: HarvestBulkClassificationPayload[];
@@ -136,7 +136,7 @@ export type UpdateHarvestPayload = {
   ownerRejected?: number;
   notes?: string;
   isPartialClassification?: boolean;
-  isBadPick?: boolean;
+  uncalculatedRejected?: number;
   remainsInItalyGradeH?: boolean;
   remainsInItalyGradeV?: boolean;
 };

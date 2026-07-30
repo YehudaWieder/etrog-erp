@@ -21,7 +21,7 @@ type BuildHarvestFormSubmissionPayloadParams = {
     ownerRejected: string;
     notes: string;
     isPartialClassification: boolean;
-    isBadPick: boolean;
+    uncalculatedRejected: string;
     remainsInItalyGradeH: boolean;
     remainsInItalyGradeV: boolean;
     classifications: HarvestFormClassificationDraft[];
@@ -365,6 +365,13 @@ export function buildHarvestFormSubmissionPayload({
     };
   }
 
+  const uncalculatedRejected = parseNonNegativeNumber(form.uncalculatedRejected) ?? 0;
+  if (uncalculatedRejected > totalRejected) {
+    return {
+      error: t.uncalculatedRejectedExceedsTotal(uncalculatedRejected, totalRejected),
+    };
+  }
+
   const { maxSortingQuantity, currentSortingQuantitySum } = getHarvestSortingQuantityState({
     classifications: form.classifications,
     totalHarvested,
@@ -415,7 +422,7 @@ export function buildHarvestFormSubmissionPayload({
     fieldId: parsedFieldId,
     updatedById: currentUserId,
     isPartialClassification: form.isPartialClassification,
-    isBadPick: form.isBadPick,
+    uncalculatedRejected,
     remainsInItalyGradeH: form.remainsInItalyGradeH,
     remainsInItalyGradeV: form.remainsInItalyGradeV,
     totalHarvested,

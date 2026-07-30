@@ -39,7 +39,7 @@ type UseHarvestSortingFormSubmissionParams = {
     quantity: string;
     notes: string;
     isPartialClassification: boolean;
-    isBadPick: boolean;
+    uncalculatedRejected: string;
     remainsInItalyGradeH: boolean;
     remainsInItalyGradeV: boolean;
   };
@@ -51,7 +51,7 @@ type UseHarvestSortingFormSubmissionParams = {
   additionalOwnerRejectedQuantity?: number;
   hasTotalHarvestedEdit?: boolean;
   hasOwnerHarvestedEdit?: boolean;
-  hasIsBadPickEdit?: boolean;
+  hasUncalculatedRejectedEdit?: boolean;
   hasRemainsInItalyGradeHEdit?: boolean;
   hasRemainsInItalyGradeVEdit?: boolean;
   setIsSubmittingHarvestSortingForm: (value: boolean) => void;
@@ -82,7 +82,7 @@ export function useHarvestSortingFormSubmission({
   additionalOwnerRejectedQuantity = 0,
   hasTotalHarvestedEdit = false,
   hasOwnerHarvestedEdit = false,
-  hasIsBadPickEdit = false,
+  hasUncalculatedRejectedEdit = false,
   hasRemainsInItalyGradeHEdit = false,
   hasRemainsInItalyGradeVEdit = false,
   setIsSubmittingHarvestSortingForm,
@@ -217,6 +217,18 @@ export function useHarvestSortingFormSubmission({
 
         const parsedHarvestId = Number(form.harvestId);
 
+        const parsedUncalculatedRejected = Number(form.uncalculatedRejected.trim() || 0);
+        if (
+          hasUncalculatedRejectedEdit
+          && selectedHarvestSummary
+          && parsedUncalculatedRejected > selectedHarvestSummary.totalRejected
+        ) {
+          setHarvestSortingFormError(
+            t.formSubmission.uncalculatedRejectedExceedsTotal(parsedUncalculatedRejected, selectedHarvestSummary.totalRejected),
+          );
+          return false;
+        }
+
         const harvestUpdate = selectedHarvestSummary
           ? {
               ...(hasTotalHarvestedEdit ? { totalHarvested: selectedHarvestSummary.totalHarvested } : {}),
@@ -227,7 +239,9 @@ export function useHarvestSortingFormSubmission({
               ...(additionalOwnerRejectedQuantity > 0 && selectedHarvestSummary.ownerRejected !== undefined
                 ? { ownerRejected: selectedHarvestSummary.ownerRejected }
                 : {}),
-              ...(hasIsBadPickEdit ? { isBadPick: form.isBadPick } : {}),
+              ...(hasUncalculatedRejectedEdit
+                ? { uncalculatedRejected: parsedUncalculatedRejected }
+                : {}),
               ...(hasRemainsInItalyGradeHEdit ? { remainsInItalyGradeH: form.remainsInItalyGradeH } : {}),
               ...(hasRemainsInItalyGradeVEdit ? { remainsInItalyGradeV: form.remainsInItalyGradeV } : {}),
             }
@@ -275,7 +289,7 @@ export function useHarvestSortingFormSubmission({
     additionalOwnerRejectedQuantity,
     hasTotalHarvestedEdit,
     hasOwnerHarvestedEdit,
-    hasIsBadPickEdit,
+    hasUncalculatedRejectedEdit,
     hasRemainsInItalyGradeHEdit,
     hasRemainsInItalyGradeVEdit,
     deletedClassificationId,

@@ -106,7 +106,7 @@ export class DashboardService {
         totalRejected: true,
         totalAfterRejected: true,
         classifiedTotal: true,
-        isBadPick: true,
+        uncalculatedRejected: true,
       },
       orderBy: { dateGregorian: 'asc' },
     });
@@ -118,11 +118,10 @@ export class DashboardService {
     let grandNet = 0;
     let grandClassified = 0;
 
-    // Rejection-rate summary can exclude specific harvest records (FieldHarvest.isBadPick):
-    // their harvested quantity still counts toward the denominator, only their rejected
-    // quantity is dropped from the numerator, so an outlier pick doesn't skew the percentage.
-    let grandHarvestedForRejectionRate = 0;
-    let grandRejectedForRejectionRate = 0;
+    // FieldHarvest.uncalculatedRejected quantities are treated as if they never happened for the
+    // "excluding bad picks" summary: they are dropped from both the harvested denominator and the
+    // rejected numerator, not just the numerator.
+    let grandUncalculatedRejected = 0;
 
     for (const r of records) {
       const dateKey = r.dateGregorian.toISOString().split('T')[0];
@@ -138,11 +137,11 @@ export class DashboardService {
       grandNet += r.totalAfterRejected;
       grandClassified += r.classifiedTotal;
 
-      grandHarvestedForRejectionRate += r.totalHarvested;
-      if (!r.isBadPick) {
-        grandRejectedForRejectionRate += r.totalRejected;
-      }
+      grandUncalculatedRejected += r.uncalculatedRejected;
     }
+
+    const grandHarvestedForRejectionRate = grandHarvested - grandUncalculatedRejected;
+    const grandRejectedForRejectionRate = grandRejected - grandUncalculatedRejected;
 
     const sortedDates = Array.from(byDate.keys()).sort();
 

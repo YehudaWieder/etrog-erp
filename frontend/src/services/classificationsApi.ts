@@ -187,7 +187,7 @@ export type HarvestSortingBatchHarvestUpdate = {
   ownerHarvested?: number;
   ownerRejected?: number;
   notes?: string;
-  isBadPick?: boolean;
+  uncalculatedRejected?: number;
   remainsInItalyGradeH?: boolean;
   remainsInItalyGradeV?: boolean;
 };

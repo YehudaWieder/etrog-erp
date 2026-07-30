@@ -1,23 +1,27 @@
-﻿import { FaCheck, FaXmark } from 'react-icons/fa6';
-import type { HarvestRecord } from '../../../../services/harvestsApi';
+﻿import type { HarvestRecord } from '../../../../services/harvestsApi';
 import styles from '../styles/HarvestDetailsSheet.module.css';
-import interactiveStyles from '../styles/HarvestInteractive.module.css';
+
+export type HarvestFieldReportDetailsSummaryRow = {
+  key: string;
+  kind: 'regular' | 'summary';
+  label: string;
+  totalHarvested: string;
+  totalRejected: string;
+  totalAfterRejected: string;
+  classifiedTotal: string;
+  rejectionRate: string;
+  uncalculatedRejected: string;
+  rejectionRateExcludingBadPicks: string;
+  harvestExcludingBadPicks: string;
+};
 
 export type HarvestFieldReportDetailsData = {
   fieldName: string;
   seasonName: string;
   recordCount: number;
+  badPickQuantity: number;
   summaryStatus: string;
-  summaryRows: Array<{
-    key: string;
-    kind: 'regular' | 'summary';
-    label: string;
-    totalHarvested: string;
-    totalRejected: string;
-    totalAfterRejected: string;
-    classifiedTotal: string;
-    rejectionRate: string;
-  }>;
+  summaryRows: HarvestFieldReportDetailsSummaryRow[];
   rows: HarvestRecord[];
 };
 
@@ -40,12 +44,13 @@ export type HarvestFieldReportDetailsPanelLabels = {
   netHarvest: string;
   classifiedTotal: string;
   rejectionRate: string;
-  isBadPick: string;
-  badPickYes: string;
-  badPickNo: string;
+  uncalculatedRejected: string;
+  rejectionRateExcludingBadPicks: string;
+  harvestExcludingBadPicks: string;
   notes: string;
   none: string;
   emptyRows: string;
+  badPickQuantity: string;
 };
 
 export function HarvestFieldReportDetailsPanel({ data, locale, labels }: HarvestFieldReportDetailsPanelProps): JSX.Element {
@@ -62,6 +67,9 @@ export function HarvestFieldReportDetailsPanel({ data, locale, labels }: Harvest
           <p>
             <strong>{labels.recordCount}:</strong> {data.recordCount}
           </p>
+          <p>
+            <strong>{labels.badPickQuantity}:</strong> {data.badPickQuantity}
+          </p>
         </div>
 
         <div className={`${styles.sheetStatus} harvest-daily-workspace__sheet-status`}>{data.summaryStatus}</div>
@@ -76,6 +84,13 @@ export function HarvestFieldReportDetailsPanel({ data, locale, labels }: Harvest
                 <th scope="col">{labels.netHarvest}</th>
                 <th scope="col">{labels.classifiedTotal}</th>
                 <th scope="col">{labels.rejectionRate}</th>
+                {data.badPickQuantity > 0 ? (
+                  <>
+                    <th scope="col">{labels.harvestExcludingBadPicks}</th>
+                    <th scope="col">{labels.uncalculatedRejected}</th>
+                    <th scope="col">{labels.rejectionRateExcludingBadPicks}</th>
+                  </>
+                ) : null}
               </tr>
             </thead>
             <tbody>
@@ -87,6 +102,13 @@ export function HarvestFieldReportDetailsPanel({ data, locale, labels }: Harvest
                   <td>{row.totalAfterRejected}</td>
                   <td>{row.classifiedTotal}</td>
                   <td>{row.rejectionRate}</td>
+                  {data.badPickQuantity > 0 ? (
+                    <>
+                      <td>{row.harvestExcludingBadPicks}</td>
+                      <td>{row.uncalculatedRejected}</td>
+                      <td>{row.rejectionRateExcludingBadPicks}</td>
+                    </>
+                  ) : null}
                 </tr>
               ))}
             </tbody>
@@ -111,13 +133,24 @@ export function HarvestFieldReportDetailsPanel({ data, locale, labels }: Harvest
                   <th>{labels.netHarvest}</th>
                   <th>{labels.classifiedTotal}</th>
                   <th>{labels.rejectionRate}</th>
-                  <th>{labels.isBadPick}</th>
+                  {data.badPickQuantity > 0 ? (
+                    <>
+                      <th>{labels.harvestExcludingBadPicks}</th>
+                      <th>{labels.uncalculatedRejected}</th>
+                      <th>{labels.rejectionRateExcludingBadPicks}</th>
+                    </>
+                  ) : null}
                   <th>{labels.notes}</th>
                 </tr>
               </thead>
               <tbody>
                 {data.rows.map((row, rowIndex) => {
                   const note = row.notes?.trim() ?? '';
+                  const harvestExcludingBadPicks = row.totalHarvested - row.uncalculatedRejected;
+                  const rejectedExcludingBadPicks = row.totalRejected - row.uncalculatedRejected;
+                  const rejectionRateExcludingBadPicks = harvestExcludingBadPicks > 0
+                    ? (rejectedExcludingBadPicks / harvestExcludingBadPicks) * 100
+                    : 0;
 
                   return (
                     <tr key={row.id}>
@@ -128,13 +161,13 @@ export function HarvestFieldReportDetailsPanel({ data, locale, labels }: Harvest
                       <td>{row.totalAfterRejected.toLocaleString(locale)}</td>
                       <td>{row.classifiedTotal.toLocaleString(locale)}</td>
                       <td>{`${Number(row.rejectionRate).toLocaleString(locale, { maximumFractionDigits: 2 })}%`}</td>
-                      <td>
-                        {row.isBadPick ? (
-                          <FaCheck aria-label={labels.badPickYes} className={interactiveStyles.badPickYes} />
-                        ) : (
-                          <FaXmark aria-label={labels.badPickNo} className={interactiveStyles.badPickNo} />
-                        )}
-                      </td>
+                      {data.badPickQuantity > 0 ? (
+                        <>
+                          <td>{harvestExcludingBadPicks.toLocaleString(locale)}</td>
+                          <td>{rejectedExcludingBadPicks.toLocaleString(locale)}</td>
+                          <td>{`${rejectionRateExcludingBadPicks.toLocaleString(locale, { maximumFractionDigits: 2 })}%`}</td>
+                        </>
+                      ) : null}
                       <td>
                         {note ? (
                           <span

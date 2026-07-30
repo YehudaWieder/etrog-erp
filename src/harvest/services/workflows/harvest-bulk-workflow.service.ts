@@ -18,6 +18,7 @@ import {
   assertFinalClassificationConsistency,
   assertGeneralAssignmentIds,
   assertNoDuplicateClassifications,
+  assertUncalculatedRejectedWithinTotal,
   buildClassificationDuplicateKey,
 } from 'src/harvest/services/harvest-core/rules/harvest-validation.rules';
 import { HarvestAllocationService } from 'src/harvest/services/workflows/harvest-allocation.service';
@@ -118,7 +119,7 @@ export class HarvestBulkWorkflowService {
       harvestUpdate.ownerHarvested !== undefined ||
       harvestUpdate.ownerRejected !== undefined ||
       harvestUpdate.notes !== undefined ||
-      harvestUpdate.isBadPick !== undefined ||
+      harvestUpdate.uncalculatedRejected !== undefined ||
       harvestUpdate.remainsInItalyGradeH !== undefined ||
       harvestUpdate.remainsInItalyGradeV !== undefined ||
       harvestUpdate.updatedById !== undefined;
@@ -135,6 +136,7 @@ export class HarvestBulkWorkflowService {
         totalRejected: true,
         ownerHarvested: true,
         ownerRejected: true,
+        uncalculatedRejected: true,
       },
     });
 
@@ -144,6 +146,8 @@ export class HarvestBulkWorkflowService {
 
     const totalHarvested = harvestUpdate.totalHarvested ?? current.totalHarvested;
     const totalRejected = harvestUpdate.totalRejected ?? current.totalRejected;
+    const uncalculatedRejected = harvestUpdate.uncalculatedRejected ?? current.uncalculatedRejected;
+    assertUncalculatedRejectedWithinTotal(totalRejected, uncalculatedRejected);
     const ownerFieldsProvided = harvestUpdate.ownerHarvested !== undefined || harvestUpdate.ownerRejected !== undefined;
     const currentHasExplicitOwnerData =
       current.ownerHarvested > 0 ||
@@ -167,7 +171,7 @@ export class HarvestBulkWorkflowService {
         ownerHarvested,
         ownerRejected,
         notes: harvestUpdate.notes,
-        isBadPick: harvestUpdate.isBadPick,
+        uncalculatedRejected: harvestUpdate.uncalculatedRejected,
         remainsInItalyGradeH: harvestUpdate.remainsInItalyGradeH,
         remainsInItalyGradeV: harvestUpdate.remainsInItalyGradeV,
         updatedById: harvestUpdate.updatedById,
@@ -386,6 +390,7 @@ export class HarvestBulkWorkflowService {
     // 1. Validate no duplicate classifications
     assertNoDuplicateClassifications(bulkPayload.classifications);
     assertClassificationsMatchHarvested(bulkPayload);
+    assertUncalculatedRejectedWithinTotal(bulkPayload.totalRejected || 0, bulkPayload.uncalculatedRejected ?? 0);
 
     // 2. Get active season
     const { id: seasonId, yearName: activeSeasonYearName } = await this.seasonsService.findActiveSeason();
@@ -437,7 +442,7 @@ export class HarvestBulkWorkflowService {
           ownerHarvested,
           ownerRejected,
           notes: bulkPayload.notes,
-          isBadPick: bulkPayload.isBadPick ?? false,
+          uncalculatedRejected: bulkPayload.uncalculatedRejected ?? 0,
           remainsInItalyGradeH: bulkPayload.remainsInItalyGradeH ?? true,
           remainsInItalyGradeV: bulkPayload.remainsInItalyGradeV ?? true,
           slug,

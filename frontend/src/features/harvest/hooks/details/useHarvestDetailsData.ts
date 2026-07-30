@@ -35,6 +35,9 @@ type RecordSummaryRow = {
   totalAfterRejected: string;
   classifiedTotal: string;
   rejectionRate: string;
+  uncalculatedRejected: string;
+  rejectionRateExcludingBadPicks: string;
+  harvestExcludingBadPicks: string;
 };
 
 function buildRecordSummary(
@@ -55,6 +58,12 @@ function buildRecordSummary(
     return Number.isFinite(numeric) ? numeric : 0;
   };
 
+  const generalHarvestedExcl = record.totalHarvested - record.uncalculatedRejected;
+  const generalRejectedExcl = record.totalRejected - record.uncalculatedRejected;
+  const generalRateExcl = generalHarvestedExcl > 0
+    ? (generalRejectedExcl / generalHarvestedExcl) * 100
+    : 0;
+
   const rows: RecordSummaryRow[] = [
     {
       key: 'general',
@@ -65,10 +74,19 @@ function buildRecordSummary(
       totalAfterRejected: numberFormatter.format(record.totalAfterRejected),
       classifiedTotal: numberFormatter.format(record.classifiedTotal),
       rejectionRate: formatRate(record.rejectionRate),
+      uncalculatedRejected: numberFormatter.format(generalRejectedExcl),
+      rejectionRateExcludingBadPicks: formatRate(generalRateExcl),
+      harvestExcludingBadPicks: numberFormatter.format(generalHarvestedExcl),
     },
   ];
 
   if (hasOwnerRowData) {
+    const ownerHarvestedExcl = record.ownerHarvested - record.uncalculatedRejected;
+    const ownerRejectedExcl = record.ownerRejected - record.uncalculatedRejected;
+    const ownerRateExcl = ownerHarvestedExcl > 0
+      ? (ownerRejectedExcl / ownerHarvestedExcl) * 100
+      : 0;
+
     rows.push({
       key: 'owner',
       kind: 'regular',
@@ -78,6 +96,9 @@ function buildRecordSummary(
       totalAfterRejected: numberFormatter.format(record.ownerAfterRejected),
       classifiedTotal: values.none,
       rejectionRate: formatRate(record.ownerRejectionRate),
+      uncalculatedRejected: numberFormatter.format(ownerRejectedExcl),
+      rejectionRateExcludingBadPicks: formatRate(ownerRateExcl),
+      harvestExcludingBadPicks: numberFormatter.format(ownerHarvestedExcl),
     });
 
     rows.push({
@@ -89,6 +110,9 @@ function buildRecordSummary(
       totalAfterRejected: numberFormatter.format(record.totalAfterRejected - record.ownerAfterRejected),
       classifiedTotal: values.none,
       rejectionRate: formatRate(toNumericValue(record.rejectionRate) - toNumericValue(record.ownerRejectionRate)),
+      uncalculatedRejected: numberFormatter.format(generalRejectedExcl - ownerRejectedExcl),
+      rejectionRateExcludingBadPicks: formatRate(generalRateExcl - ownerRateExcl),
+      harvestExcludingBadPicks: numberFormatter.format(generalHarvestedExcl - ownerHarvestedExcl),
     });
   }
 
@@ -309,6 +333,10 @@ export function useHarvestDetailsData({
         ? 'מיון חלקי'
         : 'Partial sorting';
 
+    const generalRejectionRateExcl = fieldReportDetailsPayload.totalHarvestedExcludingBadPicks > 0
+      ? (fieldReportDetailsPayload.totalRejectedExcludingBadPicks / fieldReportDetailsPayload.totalHarvestedExcludingBadPicks) * 100
+      : 0;
+
     const summaryRows: Array<{
       key: string;
       kind: 'regular' | 'summary';
@@ -318,6 +346,9 @@ export function useHarvestDetailsData({
       totalAfterRejected: string;
       classifiedTotal: string;
       rejectionRate: string;
+      uncalculatedRejected: string;
+      rejectionRateExcludingBadPicks: string;
+      harvestExcludingBadPicks: string;
     }> = [
       {
         key: 'general',
@@ -328,10 +359,17 @@ export function useHarvestDetailsData({
         totalAfterRejected: numberFormatter.format(fieldReportDetailsPayload.totalAfterRejected),
         classifiedTotal: numberFormatter.format(fieldReportDetailsPayload.classifiedTotal),
         rejectionRate: formatRate(fieldReportDetailsPayload.rejectionRate),
+        uncalculatedRejected: numberFormatter.format(fieldReportDetailsPayload.totalRejectedExcludingBadPicks),
+        rejectionRateExcludingBadPicks: formatRate(generalRejectionRateExcl),
+        harvestExcludingBadPicks: numberFormatter.format(fieldReportDetailsPayload.totalHarvestedExcludingBadPicks),
       },
     ];
 
     if (fieldReportDetailsPayload.hasOwnerOverrides) {
+      const ownerRejectionRateExcl = fieldReportDetailsPayload.ownerHarvestedExcludingBadPicks > 0
+        ? (fieldReportDetailsPayload.ownerRejectedExcludingBadPicks / fieldReportDetailsPayload.ownerHarvestedExcludingBadPicks) * 100
+        : 0;
+
       summaryRows.push({
         key: 'owner',
         kind: 'regular' as const,
@@ -341,6 +379,9 @@ export function useHarvestDetailsData({
         totalAfterRejected: numberFormatter.format(fieldReportDetailsPayload.ownerAfterRejected),
         classifiedTotal: t.dailyDetails.detailsPanel.values.none,
         rejectionRate: formatRate(fieldReportDetailsPayload.ownerRejectionRate),
+        uncalculatedRejected: numberFormatter.format(fieldReportDetailsPayload.ownerRejectedExcludingBadPicks),
+        rejectionRateExcludingBadPicks: formatRate(ownerRejectionRateExcl),
+        harvestExcludingBadPicks: numberFormatter.format(fieldReportDetailsPayload.ownerHarvestedExcludingBadPicks),
       });
 
       summaryRows.push({
@@ -352,6 +393,13 @@ export function useHarvestDetailsData({
         totalAfterRejected: numberFormatter.format(fieldReportDetailsPayload.differenceAfterRejected),
         classifiedTotal: t.dailyDetails.detailsPanel.values.none,
         rejectionRate: formatRate(fieldReportDetailsPayload.differenceRejectionRate),
+        uncalculatedRejected: numberFormatter.format(
+          fieldReportDetailsPayload.totalRejectedExcludingBadPicks - fieldReportDetailsPayload.ownerRejectedExcludingBadPicks,
+        ),
+        rejectionRateExcludingBadPicks: formatRate(generalRejectionRateExcl - ownerRejectionRateExcl),
+        harvestExcludingBadPicks: numberFormatter.format(
+          fieldReportDetailsPayload.totalHarvestedExcludingBadPicks - fieldReportDetailsPayload.ownerHarvestedExcludingBadPicks,
+        ),
       });
     }
 
@@ -359,6 +407,7 @@ export function useHarvestDetailsData({
       fieldName: fieldReportDetailsPayload.fieldName,
       seasonName: fieldReportDetailsPayload.seasonName || t.dailyDetails.detailsPanel.values.none,
       recordCount: fieldReportDetailsPayload.recordCount,
+      badPickQuantity: fieldReportDetailsPayload.totalRejected - fieldReportDetailsPayload.totalRejectedExcludingBadPicks,
       summaryStatus,
       summaryRows,
       rows: fieldReportDetailsPayload.rows,
@@ -388,61 +437,14 @@ export function useHarvestDetailsData({
       });
     const harvestIndexInSeason = seasonRows.findIndex((row) => row.id === detailsRecord.id);
     const harvestNumberDisplay = harvestIndexInSeason >= 0 ? numberFormatter.format(harvestIndexInSeason + 1) : values.none;
-    const hasOwnerRowData =
-      detailsRecord.ownerHarvested > 0 ||
-      detailsRecord.ownerRejected > 0 ||
-      detailsRecord.ownerAfterRejected > 0 ||
-      Number(detailsRecord.ownerRejectionRate) > 0;
 
-    const toNumericValue = (value: number | string) => {
-      const numeric = typeof value === 'string' ? Number(value) : value;
-      return Number.isFinite(numeric) ? numeric : 0;
-    };
-
-    const summaryRows = [
-      {
-        key: 'general',
-        kind: 'regular',
-        label: values.generalRow,
-        totalHarvested: numberFormatter.format(detailsRecord.totalHarvested),
-        totalRejected: numberFormatter.format(detailsRecord.totalRejected),
-        totalAfterRejected: numberFormatter.format(detailsRecord.totalAfterRejected),
-        classifiedTotal: numberFormatter.format(detailsRecord.classifiedTotal),
-        rejectionRate: formatRate(detailsRecord.rejectionRate),
-      },
-    ];
-
-    if (hasOwnerRowData) {
-      summaryRows.push({
-        key: 'owner',
-        kind: 'regular',
-        label: values.ownerRow,
-        totalHarvested: numberFormatter.format(detailsRecord.ownerHarvested),
-        totalRejected: numberFormatter.format(detailsRecord.ownerRejected),
-        totalAfterRejected: numberFormatter.format(detailsRecord.ownerAfterRejected),
-        classifiedTotal: values.none,
-        rejectionRate: formatRate(detailsRecord.ownerRejectionRate),
-      });
-
-      summaryRows.push({
-        key: 'difference',
-        kind: 'summary',
-        label: values.differenceRow,
-        totalHarvested: numberFormatter.format(detailsRecord.totalHarvested - detailsRecord.ownerHarvested),
-        totalRejected: numberFormatter.format(detailsRecord.totalRejected - detailsRecord.ownerRejected),
-        totalAfterRejected: numberFormatter.format(detailsRecord.totalAfterRejected - detailsRecord.ownerAfterRejected),
-        classifiedTotal: values.none,
-        rejectionRate: formatRate(toNumericValue(detailsRecord.rejectionRate) - toNumericValue(detailsRecord.ownerRejectionRate)),
-      });
-    }
-
-    const summaryStatus = hasOwnerRowData
-      ? lang === 'he'
-        ? 'מיון חלקי'
-        : 'Partial sorting'
-      : lang === 'he'
-        ? 'מיון סופי'
-        : 'Final sorting';
+    const { rows: summaryRows } = buildRecordSummary(
+      detailsRecord,
+      values,
+      numberFormatter,
+      formatRate,
+      isPartialClassificationFlag,
+    );
 
     return {
       dateGregorian: formatGregorianDate(detailsRecord.dateGregorian),
@@ -451,7 +453,8 @@ export function useHarvestDetailsData({
       harvestNumber: harvestNumberDisplay,
       fieldName: detailsRecord.field?.name ?? values.none,
       updatedByName: detailsRecord.updatedBy?.name ?? values.none,
-      isBadPick: detailsRecord.isBadPick,
+      uncalculatedRejected: detailsRecord.totalRejected - detailsRecord.uncalculatedRejected,
+      badPickQuantity: detailsRecord.uncalculatedRejected,
       statusLabel: `${values.statusPrefix} ${isPartialClassification ? values.partial : values.final}`,
       notes: detailsRecord.notes?.trim() || '',
       rows: summaryRows,

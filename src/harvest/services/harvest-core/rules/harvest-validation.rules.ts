@@ -131,6 +131,17 @@ export function assertHarvestNetVsClassified(
   }
 }
 
+export function assertUncalculatedRejectedWithinTotal(
+  totalRejected: number,
+  uncalculatedRejected: number,
+) {
+  if (uncalculatedRejected > totalRejected) {
+    throw new BadRequestException(
+      `Uncalculated rejected (${uncalculatedRejected}) cannot exceed total rejected (${totalRejected})`,
+    );
+  }
+}
+
 export function assertFinalClassificationConsistency(
   classifiedTotal: number,
   netHarvested: number,

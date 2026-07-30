@@ -33,6 +33,8 @@ type HarvestExportActionsParams = {
   numberFormatter: Intl.NumberFormat;
   sortingDownloadMenuCloseTimeoutRef: MutableRefObject<number | null>;
   createHarvestExportRows: () => HarvestExportTableData;
+  createHarvestPrintTables: () => Array<{ title: string; header: Array<string | number>; rows: Array<Array<string | number>> }>;
+  createFieldReportPrintTables: () => Array<{ title: string; header: Array<string | number>; rows: Array<Array<string | number>> }>;
   createFieldReportExportRows: () => HarvestExportTableData;
   createSortingDailyExportRows: () => HarvestExportTableData;
   createSortingDailyExpandedMatrixData: () => Promise<ExpandedMatrixData>;
@@ -174,7 +176,9 @@ export function createHarvestExportActions({
   numberFormatter,
   sortingDownloadMenuCloseTimeoutRef,
   createHarvestExportRows,
+  createHarvestPrintTables,
   createFieldReportExportRows,
+  createFieldReportPrintTables,
   createSortingDailyExportRows,
   createSortingDailyExpandedMatrixData,
   createSortingListExportRows,
@@ -187,10 +191,26 @@ export function createHarvestExportActions({
       return;
     }
 
-    const { header, rows } = createHarvestExportRows();
-    const tableHeaderHtml = header.map((label) => `<th>${escapeHtml(String(label))}</th>`).join('');
-    const tableRowsHtml = rows
-      .map((row) => `<tr>${row.map((value) => `<td>${escapeHtml(String(value))}</td>`).join('')}</tr>`)
+    const tables = createHarvestPrintTables();
+    const tablesHtml = tables
+      .map(({ title, header, rows }) => {
+        const tableHeaderHtml = header.map((label) => `<th>${escapeHtml(String(label))}</th>`).join('');
+        const tableRowsHtml = rows
+          .map((row) => `<tr>${row.map((value) => `<td>${escapeHtml(String(value))}</td>`).join('')}</tr>`)
+          .join('');
+
+        return `
+          <h2>${escapeHtml(title)}</h2>
+          <table>
+            <thead>
+              <tr>${tableHeaderHtml}</tr>
+            </thead>
+            <tbody>
+              ${tableRowsHtml}
+            </tbody>
+          </table>
+        `;
+      })
       .join('');
 
     const printWindow = window.open('', '_blank', 'width=1100,height=760');
@@ -213,14 +233,7 @@ export function createHarvestExportActions({
         <body>
           <h1>${escapeHtml(printTitle)}</h1>
           ${filterDetailsHtml}
-          <table>
-            <thead>
-              <tr>${tableHeaderHtml}</tr>
-            </thead>
-            <tbody>
-              ${tableRowsHtml}
-            </tbody>
-          </table>
+          ${tablesHtml}
         </body>
       </html>
     `);
@@ -284,10 +297,26 @@ export function createHarvestExportActions({
       return;
     }
 
-    const { header, rows } = createFieldReportExportRows();
-    const tableHeaderHtml = header.map((label) => `<th>${escapeHtml(String(label))}</th>`).join('');
-    const tableRowsHtml = rows
-      .map((row) => `<tr>${row.map((value) => `<td>${escapeHtml(String(value))}</td>`).join('')}</tr>`)
+    const tables = createFieldReportPrintTables();
+    const tablesHtml = tables
+      .map(({ title, header, rows }) => {
+        const tableHeaderHtml = header.map((label) => `<th>${escapeHtml(String(label))}</th>`).join('');
+        const tableRowsHtml = rows
+          .map((row) => `<tr>${row.map((value) => `<td>${escapeHtml(String(value))}</td>`).join('')}</tr>`)
+          .join('');
+
+        return `
+          <h2>${escapeHtml(title)}</h2>
+          <table>
+            <thead>
+              <tr>${tableHeaderHtml}</tr>
+            </thead>
+            <tbody>
+              ${tableRowsHtml}
+            </tbody>
+          </table>
+        `;
+      })
       .join('');
 
     const printWindow = window.open('', '_blank', 'width=1200,height=760');
@@ -310,14 +339,7 @@ export function createHarvestExportActions({
         <body>
           <h1>${escapeHtml(printTitle)}</h1>
           ${filterDetailsHtml}
-          <table>
-            <thead>
-              <tr>${tableHeaderHtml}</tr>
-            </thead>
-            <tbody>
-              ${tableRowsHtml}
-            </tbody>
-          </table>
+          ${tablesHtml}
         </body>
       </html>
     `);
