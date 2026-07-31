@@ -30,7 +30,7 @@
     "@nestjs/swagger": "^11.4.1",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.5.0",
-    "@supabase/supabase-js": "^2.110.0",
+    "@supabase/supabase-js": "^2.111.0",
     "bcrypt": "^6.0.0",
     "class-validator": "^0.15.1",
     "dotenv": "^17.4.2",
@@ -41,7 +41,7 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^5.0.1",
-    "undici": "^7.28.0"
+    "undici": "^7.29.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
