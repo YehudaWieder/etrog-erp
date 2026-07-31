@@ -191,6 +191,12 @@ export function HarvestClassificationRowsSection({
       if (otherDraft.id === excludeDraftId) {
         continue;
       }
+      // Scaffold rows represent existing DB classifications and only occupy specific matrix cells
+      // (grade + pitam), not the whole category slot. Excluding them here lets users add a new
+      // draft row for the same (trader, category) to enter a different grade alongside an existing one.
+      if (otherDraft.isExistingScaffold) {
+        continue;
+      }
       const key = getDraftIdentityKey(otherDraft);
       if (key) {
         keys.add(key);

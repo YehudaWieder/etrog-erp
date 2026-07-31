@@ -686,6 +686,10 @@ export class HarvestBulkWorkflowService {
 
     await this.allocationService.deleteLinkedMovements(tx, classificationId);
 
+    if (newQuantity === 0) {
+      return tx.classification.delete({ where: { id: classificationId } });
+    }
+
     const updatedClassification = await tx.classification.update({
       where: { id: classificationId },
       data: { quantity: newQuantity, updatedById },
