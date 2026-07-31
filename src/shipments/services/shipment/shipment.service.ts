@@ -39,7 +39,6 @@ export class ShipmentService {
       throw new BadRequestException(`Shipment number ${data.shipmentNumber} already exists in the active season`);
     }
 
-    const year = new Date().getFullYear();
     const randomSuffix = Math.random().toString(36).slice(2, 8);
     const temporarySlug = `shipment-tmp-${Date.now()}-${randomSuffix}`;
 
@@ -58,7 +57,7 @@ export class ShipmentService {
       },
     });
 
-    const slug = `SHP-${year}-${shipment.shipmentNumber}`;
+    const slug = `SHP-S${seasonId}-${shipment.shipmentNumber}`;
 
     return this.prisma.shipment.update({
       where: { id: shipment.id },

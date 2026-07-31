@@ -492,7 +492,7 @@ model CustomerAllocation {
 model Shipment {
   id       Int    @id @default(autoincrement())
 
-  shipmentNumber Int @unique @default(autoincrement())
+  shipmentNumber Int @default(autoincrement())
   
   seasonId Int
   season   Season @relation(fields: [seasonId], references: [id])
