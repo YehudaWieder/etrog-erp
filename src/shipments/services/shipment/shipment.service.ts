@@ -146,8 +146,7 @@ export class ShipmentService {
         throw new BadRequestException(`Shipment number ${data.shipmentNumber} already exists in this season`);
       }
 
-      const year = new Date().getFullYear();
-      newSlug = `SHP-${year}-${data.shipmentNumber}`;
+      newSlug = `SHP-S${existing.seasonId}-${data.shipmentNumber}`;
     }
 
     let normalizedStatus = updatableData.status as ShipmentStatus | undefined;
