@@ -251,3 +251,98 @@ export async function updatePitamSplitBatch(batchId: string, payload: CreatePita
     body: JSON.stringify(payload),
   });
 }
+
+export type ReclassificationSource = 'SPECIFIC_TRADER' | 'GENERAL' | 'REMAINS_IN_ITALY';
+
+export type CreateReclassificationPayload = {
+  source: ReclassificationSource;
+  traderId?: number;
+  fromTraderCategoryId: number;
+  fromGrade: Grade;
+  fromPitamStatus: PitamStatus;
+  toTraderCategoryId: number;
+  toGrade: Grade;
+  toPitamStatus: PitamStatus;
+  quantity: number;
+  toRemainsInItaly?: boolean;
+  date?: string;
+  notes?: string | null;
+};
+
+export async function createReclassificationMovement(payload: CreateReclassificationPayload) {
+  return apiClient('/inventory/reclassification', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export type ReclassificationTuple = {
+  traderCategoryId: number;
+  grade: Grade;
+  pitamStatus: PitamStatus;
+};
+
+export type ReclassificationBatch = {
+  id: number;
+  seasonId: number;
+  date: string;
+  source: ReclassificationSource;
+  traderId: number | null;
+  traderName: string | null;
+  from: ReclassificationTuple;
+  to: ReclassificationTuple | null;
+  quantity: number;
+  notes: string | null;
+};
+
+export type FetchReclassificationBatchesParams = {
+  seasonId?: number;
+  traderCategoryId?: number;
+  grade?: Grade;
+  pitamStatus?: PitamStatus;
+};
+
+export async function fetchReclassificationBatches(
+  params: FetchReclassificationBatchesParams = {},
+): Promise<ReclassificationBatch[]> {
+  const query = new URLSearchParams();
+  if (params.seasonId) query.set('seasonId', String(params.seasonId));
+  if (params.traderCategoryId) query.set('traderCategoryId', String(params.traderCategoryId));
+  if (params.grade) query.set('grade', params.grade);
+  if (params.pitamStatus) query.set('pitamStatus', params.pitamStatus);
+
+  const queryString = query.toString();
+  return apiClient<ReclassificationBatch[]>(`/inventory/reclassification${queryString ? `?${queryString}` : ''}`, {
+    suppressGlobalFeedback: true,
+  });
+}
+
+export async function undoReclassificationBatch(id: number) {
+  return apiClient(`/inventory/reclassification/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function updateReclassificationBatch(id: number, payload: CreateReclassificationPayload) {
+  return apiClient(`/inventory/reclassification/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+export type ReclassificationSummaryEntry = {
+  from: ReclassificationTuple;
+  to: ReclassificationTuple;
+  quantity: number;
+};
+
+export async function fetchReclassificationSummary(seasonId?: number): Promise<ReclassificationSummaryEntry[]> {
+  const query = new URLSearchParams();
+  if (seasonId) query.set('seasonId', String(seasonId));
+
+  const queryString = query.toString();
+  return apiClient<ReclassificationSummaryEntry[]>(
+    `/inventory/reclassification/summary${queryString ? `?${queryString}` : ''}`,
+    { suppressGlobalFeedback: true },
+  );
+}

@@ -12,25 +12,32 @@ import {
   createCustomerGeneralTransfer,
   createInternalTransfer,
   createPitamSplitMovement,
+  createReclassificationMovement,
   createRemainsInItalyWithdrawal,
   createTraderAdjustmentMovement,
   undoPitamSplitBatch,
+  undoReclassificationBatch,
   undoRemainsInItalyWithdrawal,
   updatePitamSplitBatch,
+  updateReclassificationBatch,
   updateRemainsInItalyWithdrawal,
   type InternalTransferMovementType,
   type PitamSplitSource,
   type PitamStatus,
+  type ReclassificationSource,
   type RemainsInItalyDestinationType,
   type TraderAdjustmentMovementType,
 } from '../../../services/inventoryMovementsApi';
 import { ApiError } from '../../../services/apiClient';
 import { fetchTraderInventorySummary } from '../services/traderInventorySummary.service';
 import { usePitamSplitBatches } from '../hooks/usePitamSplitBatches';
+import { useReclassificationBatches } from '../hooks/useReclassificationBatches';
 import { useRemainsInItalyWithdrawalBatches } from '../hooks/useRemainsInItalyWithdrawalBatches';
 import { PitamSplitUndoBatchPicker } from './PitamSplitUndoBatchPicker';
+import { ReclassificationBatchPicker } from './ReclassificationBatchPicker';
 import { RemainsInItalyWithdrawalBatchPicker } from './RemainsInItalyWithdrawalBatchPicker';
 import type { TraderInventorySummaryRow } from '../traderInventory.types';
+import remainsInItalyCheckboxStyles from './styles/RemainsInItalyCheckbox.module.css';
 
 const GRADE_OPTIONS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו'] as const;
 const GRADE_ORDER = new Map<string, number>(GRADE_OPTIONS.map((grade, index) => [grade, index]));
@@ -42,7 +49,7 @@ function sortGrades<T extends string>(grades: T[]): T[] {
 }
 const PITAM_STATUS_OPTIONS: PitamStatus[] = ['WITH_PITAM', 'WITHOUT_PITAM', 'MIXED'];
 
-type MovementType = InternalTransferMovementType | TraderAdjustmentMovementType | 'PITAM_SPLIT' | 'PITAM_SPLIT_MANAGE' | 'REMAINS_IN_ITALY_WITHDRAWAL' | 'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE';
+type MovementType = InternalTransferMovementType | TraderAdjustmentMovementType | 'PITAM_SPLIT' | 'PITAM_SPLIT_MANAGE' | 'REMAINS_IN_ITALY_WITHDRAWAL' | 'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE' | 'RECLASSIFICATION' | 'RECLASSIFICATION_MANAGE';
 
 const MOVEMENT_TYPE_ORDER: Array<Exclude<MovementType, 'PRIVATE_SELECTION'>> = [
   'OWNERSHIP_TRANSFER',
@@ -54,6 +61,8 @@ const MOVEMENT_TYPE_ORDER: Array<Exclude<MovementType, 'PRIVATE_SELECTION'>> = [
   'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE',
   'PITAM_SPLIT',
   'PITAM_SPLIT_MANAGE',
+  'RECLASSIFICATION',
+  'RECLASSIFICATION_MANAGE',
 ];
 
 const ADJUSTMENT_TYPES = new Set<MovementType>(['WASTE']);
@@ -90,6 +99,20 @@ function describePitamSplitError(
   }
   return error.message.toLowerCase().includes('insufficient')
     ? f.pitamSplitInsufficientStockError
+    : error.message;
+}
+
+// Same rationale as describePitamSplitError above — the shared inventory-availability stock check
+// reclassification.service.ts also calls throws an untranslated English "insufficient" message.
+function describeReclassificationError(
+  error: unknown,
+  f: { reclassificationInsufficientStockError: string; validationRequired: string },
+): string {
+  if (!(error instanceof ApiError)) {
+    return f.validationRequired;
+  }
+  return error.message.toLowerCase().includes('insufficient')
+    ? f.reclassificationInsufficientStockError
     : error.message;
 }
 
@@ -171,6 +194,25 @@ export function AddTraderMovementModal({
   const [riwManageEditQuantity, setRiwManageEditQuantity] = useState('');
   const [riwManageEditError, setRiwManageEditError] = useState('');
   const [riwManageActionSubmitting, setRiwManageActionSubmitting] = useState(false);
+  const [reclassificationSource, setReclassificationSource] = useState<ReclassificationSource | ''>('');
+  // "To" side of a reclassification is never constrained by existing stock (unlike the "from" side),
+  // so it needs its own state distinct from the shared traderCategoryId/grade/pitamStatus used for "from".
+  const [reclassToTraderCategoryId, setReclassToTraderCategoryId] = useState('');
+  const [reclassToGrade, setReclassToGrade] = useState('');
+  const [reclassToPitamStatus, setReclassToPitamStatus] = useState<PitamStatus | ''>('');
+  // Only relevant when source=GENERAL and the matching grade is picked as "to" — mirrors the harvest
+  // form's per-grade remainsInItalyGradeH/V checkboxes (HarvestBulkFormModal): when the flag for the
+  // chosen "to" grade is on, the whole reclassified quantity is parked in the remains-in-Italy bucket
+  // un-split instead of falling through the default per-trader share split.
+  const [reclassToRemainsInItalyGradeH, setReclassToRemainsInItalyGradeH] = useState(false);
+  const [reclassToRemainsInItalyGradeV, setReclassToRemainsInItalyGradeV] = useState(false);
+  // Update/cancel an existing RECLASSIFICATION batch — mirrors PITAM_SPLIT_MANAGE: pick a batch, then
+  // either edit its quantity (delete+recreate in one backend transaction) or cancel it outright.
+  const [reclassManageBatchId, setReclassManageBatchId] = useState('');
+  const [reclassManageMode, setReclassManageMode] = useState<'select' | 'edit'>('select');
+  const [reclassManageEditQuantity, setReclassManageEditQuantity] = useState('');
+  const [reclassManageEditError, setReclassManageEditError] = useState('');
+  const [reclassManageActionSubmitting, setReclassManageActionSubmitting] = useState(false);
 
   // ASSIGNED and PITAM_SPLIT (MODULO source) allocate from MODULO stock only.
   useEffect(() => {
@@ -213,7 +255,7 @@ export function AddTraderMovementModal({
   // reuses the same combined pool purely to compute an informational MIXED-availability hint (the
   // server is the source of truth for the actual per-trader share split).
   useEffect(() => {
-    const needsCombinedStock = (type === 'INTERNAL_TRANSFER' && isModulo) || (type === 'WASTE' && isModulo) || (type === 'PITAM_SPLIT' && pitamSplitSource === 'GENERAL');
+    const needsCombinedStock = (type === 'INTERNAL_TRANSFER' && isModulo) || (type === 'WASTE' && isModulo) || (type === 'PITAM_SPLIT' && pitamSplitSource === 'GENERAL') || (type === 'RECLASSIFICATION' && reclassificationSource === 'GENERAL');
     if (!needsCombinedStock || !seasonId) {
       setGeneralTransferStock([]);
       return;
@@ -239,20 +281,21 @@ export function AddTraderMovementModal({
     return () => {
       isActive = false;
     };
-  }, [type, isModulo, pitamSplitSource, seasonId]);
+  }, [type, isModulo, pitamSplitSource, reclassificationSource, seasonId]);
 
   // Ownership, internal transfers, self-pickup, waste (trader), and PITAM_SPLIT (SPECIFIC_TRADER)
   // all use the source trader's actual stock.
   useEffect(() => {
     const isPitamSplitTrader = type === 'PITAM_SPLIT' && pitamSplitSource === 'SPECIFIC_TRADER';
-    const activeFromTraderId = (type === 'SELF_PICKUP' || type === 'WASTE' || isPitamSplitTrader) ? traderId : fromTraderId;
+    const isReclassificationTrader = type === 'RECLASSIFICATION' && reclassificationSource === 'SPECIFIC_TRADER';
+    const activeFromTraderId = (type === 'SELF_PICKUP' || type === 'WASTE' || isPitamSplitTrader || isReclassificationTrader) ? traderId : fromTraderId;
     const isWaste = type === 'WASTE';
     const isWasteTrader = isWaste && !isModulo;
     const isInternalTransferGeneral = type === 'INTERNAL_TRANSFER' && isModulo;
-    const needsStockSource = type !== 'WASTE' && !isPitamSplitTrader;
+    const needsStockSource = type !== 'WASTE' && !isPitamSplitTrader && !isReclassificationTrader;
     if (
       isInternalTransferGeneral ||
-      (type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'SELF_PICKUP' && !isWaste && !isPitamSplitTrader) ||
+      (type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'SELF_PICKUP' && !isWaste && !isPitamSplitTrader && !isReclassificationTrader) ||
       !activeFromTraderId || !seasonId ||
       (needsStockSource && !stockSource) ||
       (isWaste && isModulo)
@@ -261,8 +304,10 @@ export function AddTraderMovementModal({
       return;
     }
 
-    // WASTE against a specific trader always draws from that trader's private-selection pool only.
-    const shipmentScope = isWasteTrader || stockSource === 'PRIVATE_SELECTION' ? 'PRIVATE_SELECTION' : 'UNSHIPPED';
+    // WASTE against a specific trader and RECLASSIFICATION's "מלאי פרטי" source both always draw
+    // from that trader's private-selection pool only — never their share of the general pool.
+    const shipmentScope =
+      isWasteTrader || isReclassificationTrader || stockSource === 'PRIVATE_SELECTION' ? 'PRIVATE_SELECTION' : 'UNSHIPPED';
 
     let isActive = true;
     setIsLoadingFromTraderStock(true);
@@ -289,11 +334,15 @@ export function AddTraderMovementModal({
     return () => {
       isActive = false;
     };
-  }, [type, fromTraderId, traderId, stockSource, isModulo, seasonId]);
+  }, [type, fromTraderId, traderId, stockSource, isModulo, reclassificationSource, seasonId]);
 
-  // REMAINS_IN_ITALY_WITHDRAWAL draws from the regional-retention bucket (traderId: null, isModulo: false).
+  // REMAINS_IN_ITALY_WITHDRAWAL draws from the regional-retention bucket (traderId: null, isModulo:
+  // false) directly. RECLASSIFICATION's "GENERAL" source fetches this pool too and merges it into
+  // reclassificationStockRows, so grade ה/ו appear as ordinary options under "כללי" instead of behind a
+  // separate source choice.
   useEffect(() => {
-    if (type !== 'REMAINS_IN_ITALY_WITHDRAWAL' || !seasonId) {
+    const needsRemainsInItalyForReclass = type === 'RECLASSIFICATION' && reclassificationSource === 'GENERAL';
+    if ((type !== 'REMAINS_IN_ITALY_WITHDRAWAL' && !needsRemainsInItalyForReclass) || !seasonId) {
       setRemainsInItalyStock([]);
       return;
     }
@@ -323,7 +372,7 @@ export function AddTraderMovementModal({
     return () => {
       isActive = false;
     };
-  }, [type, seasonId]);
+  }, [type, reclassificationSource, seasonId]);
 
   const { batches: pitamSplitUndoBatches, isLoading: isPitamSplitUndoLoading, reload: reloadPitamSplitUndoBatches } = usePitamSplitBatches(
     type === 'PITAM_SPLIT_MANAGE',
@@ -338,6 +387,13 @@ export function AddTraderMovementModal({
   );
 
   const selectedRiwManageBatch = riwBatches.find((batch) => String(batch.id) === riwManageBatchId) ?? null;
+
+  const { batches: reclassificationBatches, isLoading: isReclassificationUndoLoading, reload: reloadReclassificationBatches } = useReclassificationBatches(
+    type === 'RECLASSIFICATION_MANAGE',
+    { seasonId },
+  );
+
+  const selectedReclassManageBatch = reclassificationBatches.find((batch) => String(batch.id) === reclassManageBatchId) ?? null;
 
   const traderCategoryOrderById = useMemo(() => {
     const map = new Map<number, number>();
@@ -518,6 +574,17 @@ export function AddTraderMovementModal({
     setWithoutQty('');
   }, [type, pitamSplitSource, traderId]);
 
+  useEffect(() => {
+    if (type !== 'RECLASSIFICATION') return;
+    setTraderCategoryId('');
+    setGrade('');
+    setPitamStatus('');
+    setReclassToTraderCategoryId('');
+    setReclassToGrade('');
+    setReclassToPitamStatus('');
+    setQuantity('');
+  }, [type, reclassificationSource, traderId]);
+
   // Reset downstream selections whenever the source trader or stock source changes.
   useEffect(() => {
     if (type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER') return;
@@ -678,6 +745,90 @@ export function AddTraderMovementModal({
   const pitamSplitTotalExceedsAvailable = pitamSplitAvailable !== null
     && (Number(withQty || 0) + Number(withoutQty || 0)) > pitamSplitAvailable;
 
+  // RECLASSIFICATION reuses the same stock queries as the movement types above, selecting the right
+  // one per source — SPECIFIC_TRADER uses the chosen trader's own stock; GENERAL merges the combined
+  // MODULO + all-traders pool with the remains-in-Italy bucket (grade ה/ו stock lives there instead of
+  // in modulo/traders), so the user picks "כללי" once and grade ה/ו are just more options in the same
+  // list rather than a separate source. Which pool a chosen tuple actually resolves to is recomputed at
+  // submit time (see reclassificationEffectiveSource) so the backend receives the right `source` value.
+  // Unlike PITAM_SPLIT there's no MIXED-only filtering — any pitam status can be reclassified.
+  const reclassificationStockRows = useMemo(() => {
+    if (type !== 'RECLASSIFICATION') return [];
+    if (reclassificationSource === 'SPECIFIC_TRADER') return fromTraderStock;
+    if (reclassificationSource === 'GENERAL') return [...generalTransferStock, ...remainsInItalyStock];
+    return [];
+  }, [type, reclassificationSource, fromTraderStock, generalTransferStock, remainsInItalyStock]);
+
+  const reclassificationCategoryOptions = useMemo(() => {
+    const seen = new Map<number, string>();
+    for (const row of reclassificationStockRows) {
+      if (!seen.has(row.traderCategoryId)) {
+        seen.set(row.traderCategoryId, row.traderCategoryName ?? `#${row.traderCategoryId}`);
+      }
+    }
+    return sortCategoryOptionsByPriority([...seen.entries()].map(([id, name]) => ({ id, name })));
+  }, [reclassificationStockRows, traderCategoryOrderById]);
+
+  const reclassificationGradeOptions = useMemo(() => {
+    if (!traderCategoryId) return [];
+    return sortGrades([...new Set(
+      reclassificationStockRows
+        .filter((row) => String(row.traderCategoryId) === traderCategoryId)
+        .map((row) => row.grade),
+    )]);
+  }, [reclassificationStockRows, traderCategoryId]);
+
+  const reclassificationPitamStatusOptions = useMemo(() => {
+    if (!traderCategoryId || !grade) return [];
+    return [...new Set(
+      reclassificationStockRows
+        .filter((row) => String(row.traderCategoryId) === traderCategoryId && row.grade === grade)
+        .map((row) => row.pitamStatus),
+    )];
+  }, [reclassificationStockRows, traderCategoryId, grade]);
+
+  // GENERAL stock rows are one row per trader (+ one for modulo), not a pre-summed total, so
+  // availability must be summed across every matching row — not just the first one found. For
+  // SPECIFIC_TRADER (מלאי פרטי) there's only ever one matching row anyway, so summing is a no-op there.
+  const reclassificationAvailable = useMemo(() => {
+    if (type !== 'RECLASSIFICATION' || !traderCategoryId || !grade || !pitamStatus) return null;
+    const matches = reclassificationStockRows.filter(
+      (row) => String(row.traderCategoryId) === traderCategoryId && row.grade === grade && row.pitamStatus === pitamStatus,
+    );
+    return matches.length > 0 ? matches.reduce((sum, row) => sum + row.quantity, 0) : null;
+  }, [type, reclassificationStockRows, traderCategoryId, grade, pitamStatus]);
+
+  // The visible source is just SPECIFIC_TRADER / GENERAL, but the backend still needs to know whether
+  // GENERAL stock actually sits in the modulo+traders pool or in the remains-in-Italy bucket (grade
+  // ה/ו), since those are deducted differently server-side. Resolved from which fetch actually matched
+  // the chosen "from" tuple.
+  const reclassificationEffectiveSource = useMemo((): ReclassificationSource | '' => {
+    if (reclassificationSource !== 'GENERAL') return reclassificationSource;
+    if (!traderCategoryId || !grade || !pitamStatus) return reclassificationSource;
+    const inRemainsInItaly = remainsInItalyStock.some(
+      (row) => String(row.traderCategoryId) === traderCategoryId && row.grade === grade && row.pitamStatus === pitamStatus,
+    );
+    return inRemainsInItaly ? 'REMAINS_IN_ITALY' : 'GENERAL';
+  }, [reclassificationSource, traderCategoryId, grade, pitamStatus, remainsInItalyStock]);
+
+  const isReclassificationLoading = reclassificationSource === 'SPECIFIC_TRADER'
+    ? isLoadingFromTraderStock
+    : reclassificationSource === 'GENERAL'
+      ? (isLoadingGeneralTransferStock || isLoadingRemainsInItalyStock)
+      : false;
+
+  const isReclassificationSourceReady = reclassificationSource === 'SPECIFIC_TRADER' ? Boolean(traderId) : Boolean(reclassificationSource);
+  const isReclassificationCategoryEnabled = type === 'RECLASSIFICATION' && isReclassificationSourceReady && !isReclassificationLoading;
+  const isReclassificationGradeEnabled = isReclassificationCategoryEnabled && Boolean(traderCategoryId);
+  const isReclassificationPitamEnabled = isReclassificationGradeEnabled && Boolean(grade);
+  const isReclassificationQuantityEnabled = isReclassificationPitamEnabled && Boolean(pitamStatus);
+
+  // The "to" side isn't constrained by existing stock, but is still sequenced after the "from" side.
+  const isReclassificationToCategoryEnabled = type === 'RECLASSIFICATION' && isReclassificationPitamEnabled;
+  const isReclassificationToGradeEnabled = isReclassificationToCategoryEnabled && Boolean(reclassToTraderCategoryId);
+  const isReclassificationToPitamEnabled = isReclassificationToGradeEnabled && Boolean(reclassToGrade);
+  const isReclassificationToReady = isReclassificationToPitamEnabled && Boolean(reclassToPitamStatus);
+
   const sortedTraders = useMemo(
     () => [...traders].sort((left, right) => left.name.localeCompare(right.name, undefined, { sensitivity: 'base' })),
     [traders],
@@ -776,7 +927,9 @@ export function AddTraderMovementModal({
             ? isPitamSplitQuantityEnabled && (withQty !== '' || withoutQty !== '')
             : type === 'REMAINS_IN_ITALY_WITHDRAWAL'
               ? isRiwQuantityEnabled && quantity !== ''
-              : isQuantityEnabled && quantity !== '';
+              : type === 'RECLASSIFICATION'
+                ? isReclassificationToReady && quantity !== ''
+                : isQuantityEnabled && quantity !== '';
 
   if (!isOpen) {
     return null;
@@ -814,6 +967,16 @@ export function AddTraderMovementModal({
     setRiwManageEditCustomerCategoryId('');
     setRiwManageEditQuantity('');
     setRiwManageEditError('');
+    setReclassificationSource('');
+    setReclassToTraderCategoryId('');
+    setReclassToGrade('');
+    setReclassToPitamStatus('');
+    setReclassToRemainsInItalyGradeH(false);
+    setReclassToRemainsInItalyGradeV(false);
+    setReclassManageBatchId('');
+    setReclassManageMode('select');
+    setReclassManageEditQuantity('');
+    setReclassManageEditError('');
     setNotes('');
     setError(null);
   };
@@ -855,6 +1018,16 @@ export function AddTraderMovementModal({
     setRiwManageEditCustomerCategoryId('');
     setRiwManageEditQuantity('');
     setRiwManageEditError('');
+    setReclassificationSource('');
+    setReclassToTraderCategoryId('');
+    setReclassToGrade('');
+    setReclassToPitamStatus('');
+    setReclassToRemainsInItalyGradeH(false);
+    setReclassToRemainsInItalyGradeV(false);
+    setReclassManageBatchId('');
+    setReclassManageMode('select');
+    setReclassManageEditQuantity('');
+    setReclassManageEditError('');
     setError(null);
   };
 
@@ -1001,6 +1174,73 @@ export function AddTraderMovementModal({
     }
   };
 
+  const handleStartEditSelectedReclassBatch = () => {
+    if (!selectedReclassManageBatch) return;
+    setReclassManageEditQuantity(String(selectedReclassManageBatch.quantity));
+    setReclassManageEditError('');
+    setReclassManageMode('edit');
+  };
+
+  const handleDiscardEditSelectedReclassBatch = () => {
+    setReclassManageMode('select');
+    setReclassManageEditQuantity('');
+    setReclassManageEditError('');
+  };
+
+  const handleConfirmEditSelectedReclassBatch = async () => {
+    if (!selectedReclassManageBatch) return;
+
+    const nextQuantity = Number(reclassManageEditQuantity || 0);
+    if (Number.isNaN(nextQuantity) || nextQuantity <= 0) {
+      setReclassManageEditError(f.validationRequired);
+      return;
+    }
+
+    // Source/from/to stay fixed on edit — only the quantity changes (mirrors PITAM_SPLIT_MANAGE).
+    const toTuple = selectedReclassManageBatch.to ?? selectedReclassManageBatch.from;
+
+    try {
+      setReclassManageActionSubmitting(true);
+      await updateReclassificationBatch(selectedReclassManageBatch.id, {
+        source: selectedReclassManageBatch.source,
+        traderId: selectedReclassManageBatch.traderId ?? undefined,
+        fromTraderCategoryId: selectedReclassManageBatch.from.traderCategoryId,
+        fromGrade: selectedReclassManageBatch.from.grade,
+        fromPitamStatus: selectedReclassManageBatch.from.pitamStatus,
+        toTraderCategoryId: toTuple.traderCategoryId,
+        toGrade: toTuple.grade,
+        toPitamStatus: toTuple.pitamStatus,
+        quantity: nextQuantity,
+        notes: selectedReclassManageBatch.notes,
+      });
+      setReclassManageBatchId('');
+      setReclassManageMode('select');
+      setReclassManageEditQuantity('');
+      reloadReclassificationBatches();
+      onSaved();
+    } catch (updateError) {
+      setReclassManageEditError(describeReclassificationError(updateError, f));
+    } finally {
+      setReclassManageActionSubmitting(false);
+    }
+  };
+
+  const handleCancelSelectedReclassBatch = async () => {
+    if (!selectedReclassManageBatch) return;
+    setError(null);
+    try {
+      setReclassManageActionSubmitting(true);
+      await undoReclassificationBatch(selectedReclassManageBatch.id);
+      setReclassManageBatchId('');
+      reloadReclassificationBatches();
+      onSaved();
+    } catch (cancelError) {
+      setError(cancelError instanceof ApiError ? cancelError.message : f.validationRequired);
+    } finally {
+      setReclassManageActionSubmitting(false);
+    }
+  };
+
   const handleSubmit = async () => {
     setError(null);
 
@@ -1051,7 +1291,7 @@ export function AddTraderMovementModal({
       return;
     }
 
-    if (type === 'PITAM_SPLIT_MANAGE' || type === 'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE') {
+    if (type === 'PITAM_SPLIT_MANAGE' || type === 'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE' || type === 'RECLASSIFICATION_MANAGE') {
       // Update/cancel are self-contained actions triggered by their own buttons (see the
       // *_MANAGE fields below) — the generic Save button doesn't apply here.
       return;
@@ -1211,12 +1451,58 @@ export function AddTraderMovementModal({
           customerCategoryId: remainsInItalyDestination === 'CUSTOMER' ? Number(customerCategoryId) : undefined,
           notes: notes || null,
         });
+      } else if (type === 'RECLASSIFICATION') {
+        if (
+          !reclassificationSource || !traderCategoryId || !grade || !pitamStatus ||
+          !reclassToTraderCategoryId || !reclassToGrade || !reclassToPitamStatus ||
+          (reclassificationSource === 'SPECIFIC_TRADER' && !traderId)
+        ) {
+          setError(f.validationRequired);
+          return;
+        }
+
+        if (
+          traderCategoryId === reclassToTraderCategoryId &&
+          grade === reclassToGrade &&
+          pitamStatus === reclassToPitamStatus
+        ) {
+          setError(f.reclassificationSameTupleError);
+          return;
+        }
+
+        if (reclassificationAvailable !== null && quantityNumber > reclassificationAvailable) {
+          setError(f.reclassificationExceedsAvailableError(reclassificationAvailable));
+          return;
+        }
+
+        await createReclassificationMovement({
+          source: (reclassificationEffectiveSource || reclassificationSource) as ReclassificationSource,
+          traderId: reclassificationSource === 'SPECIFIC_TRADER' ? Number(traderId) : undefined,
+          fromTraderCategoryId: Number(traderCategoryId),
+          fromGrade: grade,
+          fromPitamStatus: pitamStatus,
+          toTraderCategoryId: Number(reclassToTraderCategoryId),
+          toGrade: reclassToGrade,
+          toPitamStatus: reclassToPitamStatus,
+          quantity: quantityNumber,
+          toRemainsInItaly:
+            reclassificationEffectiveSource === 'GENERAL' &&
+            ((reclassToGrade === 'ה' && reclassToRemainsInItalyGradeH) || (reclassToGrade === 'ו' && reclassToRemainsInItalyGradeV))
+              ? true
+              : undefined,
+          date: nowIso,
+          notes: notes || null,
+        });
       }
 
       resetForm();
       onSaved();
     } catch (submitError) {
-      setError(submitError instanceof ApiError ? submitError.message : f.validationRequired);
+      setError(
+        type === 'RECLASSIFICATION'
+          ? describeReclassificationError(submitError, f)
+          : submitError instanceof ApiError ? submitError.message : f.validationRequired,
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -1239,7 +1525,7 @@ export function AddTraderMovementModal({
 
         <h3 className="modal-title" style={{ position: 'relative' }}>
           {f.title}
-          <TopLoadingBar isLoading={isLoadingFromTraderStock || isLoadingGeneralStock || isLoadingGeneralTransferStock || isPitamSplitUndoLoading} />
+          <TopLoadingBar isLoading={isLoadingFromTraderStock || isLoadingGeneralStock || isLoadingGeneralTransferStock || isPitamSplitUndoLoading || isReclassificationUndoLoading} />
         </h3>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, flex: 1 }}>
@@ -2400,6 +2686,281 @@ export function AddTraderMovementModal({
             </>
           ) : null}
 
+          {type === 'RECLASSIFICATION' ? (
+            <>
+              <div style={ROW_STYLE}>
+                <div style={FIELD_STYLE}>
+                  <label style={LABEL_STYLE}>{f.reclassificationSourceLabel}</label>
+                  <select
+                    className="seasons-manager__year-input"
+                    value={reclassificationSource}
+                    onChange={(event) => {
+                      setReclassificationSource(event.target.value as ReclassificationSource | '');
+                      setTraderId('');
+                      setTraderCategoryId('');
+                      setGrade('');
+                      setPitamStatus('');
+                      setReclassToTraderCategoryId('');
+                      setReclassToGrade('');
+                      setReclassToPitamStatus('');
+                      setReclassToRemainsInItalyGradeH(false);
+                      setReclassToRemainsInItalyGradeV(false);
+                      setQuantity('');
+                    }}
+                  >
+                    <option value="">{f.reclassificationSourcePlaceholder}</option>
+                    <option value="SPECIFIC_TRADER">{f.reclassificationSourceOptions.SPECIFIC_TRADER}</option>
+                    <option value="GENERAL">{f.reclassificationSourceOptions.GENERAL}</option>
+                  </select>
+                </div>
+
+                {reclassificationSource === 'SPECIFIC_TRADER' ? (
+                  <div style={FIELD_STYLE}>
+                    <label style={LABEL_STYLE}>{f.traderLabel}</label>
+                    <select
+                      className="seasons-manager__year-input"
+                      value={traderId}
+                      onChange={(event) => setTraderId(event.target.value)}
+                    >
+                      <option value="">{f.traderPlaceholder}</option>
+                      {sortedTraders.map((trader) => (
+                        <option key={`reclass-trader-${trader.id}`} value={String(trader.id)}>
+                          {trader.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : null}
+
+                {/* Mirrors the harvest form's per-grade remainsInItalyGradeH/V checkboxes: only relevant
+                    when the "from" stock actually comes out of the GENERAL (modulo + traders) pool — when
+                    the chosen "from" tuple resolves to the remains-in-Italy bucket instead (grade ה/ו
+                    picked under "כללי"), the backend always routes the result through the default
+                    per-trader share split, so these would be silently ignored — hide them in that case. */}
+                {reclassificationEffectiveSource === 'GENERAL' ? (
+                  <>
+                    <label className={remainsInItalyCheckboxStyles.field}>
+                      <input
+                        type="checkbox"
+                        checked={reclassToRemainsInItalyGradeH}
+                        onChange={(event) => setReclassToRemainsInItalyGradeH(event.target.checked)}
+                      />
+                      <span>{f.reclassificationRemainsInItalyGradeHLabel}</span>
+                    </label>
+                    <label className={remainsInItalyCheckboxStyles.field}>
+                      <input
+                        type="checkbox"
+                        checked={reclassToRemainsInItalyGradeV}
+                        onChange={(event) => setReclassToRemainsInItalyGradeV(event.target.checked)}
+                      />
+                      <span>{f.reclassificationRemainsInItalyGradeVLabel}</span>
+                    </label>
+                  </>
+                ) : null}
+              </div>
+
+              <div style={ROW_STYLE}>
+                <div style={{ ...FIELD_STYLE, gridColumn: '1 / -1' }}>
+                  <label style={LABEL_STYLE}>{f.reclassificationFromLabel}</label>
+                </div>
+              </div>
+
+              <div style={ROW_STYLE}>
+                <div style={FIELD_STYLE}>
+                  <label style={LABEL_STYLE}>{f.traderCategoryLabel}</label>
+                  <select
+                    className="seasons-manager__year-input"
+                    value={traderCategoryId}
+                    onChange={(event) => {
+                      setTraderCategoryId(event.target.value);
+                      setGrade('');
+                      setPitamStatus('');
+                    }}
+                    disabled={!isReclassificationCategoryEnabled || reclassificationCategoryOptions.length === 0}
+                  >
+                    <option value="">{f.traderCategoryPlaceholder}</option>
+                    {reclassificationCategoryOptions.map((category) => (
+                      <option key={category.id} value={String(category.id)}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={FIELD_STYLE}>
+                  <label style={LABEL_STYLE}>{f.gradeLabel}</label>
+                  <select
+                    className="seasons-manager__year-input"
+                    value={grade}
+                    onChange={(event) => {
+                      setGrade(event.target.value);
+                      setPitamStatus('');
+                    }}
+                    disabled={!isReclassificationGradeEnabled || reclassificationGradeOptions.length === 0}
+                  >
+                    <option value="">{f.gradePlaceholder}</option>
+                    {reclassificationGradeOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={FIELD_STYLE}>
+                  <label style={LABEL_STYLE}>{f.pitamStatusLabel}</label>
+                  <select
+                    className="seasons-manager__year-input"
+                    value={pitamStatus}
+                    onChange={(event) => setPitamStatus(event.target.value as PitamStatus | '')}
+                    disabled={!isReclassificationPitamEnabled || reclassificationPitamStatusOptions.length === 0}
+                  >
+                    <option value="">{f.pitamStatusPlaceholder}</option>
+                    {reclassificationPitamStatusOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {i18n.pitamStatuses[option] || option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={FIELD_STYLE}>
+                  <label style={LABEL_STYLE}>{f.quantityLabel}</label>
+                  <input
+                    className="seasons-manager__year-input"
+                    type="number"
+                    value={quantity}
+                    onChange={(event) => setQuantity(event.target.value)}
+                    placeholder={f.quantityPlaceholder}
+                    aria-label={f.quantityLabel}
+                    max={reclassificationAvailable ?? undefined}
+                    disabled={!isReclassificationQuantityEnabled}
+                  />
+                  <span
+                    style={{
+                      fontSize: 12,
+                      opacity: 0.75,
+                      visibility: reclassificationAvailable !== null ? 'visible' : 'hidden',
+                    }}
+                  >
+                    {reclassificationAvailable !== null ? f.reclassificationAvailableLabel(reclassificationAvailable) : ' '}
+                  </span>
+                </div>
+              </div>
+
+              <div style={ROW_STYLE}>
+                <div style={{ ...FIELD_STYLE, gridColumn: '1 / -1' }}>
+                  <label style={LABEL_STYLE}>{f.reclassificationToLabel}</label>
+                </div>
+              </div>
+
+              <div style={ROW_STYLE}>
+                <div style={FIELD_STYLE}>
+                  <label style={LABEL_STYLE}>{f.traderCategoryLabel}</label>
+                  <select
+                    className="seasons-manager__year-input"
+                    value={reclassToTraderCategoryId}
+                    onChange={(event) => {
+                      setReclassToTraderCategoryId(event.target.value);
+                      setReclassToGrade('');
+                      setReclassToPitamStatus('');
+                    }}
+                    disabled={!isReclassificationToCategoryEnabled}
+                  >
+                    <option value="">{f.traderCategoryPlaceholder}</option>
+                    {traderCategories.map((category) => (
+                      <option key={`reclass-to-${category.id}`} value={String(category.id)}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={FIELD_STYLE}>
+                  <label style={LABEL_STYLE}>{f.gradeLabel}</label>
+                  <select
+                    className="seasons-manager__year-input"
+                    value={reclassToGrade}
+                    onChange={(event) => {
+                      setReclassToGrade(event.target.value);
+                      setReclassToPitamStatus('');
+                    }}
+                    disabled={!isReclassificationToGradeEnabled}
+                  >
+                    <option value="">{f.gradePlaceholder}</option>
+                    {GRADE_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={FIELD_STYLE}>
+                  <label style={LABEL_STYLE}>{f.pitamStatusLabel}</label>
+                  <select
+                    className="seasons-manager__year-input"
+                    value={reclassToPitamStatus}
+                    onChange={(event) => setReclassToPitamStatus(event.target.value as PitamStatus | '')}
+                    disabled={!isReclassificationToPitamEnabled}
+                  >
+                    <option value="">{f.pitamStatusPlaceholder}</option>
+                    {PITAM_STATUS_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {i18n.pitamStatuses[option] || option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </>
+          ) : null}
+
+          {type === 'RECLASSIFICATION_MANAGE' ? (
+            <>
+              <div style={ROW_STYLE}>
+                <div style={{ ...FIELD_STYLE, gridColumn: '1 / -1' }}>
+                  <label style={LABEL_STYLE}>{f.reclassificationUndoBatchLabel}</label>
+                  <ReclassificationBatchPicker
+                    lang={lang}
+                    labels={f}
+                    pitamStatusLabels={i18n.pitamStatuses}
+                    batches={reclassificationBatches}
+                    traderCategories={traderCategories}
+                    value={reclassManageBatchId}
+                    onChange={(id) => {
+                      setReclassManageBatchId(id);
+                      setReclassManageMode('select');
+                      setReclassManageEditError('');
+                    }}
+                    isLoading={isReclassificationUndoLoading}
+                  />
+                </div>
+              </div>
+
+              {selectedReclassManageBatch && reclassManageMode === 'edit' ? (
+                <div style={ROW_STYLE}>
+                  <div style={FIELD_STYLE}>
+                    <label style={LABEL_STYLE}>{f.quantityLabel}</label>
+                    <input
+                      className="seasons-manager__year-input"
+                      type="number"
+                      value={reclassManageEditQuantity}
+                      onChange={(event) => {
+                        setReclassManageEditQuantity(event.target.value);
+                        setReclassManageEditError('');
+                      }}
+                      placeholder={f.quantityPlaceholder}
+                      aria-label={f.quantityLabel}
+                    />
+                  </div>
+                </div>
+              ) : null}
+
+              {reclassManageEditError ? <p className="seasons-manager__error">{reclassManageEditError}</p> : null}
+            </>
+          ) : null}
+
           {type === 'OWNERSHIP_TRANSFER' ? (
             <div style={ROW_STYLE}>
               <div style={FIELD_STYLE}>
@@ -2478,7 +3039,7 @@ export function AddTraderMovementModal({
             </div>
           ) : null}
 
-          {type && type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'ASSIGNED' && type !== 'SELF_PICKUP' && type !== 'WASTE' && type !== 'PITAM_SPLIT' && type !== 'PITAM_SPLIT_MANAGE' && type !== 'REMAINS_IN_ITALY_WITHDRAWAL' && type !== 'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE' ? (
+          {type && type !== 'OWNERSHIP_TRANSFER' && type !== 'INTERNAL_TRANSFER' && type !== 'ASSIGNED' && type !== 'SELF_PICKUP' && type !== 'WASTE' && type !== 'PITAM_SPLIT' && type !== 'PITAM_SPLIT_MANAGE' && type !== 'REMAINS_IN_ITALY_WITHDRAWAL' && type !== 'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE' && type !== 'RECLASSIFICATION' && type !== 'RECLASSIFICATION_MANAGE' ? (
             <div style={ROW_STYLE}>
               <div style={FIELD_STYLE}>
                 <label style={LABEL_STYLE}>{f.traderCategoryLabel}</label>
@@ -2546,7 +3107,7 @@ export function AddTraderMovementModal({
             </div>
           ) : null}
 
-          {type && type !== 'PITAM_SPLIT_MANAGE' && type !== 'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE' ? (
+          {type && type !== 'PITAM_SPLIT_MANAGE' && type !== 'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE' && type !== 'RECLASSIFICATION_MANAGE' ? (
             <div style={ROW_STYLE}>
               <div style={{ ...FIELD_STYLE, gridColumn: '1 / -1' }}>
                 <label style={LABEL_STYLE}>{f.notesLabel}</label>
@@ -2641,10 +3202,47 @@ export function AddTraderMovementModal({
               </SubmitButton>
             </>
           ) : null}
+          {type === 'RECLASSIFICATION_MANAGE' && selectedReclassManageBatch && reclassManageMode === 'select' ? (
+            <>
+              <button className="btn btn-success" type="button" onClick={handleStartEditSelectedReclassBatch}>
+                {f.reclassificationManageUpdateLabel}
+              </button>
+              <SubmitButton
+                className="btn btn-success"
+                type="button"
+                onClick={handleCancelSelectedReclassBatch}
+                isLoading={reclassManageActionSubmitting}
+                loadingText={f.reclassificationManageCancelingLabel}
+              >
+                {f.reclassificationManageCancelLabel}
+              </SubmitButton>
+            </>
+          ) : null}
+          {type === 'RECLASSIFICATION_MANAGE' && selectedReclassManageBatch && reclassManageMode === 'edit' ? (
+            <>
+              <button
+                className="btn btn-secondary"
+                type="button"
+                onClick={handleDiscardEditSelectedReclassBatch}
+                disabled={reclassManageActionSubmitting}
+              >
+                {f.reclassificationManageDiscardEditLabel}
+              </button>
+              <SubmitButton
+                className="btn btn-success"
+                type="button"
+                onClick={handleConfirmEditSelectedReclassBatch}
+                isLoading={reclassManageActionSubmitting}
+                loadingText={f.reclassificationManageSavingLabel}
+              >
+                {f.reclassificationManageSaveLabel}
+              </SubmitButton>
+            </>
+          ) : null}
           <button className="btn btn-danger" type="button" onClick={handleClose}>
             {f.cancel}
           </button>
-          {type !== 'PITAM_SPLIT_MANAGE' && type !== 'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE' ? (
+          {type !== 'PITAM_SPLIT_MANAGE' && type !== 'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE' && type !== 'RECLASSIFICATION_MANAGE' ? (
             <SubmitButton
               className="btn btn-success"
               type="button"

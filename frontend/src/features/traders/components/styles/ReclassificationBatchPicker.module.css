@@ -1,0 +1,199 @@
+.container {
+  position: relative;
+  width: 100%;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 42px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-surface);
+  color: var(--color-text-main);
+  font-family: var(--font-family-base);
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-align: start;
+  transition: border-color var(--easing-standard), box-shadow var(--easing-standard);
+}
+
+.trigger:disabled {
+  cursor: not-allowed;
+  background: var(--color-bg-hover);
+  color: var(--color-text-muted);
+}
+
+.trigger:not(:disabled):hover {
+  border-color: var(--color-primary-strong);
+}
+
+.trigger:not(:disabled):focus-visible {
+  outline: none;
+  border-color: var(--color-primary-strong);
+  box-shadow: 0 0 0 3px rgba(230, 182, 32, 0.18);
+}
+
+.placeholder {
+  color: var(--color-text-muted);
+}
+
+.triggerSummary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.triggerDetails {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text-main);
+}
+
+.triggerQty {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+}
+
+.panel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
+  box-shadow: 0 8px 24px var(--color-shadow);
+  padding: var(--space-1);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-main);
+  font-family: var(--font-family-base);
+  cursor: pointer;
+  text-align: start;
+  transition: background var(--easing-standard), border-color var(--easing-standard);
+}
+
+.row:hover {
+  background: var(--color-bg-hover);
+}
+
+.rowSelected {
+  border-color: var(--color-primary-strong);
+  background: var(--color-primary-soft);
+}
+
+.rowTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.rowDate {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.rowBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.rowCategory {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.rowQtyGroup {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.qtyChip {
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-hover);
+  color: var(--color-text-main);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.badge {
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Specific-trader source — the app's accent green (used for harvest/leaf iconography). */
+.badge_SPECIFIC_TRADER {
+  background: rgba(45, 90, 39, 0.12);
+  color: var(--color-text-accent);
+}
+
+/* General (split by trader shares) — the app's primary gold, since it's the "headline" split mode. */
+.badge_GENERAL {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+}
+
+/* Remains-in-Italy source — a distinct blue, mirroring the withdrawal picker's customer badge. */
+.badge_REMAINS_IN_ITALY {
+  background: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
+}
+
+:global(:root[data-dark-mode='true']) .badge_SPECIFIC_TRADER {
+  background: rgba(45, 90, 39, 0.35);
+  color: #9fd6a0;
+}
+
+:global(:root[data-dark-mode='true']) .badge_GENERAL {
+  background: rgba(230, 182, 32, 0.2);
+  color: var(--color-primary);
+}
+
+:global(:root[data-dark-mode='true']) .badge_REMAINS_IN_ITALY {
+  background: rgba(37, 99, 235, 0.3);
+  color: #93c5fd;
+}
+
+:global(:root[data-dark-mode='true']) .rowSelected {
+  background: rgba(230, 182, 32, 0.15);
+}

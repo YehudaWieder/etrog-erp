@@ -44,6 +44,7 @@ import { HarvestDailyDetailsSection } from './components/daily/HarvestDailyDetai
 import { HarvestFieldReportSection } from './components/field-report/HarvestFieldReportSection';
 import { HarvestSortingDailySection } from './components/sorting-daily/HarvestSortingDailySection';
 import { HarvestSortingSummarySection } from './components/sorting-summary/HarvestSortingSummarySection';
+import { ReclassificationSummaryTable } from './components/sorting-summary/ReclassificationSummaryTable';
 import { HarvestSortingListSection } from './components/sorting-list/HarvestSortingListSection';
 import { HarvestDeletedSortingListSection } from './components/sorting-list/HarvestDeletedSortingListSection';
 import { useHarvestPageLifecycle } from './hooks/page/useHarvestPageLifecycle';
@@ -1796,16 +1797,23 @@ export function HarvestPage() {
           onRowClick={isViewingNonActiveSeason ? undefined : (row) => setSelectedDeletedSortingListRow((prev) => (prev?.id === row.id ? null : row))}
         />
       ) : isSortingSummaryTab ? (
-        <HarvestSortingSummarySection
-          lang={lang}
-          labels={t.sortingSummary}
-          filters={filters}
-          rows={filteredSortingSummaryRows}
-          isLoading={isSortingListLoading}
-          loadError={sortingListLoadError}
-          seasonLabel={sortingSummarySeasonLabel}
-          traderCategories={harvestFormTraderCategories}
-        />
+        <>
+          <HarvestSortingSummarySection
+            lang={lang}
+            labels={t.sortingSummary}
+            filters={filters}
+            rows={filteredSortingSummaryRows}
+            isLoading={isSortingListLoading}
+            loadError={sortingListLoadError}
+            seasonLabel={sortingSummarySeasonLabel}
+            traderCategories={harvestFormTraderCategories}
+          />
+          <ReclassificationSummaryTable
+            lang={lang}
+            seasonId={seasonFilterId}
+            traderCategories={harvestFormTraderCategories}
+          />
+        </>
       ) : (
         <section className="shipments-empty-state">
           <h2 className="shipments-empty-title">{content.title}</h2>

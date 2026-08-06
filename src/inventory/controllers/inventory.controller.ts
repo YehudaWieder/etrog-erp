@@ -25,6 +25,8 @@ import { PitamSplitService } from 'src/inventory/services/pitam-split/pitam-spli
 import { ResolvePitamSplitDto } from 'src/inventory/services/pitam-split/dto/resolve-pitam-split.dto';
 import { RemainsInItalyWithdrawalService } from 'src/inventory/services/remains-in-italy-withdrawal/remains-in-italy-withdrawal.service';
 import { CreateRemainsInItalyWithdrawalDto } from 'src/inventory/services/remains-in-italy-withdrawal/dto/create-remains-in-italy-withdrawal.dto';
+import { ReclassificationService } from 'src/inventory/services/reclassification/reclassification.service';
+import { ResolveReclassificationDto } from 'src/inventory/services/reclassification/dto/resolve-reclassification.dto';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('access-token')
@@ -36,6 +38,7 @@ export class InventoryController {
 		private readonly inventoryService: InventoryService,
 		private readonly pitamSplitService: PitamSplitService,
 		private readonly remainsInItalyWithdrawalService: RemainsInItalyWithdrawalService,
+		private readonly reclassificationService: ReclassificationService,
 	) {}
 
 	@Get('summary')
@@ -511,5 +514,147 @@ export class InventoryController {
 	) {
 		const actor = req.user as AuthenticatedUser;
 		return this.remainsInItalyWithdrawalService.updateWithdrawal(id, data, actor.id);
+	}
+
+	@Post('reclassification')
+	@ApiOperation({
+		summary:
+			'Change category/grade/pitamStatus for a quantity without changing ownership, as new RECLASSIFICATION ledger movements, without touching the original Classification record. ' +
+			'source=SPECIFIC_TRADER reclassifies one trader\'s own stock. ' +
+			'source=GENERAL drains modulo first, then pulls any deficit from traders by their configured share; the resulting quantity is then split across traders by share (default) or, when toRemainsInItaly is true, parked as a single row in the REMAINS_IN_ITALY bucket. ' +
+			'source=REMAINS_IN_ITALY withdraws from the remains-in-Italy bucket and always distributes the new classification via the normal GENERAL share split.',
+	})
+	@ApiBody({
+		type: ResolveReclassificationDto,
+		examples: {
+			specificTrader: {
+				summary: 'Reclassify a specific trader\'s stock',
+				value: {
+					source: 'SPECIFIC_TRADER',
+					traderId: 4,
+					fromTraderCategoryId: 3,
+					fromGrade: 'א',
+					fromPitamStatus: 'WITH_PITAM',
+					toTraderCategoryId: 3,
+					toGrade: 'ב',
+					toPitamStatus: 'WITH_PITAM',
+					quantity: 10,
+				},
+			},
+			general: {
+				summary: 'Reclassify general stock, split across traders by share',
+				value: {
+					source: 'GENERAL',
+					fromTraderCategoryId: 3,
+					fromGrade: 'א',
+					fromPitamStatus: 'WITH_PITAM',
+					toTraderCategoryId: 3,
+					toGrade: 'ב',
+					toPitamStatus: 'WITH_PITAM',
+					quantity: 50,
+				},
+			},
+			generalToRemainsInItaly: {
+				summary: 'Reclassify general stock directly into the remains-in-Italy bucket',
+				value: {
+					source: 'GENERAL',
+					fromTraderCategoryId: 3,
+					fromGrade: 'א',
+					fromPitamStatus: 'WITH_PITAM',
+					toTraderCategoryId: 3,
+					toGrade: 'ה',
+					toPitamStatus: 'WITH_PITAM',
+					quantity: 20,
+					toRemainsInItaly: true,
+				},
+			},
+			fromRemainsInItaly: {
+				summary: 'Reclassify remains-in-Italy stock back into distributable inventory',
+				value: {
+					source: 'REMAINS_IN_ITALY',
+					fromTraderCategoryId: 3,
+					fromGrade: 'ה',
+					fromPitamStatus: 'WITH_PITAM',
+					toTraderCategoryId: 3,
+					toGrade: 'ד',
+					toPitamStatus: 'WITH_PITAM',
+					quantity: 15,
+				},
+			},
+		},
+	})
+	@ApiResponse({ status: 201, description: 'Reclassification resolved successfully.' })
+	@ApiResponse({ status: 400, description: 'Invalid payload or insufficient stock.' })
+	resolveReclassification(@Body() data: ResolveReclassificationDto, @Req() req: Request) {
+		const actor = req.user as AuthenticatedUser;
+		return this.reclassificationService.resolve(data, actor.id);
+	}
+
+	@Get('reclassification')
+	@ApiOperation({
+		summary:
+			'List reclassification batches available to undo (each groups every ledger row created by a single resolve() call).',
+	})
+	@ApiQuery({ name: 'seasonId', type: Number, required: false, description: 'Defaults to active season.' })
+	@ApiQuery({ name: 'traderCategoryId', type: Number, required: false })
+	@ApiQuery({ name: 'grade', enum: Grade, enumName: 'Grade', required: false })
+	@ApiQuery({ name: 'pitamStatus', enum: PitamStatus, enumName: 'PitamStatus', required: false })
+	@ApiResponse({ status: 200, description: 'Reclassification batches.' })
+	listReclassificationBatches(
+		@Query('seasonId') seasonId?: string,
+		@Query('traderCategoryId') traderCategoryId?: string,
+		@Query('grade') grade?: Grade,
+		@Query('pitamStatus') pitamStatus?: PitamStatus,
+	) {
+		return this.reclassificationService.listBatches({
+			seasonId: parseOptionalInt(seasonId),
+			traderCategoryId: parseOptionalInt(traderCategoryId),
+			grade,
+			pitamStatus,
+		});
+	}
+
+	@Get('reclassification/summary')
+	@ApiOperation({
+		summary:
+			'Aggregated reclassification totals for a season, grouped by (from classification -> to classification), for display as an informational deviation indicator alongside harvest/sorting summaries.',
+	})
+	@ApiQuery({ name: 'seasonId', type: Number, required: false, description: 'Defaults to active season.' })
+	@ApiResponse({ status: 200, description: 'Reclassification summary.' })
+	getReclassificationSummary(@Query('seasonId') seasonId?: string) {
+		return this.reclassificationService.getReclassificationSummary(parseOptionalInt(seasonId));
+	}
+
+	@Delete('reclassification/:id')
+	@ApiOperation({
+		summary:
+			'Undo a reclassification batch: permanently deletes every ledger row it created. ' +
+			'Fails if the stock it created has since been consumed downstream (e.g. packed into a shipment).',
+	})
+	@ApiParam({ name: 'id', type: Number })
+	@ApiResponse({ status: 200, description: 'Reclassification batch undone (rows permanently deleted).' })
+	@ApiResponse({ status: 400, description: 'Created stock was already partially consumed and can no longer be undone.' })
+	@ApiResponse({ status: 404, description: 'Batch not found.' })
+	undoReclassification(@Param('id', ParseIntPipe) id: number) {
+		return this.reclassificationService.undoBatch(id);
+	}
+
+	@Put('reclassification/:id')
+	@ApiOperation({
+		summary:
+			'Update a reclassification batch: in a single transaction, deletes every ledger row the previous batch created and creates a new batch from the given payload.',
+	})
+	@ApiParam({ name: 'id', type: Number })
+	@ApiBody({ type: ResolveReclassificationDto })
+	@ApiResponse({ status: 200, description: 'Reclassification batch updated (old rows deleted, new batch created).' })
+	@ApiResponse({ status: 400, description: 'Invalid payload, insufficient stock, or previous batch already consumed downstream.' })
+	@ApiResponse({ status: 404, description: 'Batch not found.' })
+	updateReclassification(
+		@Param('id', ParseIntPipe) id: number,
+		@Body() data: ResolveReclassificationDto,
+		@Req() req: Request,
+	) {
+		const actor = req.user as AuthenticatedUser;
+		return this.reclassificationService.updateBatch(id, data, actor.id);
 	}
 }

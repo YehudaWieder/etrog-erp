@@ -1,8 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Grade, MovementType, PitamStatus, Prisma } from '@prisma/client';
+import { calculateExactShareQuantity, calculateMinimalGrossByShares } from '../validation/share-math';
+import { InventoryAvailabilityService } from '../inventory-availability.service';
 
 @Injectable()
 export class GeneralShareAllocationService {
+  constructor(private readonly inventoryAvailabilityService: InventoryAvailabilityService) {}
+
   private async getTraderCategoryShares(
     tx: Prisma.TransactionClient,
     seasonId: number,
@@ -137,11 +141,13 @@ export class GeneralShareAllocationService {
       grade: Grade;
       pitamStatus: PitamStatus;
       quantity: number;
+      type?: MovementType;
       movementReferenceId?: number;
       updatedById: number;
       notes?: string;
     },
   ) {
+    const type = params.type ?? MovementType.HARVEST_IN;
     const shares = await this.getTraderCategoryShares(tx, params.seasonId, params.traderCategoryId);
     if (shares.length === 0) {
       throw new BadRequestException(
@@ -164,7 +170,7 @@ export class GeneralShareAllocationService {
           pitamStatus: params.pitamStatus,
           quantity: params.quantity,
           isModulo: true,
-          type: MovementType.HARVEST_IN,
+          type,
           MovementReferenceId: params.movementReferenceId,
           updatedById: params.updatedById,
           notes: params.notes,
@@ -185,7 +191,7 @@ export class GeneralShareAllocationService {
             pitamStatus: params.pitamStatus,
             quantity: allocation.quantity,
             isModulo: false,
-            type: MovementType.HARVEST_IN,
+            type,
             MovementReferenceId: params.movementReferenceId,
             updatedById: params.updatedById,
             notes: params.notes,
@@ -207,7 +213,7 @@ export class GeneralShareAllocationService {
             pitamStatus: params.pitamStatus,
             quantity: remainder,
             isModulo: true,
-            type: MovementType.HARVEST_IN,
+            type,
             MovementReferenceId: params.movementReferenceId,
             updatedById: params.updatedById,
             notes: params.notes,
@@ -229,5 +235,173 @@ export class GeneralShareAllocationService {
         movementReferenceId: params.movementReferenceId,
       });
     }
+  }
+
+  // Mirror image of allocateGeneralQuantity: drains MODULO first, then splits any deficit
+  // across traders by their TraderCategoryShare percent (exact BigInt math, rounded up to the
+  // minimal gross that splits evenly), excluding each trader's private-selection stock. A
+  // rounding overage from the fair-share step is returned to MODULO as a positive ASSIGNED row.
+  // Returns every row created so the caller can link them into its own batch.
+  async deductGeneralQuantity(
+    tx: Prisma.TransactionClient,
+    params: {
+      seasonId: number;
+      date: Date;
+      traderCategoryId: number;
+      grade: Grade;
+      pitamStatus: PitamStatus;
+      quantity: number;
+      type: MovementType;
+      contextLabel: string;
+      excludePrivateSelection?: boolean;
+      movementReferenceId?: number;
+      updatedById: number;
+      notes?: string | null;
+    },
+  ): Promise<{ rows: { id: number }[] }> {
+    const excludePrivateSelection = params.excludePrivateSelection ?? true;
+
+    const moduloAvailable = Math.max(
+      0,
+      await this.inventoryAvailabilityService.getTraderUnshippedBalance(tx, {
+        seasonId: params.seasonId,
+        traderId: null,
+        traderCategoryId: params.traderCategoryId,
+        grade: params.grade,
+        pitamStatus: params.pitamStatus,
+        isModulo: true,
+      }),
+    );
+    const moduloUsed = Math.min(moduloAvailable, params.quantity);
+    const deficit = params.quantity - moduloUsed;
+
+    const rows: { id: number }[] = [];
+
+    if (moduloUsed > 0) {
+      rows.push(
+        await tx.traderStock.create({
+          data: {
+            seasonId: params.seasonId,
+            date: params.date,
+            traderId: null,
+            traderCategoryId: params.traderCategoryId,
+            grade: params.grade,
+            pitamStatus: params.pitamStatus,
+            quantity: -moduloUsed,
+            isModulo: true,
+            type: params.type,
+            MovementReferenceId: params.movementReferenceId,
+            updatedById: params.updatedById,
+            notes: params.notes,
+          },
+        }),
+      );
+    }
+
+    if (deficit > 0) {
+      const shares = await tx.traderCategoryShare.findMany({
+        where: { seasonId: params.seasonId, traderCategoryId: params.traderCategoryId },
+        orderBy: { traderId: 'asc' },
+      });
+
+      if (shares.length === 0) {
+        throw new BadRequestException(`לא הוגדרה חלוקת אחוזים בין הסוחרים עבור קטגוריה זו.`);
+      }
+
+      const normalizedShares = shares.map((share) => ({
+        traderId: share.traderId,
+        percent: Number(share.percent),
+        percentText: share.percent.toString(),
+      }));
+
+      const totalPercent = normalizedShares.reduce((sum, share) => sum + share.percent, 0);
+      if (Math.abs(totalPercent - 100) > 1e-9) {
+        throw new BadRequestException(
+          `סכום האחוזים בין הסוחרים עבור קטגוריה ${params.traderCategoryId} חייב להיות 100.`,
+        );
+      }
+
+      const grossFromTraders = calculateMinimalGrossByShares(
+        deficit,
+        normalizedShares.map((share) => share.percentText),
+      );
+      const traderAllocations = normalizedShares.map((share) => ({
+        traderId: share.traderId,
+        quantity: calculateExactShareQuantity(grossFromTraders, share.percentText),
+      }));
+
+      if (traderAllocations.some((allocation) => allocation.quantity <= 0)) {
+        throw new BadRequestException(
+          'לא ניתן לחלק את הכמות המבוקשת בין כל הסוחרים לפי האחוזים שהוגדרו; יש להגדיל את הכמות או לעדכן את האחוזים.',
+        );
+      }
+
+      for (const allocation of traderAllocations) {
+        await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
+          seasonId: params.seasonId,
+          traderId: allocation.traderId,
+          traderCategoryId: params.traderCategoryId,
+          grade: params.grade,
+          pitamStatus: params.pitamStatus,
+          isModulo: false,
+          requiredQuantity: allocation.quantity,
+          excludePrivateSelection,
+          contextLabel: `${params.contextLabel} (סוחר ${allocation.traderId})`,
+        });
+      }
+
+      for (const allocation of traderAllocations) {
+        rows.push(
+          await tx.traderStock.create({
+            data: {
+              seasonId: params.seasonId,
+              date: params.date,
+              traderId: allocation.traderId,
+              traderCategoryId: params.traderCategoryId,
+              grade: params.grade,
+              pitamStatus: params.pitamStatus,
+              quantity: -allocation.quantity,
+              isModulo: false,
+              type: params.type,
+              MovementReferenceId: params.movementReferenceId,
+              updatedById: params.updatedById,
+              notes: params.notes,
+            },
+          }),
+        );
+      }
+
+      const traderTakenTotal = traderAllocations.reduce((sum, allocation) => sum + allocation.quantity, 0);
+      const moduloRemainder = traderTakenTotal - deficit;
+
+      if (moduloRemainder > 0) {
+        rows.push(
+          await tx.traderStock.create({
+            data: {
+              seasonId: params.seasonId,
+              date: params.date,
+              traderId: null,
+              traderCategoryId: params.traderCategoryId,
+              grade: params.grade,
+              pitamStatus: params.pitamStatus,
+              quantity: moduloRemainder,
+              isModulo: true,
+              type: MovementType.ASSIGNED,
+              MovementReferenceId: params.movementReferenceId,
+              updatedById: params.updatedById,
+              notes: params.notes,
+            },
+          }),
+        );
+      }
+    }
+
+    if (rows.length === 0) {
+      throw new BadRequestException(
+        `${params.contextLabel}: אין מספיק מלאי לא ארוז. נדרש=${params.quantity}, זמין=${moduloAvailable}`,
+      );
+    }
+
+    return { rows };
   }
 }

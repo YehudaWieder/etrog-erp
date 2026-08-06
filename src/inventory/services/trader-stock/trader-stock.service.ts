@@ -12,7 +12,7 @@ import {
     requireAdjustmentQuantity,
     validateAdjustmentType,
 } from 'src/inventory/services/inventory-core/utils/adjustment-movement.util';
-import { calculateExactShareQuantity, calculateMinimalGrossByShares } from '../validation/share-math';
+import { GeneralShareAllocationService } from '../general-share-allocation/general-share-allocation.service';
 
 @Injectable()
 export class TraderStockService {
@@ -21,6 +21,7 @@ export class TraderStockService {
         private seasonsService: SeasonsService,
         private inventoryAvailabilityService: InventoryAvailabilityService,
         private traderStockSummaryService: TraderStockSummaryService,
+        private generalShareAllocationService: GeneralShareAllocationService,
     ) {}
 
     // Create a new stock movement
@@ -164,10 +165,11 @@ export class TraderStockService {
     }
 
     // "כללי" WASTE: drain MODULO first, then split any deficit across traders by their
-    // TraderCategoryShare percent (mirrors CustomerGeneralTransferService.applyMovementsTx),
-    // excluding each trader's private-selection stock. A rounding overage from the fair-share
-    // step is returned to MODULO. All rows from a multi-row split share a MovementReferenceId
-    // (self-linked to the first row) so they can be deleted together as one batch.
+    // TraderCategoryShare percent, excluding each trader's private-selection stock. A rounding
+    // overage from the fair-share step is returned to MODULO. All rows from a multi-row split
+    // share a MovementReferenceId (self-linked to the first row) so they can be deleted together
+    // as one batch. Delegates the actual deduction math to GeneralShareAllocationService, which
+    // also backs ReclassificationService's "from GENERAL" deduction.
     private async createGeneralWaste(
         data: Prisma.TraderStockUncheckedCreateInput,
         seasonId: number,
@@ -178,7 +180,7 @@ export class TraderStockService {
         const grade = data.grade as Grade;
         const pitamStatus = data.pitamStatus as PitamStatus;
         const requestQuantity = Math.abs(normalizedQuantity);
-        const date = data.date;
+        const date = data.date as Date;
         const notes = data.notes as string | null | undefined;
 
         if (!traderCategoryId || !grade || !pitamStatus) {
@@ -186,148 +188,19 @@ export class TraderStockService {
         }
 
         return this.prisma.$transaction(async (tx) => {
-            const moduloAvailable = Math.max(
-                0,
-                await this.inventoryAvailabilityService.getTraderUnshippedBalance(tx, {
-                    seasonId,
-                    traderId: null,
-                    traderCategoryId,
-                    grade,
-                    pitamStatus,
-                    isModulo: true,
-                }),
-            );
-            const moduloUsed = Math.min(moduloAvailable, requestQuantity);
-            const deficit = requestQuantity - moduloUsed;
-
-            const createdRows: { id: number }[] = [];
-
-            if (moduloUsed > 0) {
-                createdRows.push(
-                    await tx.traderStock.create({
-                        data: {
-                            seasonId,
-                            date,
-                            traderId: null,
-                            traderCategoryId,
-                            grade,
-                            pitamStatus,
-                            quantity: -moduloUsed,
-                            isModulo: true,
-                            type: MovementType.WASTE,
-                            isFromPrivateSelection: false,
-                            shipmentId: null,
-                            boxId: null,
-                            updatedById: actorId,
-                            notes,
-                        },
-                    }),
-                );
-            }
-
-            if (deficit > 0) {
-                const shares = await tx.traderCategoryShare.findMany({
-                    where: { seasonId, traderCategoryId },
-                    orderBy: { traderId: 'asc' },
-                });
-
-                if (shares.length === 0) {
-                    throw new BadRequestException('לא הוגדרה חלוקת אחוזים בין הסוחרים עבור קטגוריה זו.');
-                }
-
-                const normalizedShares = shares.map((share) => ({
-                    traderId: share.traderId,
-                    percent: Number(share.percent),
-                    percentText: share.percent.toString(),
-                }));
-
-                const totalPercent = normalizedShares.reduce((sum, share) => sum + share.percent, 0);
-                if (Math.abs(totalPercent - 100) > 1e-9) {
-                    throw new BadRequestException(`סכום האחוזים בין הסוחרים עבור קטגוריה ${traderCategoryId} חייב להיות 100.`);
-                }
-
-                const grossFromTraders = calculateMinimalGrossByShares(
-                    deficit,
-                    normalizedShares.map((share) => share.percentText),
-                );
-                const traderAllocations = normalizedShares.map((share) => ({
-                    traderId: share.traderId,
-                    quantity: calculateExactShareQuantity(grossFromTraders, share.percentText),
-                }));
-
-                if (traderAllocations.some((allocation) => allocation.quantity <= 0)) {
-                    throw new BadRequestException('לא ניתן לחלק את הכמות המבוקשת בין כל הסוחרים לפי האחוזים שהוגדרו; יש להגדיל את הכמות או לעדכן את האחוזים.');
-                }
-
-                for (const allocation of traderAllocations) {
-                    await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
-                        seasonId,
-                        traderId: allocation.traderId,
-                        traderCategoryId,
-                        grade,
-                        pitamStatus,
-                        isModulo: false,
-                        requiredQuantity: allocation.quantity,
-                        excludePrivateSelection: true,
-                        contextLabel: `פחת כללי (סוחר ${allocation.traderId})`,
-                    });
-                }
-
-                for (const allocation of traderAllocations) {
-                    createdRows.push(
-                        await tx.traderStock.create({
-                            data: {
-                                seasonId,
-                                date,
-                                traderId: allocation.traderId,
-                                traderCategoryId,
-                                grade,
-                                pitamStatus,
-                                quantity: -allocation.quantity,
-                                isModulo: false,
-                                type: MovementType.WASTE,
-                                isFromPrivateSelection: false,
-                                shipmentId: null,
-                                boxId: null,
-                                updatedById: actorId,
-                                notes,
-                            },
-                        }),
-                    );
-                }
-
-                const traderTakenTotal = traderAllocations.reduce((sum, allocation) => sum + allocation.quantity, 0);
-                const moduloRemainder = traderTakenTotal - deficit;
-
-                if (moduloRemainder > 0) {
-                    createdRows.push(
-                        await tx.traderStock.create({
-                            data: {
-                                seasonId,
-                                date,
-                                traderId: null,
-                                traderCategoryId,
-                                grade,
-                                pitamStatus,
-                                quantity: moduloRemainder,
-                                isModulo: true,
-                                type: MovementType.ASSIGNED,
-                                isFromPrivateSelection: false,
-                                shipmentId: null,
-                                boxId: null,
-                                updatedById: actorId,
-                                notes,
-                            },
-                        }),
-                    );
-                }
-            }
-
-            if (createdRows.length === 0) {
-                throw new BadRequestException(
-                    `פחת כללי: אין מספיק מלאי לא ארוז. נדרש=${requestQuantity}, זמין=${moduloAvailable}`,
-                );
-            }
+            const { rows: createdRows } = await this.generalShareAllocationService.deductGeneralQuantity(tx, {
+                seasonId,
+                date,
+                traderCategoryId,
+                grade,
+                pitamStatus,
+                quantity: requestQuantity,
+                type: MovementType.WASTE,
+                contextLabel: 'פחת כללי',
+                excludePrivateSelection: true,
+                updatedById: actorId,
+                notes,
+            });
 
             if (createdRows.length > 1) {
                 const referenceId = createdRows[0].id;

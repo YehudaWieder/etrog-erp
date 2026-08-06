@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, type ReactNode } from 'react';
+import { useState, useCallback, useMemo, useEffect, type ReactNode } from 'react';
 import { FaPrint, FaLeaf, FaArrowDown, FaScaleBalanced, FaArrowsUpDown, FaBox, FaTruck, FaCircleCheck, FaMapPin, FaHandHolding } from 'react-icons/fa6';
 import styles from '../styles/HomeDashboard.module.css';
 import { ChartPanel } from './ChartPanel';
@@ -11,6 +11,7 @@ import { SvgBarChart } from './SvgBarChart';
 import { GaugeCard } from './GaugeCard';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useDashboardSeasons } from '../hooks/useDashboardSeasons';
+import { fetchReclassificationSummary } from '../../../../services/inventoryMovementsApi';
 import { GlobalScopedFilters } from '../../../../components/ui/GlobalScopedFilters';
 import filterStyles from '../../../../components/ui/styles/GlobalFiltersBar.module.css';
 import { HOME_I18N } from '../../i18n';
@@ -27,6 +28,30 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
   const resolvedSeasonId = selectedSeasonId ?? activeSeasonId ?? undefined;
 
   const { data, loading, error } = useDashboardData(resolvedSeasonId);
+
+  const [reclassifiedTotal, setReclassifiedTotal] = useState(0);
+
+  useEffect(() => {
+    const seasonId = resolvedSeasonId ? Number(resolvedSeasonId) : undefined;
+    if (!seasonId) {
+      setReclassifiedTotal(0);
+      return;
+    }
+
+    let cancelled = false;
+    fetchReclassificationSummary(seasonId)
+      .then((entries) => {
+        if (cancelled) return;
+        setReclassifiedTotal(entries.reduce((sum, entry) => sum + entry.quantity, 0));
+      })
+      .catch(() => {
+        if (!cancelled) setReclassifiedTotal(0);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [resolvedSeasonId]);
 
   const handleValuesChange = useCallback((vals: Record<string, string>) => {
     if (vals.seasonId !== undefined) setSelectedSeasonId(vals.seasonId);
@@ -196,6 +221,7 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
           lang={lang}
           data={sortingSummary}
           unit={t.unit}
+          reclassifiedTotal={reclassifiedTotal}
           labels={t.summary.harvestSorting}
         />
       ),

@@ -8,12 +8,14 @@ type HarvestSortingSummaryProps = {
   lang: 'he' | 'en';
   data: SortingSummaryData;
   unit: string;
+  reclassifiedTotal: number;
   labels: {
     netHarvest: string;
     categoryColumn: string;
     totalColumn: string;
     privateSort: string;
     customerSort: string;
+    reclassified: string;
     empty: string;
     tableNote: string;
     columns: {
@@ -24,7 +26,7 @@ type HarvestSortingSummaryProps = {
   };
 };
 
-export function HarvestSortingSummary({ lang, data, unit, labels }: HarvestSortingSummaryProps): JSX.Element {
+export function HarvestSortingSummary({ lang, data, unit, reclassifiedTotal, labels }: HarvestSortingSummaryProps): JSX.Element {
   const locale = lang === 'he' ? 'he-IL' : 'en-US';
   const formatter = useMemo(() => new Intl.NumberFormat(locale), [locale]);
 
@@ -53,6 +55,9 @@ export function HarvestSortingSummary({ lang, data, unit, labels }: HarvestSorti
         </div>
         <div className={styles.footerLine}>
           <LabelNote label={labels.customerSort} />: <strong>{formatter.format(data.customerSortTotal)} {unit}</strong>
+        </div>
+        <div className={styles.footerLine}>
+          <LabelNote label={labels.reclassified} />: <strong>{formatter.format(reclassifiedTotal)} {unit}</strong>
         </div>
       </div>
     </div>

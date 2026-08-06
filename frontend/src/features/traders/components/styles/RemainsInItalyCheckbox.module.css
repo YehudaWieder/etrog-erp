@@ -1,0 +1,55 @@
+/* Mirrors the harvest form's remains-in-Italy checkboxes (.badPickField in
+   HarvestBulkFormModal.module.css) so the RECLASSIFICATION form's grade ה/ו checkboxes look identical. */
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  align-self: end;
+  height: 42px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #27482f;
+  cursor: pointer;
+}
+
+.field input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  border: 2px solid #c8d0d8;
+  border-radius: 6px;
+  background: var(--color-bg-surface);
+  cursor: pointer;
+  position: relative;
+  transition: background var(--easing-standard), border-color var(--easing-standard);
+}
+
+.field input[type='checkbox']:hover {
+  border-color: var(--color-primary);
+}
+
+.field input[type='checkbox']:checked {
+  background: var(--color-text-accent);
+  border-color: var(--color-text-accent);
+}
+
+.field input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  width: 5px;
+  height: 10px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.field input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}

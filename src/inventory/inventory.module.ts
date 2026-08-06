@@ -19,6 +19,7 @@ import { SeasonsModule } from 'src/seasons/seasons.module';
 import { PitamSplitService } from './services/pitam-split/pitam-split.service';
 import { GeneralShareAllocationService } from './services/general-share-allocation/general-share-allocation.service';
 import { RemainsInItalyWithdrawalService } from './services/remains-in-italy-withdrawal/remains-in-italy-withdrawal.service';
+import { ReclassificationService } from './services/reclassification/reclassification.service';
 
 @Module({
   imports: [SeasonsModule],
@@ -40,6 +41,7 @@ import { RemainsInItalyWithdrawalService } from './services/remains-in-italy-wit
     PitamSplitService,
     GeneralShareAllocationService,
     RemainsInItalyWithdrawalService,
+    ReclassificationService,
   ],
   exports: [InventoryAvailabilityService, GeneralShareAllocationService],
 })

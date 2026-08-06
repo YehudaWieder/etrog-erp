@@ -42,6 +42,7 @@ export const HOME_I18N_EN = {
         totalColumn: 'Total',
         privateSort: 'Private Sort (not included in the table)',
         customerSort: 'Customer Sort (not included in the table)',
+        reclassified: 'Reclassified in inventory (included in the table under their original classification; the new classification exists only in inventory)',
         empty: 'No sorting data to display',
         tableNote: 'The table shows general sorting only, and does not include private or customer sorting',
         columns: {
