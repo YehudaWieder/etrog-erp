@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { deleteHarvestClassification, saveHarvestSortingBatch } from '../../../../services/classificationsApi';
+import { saveHarvestSortingBatch } from '../../../../services/classificationsApi';
 import type { ClassificationRecord } from '../../../../services/classificationsApi';
 import { updateHarvest, type HarvestRecord } from '../../../../services/harvestsApi';
 import type { HarvestFormClassificationDraft } from '../../harvestPage.types';
@@ -82,8 +82,17 @@ export function useHarvestEditFormSubmission({
       edits.push({ classificationId, quantity });
     }
 
+    // Deletions are folded into the same batch as quantity-0 edits (the backend deletes a
+    // classification whenever an edit brings its quantity to 0) rather than fired as separate,
+    // eagerly-committed calls. Sending them as standalone deletes ran each one in its own
+    // transaction *before* the compensating edits in this save, so the backend's final-mode
+    // consistency check (classifiedTotal must equal net harvested) fired mid-flight against a
+    // momentarily-unbalanced total and rejected an otherwise-valid combined change — e.g.
+    // deleting a customer's sorting row while adding the same quantity to a general row in the
+    // same save. Bundling them ensures that check only runs once, against the final state.
     for (const deletedId of deletionClassificationIds) {
       classifiedTotalAdjustment -= classificationsById.get(deletedId)?.quantity ?? 0;
+      edits.push({ classificationId: deletedId, quantity: 0 });
     }
 
     const classifiedTotal = selectedHarvestRow.classifiedTotal + classifiedTotalAdjustment;
@@ -118,29 +127,6 @@ export function useHarvestEditFormSubmission({
     setIsEditingHarvest(true);
     setEditHarvestError('');
     try {
-      // Deletions first: they only ever reduce classifiedTotal, so applying them before the totals
-      // change below can only make the net-vs-classified check easier to satisfy, never harder.
-      if (deletionClassificationIds.length) {
-        try {
-          await Promise.all(
-            deletionClassificationIds.map((id) =>
-              deleteHarvestClassification({
-                harvestId: selectedHarvestRow.id,
-                classificationId: id,
-                isPartialClassification: form.isPartialClassification,
-              }),
-            ),
-          );
-        } catch (error) {
-          if (error instanceof Error && error.message.trim()) {
-            setEditHarvestError(translateHarvestApiError(error.message, t.formSubmission));
-          } else {
-            setEditHarvestError(t.bulkForm.existingClassificationCellSaveError);
-          }
-          return;
-        }
-      }
-
       // Quantity-related harvest fields are sent through the same batch transaction as the
       // classification edits/creates (rather than a separate updateHarvest call beforehand), so the
       // backend validates net-vs-classified against the *final* combined state. Applying totals first
@@ -207,8 +193,8 @@ export function useHarvestEditFormSubmission({
       setIsEditHarvestDialogOpen(false);
 
       // Re-fetch from the server rather than assembling the row from the individual responses above:
-      // several separate calls just landed (deletes / batch / field-date update), so the season-wide
-      // refetch is the simplest way to get a single, fully consistent row back.
+      // separate calls just landed (batch / field-date update), so the season-wide refetch is the
+      // simplest way to get a single, fully consistent row back.
       const freshRecords = await refreshHarvestWorkspaceData();
       const freshRow = freshRecords.find((row) => row.id === selectedHarvestRow.id);
       if (freshRow) {

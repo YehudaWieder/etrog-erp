@@ -65,7 +65,7 @@ export class HarvestBulkWorkflowService {
     assertGeneralAssignmentIds(classItem);
 
     // Create Classification
-    const classSlug = `harvest-${params.harvestId}-tcat-${classItem.traderCategoryId ?? 0}-ccat-${classItem.customerCategoryId ?? 0}-g-${classItem.grade ?? 'NA'}-pitam-${classItem.pitamStatus}-a-${classItem.assignmentType}`;
+    const classSlug = `harvest-${params.harvestId}-t-${classItem.traderId ?? 0}-c-${classItem.customerId ?? 0}-tcat-${classItem.traderCategoryId ?? 0}-ccat-${classItem.customerCategoryId ?? 0}-g-${classItem.grade ?? 'NA'}-pitam-${classItem.pitamStatus}-a-${classItem.assignmentType}`;
 
     // A previously soft-deleted classification with the same natural key would still hold this
     // slug (unique regardless of isDeleted) and block creation. New data supersedes the trashed
