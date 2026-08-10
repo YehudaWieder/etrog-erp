@@ -17,6 +17,7 @@ import {
   isManagerOrAbove,
   toWorkerTraderCategoryView,
 } from './utils/traders-cat.utils';
+import { validateGradeGroups } from '../../utils/trader-category-grade-groups.util';
 
 @Injectable()
 export class TradersCatService {
@@ -47,6 +48,7 @@ export class TradersCatService {
         name: true,
         notes: true,
         supportedGrades: true,
+        gradeGroups: true,
       },
     });
   }
@@ -65,6 +67,7 @@ export class TradersCatService {
         name: true,
         notes: true,
         supportedGrades: true,
+        gradeGroups: true,
       },
     });
   }
@@ -84,6 +87,7 @@ export class TradersCatService {
         name: true,
         notes: true,
         supportedGrades: true,
+        gradeGroups: true,
       },
       orderBy: [{ orderIndex: 'asc' }, { name: 'asc' }],
     });
@@ -103,12 +107,15 @@ export class TradersCatService {
       );
     }
 
+    validateGradeGroups(dto.gradeGroups, dto.supportedGrades ?? []);
+
     return this.prisma.tradersCategories.create({
       data: {
         name,
         notes,
         seasonId,
         supportedGrades: dto.supportedGrades,
+        gradeGroups: dto.gradeGroups ?? [],
       },
     });
   }
@@ -155,6 +162,18 @@ export class TradersCatService {
 
   // Update category details
   async update(id: number, data: Omit<UpdateTraderCategoryDto, 'id'>) {
+    if (data.gradeGroups !== undefined) {
+      const supportedGrades =
+        data.supportedGrades ??
+        (await this.prisma.tradersCategories.findUnique({
+          where: { id },
+          select: { supportedGrades: true },
+        }))?.supportedGrades ??
+        [];
+
+      validateGradeGroups(data.gradeGroups, supportedGrades);
+    }
+
     return this.prisma.tradersCategories.update({
       where: { id },
       data,

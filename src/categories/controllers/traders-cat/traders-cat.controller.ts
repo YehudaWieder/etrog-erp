@@ -41,6 +41,18 @@ export class TradersCatController {
           description: 'Grades supported by this category.',
           example: [Grade.א, Grade.ב],
         },
+        gradeGroups: {
+          type: 'array',
+          description: 'Groups of grades used to display percentage splits (e.g. [{ name: "Premium", grades: ["א","ב"] }]). Each grade may belong to at most one group.',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              grades: { type: 'array', items: { type: 'string', enum: Object.values(Grade) } },
+            },
+          },
+          example: [{ name: 'Premium', grades: [Grade.א, Grade.ב] }],
+        },
       },
       example: {
         name: 'Yanover Premium',
@@ -70,6 +82,18 @@ export class TradersCatController {
           items: { type: 'string', enum: Object.values(Grade) },
           description: 'Grades supported by this category.',
           example: [Grade.א, Grade.ב],
+        },
+        gradeGroups: {
+          type: 'array',
+          description: 'Groups of grades used to display percentage splits (e.g. [{ name: "Premium", grades: ["א","ב"] }]). Each grade may belong to at most one group.',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              grades: { type: 'array', items: { type: 'string', enum: Object.values(Grade) } },
+            },
+          },
+          example: [{ name: 'Premium', grades: [Grade.א, Grade.ב] }],
         },
         shares: {
           type: 'array',
@@ -154,6 +178,18 @@ export class TradersCatController {
           description: 'Updated list of grades supported by this category.',
           example: [Grade.א, Grade.ב, Grade.ג],
         },
+        gradeGroups: {
+          type: 'array',
+          description: 'Updated groups of grades used to display percentage splits. Each grade may belong to at most one group.',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              grades: { type: 'array', items: { type: 'string', enum: Object.values(Grade) } },
+            },
+          },
+          example: [{ name: 'Premium', grades: [Grade.א, Grade.ב] }],
+        },
       },
     },
     examples: {
@@ -191,6 +227,18 @@ export class TradersCatController {
           items: { type: 'string', enum: Object.values(Grade) },
           description: 'Updated list of grades supported by this category.',
           example: [Grade.א, Grade.ב, Grade.ג],
+        },
+        gradeGroups: {
+          type: 'array',
+          description: 'Updated groups of grades used to display percentage splits. Each grade may belong to at most one group.',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              grades: { type: 'array', items: { type: 'string', enum: Object.values(Grade) } },
+            },
+          },
+          example: [{ name: 'Premium', grades: [Grade.א, Grade.ב] }],
         },
         shares: {
           type: 'array',

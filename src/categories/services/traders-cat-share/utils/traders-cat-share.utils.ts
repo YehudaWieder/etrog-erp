@@ -11,6 +11,7 @@ export type TraderCategoryWithSharesRecord = {
   name: string;
   notes: string | null;
   supportedGrades: Grade[];
+  gradeGroups: Prisma.JsonValue;
   orderIndex: number;
   createdAt: Date;
   updatedAt: Date;
@@ -80,6 +81,7 @@ export function transformCategoryWithShares(record: TraderCategoryWithSharesReco
     name: record.name,
     notes: record.notes,
     supportedGrades: record.supportedGrades,
+    gradeGroups: record.gradeGroups,
     orderIndex: record.orderIndex,
     shares,
     totalPercent: Number(totalPercent.toFixed(2)),

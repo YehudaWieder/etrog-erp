@@ -40,6 +40,7 @@ export class SeedService {
           notes: defaultCategory.notes,
           orderIndex: defaultCategory.orderIndex,
           supportedGrades: defaultCategory.supportedGrades,
+          gradeGroups: defaultCategory.gradeGroups ?? [],
           isDefault: true, // Mark as created from seed bootstrap
         },
       });

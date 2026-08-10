@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { Grade } from '@prisma/client';
+import { Grade, Prisma } from '@prisma/client';
 import { CreateDefaultTraderCategoryWithSharesDto } from '../dto/create-default-trader-category-with-shares.dto';
 
 export const DEFAULT_CATEGORY_TOTAL_EPSILON = 0.001;
@@ -17,6 +17,7 @@ type ApprovalPreviewCategory = {
   name: string;
   notes?: string | null;
   supportedGrades?: Grade[];
+  gradeGroups?: Prisma.JsonValue;
   orderIndex: number;
   shares?: SharePreviewRow[];
   createdAt: Date;
@@ -77,6 +78,7 @@ export function toApprovalResponse(category: ApprovalPreviewCategory) {
     name: category.name,
     notes: category.notes,
     supportedGrades: category.supportedGrades ?? [],
+    gradeGroups: category.gradeGroups ?? [],
     orderIndex: category.orderIndex,
     shares,
     totalPercent: Number(totalPercent.toFixed(2)),

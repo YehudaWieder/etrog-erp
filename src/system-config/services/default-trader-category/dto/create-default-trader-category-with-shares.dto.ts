@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Grade } from '@prisma/client';
+import { GradeGroup } from 'src/categories/utils/trader-category-grade-groups.util';
 
 export class CreateDefaultTraderCategoryWithSharesItemDto {
   @ApiProperty({ description: 'Trader ID to include in the default category distribution.', example: 1 })
@@ -28,6 +29,12 @@ export class CreateDefaultTraderCategoryWithSharesDto {
     description: 'Grades supported by this category.',
   })
   supportedGrades?: Grade[];
+
+  @ApiPropertyOptional({
+    description: 'Groups of grades used to display percentage splits. Each grade may belong to at most one group.',
+    example: [{ name: 'Premium', grades: ['א', 'ב'] }],
+  })
+  gradeGroups?: GradeGroup[];
 
   @ApiProperty({
     type: [CreateDefaultTraderCategoryWithSharesItemDto],

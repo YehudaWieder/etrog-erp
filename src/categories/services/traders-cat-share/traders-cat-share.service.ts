@@ -20,6 +20,7 @@ import {
   transformCategoryWithShares,
   validateSharesPayload,
 } from './utils/traders-cat-share.utils';
+import { validateGradeGroups } from '../../utils/trader-category-grade-groups.util';
 
 @Injectable()
 export class TraderCatShareService {
@@ -97,6 +98,7 @@ export class TraderCatShareService {
           name: categoryName,
           notes: dto.notes,
           supportedGrades: dto.supportedGrades,
+          gradeGroups: dto.gradeGroups ?? [],
           orderIndex: nextOrderIndex,
         },
         select: { id: true },
@@ -127,6 +129,7 @@ export class TraderCatShareService {
           name: categoryName,
           notes: dto.notes,
           supportedGrades: dto.supportedGrades,
+          ...(dto.gradeGroups !== undefined ? { gradeGroups: dto.gradeGroups } : {}),
         },
       });
 
@@ -165,7 +168,7 @@ export class TraderCatShareService {
   private async findExistingCategoryForUpdate(id: number) {
     return this.prisma.tradersCategories.findUnique({
       where: { id },
-      select: { id: true, seasonId: true, name: true },
+      select: { id: true, seasonId: true, name: true, supportedGrades: true },
     });
   }
 
@@ -257,6 +260,8 @@ export class TraderCatShareService {
 
     await this.assertCategoryNameUniqueInSeason(categoryName, dto.seasonId);
 
+    validateGradeGroups(dto.gradeGroups, dto.supportedGrades ?? []);
+
     const traderIds = this.getUniqueTraderIds(dto.shares);
     await this.assertTradersExist(traderIds);
 
@@ -294,6 +299,10 @@ export class TraderCatShareService {
         category.seasonId,
         dto.id,
       );
+    }
+
+    if (dto.gradeGroups !== undefined) {
+      validateGradeGroups(dto.gradeGroups, dto.supportedGrades ?? category.supportedGrades);
     }
 
     const traderIds = this.getUniqueTraderIds(dto.shares);

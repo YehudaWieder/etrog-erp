@@ -27,6 +27,7 @@ import {
   validateCreateWithSharesPayload,
   validateProjectedCategoryTotal,
 } from './utils/default-trader-category.utils';
+import { validateGradeGroups } from '../../../categories/utils/trader-category-grade-groups.util';
 
 @Injectable()
 export class DefaultTraderCategoryService {
@@ -65,11 +66,14 @@ export class DefaultTraderCategoryService {
       );
     }
 
+    validateGradeGroups(dto.gradeGroups, dto.supportedGrades ?? []);
+
     return this.prisma.defaultTraderCategory.create({
       data: {
         name: categoryName,
         notes: dto.notes,
         supportedGrades: dto.supportedGrades,
+        gradeGroups: dto.gradeGroups ?? [],
       },
     });
   }
@@ -93,6 +97,8 @@ export class DefaultTraderCategoryService {
       throw new ConflictException(`Default trader category "${categoryName}" already exists`);
     }
 
+    validateGradeGroups(dto.gradeGroups, dto.supportedGrades ?? []);
+
     const traderIds = [...new Set(dto.shares.map((share) => Number(share.traderId)))];
     const traders = await this.prisma.trader.findMany({
       where: { id: { in: traderIds } },
@@ -115,6 +121,7 @@ export class DefaultTraderCategoryService {
           name: categoryName,
           notes: dto.notes,
           supportedGrades: dto.supportedGrades,
+          gradeGroups: dto.gradeGroups ?? [],
           orderIndex: nextOrderIndex,
         },
         select: { id: true },
@@ -229,12 +236,17 @@ export class DefaultTraderCategoryService {
       }
     }
 
+    if (dto.gradeGroups !== undefined) {
+      validateGradeGroups(dto.gradeGroups, dto.supportedGrades ?? category.supportedGrades);
+    }
+
     const updated = await this.prisma.defaultTraderCategory.update({
       where: { id },
       data: {
         name: normalizedName,
         notes: dto.notes,
         supportedGrades: dto.supportedGrades,
+        ...(dto.gradeGroups !== undefined ? { gradeGroups: dto.gradeGroups } : {}),
       },
       include: {
         shares: {

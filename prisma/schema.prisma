@@ -52,6 +52,7 @@ model DefaultTraderCategory {
   name            String  @unique
   notes           String?
   supportedGrades Grade[]
+  gradeGroups     Json    @default("[]")
   orderIndex      Int     @default(0)
 
   shares DefaultTraderCategoryShare[]
@@ -215,6 +216,7 @@ model TradersCategories {
   seasonId        Int
   season          Season  @relation(fields: [seasonId], references: [id])
   supportedGrades Grade[]
+  gradeGroups     Json    @default("[]")
   orderIndex      Int     @default(0)
 
   isDefault Boolean @default(false) // true = created by SeedService bootstrap, false = manually added
