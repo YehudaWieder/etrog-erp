@@ -55,6 +55,10 @@ export function openPrintableWindow({
             margin: 0 auto;
             display: block;
           }
+          tr, td, th {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
           @page {
             size: A4 landscape;
             margin: 10mm;

@@ -4,8 +4,8 @@ import styles from '../styles/HomeDashboard.module.css';
 import { ChartPanel } from './ChartPanel';
 import { SummarySection } from './SummarySection';
 import { HarvestSortingSummary } from './HarvestSortingSummary';
-import { ShipmentsSummary } from './ShipmentsSummary';
-import { InventorySummary } from './InventorySummary';
+import { ShipmentsSummary, type StatusKey } from './ShipmentsSummary';
+import { InventorySummary, GENERAL_KEY as INVENTORY_GENERAL_KEY } from './InventorySummary';
 import { SvgLineChart } from './SvgLineChart';
 import { SvgBarChart } from './SvgBarChart';
 import { GaugeCard } from './GaugeCard';
@@ -15,6 +15,7 @@ import { fetchReclassificationSummary } from '../../../../services/inventoryMove
 import { GlobalScopedFilters } from '../../../../components/ui/GlobalScopedFilters';
 import filterStyles from '../../../../components/ui/styles/GlobalFiltersBar.module.css';
 import { HOME_I18N } from '../../i18n';
+import { printDashboardSummary } from '../services/dashboardSummaryPrint.service';
 
 type HomeDashboardProps = {
   lang: 'he' | 'en';
@@ -30,6 +31,8 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
   const { data, loading, error } = useDashboardData(resolvedSeasonId);
 
   const [reclassifiedTotal, setReclassifiedTotal] = useState(0);
+  const [shipmentsStatus, setShipmentsStatus] = useState<StatusKey>('packaged');
+  const [inventoryKey, setInventoryKey] = useState<string>(INVENTORY_GENERAL_KEY);
 
   useEffect(() => {
     const seasonId = resolvedSeasonId ? Number(resolvedSeasonId) : undefined;
@@ -234,6 +237,8 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
           lang={lang}
           data={shipmentsSummary}
           unit={t.unit}
+          activeStatus={shipmentsStatus}
+          onActiveStatusChange={setShipmentsStatus}
           labels={t.summary.shipments}
         />
       ),
@@ -246,11 +251,113 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
           lang={lang}
           data={inventorySummary}
           unit={t.unit}
+          activeKey={inventoryKey}
+          onActiveKeyChange={setInventoryKey}
           labels={t.summary.inventory}
         />
       ),
     },
   ];
+
+  const SHIPMENT_STATUS_KEYS: StatusKey[] = ['packaged', 'shipped', 'delivered'];
+
+  const handlePrintSummary = () => {
+    const locale = lang === 'he' ? 'he-IL' : 'en-US';
+    const fmt = (n: number) => `${n.toLocaleString(locale)} ${t.unit}`;
+
+    const shipmentsTables = SHIPMENT_STATUS_KEYS.map((statusKey) => {
+      const statusData = shipmentsSummary[statusKey];
+      return {
+        title: `${t.summary.shipmentsTab} – ${t.summary.shipments.statusTabs[statusKey]}`,
+        metaLines: [`${t.summary.shipments.totalLabels[statusKey]}: ${fmt(statusData.total)}`],
+        categories: statusData.categories,
+        grades: statusData.grades,
+        matrix: statusData.matrix,
+        categoryColumnLabel: t.summary.shipments.categoryColumn,
+        totalColumnLabel: t.summary.shipments.totalColumn,
+        emptyLabel: t.summary.shipments.empty,
+        columnLabels: t.summary.shipments.columns,
+        footerLines: [
+          `${t.summary.shipments.customerNote}: ${fmt(statusData.customerTotal)}`,
+          `${t.summary.shipments.selfPickupNote}: ${fmt(shipmentsSummary.selfPickupTotal)}`,
+        ],
+      };
+    });
+
+    const inventoryGeneralTable = {
+      title: `${t.summary.inventoryTab} – ${t.summary.inventory.generalTab}`,
+      metaLines: [`${t.summary.inventory.totalLabel}: ${fmt(inventorySummary.general.total)}`],
+      categories: inventorySummary.general.categories,
+      grades: inventorySummary.general.grades,
+      matrix: inventorySummary.general.matrix,
+      categoryColumnLabel: t.summary.inventory.categoryColumn,
+      totalColumnLabel: t.summary.inventory.totalColumn,
+      emptyLabel: t.summary.inventory.empty,
+      columnLabels: t.summary.inventory.columns,
+      footerLines: [
+        `${t.summary.inventory.customerNote}: ${fmt(inventorySummary.general.customerTotal)}`,
+        `${t.summary.inventory.remainsInItalyFooterNote}: ${fmt(inventorySummary.general.remainsInItalyTotal)}`,
+        `${t.summary.inventory.privateNote}: ${fmt(inventorySummary.general.privateTotal)}`,
+        `${t.summary.inventory.moduloNote}: ${fmt(inventorySummary.modulo.total)}`,
+      ],
+    };
+
+    const inventoryTraderTables = inventorySummary.traderNames.map((name) => {
+      const traderData = inventorySummary.byTrader[name];
+      return {
+        title: `${t.summary.inventoryTab} – ${name}`,
+        metaLines: [`${t.summary.inventory.totalLabel}: ${fmt(traderData.total)}`],
+        categories: traderData.categories,
+        grades: traderData.grades,
+        matrix: traderData.matrix,
+        categoryColumnLabel: t.summary.inventory.categoryColumn,
+        totalColumnLabel: t.summary.inventory.totalColumn,
+        emptyLabel: t.summary.inventory.empty,
+        columnLabels: t.summary.inventory.columns,
+        footerLines: [`${t.summary.inventory.privateNote}: ${fmt(traderData.privateTotal)}`],
+      };
+    });
+
+    const inventoryModuloTable = {
+      title: `${t.summary.inventoryTab} – ${t.summary.inventory.moduloTab}`,
+      metaLines: [`${t.summary.inventory.totalLabel}: ${fmt(inventorySummary.modulo.total)}`],
+      categories: inventorySummary.modulo.categories,
+      grades: inventorySummary.modulo.grades,
+      matrix: inventorySummary.modulo.matrix,
+      categoryColumnLabel: t.summary.inventory.categoryColumn,
+      totalColumnLabel: t.summary.inventory.totalColumn,
+      emptyLabel: t.summary.inventory.empty,
+      columnLabels: t.summary.inventory.columns,
+      footerLines: [],
+    };
+
+    printDashboardSummary({
+      lang,
+      heading: t.summary.title,
+      tables: [
+        {
+          title: t.summary.harvestSortingTab,
+          metaLines: [`${t.summary.harvestSorting.netHarvest}: ${fmt(sortingSummary.netHarvest)}`],
+          categories: sortingSummary.categories,
+          grades: sortingSummary.grades,
+          matrix: sortingSummary.matrix,
+          categoryColumnLabel: t.summary.harvestSorting.categoryColumn,
+          totalColumnLabel: t.summary.harvestSorting.totalColumn,
+          emptyLabel: t.summary.harvestSorting.empty,
+          columnLabels: t.summary.harvestSorting.columns,
+          footerLines: [
+            `${t.summary.harvestSorting.privateSort}: ${fmt(sortingSummary.privateSortTotal)}`,
+            `${t.summary.harvestSorting.customerSort}: ${fmt(sortingSummary.customerSortTotal)}`,
+            `${t.summary.harvestSorting.reclassified}: ${fmt(reclassifiedTotal)}`,
+          ],
+        },
+        ...shipmentsTables,
+        inventoryGeneralTable,
+        ...inventoryTraderTables,
+        inventoryModuloTable,
+      ],
+    });
+  };
 
   return (
     <>
@@ -325,7 +432,12 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
           ))}
         </div>
 
-        <SummarySection title={t.summary.title} tabs={summaryTabs} />
+        <SummarySection
+          title={t.summary.title}
+          tabs={summaryTabs}
+          onPrint={handlePrintSummary}
+          printTitle={t.summary.printTitle}
+        />
       </div>
     </>
   );

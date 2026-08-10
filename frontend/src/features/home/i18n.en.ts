@@ -32,6 +32,7 @@ export const HOME_I18N_EN = {
     currentSeason: 'Current season',
     summary: {
       title: 'Activity Summary',
+      printTitle: 'Print Activity Summary',
       harvestSortingTab: 'Harvest & Sorting',
       shipmentsTab: 'Shipments',
       inventoryTab: 'Inventory',

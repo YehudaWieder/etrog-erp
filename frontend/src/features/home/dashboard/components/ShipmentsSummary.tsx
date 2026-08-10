@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { ShipmentsSummaryData } from '../types';
 import { CategoryGradeTable } from './CategoryGradeTable';
 import { LabelNote } from './LabelNote';
 import styles from '../styles/ShipmentsSummary.module.css';
 
-type StatusKey = 'packaged' | 'shipped' | 'delivered';
+export type StatusKey = 'packaged' | 'shipped' | 'delivered';
 
 const STATUS_KEYS: StatusKey[] = ['packaged', 'shipped', 'delivered'];
 
@@ -12,6 +12,8 @@ type ShipmentsSummaryProps = {
   lang: 'he' | 'en';
   data: ShipmentsSummaryData;
   unit: string;
+  activeStatus: StatusKey;
+  onActiveStatusChange: (status: StatusKey) => void;
   labels: {
     statusTabs: Record<StatusKey, string>;
     totalLabels: Record<StatusKey, string>;
@@ -29,8 +31,7 @@ type ShipmentsSummaryProps = {
   };
 };
 
-export function ShipmentsSummary({ lang, data, unit, labels }: ShipmentsSummaryProps): JSX.Element {
-  const [activeStatus, setActiveStatus] = useState<StatusKey>('packaged');
+export function ShipmentsSummary({ lang, data, unit, activeStatus, onActiveStatusChange, labels }: ShipmentsSummaryProps): JSX.Element {
   const locale = lang === 'he' ? 'he-IL' : 'en-US';
   const formatter = useMemo(() => new Intl.NumberFormat(locale), [locale]);
   const statusData = data[activeStatus];
@@ -43,7 +44,7 @@ export function ShipmentsSummary({ lang, data, unit, labels }: ShipmentsSummaryP
             key={key}
             type="button"
             className={`${styles.statusTabBtn} ${key === activeStatus ? styles.activeStatusTab : ''}`}
-            onClick={() => setActiveStatus(key)}
+            onClick={() => onActiveStatusChange(key)}
           >
             {labels.statusTabs[key]}
           </button>

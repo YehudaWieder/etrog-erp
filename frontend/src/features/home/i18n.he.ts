@@ -32,6 +32,7 @@ export const HOME_I18N_HE = {
     currentSeason: 'עונה נוכחית',
     summary: {
       title: 'סיכום פעילות',
+      printTitle: 'הדפסת סיכום פעילות',
       harvestSortingTab: 'קטיף ומיון',
       shipmentsTab: 'משלוחים',
       inventoryTab: 'מלאי',

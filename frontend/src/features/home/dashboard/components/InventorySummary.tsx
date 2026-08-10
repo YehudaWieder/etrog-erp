@@ -1,16 +1,18 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { InventorySummaryData } from '../types';
 import { CategoryGradeTable } from './CategoryGradeTable';
 import { LabelNote } from './LabelNote';
 import styles from '../styles/InventorySummary.module.css';
 
-const GENERAL_KEY = '__general__';
-const MODULO_KEY = '__modulo__';
+export const GENERAL_KEY = '__general__';
+export const MODULO_KEY = '__modulo__';
 
 type InventorySummaryProps = {
   lang: 'he' | 'en';
   data: InventorySummaryData;
   unit: string;
+  activeKey: string;
+  onActiveKeyChange: (key: string) => void;
   labels: {
     generalTab: string;
     moduloTab: string;
@@ -31,8 +33,7 @@ type InventorySummaryProps = {
   };
 };
 
-export function InventorySummary({ lang, data, unit, labels }: InventorySummaryProps): JSX.Element {
-  const [activeKey, setActiveKey] = useState<string>(GENERAL_KEY);
+export function InventorySummary({ lang, data, unit, activeKey, onActiveKeyChange, labels }: InventorySummaryProps): JSX.Element {
   const locale = lang === 'he' ? 'he-IL' : 'en-US';
   const formatter = useMemo(() => new Intl.NumberFormat(locale), [locale]);
 
@@ -46,7 +47,7 @@ export function InventorySummary({ lang, data, unit, labels }: InventorySummaryP
         <button
           type="button"
           className={`${styles.tabBtn} ${isGeneral ? styles.activeTab : ''}`}
-          onClick={() => setActiveKey(GENERAL_KEY)}
+          onClick={() => onActiveKeyChange(GENERAL_KEY)}
         >
           {labels.generalTab}
         </button>
@@ -55,7 +56,7 @@ export function InventorySummary({ lang, data, unit, labels }: InventorySummaryP
             key={name}
             type="button"
             className={`${styles.tabBtn} ${name === activeKey ? styles.activeTab : ''}`}
-            onClick={() => setActiveKey(name)}
+            onClick={() => onActiveKeyChange(name)}
           >
             {name}
           </button>
@@ -63,7 +64,7 @@ export function InventorySummary({ lang, data, unit, labels }: InventorySummaryP
         <button
           type="button"
           className={`${styles.tabBtn} ${isModulo ? styles.activeTab : ''}`}
-          onClick={() => setActiveKey(MODULO_KEY)}
+          onClick={() => onActiveKeyChange(MODULO_KEY)}
         >
           {labels.moduloTab}
         </button>
