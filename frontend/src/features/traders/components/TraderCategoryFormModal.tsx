@@ -3,6 +3,7 @@ import { SubmitButton } from '../../../components/ui/SubmitButton';
 import type { ShareRow } from '../tradersManagement.types';
 import { DEFAULT_PERCENT_STEP } from '../utils/traderShares.util';
 import { TRADER_CATEGORY_GRADE_OPTIONS } from '../utils/traderCategoryGrades.util';
+import type { GradeGroupRow } from '../utils/traderCategoryGradeGroups.util';
 import styles from './styles/TraderCategoriesShared.module.css';
 
 type TraderOption = {
@@ -22,6 +23,10 @@ type TraderCategoryFormModalText = {
   notesPlaceholder: string;
   allocationSectionTitle: string;
   supportedGradesLabel: string;
+  gradeGroupsLabel: string;
+  addGroupLabel: string;
+  removeGroupLabel: string;
+  groupNamePlaceholder: string;
   selectTraderOption: string;
   percentPlaceholder: (index: number) => string;
   removeRow: string;
@@ -42,6 +47,11 @@ type TraderCategoryFormModalProps = {
   setCategoryNotes: (value: string) => void;
   supportedGrades: string[];
   toggleSupportedGrade: (grade: string) => void;
+  gradeGroupRows: GradeGroupRow[];
+  addGradeGroup: () => void;
+  removeGradeGroup: (localId: number) => void;
+  renameGradeGroup: (localId: number, name: string) => void;
+  toggleGradeInGroup: (localId: number, grade: string) => void;
   shareRows: ShareRow[];
   getAvailableTradersForRow: (row: ShareRow) => TraderOption[];
   updateShareRow: (rowId: number, changes: Partial<ShareRow>) => void;
@@ -69,6 +79,11 @@ export function TraderCategoryFormModal({
   setCategoryNotes,
   supportedGrades,
   toggleSupportedGrade,
+  gradeGroupRows,
+  addGradeGroup,
+  removeGradeGroup,
+  renameGradeGroup,
+  toggleGradeInGroup,
   shareRows,
   getAvailableTradersForRow,
   updateShareRow,
@@ -136,6 +151,46 @@ export function TraderCategoryFormModal({
               <span>{grade}</span>
             </label>
           ))}
+        </div>
+
+        <p className={styles.sharesSubtitle}>{t.gradeGroupsLabel}</p>
+        <div className={styles.gradeGroupsArea}>
+          {gradeGroupRows.map((group) => (
+            <div key={group.localId} className={styles.gradeGroupRow}>
+              <div className={styles.gradeGroupRowHead}>
+                <input
+                  className="seasons-manager__year-input"
+                  type="text"
+                  value={group.name}
+                  onChange={(event) => renameGradeGroup(group.localId, event.target.value)}
+                  placeholder={t.groupNamePlaceholder}
+                />
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={() => removeGradeGroup(group.localId)}
+                >
+                  {t.removeGroupLabel}
+                </button>
+              </div>
+              <div className={styles.gradesChecklist}>
+                {supportedGrades.map((grade) => (
+                  <label key={grade} className={styles.gradeCheckboxItem}>
+                    <input
+                      type="checkbox"
+                      checked={group.grades.includes(grade)}
+                      onChange={() => toggleGradeInGroup(group.localId, grade)}
+                    />
+                    <span>{grade}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          <button type="button" className="btn btn-primary" onClick={addGradeGroup}>
+            {t.addGroupLabel}
+          </button>
         </div>
 
         <p className={styles.sharesSubtitle}>{t.allocationSectionTitle}</p>

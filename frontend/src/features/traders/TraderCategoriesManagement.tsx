@@ -34,6 +34,11 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
     setCategoryNotes,
     supportedGrades,
     toggleSupportedGrade,
+    gradeGroupRows,
+    addGradeGroup,
+    removeGradeGroup,
+    renameGradeGroup,
+    toggleGradeInGroup,
     shareRows,
     updateShareRow,
     removeShareRow,
@@ -123,6 +128,10 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
           notesPlaceholder: t.notesPlaceholder,
           allocationSectionTitle: t.allocationSectionTitle,
           supportedGradesLabel: t.supportedGradesLabel,
+          gradeGroupsLabel: t.gradeGroupsLabel,
+          addGroupLabel: t.addGroupLabel,
+          removeGroupLabel: t.removeGroupLabel,
+          groupNamePlaceholder: t.groupNamePlaceholder,
           selectTraderOption: t.selectTraderOption,
           percentPlaceholder: t.percentPlaceholder,
           removeRow: t.removeRow,
@@ -137,6 +146,11 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
         setCategoryNotes={setCategoryNotes}
         supportedGrades={supportedGrades}
         toggleSupportedGrade={toggleSupportedGrade}
+        gradeGroupRows={gradeGroupRows}
+        addGradeGroup={addGradeGroup}
+        removeGradeGroup={removeGradeGroup}
+        renameGradeGroup={renameGradeGroup}
+        toggleGradeInGroup={toggleGradeInGroup}
         shareRows={shareRows}
         getAvailableTradersForRow={getRowAvailableTraders}
         updateShareRow={updateShareRow}

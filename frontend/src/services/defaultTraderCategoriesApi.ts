@@ -1,4 +1,5 @@
 import { apiClient } from './apiClient';
+import type { GradeGroup } from './traderCategoriesApi';
 
 export type DefaultTraderCategoryShare = {
   traderId: number;
@@ -11,6 +12,7 @@ export type DefaultTraderCategory = {
   name: string;
   notes?: string | null;
   supportedGrades: string[];
+  gradeGroups: GradeGroup[];
   orderIndex: number;
   shares: DefaultTraderCategoryShare[];
   totalPercent: number;
@@ -22,6 +24,7 @@ export type CreateDefaultTraderCategoryWithSharesPayload = {
   name: string;
   notes?: string;
   supportedGrades?: string[];
+  gradeGroups?: GradeGroup[];
   shares: Array<{
     traderId: number;
     percent: number;
@@ -33,6 +36,7 @@ export type UpdateDefaultTraderCategoryPayload = {
   name?: string;
   notes?: string;
   supportedGrades?: string[];
+  gradeGroups?: GradeGroup[];
 };
 
 export type CreateDefaultTraderCategorySharePayload = {

@@ -129,6 +129,41 @@
   margin-right: auto;
 }
 
+.gradeGroupsArea {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: max-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: 0;
+  margin-bottom: var(--space-2);
+}
+
+.gradeGroupRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: var(--space-3);
+  border: 1px solid rgba(200, 208, 216, 0.7);
+  border-radius: var(--radius-sm);
+}
+
+.gradeGroupRowHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.gradeGroupRowHead :global(.seasons-manager__year-input) {
+  flex: 1;
+}
+
+:global(.app-shell[data-direction='ltr']) .gradeGroupsArea {
+  margin-left: 0;
+  margin-right: auto;
+}
+
 .sharesArea {
   display: flex;
   flex-direction: column;

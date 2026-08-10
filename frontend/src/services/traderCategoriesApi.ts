@@ -6,12 +6,18 @@ export type TraderCategoryShare = {
   percent: number;
 };
 
+export type GradeGroup = {
+  name: string;
+  grades: string[];
+};
+
 export type TraderCategoryWithShares = {
   id: number;
   seasonId: number;
   name: string;
   notes?: string | null;
   supportedGrades: string[];
+  gradeGroups: GradeGroup[];
   orderIndex: number;
   shares: TraderCategoryShare[];
   totalPercent: number;
@@ -24,6 +30,7 @@ export type CreateTraderCategoryWithSharesPayload = {
   name: string;
   notes?: string;
   supportedGrades?: string[];
+  gradeGroups?: GradeGroup[];
   shares: Array<{
     traderId: number;
     percent: number;
@@ -35,6 +42,7 @@ export type UpdateTraderCategoryWithSharesPayload = {
   name?: string;
   notes?: string;
   supportedGrades?: string[];
+  gradeGroups?: GradeGroup[];
   shares: Array<{
     traderId: number;
     percent: number;
@@ -47,6 +55,7 @@ type LegacyTraderCategory = {
   name: string;
   notes?: string | null;
   supportedGrades?: string[];
+  gradeGroups?: GradeGroup[];
   orderIndex?: number;
   createdAt?: string;
   updatedAt?: string;
@@ -93,6 +102,7 @@ function mapLegacyToWithShares(
       name: category.name,
       notes: category.notes,
       supportedGrades: category.supportedGrades ?? [],
+      gradeGroups: category.gradeGroups ?? [],
       orderIndex: category.orderIndex ?? index,
       shares: categoryShares,
       totalPercent: Number(totalPercent.toFixed(2)),

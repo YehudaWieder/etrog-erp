@@ -189,6 +189,10 @@ export type TraderCategoriesI18n = {
 	notesPlaceholder: string;
 	allocationSectionTitle: string;
 	supportedGradesLabel: string;
+	gradeGroupsLabel: string;
+	addGroupLabel: string;
+	removeGroupLabel: string;
+	groupNamePlaceholder: string;
 	categoryId: string;
 	sharesDetailsTitle: string;
 	priorityLabel: string;
@@ -238,6 +242,10 @@ export type DefaultTraderCategoriesI18n = {
 	notesPlaceholder: string;
 	allocationSectionTitle: string;
 	supportedGradesLabel: string;
+	gradeGroupsLabel: string;
+	addGroupLabel: string;
+	removeGroupLabel: string;
+	groupNamePlaceholder: string;
 	categoryId: string;
 	sharesDetailsTitle: string;
 	priorityLabel: string;

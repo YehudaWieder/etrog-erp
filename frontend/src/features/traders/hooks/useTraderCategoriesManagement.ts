@@ -17,6 +17,15 @@ import { sortByHebrewName, sortByOrderIndex } from '../services/traderCollection
 import { getAddShareRowBlockReason, getAvailableTradersForRow } from '../services/traderShareRows.service';
 import { toggleGradeSelection } from '../utils/traderCategoryGrades.util';
 import {
+  addGradeGroupRow,
+  gradeGroupsToRows,
+  removeGradeGroupRow,
+  renameGradeGroupRow,
+  rowsToGradeGroups,
+  toggleGradeInGroupRow,
+  type GradeGroupRow,
+} from '../utils/traderCategoryGradeGroups.util';
+import {
   buildTraderCategoriesFiltersConfig,
   parseTraderCategorySeasonFilterId,
   parseTraderFilterId,
@@ -57,6 +66,7 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
   const [categoryName, setCategoryName] = useState('');
   const [categoryNotes, setCategoryNotes] = useState('');
   const [supportedGrades, setSupportedGrades] = useState<string[]>([]);
+  const [gradeGroupRows, setGradeGroupRows] = useState<GradeGroupRow[]>([]);
   const [shareRows, setShareRows] = useState<ShareRow[]>([createEmptyShareRow(1)]);
   const [showAddRowBlockReason, setShowAddRowBlockReason] = useState(false);
 
@@ -218,10 +228,27 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
     setSupportedGrades((current) => toggleGradeSelection(current, grade));
   };
 
+  const addGradeGroup = () => {
+    setGradeGroupRows((current) => addGradeGroupRow(current));
+  };
+
+  const removeGradeGroup = (localId: number) => {
+    setGradeGroupRows((current) => removeGradeGroupRow(current, localId));
+  };
+
+  const renameGradeGroup = (localId: number, name: string) => {
+    setGradeGroupRows((current) => renameGradeGroupRow(current, localId, name));
+  };
+
+  const toggleGradeInGroup = (localId: number, grade: string) => {
+    setGradeGroupRows((current) => toggleGradeInGroupRow(current, localId, grade));
+  };
+
   const resetForm = () => {
     setCategoryName('');
     setCategoryNotes('');
     setSupportedGrades([]);
+    setGradeGroupRows([]);
     setShareRows([createEmptyShareRow(1)]);
     setShowAddRowBlockReason(false);
   };
@@ -293,6 +320,7 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
     setCategoryName(selectedCategory.name);
     setCategoryNotes(selectedCategory.notes ?? '');
     setSupportedGrades(selectedCategory.supportedGrades ?? []);
+    setGradeGroupRows(gradeGroupsToRows(selectedCategory.gradeGroups));
     setShowAddRowBlockReason(false);
     setShareRows(
       selectedCategory.shares.length > 0
@@ -338,6 +366,7 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
         name: categoryName.trim(),
         notes: categoryNotes.trim() || undefined,
         supportedGrades,
+        gradeGroups: rowsToGradeGroups(gradeGroupRows),
         shares: shareRows.map((shareRow) => ({
           traderId: shareRow.traderId as number,
           percent: Number(shareRow.percent),
@@ -376,6 +405,7 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
         name: categoryName.trim(),
         notes: categoryNotes.trim() || undefined,
         supportedGrades,
+        gradeGroups: rowsToGradeGroups(gradeGroupRows),
         shares: shareRows.map((shareRow) => ({
           traderId: shareRow.traderId as number,
           percent: Number(shareRow.percent),
@@ -491,6 +521,11 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
     setCategoryNotes,
     supportedGrades,
     toggleSupportedGrade,
+    gradeGroupRows,
+    addGradeGroup,
+    removeGradeGroup,
+    renameGradeGroup,
+    toggleGradeInGroup,
     shareRows,
     updateShareRow,
     removeShareRow,
