@@ -536,7 +536,7 @@ export function HarvestPage() {
   }, [isSortingListTrashTab, seasonFilterId, t.sortingListTrash.loadError]);
 
   useHarvestFormCategories({
-    isOpen: isHarvestFormOpen || isHarvestSortingFormOpen || isSortingSummaryTab || isDailyDetailsTab || isSortingDailyDetailsTab,
+    isOpen: isHarvestFormOpen || isHarvestSortingFormOpen || isSortingSummaryTab || isDailyDetailsTab || isSortingDailyDetailsTab || isHarvestSummaryTab || isFieldReportTab,
     seasonFilterId,
     setHarvestFormTraderCategories,
     setHarvestFormCustomerCategories,
