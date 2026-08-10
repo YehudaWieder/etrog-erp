@@ -10,61 +10,8 @@
   margin-right: auto;
 }
 
-.breakdownToggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin: 0 auto;
-  padding: 0 28px;
-  min-height: 42px;
-  background: transparent;
-  border: 2px solid #f3c52f;
-  border-radius: 10px;
-  color: #29540f;
-  font-size: 0.95rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background var(--easing-standard), color var(--easing-standard), border-color var(--easing-standard), transform var(--easing-standard);
-  position: relative;
-  z-index: 1;
-  margin-bottom: -21px;
-}
-
-.breakdownToggle:hover {
-  background: #f3c52f;
-  transform: translateY(-1px);
-}
-
-.breakdownToggleOpen {
-  background: #f3c52f;
-  border-color: #f3c52f;
-}
-
-.breakdownToggleOpen:hover {
-  background: #eabf2f;
-  border-color: #eabf2f;
-}
-
-.breakdownArrow {
-  font-size: 0.75rem;
-  transition: transform 0.2s ease;
-}
-
-.breakdownArrowOpen {
-  transform: rotate(180deg);
-}
-
-.breakdownContent {
-  border: 1.5px solid rgba(150, 185, 158, 0.65);
-  border-radius: 16px;
-  padding: 44px 28px 32px;
-  background: rgba(242, 248, 244, 0.97);
-  box-shadow: 0 6px 20px rgba(20, 56, 35, 0.06);
-}
-
 .categoriesTitle {
-  margin: 56px 0 0;
+  margin: 0 0 24px;
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--color-text-main);

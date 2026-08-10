@@ -5,10 +5,11 @@ import { ShipmentsSummaryCards } from './shared/ShipmentsSummaryCards';
 import { buildShipmentItemsSummaryTotals } from '../services/shipmentsSummary.service';
 import { buildShipmentItemsPerShipmentMatrices } from '../services/shipmentItemsCategoryMatrix.service';
 import { buildShipmentItemsSummaryMatrix } from '../services/shipmentItemsSummaryMatrix.service';
+import { buildShipmentDetailedMatrices } from '../services/shipmentItemsDetailedMatrix.service';
 import { printShipmentsSummary, exportShipmentsSummaryToExcel } from '../services/shipmentItemsSummaryExport.service';
 import { useShipmentItemsFilters } from '../hooks/useShipmentItemsFilters';
 import { useShipmentItemsTable } from '../hooks/useShipmentItemsTable';
-import { ShipmentBreakdownTable } from './ShipmentBreakdownTable';
+import { ShipmentDetailedBreakdownTable } from './ShipmentDetailedBreakdownTable';
 import { ShipmentsSummaryMatrix } from './ShipmentsSummaryMatrix';
 import { ShipmentsBoxStatusTable } from './ShipmentsBoxStatusTable';
 import { getShipmentsBySeason } from '../../../services/shipmentsApi';
@@ -66,7 +67,10 @@ export function ShipmentItemsSummary({ lang, labels, description, refreshKey, on
     () => buildShipmentItemsPerShipmentMatrices(rows, traderCategoryOrder),
     [rows, traderCategoryOrder],
   );
-  const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
+  const detailedMatrices = useMemo(
+    () => buildShipmentDetailedMatrices(rows, labels.noGrade, labels.summary.total, traderCategoryOrder),
+    [rows, labels.noGrade, labels.summary.total, traderCategoryOrder],
+  );
   const [shipments, setShipments] = useState<ShipmentRecord[]>([]);
 
   const hasData = summaryMatrix.shipmentNumbers.length > 0;
@@ -175,33 +179,17 @@ export function ShipmentItemsSummary({ lang, labels, description, refreshKey, on
             labels={labels}
           />
           <div className={styles.breakdownPanel}>
-            <button
-              type="button"
-              className={`${styles.breakdownToggle}${isBreakdownOpen ? ` ${styles.breakdownToggleOpen}` : ''}`}
-              onClick={() => setIsBreakdownOpen((o) => !o)}
-            >
-              {isBreakdownOpen ? labels.summaryMatrix.hideBreakdown : labels.summaryMatrix.showBreakdown}
-              <span className={`${styles.breakdownArrow}${isBreakdownOpen ? ` ${styles.breakdownArrowOpen}` : ''}`}>▼</span>
-            </button>
-            {isBreakdownOpen && (
-              <div className={styles.breakdownContent}>
-                <h3 className={styles.categoriesTitle}>{labels.summaryMatrix.categoriesTitle}</h3>
-                <div className={styles.categoryTablesStack}>
-                  {perShipmentMatrices.map((matrix) => (
-                    <ShipmentBreakdownTable
-                      key={matrix.shipmentNumber}
-                      lang={lang}
-                      data={matrix}
-                      shipmentLabel={labels.summaryMatrix.shipmentLabel}
-                      ownerColumnLabel={labels.summaryMatrix.ownerColumnLabel}
-                      privateSelectionLabel={labels.summaryMatrix.privateSelectionLabel}
-                      customersLabel={labels.summaryMatrix.customersLabel}
-                      totalLabel={labels.summary.total}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+            <h3 className={styles.categoriesTitle}>{labels.summaryMatrix.categoriesTitle}</h3>
+            <div className={styles.categoryTablesStack}>
+              {detailedMatrices.map((matrix) => (
+                <ShipmentDetailedBreakdownTable
+                  key={matrix.shipmentNumber}
+                  lang={lang}
+                  data={matrix}
+                  labels={labels}
+                />
+              ))}
+            </div>
           </div>
         </>
       )}
