@@ -15,6 +15,29 @@
   color: #972f3d;
 }
 
+.badPicksDiffValueExcluding {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 44px;
+  min-height: 30px;
+  border-radius: 999px;
+  padding: 0 10px;
+  font-weight: 700;
+  background: #fbe3e7;
+  border: 1px solid #e9b5be;
+  color: #972f3d;
+}
+
+.badPicksDiffDotExcluding {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #972f3d;
+  flex: none;
+}
+
 .detailsTrigger {
   border: 1px solid rgba(194, 211, 198, 0.9);
   background: rgba(247, 251, 248, 0.92);

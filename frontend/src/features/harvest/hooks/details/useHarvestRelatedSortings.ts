@@ -2,6 +2,11 @@
 import type { ClassificationRecord } from '../../../../services/classificationsApi';
 import type { TraderCategoryWithShares } from '../../../../services/traderCategoriesApi';
 import type { HarvestI18n } from '../../i18n';
+import {
+  buildCategoryGradeGroupSplits,
+  buildCategoryGradeTotals,
+  buildGradeGroupsByCategory,
+} from '../../utils/gradeGroupBreakdown.util';
 
 type RelatedSortingsLabels = HarvestI18n['dailyDetails']['detailsPanel']['relatedSortings'];
 
@@ -11,6 +16,7 @@ type UseHarvestRelatedSortingsParams = {
   relatedSortingsLabels: RelatedSortingsLabels;
   noneValue: string;
   traderCategories?: TraderCategoryWithShares[];
+  gradeGroupsUngroupedLabel: string;
 };
 
 export function useHarvestRelatedSortings({
@@ -19,6 +25,7 @@ export function useHarvestRelatedSortings({
   relatedSortingsLabels,
   noneValue,
   traderCategories = [],
+  gradeGroupsUngroupedLabel,
 }: UseHarvestRelatedSortingsParams) {
   const traderCategoryOrder = useMemo(() => {
     const map = new Map<string, number>();
@@ -27,6 +34,14 @@ export function useHarvestRelatedSortings({
     }
     return map;
   }, [traderCategories]);
+
+  const gradeGroupsByCategory = useMemo(() => buildGradeGroupsByCategory(traderCategories), [traderCategories]);
+
+  const gradeGroupSplits = useMemo(() => {
+    const gradeFallback = lang === 'he' ? 'ללא' : 'None';
+    const categoryGradeTotals = buildCategoryGradeTotals(relatedSortings, gradeFallback);
+    return buildCategoryGradeGroupSplits(categoryGradeTotals, gradeGroupsByCategory, traderCategoryOrder, gradeGroupsUngroupedLabel);
+  }, [lang, relatedSortings, gradeGroupsByCategory, traderCategoryOrder, gradeGroupsUngroupedLabel]);
 
   const sortedRelatedSortings = useMemo(() => {
     const locale = lang === 'he' ? 'he' : 'en';
@@ -154,6 +169,7 @@ export function useHarvestRelatedSortings({
     getRelatedSortingNote,
     getRelatedSortingTarget,
     sortedRelatedSortings,
+    gradeGroupSplits,
   };
 }
 

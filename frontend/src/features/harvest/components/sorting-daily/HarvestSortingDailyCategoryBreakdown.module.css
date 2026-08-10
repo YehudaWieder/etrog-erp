@@ -1,0 +1,5 @@
+.panelMatrix table thead tr th {
+  background: rgba(241, 247, 243, 0.95) !important;
+  color: #284f31 !important;
+  box-shadow: none !important;
+}

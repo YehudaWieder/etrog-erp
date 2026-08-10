@@ -155,7 +155,9 @@ export type HarvestI18n = {
     existingClassificationQuantitySubtractModeLabel: string;
     subtractExistingClassificationQuantityConfirmLabel: string;
     subtractExistingClassificationQuantityInvalidError: string;
-    subtractExistingClassificationQuantityExceedsBaseError: (baseQuantity: number) => string;
+    subtractExistingClassificationQuantityExceedsBaseError: (
+      baseQuantity: number,
+    ) => string;
     existingClassificationCellInvalidQuantityError: string;
     existingClassificationCellSaveError: string;
     cancel: string;
@@ -192,8 +194,12 @@ export type HarvestI18n = {
       alreadyClassifiedTotal: number,
       availableSortingTotal: number,
     ) => string;
-    sortingTotalMustMatchAvailableForFullSorting: (requiredTotal: number) => string;
-    sortingTotalWithClassifiedMustMatchAvailableForFullSorting: (requiredTotal: number) => string;
+    sortingTotalMustMatchAvailableForFullSorting: (
+      requiredTotal: number,
+    ) => string;
+    sortingTotalWithClassifiedMustMatchAvailableForFullSorting: (
+      requiredTotal: number,
+    ) => string;
     sortingTotalMustBeAtMostAvailableMinusOneForPartialSorting: (
       maximumTotal: number,
       alreadyClassifiedTotal: number,
@@ -209,12 +215,24 @@ export type HarvestI18n = {
     customerRequired: (rowNumber: number) => string;
     customerCategoryRequired: (rowNumber: number) => string;
     pitamStatusRequired: (rowNumber: number) => string;
-    apiClassificationsExceedNet: (classificationsTotal: number, netHarvested: number) => string;
-    apiClassificationsMustEqualNet: (classificationsTotal: number, netHarvested: number) => string;
-    apiClassificationsMustEqualNetFinal: (classificationsTotal: number, netHarvested: number) => string;
+    apiClassificationsExceedNet: (
+      classificationsTotal: number,
+      netHarvested: number,
+    ) => string;
+    apiClassificationsMustEqualNet: (
+      classificationsTotal: number,
+      netHarvested: number,
+    ) => string;
+    apiClassificationsMustEqualNetFinal: (
+      classificationsTotal: number,
+      netHarvested: number,
+    ) => string;
     apiDuplicateClassification: string;
     apiHarvestYearMismatch: (harvestYear: number, seasonYear: number) => string;
-    uncalculatedRejectedExceedsTotal: (uncalculatedRejected: number, totalRejected: number) => string;
+    uncalculatedRejectedExceedsTotal: (
+      uncalculatedRejected: number,
+      totalRejected: number,
+    ) => string;
     saveFailed: string;
     sortingSaveFailed: string;
   };
@@ -357,6 +375,7 @@ export type HarvestI18n = {
       rejectionRate: string;
       rejectionRateExcludingBadPicks: string;
       harvestExcludingBadPicks: string;
+      excludingBadPicksDiffTooltip: string;
     };
   };
   sortingDailyDetails: {
@@ -365,13 +384,13 @@ export type HarvestI18n = {
     loadError: string;
     empty: string;
     title: string;
-      printWindowTitle: string;
-      expandedPrintWindowTitle: string;
-      sheetName: string;
-      expandedSheetName: string;
-      exportError: string;
-      expandedPrintError: string;
-      expandedExportError: string;
+    printWindowTitle: string;
+    expandedPrintWindowTitle: string;
+    sheetName: string;
+    expandedSheetName: string;
+    exportError: string;
+    expandedPrintError: string;
+    expandedExportError: string;
     closeLabel: string;
     print: string;
     table: {
@@ -447,6 +466,7 @@ export type HarvestI18n = {
       uncalculatedRejected: string;
       rejectionRateExcludingBadPicks: string;
       harvestExcludingBadPicks: string;
+      excludingBadPicksDiffTooltip: string;
     };
     filters: {
       methodFilterLabel: string;
@@ -541,17 +561,20 @@ export type HarvestI18n = {
       total: string;
     };
     rows: {
+      general: string;
       privateSorting: string;
       customers: string;
       grandTotal: string;
     };
     breakdown: {
-      showBreakdown: string;
-      hideBreakdown: string;
-      breakdownTitle: string;
       grade: string;
-      category: string;
       noCategory: string;
+    };
+    gradeGroups: {
+      title: string;
+      groupColumn: string;
+      percentColumn: string;
+      ungrouped: string;
     };
   };
   emptyState: Record<string, EmptyStateContent>;

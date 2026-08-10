@@ -9,7 +9,8 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     delete: 'Delete',
     deleteHarvestDialog: {
       title: 'Delete Harvest Record',
-      message: 'Are you sure you want to delete this harvest record? This action cannot be undone.',
+      message:
+        'Are you sure you want to delete this harvest record? This action cannot be undone.',
       confirm: 'Delete',
       cancel: 'Cancel',
     },
@@ -22,7 +23,8 @@ export const HARVEST_I18N_EN: HarvestI18n = {
       ownerHarvestedLabel: 'Owner Harvested',
       ownerRejectedLabel: 'Owner Rejected',
       notesLabel: 'Notes',
-      uncalculatedRejectedPlaceholder: (totalRejected) => `Out of ${totalRejected} rejected`,
+      uncalculatedRejectedPlaceholder: (totalRejected) =>
+        `Out of ${totalRejected} rejected`,
       confirm: 'Save',
       cancel: 'Cancel',
     },
@@ -40,12 +42,15 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     },
     permanentDeleteSortingDialog: {
       title: 'Permanently Delete Sorting Record',
-      message: 'Are you sure you want to permanently delete this sorting record? This cannot be undone.',
+      message:
+        'Are you sure you want to permanently delete this sorting record? This cannot be undone.',
       confirm: 'Delete Permanently',
       cancel: 'Cancel',
     },
-    deleteHarvestBlockedTitle: 'Cannot delete a harvest that has related sortings',
-    nonActiveSeasonDisabled: 'You can only add, edit, or delete in the active season',
+    deleteHarvestBlockedTitle:
+      'Cannot delete a harvest that has related sortings',
+    nonActiveSeasonDisabled:
+      'You can only add, edit, or delete in the active season',
     restore: 'Restore',
     permanentDelete: 'Delete Permanently',
   },
@@ -53,7 +58,8 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     ariaLabel: 'Global harvest form',
     closeLabel: 'Close',
     title: 'Add Harvest and Sorting',
-    instructions: 'Use this form to enter harvest and sorting data, and add sorting rows if needed.',
+    instructions:
+      'Use this form to enter harvest and sorting data, and add sorting rows if needed.',
     fieldLabel: 'Field',
     fieldPlaceholder: 'Select field',
     gregorianDateLabel: 'Gregorian date',
@@ -68,38 +74,50 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     rejectionRateLabel: 'Rejection %',
     ownerRejectionRateLabel: 'Franco rejection %',
     classificationModeLabel: 'Classification mode',
-    classificationModeHint: 'Choose the sorting mode for this record: full for the whole harvest or partial for available data.',
+    classificationModeHint:
+      'Choose the sorting mode for this record: full for the whole harvest or partial for available data.',
     fullSorting: 'Full sorting',
     partialSorting: 'Partial sorting',
     notesPlaceholder: 'Harvest notes',
     notesLabel: 'Harvest notes',
     uncalculatedRejectedLabel: 'Uncalculated rejected',
-    uncalculatedRejectedPlaceholder: (totalRejected) => `Out of ${totalRejected} rejected`,
-    remainsInItalyGradeHLabel: "Grade H remains in Italy",
-    remainsInItalyGradeVLabel: "Grade V remains in Italy",
+    uncalculatedRejectedPlaceholder: (totalRejected) =>
+      `Out of ${totalRejected} rejected`,
+    remainsInItalyGradeHLabel: 'Grade H remains in Italy',
+    remainsInItalyGradeVLabel: 'Grade V remains in Italy',
     sortingRowsTitle: 'Sorting rows',
     sortingTotalQuantityLabel: 'Total sorting quantity',
-    fullSortingRequiredHint: (requiredTotal) => `Full sorting requires a quantity of ${requiredTotal}.`,
-    fullSortingReduceHint: (amount) => `You filled more than required - reduce by ${amount}.`,
-    fullSortingIncreaseHint: (amount) => `You filled less than required - add ${amount}.`,
+    fullSortingRequiredHint: (requiredTotal) =>
+      `Full sorting requires a quantity of ${requiredTotal}.`,
+    fullSortingReduceHint: (amount) =>
+      `You filled more than required - reduce by ${amount}.`,
+    fullSortingIncreaseHint: (amount) =>
+      `You filled less than required - add ${amount}.`,
     fullSortingMatchHint: 'The filled quantity matches full sorting.',
     addSortingRow: 'Add sorting row',
     sortingRowPrefix: (index) => `Sorting ${index + 1}`,
     removeSortingRow: 'Remove',
     pendingRemovedSortingRowsTitle: 'Removed sortings (not saved yet)',
-    pendingRemovedSortingRowsHint: 'A removed sorting can still be restored as long as the form hasn\'t been saved.',
+    pendingRemovedSortingRowsHint:
+      "A removed sorting can still be restored as long as the form hasn't been saved.",
     restorePendingRemovedSortingRow: 'Restore',
     addRejectedQuantity: 'Add rejected',
     additionalRejectedLabel: 'Rejected quantity to add',
     additionalRejectedPlaceholder: 'Quantity',
-    additionalRejectedNewTotalLabel: (newTotal) => `Total rejected after adding: ${newTotal}`,
+    additionalRejectedNewTotalLabel: (newTotal) =>
+      `Total rejected after adding: ${newTotal}`,
     removeAddedRejectedQuantity: 'Remove',
     addOwnerRejectedQuantity: 'Add owner rejected',
     additionalOwnerRejectedLabel: 'Owner rejected quantity to add',
     additionalOwnerRejectedPlaceholder: 'Quantity',
-    additionalOwnerRejectedNewTotalLabel: (newTotal) => `Total owner rejected after adding: ${newTotal}`,
+    additionalOwnerRejectedNewTotalLabel: (newTotal) =>
+      `Total owner rejected after adding: ${newTotal}`,
     removeAddedOwnerRejectedQuantity: 'Remove',
-    assignmentOptions: { general: 'General', trader: 'Trader', customer: 'Customer' },
+    assignmentOptions: {
+      general: 'General',
+      trader: 'Trader',
+      customer: 'Customer',
+    },
     assignmentTypeLabel: 'Assignment',
     traderLabel: 'Trader',
     traderCategoryLabel: 'Category',
@@ -113,36 +131,57 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     gradePlaceholder: 'Select grade',
     pitamStatusLabel: 'Pitam',
     pitamStatusPlaceholder: 'Select pitam status',
-    pitamOptions: { withPitam: 'With pitam', withoutPitam: 'Without pitam', mixed: 'Mixed' },
+    pitamOptions: {
+      withPitam: 'With pitam',
+      withoutPitam: 'Without pitam',
+      mixed: 'Mixed',
+    },
     quantityLabel: 'Quantity',
     quantityPlaceholder: 'Quantity',
-    selectCategoryForQuantitiesHint: 'Select a category to fill in quantities per grade.',
+    selectCategoryForQuantitiesHint:
+      'Select a category to fill in quantities per grade.',
     sortingNotesLabel: 'Sorting notes',
     sortingNotesPlaceholder: 'Sorting notes',
-    addSortingRowBlockedError: 'Complete the last sorting row before adding a new one.',
-    addSortingRowSummaryFieldsRequiredError: 'Fill in total harvested and total rejected before adding a sorting row.',
-    addSortingRowMaxReachedError: 'Cannot add another sorting row: total sorting quantity already reached the allowed maximum.',
-    duplicateSortingRowError: 'This assignment and category already exist in this harvest or were already selected in another sorting row.',
-    existingClassificationCellBlockedHint: 'This cell is blocked because a sorting entry with the same assignment, category, grade and pitam status already exists. Click the + icon to add quantity to the existing entry - the change is saved together with the rest of the table when you click save.',
-    blockedQuantityFieldsHint: 'Some fields are blocked because of unsupported grades or sorting entries that already exist for them. You can add quantity to the existing sorting entry.',
+    addSortingRowBlockedError:
+      'Complete the last sorting row before adding a new one.',
+    addSortingRowSummaryFieldsRequiredError:
+      'Fill in total harvested and total rejected before adding a sorting row.',
+    addSortingRowMaxReachedError:
+      'Cannot add another sorting row: total sorting quantity already reached the allowed maximum.',
+    duplicateSortingRowError:
+      'This assignment and category already exist in this harvest or were already selected in another sorting row.',
+    existingClassificationCellBlockedHint:
+      'This cell is blocked because a sorting entry with the same assignment, category, grade and pitam status already exists. Click the + icon to add quantity to the existing entry - the change is saved together with the rest of the table when you click save.',
+    blockedQuantityFieldsHint:
+      'Some fields are blocked because of unsupported grades or sorting entries that already exist for them. You can add quantity to the existing sorting entry.',
     addExistingClassificationQuantityLabel: 'Add quantity',
     cancelExistingClassificationCellLabel: 'Cancel the added quantity',
-    addExistingClassificationQuantityPopupTitle: 'Add quantity to existing sorting entry',
-    addExistingClassificationQuantityPopupPrefix: 'Current quantity for category',
+    addExistingClassificationQuantityPopupTitle:
+      'Add quantity to existing sorting entry',
+    addExistingClassificationQuantityPopupPrefix:
+      'Current quantity for category',
     addExistingClassificationQuantityPopupGradeWord: 'grade',
-    addExistingClassificationQuantityPopupInstruction: "Enter the quantity you'd like to add to this sorting entry.",
+    addExistingClassificationQuantityPopupInstruction:
+      "Enter the quantity you'd like to add to this sorting entry.",
     addExistingClassificationQuantityConfirmLabel: 'Add',
-    addExistingClassificationQuantityInvalidError: 'Enter a valid quantity to add.',
+    addExistingClassificationQuantityInvalidError:
+      'Enter a valid quantity to add.',
     editExistingClassificationQuantityLabel: 'Edit quantity',
-    editExistingClassificationQuantityPopupTitle: 'Update quantity for existing sorting entry',
-    editExistingClassificationQuantityPopupInstruction: "Choose whether to add or subtract, then enter the desired quantity.",
+    editExistingClassificationQuantityPopupTitle:
+      'Update quantity for existing sorting entry',
+    editExistingClassificationQuantityPopupInstruction:
+      'Choose whether to add or subtract, then enter the desired quantity.',
     existingClassificationQuantityAddModeLabel: 'Add',
     existingClassificationQuantitySubtractModeLabel: 'Subtract',
     subtractExistingClassificationQuantityConfirmLabel: 'Subtract',
-    subtractExistingClassificationQuantityInvalidError: 'Enter a valid quantity to subtract.',
-    subtractExistingClassificationQuantityExceedsBaseError: (baseQuantity) => `Cannot subtract more than the current quantity (${baseQuantity}).`,
-    existingClassificationCellInvalidQuantityError: 'Enter a valid quantity for the edited existing sorting entry.',
-    existingClassificationCellSaveError: 'Failed to update the existing quantity. Please try again.',
+    subtractExistingClassificationQuantityInvalidError:
+      'Enter a valid quantity to subtract.',
+    subtractExistingClassificationQuantityExceedsBaseError: (baseQuantity) =>
+      `Cannot subtract more than the current quantity (${baseQuantity}).`,
+    existingClassificationCellInvalidQuantityError:
+      'Enter a valid quantity for the edited existing sorting entry.',
+    existingClassificationCellSaveError:
+      'Failed to update the existing quantity. Please try again.',
     cancel: 'Cancel',
     save: 'Save harvest',
     saving: 'Saving...',
@@ -154,8 +193,16 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     viewAllFieldDetails: (fieldName) => `View all details for ${fieldName}`,
   },
   topNav: [
-    { id: 'harvest', label: 'Harvest & Sorting', href: '/harvest/harvest-summary' },
-    { id: 'shipments', label: 'Shipments', href: '/shipments/shipment-items-summary' },
+    {
+      id: 'harvest',
+      label: 'Harvest & Sorting',
+      href: '/harvest/harvest-summary',
+    },
+    {
+      id: 'shipments',
+      label: 'Shipments',
+      href: '/shipments/shipment-items-summary',
+    },
     { id: 'partners', label: 'Trader Inventory' },
     { id: 'customers', label: 'Customer Inventory' },
     { id: 'workers', label: 'Workers' },
@@ -194,7 +241,6 @@ export const HARVEST_I18N_EN: HarvestI18n = {
           href: '/harvest/harvest-daily-details',
           icon: 'fa-calendar',
         },
-
       ],
     },
     {
@@ -233,37 +279,61 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     hebrewDateRequired: 'Please provide the Hebrew date.',
     totalHarvestedRequired: 'Please enter total harvested.',
     totalRejectedRequired: 'Please enter total rejected.',
-    sortingHarvestRequired: 'Please select the harvest this sorting belongs to.',
-    sortingQuantityRequired: 'Please enter a sorting quantity greater than zero.',
+    sortingHarvestRequired:
+      'Please select the harvest this sorting belongs to.',
+    sortingQuantityRequired:
+      'Please enter a sorting quantity greater than zero.',
     sortingTraderCategoryRequired: 'Please select a trader category.',
     sortingGradeRequired: 'Please select a grade.',
     sortingTraderRequired: 'Please select a trader.',
     sortingCustomerRequired: 'Please select a customer.',
     sortingCustomerCategoryRequired: 'Please select a customer category.',
     sortingPitamStatusRequired: 'Please select a pitam status.',
-    sortingTotalExceedsAvailable: (maxAllowed, alreadyClassifiedTotal, availableSortingTotal) =>
+    sortingTotalExceedsAvailable: (
+      maxAllowed,
+      alreadyClassifiedTotal,
+      availableSortingTotal,
+    ) =>
       `The new sorting quantity cannot exceed ${maxAllowed} (${alreadyClassifiedTotal} out of ${availableSortingTotal} available have already been sorted).`,
-    sortingTotalMustMatchAvailableForFullSorting: (requiredTotal) => `In full sorting mode, total sorting quantity must be exactly ${requiredTotal}. You can switch to partial sorting to save.`,
-    sortingTotalWithClassifiedMustMatchAvailableForFullSorting: (requiredTotal) => `In full sorting mode, sorting total plus already classified total must equal ${requiredTotal}. You can switch to partial sorting to save.`,
-    sortingTotalMustBeAtMostAvailableMinusOneForPartialSorting: (maximumTotal, alreadyClassifiedTotal, availableSortingTotal) =>
+    sortingTotalMustMatchAvailableForFullSorting: (requiredTotal) =>
+      `In full sorting mode, total sorting quantity must be exactly ${requiredTotal}. You can switch to partial sorting to save.`,
+    sortingTotalWithClassifiedMustMatchAvailableForFullSorting: (
+      requiredTotal,
+    ) =>
+      `In full sorting mode, sorting total plus already classified total must equal ${requiredTotal}. You can switch to partial sorting to save.`,
+    sortingTotalMustBeAtMostAvailableMinusOneForPartialSorting: (
+      maximumTotal,
+      alreadyClassifiedTotal,
+      availableSortingTotal,
+    ) =>
       `In partial sorting mode, the new sorting quantity being added must be at most ${maximumTotal} (${alreadyClassifiedTotal} out of ${availableSortingTotal} available have already been sorted).`,
     sortingRowRequired: 'At least one sorting row is required.',
-    addSortingRowTotalsRequiredError: 'Enter total harvested and total rejected before adding a sorting row.',
-    addSortingRowSummaryFieldsRequiredError: 'Fill in total harvested and total rejected before adding a sorting row.',
-    sortingRowQuantityRequired: (rowNumber) => `Sorting row ${rowNumber} must include a quantity greater than zero.`,
-    traderCategoryRequired: (rowNumber) => `Sorting row ${rowNumber} must include a trader category.`,
-    gradeRequired: (rowNumber) => `Sorting row ${rowNumber} must include a grade.`,
-    traderRequired: (rowNumber) => `Sorting row ${rowNumber} must include a trader.`,
-    customerRequired: (rowNumber) => `Sorting row ${rowNumber} must include a customer.`,
-    customerCategoryRequired: (rowNumber) => `Sorting row ${rowNumber} must include a customer category.`,
-    pitamStatusRequired: (rowNumber) => `Sorting row ${rowNumber} must include a pitam status.`,
+    addSortingRowTotalsRequiredError:
+      'Enter total harvested and total rejected before adding a sorting row.',
+    addSortingRowSummaryFieldsRequiredError:
+      'Fill in total harvested and total rejected before adding a sorting row.',
+    sortingRowQuantityRequired: (rowNumber) =>
+      `Sorting row ${rowNumber} must include a quantity greater than zero.`,
+    traderCategoryRequired: (rowNumber) =>
+      `Sorting row ${rowNumber} must include a trader category.`,
+    gradeRequired: (rowNumber) =>
+      `Sorting row ${rowNumber} must include a grade.`,
+    traderRequired: (rowNumber) =>
+      `Sorting row ${rowNumber} must include a trader.`,
+    customerRequired: (rowNumber) =>
+      `Sorting row ${rowNumber} must include a customer.`,
+    customerCategoryRequired: (rowNumber) =>
+      `Sorting row ${rowNumber} must include a customer category.`,
+    pitamStatusRequired: (rowNumber) =>
+      `Sorting row ${rowNumber} must include a pitam status.`,
     apiClassificationsExceedNet: (classificationsTotal, netHarvested) =>
       `Total sorting quantity (${classificationsTotal}) cannot exceed net harvested (${netHarvested}).`,
     apiClassificationsMustEqualNet: (classificationsTotal, netHarvested) =>
       `Total sorting quantity (${classificationsTotal}) must equal net harvested (${netHarvested}) in full sorting mode.`,
     apiClassificationsMustEqualNetFinal: (classificationsTotal, netHarvested) =>
       `Total sorting quantity (${classificationsTotal}) must equal net harvested (${netHarvested}) in full sorting mode. You can switch to partial sorting if you haven't finished sorting the entire quantity yet.`,
-    apiDuplicateClassification: 'Duplicate sorting entry: each combination of type, trader/customer, category and grade must be unique.',
+    apiDuplicateClassification:
+      'Duplicate sorting entry: each combination of type, trader/customer, category and grade must be unique.',
     apiHarvestYearMismatch: (harvestYear, seasonYear) =>
       `The harvest date year (${harvestYear}) does not match the active season year (${seasonYear}).`,
     uncalculatedRejectedExceedsTotal: (uncalculatedRejected, totalRejected) =>
@@ -276,7 +346,8 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     closeLabel: 'Close',
     title: 'Add Sorting',
     restoreTitle: 'Restore Sorting',
-    instructions: 'Use this form to create a sorting record for an existing harvest.',
+    instructions:
+      'Use this form to create a sorting record for an existing harvest.',
     harvestLabel: 'Linked harvest',
     harvestPlaceholder: 'Select harvest',
     loadingHarvestOptions: 'Loading available harvests...',
@@ -294,7 +365,8 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     restoring: 'Restoring...',
   },
   dailyDetails: {
-    description: 'Centralized daily harvest rows loaded directly from the active season data.',
+    description:
+      'Centralized daily harvest rows loaded directly from the active season data.',
     loading: 'Loading harvest data...',
     loadError: 'Failed to load harvest data right now.',
     empty: 'No harvest records found for the active season.',
@@ -410,10 +482,13 @@ export const HARVEST_I18N_EN: HarvestI18n = {
       rejectionRate: 'Rejection %',
       rejectionRateExcludingBadPicks: 'Rejection Rate (Excl. Bad Picks)',
       harvestExcludingBadPicks: 'Harvest Excluding Bad Picks',
+      excludingBadPicksDiffTooltip:
+        'This value excludes bad picks and is lower than the equivalent including bad picks',
     },
   },
   sortingDailyDetails: {
-    description: 'Daily sorting summary grouped by harvest date and field. Category columns are shown only when totals are above 0.',
+    description:
+      'Daily sorting summary grouped by harvest date and field. Category columns are shown only when totals are above 0.',
     loading: 'Loading daily sorting data...',
     loadError: 'Failed to load daily sorting data right now.',
     empty: 'No sorting records found for the selected season.',
@@ -423,8 +498,10 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     sheetName: 'Sorting Daily',
     expandedSheetName: 'Sorting Expanded',
     exportError: 'Could not export to Excel right now.',
-    expandedPrintError: 'Could not prepare the expanded print version right now.',
-    expandedExportError: 'Could not prepare the expanded export version right now.',
+    expandedPrintError:
+      'Could not prepare the expanded print version right now.',
+    expandedExportError:
+      'Could not prepare the expanded export version right now.',
     closeLabel: 'Close daily sorting details',
     print: 'Print',
     table: {
@@ -488,7 +565,8 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     printWindowTitle: 'Harvest Field Report',
     sheetName: 'Field Report',
     exportError: 'Could not export to Excel right now.',
-    detailsTitle: (fieldName) => (fieldName ? `Field Details - ${fieldName}` : 'Field Details'),
+    detailsTitle: (fieldName) =>
+      fieldName ? `Field Details - ${fieldName}` : 'Field Details',
     closeLabel: 'Close field details',
     printLabel: 'Print',
     headers: {
@@ -500,6 +578,8 @@ export const HARVEST_I18N_EN: HarvestI18n = {
       uncalculatedRejected: 'Rejected Excluding Bad Picks',
       rejectionRateExcludingBadPicks: 'Rejection Rate (Excl. Bad Picks)',
       harvestExcludingBadPicks: 'Harvest Excluding Bad Picks',
+      excludingBadPicksDiffTooltip:
+        'This value excludes bad picks and is lower than the equivalent including bad picks',
     },
     filters: {
       methodFilterLabel: 'Calculation Method',
@@ -517,7 +597,8 @@ export const HARVEST_I18N_EN: HarvestI18n = {
       totalRejected: 'Total Rejected',
       totalNet: 'Total Net',
       avgRejectionRate: 'Avg. Rejection Rate',
-      avgRejectionRateExcludingBadPicks: 'Avg. Rejection Rate (Excl. Bad Picks)',
+      avgRejectionRateExcludingBadPicks:
+        'Avg. Rejection Rate (Excl. Bad Picks)',
       totalRecordCount: 'Total Harvests',
       totalFields: 'Total Fields',
     },
@@ -577,9 +658,10 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     loadError: 'Failed to load the sorting summary.',
     empty: 'No sorting records found for the selected season.',
     retry: 'Retry',
-    tableTitle: 'Sorting Summary by Category',
+    tableTitle: 'Sorting Summary',
     seasonFilterLabel: 'Season',
-    description: 'Sorting quantities by category, grade, and pitam status for the selected season.',
+    description:
+      'Sorting quantities by category, grade, and pitam status for the selected season.',
     actionsLabel: 'Table actions',
     printTitle: 'Print sorting summary',
     printAriaLabel: 'Print sorting summary tables',
@@ -594,23 +676,27 @@ export const HARVEST_I18N_EN: HarvestI18n = {
       total: 'Total',
     },
     rows: {
+      general: 'General Sorting',
       privateSorting: 'Private Sorting',
-      customers: 'Customers',
+      customers: 'Customer Sorting',
       grandTotal: 'Grand Total',
     },
     breakdown: {
-      showBreakdown: 'Show grade breakdown',
-      hideBreakdown: 'Hide breakdown',
-      breakdownTitle: 'Breakdown by Category and Grade',
       grade: 'Grade',
-      category: 'Category',
       noCategory: 'No category',
+    },
+    gradeGroups: {
+      title: 'Percentage breakdown by grade groups',
+      groupColumn: 'Group',
+      percentColumn: 'Percent',
+      ungrouped: 'Ungrouped',
     },
   },
   emptyState: {
     'harvest-summary': {
       title: 'Harvest summary will appear here',
-      description: 'A summary of all harvests by season and field will be shown here.',
+      description:
+        'A summary of all harvests by season and field will be shown here.',
     },
     'harvest-daily-details': {
       title: 'Daily harvest breakdown will appear here',
@@ -618,11 +704,13 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     },
     'harvest-field-report': {
       title: 'Harvest report by field will appear here',
-      description: 'Use this view to compare harvest performance across fields.',
+      description:
+        'Use this view to compare harvest performance across fields.',
     },
     'sorting-summary': {
       title: 'Sorting summary will appear here',
-      description: 'An overview of all sortings by category and season will be shown here.',
+      description:
+        'An overview of all sortings by category and season will be shown here.',
     },
     'sorting-daily-details': {
       title: 'Daily sorting breakdown will appear here',
@@ -630,11 +718,13 @@ export const HARVEST_I18N_EN: HarvestI18n = {
     },
     'sorting-list': {
       title: 'Sorting list will appear here',
-      description: 'A full list of all sorting records for the selected season will be shown here.',
+      description:
+        'A full list of all sorting records for the selected season will be shown here.',
     },
     'sorting-list-trash': {
       title: 'Sorting trash will appear here',
-      description: 'Deleted sorting records for the selected season will be shown here.',
+      description:
+        'Deleted sorting records for the selected season will be shown here.',
     },
     default: {
       title: 'No data to display',

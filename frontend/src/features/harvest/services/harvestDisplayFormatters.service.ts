@@ -63,6 +63,9 @@ export function buildHarvestFieldReportDetailsLabels(
     none: t.dailyDetails.detailsPanel.values.none,
     emptyRows: t.dailyDetails.empty,
     badPickQuantity: t.dailyDetails.detailsPanel.fields.badPickQuantity,
+    gradeGroupsTitle: t.sortingSummary.gradeGroups.title,
+    gradeGroupsGroupColumn: t.sortingSummary.gradeGroups.groupColumn,
+    gradeGroupsPercentColumn: t.sortingSummary.gradeGroups.percentColumn,
   };
 }
 

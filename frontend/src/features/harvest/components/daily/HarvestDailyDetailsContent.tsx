@@ -1,4 +1,6 @@
 ﻿import type { ClassificationRecord } from '../../../../services/classificationsApi';
+import type { CategoryGradeGroupSplit } from '../../utils/gradeGroupBreakdown.util';
+import { GradeGroupSplitCards } from '../shared/GradeGroupSplitCards';
 import styles from '../styles/HarvestDetailsSheet.module.css';
 
 export type DetailsSheetData = {
@@ -70,6 +72,9 @@ export type HarvestDailyDetailsContentProps = {
   relatedSortingsLoadError: string;
   relatedSortings: ClassificationRecord[];
   sortedRelatedSortings: ClassificationRecord[];
+  gradeGroupSplits: CategoryGradeGroupSplit[];
+  gradeGroupsLabels: { title: string; groupColumn: string; percentColumn: string };
+  locale: string;
   numberFormatter: Intl.NumberFormat;
   formatRelatedSortingText: (value?: string | null) => string;
   getRelatedSortingAssignmentLabel: (assignmentType: string) => string;
@@ -86,6 +91,9 @@ export function HarvestDailyDetailsContent({
   relatedSortingsLoadError,
   relatedSortings,
   sortedRelatedSortings,
+  gradeGroupSplits,
+  gradeGroupsLabels,
+  locale,
   numberFormatter,
   formatRelatedSortingText,
   getRelatedSortingAssignmentLabel,
@@ -167,6 +175,15 @@ export function HarvestDailyDetailsContent({
           </p>
         ) : null}
       </div>
+
+      <GradeGroupSplitCards
+        title={gradeGroupsLabels.title}
+        splits={gradeGroupSplits}
+        groupColumnLabel={gradeGroupsLabels.groupColumn}
+        percentColumnLabel={gradeGroupsLabels.percentColumn}
+        locale={locale}
+        compact
+      />
 
       <div className={`${styles.relatedSortingsCard} harvest-daily-workspace__related-sortings-card`}>
         <h4 className={`${styles.relatedSortingsTitle} harvest-daily-workspace__related-sortings-title`}>{relatedSortingsLabels.title}</h4>

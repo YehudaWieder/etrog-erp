@@ -1,4 +1,6 @@
 ﻿import type { HarvestRecord } from '../../../../services/harvestsApi';
+import type { CategoryGradeGroupSplit } from '../../utils/gradeGroupBreakdown.util';
+import { GradeGroupSplitCards } from '../shared/GradeGroupSplitCards';
 import styles from '../styles/HarvestDetailsSheet.module.css';
 
 export type HarvestFieldReportDetailsSummaryRow = {
@@ -23,6 +25,7 @@ export type HarvestFieldReportDetailsData = {
   summaryStatus: string;
   summaryRows: HarvestFieldReportDetailsSummaryRow[];
   rows: HarvestRecord[];
+  gradeGroupSplits: CategoryGradeGroupSplit[];
 };
 
 type HarvestFieldReportDetailsPanelProps = {
@@ -51,6 +54,9 @@ export type HarvestFieldReportDetailsPanelLabels = {
   none: string;
   emptyRows: string;
   badPickQuantity: string;
+  gradeGroupsTitle: string;
+  gradeGroupsGroupColumn: string;
+  gradeGroupsPercentColumn: string;
 };
 
 export function HarvestFieldReportDetailsPanel({ data, locale, labels }: HarvestFieldReportDetailsPanelProps): JSX.Element {
@@ -115,6 +121,15 @@ export function HarvestFieldReportDetailsPanel({ data, locale, labels }: Harvest
           </table>
         </div>
       </div>
+
+      <GradeGroupSplitCards
+        title={labels.gradeGroupsTitle}
+        splits={data.gradeGroupSplits}
+        groupColumnLabel={labels.gradeGroupsGroupColumn}
+        percentColumnLabel={labels.gradeGroupsPercentColumn}
+        locale={locale}
+        compact
+      />
 
       <div className={`${styles.relatedSortingsCard} harvest-daily-workspace__related-sortings-card`}>
         <h4 className={`${styles.relatedSortingsTitle} harvest-daily-workspace__related-sortings-title`}>{labels.rowsTitle}</h4>

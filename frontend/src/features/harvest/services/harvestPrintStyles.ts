@@ -49,9 +49,71 @@ export const HARVEST_PRINT_BASE_STYLE = `
   tbody tr:nth-child(even) {
     background: #f8fcf9;
   }
+  tr, td, th {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
   @page {
     size: A4 landscape;
     margin: 6mm;
+  }
+`;
+
+const GROUP_SPLIT_PRINT_STYLE = `
+  .harvest-daily-workspace__group-split-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 14px 0;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .harvest-daily-workspace__group-split-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1f4f29;
+    text-align: left;
+  }
+  html[dir='rtl'] .harvest-daily-workspace__group-split-title {
+    text-align: right;
+  }
+  .harvest-daily-workspace__group-split-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .harvest-daily-workspace__group-split-card {
+    border: 1px solid #cfdcd2;
+    border-radius: 10px;
+    background: #fff;
+    padding: 10px 12px;
+    min-width: 180px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .harvest-daily-workspace__group-split-card-title {
+    margin: 0 0 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #1f4f29;
+    text-align: center;
+  }
+  .harvest-daily-workspace__group-split-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  .harvest-daily-workspace__group-split-table th,
+  .harvest-daily-workspace__group-split-table td {
+    border: 1px solid #ccd9cf;
+    padding: 4px 8px;
+    text-align: center;
+  }
+  .harvest-daily-workspace__group-split-table th {
+    background: #f1f7f3;
+    color: #284f31;
+    font-weight: 700;
   }
 `;
 
@@ -183,6 +245,32 @@ export const HARVEST_DETAILS_PRINT_EXTRA_STYLES = `
     color: #2f4536;
     white-space: pre-wrap;
   }
+  ${GROUP_SPLIT_PRINT_STYLE}
+  .global-left-details-panel {
+    position: static !important;
+    transform: none !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    box-shadow: none !important;
+    border: 1px solid #d2ded6;
+  }
+  .global-left-details-panel__header-actions,
+  .global-left-details-panel__close {
+    display: none !important;
+  }
+  .global-left-details-panel__body {
+    overflow: visible !important;
+  }
+  .global-data-table__viewport {
+    overflow: visible !important;
+  }
+  .global-data-table__header,
+  .global-data-table__body,
+  .global-data-table__row {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
 `;
 
 export const HARVEST_FIELD_REPORT_DETAILS_PRINT_EXTRA_STYLES = `
@@ -193,6 +281,8 @@ export const HARVEST_FIELD_REPORT_DETAILS_PRINT_EXTRA_STYLES = `
     padding: 12px;
     display: grid;
     gap: 12px;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
   .harvest-daily-workspace__sheet-head {
     display: flex;
@@ -300,6 +390,7 @@ export const HARVEST_FIELD_REPORT_DETAILS_PRINT_EXTRA_STYLES = `
     color: #2f4536;
     white-space: pre-wrap;
   }
+  ${GROUP_SPLIT_PRINT_STYLE}
   .global-left-details-panel {
     position: static !important;
     transform: none !important;
@@ -408,5 +499,83 @@ export const HARVEST_SORTING_DAILY_DETAILS_PRINT_EXTRA_STYLES = `
     margin: 0;
     color: #214f2a;
     font-size: 16px;
+  }
+  .harvest-daily-workspace__sheet-card--category-breakdown > div {
+    overflow: visible !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  .harvest-daily-workspace__sheet-card--category-breakdown table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 11px;
+  }
+  .harvest-daily-workspace__sheet-card--category-breakdown th,
+  .harvest-daily-workspace__sheet-card--category-breakdown td {
+    border: 1px solid #ccd9cf;
+    padding: 5px 6px;
+    text-align: center;
+    vertical-align: middle;
+    word-break: break-word;
+  }
+  .harvest-daily-workspace__sheet-card--category-breakdown thead th {
+    background: #f1f7f3;
+    color: #284f31;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .harvest-daily-workspace__sheet-card--category-breakdown tbody tr:nth-child(odd) {
+    background: #fafcfa;
+  }
+  .harvest-daily-workspace__sheet-card--category-breakdown tbody tr:nth-child(even) {
+    background: #f3f8f4;
+  }
+  .harvest-daily-workspace__sheet-card--category-breakdown tfoot th,
+  .harvest-daily-workspace__sheet-card--category-breakdown tfoot td {
+    background: #e0ece2;
+    font-weight: 700;
+    border-top: 2px solid #8cb494;
+  }
+  .harvest-daily-workspace__sheet-card--category-breakdown tbody th:first-child,
+  .harvest-daily-workspace__sheet-card--category-breakdown tfoot th:first-child {
+    text-align: start;
+    font-weight: 700;
+    background: #eff6f1;
+  }
+  .harvest-daily-workspace__sheet-card--category-breakdown tbody td:last-child,
+  .harvest-daily-workspace__sheet-card--category-breakdown tfoot td:last-child {
+    font-weight: 700;
+    background: #e4f0e7;
+  }
+  ${GROUP_SPLIT_PRINT_STYLE}
+  .global-left-details-panel {
+    position: static !important;
+    transform: none !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    box-shadow: none !important;
+    border: 1px solid #d2ded6;
+  }
+  .global-left-details-panel__header-actions,
+  .global-left-details-panel__close {
+    display: none !important;
+  }
+  .global-left-details-panel__body {
+    overflow: visible !important;
+  }
+  .global-data-table__viewport {
+    overflow: visible !important;
+  }
+  .global-data-table__header,
+  .global-data-table__body,
+  .global-data-table__row {
+    width: 100% !important;
+    min-width: 0 !important;
   }
 `;

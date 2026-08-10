@@ -5,6 +5,7 @@ import { GlobalDataTable, type GlobalDataTableColumn } from '../../../../compone
 import { GlobalLeftDetailsPanel } from '../../../../components/ui/GlobalLeftDetailsPanel';
 import { GlobalScopedFilters, type GlobalScopedFilterConfig } from '../../../../components/ui/GlobalScopedFilters';
 import type { HarvestRecord } from '../../../../services/harvestsApi';
+import type { CategoryGradeGroupSplit } from '../../utils/gradeGroupBreakdown.util';
 import { HarvestDailyDetailsContent, type DetailsSheetData, type RelatedSortingsLabels } from './HarvestDailyDetailsContent';
 import { HarvestPrintExportActions } from '../shared/HarvestPrintExportActions';
 import { HarvestStatCardGrid } from '../shared/HarvestStatCard';
@@ -48,6 +49,8 @@ type HarvestDailyDetailsSectionProps = {
   relatedSortingsLoadError: string;
   relatedSortings: import('../../../../services/classificationsApi').ClassificationRecord[];
   sortedRelatedSortings: import('../../../../services/classificationsApi').ClassificationRecord[];
+  gradeGroupSplits: CategoryGradeGroupSplit[];
+  gradeGroupsLabels: { title: string; groupColumn: string; percentColumn: string };
   numberFormatter: Intl.NumberFormat;
   formatRelatedSortingText: (value?: string | null) => string;
   getRelatedSortingAssignmentLabel: (assignmentType: string) => string;
@@ -100,6 +103,8 @@ export function HarvestDailyDetailsSection({
   relatedSortingsLoadError,
   relatedSortings,
   sortedRelatedSortings,
+  gradeGroupSplits,
+  gradeGroupsLabels,
   numberFormatter,
   formatRelatedSortingText,
   getRelatedSortingAssignmentLabel,
@@ -200,6 +205,9 @@ export function HarvestDailyDetailsSection({
                         relatedSortingsLoadError={relatedSortingsLoadError}
                         relatedSortings={relatedSortings}
                         sortedRelatedSortings={sortedRelatedSortings}
+                        gradeGroupSplits={gradeGroupSplits}
+                        gradeGroupsLabels={gradeGroupsLabels}
+                        locale={lang === 'he' ? 'he-IL' : 'en-GB'}
                         numberFormatter={numberFormatter}
                         formatRelatedSortingText={formatRelatedSortingText}
                         getRelatedSortingAssignmentLabel={getRelatedSortingAssignmentLabel}

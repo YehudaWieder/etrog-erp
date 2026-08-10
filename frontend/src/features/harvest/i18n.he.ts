@@ -9,7 +9,8 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     delete: 'מחיקה',
     deleteHarvestDialog: {
       title: 'מחיקת רשומת קטיף',
-      message: 'האם אתה בטוח שברצונך למחוק את רשומת הקטיף הזו? פעולה זו אינה ניתנת לביטול.',
+      message:
+        'האם אתה בטוח שברצונך למחוק את רשומת הקטיף הזו? פעולה זו אינה ניתנת לביטול.',
       confirm: 'מחיקה',
       cancel: 'ביטול',
     },
@@ -22,7 +23,8 @@ export const HARVEST_I18N_HE: HarvestI18n = {
       ownerHarvestedLabel: 'קטיף פרנקו',
       ownerRejectedLabel: 'יורדים פרנקו',
       notesLabel: 'הערות',
-      uncalculatedRejectedPlaceholder: (totalRejected) => `מתוך ${totalRejected} יורדים`,
+      uncalculatedRejectedPlaceholder: (totalRejected) =>
+        `מתוך ${totalRejected} יורדים`,
       confirm: 'שמירה',
       cancel: 'ביטול',
     },
@@ -40,7 +42,8 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     },
     permanentDeleteSortingDialog: {
       title: 'מחיקה סופית של רשומת מיון',
-      message: 'האם אתה בטוח שברצונך למחוק לצמיתות את רשומת המיון הזו? לא ניתן לבטל פעולה זו.',
+      message:
+        'האם אתה בטוח שברצונך למחוק לצמיתות את רשומת המיון הזו? לא ניתן לבטל פעולה זו.',
       confirm: 'מחיקה סופית',
       cancel: 'ביטול',
     },
@@ -53,7 +56,8 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     ariaLabel: 'טופס קטיף גלובלי',
     closeLabel: 'סגירה',
     title: 'הוספת קטיף ומיון',
-    instructions: 'בטופס זה מזינים נתוני קטיף ומיון, וניתן להוסיף שורות מיון לפי הצורך.',
+    instructions:
+      'בטופס זה מזינים נתוני קטיף ומיון, וניתן להוסיף שורות מיון לפי הצורך.',
     fieldLabel: 'שדה',
     fieldPlaceholder: 'בחר שדה',
     gregorianDateLabel: 'תאריך לועזי',
@@ -68,36 +72,44 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     rejectionRateLabel: 'אחוז יורדים',
     ownerRejectionRateLabel: 'אחוז יורדים פרנקו',
     classificationModeLabel: 'סוג מיון',
-    classificationModeHint: 'בחר סוג מיון לדוח: מיון מלא אם כל האתרוגים מהקטיף מוינו ומעודכנים בטופס הזה, או מיון חלקי לפי נתונים זמינים.',
+    classificationModeHint:
+      'בחר סוג מיון לדוח: מיון מלא אם כל האתרוגים מהקטיף מוינו ומעודכנים בטופס הזה, או מיון חלקי לפי נתונים זמינים.',
     fullSorting: 'מיון מלא',
     partialSorting: 'מיון חלקי',
     notesPlaceholder: 'הערות קטיף',
     notesLabel: 'הערות קטיף',
     uncalculatedRejectedLabel: 'יורדים לא מחושבים',
-    uncalculatedRejectedPlaceholder: (totalRejected) => `מתוך ${totalRejected} יורדים`,
-    remainsInItalyGradeHLabel: 'דרגה ה\' נשארת באיטליה',
-    remainsInItalyGradeVLabel: 'דרגה ו\' נשארת באיטליה',
+    uncalculatedRejectedPlaceholder: (totalRejected) =>
+      `מתוך ${totalRejected} יורדים`,
+    remainsInItalyGradeHLabel: "דרגה ה' נשארת באיטליה",
+    remainsInItalyGradeVLabel: "דרגה ו' נשארת באיטליה",
     sortingRowsTitle: 'שורות מיון',
     sortingTotalQuantityLabel: 'סך הכל כמות מיון',
-    fullSortingRequiredHint: (requiredTotal) => `למיון מלא נדרשת כמות של ${requiredTotal}.`,
-    fullSortingReduceHint: (amount) => `מילאת יותר מהנדרש - יש להוריד ${amount}.`,
-    fullSortingIncreaseHint: (amount) => `מילאת פחות מהנדרש - יש להוסיף ${amount}.`,
+    fullSortingRequiredHint: (requiredTotal) =>
+      `למיון מלא נדרשת כמות של ${requiredTotal}.`,
+    fullSortingReduceHint: (amount) =>
+      `מילאת יותר מהנדרש - יש להוריד ${amount}.`,
+    fullSortingIncreaseHint: (amount) =>
+      `מילאת פחות מהנדרש - יש להוסיף ${amount}.`,
     fullSortingMatchHint: 'הכמות שמולאה תואמת למיון מלא.',
     addSortingRow: 'הוספת שורת מיון',
     sortingRowPrefix: (index) => `מיון ${index + 1}`,
     removeSortingRow: 'מחיקה',
     pendingRemovedSortingRowsTitle: 'מיונים שהוסרו (טרם נשמר)',
-    pendingRemovedSortingRowsHint: 'ניתן לשחזר מיון שהוסר כל עוד לא נשמר הטופס.',
+    pendingRemovedSortingRowsHint:
+      'ניתן לשחזר מיון שהוסר כל עוד לא נשמר הטופס.',
     restorePendingRemovedSortingRow: 'שחזור',
     addRejectedQuantity: 'הוספת יורדים',
     additionalRejectedLabel: 'כמות יורדים להוספה',
     additionalRejectedPlaceholder: 'כמות',
-    additionalRejectedNewTotalLabel: (newTotal) => `סה"כ יורדים לאחר ההוספה: ${newTotal}`,
+    additionalRejectedNewTotalLabel: (newTotal) =>
+      `סה"כ יורדים לאחר ההוספה: ${newTotal}`,
     removeAddedRejectedQuantity: 'הסרה',
     addOwnerRejectedQuantity: 'הוספת יורדים פרנקו',
     additionalOwnerRejectedLabel: 'כמות יורדים פרנקו להוספה',
     additionalOwnerRejectedPlaceholder: 'כמות',
-    additionalOwnerRejectedNewTotalLabel: (newTotal) => `סה"כ יורדים פרנקו לאחר ההוספה: ${newTotal}`,
+    additionalOwnerRejectedNewTotalLabel: (newTotal) =>
+      `סה"כ יורדים פרנקו לאחר ההוספה: ${newTotal}`,
     removeAddedOwnerRejectedQuantity: 'הסרה',
     assignmentOptions: { general: 'כללי', trader: 'סוחר', customer: 'לקוח' },
     assignmentTypeLabel: 'שיוך',
@@ -116,32 +128,45 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     pitamOptions: { withPitam: 'פיטם', withoutPitam: 'בל"פ', mixed: 'מעורב' },
     quantityLabel: 'כמות',
     quantityPlaceholder: 'כמות',
-    selectCategoryForQuantitiesHint: 'יש לבחור קטגוריה כדי למלא כמויות לפי דרגה.',
+    selectCategoryForQuantitiesHint:
+      'יש לבחור קטגוריה כדי למלא כמויות לפי דרגה.',
     sortingNotesLabel: 'הערות מיון',
     sortingNotesPlaceholder: 'הערות מיון',
-    addSortingRowBlockedError: 'יש למלא את שורת המיון האחרונה לפני הוספת שורה חדשה.',
-    addSortingRowSummaryFieldsRequiredError: 'יש למלא את שדות הסיכום של סה"כ קטיף וסה"כ יורדים לפני הוספת שורת מיון.',
-    addSortingRowMaxReachedError: 'לא ניתן להוסיף שורת מיון נוספת: סכום הכמויות כבר הגיע למקסימום המותר.',
-    duplicateSortingRowError: 'שיוך וקטגוריה אלו כבר קיימים בקטיף זה או נבחרו בשורת מיון קודמת.',
-    existingClassificationCellBlockedHint: 'תא זה חסום כי כבר קיימת רשומת מיון עם אותו שיוך, קטגוריה, דרגה וסטטוס פיטם. ניתן ללחוץ על סמל הפלוס כדי להוסיף כמות למיון הקיים - השינוי יישמר יחד עם שאר הטבלה בלחיצה על שמירה.',
-    blockedQuantityFieldsHint: 'חלק מהשדות חסומים עקב דרגות לא נתמכות או מיונים שכבר קיימים להם. ניתן להוסיף כמות למיון הקיים.',
+    addSortingRowBlockedError:
+      'יש למלא את שורת המיון האחרונה לפני הוספת שורה חדשה.',
+    addSortingRowSummaryFieldsRequiredError:
+      'יש למלא את שדות הסיכום של סה"כ קטיף וסה"כ יורדים לפני הוספת שורת מיון.',
+    addSortingRowMaxReachedError:
+      'לא ניתן להוסיף שורת מיון נוספת: סכום הכמויות כבר הגיע למקסימום המותר.',
+    duplicateSortingRowError:
+      'שיוך וקטגוריה אלו כבר קיימים בקטיף זה או נבחרו בשורת מיון קודמת.',
+    existingClassificationCellBlockedHint:
+      'תא זה חסום כי כבר קיימת רשומת מיון עם אותו שיוך, קטגוריה, דרגה וסטטוס פיטם. ניתן ללחוץ על סמל הפלוס כדי להוסיף כמות למיון הקיים - השינוי יישמר יחד עם שאר הטבלה בלחיצה על שמירה.',
+    blockedQuantityFieldsHint:
+      'חלק מהשדות חסומים עקב דרגות לא נתמכות או מיונים שכבר קיימים להם. ניתן להוסיף כמות למיון הקיים.',
     addExistingClassificationQuantityLabel: 'הוספת כמות',
     cancelExistingClassificationCellLabel: 'ביטול הכמות שנוספה',
     addExistingClassificationQuantityPopupTitle: 'הוספת כמות למיון קיים',
     addExistingClassificationQuantityPopupPrefix: 'הכמות הנוכחית בקטגוריה',
     addExistingClassificationQuantityPopupGradeWord: 'דרגה',
-    addExistingClassificationQuantityPopupInstruction: 'יש להזין את הכמות שברצונך להוסיף למיון זה.',
+    addExistingClassificationQuantityPopupInstruction:
+      'יש להזין את הכמות שברצונך להוסיף למיון זה.',
     addExistingClassificationQuantityConfirmLabel: 'הוספה',
-    addExistingClassificationQuantityInvalidError: 'יש להזין כמות תקינה להוספה.',
+    addExistingClassificationQuantityInvalidError:
+      'יש להזין כמות תקינה להוספה.',
     editExistingClassificationQuantityLabel: 'עריכת כמות',
     editExistingClassificationQuantityPopupTitle: 'עדכון כמות למיון קיים',
-    editExistingClassificationQuantityPopupInstruction: 'יש לבחור אם להוסיף או להוריד כמות, ולהזין את הכמות הרצויה.',
+    editExistingClassificationQuantityPopupInstruction:
+      'יש לבחור אם להוסיף או להוריד כמות, ולהזין את הכמות הרצויה.',
     existingClassificationQuantityAddModeLabel: 'הוספה',
     existingClassificationQuantitySubtractModeLabel: 'הורדה',
     subtractExistingClassificationQuantityConfirmLabel: 'הורדה',
-    subtractExistingClassificationQuantityInvalidError: 'יש להזין כמות תקינה להורדה.',
-    subtractExistingClassificationQuantityExceedsBaseError: (baseQuantity) => `לא ניתן להוריד יותר מהכמות הקיימת (${baseQuantity}).`,
-    existingClassificationCellInvalidQuantityError: 'יש להזין כמות תקינה עבור המיון הקיים שנערך.',
+    subtractExistingClassificationQuantityInvalidError:
+      'יש להזין כמות תקינה להורדה.',
+    subtractExistingClassificationQuantityExceedsBaseError: (baseQuantity) =>
+      `לא ניתן להוריד יותר מהכמות הקיימת (${baseQuantity}).`,
+    existingClassificationCellInvalidQuantityError:
+      'יש להזין כמות תקינה עבור המיון הקיים שנערך.',
     existingClassificationCellSaveError: 'עדכון הכמות הקיימת נכשל. נסו שוב.',
     cancel: 'ביטול',
     save: 'שמירת קטיף',
@@ -154,8 +179,18 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     viewAllFieldDetails: (fieldName) => `הצגת כל פרטי השדה ${fieldName}`,
   },
   topNav: [
-    { id: 'harvest', label: 'קטיף ומיון', icon: 'fa-leaf', href: '/harvest/harvest-summary' },
-    { id: 'shipments', label: 'משלוחים', icon: 'fa-truck', href: '/shipments/shipment-items-summary' },
+    {
+      id: 'harvest',
+      label: 'קטיף ומיון',
+      icon: 'fa-leaf',
+      href: '/harvest/harvest-summary',
+    },
+    {
+      id: 'shipments',
+      label: 'משלוחים',
+      icon: 'fa-truck',
+      href: '/shipments/shipment-items-summary',
+    },
     { id: 'partners', label: 'מלאי סוחרים', icon: 'fa-handshake' },
     { id: 'customers', label: 'מלאי לקוחות', icon: 'fa-users' },
     { id: 'workers', label: 'עובדים', icon: 'fa-person' },
@@ -194,7 +229,6 @@ export const HARVEST_I18N_HE: HarvestI18n = {
           href: '/harvest/harvest-daily-details',
           icon: 'fa-calendar',
         },
-
       ],
     },
     {
@@ -241,29 +275,48 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     sortingCustomerRequired: 'יש לבחור לקוח.',
     sortingCustomerCategoryRequired: 'יש לבחור קטגוריית לקוח.',
     sortingPitamStatusRequired: 'יש לבחור סטטוס פיטם.',
-    sortingTotalExceedsAvailable: (maxAllowed, alreadyClassifiedTotal, availableSortingTotal) =>
+    sortingTotalExceedsAvailable: (
+      maxAllowed,
+      alreadyClassifiedTotal,
+      availableSortingTotal,
+    ) =>
       `סכום כמויות המיון החדשות לא יכול להיות גדול מ-${maxAllowed} (כבר מוינו ${alreadyClassifiedTotal} מתוך ${availableSortingTotal} הזמינים בסה"כ).`,
-    sortingTotalMustMatchAvailableForFullSorting: (requiredTotal) => `במיון מלא סכום כמויות המיון חייב להיות בדיוק ${requiredTotal}. ניתן לשנות למיון חלקי ולשמור.`,
-    sortingTotalWithClassifiedMustMatchAvailableForFullSorting: (requiredTotal) => `במיון מלא סה"כ המיון יחד עם סה"כ מויין חייב להיות בדיוק ${requiredTotal}. ניתן לשנות למיון חלקי ולשמור.`,
-    sortingTotalMustBeAtMostAvailableMinusOneForPartialSorting: (maximumTotal, alreadyClassifiedTotal, availableSortingTotal) =>
+    sortingTotalMustMatchAvailableForFullSorting: (requiredTotal) =>
+      `במיון מלא סכום כמויות המיון חייב להיות בדיוק ${requiredTotal}. ניתן לשנות למיון חלקי ולשמור.`,
+    sortingTotalWithClassifiedMustMatchAvailableForFullSorting: (
+      requiredTotal,
+    ) =>
+      `במיון מלא סה"כ המיון יחד עם סה"כ מויין חייב להיות בדיוק ${requiredTotal}. ניתן לשנות למיון חלקי ולשמור.`,
+    sortingTotalMustBeAtMostAvailableMinusOneForPartialSorting: (
+      maximumTotal,
+      alreadyClassifiedTotal,
+      availableSortingTotal,
+    ) =>
       `במיון חלקי סה"כ המיון החדש שמתווסף חייב להיות לכל היותר ${maximumTotal} (כבר מוינו ${alreadyClassifiedTotal} מתוך ${availableSortingTotal} הזמינים בסה"כ).`,
     sortingRowRequired: 'יש להוסיף לפחות שורת מיון אחת.',
-    addSortingRowTotalsRequiredError: 'יש להזין סה"כ קטיף וסה"כ יורדים לפני הוספת שורת מיון.',
-    addSortingRowSummaryFieldsRequiredError: 'יש למלא את שדות הסיכום של סה"כ קטיף וסה"כ יורדים לפני הוספת שורת מיון.',
-    sortingRowQuantityRequired: (rowNumber) => `בשורת מיון ${rowNumber} חייבת להיות כמות גדולה מאפס.`,
-    traderCategoryRequired: (rowNumber) => `בשורת מיון ${rowNumber} יש לבחור קטגוריית סוחר.`,
+    addSortingRowTotalsRequiredError:
+      'יש להזין סה"כ קטיף וסה"כ יורדים לפני הוספת שורת מיון.',
+    addSortingRowSummaryFieldsRequiredError:
+      'יש למלא את שדות הסיכום של סה"כ קטיף וסה"כ יורדים לפני הוספת שורת מיון.',
+    sortingRowQuantityRequired: (rowNumber) =>
+      `בשורת מיון ${rowNumber} חייבת להיות כמות גדולה מאפס.`,
+    traderCategoryRequired: (rowNumber) =>
+      `בשורת מיון ${rowNumber} יש לבחור קטגוריית סוחר.`,
     gradeRequired: (rowNumber) => `בשורת מיון ${rowNumber} יש לבחור דרגה.`,
     traderRequired: (rowNumber) => `בשורת מיון ${rowNumber} יש לבחור סוחר.`,
     customerRequired: (rowNumber) => `בשורת מיון ${rowNumber} יש לבחור לקוח.`,
-    customerCategoryRequired: (rowNumber) => `בשורת מיון ${rowNumber} יש לבחור קטגוריית לקוח.`,
-    pitamStatusRequired: (rowNumber) => `בשורת מיון ${rowNumber} יש לבחור סטטוס פיטם.`,
+    customerCategoryRequired: (rowNumber) =>
+      `בשורת מיון ${rowNumber} יש לבחור קטגוריית לקוח.`,
+    pitamStatusRequired: (rowNumber) =>
+      `בשורת מיון ${rowNumber} יש לבחור סטטוס פיטם.`,
     apiClassificationsExceedNet: (classificationsTotal, netHarvested) =>
       `סה"כ כמות המיון (${classificationsTotal}) לא יכולה לעלות על כמות הנטו שנקטפה (${netHarvested}).`,
     apiClassificationsMustEqualNet: (classificationsTotal, netHarvested) =>
       `סה"כ כמות המיון (${classificationsTotal}) חייבת להיות שווה לכמות הנטו שנקטפה (${netHarvested}) במיון מלא.`,
     apiClassificationsMustEqualNetFinal: (classificationsTotal, netHarvested) =>
       `סה"כ כמות המיון (${classificationsTotal}) חייבת להיות שווה לכמות הנטו שנקטפה (${netHarvested}) במיון מלא. ניתן לעבור למיון חלקי אם עדיין לא סיימתם למיין את כל הכמות.`,
-    apiDuplicateClassification: 'רשומת מיון כפולה: כל שילוב של סוג, סוחר/לקוח, קטגוריה ודרגה חייב להיות ייחודי.',
+    apiDuplicateClassification:
+      'רשומת מיון כפולה: כל שילוב של סוג, סוחר/לקוח, קטגוריה ודרגה חייב להיות ייחודי.',
     apiHarvestYearMismatch: (harvestYear, seasonYear) =>
       `שנת תאריך הקטיף (${harvestYear}) אינה תואמת את שנת העונה הפעילה (${seasonYear}).`,
     uncalculatedRejectedExceedsTotal: (uncalculatedRejected, totalRejected) =>
@@ -294,7 +347,8 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     restoring: 'משחזר...',
   },
   dailyDetails: {
-    description: 'ריכוז כל רשומות הקטיף לפי ימים, ישירות מנתוני המערכת לעונה הפעילה.',
+    description:
+      'ריכוז כל רשומות הקטיף לפי ימים, ישירות מנתוני המערכת לעונה הפעילה.',
     loading: 'טוען נתוני קטיף...',
     loadError: 'לא ניתן היה לטעון את נתוני הקטיף כעת.',
     empty: 'לא נמצאו רשומות קטיף להצגה לעונה הפעילה.',
@@ -410,10 +464,13 @@ export const HARVEST_I18N_HE: HarvestI18n = {
       rejectionRate: 'אחוז יורדים',
       rejectionRateExcludingBadPicks: 'אחוז פסילה ללא קטיף גרוע',
       harvestExcludingBadPicks: 'קטיף ללא קטיף גרוע',
+      excludingBadPicksDiffTooltip:
+        'הערך אינו כולל קטיף גרוע ולכן נמוך מהערך המקביל הכולל',
     },
   },
   sortingDailyDetails: {
-    description: 'ריכוז מיון יומי לפי תאריך קטיף ושדה. כל עמודת קטגוריה מוצגת רק אם קיימים בה מיונים מעל 0.',
+    description:
+      'ריכוז מיון יומי לפי תאריך קטיף ושדה. כל עמודת קטגוריה מוצגת רק אם קיימים בה מיונים מעל 0.',
     loading: 'טוען נתוני מיון יומיים...',
     loadError: 'טעינת נתוני המיון היומיים נכשלה.',
     empty: 'לא נמצאו נתוני מיון להצגה עבור העונה הנבחרת.',
@@ -488,7 +545,8 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     printWindowTitle: 'דוח קטיפים לפי שדה',
     sheetName: 'דוח שדות',
     exportError: 'לא ניתן לייצא כרגע לאקסל.',
-    detailsTitle: (fieldName) => (fieldName ? `פרטי שדה - ${fieldName}` : 'פרטי שדה'),
+    detailsTitle: (fieldName) =>
+      fieldName ? `פרטי שדה - ${fieldName}` : 'פרטי שדה',
     closeLabel: 'סגירת פרטי שדה',
     printLabel: 'הדפסה',
     headers: {
@@ -500,6 +558,8 @@ export const HARVEST_I18N_HE: HarvestI18n = {
       uncalculatedRejected: 'יורדים ללא קטיף גרוע',
       rejectionRateExcludingBadPicks: 'אחוז פסילה ללא קטיף גרוע',
       harvestExcludingBadPicks: 'קטיף ללא קטיף גרוע',
+      excludingBadPicksDiffTooltip:
+        'הערך אינו כולל קטיף גרוע ולכן נמוך מהערך המקביל הכולל',
     },
     filters: {
       methodFilterLabel: 'שיטת חישוב',
@@ -577,9 +637,10 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     loadError: 'טעינת סיכום המיונים נכשלה.',
     empty: 'לא נמצאו רשומות מיון להצגה עבור העונה הנבחרת.',
     retry: 'נסה שוב',
-    tableTitle: 'סיכום מיונים לפי קטגוריה',
+    tableTitle: 'סיכום מיונים',
     seasonFilterLabel: 'עונה',
-    description: 'סיכום כמויות המיון לפי קטגוריות, דרגות ומצב פיטם עבור העונה הנבחרת.',
+    description:
+      'סיכום כמויות המיון לפי קטגוריות, דרגות ומצב פיטם עבור העונה הנבחרת.',
     actionsLabel: 'פעולות טבלה',
     printTitle: 'הדפסת סיכום מיונים',
     printAriaLabel: 'הדפסת טבלאות סיכום מיונים',
@@ -594,17 +655,20 @@ export const HARVEST_I18N_HE: HarvestI18n = {
       total: 'סה"כ',
     },
     rows: {
+      general: 'מיון כללי',
       privateSorting: 'מיון פרטי',
-      customers: 'לקוחות',
+      customers: 'מיון לקוחות',
       grandTotal: 'סה"כ כולל',
     },
     breakdown: {
-      showBreakdown: 'הצג פירוט לפי דרגות',
-      hideBreakdown: 'הסתר פירוט',
-      breakdownTitle: 'פירוט לפי קטגוריות ודרגות',
       grade: 'דרגה',
-      category: 'קטגוריה',
       noCategory: 'ללא קטגוריה',
+    },
+    gradeGroups: {
+      title: 'פילוח אחוזים לפי קבוצות דרגות',
+      groupColumn: 'קבוצה',
+      percentColumn: 'אחוז',
+      ungrouped: 'ללא קיבוץ',
     },
   },
   emptyState: {

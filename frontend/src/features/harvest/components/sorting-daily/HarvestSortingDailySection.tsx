@@ -1,14 +1,24 @@
 import { useMemo } from 'react';
 import type { Dispatch, RefObject, SetStateAction } from 'react';
 import { FaPrint, FaBoxesStacked, FaUserTie, FaUsers } from 'react-icons/fa6';
-import { GlobalDataTable, type GlobalDataTableColumn } from '../../../../components/ui/GlobalDataTable';
+import {
+  GlobalDataTable,
+  type GlobalDataTableColumn,
+} from '../../../../components/ui/GlobalDataTable';
 import { GlobalLeftDetailsPanel } from '../../../../components/ui/GlobalLeftDetailsPanel';
-import { GlobalScopedFilters, type GlobalScopedFilterConfig } from '../../../../components/ui/GlobalScopedFilters';
-import type { ClassificationDailySummaryCategory, ClassificationDailySummaryRow } from '../../../../services/classificationsApi';
+import {
+  GlobalScopedFilters,
+  type GlobalScopedFilterConfig,
+} from '../../../../components/ui/GlobalScopedFilters';
+import type {
+  ClassificationDailySummaryCategory,
+  ClassificationDailySummaryRow,
+} from '../../../../services/classificationsApi';
 import type { HarvestI18n } from '../../i18n';
+import type { CategoryGradeGroupSplit } from '../../utils/gradeGroupBreakdown.util';
+import type { SortingDailyCategorySections } from '../../hooks/details/useHarvestDetailsData';
 import {
   HarvestSortingDailyDetailsContent,
-  type SortingDailyCategoryBreakdown,
   type SortingDailyDetailsData,
   type SortingDailySummaryData,
 } from './HarvestSortingDailyDetailsContent';
@@ -31,7 +41,9 @@ type HarvestSortingDailySectionProps = {
   sortingDailyColumns: GlobalDataTableColumn<ClassificationDailySummaryRow>[];
   filteredSortingDailyRows: ClassificationDailySummaryRow[];
   filteredSortingDailyCategories: ClassificationDailySummaryCategory[];
-  onSortingDailySortedRowsChange: (rows: ClassificationDailySummaryRow[]) => void;
+  onSortingDailySortedRowsChange: (
+    rows: ClassificationDailySummaryRow[],
+  ) => void;
   selectedSortingDailyRowId: number | null;
   onSelectSortingDailyRow: Dispatch<SetStateAction<number | null>>;
   isSelectionDisabled?: boolean;
@@ -46,7 +58,13 @@ type HarvestSortingDailySectionProps = {
   onCloseSortingDailyDetails: () => void;
   onPrintSortingDailyDetails: () => void;
   sortingDailyDetailsPrintRef: RefObject<HTMLDivElement>;
-  sortingDailyCategoryBreakdown: SortingDailyCategoryBreakdown[];
+  sortingDailyCategoryBreakdown: SortingDailyCategorySections;
+  sortingDailyGradeGroupSplits: CategoryGradeGroupSplit[];
+  gradeGroupsLabels: {
+    title: string;
+    groupColumn: string;
+    percentColumn: string;
+  };
   isSortingDailyDetailRowsLoading: boolean;
   sortingDailyDetailRowsLoadError: string;
   formatGregorianDate: (value: string) => string;
@@ -91,6 +109,8 @@ export function HarvestSortingDailySection({
   onPrintSortingDailyDetails,
   sortingDailyDetailsPrintRef,
   sortingDailyCategoryBreakdown,
+  sortingDailyGradeGroupSplits,
+  gradeGroupsLabels,
   isSortingDailyDetailRowsLoading,
   sortingDailyDetailRowsLoadError,
   formatGregorianDate,
@@ -110,7 +130,9 @@ export function HarvestSortingDailySection({
   );
 
   return (
-    <section className={`${workspaceStyles.workspace} ${panelStyles.workspace}`}>
+    <section
+      className={`${workspaceStyles.workspace} ${panelStyles.workspace}`}
+    >
       <header className={workspaceStyles.header}>
         <div>
           <p className={workspaceStyles.description}>{description}</p>
@@ -119,9 +141,24 @@ export function HarvestSortingDailySection({
 
       <HarvestStatCardGrid
         items={[
-          { key: 'totalSorted', label: summaryLabels.totalSorted, value: numberFormatter.format(summaryTotals.totalSorted), icon: <FaBoxesStacked aria-hidden="true" /> },
-          { key: 'traderTotal', label: summaryLabels.traderTotal, value: numberFormatter.format(summaryTotals.traderTotal), icon: <FaUserTie aria-hidden="true" /> },
-          { key: 'customerTotal', label: summaryLabels.customerTotal, value: numberFormatter.format(summaryTotals.customerTotal), icon: <FaUsers aria-hidden="true" /> },
+          {
+            key: 'totalSorted',
+            label: summaryLabels.totalSorted,
+            value: numberFormatter.format(summaryTotals.totalSorted),
+            icon: <FaBoxesStacked aria-hidden="true" />,
+          },
+          {
+            key: 'traderTotal',
+            label: summaryLabels.traderTotal,
+            value: numberFormatter.format(summaryTotals.traderTotal),
+            icon: <FaUserTie aria-hidden="true" />,
+          },
+          {
+            key: 'customerTotal',
+            label: summaryLabels.customerTotal,
+            value: numberFormatter.format(summaryTotals.customerTotal),
+            icon: <FaUsers aria-hidden="true" />,
+          },
         ]}
       />
 
@@ -129,25 +166,31 @@ export function HarvestSortingDailySection({
         scope="harvest-daily-details"
         filters={filters}
         direction={lang === 'he' ? 'rtl' : 'ltr'}
-        actions={hasRows ? (
-          <HarvestSortingPrintExportActions
-            lang={lang}
-            tableActionsLabel={t.tableActionsLabel}
-            t={t.sortingDailyDetails.actions}
-            onPrintSummary={onPrintSummary}
-            onExportSummary={onExportSummary}
-            onExportExpanded={onExportExpanded}
-            onCloseMenuFromTarget={onCloseMenuFromTarget}
-            onCancelMenuClose={onCancelMenuClose}
-            onScheduleMenuClose={onScheduleMenuClose}
-          />
-        ) : undefined}
+        actions={
+          hasRows ? (
+            <HarvestSortingPrintExportActions
+              lang={lang}
+              tableActionsLabel={t.tableActionsLabel}
+              t={t.sortingDailyDetails.actions}
+              onPrintSummary={onPrintSummary}
+              onExportSummary={onExportSummary}
+              onExportExpanded={onExportExpanded}
+              onCloseMenuFromTarget={onCloseMenuFromTarget}
+              onCancelMenuClose={onCancelMenuClose}
+              onScheduleMenuClose={onScheduleMenuClose}
+            />
+          ) : undefined
+        }
       />
 
-      {sortingDailyLoadError ? <p className="seasons-manager__error">{sortingDailyLoadError}</p> : null}
+      {sortingDailyLoadError ? (
+        <p className="seasons-manager__error">{sortingDailyLoadError}</p>
+      ) : null}
 
       <div className={panelStyles.panelWide}>
-        {isSortingDailyLoading ? <p className="seasons-manager__state">{loadingLabel}</p> : null}
+        {isSortingDailyLoading ? (
+          <p className="seasons-manager__state">{loadingLabel}</p>
+        ) : null}
 
         {!isSortingDailyLoading ? (
           <>
@@ -160,11 +203,17 @@ export function HarvestSortingDailySection({
                   emptyLabel={emptyLabel}
                   defaultSortState={{ key: 'dateGregorian', direction: 'desc' }}
                   selectedRowKey={selectedSortingDailyRowId}
-                  onRowClick={isSelectionDisabled ? undefined : (row) => {
-                    onSelectSortingDailyRow((previousSelectedRowId) =>
-                      previousSelectedRowId === row.harvestId ? null : row.harvestId,
-                    );
-                  }}
+                  onRowClick={
+                    isSelectionDisabled
+                      ? undefined
+                      : (row) => {
+                          onSelectSortingDailyRow((previousSelectedRowId) =>
+                            previousSelectedRowId === row.harvestId
+                              ? null
+                              : row.harvestId,
+                          );
+                        }
+                  }
                   onSortedRowsChange={onSortingDailySortedRowsChange}
                 />
 
@@ -185,18 +234,23 @@ export function HarvestSortingDailySection({
                   }
                 >
                   {sortingDailyDetailsData ? (
-                    <div className="harvest-daily-workspace__print-content" ref={sortingDailyDetailsPrintRef}>
+                    <div
+                      className="harvest-daily-workspace__print-content"
+                      ref={sortingDailyDetailsPrintRef}
+                    >
                       <HarvestSortingDailyDetailsContent
                         lang={lang}
                         t={t}
                         data={sortingDailyDetailsData}
                         summary={sortingDailySummaryData}
                         categoryBreakdown={sortingDailyCategoryBreakdown}
+                        gradeGroupSplits={sortingDailyGradeGroupSplits}
+                        gradeGroupsLabels={gradeGroupsLabels}
+                        locale={lang === 'he' ? 'he-IL' : 'en-GB'}
                         isDetailRowsLoading={isSortingDailyDetailRowsLoading}
                         detailRowsLoadError={sortingDailyDetailRowsLoadError}
                         emptyLabel={emptyLabel}
                         formatGregorianDate={formatGregorianDate}
-                        numberFormatter={numberFormatter}
                         labels={sortingDailyDetailsLabels}
                       />
                     </div>
@@ -204,7 +258,6 @@ export function HarvestSortingDailySection({
                     <p className={sheetStyles.detailsEmpty}>{emptyLabel}</p>
                   )}
                 </GlobalLeftDetailsPanel>
-
               </>
             ) : (
               <p className="seasons-manager__state">{emptyLabel}</p>

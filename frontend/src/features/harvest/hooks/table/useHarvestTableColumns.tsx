@@ -15,6 +15,16 @@ import {
 import { HarvestDetailsTriggerButton } from '../../components/shared/HarvestDetailsTriggerButton';
 import interactiveStyles from '../../components/styles/HarvestInteractive.module.css';
 
+function renderBadPicksDiffValue(display: string, hasDiff: boolean, tooltip: string): JSX.Element | string {
+  if (!hasDiff) return display;
+  return (
+    <span className={interactiveStyles.badPicksDiffValueExcluding} title={tooltip}>
+      <span className={interactiveStyles.badPicksDiffDotExcluding} aria-hidden="true" />
+      {display}
+    </span>
+  );
+}
+
 type UseHarvestTableColumnsParams = {
   lang: 'he' | 'en';
   t: HarvestI18n;
@@ -159,7 +169,11 @@ export function useHarvestTableColumns({
         sortAccessor: (row) => row.totalHarvested - row.uncalculatedRejected,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
         align: 'center',
-        render: (row) => numberFormatter.format(row.totalHarvested - row.uncalculatedRejected),
+        render: (row) => renderBadPicksDiffValue(
+          numberFormatter.format(row.totalHarvested - row.uncalculatedRejected),
+          row.uncalculatedRejected > 0,
+          t.dailyDetails.columns.excludingBadPicksDiffTooltip,
+        ),
       },
       {
         id: 'uncalculatedRejected',
@@ -171,7 +185,11 @@ export function useHarvestTableColumns({
         sortAccessor: (row) => row.totalRejected - row.uncalculatedRejected,
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
         align: 'center',
-        render: (row) => numberFormatter.format(row.totalRejected - row.uncalculatedRejected),
+        render: (row) => renderBadPicksDiffValue(
+          numberFormatter.format(row.totalRejected - row.uncalculatedRejected),
+          row.uncalculatedRejected > 0,
+          t.dailyDetails.columns.excludingBadPicksDiffTooltip,
+        ),
       },
       {
         id: 'rejectionRateExcludingBadPicks',
@@ -188,7 +206,12 @@ export function useHarvestTableColumns({
         align: 'center',
         render: (row) => {
           const harvestedExcl = row.totalHarvested - row.uncalculatedRejected;
-          return formatRate(harvestedExcl > 0 ? ((row.totalRejected - row.uncalculatedRejected) / harvestedExcl) * 100 : 0);
+          const rateExcl = harvestedExcl > 0 ? ((row.totalRejected - row.uncalculatedRejected) / harvestedExcl) * 100 : 0;
+          return renderBadPicksDiffValue(
+            formatRate(rateExcl),
+            row.uncalculatedRejected > 0,
+            t.dailyDetails.columns.excludingBadPicksDiffTooltip,
+          );
         },
       },
     ];
@@ -364,7 +387,11 @@ export function useHarvestTableColumns({
         sortAccessor: (row) => (fieldReportMethod === 'franco' ? row.ownerHarvestedExcludingBadPicks : row.totalHarvestedExcludingBadPicks),
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
         align: 'center',
-        render: (row) => numberFormatter.format(fieldReportMethod === 'franco' ? row.ownerHarvestedExcludingBadPicks : row.totalHarvestedExcludingBadPicks),
+        render: (row) => renderBadPicksDiffValue(
+          numberFormatter.format(fieldReportMethod === 'franco' ? row.ownerHarvestedExcludingBadPicks : row.totalHarvestedExcludingBadPicks),
+          fieldReportMethod === 'franco' ? row.ownerRejected !== row.ownerRejectedExcludingBadPicks : row.totalRejected !== row.totalRejectedExcludingBadPicks,
+          t.fieldReport.headers.excludingBadPicksDiffTooltip,
+        ),
       },
       {
         id: 'uncalculatedRejected',
@@ -378,9 +405,13 @@ export function useHarvestTableColumns({
           : row.totalRejectedExcludingBadPicks),
         minWidth: GLOBAL_DATA_TABLE_WIDTHS.numeric,
         align: 'center',
-        render: (row) => numberFormatter.format(fieldReportMethod === 'franco'
-          ? row.ownerRejectedExcludingBadPicks
-          : row.totalRejectedExcludingBadPicks),
+        render: (row) => renderBadPicksDiffValue(
+          numberFormatter.format(fieldReportMethod === 'franco'
+            ? row.ownerRejectedExcludingBadPicks
+            : row.totalRejectedExcludingBadPicks),
+          fieldReportMethod === 'franco' ? row.ownerRejected !== row.ownerRejectedExcludingBadPicks : row.totalRejected !== row.totalRejectedExcludingBadPicks,
+          t.fieldReport.headers.excludingBadPicksDiffTooltip,
+        ),
       },
       {
         id: 'rejectionRateExcludingBadPicks',
@@ -399,7 +430,12 @@ export function useHarvestTableColumns({
         render: (row) => {
           const harvested = fieldReportMethod === 'franco' ? row.ownerHarvestedExcludingBadPicks : row.totalHarvestedExcludingBadPicks;
           const rejected = fieldReportMethod === 'franco' ? row.ownerRejectedExcludingBadPicks : row.totalRejectedExcludingBadPicks;
-          return formatRate(harvested > 0 ? (rejected / harvested) * 100 : 0);
+          const hasDiff = fieldReportMethod === 'franco' ? row.ownerRejected !== row.ownerRejectedExcludingBadPicks : row.totalRejected !== row.totalRejectedExcludingBadPicks;
+          return renderBadPicksDiffValue(
+            formatRate(harvested > 0 ? (rejected / harvested) * 100 : 0),
+            hasDiff,
+            t.fieldReport.headers.excludingBadPicksDiffTooltip,
+          );
         },
       },
     ];

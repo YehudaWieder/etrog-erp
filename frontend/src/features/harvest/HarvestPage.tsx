@@ -496,7 +496,7 @@ export function HarvestPage() {
   });
 
   useEffect(() => {
-    if ((!isSortingListTab && !isSortingSummaryTab) || seasonFilterId === null) {
+    if ((!isSortingListTab && !isSortingSummaryTab && !isHarvestSummaryTab && !isFieldReportTab) || seasonFilterId === null) {
       return;
     }
 
@@ -513,7 +513,7 @@ export function HarvestPage() {
       .finally(() => {
         setIsSortingListLoading(false);
       });
-  }, [isSortingListTab, isSortingSummaryTab, seasonFilterId, t.sortingList.loadError, t.sortingSummary.loadError]);
+  }, [isSortingListTab, isSortingSummaryTab, isHarvestSummaryTab, isFieldReportTab, seasonFilterId, t.sortingList.loadError, t.sortingSummary.loadError]);
 
   useEffect(() => {
     if (!isSortingListTrashTab || seasonFilterId === null) {
@@ -1136,6 +1136,7 @@ export function HarvestPage() {
     sortingDailyDetailsData,
     sortingDailySummaryData,
     sortingDailyCategoryBreakdown,
+    sortingDailyGradeGroupSplits,
     fieldReportDetailsData,
     detailsSheetData,
   } = useHarvestDetailsData({
@@ -1153,6 +1154,8 @@ export function HarvestPage() {
     numberFormatter,
     formatRate,
     isPartialClassificationFlag,
+    sortingListRows,
+    traderCategories: harvestFormTraderCategories,
   });
 
   const relatedSortingsLabels = t.dailyDetails.detailsPanel.relatedSortings;
@@ -1166,12 +1169,14 @@ export function HarvestPage() {
     getRelatedSortingNote,
     getRelatedSortingTarget,
     sortedRelatedSortings,
+    gradeGroupSplits: relatedSortingsGradeGroupSplits,
   } = useHarvestRelatedSortings({
     lang,
     relatedSortings,
     relatedSortingsLabels,
     noneValue: detailsSheetData?.values.none ?? '-',
     traderCategories: harvestFormTraderCategories,
+    gradeGroupsUngroupedLabel: t.sortingSummary.gradeGroups.ungrouped,
   });
 
   const sortingSummarySeasonLabel = useMemo(() => {
@@ -1681,6 +1686,8 @@ export function HarvestPage() {
           relatedSortingsLoadError={relatedSortingsLoadError}
           relatedSortings={relatedSortings}
           sortedRelatedSortings={sortedRelatedSortings}
+          gradeGroupSplits={relatedSortingsGradeGroupSplits}
+          gradeGroupsLabels={t.sortingSummary.gradeGroups}
           numberFormatter={numberFormatter}
           formatRelatedSortingText={formatRelatedSortingText}
           getRelatedSortingAssignmentLabel={getRelatedSortingAssignmentLabel}
@@ -1757,6 +1764,8 @@ export function HarvestPage() {
           onPrintSortingDailyDetails={handlePrintSortingDailyDetails}
           sortingDailyDetailsPrintRef={sortingDailyDetailsPrintRef}
           sortingDailyCategoryBreakdown={sortingDailyCategoryBreakdown}
+          sortingDailyGradeGroupSplits={sortingDailyGradeGroupSplits}
+          gradeGroupsLabels={t.sortingSummary.gradeGroups}
           isSortingDailyDetailRowsLoading={isSortingDailyDetailRowsLoading}
           sortingDailyDetailRowsLoadError={sortingDailyDetailRowsLoadError}
           formatGregorianDate={formatGregorianDate}
