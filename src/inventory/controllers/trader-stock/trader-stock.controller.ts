@@ -5,7 +5,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedRespo
 import { Request } from 'express';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { TraderStockService } from '../../services/trader-stock/trader-stock.service';
-import { InventoryOwnerScope, InventoryShipmentScope, InventorySortBy } from '../../services/trader-stock/dto/inventory-summary.dto';
+import { InventoryOwnerScope, InventoryShipmentScope, InventorySortBy, InventorySourceScope } from '../../services/trader-stock/dto/inventory-summary.dto';
 import { Prisma, Grade, PitamStatus } from '@prisma/client';
 import { CreateTraderStockMovementDto } from '../../services/trader-stock/dto/create-trader-stock-movement.dto';
 import { UpdateTraderStockAdjustmentDto } from '../../services/trader-stock/dto/update-trader-stock-adjustment.dto';
@@ -127,6 +127,7 @@ export class TraderStockController {
   @ApiQuery({ name: 'traderId', type: Number, required: false, description: 'Filter by a specific trader ID.' })
   @ApiQuery({ name: 'ownerScope', required: false, enum: ['ALL', 'TRADER', 'MODULO'], description: 'ALL = all traders + modulo, TRADER = one trader, MODULO = unassigned stock only.' })
   @ApiQuery({ name: 'shipmentScope', required: false, enum: ['ALL', 'SHIPPED', 'UNSHIPPED', 'PACKED_SHIPPED', 'SELF_PICKUP', 'HARVEST_IN', 'INTERNAL_TRANSFER', 'OWNERSHIP_TRANSFER', 'ASSIGNED', 'WASTE', 'ADJUSTMENT'], description: 'Filter by movement type. Logical groups: SHIPPED = PACKED_SHIPPED + SELF_PICKUP, UNSHIPPED = all non-outbound types. Exact types: PACKED_SHIPPED, SELF_PICKUP, HARVEST_IN, INTERNAL_TRANSFER, OWNERSHIP_TRANSFER, ASSIGNED, WASTE, ADJUSTMENT.' })
+  @ApiQuery({ name: 'sourceScope', required: false, enum: ['ALL', 'GENERAL', 'PRIVATE_SELECTION'], description: 'Filter by stock origin, independent of shipmentScope. GENERAL excludes private-selection-pool stock, PRIVATE_SELECTION restricts to it (combines with shipmentScope).' })
   @ApiQuery({ name: 'traderCategoryId', type: Number, required: false, description: 'Optional trader category filter.' })
   @ApiQuery({ name: 'grade', enum: Grade, enumName: 'Grade', required: false, description: 'Optional grade filter.' })
   @ApiQuery({ name: 'pitamStatus', enum: PitamStatus, enumName: 'PitamStatus', required: false, description: 'Optional pitam status filter.' })
@@ -138,6 +139,7 @@ export class TraderStockController {
     @Query('traderId') traderId?: string,
     @Query('ownerScope') ownerScope?: InventoryOwnerScope,
     @Query('shipmentScope') shipmentScope?: InventoryShipmentScope,
+    @Query('sourceScope') sourceScope?: InventorySourceScope,
     @Query('traderCategoryId') traderCategoryId?: string,
     @Query('grade') grade?: Grade,
     @Query('pitamStatus') pitamStatus?: PitamStatus,
@@ -150,6 +152,7 @@ export class TraderStockController {
         traderId,
         ownerScope,
         shipmentScope,
+        sourceScope,
         traderCategoryId,
         grade,
         pitamStatus,

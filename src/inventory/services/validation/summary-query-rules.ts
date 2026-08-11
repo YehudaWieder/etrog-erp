@@ -2,13 +2,14 @@
 import { MovementType } from '@prisma/client';
 import { CombinedInventorySummaryQuery } from 'src/inventory/services/inventory-core/dto/combined-inventory-summary.dto';
 import { CustomerInventoryShipmentScope, CustomerInventorySortBy, CustomerInventorySortOrder } from 'src/inventory/services/customer-allocation/dto/customer-inventory-summary.dto';
-import { InventorySummaryQuery } from 'src/inventory/services/trader-stock/dto/inventory-summary.dto';
+import { InventorySourceScope, InventorySummaryQuery } from 'src/inventory/services/trader-stock/dto/inventory-summary.dto';
 import { InventoryMovementScope, InventoryOwnerScope, InventorySortOrder, InventoryTraderSortBy } from 'src/inventory/services/inventory-core/types/inventory-query.types';
 
 export function validateTraderSummaryQuery(
   query: InventorySummaryQuery,
   ownerScope: InventoryOwnerScope,
   shipmentScope: InventoryMovementScope,
+  sourceScope: InventorySourceScope,
   sortBy: InventoryTraderSortBy,
   sortOrder: InventorySortOrder,
 ) {
@@ -35,6 +36,11 @@ export function validateTraderSummaryQuery(
     throw new BadRequestException(
       'shipmentScope must be one of: ALL, SHIPPED, UNSHIPPED, PACKED_SHIPPED, SELF_PICKUP, HARVEST_IN, INTERNAL_TRANSFER, OWNERSHIP_TRANSFER, ASSIGNED, PRIVATE_SELECTION, WASTE, ADJUSTMENT, REMAINS_IN_ITALY',
     );
+  }
+
+  const validSourceScopes: InventorySourceScope[] = ['ALL', 'GENERAL', 'PRIVATE_SELECTION'];
+  if (!validSourceScopes.includes(sourceScope)) {
+    throw new BadRequestException('sourceScope must be one of: ALL, GENERAL, PRIVATE_SELECTION');
   }
 
   if (!['category', 'trader', 'quantity', 'grade', 'pitamStatus', 'updatedAt'].includes(sortBy)) {

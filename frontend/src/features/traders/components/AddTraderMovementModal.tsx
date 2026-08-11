@@ -316,8 +316,9 @@ export function AddTraderMovementModal({
 
     // WASTE against a specific trader and RECLASSIFICATION's "מלאי פרטי" source both always draw
     // from that trader's private-selection pool only — never their share of the general pool.
-    const shipmentScope =
-      isWasteTrader || isReclassificationTrader || stockSource === 'PRIVATE_SELECTION' ? 'PRIVATE_SELECTION' : 'UNSHIPPED';
+    const isPrivateSelectionSource = isWasteTrader || isReclassificationTrader || stockSource === 'PRIVATE_SELECTION';
+    const shipmentScope = isPrivateSelectionSource ? 'ALL' : 'UNSHIPPED';
+    const sourceScope = isPrivateSelectionSource ? 'PRIVATE_SELECTION' : 'ALL';
 
     let isActive = true;
     setIsLoadingFromTraderStock(true);
@@ -327,6 +328,7 @@ export function AddTraderMovementModal({
       traderId: Number(activeFromTraderId),
       ownerScope: 'TRADER',
       shipmentScope,
+      sourceScope,
     })
       .then((result) => {
         if (!isActive) return;

@@ -1,5 +1,5 @@
 ﻿import { Prisma, MovementType } from '@prisma/client';
-import { InventorySummaryQuery } from 'src/inventory/services/trader-stock/dto/inventory-summary.dto';
+import { InventorySourceScope, InventorySummaryQuery } from 'src/inventory/services/trader-stock/dto/inventory-summary.dto';
 import { InventoryMovementScope, InventoryOwnerScope } from 'src/inventory/services/inventory-core/types/inventory-query.types';
 
 export function buildTraderStockSummaryWhere(
@@ -7,6 +7,7 @@ export function buildTraderStockSummaryWhere(
   seasonId: number,
   ownerScope: InventoryOwnerScope,
   shipmentScope: InventoryMovementScope,
+  sourceScope: InventorySourceScope = 'ALL',
 ): Prisma.TraderStockWhereInput {
   if (shipmentScope === 'REMAINS_IN_ITALY') {
     // Regional-retention bucket is never trader/modulo owned - ownerScope/traderId from the
@@ -41,12 +42,35 @@ export function buildTraderStockSummaryWhere(
     where.type = { not: MovementType.REMAINS_IN_ITALY };
   }
 
+  applySourceScope(where, sourceScope);
+
   // For non-box-based filters, apply type filter
   // For box-based filters (PACKED_SHIPPED, SHIPPED, UNSHIPPED),
   // the repository will handle filtering by box.status
   applyNonBoxTypeFilters(where, shipmentScope);
 
   return where;
+}
+
+function applySourceScope(where: Prisma.TraderStockWhereInput, sourceScope: InventorySourceScope) {
+  if (sourceScope === 'PRIVATE_SELECTION') {
+    where.OR = [
+      { type: MovementType.PRIVATE_SELECTION },
+      { isFromPrivateSelection: true },
+    ];
+    return;
+  }
+
+  if (sourceScope === 'GENERAL') {
+    where.NOT = {
+      OR: [
+        { type: MovementType.PRIVATE_SELECTION },
+        { isFromPrivateSelection: true },
+      ],
+    };
+  }
+
+  // ALL: no source restriction.
 }
 
 function applyOwnerScope(

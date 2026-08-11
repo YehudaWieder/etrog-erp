@@ -6,6 +6,7 @@ export async function fetchTraderInventorySummary(
 ): Promise<TraderInventorySummaryResponse> {
   const query = new URLSearchParams({
     shipmentScope: filters.shipmentScope || 'ALL',
+    sourceScope: filters.sourceScope || 'ALL',
     ownerScope: filters.ownerScope,
   });
 

@@ -29,16 +29,18 @@ export class TraderStockSummaryService {
 
     const ownerScope = query.ownerScope ?? 'ALL';
     const shipmentScope = query.shipmentScope ?? 'ALL';
+    const sourceScope = query.sourceScope ?? 'ALL';
     const sortBy = query.sortBy ?? 'category';
     const sortOrder = query.sortOrder ?? 'asc';
 
-    validateTraderSummaryQuery(query, ownerScope, shipmentScope, sortBy, sortOrder);
+    validateTraderSummaryQuery(query, ownerScope, shipmentScope, sourceScope, sortBy, sortOrder);
 
     const where = buildTraderStockSummaryWhere(
       query,
       seasonId,
       ownerScope,
       shipmentScope as InventoryMovementScope,
+      sourceScope,
     );
 
     // The "remains in Italy" total is always shown regardless of the active shipment-scope

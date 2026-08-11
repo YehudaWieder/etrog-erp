@@ -49,6 +49,9 @@ export type TraderInventoryI18n = {
 				unassignedOption: string;
 				inventoryStatusLabel: string;
 				allInventoryOption: string;
+				inventorySourceLabel: string;
+				inventorySourceAllOption: string;
+				inventorySourceGeneralOption: string;
 				unboxedOption: string;
 				boxedOption: string;
 				shippedOption: string;

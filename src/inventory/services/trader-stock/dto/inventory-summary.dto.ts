@@ -8,6 +8,7 @@ import {
 } from 'src/inventory/services/inventory-core/types/inventory-query.types';
 
 export type InventoryShipmentScope = InventoryMovementScope;
+export type InventorySourceScope = 'ALL' | 'GENERAL' | 'PRIVATE_SELECTION';
 export type InventorySortBy = InventoryTraderSortBy;
 export type {
   InventoryOwnerScope,
@@ -17,6 +18,7 @@ export type {
 export interface InventorySummaryQuery extends InventorySummaryBaseFilters {
   ownerScope?: InventoryOwnerScope;
   shipmentScope?: InventoryShipmentScope;
+  sourceScope?: InventorySourceScope;
   sortBy?: InventorySortBy;
   sortOrder?: InventorySortOrder;
 }

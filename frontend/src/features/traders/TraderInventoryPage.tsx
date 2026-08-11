@@ -29,6 +29,7 @@ const DEFAULT_FILTER_VALUES: Record<string, string> = {
   seasonId: '',
   traderId: 'ALL',
   inventoryStatus: 'ALL',
+  inventorySource: 'ALL',
   movementStatus: 'ALL',
   movementCategory: 'ALL',
   movementGrade: 'ALL',
@@ -136,14 +137,22 @@ export function TraderInventoryPage() {
   }, [filterValues.traderId, selectedTraderId]);
 
   const selectedShipmentScope = useMemo<
-    'ALL' | 'UNSHIPPED' | 'PACKED_SHIPPED' | 'SHIPPED' | 'SELF_PICKUP' | 'PRIVATE_SELECTION' | 'HARVEST_IN' | 'INTERNAL_TRANSFER' | 'OWNERSHIP_TRANSFER' | 'ASSIGNED' | 'WASTE' | 'ADJUSTMENT' | 'REMAINS_IN_ITALY'
+    'ALL' | 'UNSHIPPED' | 'PACKED_SHIPPED' | 'SHIPPED' | 'SELF_PICKUP' | 'HARVEST_IN' | 'INTERNAL_TRANSFER' | 'OWNERSHIP_TRANSFER' | 'ASSIGNED' | 'WASTE' | 'ADJUSTMENT' | 'REMAINS_IN_ITALY'
   >(() => {
     const status = filterValues.inventoryStatus || 'ALL';
-    if (status === 'ALL' || status === 'UNSHIPPED' || status === 'PACKED_SHIPPED' || status === 'SHIPPED' || status === 'SELF_PICKUP' || status === 'PRIVATE_SELECTION' || status === 'REMAINS_IN_ITALY') {
+    if (status === 'ALL' || status === 'UNSHIPPED' || status === 'PACKED_SHIPPED' || status === 'SHIPPED' || status === 'SELF_PICKUP' || status === 'REMAINS_IN_ITALY') {
       return status;
     }
     return 'ALL';
   }, [filterValues.inventoryStatus]);
+
+  const selectedSourceScope = useMemo<'ALL' | 'GENERAL' | 'PRIVATE_SELECTION'>(() => {
+    const source = filterValues.inventorySource || 'ALL';
+    if (source === 'ALL' || source === 'GENERAL' || source === 'PRIVATE_SELECTION') {
+      return source;
+    }
+    return 'ALL';
+  }, [filterValues.inventorySource]);
 
   const summaryFilters = useMemo(
     () => ({
@@ -151,8 +160,9 @@ export function TraderInventoryPage() {
       traderId: selectedTraderId,
       ownerScope: selectedOwnerScope,
       shipmentScope: selectedShipmentScope,
+      sourceScope: selectedSourceScope,
     }),
-    [selectedOwnerScope, selectedSeasonId, selectedTraderId, selectedShipmentScope],
+    [selectedOwnerScope, selectedSeasonId, selectedTraderId, selectedShipmentScope, selectedSourceScope],
   );
 
   const traderInventorySummary = useTraderInventorySummary(isAllInventoryTab, summaryFilters);
@@ -274,10 +284,18 @@ export function TraderInventoryPage() {
       { value: 'PACKED_SHIPPED', label: t.summary.filters.boxedOption },
       { value: 'SHIPPED', label: t.summary.filters.shippedOption },
       { value: 'SELF_PICKUP', label: t.summary.filters.selfPickupOption },
-      { value: 'PRIVATE_SELECTION', label: t.summary.filters.privateSelectionOption },
       { value: 'REMAINS_IN_ITALY', label: t.summary.filters.remainsInItalyOption },
     ],
-    [t.summary.filters.allInventoryOption, t.summary.filters.unboxedOption, t.summary.filters.boxedOption, t.summary.filters.shippedOption, t.summary.filters.selfPickupOption, t.summary.filters.privateSelectionOption, t.summary.filters.remainsInItalyOption],
+    [t.summary.filters.allInventoryOption, t.summary.filters.unboxedOption, t.summary.filters.boxedOption, t.summary.filters.shippedOption, t.summary.filters.selfPickupOption, t.summary.filters.remainsInItalyOption],
+  );
+
+  const inventorySourceOptions = useMemo(
+    () => [
+      { value: 'ALL', label: t.summary.filters.inventorySourceAllOption },
+      { value: 'GENERAL', label: t.summary.filters.inventorySourceGeneralOption },
+      { value: 'PRIVATE_SELECTION', label: t.summary.filters.privateSelectionOption },
+    ],
+    [t.summary.filters.inventorySourceAllOption, t.summary.filters.inventorySourceGeneralOption, t.summary.filters.privateSelectionOption],
   );
 
   useEffect(() => {
@@ -339,17 +357,25 @@ export function TraderInventoryPage() {
         disabled: isRemainsInItalyFilter,
       },
       {
+        key: 'inventorySource',
+        label: t.summary.filters.inventorySourceLabel,
+        defaultValue: 'ALL',
+        options: inventorySourceOptions,
+        disabled: isRemainsInItalyFilter,
+      },
+      {
         key: 'inventoryStatus',
         label: t.summary.filters.inventoryStatusLabel,
         defaultValue: 'ALL',
         options: inventoryStatusOptions,
       },
     ],
-    [activeSeasonId, seasonOptions, t.summary.filters.seasonLabel, t.summary.filters.traderLabel, traderOptions, t.summary.filters.inventoryStatusLabel, inventoryStatusOptions, isRemainsInItalyFilter],
+    [activeSeasonId, seasonOptions, t.summary.filters.seasonLabel, t.summary.filters.traderLabel, traderOptions, t.summary.filters.inventoryStatusLabel, inventoryStatusOptions, t.summary.filters.inventorySourceLabel, inventorySourceOptions, isRemainsInItalyFilter],
   );
 
-  // "נשאר באיטליה" is never trader-owned - the trader filter is disabled above, and its value
-  // is reset to ALL so a stale specific-trader selection doesn't linger while disabled.
+  // "נשאר באיטליה" is never trader-owned or private-selection-scoped - the trader and source
+  // filters are disabled above, and their values are reset to ALL so a stale selection doesn't
+  // linger while disabled.
   useEffect(() => {
     if (!isRemainsInItalyFilter || !filtersApiRef.current) {
       return;
@@ -358,7 +384,11 @@ export function TraderInventoryPage() {
     if (filterValues.traderId !== 'ALL') {
       filtersApiRef.current.setFilterValue('traderId', 'ALL');
     }
-  }, [isRemainsInItalyFilter, filterValues.traderId]);
+
+    if (filterValues.inventorySource !== 'ALL') {
+      filtersApiRef.current.setFilterValue('inventorySource', 'ALL');
+    }
+  }, [isRemainsInItalyFilter, filterValues.traderId, filterValues.inventorySource]);
 
   const handlePrintInventoryTable = useCallback(() => {
     if (!matrixTableRef.current) {
@@ -377,23 +407,30 @@ export function TraderInventoryPage() {
       ? traders.find(tr => String(tr.id) === filterValues.traderId)?.name || filterValues.traderId
       : 'N/A';
 
-    // Map inventory status to display label
+    // Map inventory status/source to display label
     const statusMap: Record<string, string> = {
       'ALL': t.summary.filters.allInventoryOption,
       'UNSHIPPED': t.summary.filters.unboxedOption,
       'PACKED_SHIPPED': t.summary.filters.boxedOption,
       'SHIPPED': t.summary.filters.shippedOption,
       'SELF_PICKUP': t.summary.filters.selfPickupOption,
-      'PRIVATE_SELECTION': t.summary.filters.privateSelectionOption,
       'REMAINS_IN_ITALY': t.summary.filters.remainsInItalyOption,
     };
     const statusDisplay = statusMap[filterValues.inventoryStatus] || filterValues.inventoryStatus;
+
+    const sourceMap: Record<string, string> = {
+      'ALL': t.summary.filters.inventorySourceAllOption,
+      'GENERAL': t.summary.filters.inventorySourceGeneralOption,
+      'PRIVATE_SELECTION': t.summary.filters.privateSelectionOption,
+    };
+    const sourceDisplay = sourceMap[filterValues.inventorySource] || filterValues.inventorySource;
 
     const filterDetailsHtml = `
       <div style="margin-bottom: 20px; padding: 12px; background: #f5f5f5; border-radius: 4px; font-size: 12px; border: 1px solid #ddd;">
         <strong>${lang === 'he' ? 'סינונים פעילים' : 'Active Filters'}:</strong><br/>
         <div style="margin-top: 4px;">${t.summary.filters.seasonLabel}: ${seasonDisplay}</div>
         <div style="margin-top: 4px;">${t.summary.filters.traderLabel}: ${traderDisplay}</div>
+        <div style="margin-top: 4px;">${t.summary.filters.inventorySourceLabel}: ${sourceDisplay}</div>
         <div style="margin-top: 4px;">${t.summary.filters.inventoryStatusLabel}: ${statusDisplay}</div>
       </div>
     `;
@@ -517,20 +554,26 @@ export function TraderInventoryPage() {
       'PACKED_SHIPPED': t.summary.filters.boxedOption,
       'SHIPPED': t.summary.filters.shippedOption,
       'SELF_PICKUP': t.summary.filters.selfPickupOption,
-      'PRIVATE_SELECTION': t.summary.filters.privateSelectionOption,
       'REMAINS_IN_ITALY': t.summary.filters.remainsInItalyOption,
     };
     const statusDisplay = statusMap[filterValues.inventoryStatus] || filterValues.inventoryStatus;
+    const sourceMap: Record<string, string> = {
+      'ALL': t.summary.filters.inventorySourceAllOption,
+      'GENERAL': t.summary.filters.inventorySourceGeneralOption,
+      'PRIVATE_SELECTION': t.summary.filters.privateSelectionOption,
+    };
+    const sourceDisplay = sourceMap[filterValues.inventorySource] || filterValues.inventorySource;
     const baseFileName = lang === 'he' ? 'מלאי סוחרים' : 'Trader Inventory';
 
     const summaryMatrix = buildTraderInventorySummaryMatrix(traderInventorySummary.rows, t.summary.values.none, traderCategoryOrder);
 
     await exportTraderInventoryExcel({
-      fileName: `${baseFileName}_${seasonDisplay}_${traderDisplay}_${statusDisplay}`,
+      fileName: `${baseFileName}_${seasonDisplay}_${traderDisplay}_${sourceDisplay}_${statusDisplay}`,
       sheetName: lang === 'he' ? 'מלאי סוחרים' : 'Trader Inventory',
       filterRows: [
         [t.summary.filters.seasonLabel, seasonDisplay],
         [t.summary.filters.traderLabel, traderDisplay],
+        [t.summary.filters.inventorySourceLabel, sourceDisplay],
         [t.summary.filters.inventoryStatusLabel, statusDisplay],
       ],
       summaryMatrix,
