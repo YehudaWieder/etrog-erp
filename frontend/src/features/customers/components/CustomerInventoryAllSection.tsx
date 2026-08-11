@@ -89,88 +89,88 @@ export function CustomerInventoryAllSection({
       {summaryMatrix.customers.length > 0 ? (
         <>
           <section className={traderStyles.matrixSection}>
-            <div className={traderStyles.matrixViewport}>
-              <table className={traderStyles.matrixTable} ref={tableRef}>
+            <div className={styles.matrixViewport}>
+              <table className={styles.matrixTable} ref={tableRef}>
                 <thead>
                   <tr>
-                    <th className={traderStyles.matrixTypeHead}>{labels.columns.customer}</th>
+                    <th className={styles.matrixTypeHead}>{labels.columns.customer}</th>
                     <th>{getPitamStatusLabel('WITH_PITAM', labels)}</th>
                     <th>{getPitamStatusLabel('WITHOUT_PITAM', labels)}</th>
                     <th>{getPitamStatusLabel('MIXED', labels)}</th>
-                    <th className={traderStyles.matrixTotalHead}>{labels.matrix.total}</th>
+                    <th className={styles.matrixTotalHead}>{labels.matrix.total}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {summaryMatrix.customers.map((customer) => (
                     <tr key={customer.customerId}>
-                      <th className={traderStyles.matrixTypeCell}>{customer.customerName}</th>
+                      <th className={styles.matrixTypeCell}>{customer.customerName}</th>
                       <td>{fmt(customer.totalsByPitamStatus.WITH_PITAM)}</td>
                       <td>{fmt(customer.totalsByPitamStatus.WITHOUT_PITAM)}</td>
                       <td>{fmt(customer.totalsByPitamStatus.MIXED)}</td>
-                      <td className={traderStyles.matrixTotalCell}>{fmt(customer.total)}</td>
+                      <td className={styles.matrixTotalCell}>{fmt(customer.total)}</td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
                   <tr>
-                    <th className={traderStyles.matrixTypeCell}>{labels.matrix.total}</th>
+                    <th className={styles.matrixTypeCell}>{labels.matrix.total}</th>
                     <td>{fmt(summaryMatrix.grandTotalByPitamStatus.WITH_PITAM)}</td>
                     <td>{fmt(summaryMatrix.grandTotalByPitamStatus.WITHOUT_PITAM)}</td>
                     <td>{fmt(summaryMatrix.grandTotalByPitamStatus.MIXED)}</td>
-                    <td className={traderStyles.matrixTotalCell}>{fmt(summaryMatrix.grandTotal)}</td>
+                    <td className={styles.matrixTotalCell}>{fmt(summaryMatrix.grandTotal)}</td>
                   </tr>
                 </tfoot>
               </table>
             </div>
           </section>
 
-          <div className={traderStyles.breakdownPanel}>
+          <div className={styles.breakdownPanel}>
             <button
               type="button"
-              className={`${traderStyles.breakdownToggle}${isBreakdownOpen ? ` ${traderStyles.breakdownToggleOpen}` : ''}`}
+              className={`${styles.breakdownToggle}${isBreakdownOpen ? ` ${styles.breakdownToggleOpen}` : ''}`}
               onClick={() => setIsBreakdownOpen((o) => !o)}
             >
               {isBreakdownOpen ? labels.breakdown.hideBreakdown : labels.breakdown.showBreakdown}
-              <span className={`${traderStyles.breakdownArrow}${isBreakdownOpen ? ` ${traderStyles.breakdownArrowOpen}` : ''}`}>▼</span>
+              <span className={`${styles.breakdownArrow}${isBreakdownOpen ? ` ${styles.breakdownArrowOpen}` : ''}`}>▼</span>
             </button>
             {isBreakdownOpen && (
-              <div className={traderStyles.breakdownContent}>
-                <h3 className={traderStyles.breakdownTitle}>{labels.breakdown.breakdownTitle}</h3>
-                <div className={traderStyles.categoryTablesStack}>
+              <div className={styles.breakdownContent}>
+                <h3 className={styles.breakdownTitle}>{labels.breakdown.breakdownTitle}</h3>
+                <div className={styles.categoryTablesStack}>
                   {summaryMatrix.customers.map((customer) => (
-                    <div key={customer.customerId} className={traderStyles.tableSection}>
+                    <div key={customer.customerId} className={styles.tableSection}>
                       <h3 className={styles.customerSectionTitle}>{customer.customerName}</h3>
-                      <div className={traderStyles.matrixViewport}>
-                        <table className={traderStyles.matrixTable}>
+                      <div className={styles.matrixViewport}>
+                        <table className={styles.matrixTable}>
                           <thead>
                             <tr>
-                              <th className={traderStyles.matrixTypeHead}>{labels.columns.category}</th>
-                              <th className={traderStyles.matrixTypeHead}>{labels.matrix.grade}</th>
+                              <th className={styles.matrixTypeHead}>{labels.columns.category}</th>
+                              <th className={styles.matrixTypeHead}>{labels.matrix.grade}</th>
                               <th>{getPitamStatusLabel('WITH_PITAM', labels)}</th>
                               <th>{getPitamStatusLabel('WITHOUT_PITAM', labels)}</th>
                               <th>{getPitamStatusLabel('MIXED', labels)}</th>
-                              <th className={traderStyles.matrixTotalHead}>{labels.matrix.total}</th>
+                              <th className={styles.matrixTotalHead}>{labels.matrix.total}</th>
                             </tr>
                           </thead>
                           <tbody>
                             {customer.categories.map((category) => (
                               <tr key={category.key}>
-                                <th className={traderStyles.matrixTypeCell}>{category.label}</th>
+                                <th className={styles.matrixTypeCell}>{category.label}</th>
                                 <td>{category.grade}</td>
                                 <td>{fmt(category.totalsByPitamStatus.WITH_PITAM)}</td>
                                 <td>{fmt(category.totalsByPitamStatus.WITHOUT_PITAM)}</td>
                                 <td>{fmt(category.totalsByPitamStatus.MIXED)}</td>
-                                <td className={traderStyles.matrixTotalCell}>{fmt(category.total)}</td>
+                                <td className={styles.matrixTotalCell}>{fmt(category.total)}</td>
                               </tr>
                             ))}
                           </tbody>
                           <tfoot>
                             <tr>
-                              <th className={traderStyles.matrixTypeCell} colSpan={2}>{labels.matrix.total}</th>
+                              <th className={styles.matrixTypeCell} colSpan={2}>{labels.matrix.total}</th>
                               <td>{fmt(customer.totalsByPitamStatus.WITH_PITAM)}</td>
                               <td>{fmt(customer.totalsByPitamStatus.WITHOUT_PITAM)}</td>
                               <td>{fmt(customer.totalsByPitamStatus.MIXED)}</td>
-                              <td className={traderStyles.matrixTotalCell}>{fmt(customer.total)}</td>
+                              <td className={styles.matrixTotalCell}>{fmt(customer.total)}</td>
                             </tr>
                           </tfoot>
                         </table>
