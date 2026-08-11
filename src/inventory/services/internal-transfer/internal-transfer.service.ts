@@ -229,7 +229,7 @@ export class InternalTransferService {
     // pitamStatus is a single shared snapshot across both sides of a transfer by default;
     // fromPitamStatus/toPitamStatus only override it when a side-specific value was supplied.
     // toPitamStatus exists specifically so a MIXED trader batch can be resolved into a definite
-    // WITH_PITAM/WITHOUT_PITAM status when it lands on a customer.
+    // WITH_PITAM/WITHOUT_PITAM/MIXED status when it lands on a customer.
     const pitamStatus =
       side === 'from'
         ? data.fromPitamStatus ?? data.pitamStatus
@@ -237,10 +237,6 @@ export class InternalTransferService {
 
     if (!pitamStatus) {
       throw new BadRequestException(`${side}PitamStatus is required`);
-    }
-
-    if (side === 'to' && ownerType === InventoryOwnerType.CUSTOMER && data.toPitamStatus === PitamStatus.MIXED) {
-      throw new BadRequestException('toPitamStatus cannot be MIXED');
     }
 
     if (

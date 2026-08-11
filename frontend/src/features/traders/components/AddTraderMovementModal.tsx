@@ -1865,8 +1865,8 @@ export function AddTraderMovementModal({
                   </select>
                 </div>
 
-                {/* The trader side can be a MIXED batch, but a customer can't own "mixed" stock —
-                    require picking the actual pitam status for the customer record in that case only. */}
+                {/* The trader side can be a MIXED batch — require explicitly picking the pitam
+                    status for the customer record in that case (defaults to nothing selected). */}
                 {pitamStatus === 'MIXED' ? (
                   <div style={FIELD_STYLE}>
                     <label style={LABEL_STYLE}>{f.customerPitamStatusLabel}</label>
@@ -1878,6 +1878,7 @@ export function AddTraderMovementModal({
                       <option value="">{f.pitamStatusPlaceholder}</option>
                       <option value="WITH_PITAM">{i18n.pitamStatuses.WITH_PITAM}</option>
                       <option value="WITHOUT_PITAM">{i18n.pitamStatuses.WITHOUT_PITAM}</option>
+                      <option value="MIXED">{i18n.pitamStatuses.MIXED}</option>
                     </select>
                   </div>
                 ) : null}
