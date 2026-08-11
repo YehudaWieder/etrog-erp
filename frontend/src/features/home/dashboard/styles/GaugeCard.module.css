@@ -1,5 +1,6 @@
 .card {
   flex: 1;
+  height: 100%;
   background: var(--card-bg);
   border-radius: 16px;
   border: 1px solid rgba(226, 230, 235, 0.95);
@@ -9,6 +10,9 @@
   text-align: center;
   transition: background var(--easing-standard), box-shadow var(--easing-standard), transform var(--easing-standard);
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .card:hover {
@@ -106,13 +110,23 @@
     box-shadow: none;
     border: 1px solid #ccc;
     background: white;
-    padding: 8px 4px;
+    padding: 6px 3px;
   }
   .svgWrapper {
-    width: 90px;
+    width: 72px;
   }
   .gaugeSvg {
-    width: 90px;
-    height: 72px;
+    width: 72px;
+    height: 58px;
+  }
+  .iconOverlay {
+    top: 22px;
+    font-size: 11px;
+  }
+  .title {
+    font-size: 11px;
+  }
+  .value {
+    font-size: 10px;
   }
 }

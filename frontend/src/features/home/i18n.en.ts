@@ -94,6 +94,13 @@ export const HOME_I18N_EN = {
         },
       },
     },
+    gradeGroups: {
+      title: 'Percentage Breakdown by Grade Groups',
+      groupColumn: 'Group',
+      percentColumn: 'Percent',
+      ungrouped: 'Ungrouped',
+      grade: 'Grade',
+    },
     gauges: {
       grossHarvest: 'Gross Harvest',
       rejects: 'Rejects',

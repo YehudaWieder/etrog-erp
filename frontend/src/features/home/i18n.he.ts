@@ -94,6 +94,13 @@ export const HOME_I18N_HE = {
         },
       },
     },
+    gradeGroups: {
+      title: 'פילוח אחוזים לפי קבוצות דרגות',
+      groupColumn: 'קבוצה',
+      percentColumn: 'אחוז',
+      ungrouped: 'ללא קיבוץ',
+      grade: 'דרגה',
+    },
     gauges: {
       grossHarvest: 'קטיף ברוטו',
       rejects: 'יורדים',

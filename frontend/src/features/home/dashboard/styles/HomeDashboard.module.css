@@ -87,7 +87,59 @@
   display: none;
 }
 
+.summaryPrintOnly {
+  display: none;
+}
+
+.gradeGroupSplitPrintOnly {
+  display: none;
+}
+
+.gradeGroupSplitScreenOnly {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
 @media print {
+  .summaryScreenOnly {
+    display: none;
+  }
+
+  .summaryPrintOnly {
+    display: block;
+  }
+
+  .gradeGroupSplitScreenOnly {
+    display: none;
+  }
+
+  .gradeGroupSplitPrintOnly {
+    display: block;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .gradeGroupSplitPrintOnly :global(.harvest-daily-workspace__group-split-title) {
+    text-align: start;
+  }
+  .gradeGroupSplitPrintOnly :global(.harvest-daily-workspace__group-split-list) {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  .gradeGroupSplitPrintOnly :global(.harvest-daily-workspace__group-split-card) {
+    min-width: 0;
+    flex: 1 1 0;
+    padding: 6px 8px;
+  }
+  .gradeGroupSplitPrintOnly :global(.harvest-daily-workspace__group-split-card-title) {
+    font-size: 0.8rem;
+  }
+  .gradeGroupSplitPrintOnly :global(.harvest-daily-workspace__group-split-table) th,
+  .gradeGroupSplitPrintOnly :global(.harvest-daily-workspace__group-split-table) td {
+    padding: 3px 6px;
+    font-size: 10px;
+  }
+
   .printHeader {
     display: flex;
     justify-content: flex-end;
@@ -119,22 +171,23 @@
     gap: 20px;
   }
   .topRow {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     height: auto;
     gap: 16px;
   }
   .halfCell {
-    flex: unset;
-    width: 100%;
+    grid-column: 1 / -1;
+    min-width: 0;
   }
   .quarterCell {
-    flex: 1;
-    min-width: 45%;
+    grid-column: span 1;
+    min-width: 0;
   }
   .metricsRow,
   .metricsRowExtra {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
   }
 

@@ -26,18 +26,13 @@ type PrintDashboardSummaryParams = {
   tables: DashboardSummaryPrintTable[];
 };
 
-const PRINT_EXTRA_STYLES = `
+export const DASHBOARD_SUMMARY_PRINT_STYLES = `
   h2 {
     margin: 18px 0 8px;
     font-size: 16px;
     color: #1f4f29;
     break-before: page;
     page-break-before: always;
-  }
-  h2:first-of-type {
-    margin-top: 0;
-    break-before: auto;
-    page-break-before: auto;
   }
   .dashboard-summary-print__meta {
     margin: 0 0 10px;
@@ -173,15 +168,27 @@ function sectionHtml(table: DashboardSummaryPrintTable, locale: string): string 
   return `<h2>${esc(table.title)}</h2>${metaHtml}${tableHtml(table, locale)}${footerHtml}`;
 }
 
-export function printDashboardSummary({ lang, heading, tables }: PrintDashboardSummaryParams): void {
+export function buildDashboardSummaryHtml(lang: 'he' | 'en', tables: DashboardSummaryPrintTable[]): string {
   const locale = lang === 'he' ? 'he-IL' : 'en-US';
-  const html = tables.map((table) => sectionHtml(table, locale)).join('');
+  return tables.map((table) => sectionHtml(table, locale)).join('');
+}
+
+const STANDALONE_WINDOW_FIRST_PAGE_OVERRIDE = `
+  .harvest-print__content h2:first-of-type {
+    margin-top: 0;
+    break-before: auto;
+    page-break-before: auto;
+  }
+`;
+
+export function printDashboardSummary({ lang, heading, tables }: PrintDashboardSummaryParams): void {
+  const html = buildDashboardSummaryHtml(lang, tables);
 
   openPrintableWindow({
     title: heading,
     heading,
     html,
     direction: lang === 'he' ? 'rtl' : 'ltr',
-    extraStyles: PRINT_EXTRA_STYLES,
+    extraStyles: DASHBOARD_SUMMARY_PRINT_STYLES + STANDALONE_WINDOW_FIRST_PAGE_OVERRIDE,
   });
 }

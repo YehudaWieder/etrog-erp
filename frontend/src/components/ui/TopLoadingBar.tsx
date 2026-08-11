@@ -83,7 +83,7 @@ export function TopLoadingBar({ isLoading, placement = 'underline' }: TopLoading
         };
 
   return (
-    <div aria-hidden="true" style={containerStyle}>
+    <div aria-hidden="true" className="top-loading-bar" style={containerStyle}>
       <div
         style={{
           height: '100%',

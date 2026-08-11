@@ -12,10 +12,23 @@ import { GaugeCard } from './GaugeCard';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useDashboardSeasons } from '../hooks/useDashboardSeasons';
 import { fetchReclassificationSummary } from '../../../../services/inventoryMovementsApi';
+import { getClassificationsBySeason, type ClassificationListRecord } from '../../../../services/classificationsApi';
+import { getTraderCategoriesWithShares, type TraderCategoryWithShares } from '../../../../services/traderCategoriesApi';
 import { GlobalScopedFilters } from '../../../../components/ui/GlobalScopedFilters';
 import filterStyles from '../../../../components/ui/styles/GlobalFiltersBar.module.css';
 import { HOME_I18N } from '../../i18n';
-import { printDashboardSummary } from '../services/dashboardSummaryPrint.service';
+import {
+  printDashboardSummary,
+  buildDashboardSummaryHtml,
+  DASHBOARD_SUMMARY_PRINT_STYLES,
+  type DashboardSummaryPrintTable,
+} from '../services/dashboardSummaryPrint.service';
+import {
+  buildCategoryGradeTotals,
+  buildGradeGroupsByCategory,
+  buildCategoryGradeGroupSplits,
+} from '../../../harvest/utils/gradeGroupBreakdown.util';
+import { GradeGroupSplitCards } from '../../../harvest/components/shared/GradeGroupSplitCards';
 
 type HomeDashboardProps = {
   lang: 'he' | 'en';
@@ -33,6 +46,8 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
   const [reclassifiedTotal, setReclassifiedTotal] = useState(0);
   const [shipmentsStatus, setShipmentsStatus] = useState<StatusKey>('packaged');
   const [inventoryKey, setInventoryKey] = useState<string>(INVENTORY_GENERAL_KEY);
+  const [classificationRows, setClassificationRows] = useState<ClassificationListRecord[]>([]);
+  const [traderCategories, setTraderCategories] = useState<TraderCategoryWithShares[]>([]);
 
   useEffect(() => {
     const seasonId = resolvedSeasonId ? Number(resolvedSeasonId) : undefined;
@@ -49,6 +64,33 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
       })
       .catch(() => {
         if (!cancelled) setReclassifiedTotal(0);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [resolvedSeasonId]);
+
+  useEffect(() => {
+    const seasonId = resolvedSeasonId ? Number(resolvedSeasonId) : undefined;
+    if (!seasonId) {
+      setClassificationRows([]);
+      setTraderCategories([]);
+      return;
+    }
+
+    let cancelled = false;
+    Promise.all([getClassificationsBySeason(seasonId), getTraderCategoriesWithShares(seasonId)])
+      .then(([rows, categories]) => {
+        if (cancelled) return;
+        setClassificationRows(rows);
+        setTraderCategories(categories);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setClassificationRows([]);
+          setTraderCategories([]);
+        }
       });
 
     return () => {
@@ -81,12 +123,26 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
     [t.seasonLabel, activeSeasonId, seasonOptions],
   );
 
+  const handlePrintDashboard = () => {
+    const styleEl = document.createElement('style');
+    styleEl.textContent = '@page { size: A4 landscape; margin: 1cm; }';
+    document.head.appendChild(styleEl);
+
+    const cleanup = () => {
+      styleEl.remove();
+      window.removeEventListener('afterprint', cleanup);
+    };
+    window.addEventListener('afterprint', cleanup);
+
+    window.print();
+  };
+
   const printAction = (
     <div className={filterStyles.iconActions}>
       <button
         type="button"
         className={filterStyles.iconBtn}
-        onClick={() => window.print()}
+        onClick={handlePrintDashboard}
         aria-label={t.printTitle}
         title={t.printTitle}
       >
@@ -215,6 +271,17 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
 
   const selectedSeasonLabel = seasonOptions.find((s) => s.value === String(resolvedSeasonId))?.label ?? '';
 
+  const gradeGroupsByCategory = buildGradeGroupsByCategory(traderCategories);
+  const traderCategoryOrderForGroups = new Map<string, number>();
+  for (const category of traderCategories) traderCategoryOrderForGroups.set(category.name, category.orderIndex);
+  const categoryGradeTotals = buildCategoryGradeTotals(classificationRows, t.gradeGroups.grade);
+  const gradeGroupSplits = buildCategoryGradeGroupSplits(
+    categoryGradeTotals,
+    gradeGroupsByCategory,
+    traderCategoryOrderForGroups,
+    t.gradeGroups.ungrouped,
+  );
+
   const summaryTabs = [
     {
       key: 'harvestSorting',
@@ -261,7 +328,7 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
 
   const SHIPMENT_STATUS_KEYS: StatusKey[] = ['packaged', 'shipped', 'delivered'];
 
-  const handlePrintSummary = () => {
+  const buildSummaryPrintTables = (): DashboardSummaryPrintTable[] => {
     const locale = lang === 'he' ? 'he-IL' : 'en-US';
     const fmt = (n: number) => `${n.toLocaleString(locale)} ${t.unit}`;
 
@@ -331,33 +398,39 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
       footerLines: [],
     };
 
+    return [
+      {
+        title: t.summary.harvestSortingTab,
+        metaLines: [`${t.summary.harvestSorting.netHarvest}: ${fmt(sortingSummary.netHarvest)}`],
+        categories: sortingSummary.categories,
+        grades: sortingSummary.grades,
+        matrix: sortingSummary.matrix,
+        categoryColumnLabel: t.summary.harvestSorting.categoryColumn,
+        totalColumnLabel: t.summary.harvestSorting.totalColumn,
+        emptyLabel: t.summary.harvestSorting.empty,
+        columnLabels: t.summary.harvestSorting.columns,
+        footerLines: [
+          `${t.summary.harvestSorting.privateSort}: ${fmt(sortingSummary.privateSortTotal)}`,
+          `${t.summary.harvestSorting.customerSort}: ${fmt(sortingSummary.customerSortTotal)}`,
+          `${t.summary.harvestSorting.reclassified}: ${fmt(reclassifiedTotal)}`,
+        ],
+      },
+      ...shipmentsTables,
+      inventoryGeneralTable,
+      ...inventoryTraderTables,
+      inventoryModuloTable,
+    ];
+  };
+
+  const handlePrintSummary = () => {
     printDashboardSummary({
       lang,
       heading: t.summary.title,
-      tables: [
-        {
-          title: t.summary.harvestSortingTab,
-          metaLines: [`${t.summary.harvestSorting.netHarvest}: ${fmt(sortingSummary.netHarvest)}`],
-          categories: sortingSummary.categories,
-          grades: sortingSummary.grades,
-          matrix: sortingSummary.matrix,
-          categoryColumnLabel: t.summary.harvestSorting.categoryColumn,
-          totalColumnLabel: t.summary.harvestSorting.totalColumn,
-          emptyLabel: t.summary.harvestSorting.empty,
-          columnLabels: t.summary.harvestSorting.columns,
-          footerLines: [
-            `${t.summary.harvestSorting.privateSort}: ${fmt(sortingSummary.privateSortTotal)}`,
-            `${t.summary.harvestSorting.customerSort}: ${fmt(sortingSummary.customerSortTotal)}`,
-            `${t.summary.harvestSorting.reclassified}: ${fmt(reclassifiedTotal)}`,
-          ],
-        },
-        ...shipmentsTables,
-        inventoryGeneralTable,
-        ...inventoryTraderTables,
-        inventoryModuloTable,
-      ],
+      tables: buildSummaryPrintTables(),
     });
   };
+
+  const summaryPrintHtml = buildDashboardSummaryHtml(lang, buildSummaryPrintTables());
 
   return (
     <>
@@ -432,12 +505,40 @@ export function HomeDashboard({ lang }: HomeDashboardProps): JSX.Element {
           ))}
         </div>
 
-        <SummarySection
-          title={t.summary.title}
-          tabs={summaryTabs}
-          onPrint={handlePrintSummary}
-          printTitle={t.summary.printTitle}
-        />
+        <div className={styles.gradeGroupSplitPrintOnly}>
+          <GradeGroupSplitCards
+            title={t.gradeGroups.title}
+            splits={gradeGroupSplits}
+            groupColumnLabel={t.gradeGroups.groupColumn}
+            percentColumnLabel={t.gradeGroups.percentColumn}
+            locale={lang === 'he' ? 'he-IL' : 'en-US'}
+          />
+        </div>
+
+        <div className={styles.summaryScreenOnly}>
+          <SummarySection
+            title={t.summary.title}
+            tabs={summaryTabs}
+            onPrint={handlePrintSummary}
+            printTitle={t.summary.printTitle}
+          />
+        </div>
+
+        <div className={styles.summaryPrintOnly}>
+          <style dangerouslySetInnerHTML={{ __html: `@media print { ${DASHBOARD_SUMMARY_PRINT_STYLES} }` }} />
+          <div dangerouslySetInnerHTML={{ __html: summaryPrintHtml }} />
+        </div>
+
+        <div className={styles.gradeGroupSplitScreenOnly}>
+          <GradeGroupSplitCards
+            title={t.gradeGroups.title}
+            splits={gradeGroupSplits}
+            groupColumnLabel={t.gradeGroups.groupColumn}
+            percentColumnLabel={t.gradeGroups.percentColumn}
+            locale={lang === 'he' ? 'he-IL' : 'en-US'}
+            compact
+          />
+        </div>
       </div>
     </>
   );
