@@ -153,8 +153,13 @@ export class DashboardService {
 
     const sorted = await this.buildSortedSeries(seasonId);
 
-    const [allTraders, traderStockRecords, privateSelectionRecords, moduloRecords] = await Promise.all([
+    const [allTraders, categoryOrderRecords, traderStockRecords, privateSelectionRecords, moduloRecords] = await Promise.all([
       this.prisma.trader.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+      this.prisma.tradersCategories.findMany({
+        where: { seasonId },
+        select: { name: true },
+        orderBy: [{ orderIndex: 'asc' }, { name: 'asc' }],
+      }),
       this.prisma.traderStock.findMany({
         where: {
           seasonId,
@@ -243,6 +248,18 @@ export class DashboardService {
       return GRADE_ORDER.filter((g) => used.has(g));
     };
 
+    // Category rows must follow the priority order configured in category settings
+    // (TradersCategories.orderIndex), not the order categories happened to first appear
+    // in the underlying query results.
+    const categoryOrder = categoryOrderRecords.map((c) => c.name);
+    const categoriesUsedIn = (matrix: Map<string, Map<string, PitamGradeCell>>): string[] => {
+      const used = matrix.keys();
+      const usedSet = new Set(used);
+      const ordered = categoryOrder.filter((c) => usedSet.has(c));
+      const unordered = Array.from(usedSet).filter((c) => !categoryOrder.includes(c));
+      return [...ordered, ...unordered];
+    };
+
     const traderMap = new Map<number, { total: number; byCategory: Map<string, number>; privateSort: number }>(
       allTraders.map((t) => [t.id, { total: 0, byCategory: new Map(), privateSort: 0 }]),
     );
@@ -298,12 +315,12 @@ export class DashboardService {
     }
 
     const generalInventoryGrades = gradesUsedIn(generalInventoryMatrix);
-    const generalInventoryCategories = Array.from(generalInventoryMatrix.keys());
+    const generalInventoryCategories = categoriesUsedIn(generalInventoryMatrix);
     const generalInventoryMatrixFlat = flattenPitamMatrix(generalInventoryMatrix);
 
     const buildInventorySummary = (bucket: InventoryBucket) => ({
       total: bucket.total,
-      categories: Array.from(bucket.matrix.keys()),
+      categories: categoriesUsedIn(bucket.matrix),
       grades: gradesUsedIn(bucket.matrix),
       matrix: flattenPitamMatrix(bucket.matrix),
       privateTotal: bucket.privateTotal,
@@ -321,7 +338,7 @@ export class DashboardService {
       addToPitamMatrix(moduloMatrix, cat, r.grade, r.pitamStatus, r.quantity);
     }
     const moduloGrades = gradesUsedIn(moduloMatrix);
-    const moduloCategories = Array.from(moduloMatrix.keys());
+    const moduloCategories = categoriesUsedIn(moduloMatrix);
     const moduloMatrixFlat = flattenPitamMatrix(moduloMatrix);
 
     const traderDistributionGeneral: DailyDataPoint[] = [];
@@ -483,7 +500,7 @@ export class DashboardService {
     }
 
     const classificationGrades = gradesUsedIn(classificationGeneralMatrix);
-    const classificationCategories = Array.from(classificationGeneralMatrix.keys());
+    const classificationCategories = categoriesUsedIn(classificationGeneralMatrix);
     const classificationMatrixFlat = flattenPitamMatrix(classificationGeneralMatrix);
 
     type ShipmentBucket = { matrix: Map<string, Map<string, PitamGradeCell>>; customerTotal: number };
@@ -513,7 +530,7 @@ export class DashboardService {
 
     const buildShipmentStatusSummary = (total: number, bucket: ShipmentBucket) => ({
       total,
-      categories: Array.from(bucket.matrix.keys()),
+      categories: categoriesUsedIn(bucket.matrix),
       grades: gradesUsedIn(bucket.matrix),
       matrix: flattenPitamMatrix(bucket.matrix),
       customerTotal: bucket.customerTotal,
