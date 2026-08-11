@@ -338,6 +338,10 @@ export type TraderMovementsI18n = {
 		closeLabel: string;
 		typeLabel: string;
 		typePlaceholder: string;
+		typeGroupRegular: string;
+		typeGroupSpecial: string;
+		typeGroupManage: string;
+		typeBackLabel: string;
 		typeOptions: {
 			OWNERSHIP_TRANSFER: string;
 			INTERNAL_TRANSFER: string;

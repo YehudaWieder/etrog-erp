@@ -381,6 +381,10 @@ export const TRADER_MOVEMENTS_I18N_EN: TraderMovementsI18n = {
 		closeLabel: 'Close',
 		typeLabel: 'Movement Type',
 		typePlaceholder: 'Select action type',
+		typeGroupRegular: 'Regular Actions',
+		typeGroupSpecial: 'Special Actions',
+		typeGroupManage: 'Manage / Cancel',
+		typeBackLabel: 'Back to action selection',
 		typeOptions: {
 			OWNERSHIP_TRANSFER: 'Ownership Transfer Between Traders',
 			INTERNAL_TRANSFER: 'Transfer to Customer',

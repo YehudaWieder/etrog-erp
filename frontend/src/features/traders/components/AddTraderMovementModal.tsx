@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { FaArrowRight, FaArrowLeft } from 'react-icons/fa6';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
 import { TopLoadingBar } from '../../../components/ui/TopLoadingBar';
 import type { AppLang } from '../i18n';
@@ -38,6 +39,7 @@ import { ReclassificationBatchPicker } from './ReclassificationBatchPicker';
 import { RemainsInItalyWithdrawalBatchPicker } from './RemainsInItalyWithdrawalBatchPicker';
 import type { TraderInventorySummaryRow } from '../traderInventory.types';
 import remainsInItalyCheckboxStyles from './styles/RemainsInItalyCheckbox.module.css';
+import movementTypePickerStyles from './styles/MovementTypePicker.module.css';
 
 const GRADE_OPTIONS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו'] as const;
 const GRADE_ORDER = new Map<string, number>(GRADE_OPTIONS.map((grade, index) => [grade, index]));
@@ -51,21 +53,29 @@ const PITAM_STATUS_OPTIONS: PitamStatus[] = ['WITH_PITAM', 'WITHOUT_PITAM', 'MIX
 
 type MovementType = InternalTransferMovementType | TraderAdjustmentMovementType | 'PITAM_SPLIT' | 'PITAM_SPLIT_MANAGE' | 'REMAINS_IN_ITALY_WITHDRAWAL' | 'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE' | 'RECLASSIFICATION' | 'RECLASSIFICATION_MANAGE';
 
-const MOVEMENT_TYPE_ORDER: Array<Exclude<MovementType, 'PRIVATE_SELECTION'>> = [
-  'OWNERSHIP_TRANSFER',
-  'ASSIGNED',
-  'INTERNAL_TRANSFER',
-  'SELF_PICKUP',
-  'WASTE',
-  'REMAINS_IN_ITALY_WITHDRAWAL',
-  'REMAINS_IN_ITALY_WITHDRAWAL_MANAGE',
-  'PITAM_SPLIT',
-  'PITAM_SPLIT_MANAGE',
-  'RECLASSIFICATION',
-  'RECLASSIFICATION_MANAGE',
-];
-
 const ADJUSTMENT_TYPES = new Set<MovementType>(['WASTE']);
+
+const MOVEMENT_TYPE_GROUPS: Array<{
+  labelKey: 'typeGroupRegular' | 'typeGroupSpecial' | 'typeGroupManage';
+  isManage: boolean;
+  types: Array<Exclude<MovementType, 'PRIVATE_SELECTION'>>;
+}> = [
+  {
+    labelKey: 'typeGroupRegular',
+    isManage: false,
+    types: ['OWNERSHIP_TRANSFER', 'ASSIGNED', 'INTERNAL_TRANSFER', 'SELF_PICKUP', 'WASTE'],
+  },
+  {
+    labelKey: 'typeGroupSpecial',
+    isManage: false,
+    types: ['REMAINS_IN_ITALY_WITHDRAWAL', 'PITAM_SPLIT', 'RECLASSIFICATION'],
+  },
+  {
+    labelKey: 'typeGroupManage',
+    isManage: true,
+    types: ['REMAINS_IN_ITALY_WITHDRAWAL_MANAGE', 'PITAM_SPLIT_MANAGE', 'RECLASSIFICATION_MANAGE'],
+  },
+];
 
 const ROW_STYLE: CSSProperties = {
   display: 'grid',
@@ -1532,36 +1542,71 @@ export function AddTraderMovementModal({
           {/* Row 1: action type */}
           <div style={ROW_STYLE}>
             <div style={{ ...FIELD_STYLE, gridColumn: '1 / -1' }}>
-              <label style={LABEL_STYLE}>{f.typeLabel}</label>
-              <select
-                className="seasons-manager__year-input"
-                value={type}
-                onChange={(event) => handleTypeChange(event.target.value as MovementType | '')}
-              >
-                <option value="">{f.typePlaceholder}</option>
-                {MOVEMENT_TYPE_ORDER.map((option) => (
-                  <option key={option} value={option}>
-                    {f.typeOptions[option]}
-                  </option>
-                ))}
-              </select>
+              {!type ? (
+                <div
+                  style={{
+                    textAlign: 'center',
+                    color: 'var(--color-text-accent)',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                  }}
+                >
+                  {f.typePlaceholder}
+                </div>
+              ) : null}
+              {type && type !== 'PRIVATE_SELECTION' ? (
+                <div className={movementTypePickerStyles.selectedRow}>
+                  <button
+                    type="button"
+                    className={movementTypePickerStyles.backButton}
+                    onClick={() => handleTypeChange('')}
+                    aria-label={f.typeBackLabel}
+                    title={f.typeBackLabel}
+                  >
+                    {lang === 'he' ? <FaArrowRight /> : <FaArrowLeft />}
+                  </button>
+                  <div className={movementTypePickerStyles.grid}>
+                    <button
+                      type="button"
+                      className={[
+                        movementTypePickerStyles.button,
+                        movementTypePickerStyles.buttonSelected,
+                        MOVEMENT_TYPE_GROUPS.some((group) => group.isManage && group.types.includes(type))
+                          ? movementTypePickerStyles.buttonManage
+                          : '',
+                      ].filter(Boolean).join(' ')}
+                      onClick={() => handleTypeChange('')}
+                    >
+                      {f.typeOptions[type]}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className={movementTypePickerStyles.groups}>
+                  {MOVEMENT_TYPE_GROUPS.map((group) => (
+                    <div key={group.labelKey} className={movementTypePickerStyles.group}>
+                      <span className={movementTypePickerStyles.groupLabel}>{f[group.labelKey]}</span>
+                      <div className={movementTypePickerStyles.grid}>
+                        {group.types.map((option) => (
+                          <button
+                            key={option}
+                            type="button"
+                            className={[
+                              movementTypePickerStyles.button,
+                              group.isManage ? movementTypePickerStyles.buttonManage : '',
+                            ].filter(Boolean).join(' ')}
+                            onClick={() => handleTypeChange(option)}
+                          >
+                            {f.typeOptions[option]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-
-          {!type ? (
-            <div
-              style={{
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--color-text-secondary, #6b7280)',
-                fontSize: '0.95rem',
-              }}
-            >
-              {f.typePlaceholder}
-            </div>
-          ) : null}
 
           {type === 'OWNERSHIP_TRANSFER' ? (
             <>

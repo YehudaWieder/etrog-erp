@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { FaArrowRight, FaArrowLeft } from 'react-icons/fa6';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
 import { TopLoadingBar } from '../../../components/ui/TopLoadingBar';
 import type { Customer } from '../../../services/customersApi';
@@ -16,6 +17,7 @@ import { fetchCustomerInventorySummary } from '../services/customerInventorySumm
 import { fetchTraderInventorySummary } from '../../traders/services/traderInventorySummary.service';
 import type { CustomerInventorySummaryRow } from '../customerInventory.types';
 import type { AppLang } from '../../traders/i18n';
+import movementTypePickerStyles from '../../traders/components/styles/MovementTypePicker.module.css';
 
 const GENERAL_TRADER_VALUE = 'GENERAL';
 
@@ -50,6 +52,7 @@ const F = {
     closeLabel: 'סגור',
     typeLabel: 'סוג תנועה',
     typePlaceholder: 'בחר סוג פעולה',
+    typeBackLabel: 'חזרה לבחירת פעולה',
     typeOptions: {
       INTERNAL_TRANSFER: 'העברה לסוחר',
       SELF_PICKUP: 'איסוף עצמי',
@@ -84,6 +87,7 @@ const F = {
     closeLabel: 'Close',
     typeLabel: 'Movement Type',
     typePlaceholder: 'Select movement type',
+    typeBackLabel: 'Back to action selection',
     typeOptions: {
       INTERNAL_TRANSFER: 'Transfer to Trader',
       SELF_PICKUP: 'Self Pickup',
@@ -471,39 +475,64 @@ export function AddCustomerMovementModal({
           {/* Row 1: movement type */}
           <div style={ROW_STYLE}>
             <div style={{ ...FIELD_STYLE, gridColumn: '1 / -1' }}>
-              <label style={LABEL_STYLE}>{f.typeLabel}</label>
-              <select
-                className="seasons-manager__year-input"
-                value={type}
-                onChange={(event) => {
-                  setType(event.target.value as CustomerMovementType | '');
-                  setError(null);
-                }}
-              >
-                <option value="">{f.typePlaceholder}</option>
-                {MOVEMENT_TYPE_ORDER.map((option) => (
-                  <option key={option} value={option}>
-                    {f.typeOptions[option]}
-                  </option>
-                ))}
-              </select>
+              {!type ? (
+                <div
+                  style={{
+                    textAlign: 'center',
+                    color: 'var(--color-text-accent)',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                  }}
+                >
+                  {f.typePlaceholder}
+                </div>
+              ) : null}
+              {type ? (
+                <div className={movementTypePickerStyles.selectedRow}>
+                  <button
+                    type="button"
+                    className={movementTypePickerStyles.backButton}
+                    onClick={() => {
+                      setType('');
+                      setError(null);
+                    }}
+                    aria-label={f.typeBackLabel}
+                    title={f.typeBackLabel}
+                  >
+                    {lang === 'he' ? <FaArrowRight /> : <FaArrowLeft />}
+                  </button>
+                  <div className={movementTypePickerStyles.grid}>
+                    <button
+                      type="button"
+                      className={[movementTypePickerStyles.button, movementTypePickerStyles.buttonSelected].join(' ')}
+                      onClick={() => {
+                        setType('');
+                        setError(null);
+                      }}
+                    >
+                      {f.typeOptions[type]}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className={movementTypePickerStyles.grid}>
+                  {MOVEMENT_TYPE_ORDER.map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      className={movementTypePickerStyles.button}
+                      onClick={() => {
+                        setType(option);
+                        setError(null);
+                      }}
+                    >
+                      {f.typeOptions[option]}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-
-          {!type ? (
-            <div
-              style={{
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--color-text-secondary, #6b7280)',
-                fontSize: '0.95rem',
-              }}
-            >
-              {f.typePlaceholder}
-            </div>
-          ) : null}
 
           {type ? (
             <>

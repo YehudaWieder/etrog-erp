@@ -381,6 +381,10 @@ export const TRADER_MOVEMENTS_I18N_HE: TraderMovementsI18n = {
 		closeLabel: 'סגור',
 		typeLabel: 'סוג תנועה',
 		typePlaceholder: 'בחר סוג פעולה',
+		typeGroupRegular: 'פעולות רגילות',
+		typeGroupSpecial: 'פעולות מיוחדות',
+		typeGroupManage: 'ניהול / ביטול',
+		typeBackLabel: 'חזרה לבחירת פעולה',
 		typeOptions: {
 			OWNERSHIP_TRANSFER: 'העברת בעלות בין סוחרים',
 			INTERNAL_TRANSFER: 'העברה מסוחרים ללקוח',
