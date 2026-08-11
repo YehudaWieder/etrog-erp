@@ -1525,7 +1525,7 @@ export function AddTraderMovementModal({
 
         <h3 className="modal-title" style={{ position: 'relative' }}>
           {f.title}
-          <TopLoadingBar isLoading={isLoadingFromTraderStock || isLoadingGeneralStock || isLoadingGeneralTransferStock || isPitamSplitUndoLoading || isReclassificationUndoLoading} />
+          <TopLoadingBar isLoading={isLoadingFromTraderStock || isLoadingGeneralStock || isLoadingGeneralTransferStock || isLoadingRemainsInItalyStock || isPitamSplitUndoLoading || isRiwUndoLoading || isReclassificationUndoLoading} />
         </h3>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, flex: 1 }}>
