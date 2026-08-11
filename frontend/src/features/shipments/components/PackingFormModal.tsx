@@ -118,6 +118,11 @@ type PackingItemFieldsText = {
   addExistingItemQuantityPopupInstruction: string;
   addExistingItemQuantityConfirmLabel: string;
   addExistingItemQuantityInvalidError: string;
+  existingItemQuantityAddModeLabel: string;
+  existingItemQuantitySubtractModeLabel: string;
+  subtractExistingItemQuantityConfirmLabel: string;
+  subtractExistingItemQuantityInvalidError: string;
+  subtractExistingItemQuantityExceedsBaseError: (n: number) => string;
   cancel: string;
   remainingCapacityHint: (n: number) => string;
   notesLabel: string;
