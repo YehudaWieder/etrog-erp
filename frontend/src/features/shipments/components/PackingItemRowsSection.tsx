@@ -62,6 +62,10 @@ type PackingItemFieldsText = {
   subtractExistingItemQuantityConfirmLabel: string;
   subtractExistingItemQuantityInvalidError: string;
   subtractExistingItemQuantityExceedsBaseError: (n: number) => string;
+  addExistingItemQuantityAvailableHint: (n: number) => string;
+  addExistingItemQuantityExceedsAvailableError: (n: number) => string;
+  subtractExistingItemQuantityToZeroHint: string;
+  cellQuantityExceedsAvailableHint: (n: number) => string;
   cancel: string;
   notesLabel: string;
   notesPlaceholder: string;
@@ -156,6 +160,7 @@ export function PackingItemRowsSection({
   const [addQuantityCell, setAddQuantityCell] = useState<{
     itemId: number;
     baseQuantity: number;
+    available: number;
     categoryName: string;
     gradeLabel: string;
     pitamLabel: string;
@@ -168,6 +173,7 @@ export function PackingItemRowsSection({
   const handleOpenAddQuantityPopup = (params: {
     itemId: number;
     baseQuantity: number;
+    available: number;
     categoryName: string;
     gradeLabel: string;
     pitamLabel: string;
@@ -200,6 +206,10 @@ export function PackingItemRowsSection({
     }
     if (isSubtractMode && parsedQuantity > addQuantityCell.baseQuantity) {
       setAddQuantityError(fieldsT.subtractExistingItemQuantityExceedsBaseError(addQuantityCell.baseQuantity));
+      return;
+    }
+    if (!isSubtractMode && parsedQuantity > addQuantityCell.available) {
+      setAddQuantityError(fieldsT.addExistingItemQuantityExceedsAvailableError(addQuantityCell.available));
       return;
     }
     const newTotal = isSubtractMode
@@ -549,6 +559,40 @@ export function PackingItemRowsSection({
                           const pendingValue = existingItem ? pendingExistingItemEdits[existingItem.id] : undefined;
                           const hasPendingAddition = pendingValue !== undefined;
 
+                          const mixedAvailable = view.cellAvailability.MIXED?.[gradeKey] ?? 0;
+                          // Trader rows resolve their own MIXED stock; rows on a GENERAL/unassigned
+                          // box or item have no single owning trader, so their split is resolved
+                          // proportionally across every trader holding that category/grade instead.
+                          // Customers always have a definite pitam status, so there is nothing to
+                          // resolve on customer rows. Available regardless of whether the cell already
+                          // has a packed item — there can still be unresolved MIXED stock left to split.
+                          const isGeneralPoolItem = view.isUnassignedBox || view.isSharedUnassignedItem;
+                          const canSuggestPitamSplit =
+                            pitamKey === 'MIXED' &&
+                            mixedAvailable > 0 &&
+                            (view.isTraderItem ? Boolean(effTraderIdStr) : isGeneralPoolItem) &&
+                            Boolean(draft.traderCategoryId) &&
+                            gradeKey !== SINGLE_GRADE_COLUMN_KEY;
+
+                          const pitamSplitButton = canSuggestPitamSplit ? (
+                            <button
+                              type="button"
+                              className={styles.pitamSplitHintButton}
+                              onClick={() =>
+                                setPitamSplitCell({
+                                  mixedAvailable,
+                                  traderId: view.isTraderItem ? Number(effTraderIdStr) : null,
+                                  stockSource: draft.stockSource,
+                                  traderCategoryId: Number(draft.traderCategoryId),
+                                  grade: gradeKey,
+                                })
+                              }
+                              title={fieldsT.pitamSplitHintLabel(mixedAvailable)}
+                            >
+                              {fieldsT.pitamSplitHintLabel(mixedAvailable)}
+                            </button>
+                          ) : null;
+
                           if (isExistingCell && existingItem) {
                             return (
                               <td key={`packing-cell-${draft.id}-${pitamKey}-${gradeKey}`}>
@@ -572,6 +616,7 @@ export function PackingItemRowsSection({
                                         handleOpenAddQuantityPopup({
                                           itemId: existingItem.id,
                                           baseQuantity: existingItem.quantity,
+                                          available,
                                           categoryName: rowCategoryName,
                                           gradeLabel:
                                             gradeKey === SINGLE_GRADE_COLUMN_KEY
@@ -602,23 +647,15 @@ export function PackingItemRowsSection({
                                     </button>
                                   )}
                                 </div>
+                                {pitamSplitButton}
                               </td>
                             );
                           }
 
-                          const mixedAvailable = view.cellAvailability.MIXED?.[gradeKey] ?? 0;
-                          // Trader rows resolve their own MIXED stock; rows on a GENERAL/unassigned
-                          // box or item have no single owning trader, so their split is resolved
-                          // proportionally across every trader holding that category/grade instead.
-                          // Customers always have a definite pitam status, so there is nothing to
-                          // resolve on customer rows.
-                          const isGeneralPoolItem = view.isUnassignedBox || view.isSharedUnassignedItem;
-                          const canSuggestPitamSplit =
-                            pitamKey === 'MIXED' &&
-                            mixedAvailable > 0 &&
-                            (view.isTraderItem ? Boolean(effTraderIdStr) : isGeneralPoolItem) &&
-                            Boolean(draft.traderCategoryId) &&
-                            gradeKey !== SINGLE_GRADE_COLUMN_KEY;
+                          const enteredRaw = draft.quantities[pitamKey][gradeKey] ?? '';
+                          const enteredQuantity = Number(enteredRaw);
+                          const exceedsAvailable =
+                            enteredRaw.trim() !== '' && Number.isFinite(enteredQuantity) && enteredQuantity > available;
 
                           return (
                             <td key={`packing-cell-${draft.id}-${pitamKey}-${gradeKey}`}>
@@ -633,26 +670,23 @@ export function PackingItemRowsSection({
                                 onChange={(e) => onUpdateRowQuantity(draft.id, pitamKey, gradeKey, e.target.value)}
                                 onWheel={(e) => e.currentTarget.blur()}
                                 placeholder={fieldsT.availableQuantityHint(available)}
-                                title={isLockedByFullBox ? (boxCapacityMessage ?? undefined) : isEnabled ? fieldsT.availableQuantityHint(available) : undefined}
+                                title={
+                                  exceedsAvailable
+                                    ? fieldsT.cellQuantityExceedsAvailableHint(available)
+                                    : isLockedByFullBox
+                                      ? (boxCapacityMessage ?? undefined)
+                                      : isEnabled
+                                        ? fieldsT.availableQuantityHint(available)
+                                        : undefined
+                                }
+                                style={exceedsAvailable ? { borderColor: '#dc2626' } : undefined}
                               />
-                              {canSuggestPitamSplit ? (
-                                <button
-                                  type="button"
-                                  className={styles.pitamSplitHintButton}
-                                  onClick={() =>
-                                    setPitamSplitCell({
-                                      mixedAvailable,
-                                      traderId: view.isTraderItem ? Number(effTraderIdStr) : null,
-                                      stockSource: draft.stockSource,
-                                      traderCategoryId: Number(draft.traderCategoryId),
-                                      grade: gradeKey,
-                                    })
-                                  }
-                                  title={fieldsT.pitamSplitHintLabel(mixedAvailable)}
-                                >
-                                  {fieldsT.pitamSplitHintLabel(mixedAvailable)}
-                                </button>
+                              {exceedsAvailable ? (
+                                <span style={{ color: '#dc2626', fontSize: '0.75rem', display: 'block' }}>
+                                  {fieldsT.cellQuantityExceedsAvailableHint(available)}
+                                </span>
                               ) : null}
+                              {pitamSplitButton}
                             </td>
                           );
                         })}
@@ -774,11 +808,20 @@ export function PackingItemRowsSection({
                   </button>
                 </div>
 
+                {addQuantityMode === 'add' ? (
+                  <p className="modal-message">
+                    {fieldsT.addExistingItemQuantityAvailableHint(addQuantityCell.available)}
+                  </p>
+                ) : (
+                  <p className="modal-message">{fieldsT.subtractExistingItemQuantityToZeroHint}</p>
+                )}
+
                 <div className={styles.addQuantityInputRow}>
                   <input
                     className="seasons-manager__year-input"
                     type="number"
                     min="0"
+                    max={addQuantityMode === 'add' ? addQuantityCell.available : addQuantityCell.baseQuantity}
                     autoFocus
                     value={addQuantityValue}
                     onChange={(event) => {

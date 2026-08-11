@@ -985,7 +985,9 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
     const existingItemEdits: { itemId: number; quantity: number }[] = [];
     for (const [itemIdStr, rawValue] of Object.entries(pendingExistingItemEdits)) {
       const quantity = Number(rawValue);
-      if (!Number.isInteger(quantity) || quantity <= 0) {
+      // 0 is valid here — it means "remove this item" (see PackingItemRowsSection's subtract-to-zero
+      // flow) and is routed to a delete by the backend instead of being treated as an update.
+      if (!Number.isInteger(quantity) || quantity < 0) {
         setError(itemsT.existingItemInvalidQuantityError);
         return;
       }
@@ -1021,7 +1023,11 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
       handleClose();
     } catch (err) {
       if (err instanceof ApiError) {
-        const lowerMessage = err.message.toLowerCase();
+        // Match against the raw server message, not err.message — for statuses the client
+        // localizes (400/404), err.message is already the translated Hebrew text, so English
+        // keyword checks against it would never match and every such error would silently fall
+        // through to the generic message below.
+        const lowerMessage = (err.serverMessage ?? err.message).toLowerCase();
         if (err.status === 409 && lowerMessage.includes('shipment item')) {
           setError(itemsT.duplicateItemError);
         } else if (err.status === 409) {
@@ -1033,7 +1039,10 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
         } else if (err.status === 400 && lowerMessage.includes('capacity')) {
           setError(itemsT.errorBoxCapacityExceeded);
         } else if (err.status === 400 && lowerMessage.includes('insufficient')) {
-          setError(itemsT.validationQuantityExceedsAvailable);
+          // err.message is already the localized, specific text (context + required/available
+          // counts) produced by translateApiErrorMessage — surface it as-is instead of the
+          // generic "quantity exceeds available" fallback.
+          setError(err.message);
         } else {
           setError(t.genericError);
         }

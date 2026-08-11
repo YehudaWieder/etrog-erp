@@ -3,12 +3,13 @@ import { BoxOwnership, BoxStatus, BoxType } from '@prisma/client';
 import { PackBoxItemDto } from '../../item/dto/pack-box-item.dto';
 
 // Quantity edit for an item already packed in this box. Runs in the same transaction as the box
-// update and new item creations — see BoxPackingWorkflowService.
+// update and new item creations — see BoxPackingWorkflowService. A quantity of 0 deletes the item
+// instead of updating it (there is no such thing as a packed item with zero quantity).
 export class PackBoxItemEditDto {
   @ApiProperty({ description: 'ID of the already-packed shipment item to update.', example: 501 })
   id!: number;
 
-  @ApiProperty({ description: 'New quantity for the item.', example: 30 })
+  @ApiProperty({ description: 'New quantity for the item. 0 deletes the item.', example: 30 })
   quantity!: number;
 }
 

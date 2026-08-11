@@ -902,6 +902,7 @@ export class ItemService {
           grade: true,
           ownershipType: true,
           updatedById: true,
+          isPrivateSelection: true,
         },
       });
 
@@ -988,7 +989,7 @@ export class ItemService {
 
       const nextIsPrivateSelection = Object.prototype.hasOwnProperty.call(updatePayload, 'isPrivateSelection')
         ? Boolean(updatePayload.isPrivateSelection)
-        : Boolean((currentItem as any).isPrivateSelection ?? false);
+        : currentItem.isPrivateSelection;
 
       if (currentItem.ownershipType !== ItemOwnership.CUSTOM) {
         await this.ensureEnoughAvailableStock(tx, {
@@ -1191,35 +1192,39 @@ export class ItemService {
 
   // Soft-deletes an item (sets isDeleted=true) and hard-deletes its inventory movements, then syncs totals.
   async remove(id: number) {
-    return await this.prisma.$transaction(async (tx) => {
-      const existing = await tx.shipmentItem.findFirst({
-        where: { id, isDeleted: false },
-        select: { boxId: true, shipmentId: true },
-      });
+    return await this.prisma.$transaction((tx) => this.removeInTx(tx, id), { timeout: 300_000 });
+  }
 
-      if (!existing) {
-        throw new NotFoundException(`Shipment item #${id} not found`);
-      }
+  // Tx-scoped body of remove(), reusable by callers that already hold an open transaction
+  // (e.g. BoxPackingWorkflowService, when a packing edit brings an item's quantity down to 0).
+  async removeInTx(tx: Prisma.TransactionClient, id: number) {
+    const existing = await tx.shipmentItem.findFirst({
+      where: { id, isDeleted: false },
+      select: { boxId: true, shipmentId: true },
+    });
 
-      const box = await tx.box.findUnique({
-        where: { id: existing.boxId },
-        select: { status: true },
-      });
+    if (!existing) {
+      throw new NotFoundException(`Shipment item #${id} not found`);
+    }
 
-      if (box && (box.status === 'SHIPPED' || box.status === 'DELIVERED')) {
-        throw new BadRequestException('לא ניתן למחוק פריט שנמצא בקרטון שנשלח או נמסר');
-      }
+    const box = await tx.box.findUnique({
+      where: { id: existing.boxId },
+      select: { status: true },
+    });
 
-      await this.deletePackedMovementsByItemId(tx, id);
+    if (box && (box.status === 'SHIPPED' || box.status === 'DELIVERED')) {
+      throw new BadRequestException('לא ניתן למחוק פריט שנמצא בקרטון שנשלח או נמסר');
+    }
 
-      const item = await tx.shipmentItem.update({
-        where: { id },
-        data: { isDeleted: true },
-      });
+    await this.deletePackedMovementsByItemId(tx, id);
 
-      await this.shipmentsService.syncBoxAndShipmentTotals(tx, existing.boxId, existing.shipmentId);
+    const item = await tx.shipmentItem.update({
+      where: { id },
+      data: { isDeleted: true },
+    });
 
-      return item;
-    }, { timeout: 300_000 });
+    await this.shipmentsService.syncBoxAndShipmentTotals(tx, existing.boxId, existing.shipmentId);
+
+    return item;
   }
 }

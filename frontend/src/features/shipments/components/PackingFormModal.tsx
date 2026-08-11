@@ -123,6 +123,10 @@ type PackingItemFieldsText = {
   subtractExistingItemQuantityConfirmLabel: string;
   subtractExistingItemQuantityInvalidError: string;
   subtractExistingItemQuantityExceedsBaseError: (n: number) => string;
+  addExistingItemQuantityAvailableHint: (n: number) => string;
+  addExistingItemQuantityExceedsAvailableError: (n: number) => string;
+  subtractExistingItemQuantityToZeroHint: string;
+  cellQuantityExceedsAvailableHint: (n: number) => string;
   cancel: string;
   remainingCapacityHint: (n: number) => string;
   notesLabel: string;
