@@ -165,6 +165,13 @@
   width: min(360px, 90vw);
 }
 
+.addQuantityModeToggle {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 .manageDialog {
   width: min(600px, 94vw);
   min-height: 420px;

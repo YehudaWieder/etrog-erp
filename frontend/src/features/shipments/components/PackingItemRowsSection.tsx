@@ -57,6 +57,11 @@ type PackingItemFieldsText = {
   addExistingItemQuantityPopupInstruction: string;
   addExistingItemQuantityConfirmLabel: string;
   addExistingItemQuantityInvalidError: string;
+  existingItemQuantityAddModeLabel: string;
+  existingItemQuantitySubtractModeLabel: string;
+  subtractExistingItemQuantityConfirmLabel: string;
+  subtractExistingItemQuantityInvalidError: string;
+  subtractExistingItemQuantityExceedsBaseError: (n: number) => string;
   cancel: string;
   notesLabel: string;
   notesPlaceholder: string;
@@ -158,6 +163,7 @@ export function PackingItemRowsSection({
   } | null>(null);
   const [addQuantityValue, setAddQuantityValue] = useState('');
   const [addQuantityError, setAddQuantityError] = useState('');
+  const [addQuantityMode, setAddQuantityMode] = useState<'add' | 'subtract'>('add');
 
   const handleOpenAddQuantityPopup = (params: {
     itemId: number;
@@ -170,24 +176,35 @@ export function PackingItemRowsSection({
     setAddQuantityCell(params);
     setAddQuantityValue('');
     setAddQuantityError('');
+    setAddQuantityMode('add');
   };
 
   const handleCloseAddQuantityPopup = () => {
     setAddQuantityCell(null);
     setAddQuantityValue('');
     setAddQuantityError('');
+    setAddQuantityMode('add');
   };
 
   const handleConfirmAddQuantity = () => {
     if (!addQuantityCell) {
       return;
     }
-    const parsedAddedQuantity = Number(addQuantityValue);
-    if (!Number.isFinite(parsedAddedQuantity) || parsedAddedQuantity <= 0) {
-      setAddQuantityError(fieldsT.addExistingItemQuantityInvalidError);
+    const isSubtractMode = addQuantityMode === 'subtract';
+    const parsedQuantity = Number(addQuantityValue);
+    if (!Number.isFinite(parsedQuantity) || parsedQuantity <= 0) {
+      setAddQuantityError(
+        isSubtractMode ? fieldsT.subtractExistingItemQuantityInvalidError : fieldsT.addExistingItemQuantityInvalidError,
+      );
       return;
     }
-    const newTotal = addQuantityCell.baseQuantity + parsedAddedQuantity;
+    if (isSubtractMode && parsedQuantity > addQuantityCell.baseQuantity) {
+      setAddQuantityError(fieldsT.subtractExistingItemQuantityExceedsBaseError(addQuantityCell.baseQuantity));
+      return;
+    }
+    const newTotal = isSubtractMode
+      ? addQuantityCell.baseQuantity - parsedQuantity
+      : addQuantityCell.baseQuantity + parsedQuantity;
     onStageExistingItemEdit(addQuantityCell.itemId, String(newTotal));
     handleCloseAddQuantityPopup();
   };
@@ -734,6 +751,29 @@ export function PackingItemRowsSection({
                   {fieldsT.addExistingItemQuantityPopupInstruction}
                 </p>
 
+                <div className={styles.addQuantityModeToggle}>
+                  <button
+                    type="button"
+                    className={`btn ${addQuantityMode === 'add' ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => {
+                      setAddQuantityMode('add');
+                      setAddQuantityError('');
+                    }}
+                  >
+                    {fieldsT.existingItemQuantityAddModeLabel}
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn ${addQuantityMode === 'subtract' ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => {
+                      setAddQuantityMode('subtract');
+                      setAddQuantityError('');
+                    }}
+                  >
+                    {fieldsT.existingItemQuantitySubtractModeLabel}
+                  </button>
+                </div>
+
                 <div className={styles.addQuantityInputRow}>
                   <input
                     className="seasons-manager__year-input"
@@ -759,9 +799,15 @@ export function PackingItemRowsSection({
                     className="btn btn-success"
                     onClick={handleConfirmAddQuantity}
                     isLoading={false}
-                    loadingText={fieldsT.addExistingItemQuantityConfirmLabel}
+                    loadingText={
+                      addQuantityMode === 'subtract'
+                        ? fieldsT.subtractExistingItemQuantityConfirmLabel
+                        : fieldsT.addExistingItemQuantityConfirmLabel
+                    }
                   >
-                    {fieldsT.addExistingItemQuantityConfirmLabel}
+                    {addQuantityMode === 'subtract'
+                      ? fieldsT.subtractExistingItemQuantityConfirmLabel
+                      : fieldsT.addExistingItemQuantityConfirmLabel}
                   </SubmitButton>
                 </div>
               </div>
