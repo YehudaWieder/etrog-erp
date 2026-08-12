@@ -236,7 +236,8 @@ export function useHarvestPageControls({
       defaultValue: 'all',
       queryParam: 'hdDate',
       options: harvestDateOptions,
-      ...((isSortingListTab || isSortingListTrashTab || isSortingSummaryTab) ? { type: 'calendar' as const, lang } : {}),
+      type: 'calendar' as const,
+      lang,
     };
 
     const fieldFilter: GlobalScopedFilterConfig = {
@@ -286,6 +287,7 @@ export function useHarvestPageControls({
     if (isSortingDailyDetailsTab) {
       return [
         seasonFilter,
+        dateFilter,
         fieldFilter,
         {
           key: 'sortingAssignmentType',
@@ -311,7 +313,7 @@ export function useHarvestPageControls({
       ];
     }
 
-    return [seasonFilter, fieldFilter];
+    return [seasonFilter, dateFilter, fieldFilter];
   }, [
     activeSeasonId,
     fields,
@@ -322,6 +324,7 @@ export function useHarvestPageControls({
     isSortingListTab,
     isSortingListTrashTab,
     isSortingSummaryTab,
+    lang,
     seasons,
     sortingAssignmentFilterOptions,
     t.dailyDetails.filters,

@@ -39,6 +39,7 @@ export function CalendarDateFilter({ id, label, value, options, onChange, lang =
 
   const [viewYear, setViewYear] = useState(initialViewDate.getFullYear());
   const [viewMonth, setViewMonth] = useState(initialViewDate.getMonth());
+  const hasAutoNavigatedRef = useRef(false);
 
   useEffect(() => {
     if (value !== 'all' && value) {
@@ -47,6 +48,17 @@ export function CalendarDateFilter({ id, label, value, options, onChange, lang =
       setViewMonth(d.getMonth());
     }
   }, [value]);
+
+  useEffect(() => {
+    if (hasAutoNavigatedRef.current) return;
+    if (value !== 'all' && value) return;
+    if (availableDates.size === 0) return;
+    hasAutoNavigatedRef.current = true;
+    const sorted = [...availableDates].sort((a, b) => b.localeCompare(a));
+    const d = new Date(sorted[0] + 'T00:00:00');
+    setViewYear(d.getFullYear());
+    setViewMonth(d.getMonth());
+  }, [availableDates, value]);
 
   useEffect(() => {
     if (!isOpen) return;

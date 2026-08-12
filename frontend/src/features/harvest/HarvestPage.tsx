@@ -443,7 +443,7 @@ export function HarvestPage() {
       sourceRows = sourceList.map((row) => ({ dateGregorian: (row.fieldHarvest?.dateGregorian ?? '').slice(0, 10) })).filter((r) => r.dateGregorian !== '');
       allDatesLabel = t.sortingList.filters.allDatesOption;
     } else {
-      sourceRows = harvestRows;
+      sourceRows = harvestRows.map((row) => ({ dateGregorian: (row.dateGregorian ?? '').slice(0, 10) })).filter((r) => r.dateGregorian !== '');
       allDatesLabel = t.dailyDetails.filters.allDatesOption;
     }
     const uniqueDates = [...new Set(sourceRows.map((row) => row.dateGregorian))];
@@ -881,9 +881,12 @@ export function HarvestPage() {
       if (fieldFilterId !== 'all' && row.fieldId !== fieldFilterId) {
         return false;
       }
+      if (harvestDateFilterId !== 'all' && (row.dateGregorian ?? '').slice(0, 10) !== harvestDateFilterId) {
+        return false;
+      }
       return true;
     });
-  }, [harvestRows, fieldFilterId]);
+  }, [harvestRows, fieldFilterId, harvestDateFilterId]);
 
   useEffect(() => {
     if (!detailsRecord) {
@@ -994,6 +997,7 @@ export function HarvestPage() {
     return sortingDailyRows
       .filter((row) => {
         if (fieldFilterId !== 'all' && row.fieldId !== fieldFilterId) return false;
+        if (harvestDateFilterId !== 'all' && (row.dateGregorian ?? '').slice(0, 10) !== harvestDateFilterId) return false;
         return true;
       })
       .map((row) => {
@@ -1019,6 +1023,7 @@ export function HarvestPage() {
       .filter((row) => row.totalSorted > 0);
   }, [
     fieldFilterId,
+    harvestDateFilterId,
     filteredSortingDailyCategories,
     sortingDailyRows,
   ]);
