@@ -197,6 +197,14 @@ export function useHarvestDetailsData({
     [traderCategories],
   );
 
+  const traderCategoryOrder = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const category of traderCategories) {
+      map.set(category.name, category.orderIndex);
+    }
+    return map;
+  }, [traderCategories]);
+
   const gradeFallback = lang === 'he' ? 'ללא' : 'None';
   const sortingDailyDetailsData = useMemo(() => {
     if (sortingDailyDetailsRowId === null) {
@@ -377,13 +385,14 @@ export function useHarvestDetailsData({
     return buildCategoryGradeGroupSplits(
       categoryGradeTotals,
       gradeGroupsByCategory,
-      null,
+      traderCategoryOrder,
       t.sortingSummary.gradeGroups.ungrouped,
     );
   }, [
     sortingDailyDetailRows,
     gradeFallback,
     gradeGroupsByCategory,
+    traderCategoryOrder,
     t.sortingSummary.gradeGroups.ungrouped,
   ]);
 
@@ -520,7 +529,7 @@ export function useHarvestDetailsData({
     const gradeGroupSplits = buildCategoryGradeGroupSplits(
       fieldGradeTotals,
       gradeGroupsByCategory,
-      null,
+      traderCategoryOrder,
       t.sortingSummary.gradeGroups.ungrouped,
     );
 
@@ -547,6 +556,7 @@ export function useHarvestDetailsData({
     t.sortingSummary.gradeGroups.ungrouped,
     sortingListRows,
     gradeGroupsByCategory,
+    traderCategoryOrder,
     gradeFallback,
   ]);
 
