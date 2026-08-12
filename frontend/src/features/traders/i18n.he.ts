@@ -59,10 +59,11 @@ export const TRADER_INVENTORY_I18N_HE: TraderInventoryI18n = {
 		retry: 'נסה שוב',
 		totals: {
 			totalQuantity: 'סה"כ מלאי',
-			traderQuantity: 'סה"כ מלאי סוחרים',
+			traderQuantity: 'מלאי סוחרים כללי',
 			moduloQuantity: 'מלאי לא משוייך',
 			remainsInItalyQuantity: 'נשאר באיטליה',
 			remainsInItalyNote: 'לא נכלל במלאי',
+			privateSelectionQuantity: 'מיון פרטי',
 		},
 		matrix: {
 			title: 'סיכום מלאי לפי קטגוריה',

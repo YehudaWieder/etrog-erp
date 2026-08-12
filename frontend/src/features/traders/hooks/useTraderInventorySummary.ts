@@ -9,6 +9,7 @@ const EMPTY_SUMMARY: TraderInventorySummaryResponse = {
     moduloQuantity: 0,
     traderQuantity: 0,
     remainsInItalyQuantity: 0,
+    privateSelectionQuantity: 0,
   },
 };
 

@@ -59,10 +59,11 @@ export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
 		retry: 'Retry',
 		totals: {
 			totalQuantity: 'Total Inventory',
-			traderQuantity: 'Trader Inventory Total',
+			traderQuantity: 'General Trader Inventory',
 			moduloQuantity: 'Modulo Inventory Total',
 			remainsInItalyQuantity: 'Remains in Italy',
 			remainsInItalyNote: 'Not included in inventory',
+			privateSelectionQuantity: 'Private Selection',
 		},
 		matrix: {
 			title: 'Inventory Summary by Category',

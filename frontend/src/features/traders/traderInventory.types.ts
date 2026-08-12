@@ -17,6 +17,7 @@ export type TraderInventorySummaryTotals = {
   moduloQuantity: number;
   traderQuantity: number;
   remainsInItalyQuantity: number;
+  privateSelectionQuantity: number;
 };
 
 export type TraderInventorySummaryResponse = {

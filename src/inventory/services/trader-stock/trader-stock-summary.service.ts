@@ -64,11 +64,61 @@ export class TraderStockSummaryService {
     // The "remains in Italy" total is always shown regardless of the active shipment-scope
     // filter, so it's fetched independently rather than derived from the filtered rows below.
     const remainsInItalyWhere = buildTraderStockSummaryWhere(query, seasonId, ownerScope, 'REMAINS_IN_ITALY');
+    // The trader/modulo/private-selection split cards each represent one slice of general stock
+    // under the *currently selected* shipment-scope filter (e.g. only shipped rows when the user
+    // filters by "shipped"), so each is fetched independently with that same shipmentScope but a
+    // forced sourceScope, rather than mixing sources together like the filtered rows below.
+    const generalWhere = buildTraderStockSummaryWhere(
+      query,
+      seasonId,
+      ownerScope,
+      shipmentScope as InventoryMovementScope,
+      'GENERAL',
+      remainsInItalyCustomerAnchorIds,
+      transferredToCustomerModuloRefundIds,
+    );
+    const privateSelectionWhere = buildTraderStockSummaryWhere(
+      query,
+      seasonId,
+      ownerScope,
+      shipmentScope as InventoryMovementScope,
+      'PRIVATE_SELECTION',
+      remainsInItalyCustomerAnchorIds,
+      transferredToCustomerModuloRefundIds,
+    );
 
-    const [rows, remainsInItalyQuantity] = await Promise.all([
+    const [rows, remainsInItalyQuantity, generalRows, privateSelectionRows] = await Promise.all([
       this.repository.groupSummary(where, shipmentScope as InventoryMovementScope),
       this.repository.sumQuantity(remainsInItalyWhere),
+      this.repository.groupSummary(generalWhere, shipmentScope as InventoryMovementScope),
+      // REMAINS_IN_ITALY is a standalone regional bucket unrelated to the private-selection pool -
+      // buildTraderStockSummaryWhere ignores sourceScope entirely for that shipmentScope (it would
+      // otherwise return the same where as remainsInItalyWhere above), so skip the query then.
+      shipmentScope === 'REMAINS_IN_ITALY'
+        ? Promise.resolve([])
+        : this.repository.groupSummary(privateSelectionWhere, shipmentScope as InventoryMovementScope),
     ]);
+
+    const privateSelectionQuantity = privateSelectionRows.reduce(
+      (sum, row) => sum + (row._sum.quantity ?? 0),
+      0,
+    );
+
+    const { traderQuantity, moduloQuantity } =
+      shipmentScope === 'REMAINS_IN_ITALY'
+        ? { traderQuantity: 0, moduloQuantity: 0 }
+        : generalRows.reduce(
+            (accumulator, row) => {
+              const quantity = row._sum.quantity ?? 0;
+              if (row.isModulo) {
+                accumulator.moduloQuantity += quantity;
+              } else {
+                accumulator.traderQuantity += quantity;
+              }
+              return accumulator;
+            },
+            { traderQuantity: 0, moduloQuantity: 0 },
+          );
 
     const filteredRows = rows.filter((row) => (row._sum.quantity ?? 0) !== 0);
 
@@ -115,16 +165,9 @@ export class TraderStockSummaryService {
     const totals: InventorySummaryTotals = sorted.reduce(
       (accumulator, row) => {
         accumulator.totalQuantity += row.quantity;
-        if (shipmentScope !== 'REMAINS_IN_ITALY') {
-          if (row.isModulo) {
-            accumulator.moduloQuantity += row.quantity;
-          } else {
-            accumulator.traderQuantity += row.quantity;
-          }
-        }
         return accumulator;
       },
-      { totalQuantity: 0, moduloQuantity: 0, traderQuantity: 0, remainsInItalyQuantity },
+      { totalQuantity: 0, moduloQuantity, traderQuantity, remainsInItalyQuantity, privateSelectionQuantity },
     );
 
     return { rows: sorted, totals };

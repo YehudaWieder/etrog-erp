@@ -71,6 +71,7 @@ export type TraderInventoryI18n = {
 			moduloQuantity: string;
 			remainsInItalyQuantity: string;
 			remainsInItalyNote: string;
+			privateSelectionQuantity: string;
 		};
 		matrix: {
 			title: string;
