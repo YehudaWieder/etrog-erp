@@ -137,10 +137,10 @@ export function TraderInventoryPage() {
   }, [filterValues.traderId, selectedTraderId]);
 
   const selectedShipmentScope = useMemo<
-    'ALL' | 'UNSHIPPED' | 'PACKED_SHIPPED' | 'SHIPPED' | 'SELF_PICKUP' | 'HARVEST_IN' | 'INTERNAL_TRANSFER' | 'OWNERSHIP_TRANSFER' | 'ASSIGNED' | 'WASTE' | 'ADJUSTMENT' | 'REMAINS_IN_ITALY'
+    'ALL' | 'UNSHIPPED' | 'PACKED_SHIPPED' | 'SHIPPED' | 'SELF_PICKUP' | 'HARVEST_IN' | 'INTERNAL_TRANSFER' | 'TRANSFERRED_TO_CUSTOMER' | 'OWNERSHIP_TRANSFER' | 'ASSIGNED' | 'WASTE' | 'ADJUSTMENT' | 'REMAINS_IN_ITALY'
   >(() => {
     const status = filterValues.inventoryStatus || 'ALL';
-    if (status === 'ALL' || status === 'UNSHIPPED' || status === 'PACKED_SHIPPED' || status === 'SHIPPED' || status === 'SELF_PICKUP' || status === 'REMAINS_IN_ITALY') {
+    if (status === 'ALL' || status === 'UNSHIPPED' || status === 'PACKED_SHIPPED' || status === 'SHIPPED' || status === 'SELF_PICKUP' || status === 'TRANSFERRED_TO_CUSTOMER' || status === 'REMAINS_IN_ITALY') {
       return status;
     }
     return 'ALL';
@@ -284,9 +284,10 @@ export function TraderInventoryPage() {
       { value: 'PACKED_SHIPPED', label: t.summary.filters.boxedOption },
       { value: 'SHIPPED', label: t.summary.filters.shippedOption },
       { value: 'SELF_PICKUP', label: t.summary.filters.selfPickupOption },
+      { value: 'TRANSFERRED_TO_CUSTOMER', label: t.summary.filters.transferredToCustomerOption },
       { value: 'REMAINS_IN_ITALY', label: t.summary.filters.remainsInItalyOption },
     ],
-    [t.summary.filters.allInventoryOption, t.summary.filters.unboxedOption, t.summary.filters.boxedOption, t.summary.filters.shippedOption, t.summary.filters.selfPickupOption, t.summary.filters.remainsInItalyOption],
+    [t.summary.filters.allInventoryOption, t.summary.filters.unboxedOption, t.summary.filters.boxedOption, t.summary.filters.shippedOption, t.summary.filters.selfPickupOption, t.summary.filters.transferredToCustomerOption, t.summary.filters.remainsInItalyOption],
   );
 
   const inventorySourceOptions = useMemo(
@@ -414,6 +415,7 @@ export function TraderInventoryPage() {
       'PACKED_SHIPPED': t.summary.filters.boxedOption,
       'SHIPPED': t.summary.filters.shippedOption,
       'SELF_PICKUP': t.summary.filters.selfPickupOption,
+      'TRANSFERRED_TO_CUSTOMER': t.summary.filters.transferredToCustomerOption,
       'REMAINS_IN_ITALY': t.summary.filters.remainsInItalyOption,
     };
     const statusDisplay = statusMap[filterValues.inventoryStatus] || filterValues.inventoryStatus;
@@ -554,6 +556,7 @@ export function TraderInventoryPage() {
       'PACKED_SHIPPED': t.summary.filters.boxedOption,
       'SHIPPED': t.summary.filters.shippedOption,
       'SELF_PICKUP': t.summary.filters.selfPickupOption,
+      'TRANSFERRED_TO_CUSTOMER': t.summary.filters.transferredToCustomerOption,
       'REMAINS_IN_ITALY': t.summary.filters.remainsInItalyOption,
     };
     const statusDisplay = statusMap[filterValues.inventoryStatus] || filterValues.inventoryStatus;
@@ -712,6 +715,7 @@ export function TraderInventoryPage() {
           onRetry={traderInventorySummary.reload}
           tableRef={matrixTableRef}
           traderCategoryOrder={traderCategoryOrder}
+          hideTraderModuloBreakdown={traderInventorySummary.loadedShipmentScope === 'TRANSFERRED_TO_CUSTOMER'}
         />
       ) : isMovementsTab ? (
         <TraderMovementsSection

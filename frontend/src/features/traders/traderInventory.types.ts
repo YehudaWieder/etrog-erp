@@ -28,6 +28,6 @@ export type TraderInventorySummaryFilters = {
   seasonId: number | null;
   traderId: number | null;
   ownerScope: 'ALL' | 'TRADER' | 'MODULO';
-  shipmentScope?: 'ALL' | 'UNSHIPPED' | 'PACKED_SHIPPED' | 'SHIPPED' | 'SELF_PICKUP' | 'HARVEST_IN' | 'INTERNAL_TRANSFER' | 'OWNERSHIP_TRANSFER' | 'ASSIGNED' | 'WASTE' | 'ADJUSTMENT' | 'REMAINS_IN_ITALY';
+  shipmentScope?: 'ALL' | 'UNSHIPPED' | 'PACKED_SHIPPED' | 'SHIPPED' | 'SELF_PICKUP' | 'HARVEST_IN' | 'INTERNAL_TRANSFER' | 'TRANSFERRED_TO_CUSTOMER' | 'OWNERSHIP_TRANSFER' | 'ASSIGNED' | 'WASTE' | 'ADJUSTMENT' | 'REMAINS_IN_ITALY';
   sourceScope?: 'ALL' | 'GENERAL' | 'PRIVATE_SELECTION';
 };

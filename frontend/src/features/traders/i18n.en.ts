@@ -51,6 +51,7 @@ export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
 			selfPickupOption: 'Self-Pickup',
 				privateSelectionOption: 'Private Selection',
 				remainsInItalyOption: 'Remains in Italy',
+			transferredToCustomerOption: 'Transferred to Customers',
 		},
 		loading: 'Loading trader inventory summary...',
 		loadFailed: 'Failed to load trader inventory summary.',

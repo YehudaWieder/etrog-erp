@@ -1,11 +1,97 @@
 ﻿import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Grade, MovementType, PitamStatus, Prisma, SourceType } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { InventoryMovementScope } from 'src/inventory/services/inventory-core/types/inventory-query.types';
 
 @Injectable()
 export class TraderStockSummaryRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  // REMAINS_IN_ITALY withdrawals (see RemainsInItalyWithdrawalService) record the negative anchor
+  // in traderStock and, when the destination is a customer, a linked positive customerAllocation
+  // row via MovementReferenceId - there's no field on the anchor row itself that says where it
+  // went, so the TRANSFERRED_TO_CUSTOMER status filter needs this lookup to find those anchors.
+  async findRemainsInItalyCustomerAnchorIds(
+    seasonId: number,
+    filters: { traderCategoryId?: number; grade?: Grade; pitamStatus?: PitamStatus },
+  ): Promise<number[]> {
+    const anchors = await this.prisma.traderStock.findMany({
+      where: {
+        seasonId,
+        isDeleted: false,
+        type: MovementType.REMAINS_IN_ITALY,
+        quantity: { lt: 0 },
+        traderCategoryId: filters.traderCategoryId,
+        grade: filters.grade,
+        pitamStatus: filters.pitamStatus,
+      },
+      select: { id: true },
+    });
+
+    if (anchors.length === 0) {
+      return [];
+    }
+
+    const anchorIds = anchors.map((anchor) => anchor.id);
+
+    const customerLinks = await this.prisma.customerAllocation.findMany({
+      where: {
+        MovementReferenceId: { in: anchorIds },
+        isDeleted: false,
+        type: MovementType.HARVEST_IN,
+      },
+      select: { MovementReferenceId: true },
+    });
+
+    return customerLinks
+      .map((link) => link.MovementReferenceId)
+      .filter((id): id is number => id !== null);
+  }
+
+  // CustomerGeneralTransferService rounds the amount it draws from traders UP to the smallest
+  // quantity that splits into whole numbers by each trader's share (see calculateMinimalGrossByShares),
+  // then credits the excess back to modulo as a positive isModulo ASSIGNED row sharing the same
+  // MovementReferenceId as the customer allocation. That excess never reached a customer, so the
+  // TRANSFERRED_TO_CUSTOMER filter needs to include these specific rows (grouped in as a normal
+  // MODULO line, netting against any moduloUsed row from the same operation) so the per-category
+  // breakdown table and the grand total agree - both are derived from the same rows.
+  async findTransferredToCustomerModuloRefundIds(
+    seasonId: number,
+    filters: { traderCategoryId?: number; grade?: Grade; pitamStatus?: PitamStatus },
+  ): Promise<number[]> {
+    const generalTransferGroups = await this.prisma.customerAllocation.findMany({
+      where: {
+        seasonId,
+        isDeleted: false,
+        type: MovementType.INTERNAL_TRANSFER,
+        takenFrom: SourceType.GENERAL,
+      },
+      select: { id: true },
+    });
+
+    if (generalTransferGroups.length === 0) {
+      return [];
+    }
+
+    const groupIds = generalTransferGroups.map((group) => group.id);
+
+    const refundRows = await this.prisma.traderStock.findMany({
+      where: {
+        MovementReferenceId: { in: groupIds },
+        isDeleted: false,
+        isModulo: true,
+        traderId: null,
+        type: MovementType.ASSIGNED,
+        quantity: { gt: 0 },
+        traderCategoryId: filters.traderCategoryId,
+        grade: filters.grade,
+        pitamStatus: filters.pitamStatus,
+      },
+      select: { id: true },
+    });
+
+    return refundRows.map((row) => row.id);
+  }
 
   groupSummary(where: Prisma.TraderStockWhereInput, shipmentScope?: InventoryMovementScope) {
     // PACKED_SHIPPED, SHIPPED, and UNSHIPPED need box-status awareness; all other scopes use a simple groupBy.

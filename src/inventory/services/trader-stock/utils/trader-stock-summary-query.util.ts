@@ -8,6 +8,8 @@ export function buildTraderStockSummaryWhere(
   ownerScope: InventoryOwnerScope,
   shipmentScope: InventoryMovementScope,
   sourceScope: InventorySourceScope = 'ALL',
+  remainsInItalyCustomerAnchorIds?: number[],
+  transferredToCustomerModuloRefundIds?: number[],
 ): Prisma.TraderStockWhereInput {
   if (shipmentScope === 'REMAINS_IN_ITALY') {
     // Regional-retention bucket is never trader/modulo owned - ownerScope/traderId from the
@@ -47,27 +49,39 @@ export function buildTraderStockSummaryWhere(
   // For non-box-based filters, apply type filter
   // For box-based filters (PACKED_SHIPPED, SHIPPED, UNSHIPPED),
   // the repository will handle filtering by box.status
-  applyNonBoxTypeFilters(where, shipmentScope);
+  applyNonBoxTypeFilters(where, shipmentScope, remainsInItalyCustomerAnchorIds, transferredToCustomerModuloRefundIds);
 
   return where;
 }
 
+// Composes an extra condition onto `where` without clobbering one already set by another step
+// (e.g. applySourceScope's OR and a status filter's OR would otherwise overwrite each other since
+// both would assign the same `where.OR` key).
+function pushAndCondition(where: Prisma.TraderStockWhereInput, condition: Prisma.TraderStockWhereInput) {
+  const existing = Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : [];
+  where.AND = [...existing, condition];
+}
+
 function applySourceScope(where: Prisma.TraderStockWhereInput, sourceScope: InventorySourceScope) {
   if (sourceScope === 'PRIVATE_SELECTION') {
-    where.OR = [
-      { type: MovementType.PRIVATE_SELECTION },
-      { isFromPrivateSelection: true },
-    ];
-    return;
-  }
-
-  if (sourceScope === 'GENERAL') {
-    where.NOT = {
+    pushAndCondition(where, {
       OR: [
         { type: MovementType.PRIVATE_SELECTION },
         { isFromPrivateSelection: true },
       ],
-    };
+    });
+    return;
+  }
+
+  if (sourceScope === 'GENERAL') {
+    pushAndCondition(where, {
+      NOT: {
+        OR: [
+          { type: MovementType.PRIVATE_SELECTION },
+          { isFromPrivateSelection: true },
+        ],
+      },
+    });
   }
 
   // ALL: no source restriction.
@@ -99,6 +113,8 @@ function applyOwnerScope(
 function applyNonBoxTypeFilters(
   where: Prisma.TraderStockWhereInput,
   shipmentScope: InventoryMovementScope,
+  remainsInItalyCustomerAnchorIds?: number[],
+  transferredToCustomerModuloRefundIds?: number[],
 ) {
   // PACKED_SHIPPED and UNSHIPPED are box-based scopes handled by groupSummaryWithBoxStatus
   // (no type filter applied here for those two).
@@ -132,6 +148,31 @@ function applyNonBoxTypeFilters(
 
   if (shipmentScope === 'INTERNAL_TRANSFER') {
     where.type = MovementType.INTERNAL_TRANSFER;
+    return;
+  }
+
+  if (shipmentScope === 'TRANSFERRED_TO_CUSTOMER') {
+    // INTERNAL_TRANSFER on traderStock is exclusively TRADER<->CUSTOMER (never trader<->trader,
+    // that's OWNERSHIP_TRANSFER). The negative side is stock the trader gave to a customer; the
+    // positive side is stock received back from one. Only the negative side counts here.
+    // Also includes REMAINS_IN_ITALY withdrawals whose destination was a customer (see
+    // RemainsInItalyWithdrawalService) - those anchor rows are looked up by the caller and passed
+    // in as remainsInItalyCustomerAnchorIds, since that link isn't derivable from this row alone.
+    // Also includes the modulo-remainder refund rows from CustomerGeneralTransferService's
+    // rounding-up-to-whole-shares mechanism (transferredToCustomerModuloRefundIds) - these are
+    // positive and share traderId/isModulo/category/grade/pitam with the corresponding moduloUsed
+    // deduction from the same operation, so groupBy nets them together automatically, keeping the
+    // per-category breakdown and the grand total consistent with what customers actually received.
+    const clauses: Prisma.TraderStockWhereInput[] = [
+      { type: MovementType.INTERNAL_TRANSFER, quantity: { lt: 0 } },
+    ];
+    if (remainsInItalyCustomerAnchorIds && remainsInItalyCustomerAnchorIds.length > 0) {
+      clauses.push({ type: MovementType.REMAINS_IN_ITALY, id: { in: remainsInItalyCustomerAnchorIds } });
+    }
+    if (transferredToCustomerModuloRefundIds && transferredToCustomerModuloRefundIds.length > 0) {
+      clauses.push({ type: MovementType.ASSIGNED, id: { in: transferredToCustomerModuloRefundIds } });
+    }
+    where.OR = clauses;
     return;
   }
 

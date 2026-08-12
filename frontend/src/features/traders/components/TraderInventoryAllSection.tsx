@@ -35,6 +35,10 @@ type TraderInventoryAllSectionProps = {
   onRetry: () => void;
   tableRef?: RefObject<HTMLTableElement>;
   traderCategoryOrder?: Map<string, number>;
+  // "Transferred to customers" shows customer-bound stock - the trader/modulo split is
+  // meaningless there (it's neither "trader inventory" nor "unassigned inventory" anymore,
+  // it's customer inventory), so those two cards are left blank instead of showing numbers.
+  hideTraderModuloBreakdown?: boolean;
 };
 
 export function TraderInventoryAllSection({
@@ -48,6 +52,7 @@ export function TraderInventoryAllSection({
   onRetry,
   tableRef,
   traderCategoryOrder,
+  hideTraderModuloBreakdown,
 }: TraderInventoryAllSectionProps) {
   const locale = lang === 'he' ? 'he-IL' : 'en-US';
 
@@ -117,12 +122,12 @@ export function TraderInventoryAllSection({
         <article className={styles.summaryCard}>
           <div className={styles.summaryIcon}><FaUserTie aria-hidden="true" /></div>
           <span className={styles.summaryLabel}>{labels.totals.traderQuantity}</span>
-          <strong className={styles.summaryValue}>{numberFormatter.format(Math.abs(totals.traderQuantity))}</strong>
+          <strong className={styles.summaryValue}>{hideTraderModuloBreakdown ? '—' : numberFormatter.format(Math.abs(totals.traderQuantity))}</strong>
         </article>
         <article className={styles.summaryCard}>
           <div className={styles.summaryIcon}><FaLayerGroup aria-hidden="true" /></div>
           <span className={styles.summaryLabel}>{labels.totals.moduloQuantity}</span>
-          <strong className={styles.summaryValue}>{numberFormatter.format(Math.abs(totals.moduloQuantity))}</strong>
+          <strong className={styles.summaryValue}>{hideTraderModuloBreakdown ? '—' : numberFormatter.format(Math.abs(totals.moduloQuantity))}</strong>
         </article>
         <article className={styles.summaryCard}>
           <div className={styles.summaryIcon}><FaMapPin aria-hidden="true" /></div>

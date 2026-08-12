@@ -9,6 +9,7 @@ export type InventoryMovementScope =
   | 'SELF_PICKUP'
   | 'HARVEST_IN'
   | 'INTERNAL_TRANSFER'
+  | 'TRANSFERRED_TO_CUSTOMER'
   | 'OWNERSHIP_TRANSFER'
   | 'ASSIGNED'
   | 'PRIVATE_SELECTION'

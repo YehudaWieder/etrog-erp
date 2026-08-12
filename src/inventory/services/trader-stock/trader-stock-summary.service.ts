@@ -35,12 +35,30 @@ export class TraderStockSummaryService {
 
     validateTraderSummaryQuery(query, ownerScope, shipmentScope, sourceScope, sortBy, sortOrder);
 
+    const [remainsInItalyCustomerAnchorIds, transferredToCustomerModuloRefundIds] =
+      shipmentScope === 'TRANSFERRED_TO_CUSTOMER'
+        ? await Promise.all([
+            this.repository.findRemainsInItalyCustomerAnchorIds(seasonId, {
+              traderCategoryId: query.traderCategoryId,
+              grade: query.grade,
+              pitamStatus: query.pitamStatus,
+            }),
+            this.repository.findTransferredToCustomerModuloRefundIds(seasonId, {
+              traderCategoryId: query.traderCategoryId,
+              grade: query.grade,
+              pitamStatus: query.pitamStatus,
+            }),
+          ])
+        : [undefined, undefined];
+
     const where = buildTraderStockSummaryWhere(
       query,
       seasonId,
       ownerScope,
       shipmentScope as InventoryMovementScope,
       sourceScope,
+      remainsInItalyCustomerAnchorIds,
+      transferredToCustomerModuloRefundIds,
     );
 
     // The "remains in Italy" total is always shown regardless of the active shipment-scope

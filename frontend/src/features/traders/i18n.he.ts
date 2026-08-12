@@ -51,6 +51,7 @@ export const TRADER_INVENTORY_I18N_HE: TraderInventoryI18n = {
 			selfPickupOption: 'באיסוף עצמי',
 			privateSelectionOption: 'מיון פרטי',
 			remainsInItalyOption: 'נשאר באיטליה',
+			transferredToCustomerOption: 'הועבר ללקוחות',
 		},
 		loading: 'טוען סיכום מלאי סוחרים...',
 		loadFailed: 'טעינת סיכום מלאי הסוחרים נכשלה.',

@@ -14,6 +14,12 @@ const EMPTY_SUMMARY: TraderInventorySummaryResponse = {
 
 export function useTraderInventorySummary(enabled: boolean, filters: TraderInventorySummaryFilters) {
   const [summary, setSummary] = useState<TraderInventorySummaryResponse>(EMPTY_SUMMARY);
+  // Tracks which shipmentScope the data in `summary` was actually fetched for, updated atomically
+  // alongside setSummary - so consumers deciding what a scope-specific value means (e.g. hiding the
+  // trader/modulo split for TRANSFERRED_TO_CUSTOMER) can key off the data's real scope instead of
+  // the just-selected filter, which would otherwise flash the previous scope's stale totals while
+  // the new filter's request is still in flight.
+  const [loadedShipmentScope, setLoadedShipmentScope] = useState(filters.shipmentScope);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -27,6 +33,7 @@ export function useTraderInventorySummary(enabled: boolean, filters: TraderInven
     }
 
     let isActive = true;
+    const requestedShipmentScope = filters.shipmentScope;
 
     setIsLoading(true);
     setError(null);
@@ -38,6 +45,7 @@ export function useTraderInventorySummary(enabled: boolean, filters: TraderInven
         }
 
         setSummary(nextSummary);
+        setLoadedShipmentScope(requestedShipmentScope);
       })
       .catch((nextError: unknown) => {
         if (!isActive) {
@@ -62,6 +70,7 @@ export function useTraderInventorySummary(enabled: boolean, filters: TraderInven
   return {
     rows: summary.rows,
     totals: summary.totals,
+    loadedShipmentScope,
     isLoading,
     error,
     reload: () => setReloadKey((currentValue) => currentValue + 1),
