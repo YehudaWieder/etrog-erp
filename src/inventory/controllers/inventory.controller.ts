@@ -27,6 +27,8 @@ import { RemainsInItalyWithdrawalService } from 'src/inventory/services/remains-
 import { CreateRemainsInItalyWithdrawalDto } from 'src/inventory/services/remains-in-italy-withdrawal/dto/create-remains-in-italy-withdrawal.dto';
 import { ReclassificationService } from 'src/inventory/services/reclassification/reclassification.service';
 import { ResolveReclassificationDto } from 'src/inventory/services/reclassification/dto/resolve-reclassification.dto';
+import { CustomerToGeneralTransferService } from 'src/inventory/services/customer-to-general-transfer/customer-to-general-transfer.service';
+import { CreateCustomerToGeneralTransferDto } from 'src/inventory/services/customer-to-general-transfer/dto/create-customer-to-general-transfer.dto';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('access-token')
@@ -39,6 +41,7 @@ export class InventoryController {
 		private readonly pitamSplitService: PitamSplitService,
 		private readonly remainsInItalyWithdrawalService: RemainsInItalyWithdrawalService,
 		private readonly reclassificationService: ReclassificationService,
+		private readonly customerToGeneralTransferService: CustomerToGeneralTransferService,
 	) {}
 
 	@Get('summary')
@@ -459,6 +462,21 @@ export class InventoryController {
 	createRemainsInItalyWithdrawal(@Body() data: CreateRemainsInItalyWithdrawalDto, @Req() req: Request) {
 		const actor = req.user as AuthenticatedUser;
 		return this.remainsInItalyWithdrawalService.create(data, actor.id);
+	}
+
+	@Post('customer-to-general-transfer')
+	@ApiOperation({
+		summary:
+			'Transfer a quantity from a customer\'s unshipped stock into the GENERAL trader pool (opposite direction of customer-general-transfer). ' +
+			'Splits across every trader in traderCategoryId by their configured share (default) or, when toRemainsInItaly is true (grade ה/ו only), ' +
+			'parks it as a single row in the REMAINS_IN_ITALY bucket instead.',
+	})
+	@ApiBody({ type: CreateCustomerToGeneralTransferDto })
+	@ApiResponse({ status: 201, description: 'Transfer created successfully.' })
+	@ApiResponse({ status: 400, description: 'Invalid payload or insufficient unshipped customer stock.' })
+	createCustomerToGeneralTransfer(@Body() data: CreateCustomerToGeneralTransferDto, @Req() req: Request) {
+		const actor = req.user as AuthenticatedUser;
+		return this.customerToGeneralTransferService.create(data, actor.id);
 	}
 
 	@Get('remains-in-italy-withdrawal')

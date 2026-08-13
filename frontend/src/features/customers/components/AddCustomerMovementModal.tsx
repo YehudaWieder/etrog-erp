@@ -10,14 +10,15 @@ import {
   InventoryOwnerType,
   createInternalTransfer,
   createCustomerAdjustmentMovement,
+  createCustomerToGeneralTransfer,
   type PitamStatus,
 } from '../../../services/inventoryMovementsApi';
 import { ApiError } from '../../../services/apiClient';
 import { fetchCustomerInventorySummary } from '../services/customerInventorySummary.service';
-import { fetchTraderInventorySummary } from '../../traders/services/traderInventorySummary.service';
 import type { CustomerInventorySummaryRow } from '../customerInventory.types';
 import type { AppLang } from '../../traders/i18n';
 import movementTypePickerStyles from '../../traders/components/styles/MovementTypePicker.module.css';
+import remainsInItalyCheckboxStyles from '../../traders/components/styles/RemainsInItalyCheckbox.module.css';
 
 const GENERAL_TRADER_VALUE = 'GENERAL';
 
@@ -74,6 +75,9 @@ const F = {
     gradePlaceholder: 'בחר דרגה',
     quantityPlaceholder: 'כמות',
     quantityLabel: 'כמות',
+    remainsInItalyGradeHLabel: 'דרגה ה נשארת באיטליה',
+    remainsInItalyGradeVLabel: 'דרגה ו נשארת באיטליה',
+    toPitamStatusLabel: 'סטטוס פיטם אצל הסוחר',
     availableQuantityHint: (n: number) => `זמין: ${n}`,
     notesPlaceholder: 'הערות (לא חובה)',
     notesLabel: 'הערות',
@@ -109,6 +113,9 @@ const F = {
     gradePlaceholder: 'Select grade',
     quantityPlaceholder: 'Quantity',
     quantityLabel: 'Quantity',
+    remainsInItalyGradeHLabel: 'Grade ה remains in Italy',
+    remainsInItalyGradeVLabel: 'Grade ו remains in Italy',
+    toPitamStatusLabel: 'Pitam status at the trader',
     availableQuantityHint: (n: number) => `Available: ${n}`,
     notesPlaceholder: 'Notes (optional)',
     notesLabel: 'Notes',
@@ -151,6 +158,13 @@ export function AddCustomerMovementModal({
   const [traderCategoryId, setTraderCategoryId] = useState('');
   const [grade, setGrade] = useState('');
   const [quantity, setQuantity] = useState('');
+  // Only meaningful when traderId === GENERAL_TRADER_VALUE and grade is ה/ו - mirrors
+  // AddTraderMovementModal's reclassToRemainsInItalyGradeH/V pattern.
+  const [transferToRemainsInItalyGradeH, setTransferToRemainsInItalyGradeH] = useState(false);
+  const [transferToRemainsInItalyGradeV, setTransferToRemainsInItalyGradeV] = useState(false);
+  // Only meaningful when the specific-trader destination's source pitamStatus is MIXED - lets the
+  // user force a definite WITH_PITAM/WITHOUT_PITAM status on the trader side instead of leaving it MIXED.
+  const [toPitamStatus, setToPitamStatus] = useState<PitamStatus | ''>('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -194,6 +208,9 @@ export function AddCustomerMovementModal({
     setTraderCategoryId('');
     setGrade('');
     setQuantity('');
+    setTransferToRemainsInItalyGradeH(false);
+    setTransferToRemainsInItalyGradeV(false);
+    setToPitamStatus('');
   }, [customerId, type]);
 
   useEffect(() => {
@@ -202,6 +219,9 @@ export function AddCustomerMovementModal({
     setTraderCategoryId('');
     setGrade('');
     setQuantity('');
+    setTransferToRemainsInItalyGradeH(false);
+    setTransferToRemainsInItalyGradeV(false);
+    setToPitamStatus('');
   }, [customerCategoryId]);
 
   useEffect(() => {
@@ -209,6 +229,7 @@ export function AddCustomerMovementModal({
     setTraderCategoryId('');
     setGrade('');
     setQuantity('');
+    setToPitamStatus('');
   }, [pitamStatus]);
 
   const availableCategoryOptions = useMemo(() => {
@@ -286,6 +307,9 @@ export function AddCustomerMovementModal({
     setTraderCategoryId('');
     setGrade('');
     setQuantity('');
+    setTransferToRemainsInItalyGradeH(false);
+    setTransferToRemainsInItalyGradeV(false);
+    setToPitamStatus('');
     setNotes('');
     setError(null);
   };
@@ -321,96 +345,24 @@ export function AddCustomerMovementModal({
 
       if (type === 'INTERNAL_TRANSFER') {
         if (traderId === GENERAL_TRADER_VALUE) {
-          // General distribution: same logic as harvest general sorting
-          const selectedCategory = traderCategories.find((c) => String(c.id) === traderCategoryId);
-          const shares = selectedCategory?.shares ?? [];
+          const toRemainsInItaly =
+            (grade === GRADE_OPTIONS[4] && transferToRemainsInItalyGradeH) ||
+            (grade === GRADE_OPTIONS[5] && transferToRemainsInItalyGradeV)
+              ? true
+              : undefined;
 
-          const allocations = shares.map((share) => ({
-            traderId: share.traderId,
-            quantity: Math.floor((quantityNumber * share.percent) / 100),
-          }));
-
-          const canDistributeToAll = allocations.length > 0 && allocations.every((a) => a.quantity > 0);
-          const totalAllocated = canDistributeToAll
-            ? allocations.reduce((sum, a) => sum + a.quantity, 0)
-            : 0;
-          const remainder = quantityNumber - totalAllocated;
-
-          const baseFrom = {
+          await createCustomerToGeneralTransfer({
             date: nowIso,
-            fromOwnerType: InventoryOwnerType.CUSTOMER,
-            fromCustomerId: Number(customerId),
-            fromCustomerCategoryId: Number(customerCategoryId),
-            fromPitamStatus: pitamStatus as PitamStatus,
-            toTraderCategoryId: Number(traderCategoryId),
-            toGrade: grade,
+            customerId: Number(customerId),
+            customerCategoryId: Number(customerCategoryId),
+            pitamStatus: pitamStatus as PitamStatus,
+            toPitamStatus: toPitamStatus || undefined,
+            grade,
+            traderCategoryId: Number(traderCategoryId),
+            quantity: quantityNumber,
+            toRemainsInItaly,
             notes: notes || null,
-          };
-
-          if (canDistributeToAll) {
-            for (const allocation of allocations) {
-              await createInternalTransfer({
-                ...baseFrom,
-                type: 'INTERNAL_TRANSFER',
-                quantity: allocation.quantity,
-                toOwnerType: InventoryOwnerType.TRADER,
-                toTraderId: allocation.traderId,
-              });
-            }
-          }
-
-          // Remainder (or everything if can't distribute) goes to MODULO
-          const moduloAmount = canDistributeToAll ? remainder : quantityNumber;
-          if (moduloAmount > 0) {
-            await createInternalTransfer({
-              ...baseFrom,
-              type: 'INTERNAL_TRANSFER',
-              quantity: moduloAmount,
-              toOwnerType: InventoryOwnerType.MODULO,
-            });
-          }
-
-          // Try to redistribute accumulated MODULO pool (same as tryAssignFromModuloPool)
-          if (seasonId && shares.length > 0) {
-            const moduloStock = await fetchTraderInventorySummary({
-              seasonId,
-              traderId: null,
-              ownerScope: 'MODULO',
-              shipmentScope: 'UNSHIPPED',
-            });
-
-            const moduloRow = moduloStock.rows.find(
-              (r) =>
-                String(r.traderCategoryId) === traderCategoryId &&
-                r.grade === grade &&
-                r.pitamStatus === pitamStatus,
-            );
-            const moduloBalance = moduloRow?.quantity ?? 0;
-
-            if (moduloBalance > 0) {
-              const moduloAllocations = shares.map((share) => ({
-                traderId: share.traderId,
-                quantity: Math.floor((moduloBalance * share.percent) / 100),
-              }));
-
-              if (moduloAllocations.every((a) => a.quantity > 0)) {
-                for (const allocation of moduloAllocations) {
-                  await createInternalTransfer({
-                    type: 'ASSIGNED',
-                    date: nowIso,
-                    quantity: allocation.quantity,
-                    pitamStatus: pitamStatus as PitamStatus,
-                    grade,
-                    traderCategoryId: Number(traderCategoryId),
-                    fromOwnerType: InventoryOwnerType.MODULO,
-                    toOwnerType: InventoryOwnerType.TRADER,
-                    toTraderId: allocation.traderId,
-                    notes: notes || null,
-                  });
-                }
-              }
-            }
-          }
+          });
         } else {
           // Specific trader → enters as private selection (מיון פרטי)
           await createInternalTransfer({
@@ -425,6 +377,7 @@ export function AddCustomerMovementModal({
             toTraderId: Number(traderId),
             toTraderCategoryId: Number(traderCategoryId),
             toGrade: grade,
+            toPitamStatus: toPitamStatus || undefined,
             notes: notes || null,
           });
         }
@@ -629,7 +582,7 @@ export function AddCustomerMovementModal({
                 </div>
               ) : null}
 
-              {/* Row 3: trader + trader category + grade + quantity (INTERNAL_TRANSFER only) */}
+              {/* Row 3: trader + trader category + grade + pitam-status override (INTERNAL_TRANSFER only) */}
               {type === 'INTERNAL_TRANSFER' ? (
                 <div style={ROW_STYLE}>
                   <div style={FIELD_STYLE}>
@@ -642,6 +595,9 @@ export function AddCustomerMovementModal({
                         setTraderCategoryId('');
                         setGrade('');
                         setQuantity('');
+                        setTransferToRemainsInItalyGradeH(false);
+                        setTransferToRemainsInItalyGradeV(false);
+                        setToPitamStatus('');
                       }}
                       disabled={!isTraderEnabled}
                     >
@@ -684,6 +640,8 @@ export function AddCustomerMovementModal({
                       onChange={(event) => {
                         setGrade(event.target.value);
                         setQuantity('');
+                        setTransferToRemainsInItalyGradeH(false);
+                        setTransferToRemainsInItalyGradeV(false);
                       }}
                       disabled={!isGradeEnabled}
                     >
@@ -696,6 +654,26 @@ export function AddCustomerMovementModal({
                     </select>
                   </div>
 
+                  {pitamStatus === 'MIXED' ? (
+                    <div style={FIELD_STYLE}>
+                      <label style={LABEL_STYLE}>{f.toPitamStatusLabel}</label>
+                      <select
+                        className="seasons-manager__year-input"
+                        value={toPitamStatus}
+                        onChange={(event) => setToPitamStatus(event.target.value as PitamStatus | '')}
+                      >
+                        <option value="">{f.pitamStatuses.MIXED}</option>
+                        <option value="WITH_PITAM">{f.pitamStatuses.WITH_PITAM}</option>
+                        <option value="WITHOUT_PITAM">{f.pitamStatuses.WITHOUT_PITAM}</option>
+                      </select>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {/* Row 4: quantity + remains-in-Italy checkboxes (INTERNAL_TRANSFER only) */}
+              {type === 'INTERNAL_TRANSFER' ? (
+                <div style={{ ...ROW_STYLE, alignItems: 'center' }}>
                   <div style={FIELD_STYLE}>
                     <label style={LABEL_STYLE}>{f.quantityLabel}</label>
                     <input
@@ -718,6 +696,27 @@ export function AddCustomerMovementModal({
                       {availableQuantity !== null ? f.availableQuantityHint(availableQuantity) : ' '}
                     </span>
                   </div>
+
+                  {traderId === GENERAL_TRADER_VALUE && grade === GRADE_OPTIONS[4] ? (
+                    <label className={remainsInItalyCheckboxStyles.field} style={{ alignSelf: 'center' }}>
+                      <input
+                        type="checkbox"
+                        checked={transferToRemainsInItalyGradeH}
+                        onChange={(event) => setTransferToRemainsInItalyGradeH(event.target.checked)}
+                      />
+                      <span>{f.remainsInItalyGradeHLabel}</span>
+                    </label>
+                  ) : null}
+                  {traderId === GENERAL_TRADER_VALUE && grade === GRADE_OPTIONS[5] ? (
+                    <label className={remainsInItalyCheckboxStyles.field} style={{ alignSelf: 'center' }}>
+                      <input
+                        type="checkbox"
+                        checked={transferToRemainsInItalyGradeV}
+                        onChange={(event) => setTransferToRemainsInItalyGradeV(event.target.checked)}
+                      />
+                      <span>{f.remainsInItalyGradeVLabel}</span>
+                    </label>
+                  ) : null}
                 </div>
               ) : null}
 

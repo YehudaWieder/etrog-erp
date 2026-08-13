@@ -87,6 +87,26 @@ export async function createCustomerGeneralTransfer(payload: CreateCustomerGener
   });
 }
 
+export type CreateCustomerToGeneralTransferPayload = {
+  date?: string;
+  customerId: number;
+  customerCategoryId: number;
+  pitamStatus: PitamStatus;
+  toPitamStatus?: PitamStatus;
+  grade: Grade;
+  traderCategoryId: number;
+  quantity: number;
+  toRemainsInItaly?: boolean;
+  notes?: string | null;
+};
+
+export async function createCustomerToGeneralTransfer(payload: CreateCustomerToGeneralTransferPayload) {
+  return apiClient('/inventory/customer-to-general-transfer', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 export type CustomerAdjustmentMovementType = 'WASTE' | 'SELF_PICKUP' | 'ADJUSTMENT';
 
 export type CreateCustomerAdjustmentPayload = {
