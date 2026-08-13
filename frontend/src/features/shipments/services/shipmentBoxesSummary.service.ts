@@ -9,6 +9,7 @@ export type ShipmentBoxesSummaryRow = {
   label: string;
   counts: Record<BoxTypeKey, number>;
   total: number;
+  etrogTotal: number;
 };
 
 export type ShipmentBoxesSummary = {
@@ -19,6 +20,7 @@ export type ShipmentBoxesSummary = {
   customRow: ShipmentBoxesSummaryRow | null;
   columnTotals: Record<BoxTypeKey, number>;
   grandTotal: number;
+  grandEtrogTotal: number;
 };
 
 function emptyCounts(): Record<BoxTypeKey, number> {
@@ -26,7 +28,7 @@ function emptyCounts(): Record<BoxTypeKey, number> {
 }
 
 function emptyRow(key: string, label: string): ShipmentBoxesSummaryRow {
-  return { key, label, counts: emptyCounts(), total: 0 };
+  return { key, label, counts: emptyCounts(), total: 0, etrogTotal: 0 };
 }
 
 export function buildShipmentBoxesSummary(
@@ -40,6 +42,7 @@ export function buildShipmentBoxesSummary(
   const customerRowsMap = new Map<number, ShipmentBoxesSummaryRow>();
   const columnTotals = emptyCounts();
   let grandTotal = 0;
+  let grandEtrogTotal = 0;
 
   for (const box of boxes) {
     const boxType = box.boxType as BoxTypeKey;
@@ -63,8 +66,10 @@ export function buildShipmentBoxesSummary(
 
     targetRow.counts[boxType] = (targetRow.counts[boxType] ?? 0) + 1;
     targetRow.total += 1;
+    targetRow.etrogTotal += box.totalQuantity;
     columnTotals[boxType] = (columnTotals[boxType] ?? 0) + 1;
     grandTotal += 1;
+    grandEtrogTotal += box.totalQuantity;
   }
 
   const traderRows = Array.from(traderRowsMap.values()).sort((a, b) => a.label.localeCompare(b.label));
@@ -79,5 +84,6 @@ export function buildShipmentBoxesSummary(
     customRow: customRow.total > 0 ? customRow : null,
     columnTotals,
     grandTotal,
+    grandEtrogTotal,
   };
 }

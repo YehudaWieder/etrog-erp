@@ -65,6 +65,7 @@ export type ShipmentsTableLabels = {
     customRowLabel: string;
     totalRowLabel: string;
     totalColumnLabel: string;
+    etrogTotalColumnLabel: string;
     loading: string;
     error: string;
     empty: string;

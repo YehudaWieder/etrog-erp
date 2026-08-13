@@ -15,6 +15,7 @@ export function ShipmentBoxesSummaryTable({ summary, labels }: ShipmentBoxesSumm
         <td key={boxType}>{row.counts[boxType]}</td>
       ))}
       <td>{row.total}</td>
+      <td>{row.etrogTotal}</td>
     </tr>
   );
 
@@ -31,6 +32,7 @@ export function ShipmentBoxesSummaryTable({ summary, labels }: ShipmentBoxesSumm
                 <th key={boxType} scope="col">{labels.boxTypeLabels[boxType]}</th>
               ))}
               <th scope="col">{labels.totalColumnLabel}</th>
+              <th scope="col">{labels.etrogTotalColumnLabel}</th>
             </tr>
           </thead>
           <tbody>
@@ -46,6 +48,7 @@ export function ShipmentBoxesSummaryTable({ summary, labels }: ShipmentBoxesSumm
                 <td key={boxType}>{summary.columnTotals[boxType]}</td>
               ))}
               <td>{summary.grandTotal}</td>
+              <td>{summary.grandEtrogTotal}</td>
             </tr>
           </tfoot>
         </table>
