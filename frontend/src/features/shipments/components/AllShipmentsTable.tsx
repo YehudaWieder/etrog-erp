@@ -12,10 +12,12 @@ import { useShipmentDetailsItems } from '../hooks/useShipmentDetailsItems';
 import { ShipmentsSummaryCards } from './shared/ShipmentsSummaryCards';
 import { ShipmentBoxesSummaryTable } from './ShipmentBoxesSummaryTable';
 import { ShipmentEtrogSummaryTable } from './ShipmentEtrogSummaryTable';
+import { ShipmentTraderEtrogSummaryTable } from './ShipmentTraderEtrogSummaryTable';
 import { ShipmentItemsDetailTable } from './ShipmentItemsDetailTable';
 import { buildAllShipmentsSummaryTotals } from '../services/shipmentsSummary.service';
 import { buildShipmentBoxesSummary } from '../services/shipmentBoxesSummary.service';
 import { buildShipmentEtrogSummary } from '../services/shipmentEtrogSummary.service';
+import { buildShipmentTraderEtrogSummary } from '../services/shipmentTraderEtrogSummary.service';
 import { buildShipmentItemsDetailRows } from '../services/shipmentItemsDetailRows.service';
 import { SHIPMENT_DETAILS_PRINT_EXTRA_STYLES } from '../services/shipmentDetailsPrintStyles';
 import { printAllShipments, exportAllShipmentsToExcel } from '../services/allShipmentsExport.service';
@@ -99,6 +101,10 @@ export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectSh
   const detailsEtrogSummary = useMemo(
     () => buildShipmentEtrogSummary(detailsItems, labels.detailsEtrogSummary.customRowLabel, detailsTraderCategoryOrder),
     [detailsItems, labels.detailsEtrogSummary.customRowLabel, detailsTraderCategoryOrder],
+  );
+  const detailsTraderEtrogSummary = useMemo(
+    () => buildShipmentTraderEtrogSummary(detailsItems, detailsTraderCategoryOrder),
+    [detailsItems, detailsTraderCategoryOrder],
   );
   const detailsItemsRows = useMemo(
     () => buildShipmentItemsDetailRows(detailsItems, detailsBoxes, labels.detailsItemsTable),
@@ -302,6 +308,9 @@ export function AllShipmentsTable({ lang, labels, selectedShipmentId, onSelectSh
                   <p className={styles.detailsSummaryState}>{labels.detailsEtrogSummary.empty}</p>
                 ) : (
                   <>
+                    {detailsTraderEtrogSummary.rows.length > 0 ? (
+                      <ShipmentTraderEtrogSummaryTable summary={detailsTraderEtrogSummary} labels={labels.detailsTraderEtrogSummary} />
+                    ) : null}
                     <ShipmentEtrogSummaryTable summary={detailsEtrogSummary} labels={labels.detailsEtrogSummary} />
                     <ShipmentItemsDetailTable rows={detailsItemsRows} labels={labels.detailsItemsTable} />
                   </>

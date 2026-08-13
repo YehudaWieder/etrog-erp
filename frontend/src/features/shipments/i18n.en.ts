@@ -562,6 +562,11 @@ export const SHIPMENTS_I18N_EN = {
       error: 'Failed to load boxes',
       empty: 'No boxes to display',
     },
+    detailsTraderEtrogSummary: {
+      title: 'Traders Etrogs Summary',
+      totalRowLabel: 'Total',
+      totalColumnLabel: 'Total',
+    },
     detailsEtrogSummary: {
       title: 'Etrogs Summary',
       pitamStatusLabels: {

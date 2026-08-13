@@ -70,6 +70,11 @@ export type ShipmentsTableLabels = {
     error: string;
     empty: string;
   };
+  detailsTraderEtrogSummary: {
+    title: string;
+    totalRowLabel: string;
+    totalColumnLabel: string;
+  };
   detailsEtrogSummary: {
     title: string;
     pitamStatusLabels: Record<'WITH_PITAM' | 'WITHOUT_PITAM' | 'MIXED', string>;

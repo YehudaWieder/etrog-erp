@@ -564,6 +564,11 @@ export const SHIPMENTS_I18N_HE = {
       error: 'שגיאה בטעינת הקרטונים',
       empty: 'אין קרטונים להצגה',
     },
+    detailsTraderEtrogSummary: {
+      title: 'סיכום אתרוגים לסוחרים',
+      totalRowLabel: 'סה"כ',
+      totalColumnLabel: 'סה"כ',
+    },
     detailsEtrogSummary: {
       title: 'סיכום אתרוגים',
       pitamStatusLabels: {
