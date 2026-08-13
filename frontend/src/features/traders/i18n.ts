@@ -437,6 +437,12 @@ export type TraderMovementsI18n = {
 		reclassificationManageSaveLabel: string;
 		reclassificationManageSavingLabel: string;
 		reclassificationManageDiscardEditLabel: string;
+		availableToCancelLabel: string;
+		fullyPackedLabel: string;
+		partialCancelConfirmTitle: string;
+		partialCancelConfirmMessage: (available: number, requested: number) => string;
+		partialCancelConfirmLabel: string;
+		partialCancelDismissLabel: string;
 		availableQuantityHint: (quantity: number) => string;
 		adjustmentQuantityHint: string;
 		notesLabel: string;

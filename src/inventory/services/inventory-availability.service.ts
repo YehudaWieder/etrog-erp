@@ -163,4 +163,55 @@ export class InventoryAvailabilityService {
       );
     }
   }
+
+  // Non-throwing counterpart to assertTraderHasUnshippedStock/assertCustomerHasUnshippedStock,
+  // used to tell a caller how much of a still-pending row could safely be cancelled/reduced right
+  // now (e.g. undoing a batch that's been partially packed) instead of only pass/fail.
+  async getTraderAvailableToReduce(
+    client: LedgerClient,
+    params: {
+      seasonId: number;
+      traderId: number | null;
+      traderCategoryId: number;
+      grade: Grade;
+      pitamStatus: PitamStatus;
+      isModulo: boolean;
+      requestedQuantity: number;
+      excludePrivateSelection?: boolean;
+      onlyPrivateSelection?: boolean;
+    },
+  ) {
+    const available = await this.getTraderUnshippedBalance(client, {
+      seasonId: params.seasonId,
+      traderId: params.traderId,
+      traderCategoryId: params.traderCategoryId,
+      grade: params.grade,
+      pitamStatus: params.pitamStatus,
+      isModulo: params.isModulo,
+      excludePrivateSelection: params.excludePrivateSelection,
+      onlyPrivateSelection: params.onlyPrivateSelection,
+    });
+
+    return Math.max(0, Math.min(params.requestedQuantity, available));
+  }
+
+  async getCustomerAvailableToReduce(
+    client: LedgerClient,
+    params: {
+      seasonId: number;
+      customerId: number;
+      customerCategoryId: number;
+      pitamStatus: PitamStatus;
+      requestedQuantity: number;
+    },
+  ) {
+    const available = await this.getCustomerUnshippedBalance(client, {
+      seasonId: params.seasonId,
+      customerId: params.customerId,
+      customerCategoryId: params.customerCategoryId,
+      pitamStatus: params.pitamStatus,
+    });
+
+    return Math.max(0, Math.min(params.requestedQuantity, available));
+  }
 }

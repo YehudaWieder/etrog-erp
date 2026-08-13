@@ -153,6 +153,32 @@
   white-space: nowrap;
 }
 
+.qtyChipAvailable {
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-pill);
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--color-warning, #b45309);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.rowBlocked {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.rowBlockedLabel {
+  color: var(--color-danger, #dc2626);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+:global(:root[data-dark-mode='true']) .qtyChipAvailable {
+  background: rgba(245, 158, 11, 0.25);
+  color: #fbbf24;
+}
+
 .badge {
   padding: 2px var(--space-2);
   border-radius: var(--radius-pill);

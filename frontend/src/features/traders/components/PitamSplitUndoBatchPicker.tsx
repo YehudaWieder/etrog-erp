@@ -13,6 +13,8 @@ export type PitamSplitUndoBatchPickerLabels = {
   pitamSplitUndoBatchPlaceholder: string;
   pitamSplitWithLabel: string;
   pitamSplitWithoutLabel: string;
+  availableToCancelLabel: string;
+  fullyPackedLabel: string;
 };
 
 type PitamSplitUndoBatchPickerProps = {
@@ -95,6 +97,13 @@ export function PitamSplitUndoBatchPicker({
             <span className={styles.triggerQty}>
               +{selectedBatch.withQty} / +{selectedBatch.withoutQty}
             </span>
+            {selectedBatch.availableQuantity < selectedBatch.withQty + selectedBatch.withoutQty ? (
+              <span className={styles.qtyChipAvailable}>
+                {selectedBatch.availableQuantity > 0
+                  ? `${labels.availableToCancelLabel}: ${selectedBatch.availableQuantity}`
+                  : labels.fullyPackedLabel}
+              </span>
+            ) : null}
           </span>
         ) : (
           <span className={styles.placeholder}>{placeholderText}</span>
@@ -106,13 +115,14 @@ export function PitamSplitUndoBatchPicker({
         <div className={styles.panel} role="listbox">
           {batches.map((batch) => {
             const isSelected = batch.batchId === value;
+            const isFullyPacked = batch.availableQuantity === 0;
             return (
               <button
                 type="button"
                 key={batch.batchId}
                 role="option"
                 aria-selected={isSelected}
-                className={`${styles.row} ${isSelected ? styles.rowSelected : ''}`}
+                className={`${styles.row} ${isSelected ? styles.rowSelected : ''} ${isFullyPacked ? styles.rowBlocked : ''}`}
                 onClick={() => {
                   onChange(batch.batchId);
                   setIsOpen(false);
@@ -129,6 +139,11 @@ export function PitamSplitUndoBatchPicker({
                   <span className={styles.rowQtyGroup}>
                     <span className={styles.qtyChip}>{labels.pitamSplitWithLabel}: {batch.withQty}</span>
                     <span className={styles.qtyChip}>{labels.pitamSplitWithoutLabel}: {batch.withoutQty}</span>
+                    {isFullyPacked ? (
+                      <span className={styles.rowBlockedLabel}>{labels.fullyPackedLabel}</span>
+                    ) : batch.availableQuantity < batch.withQty + batch.withoutQty ? (
+                      <span className={styles.qtyChipAvailable}>{labels.availableToCancelLabel}: {batch.availableQuantity}</span>
+                    ) : null}
                   </span>
                 </div>
               </button>

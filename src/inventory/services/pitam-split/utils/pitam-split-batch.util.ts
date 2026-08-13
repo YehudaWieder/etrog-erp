@@ -21,10 +21,15 @@ export type PitamSplitBatchSummary = {
   notes: string | null;
 };
 
+// Internal-only shape carrying the raw positive (WITH_PITAM/WITHOUT_PITAM) rows alongside each
+// summary, so the async service layer can compute per-row availability afterward without this
+// (deliberately pure/synchronous) grouping function needing DB access itself.
+export type PitamSplitBatchSummaryWithRows = PitamSplitBatchSummary & { positiveRows: PitamSplitBatchRow[] };
+
 // One resolve() call creates one negative/positive triple per affected trader (plus modulo).
 // Groups those raw ledger rows back into one summary per batchId — the "one undo-able action"
 // the user actually performed, regardless of how many rows it produced underneath.
-export function groupPitamSplitRowsIntoBatches(rows: PitamSplitBatchRow[]): PitamSplitBatchSummary[] {
+export function groupPitamSplitRowsIntoBatches(rows: PitamSplitBatchRow[]): PitamSplitBatchSummaryWithRows[] {
   const byBatch = new Map<string, PitamSplitBatchRow[]>();
 
   for (const row of rows) {
@@ -37,7 +42,7 @@ export function groupPitamSplitRowsIntoBatches(rows: PitamSplitBatchRow[]): Pita
     }
   }
 
-  const summaries: PitamSplitBatchSummary[] = [];
+  const summaries: PitamSplitBatchSummaryWithRows[] = [];
 
   for (const [batchId, batchRows] of byBatch) {
     const affectedKeys = new Set(batchRows.map((row) => (row.isModulo ? 'MODULO' : `TRADER:${row.traderId}`)));
@@ -61,6 +66,7 @@ export function groupPitamSplitRowsIntoBatches(rows: PitamSplitBatchRow[]): Pita
       withQty: batchRows.filter((row) => row.pitamStatus === 'WITH_PITAM').reduce((sum, row) => sum + row.quantity, 0),
       withoutQty: batchRows.filter((row) => row.pitamStatus === 'WITHOUT_PITAM').reduce((sum, row) => sum + row.quantity, 0),
       notes: batchRows.find((row) => row.notes)?.notes ?? null,
+      positiveRows: batchRows.filter((row) => row.quantity > 0),
     });
   }
 

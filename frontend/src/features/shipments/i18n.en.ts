@@ -433,6 +433,8 @@ export const SHIPMENTS_I18N_EN = {
     pitamSplitManageSavingLabel: 'Saving...',
     pitamSplitManageDiscardEditLabel: 'Back',
     pitamSplitManageCloseLabel: 'Close',
+    pitamSplitManageAvailableToCancelLabel: 'Available to cancel',
+    pitamSplitManageFullyPackedLabel: 'Fully packed',
     boxOwnershipLabels: {
       TRADER: 'Trader',
       CUSTOMER: 'Customer',

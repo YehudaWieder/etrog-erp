@@ -55,44 +55,82 @@ export class ReclassificationService {
       include: { trader: { select: { id: true, name: true } } },
     });
 
-    return anchors.map((anchor) => {
-      const linked = linkedRows.filter((row) => row.MovementReferenceId === anchor.id);
-      const allRows = [{ ...anchor, trader: null as { id: number; name: string } | null }, ...linked];
+    return Promise.all(
+      anchors.map(async (anchor) => {
+        const linked = linkedRows.filter((row) => row.MovementReferenceId === anchor.id);
+        const allRows = [{ ...anchor, trader: null as { id: number; name: string } | null }, ...linked];
 
-      const matchesFromTuple = (row: (typeof allRows)[number]) =>
-        row.traderCategoryId === anchor.traderCategoryId &&
-        row.grade === anchor.grade &&
-        row.pitamStatus === anchor.pitamStatus;
+        const matchesFromTuple = (row: (typeof allRows)[number]) =>
+          row.traderCategoryId === anchor.traderCategoryId &&
+          row.grade === anchor.grade &&
+          row.pitamStatus === anchor.pitamStatus;
 
-      const quantity = Math.abs(
-        allRows.filter(matchesFromTuple).reduce((sum, row) => sum + row.quantity, 0),
-      );
+        const quantity = Math.abs(
+          allRows.filter(matchesFromTuple).reduce((sum, row) => sum + row.quantity, 0),
+        );
 
-      const toRow = allRows.find((row) => !matchesFromTuple(row));
+        const toRow = allRows.find((row) => !matchesFromTuple(row));
 
-      const source = this.inferSource(anchor, linked);
-      const traderId = source === 'SPECIFIC_TRADER' ? anchor.traderId : null;
-      const traderName = source === 'SPECIFIC_TRADER' ? (linked.find((r) => r.traderId === traderId)?.trader?.name ?? null) : null;
+        const source = this.inferSource(anchor, linked);
+        const traderId = source === 'SPECIFIC_TRADER' ? anchor.traderId : null;
+        const traderName = source === 'SPECIFIC_TRADER' ? (linked.find((r) => r.traderId === traderId)?.trader?.name ?? null) : null;
 
-      return {
-        id: anchor.id,
-        seasonId: anchor.seasonId,
-        date: anchor.date,
-        source,
-        traderId,
-        traderName,
-        from: {
-          traderCategoryId: anchor.traderCategoryId,
-          grade: anchor.grade,
-          pitamStatus: anchor.pitamStatus,
-        },
-        to: toRow
-          ? { traderCategoryId: toRow.traderCategoryId, grade: toRow.grade, pitamStatus: toRow.pitamStatus }
-          : null,
-        quantity,
-        notes: anchor.notes,
-      };
-    });
+        // GENERAL and REMAINS_IN_ITALY sources fan the "to" side out across multiple linked rows
+        // (one per trader/modulo share) via generalShareAllocationService.allocateGeneralQuantity,
+        // so partial-cancel isn't safe there - availableQuantity is 0-or-full: every positive row
+        // must still have its own full quantity available, otherwise the whole batch is blocked,
+        // mirroring what deleteBatchInTx's per-row assert would currently allow.
+        const positiveRows = linked.filter((row) => row.quantity > 0);
+        const availableQuantity =
+          source === 'SPECIFIC_TRADER'
+            ? await this.inventoryAvailabilityService.getTraderAvailableToReduce(this.prisma, {
+                seasonId: anchor.seasonId,
+                traderId: positiveRows[0]?.traderId ?? null,
+                traderCategoryId: positiveRows[0]?.traderCategoryId ?? anchor.traderCategoryId,
+                grade: positiveRows[0]?.grade ?? anchor.grade,
+                pitamStatus: positiveRows[0]?.pitamStatus ?? anchor.pitamStatus,
+                isModulo: positiveRows[0]?.isModulo ?? false,
+                requestedQuantity: positiveRows[0]?.quantity ?? 0,
+              })
+            : await (async () => {
+                const availabilities = await Promise.all(
+                  positiveRows.map((row) =>
+                    this.inventoryAvailabilityService.getTraderAvailableToReduce(this.prisma, {
+                      seasonId: row.seasonId,
+                      traderId: row.traderId,
+                      traderCategoryId: row.traderCategoryId,
+                      grade: row.grade,
+                      pitamStatus: row.pitamStatus,
+                      isModulo: row.isModulo,
+                      requestedQuantity: row.quantity,
+                    }),
+                  ),
+                );
+                const allFullyAvailable = positiveRows.every((row, index) => availabilities[index] >= row.quantity);
+                return allFullyAvailable ? quantity : 0;
+              })();
+
+        return {
+          id: anchor.id,
+          seasonId: anchor.seasonId,
+          date: anchor.date,
+          source,
+          traderId,
+          traderName,
+          from: {
+            traderCategoryId: anchor.traderCategoryId,
+            grade: anchor.grade,
+            pitamStatus: anchor.pitamStatus,
+          },
+          to: toRow
+            ? { traderCategoryId: toRow.traderCategoryId, grade: toRow.grade, pitamStatus: toRow.pitamStatus }
+            : null,
+          quantity,
+          availableQuantity,
+          notes: anchor.notes,
+        };
+      }),
+    );
   }
 
   async getReclassificationSummary(seasonId?: number) {
@@ -121,8 +159,8 @@ export class ReclassificationService {
     return Array.from(groups.values());
   }
 
-  async undoBatch(anchorId: number) {
-    return this.prisma.$transaction(async (tx) => this.deleteBatchInTx(tx, anchorId));
+  async undoBatch(anchorId: number, quantity?: number) {
+    return this.prisma.$transaction(async (tx) => this.deleteBatchInTx(tx, anchorId, quantity));
   }
 
   async updateBatch(anchorId: number, dto: ResolveReclassificationDto, actorId: number) {
@@ -316,7 +354,7 @@ export class ReclassificationService {
   // Shared by undoBatch and updateBatch. Asserts every positive row the batch created hasn't
   // since been consumed downstream (e.g. packed into a shipment), then permanently deletes the
   // anchor row and everything linked to it via MovementReferenceId.
-  private async deleteBatchInTx(tx: Prisma.TransactionClient, anchorId: number) {
+  private async deleteBatchInTx(tx: Prisma.TransactionClient, anchorId: number, quantity?: number) {
     const anchor = await tx.traderStock.findFirst({
       where: { id: anchorId, type: MovementType.RECLASSIFICATION, quantity: { lt: 0 }, isDeleted: false },
     });
@@ -329,25 +367,68 @@ export class ReclassificationService {
       where: { MovementReferenceId: anchorId, isDeleted: false },
     });
 
-    for (const row of linked.filter((row) => row.quantity > 0)) {
-      await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
-        seasonId: row.seasonId,
-        traderId: row.traderId,
-        traderCategoryId: row.traderCategoryId,
-        grade: row.grade,
-        pitamStatus: row.pitamStatus,
-        isModulo: row.isModulo,
-        requiredQuantity: row.quantity,
-        contextLabel: 'ביטול שינוי סיווג',
-      });
+    const source = this.inferSource(anchor, linked);
+    const positiveRows = linked.filter((row) => row.quantity > 0);
+
+    // GENERAL/REMAINS_IN_ITALY fan the "to" side across multiple linked rows - partial cancel
+    // isn't safe there (no single row to decrement), so it stays all-or-nothing.
+    if (source !== 'SPECIFIC_TRADER') {
+      const fullQuantity = positiveRows.reduce((sum, row) => sum + row.quantity, 0);
+      if (quantity !== undefined && quantity !== fullQuantity) {
+        throw new BadRequestException('לא ניתן לבטל חלקית שינוי סיווג ממקור כללי/נשאר באיטליה - יש לבטל את כל הכמות.');
+      }
+
+      for (const row of positiveRows) {
+        await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
+          seasonId: row.seasonId,
+          traderId: row.traderId,
+          traderCategoryId: row.traderCategoryId,
+          grade: row.grade,
+          pitamStatus: row.pitamStatus,
+          isModulo: row.isModulo,
+          requiredQuantity: row.quantity,
+          contextLabel: 'ביטול שינוי סיווג',
+        });
+      }
+
+      await tx.traderStock.deleteMany({ where: { id: anchorId } });
+      if (linked.length > 0) {
+        await tx.traderStock.deleteMany({ where: { MovementReferenceId: anchorId } });
+      }
+
+      return { anchorId, deletedCount: 1 + linked.length, reducedQuantity: fullQuantity };
     }
 
-    await tx.traderStock.deleteMany({ where: { id: anchorId } });
-    if (linked.length > 0) {
+    // SPECIFIC_TRADER: single positive "to" row - safe to reduce in place for a partial cancel.
+    const toRow = positiveRows[0];
+    const fullQuantity = toRow?.quantity ?? 0;
+    const reduceBy = quantity ?? fullQuantity;
+
+    if (reduceBy <= 0 || reduceBy > fullQuantity) {
+      throw new BadRequestException(`כמות לביטול לא תקינה: ${reduceBy} (זמין: ${fullQuantity})`);
+    }
+
+    await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
+      seasonId: toRow.seasonId,
+      traderId: toRow.traderId,
+      traderCategoryId: toRow.traderCategoryId,
+      grade: toRow.grade,
+      pitamStatus: toRow.pitamStatus,
+      isModulo: toRow.isModulo,
+      requiredQuantity: reduceBy,
+      contextLabel: 'ביטול שינוי סיווג',
+    });
+
+    if (reduceBy === fullQuantity) {
+      await tx.traderStock.deleteMany({ where: { id: anchorId } });
       await tx.traderStock.deleteMany({ where: { MovementReferenceId: anchorId } });
+      return { anchorId, deletedCount: 1 + linked.length, reducedQuantity: reduceBy };
     }
 
-    return { anchorId, deletedCount: 1 + linked.length };
+    await tx.traderStock.update({ where: { id: toRow.id }, data: { quantity: toRow.quantity - reduceBy } });
+    await tx.traderStock.update({ where: { id: anchor.id }, data: { quantity: anchor.quantity + reduceBy } });
+
+    return { anchorId, deletedCount: 0, reducedQuantity: reduceBy };
   }
 
   private inferSource(

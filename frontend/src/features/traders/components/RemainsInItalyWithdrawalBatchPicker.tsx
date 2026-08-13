@@ -12,6 +12,8 @@ export type RemainsInItalyWithdrawalBatchPickerLabels = {
   riwUndoNoBatches: string;
   riwUndoBatchPlaceholder: string;
   quantityLabel: string;
+  availableToCancelLabel: string;
+  fullyPackedLabel: string;
 };
 
 type RemainsInItalyWithdrawalBatchPickerProps = {
@@ -97,6 +99,13 @@ export function RemainsInItalyWithdrawalBatchPicker({
               {categoryName(selectedBatch.traderCategoryId)} / {selectedBatch.grade} / {pitamStatusLabels[selectedBatch.pitamStatus]}
             </span>
             <span className={styles.triggerQty}>{labels.quantityLabel}: {selectedBatch.quantity}</span>
+            {selectedBatch.availableQuantity < selectedBatch.quantity ? (
+              <span className={styles.qtyChipAvailable}>
+                {selectedBatch.availableQuantity > 0
+                  ? `${labels.availableToCancelLabel}: ${selectedBatch.availableQuantity}`
+                  : labels.fullyPackedLabel}
+              </span>
+            ) : null}
           </span>
         ) : (
           <span className={styles.placeholder}>{placeholderText}</span>
@@ -108,13 +117,14 @@ export function RemainsInItalyWithdrawalBatchPicker({
         <div className={styles.panel} role="listbox">
           {batches.map((batch) => {
             const isSelected = String(batch.id) === value;
+            const isFullyPacked = batch.availableQuantity === 0;
             return (
               <button
                 type="button"
                 key={batch.id}
                 role="option"
                 aria-selected={isSelected}
-                className={`${styles.row} ${isSelected ? styles.rowSelected : ''}`}
+                className={`${styles.row} ${isSelected ? styles.rowSelected : ''} ${isFullyPacked ? styles.rowBlocked : ''}`}
                 onClick={() => {
                   onChange(String(batch.id));
                   setIsOpen(false);
@@ -132,6 +142,11 @@ export function RemainsInItalyWithdrawalBatchPicker({
                   </span>
                   <span className={styles.rowQtyGroup}>
                     <span className={styles.qtyChip}>{labels.quantityLabel}: {batch.quantity}</span>
+                    {isFullyPacked ? (
+                      <span className={styles.rowBlockedLabel}>{labels.fullyPackedLabel}</span>
+                    ) : batch.availableQuantity < batch.quantity ? (
+                      <span className={styles.qtyChipAvailable}>{labels.availableToCancelLabel}: {batch.availableQuantity}</span>
+                    ) : null}
                   </span>
                 </div>
               </button>

@@ -163,6 +163,8 @@ type PackingItemFieldsText = {
   pitamSplitManageSavingLabel: string;
   pitamSplitManageDiscardEditLabel: string;
   pitamSplitManageCloseLabel: string;
+  pitamSplitManageAvailableToCancelLabel: string;
+  pitamSplitManageFullyPackedLabel: string;
 };
 
 type PackingFormModalProps = {
@@ -788,6 +790,8 @@ export function PackingFormModal({
                         pitamSplitUndoBatchPlaceholder: itemFieldsT.pitamSplitManageSelectPlaceholder,
                         pitamSplitWithLabel: itemFieldsT.pitamSplitWithLabel,
                         pitamSplitWithoutLabel: itemFieldsT.pitamSplitWithoutLabel,
+                        availableToCancelLabel: itemFieldsT.pitamSplitManageAvailableToCancelLabel,
+                        fullyPackedLabel: itemFieldsT.pitamSplitManageFullyPackedLabel,
                       }}
                       batches={manageBatches}
                       traderCategories={manageTraderCategories}

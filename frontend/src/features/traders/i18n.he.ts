@@ -492,6 +492,13 @@ export const TRADER_MOVEMENTS_I18N_HE: TraderMovementsI18n = {
 		reclassificationManageSaveLabel: 'שמור עדכון',
 		reclassificationManageSavingLabel: 'שומר...',
 		reclassificationManageDiscardEditLabel: 'חזרה',
+		availableToCancelLabel: 'זמין לביטול',
+		fullyPackedLabel: 'הכל כבר נארז',
+		partialCancelConfirmTitle: 'ביטול חלקי',
+		partialCancelConfirmMessage: (available: number, requested: number) =>
+			`ניתן לבטל רק ${available} מתוך ${requested} יחידות — השאר כבר נארז. לבטל את ${available} היחידות הזמינות?`,
+		partialCancelConfirmLabel: 'בטל את הכמות הזמינה',
+		partialCancelDismissLabel: 'סגור',
 		availableQuantityHint: (quantity: number) => `זמין: ${quantity}`,
 		adjustmentQuantityHint: 'ניתן להזין מספר שלילי לקיזוז מהמלאי או חיובי להוספה',
 		notesLabel: 'הערות',

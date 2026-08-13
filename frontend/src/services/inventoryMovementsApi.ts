@@ -144,6 +144,7 @@ export type RemainsInItalyWithdrawalBatch = {
   customerId: number | null;
   customerCategoryId: number | null;
   customerName: string | null;
+  availableQuantity: number;
   notes: string | null;
 };
 
@@ -170,8 +171,9 @@ export async function fetchRemainsInItalyWithdrawalBatches(
   );
 }
 
-export async function undoRemainsInItalyWithdrawal(id: number) {
-  return apiClient(`/inventory/remains-in-italy-withdrawal/${id}`, {
+export async function undoRemainsInItalyWithdrawal(id: number, quantity?: number) {
+  const query = quantity !== undefined ? `?quantity=${quantity}` : '';
+  return apiClient(`/inventory/remains-in-italy-withdrawal/${id}${query}`, {
     method: 'DELETE',
   });
 }
@@ -218,6 +220,7 @@ export type PitamSplitBatch = {
   affectedCount: number;
   withQty: number;
   withoutQty: number;
+  availableQuantity: number;
   notes: string | null;
 };
 
@@ -239,8 +242,9 @@ export async function fetchPitamSplitBatches(params: FetchPitamSplitBatchesParam
   });
 }
 
-export async function undoPitamSplitBatch(batchId: string) {
-  return apiClient(`/inventory/pitam-split/${batchId}`, {
+export async function undoPitamSplitBatch(batchId: string, quantity?: number) {
+  const query = quantity !== undefined ? `?quantity=${quantity}` : '';
+  return apiClient(`/inventory/pitam-split/${batchId}${query}`, {
     method: 'DELETE',
   });
 }
@@ -292,6 +296,7 @@ export type ReclassificationBatch = {
   from: ReclassificationTuple;
   to: ReclassificationTuple | null;
   quantity: number;
+  availableQuantity: number;
   notes: string | null;
 };
 
@@ -317,8 +322,9 @@ export async function fetchReclassificationBatches(
   });
 }
 
-export async function undoReclassificationBatch(id: number) {
-  return apiClient(`/inventory/reclassification/${id}`, {
+export async function undoReclassificationBatch(id: number, quantity?: number) {
+  const query = quantity !== undefined ? `?quantity=${quantity}` : '';
+  return apiClient(`/inventory/reclassification/${id}${query}`, {
     method: 'DELETE',
   });
 }

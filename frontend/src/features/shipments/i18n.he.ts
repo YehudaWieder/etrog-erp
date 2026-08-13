@@ -435,6 +435,8 @@ export const SHIPMENTS_I18N_HE = {
     pitamSplitManageSavingLabel: 'שומר...',
     pitamSplitManageDiscardEditLabel: 'חזרה',
     pitamSplitManageCloseLabel: 'סגור',
+    pitamSplitManageAvailableToCancelLabel: 'זמין לביטול',
+    pitamSplitManageFullyPackedLabel: 'הכל כבר נארז',
     boxOwnershipLabels: {
       TRADER: 'סוחר',
       CUSTOMER: 'לקוח',

@@ -124,14 +124,54 @@ export class PitamSplitService {
       orderBy: { date: 'desc' },
     });
 
-    return groupPitamSplitRowsIntoBatches(rows);
+    const summaries = groupPitamSplitRowsIntoBatches(rows);
+
+    return Promise.all(
+      summaries.map(async ({ positiveRows, ...summary }) => {
+        // SPECIFIC_TRADER/MODULO: a single party, so each row's own availability sums directly to
+        // what's still safely cancellable. GENERAL: multiple parties fanned out - partial cancel
+        // isn't safe there, so it's 0-or-full (every row must still have its full quantity available).
+        if (summary.source === 'GENERAL') {
+          const availabilities = await Promise.all(
+            positiveRows.map((row) =>
+              this.inventoryAvailabilityService.getTraderAvailableToReduce(this.prisma, {
+                seasonId: row.seasonId,
+                traderId: row.traderId,
+                traderCategoryId: row.traderCategoryId,
+                grade: row.grade,
+                pitamStatus: row.pitamStatus,
+                isModulo: row.isModulo,
+                requestedQuantity: row.quantity,
+              }),
+            ),
+          );
+          const allFullyAvailable = positiveRows.every((row, index) => availabilities[index] >= row.quantity);
+          return { ...summary, availableQuantity: allFullyAvailable ? summary.withQty + summary.withoutQty : 0 };
+        }
+
+        const availabilities = await Promise.all(
+          positiveRows.map((row) =>
+            this.inventoryAvailabilityService.getTraderAvailableToReduce(this.prisma, {
+              seasonId: row.seasonId,
+              traderId: row.traderId,
+              traderCategoryId: row.traderCategoryId,
+              grade: row.grade,
+              pitamStatus: row.pitamStatus,
+              isModulo: row.isModulo,
+              requestedQuantity: row.quantity,
+            }),
+          ),
+        );
+        return { ...summary, availableQuantity: availabilities.reduce((sum, value) => sum + value, 0) };
+      }),
+    );
   }
 
-  async undoBatch(batchId: string) {
-    return this.prisma.$transaction(async (tx) => this.deleteBatchInTx(tx, batchId));
+  async undoBatch(batchId: string, quantity?: number) {
+    return this.prisma.$transaction(async (tx) => this.deleteBatchInTx(tx, batchId, quantity));
   }
 
-  private async deleteBatchInTx(tx: Prisma.TransactionClient, batchId: string) {
+  private async deleteBatchInTx(tx: Prisma.TransactionClient, batchId: string, quantity?: number) {
     const rows = await tx.traderStock.findMany({
       where: { pitamSplitBatchId: batchId, type: MovementType.PITAM_SPLIT },
     });
@@ -141,27 +181,116 @@ export class PitamSplitService {
     }
 
     const { seasonId } = rows[0];
-
-    // Undoing removes the positive WITH_PITAM/WITHOUT_PITAM rows this batch created — assert
-    // that quantity hasn't since been consumed downstream (e.g. packed into a shipment), or the
-    // ledger would be left short.
     const positiveRows = rows.filter((row) => row.quantity > 0);
-    for (const row of positiveRows) {
-      await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
-        seasonId,
-        traderId: row.traderId,
-        traderCategoryId: row.traderCategoryId,
-        grade: row.grade,
-        pitamStatus: row.pitamStatus,
-        isModulo: row.isModulo,
-        requiredQuantity: row.quantity,
-        contextLabel: 'Undo pitam split',
-      });
+    const affectedKeys = new Set(rows.map((row) => (row.isModulo ? 'MODULO' : `TRADER:${row.traderId}`)));
+    const isGeneral = affectedKeys.size > 1;
+    const fullQuantity = positiveRows.reduce((sum, row) => sum + row.quantity, 0);
+
+    // GENERAL (multiple parties) fans the positive rows across every affected trader/modulo -
+    // partial cancel isn't safe there, so it stays all-or-nothing.
+    if (isGeneral) {
+      if (quantity !== undefined && quantity !== fullQuantity) {
+        throw new BadRequestException('לא ניתן לבטל חלקית פיצול פיתם ממקור כללי - יש לבטל את כל הכמות.');
+      }
+
+      for (const row of positiveRows) {
+        await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
+          seasonId,
+          traderId: row.traderId,
+          traderCategoryId: row.traderCategoryId,
+          grade: row.grade,
+          pitamStatus: row.pitamStatus,
+          isModulo: row.isModulo,
+          requiredQuantity: row.quantity,
+          contextLabel: 'Undo pitam split',
+        });
+      }
+
+      await tx.traderStock.deleteMany({ where: { pitamSplitBatchId: batchId } });
+      return { batchId, deletedCount: rows.length, reducedQuantity: fullQuantity };
     }
 
-    await tx.traderStock.deleteMany({ where: { pitamSplitBatchId: batchId } });
+    // Single party (SPECIFIC_TRADER/MODULO): up to two positive rows (WITH_PITAM, WITHOUT_PITAM)
+    // referencing the same MIXED anchor - a partial cancel is allocated by filling from
+    // WITH_PITAM first, spilling any remainder into WITHOUT_PITAM, each capped at its own row's
+    // independent availability (deterministic, simplest rule - not a proportional split).
+    const withRow = positiveRows.find((row) => row.pitamStatus === 'WITH_PITAM');
+    const withoutRow = positiveRows.find((row) => row.pitamStatus === 'WITHOUT_PITAM');
+    const reduceBy = quantity ?? fullQuantity;
 
-    return { batchId, deletedCount: rows.length };
+    if (reduceBy <= 0 || reduceBy > fullQuantity) {
+      throw new BadRequestException(`כמות לביטול לא תקינה: ${reduceBy} (זמין: ${fullQuantity})`);
+    }
+
+    const withAvailable = withRow
+      ? await this.inventoryAvailabilityService.getTraderAvailableToReduce(tx, {
+          seasonId,
+          traderId: withRow.traderId,
+          traderCategoryId: withRow.traderCategoryId,
+          grade: withRow.grade,
+          pitamStatus: withRow.pitamStatus,
+          isModulo: withRow.isModulo,
+          requestedQuantity: withRow.quantity,
+        })
+      : 0;
+    const withoutAvailable = withoutRow
+      ? await this.inventoryAvailabilityService.getTraderAvailableToReduce(tx, {
+          seasonId,
+          traderId: withoutRow.traderId,
+          traderCategoryId: withoutRow.traderCategoryId,
+          grade: withoutRow.grade,
+          pitamStatus: withoutRow.pitamStatus,
+          isModulo: withoutRow.isModulo,
+          requestedQuantity: withoutRow.quantity,
+        })
+      : 0;
+
+    if (reduceBy > withAvailable + withoutAvailable) {
+      throw new BadRequestException(
+        `לא ניתן לבטל ${reduceBy} יחידות: זמינות לביטול רק ${withAvailable + withoutAvailable} (השאר כבר נארז).`,
+      );
+    }
+
+    const takeFromWith = Math.min(reduceBy, withAvailable);
+    const takeFromWithout = reduceBy - takeFromWith;
+
+    const anchor = await tx.traderStock.findFirst({
+      where: { pitamSplitBatchId: batchId, type: MovementType.PITAM_SPLIT, quantity: { lt: 0 } },
+    });
+
+    let deletedCount = 0;
+
+    if (withRow && takeFromWith > 0) {
+      if (takeFromWith === withRow.quantity) {
+        await tx.traderStock.delete({ where: { id: withRow.id } });
+        deletedCount += 1;
+      } else {
+        await tx.traderStock.update({ where: { id: withRow.id }, data: { quantity: withRow.quantity - takeFromWith } });
+      }
+    }
+
+    if (withoutRow && takeFromWithout > 0) {
+      if (takeFromWithout === withoutRow.quantity) {
+        await tx.traderStock.delete({ where: { id: withoutRow.id } });
+        deletedCount += 1;
+      } else {
+        await tx.traderStock.update({
+          where: { id: withoutRow.id },
+          data: { quantity: withoutRow.quantity - takeFromWithout },
+        });
+      }
+    }
+
+    if (anchor) {
+      if (reduceBy === fullQuantity) {
+        await tx.traderStock.delete({ where: { id: anchor.id } });
+        deletedCount += 1;
+      } else {
+        await tx.traderStock.update({ where: { id: anchor.id }, data: { quantity: anchor.quantity + reduceBy } });
+      }
+    }
+
+    return { batchId, deletedCount, reducedQuantity: reduceBy };
   }
 
   // Case (א)/(ב) from the plan: a single party (one trader, or the modulo pool itself) resolving
