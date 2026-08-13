@@ -85,6 +85,9 @@ type PackingFormModalText = {
     addRowDisabledHint: string;
     totalPackedQuantityLabel: string;
   };
+  pendingRemovedItemRowsTitle: string;
+  pendingRemovedItemRowsHint: string;
+  restorePendingRemovedItemRow: string;
 };
 
 type PackingItemFieldsText = {
@@ -213,6 +216,8 @@ type PackingFormModalProps = {
   onUpdateItemRowQuantity: (id: string, pitamKey: PitamRowKey, gradeKey: string, value: string) => void;
   pendingExistingItemEdits: Record<number, string>;
   onStageExistingItemEdit: (itemId: number, value: string | null) => void;
+  removedItemGroups: { ids: number[]; label: string }[];
+  onRestoreItemGroup: (ids: number[]) => void;
   onInvalidateTraderInventory: (traderId: number, stockSource: StockSource | '') => void;
   onInvalidateAllTraderInventory: () => void;
 
@@ -277,6 +282,8 @@ export function PackingFormModal({
   onUpdateItemRowQuantity,
   pendingExistingItemEdits,
   onStageExistingItemEdit,
+  removedItemGroups,
+  onRestoreItemGroup,
   onInvalidateTraderInventory,
   onInvalidateAllTraderInventory,
   isSubmitting,
@@ -702,6 +709,24 @@ export function PackingFormModal({
             onInvalidateTraderInventory={onInvalidateTraderInventory}
             onInvalidateAllTraderInventory={onInvalidateAllTraderInventory}
           />
+        ) : null}
+
+        {isBoxSelected && removedItemGroups.length ? (
+          <div style={{ marginTop: '1rem' }}>
+            <h4 style={{ margin: '0 0 0.25rem' }}>{t.pendingRemovedItemRowsTitle}</h4>
+            <p className={gridStyles.quantityMatrixHint}>{t.pendingRemovedItemRowsHint}</p>
+            {removedItemGroups.map((group) => (
+              <div
+                key={group.ids.join('-')}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0' }}
+              >
+                <span>{group.label}</span>
+                <button type="button" className="btn btn-secondary" onClick={() => onRestoreItemGroup(group.ids)}>
+                  {t.restorePendingRemovedItemRow}
+                </button>
+              </div>
+            ))}
+          </div>
         ) : null}
 
         {error ? <p className="seasons-manager__error">{error}</p> : null}

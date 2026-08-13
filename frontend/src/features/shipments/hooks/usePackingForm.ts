@@ -85,6 +85,10 @@ export type PackingItemRowDraft = {
   // Grade x pitam-status quantity matrix, used for every other ownership (inventory-backed) row.
   quantities: GradeQuantityMatrix;
   notes: string;
+  // Ids of already-packed shipment items this row was scaffolded from (see
+  // buildInitialItemRowsFromExisting). Present only on rows seeded from existing box items — used so
+  // removing the row can stage those items for deletion instead of just hiding them from the form.
+  existingItemIds?: number[];
 };
 
 export type PackingItemRowView = {
@@ -162,6 +166,8 @@ type UsePackingFormResult = {
   updateItemRowQuantity: (id: string, pitamKey: PitamRowKey, gradeKey: string, value: string) => void;
   pendingExistingItemEdits: Record<number, string>;
   stageExistingItemEdit: (itemId: number, value: string | null) => void;
+  removedItemGroups: { ids: number[]; label: string }[];
+  restoreItemGroup: (ids: number[]) => void;
   invalidateTraderInventory: (traderId: number, stockSource: StockSource | '') => void;
   invalidateAllTraderInventory: () => void;
 
@@ -186,6 +192,108 @@ function createEmptyItemRowDraft(id: string): PackingItemRowDraft {
     quantities: createEmptyGradeQuantityMatrix(),
     notes: '',
   };
+}
+
+// Builds one scaffold draft row per already-packed combo (ownership + trader/customer + category +
+// stock source) found among a box's existing items, so the packing form shows their table right away
+// instead of requiring the user to manually recreate a matching row first. Quantities are left empty
+// on purpose: PackingItemRowsSection renders the actual packed quantities for these combos as
+// blocked/existing cells (via existingItemByCell) once a draft row with a matching identity is present.
+// CUSTOM items are skipped — they're free-text and never surface through existingItemByCell.
+function buildInitialItemRowsFromExisting(existingItems: ShipmentItemRecord[]): PackingItemRowDraft[] {
+  const draftsByIdentityKey = new Map<string, PackingItemRowDraft>();
+  let counter = 0;
+
+  for (const item of existingItems) {
+    let identityKey: string | null = null;
+    let scaffold: Partial<PackingItemRowDraft> | null = null;
+
+    if (item.ownershipType === 'TRADER' && item.traderId && item.traderCategoryId) {
+      const stockSource: StockSource = item.isPrivateSelection ? 'PRIVATE_SELECTION' : 'GENERAL';
+      identityKey = `TRADER:${item.traderId}:${stockSource}:${item.traderCategoryId}`;
+      scaffold = {
+        itemOwnership: 'TRADER',
+        stockSource,
+        traderId: String(item.traderId),
+        traderCategoryId: String(item.traderCategoryId),
+      };
+    } else if (item.ownershipType === 'CUSTOMER' && item.customerId && item.customerCategoryId) {
+      identityKey = `CUSTOMER:${item.customerId}:${item.customerCategoryId}`;
+      scaffold = {
+        itemOwnership: 'CUSTOMER',
+        customerId: String(item.customerId),
+        customerCategoryId: String(item.customerCategoryId),
+      };
+    } else if (item.ownershipType === 'GENERAL' && item.traderCategoryId) {
+      identityKey = `GENERAL:${item.traderCategoryId}`;
+      scaffold = {
+        itemOwnership: 'GENERAL',
+        traderCategoryId: String(item.traderCategoryId),
+      };
+    }
+
+    if (!identityKey || !scaffold) {
+      continue;
+    }
+
+    const existingDraft = draftsByIdentityKey.get(identityKey);
+    if (existingDraft) {
+      existingDraft.existingItemIds = [...(existingDraft.existingItemIds ?? []), item.id];
+      continue;
+    }
+
+    draftsByIdentityKey.set(identityKey, {
+      ...createEmptyItemRowDraft(`existing-packing-row-${counter++}`),
+      ...scaffold,
+      existingItemIds: [item.id],
+    });
+  }
+
+  return [...draftsByIdentityKey.values()];
+}
+
+// Groups a box's already-packed items into named "removed groups" for the pending-removal list,
+// using the same identity (ownership + trader/customer + category + stock source) as
+// buildInitialItemRowsFromExisting, so a single scaffold-row removal reliably maps back to a single
+// restorable group.
+function buildRemovedItemGroups(
+  existingItems: ShipmentItemRecord[],
+  deletionItemIds: number[],
+): { ids: number[]; label: string }[] {
+  const deletedItems = existingItems.filter((item) => deletionItemIds.includes(item.id));
+  const groupsByIdentityKey = new Map<string, { ids: number[]; label: string }>();
+
+  for (const item of deletedItems) {
+    let identityKey: string | null = null;
+    let label = '';
+
+    if (item.ownershipType === 'TRADER' && item.traderId && item.traderCategoryId) {
+      const stockSource: StockSource = item.isPrivateSelection ? 'PRIVATE_SELECTION' : 'GENERAL';
+      identityKey = `TRADER:${item.traderId}:${stockSource}:${item.traderCategoryId}`;
+      label = [item.trader?.name, item.traderCategory?.name].filter(Boolean).join(' — ');
+    } else if (item.ownershipType === 'CUSTOMER' && item.customerId && item.customerCategoryId) {
+      identityKey = `CUSTOMER:${item.customerId}:${item.customerCategoryId}`;
+      label = [item.customer?.customerName, item.customerCategory?.name, item.customerCategory?.grade]
+        .filter(Boolean)
+        .join(' — ');
+    } else if (item.ownershipType === 'GENERAL' && item.traderCategoryId) {
+      identityKey = `GENERAL:${item.traderCategoryId}`;
+      label = item.traderCategory?.name ?? '';
+    }
+
+    if (!identityKey) {
+      continue;
+    }
+
+    const existingGroup = groupsByIdentityKey.get(identityKey);
+    if (existingGroup) {
+      existingGroup.ids.push(item.id);
+    } else {
+      groupsByIdentityKey.set(identityKey, { ids: [item.id], label });
+    }
+  }
+
+  return [...groupsByIdentityKey.values()];
 }
 
 export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePackingFormProps): UsePackingFormResult {
@@ -221,6 +329,7 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
 
   const [itemRows, setItemRows] = useState<PackingItemRowDraft[]>([]);
   const [pendingExistingItemEdits, setPendingExistingItemEdits] = useState<Record<number, string>>({});
+  const [deletionItemIds, setDeletionItemIds] = useState<number[]>([]);
   const rowCounterRef = useRef(1);
 
   const [allTraderInventory, setAllTraderInventory] = useState<TraderInventoryRow[]>([]);
@@ -337,6 +446,7 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
         setSystemConfig(nextSystemConfig);
         setHasItems(boxItems.length > 0);
         setExistingBoxItems(boxItems);
+        setItemRows(buildInitialItemRowsFromExisting(boxItems));
         setBoxTotalQuantity(fullBox.totalQuantity);
 
         const boxShipment = nextShipments.find((s) => s.id === fullBox.shipmentId);
@@ -760,6 +870,7 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
     setIsShipmentShipped(false);
     setItemRows([]);
     setPendingExistingItemEdits({});
+    setDeletionItemIds([]);
     setError(null);
   }, []);
 
@@ -817,9 +928,49 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
     setItemRows((prev) => [...prev, createEmptyItemRowDraft(`packing-row-${nextId}`)]);
   }, []);
 
+  // Lets the user undo a row removal before saving: as long as the form hasn't been submitted, the
+  // deleted items are still sitting in existingBoxItems untouched, so restoring is just clearing the
+  // deletion marks (and any staged quantity edit) and re-adding a scaffold row for that combo.
+  const removedItemGroups = useMemo(
+    () => buildRemovedItemGroups(existingBoxItems, deletionItemIds),
+    [existingBoxItems, deletionItemIds],
+  );
+
+  // Removing a row scaffolded from already-packed items doesn't just hide it — it stages those items
+  // for deletion (quantity-0 edits, which packBox's itemEdits routes to a delete) so the removal is
+  // actually persisted on save, while still leaving it listed under removedItemGroups for undo.
   const removeItemRow = useCallback((id: string) => {
+    const target = itemRows.find((row) => row.id === id);
+    const idsToDelete = target?.existingItemIds ?? [];
+
+    if (idsToDelete.length) {
+      setDeletionItemIds((prev) => [...prev, ...idsToDelete]);
+      setPendingExistingItemEdits((prev) => {
+        const next = { ...prev };
+        for (const itemId of idsToDelete) {
+          next[itemId] = '0';
+        }
+        return next;
+      });
+    }
+
     setItemRows((prev) => prev.filter((row) => row.id !== id));
-  }, []);
+  }, [itemRows]);
+
+  const restoreItemGroup = useCallback((ids: number[]) => {
+    setDeletionItemIds((prev) => prev.filter((id) => !ids.includes(id)));
+    setPendingExistingItemEdits((prev) => {
+      const next = { ...prev };
+      for (const id of ids) {
+        delete next[id];
+      }
+      return next;
+    });
+    setItemRows((prev) => [
+      ...prev,
+      ...buildInitialItemRowsFromExisting(existingBoxItems.filter((item) => ids.includes(item.id))),
+    ]);
+  }, [existingBoxItems]);
 
   const updateItemRow = useCallback((id: string, updater: Partial<PackingItemRowDraft>) => {
     setItemRows((prev) => prev.map((row) => (row.id === id ? { ...row, ...updater } : row)));
@@ -1108,6 +1259,8 @@ export function usePackingForm({ isOpen, t, itemsT, onSuccess, onClose }: UsePac
     updateItemRowQuantity,
     pendingExistingItemEdits,
     stageExistingItemEdit,
+    removedItemGroups,
+    restoreItemGroup,
     invalidateTraderInventory,
     invalidateAllTraderInventory,
 

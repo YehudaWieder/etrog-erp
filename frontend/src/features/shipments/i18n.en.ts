@@ -297,6 +297,9 @@ export const SHIPMENTS_I18N_EN = {
       addRowDisabledHint: 'Select a category and enter a quantity for the current item before adding another',
       totalPackedQuantityLabel: 'Total packed quantity',
     },
+    pendingRemovedItemRowsTitle: 'Removed items (not saved yet)',
+    pendingRemovedItemRowsHint: 'A removed item can be restored as long as the form hasn\'t been saved.',
+    restorePendingRemovedItemRow: 'Restore',
   },
   deleteBoxDialog: {
     title: (num: number) => `Delete Box ${num}`,

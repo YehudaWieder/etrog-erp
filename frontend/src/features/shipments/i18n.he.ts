@@ -299,6 +299,9 @@ export const SHIPMENTS_I18N_HE = {
       addRowDisabledHint: 'יש לבחור קטגוריה ולהזין כמות לפריט הנוכחי לפני הוספת פריט נוסף',
       totalPackedQuantityLabel: 'סך הכל נארז',
     },
+    pendingRemovedItemRowsTitle: 'פריטים שהוסרו (טרם נשמר)',
+    pendingRemovedItemRowsHint: 'ניתן לשחזר פריט שהוסר כל עוד לא נשמר הטופס.',
+    restorePendingRemovedItemRow: 'שחזור',
   },
   deleteBoxDialog: {
     title: (num: number) => `מחיקת קרטון ${num}`,
