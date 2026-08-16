@@ -175,8 +175,8 @@ export class ReclassificationService {
     return Array.from(groups.values());
   }
 
-  async undoBatch(anchorId: number, quantity?: number) {
-    return this.prisma.$transaction(async (tx) => this.deleteBatchInTx(tx, anchorId, quantity));
+  async undoBatch(anchorId: number) {
+    return this.prisma.$transaction(async (tx) => this.deleteBatchInTx(tx, anchorId));
   }
 
   async updateBatch(anchorId: number, dto: ResolveReclassificationDto, actorId: number) {
@@ -428,8 +428,9 @@ export class ReclassificationService {
 
   // Shared by undoBatch and updateBatch. Asserts every positive row the batch created hasn't
   // since been consumed downstream (e.g. packed into a shipment), then permanently deletes the
-  // anchor row and everything linked to it via MovementReferenceId.
-  private async deleteBatchInTx(tx: Prisma.TransactionClient, anchorId: number, quantity?: number) {
+  // anchor row and everything linked to it via MovementReferenceId. All-or-nothing: cancellation
+  // is only allowed while every positive row is still fully unshipped - no partial cancel.
+  private async deleteBatchInTx(tx: Prisma.TransactionClient, anchorId: number) {
     const anchor = await tx.traderStock.findFirst({
       where: { id: anchorId, type: MovementType.RECLASSIFICATION, quantity: { lt: 0 }, isDeleted: false },
     });
@@ -443,71 +444,27 @@ export class ReclassificationService {
     });
 
     const positiveRows = linked.filter((row) => row.quantity > 0);
+    const fullQuantity = positiveRows.reduce((sum, row) => sum + row.quantity, 0);
 
-    // A single positive "to" row tagged isFromPrivateSelection is the signature of a landing on one
-    // specific trader's private selection (SPECIFIC_TRADER's own to-row, or GENERAL's toTraderId) -
-    // the only shape where partial-cancel is safe (reduce that one row in place). Ordinary
-    // share-splits (GENERAL/REMAINS_IN_ITALY/toGeneral), including the pre-existing edge case of a
-    // single-trader-100%-share category, never set that flag and stay all-or-nothing.
-    const isSingleOwnerLanding = positiveRows.length === 1 && positiveRows[0].isFromPrivateSelection === true;
-
-    if (!isSingleOwnerLanding) {
-      const fullQuantity = positiveRows.reduce((sum, row) => sum + row.quantity, 0);
-      if (quantity !== undefined && quantity !== fullQuantity) {
-        throw new BadRequestException('לא ניתן לבטל חלקית שינוי סיווג ושיוך ממקור כללי/נשאר באיטליה - יש לבטל את כל הכמות.');
-      }
-
-      for (const row of positiveRows) {
-        await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
-          seasonId: row.seasonId,
-          traderId: row.traderId,
-          traderCategoryId: row.traderCategoryId,
-          grade: row.grade,
-          pitamStatus: row.pitamStatus,
-          isModulo: row.isModulo,
-          requiredQuantity: row.quantity,
-          contextLabel: 'ביטול שינוי סיווג ושיוך',
-        });
-      }
-
-      await tx.traderStock.deleteMany({ where: { id: anchorId } });
-      if (linked.length > 0) {
-        await tx.traderStock.deleteMany({ where: { MovementReferenceId: anchorId } });
-      }
-
-      return { anchorId, deletedCount: 1 + linked.length, reducedQuantity: fullQuantity };
+    for (const row of positiveRows) {
+      await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
+        seasonId: row.seasonId,
+        traderId: row.traderId,
+        traderCategoryId: row.traderCategoryId,
+        grade: row.grade,
+        pitamStatus: row.pitamStatus,
+        isModulo: row.isModulo,
+        requiredQuantity: row.quantity,
+        contextLabel: 'ביטול שינוי סיווג ושיוך',
+      });
     }
 
-    // Single private-selection landing row - safe to reduce in place for a partial cancel.
-    const toRow = positiveRows[0];
-    const fullQuantity = toRow?.quantity ?? 0;
-    const reduceBy = quantity ?? fullQuantity;
-
-    if (reduceBy <= 0 || reduceBy > fullQuantity) {
-      throw new BadRequestException(`כמות לביטול לא תקינה: ${reduceBy} (זמין: ${fullQuantity})`);
-    }
-
-    await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
-      seasonId: toRow.seasonId,
-      traderId: toRow.traderId,
-      traderCategoryId: toRow.traderCategoryId,
-      grade: toRow.grade,
-      pitamStatus: toRow.pitamStatus,
-      isModulo: toRow.isModulo,
-      requiredQuantity: reduceBy,
-      contextLabel: 'ביטול שינוי סיווג ושיוך',
-    });
-
-    if (reduceBy === fullQuantity) {
-      await tx.traderStock.deleteMany({ where: { id: anchorId } });
+    await tx.traderStock.deleteMany({ where: { id: anchorId } });
+    if (linked.length > 0) {
       await tx.traderStock.deleteMany({ where: { MovementReferenceId: anchorId } });
-      return { anchorId, deletedCount: 1 + linked.length, reducedQuantity: reduceBy };
     }
 
-    await tx.traderStock.update({ where: { id: toRow.id }, data: { quantity: toRow.quantity - reduceBy } });
-    await tx.traderStock.update({ where: { id: anchor.id }, data: { quantity: anchor.quantity + reduceBy } });
-
-    return { anchorId, deletedCount: 0, reducedQuantity: reduceBy };
+    return { anchorId, deletedCount: 1 + linked.length, reducedQuantity: fullQuantity };
   }
 
   private inferSource(

@@ -161,8 +161,8 @@ export class RemainsInItalyWithdrawalService {
     );
   }
 
-  async undoWithdrawal(anchorId: number, quantity?: number) {
-    return this.prisma.$transaction(async (tx) => this.deleteWithdrawalInTx(tx, anchorId, quantity));
+  async undoWithdrawal(anchorId: number) {
+    return this.prisma.$transaction(async (tx) => this.deleteWithdrawalInTx(tx, anchorId));
   }
 
   async updateWithdrawal(anchorId: number, dto: CreateRemainsInItalyWithdrawalDto, actorId: number) {
@@ -266,7 +266,9 @@ export class RemainsInItalyWithdrawalService {
   // Shared by undoWithdrawal and updateWithdrawal (delete-then-recreate). Asserts every positive
   // (destination-side) row this withdrawal created hasn't since been consumed downstream (e.g.
   // packed into a shipment) before permanently deleting the anchor row and everything it created.
-  private async deleteWithdrawalInTx(tx: Prisma.TransactionClient, anchorId: number, quantity?: number) {
+  // All-or-nothing for every destination type: cancellation is only allowed while the full
+  // withdrawn quantity is still unshipped - no partial cancel.
+  private async deleteWithdrawalInTx(tx: Prisma.TransactionClient, anchorId: number) {
     const anchor = await tx.traderStock.findFirst({
       where: { id: anchorId, type: MovementType.REMAINS_IN_ITALY, quantity: { lt: 0 }, isDeleted: false },
     });
@@ -288,13 +290,7 @@ export class RemainsInItalyWithdrawalService {
       customerRows.length > 0 ? 'CUSTOMER' : traderRows.length === 1 ? 'TRADER' : 'GENERAL';
     const fullQuantity = Math.abs(anchor.quantity);
 
-    // GENERAL fans the destination across multiple trader rows - partial cancel isn't safe there,
-    // so it stays all-or-nothing.
     if (destinationType === 'GENERAL') {
-      if (quantity !== undefined && quantity !== fullQuantity) {
-        throw new BadRequestException('לא ניתן לבטל חלקית הוצאה מנשאר באיטליה עם יעד כללי - יש לבטל את כל הכמות.');
-      }
-
       for (const row of traderRows.filter((row) => row.quantity > 0)) {
         await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
           seasonId: row.seasonId,
@@ -316,12 +312,6 @@ export class RemainsInItalyWithdrawalService {
       return { anchorId, deletedCount: 1 + traderRows.length, reducedQuantity: fullQuantity };
     }
 
-    // TRADER/CUSTOMER: a single positive destination row - safe to reduce in place for a partial cancel.
-    const reduceBy = quantity ?? fullQuantity;
-    if (reduceBy <= 0 || reduceBy > fullQuantity) {
-      throw new BadRequestException(`כמות לביטול לא תקינה: ${reduceBy} (זמין: ${fullQuantity})`);
-    }
-
     if (destinationType === 'TRADER') {
       const row = traderRows[0];
       await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
@@ -331,19 +321,13 @@ export class RemainsInItalyWithdrawalService {
         grade: row.grade,
         pitamStatus: row.pitamStatus,
         isModulo: row.isModulo,
-        requiredQuantity: reduceBy,
+        requiredQuantity: fullQuantity,
         contextLabel: 'ביטול הוצאה מנשאר באיטליה',
       });
 
-      if (reduceBy === fullQuantity) {
-        await tx.traderStock.deleteMany({ where: { id: anchorId } });
-        await tx.traderStock.deleteMany({ where: { MovementReferenceId: anchorId } });
-        return { anchorId, deletedCount: 2, reducedQuantity: reduceBy };
-      }
-
-      await tx.traderStock.update({ where: { id: row.id }, data: { quantity: row.quantity - reduceBy } });
-      await tx.traderStock.update({ where: { id: anchor.id }, data: { quantity: anchor.quantity + reduceBy } });
-      return { anchorId, deletedCount: 0, reducedQuantity: reduceBy };
+      await tx.traderStock.deleteMany({ where: { id: anchorId } });
+      await tx.traderStock.deleteMany({ where: { MovementReferenceId: anchorId } });
+      return { anchorId, deletedCount: 2, reducedQuantity: fullQuantity };
     }
 
     // CUSTOMER
@@ -353,19 +337,13 @@ export class RemainsInItalyWithdrawalService {
       customerId: row.customerId,
       customerCategoryId: row.customerCategoryId,
       pitamStatus: row.pitamStatus,
-      requiredQuantity: reduceBy,
+      requiredQuantity: fullQuantity,
       contextLabel: 'ביטול הוצאה מנשאר באיטליה',
     });
 
-    if (reduceBy === fullQuantity) {
-      await tx.traderStock.deleteMany({ where: { id: anchorId } });
-      await tx.customerAllocation.deleteMany({ where: { MovementReferenceId: anchorId } });
-      return { anchorId, deletedCount: 2, reducedQuantity: reduceBy };
-    }
-
-    await tx.customerAllocation.update({ where: { id: row.id }, data: { quantity: row.quantity - reduceBy } });
-    await tx.traderStock.update({ where: { id: anchor.id }, data: { quantity: anchor.quantity + reduceBy } });
-    return { anchorId, deletedCount: 0, reducedQuantity: reduceBy };
+    await tx.traderStock.deleteMany({ where: { id: anchorId } });
+    await tx.customerAllocation.deleteMany({ where: { MovementReferenceId: anchorId } });
+    return { anchorId, deletedCount: 2, reducedQuantity: fullQuantity };
   }
 
   private validate(dto: CreateRemainsInItalyWithdrawalDto) {

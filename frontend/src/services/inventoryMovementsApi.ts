@@ -191,9 +191,8 @@ export async function fetchRemainsInItalyWithdrawalBatches(
   );
 }
 
-export async function undoRemainsInItalyWithdrawal(id: number, quantity?: number) {
-  const query = quantity !== undefined ? `?quantity=${quantity}` : '';
-  return apiClient(`/inventory/remains-in-italy-withdrawal/${id}${query}`, {
+export async function undoRemainsInItalyWithdrawal(id: number) {
+  return apiClient(`/inventory/remains-in-italy-withdrawal/${id}`, {
     method: 'DELETE',
   });
 }
@@ -262,9 +261,8 @@ export async function fetchPitamSplitBatches(params: FetchPitamSplitBatchesParam
   });
 }
 
-export async function undoPitamSplitBatch(batchId: string, quantity?: number) {
-  const query = quantity !== undefined ? `?quantity=${quantity}` : '';
-  return apiClient(`/inventory/pitam-split/${batchId}${query}`, {
+export async function undoPitamSplitBatch(batchId: string) {
+  return apiClient(`/inventory/pitam-split/${batchId}`, {
     method: 'DELETE',
   });
 }
@@ -346,9 +344,8 @@ export async function fetchReclassificationBatches(
   });
 }
 
-export async function undoReclassificationBatch(id: number, quantity?: number) {
-  const query = quantity !== undefined ? `?quantity=${quantity}` : '';
-  return apiClient(`/inventory/reclassification/${id}${query}`, {
+export async function undoReclassificationBatch(id: number) {
+  return apiClient(`/inventory/reclassification/${id}`, {
     method: 'DELETE',
   });
 }

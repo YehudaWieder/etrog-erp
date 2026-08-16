@@ -384,16 +384,14 @@ export class InventoryController {
 	@ApiOperation({
 		summary:
 			'Undo a pitam split batch: permanently deletes every ledger row it created, resolving MIXED stock back to what it was before the split. ' +
-			'Fails if the WITH_PITAM/WITHOUT_PITAM stock it created has since been consumed downstream (e.g. packed into a shipment). ' +
-			'For single-party (SPECIFIC_TRADER/MODULO) batches, an optional partial quantity can be passed to cancel only the still-unpacked portion; GENERAL-source batches must be cancelled in full.',
+			'Fails if the WITH_PITAM/WITHOUT_PITAM stock it created has since been consumed downstream (e.g. packed into a shipment) - the batch must be fully unshipped to be cancelled.',
 	})
 	@ApiParam({ name: 'batchId', type: String })
-	@ApiQuery({ name: 'quantity', type: Number, required: false, description: 'Partial quantity to cancel; omit to cancel the full batch. GENERAL-source batches reject any value other than the full quantity.' })
-	@ApiResponse({ status: 200, description: 'Pitam split batch undone (rows permanently deleted or reduced).' })
+	@ApiResponse({ status: 200, description: 'Pitam split batch undone (rows permanently deleted).' })
 	@ApiResponse({ status: 400, description: 'Split stock was already partially consumed and can no longer be undone.' })
 	@ApiResponse({ status: 404, description: 'Batch not found.' })
-	undoPitamSplit(@Param('batchId') batchId: string, @Query('quantity') quantity?: string) {
-		return this.pitamSplitService.undoBatch(batchId, parseOptionalInt(quantity));
+	undoPitamSplit(@Param('batchId') batchId: string) {
+		return this.pitamSplitService.undoBatch(batchId);
 	}
 
 	@Put('pitam-split/:batchId')
@@ -507,16 +505,14 @@ export class InventoryController {
 	@ApiOperation({
 		summary:
 			'Undo a remains-in-Italy withdrawal: permanently deletes the negative REMAINS_IN_ITALY row and everything it created at its destination. ' +
-			'Fails if that destination stock has since been consumed downstream (e.g. packed into a shipment). ' +
-			'For TRADER/CUSTOMER destinations, an optional partial quantity can be passed to cancel only the still-unpacked portion; GENERAL destinations must be cancelled in full.',
+			'Fails if that destination stock has since been consumed downstream (e.g. packed into a shipment) - the withdrawal must be fully unshipped to be cancelled.',
 	})
 	@ApiParam({ name: 'id', type: Number })
-	@ApiQuery({ name: 'quantity', type: Number, required: false, description: 'Partial quantity to cancel; omit to cancel the full withdrawal. GENERAL-destination withdrawals reject any value other than the full quantity.' })
-	@ApiResponse({ status: 200, description: 'Withdrawal undone (rows permanently deleted or reduced).' })
+	@ApiResponse({ status: 200, description: 'Withdrawal undone (rows permanently deleted).' })
 	@ApiResponse({ status: 400, description: 'Destination stock was already partially consumed and can no longer be undone.' })
 	@ApiResponse({ status: 404, description: 'Withdrawal not found.' })
-	undoRemainsInItalyWithdrawal(@Param('id', ParseIntPipe) id: number, @Query('quantity') quantity?: string) {
-		return this.remainsInItalyWithdrawalService.undoWithdrawal(id, parseOptionalInt(quantity));
+	undoRemainsInItalyWithdrawal(@Param('id', ParseIntPipe) id: number) {
+		return this.remainsInItalyWithdrawalService.undoWithdrawal(id);
 	}
 
 	@Put('remains-in-italy-withdrawal/:id')
@@ -680,16 +676,14 @@ export class InventoryController {
 	@ApiOperation({
 		summary:
 			'Undo a reclassification batch: permanently deletes every ledger row it created. ' +
-			'Fails if the stock it created has since been consumed downstream (e.g. packed into a shipment). ' +
-			'When the batch landed as a single row in one trader\'s private selection (SPECIFIC_TRADER, or GENERAL with toTraderId), an optional partial quantity can be passed to cancel only the still-unpacked portion; share-split batches (plain GENERAL, REMAINS_IN_ITALY, toRemainsInItaly, toGeneral) must be cancelled in full.',
+			'Fails if the stock it created has since been consumed downstream (e.g. packed into a shipment) - the batch must be fully unshipped to be cancelled.',
 	})
 	@ApiParam({ name: 'id', type: Number })
-	@ApiQuery({ name: 'quantity', type: Number, required: false, description: 'Partial quantity to cancel; omit to cancel the full batch. Share-split batches reject any value other than the full quantity.' })
-	@ApiResponse({ status: 200, description: 'Reclassification batch undone (rows permanently deleted or reduced).' })
+	@ApiResponse({ status: 200, description: 'Reclassification batch undone (rows permanently deleted).' })
 	@ApiResponse({ status: 400, description: 'Created stock was already partially consumed and can no longer be undone.' })
 	@ApiResponse({ status: 404, description: 'Batch not found.' })
-	undoReclassification(@Param('id', ParseIntPipe) id: number, @Query('quantity') quantity?: string) {
-		return this.reclassificationService.undoBatch(id, parseOptionalInt(quantity));
+	undoReclassification(@Param('id', ParseIntPipe) id: number) {
+		return this.reclassificationService.undoBatch(id);
 	}
 
 	@Put('reclassification/:id')

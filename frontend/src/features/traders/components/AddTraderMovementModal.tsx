@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { FaArrowRight, FaArrowLeft } from 'react-icons/fa6';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
 import { TopLoadingBar } from '../../../components/ui/TopLoadingBar';
-import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import type { AppLang } from '../i18n';
 import { getTraderMovementsI18n } from '../i18n';
 import type { Trader } from '../../../services/tradersApi';
@@ -181,9 +180,6 @@ export function AddTraderMovementModal({
   const [pitamManageEditWithoutValue, setPitamManageEditWithoutValue] = useState('');
   const [pitamManageEditError, setPitamManageEditError] = useState('');
   const [pitamManageActionSubmitting, setPitamManageActionSubmitting] = useState(false);
-  // Only shown when the selected batch is partially packed - confirms cancelling the still-unpacked
-  // remainder instead of silently reducing the requested amount.
-  const [pitamManagePartialCancelConfirmOpen, setPitamManagePartialCancelConfirmOpen] = useState(false);
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -208,7 +204,6 @@ export function AddTraderMovementModal({
   const [riwManageEditQuantity, setRiwManageEditQuantity] = useState('');
   const [riwManageEditError, setRiwManageEditError] = useState('');
   const [riwManageActionSubmitting, setRiwManageActionSubmitting] = useState(false);
-  const [riwManagePartialCancelConfirmOpen, setRiwManagePartialCancelConfirmOpen] = useState(false);
   const [reclassificationSource, setReclassificationSource] = useState<ReclassificationSource | ''>('');
   // "To" side of a reclassification is never constrained by existing stock (unlike the "from" side),
   // so it needs its own state distinct from the shared traderCategoryId/grade/pitamStatus used for "from".
@@ -234,7 +229,6 @@ export function AddTraderMovementModal({
   const [reclassManageEditQuantity, setReclassManageEditQuantity] = useState('');
   const [reclassManageEditError, setReclassManageEditError] = useState('');
   const [reclassManageActionSubmitting, setReclassManageActionSubmitting] = useState(false);
-  const [reclassManagePartialCancelConfirmOpen, setReclassManagePartialCancelConfirmOpen] = useState(false);
 
   // ASSIGNED and PITAM_SPLIT (MODULO source) allocate from MODULO stock only.
   useEffect(() => {
@@ -1115,25 +1109,18 @@ export function AddTraderMovementModal({
   };
 
   const handleCancelSelectedManageBatch = () => {
-    if (!selectedManageBatch || selectedManageBatch.availableQuantity === 0) return;
-    const fullQuantity = selectedManageBatch.withQty + selectedManageBatch.withoutQty;
-    if (selectedManageBatch.availableQuantity < fullQuantity) {
-      setPitamManagePartialCancelConfirmOpen(true);
-      return;
-    }
+    const fullQuantity = selectedManageBatch ? selectedManageBatch.withQty + selectedManageBatch.withoutQty : 0;
+    if (!selectedManageBatch || selectedManageBatch.availableQuantity < fullQuantity) return;
     performCancelSelectedManageBatch();
   };
 
   const performCancelSelectedManageBatch = async () => {
     if (!selectedManageBatch) return;
-    const fullQuantity = selectedManageBatch.withQty + selectedManageBatch.withoutQty;
-    const isPartial = selectedManageBatch.availableQuantity < fullQuantity;
     setError(null);
     try {
       setPitamManageActionSubmitting(true);
-      await undoPitamSplitBatch(selectedManageBatch.batchId, isPartial ? selectedManageBatch.availableQuantity : undefined);
+      await undoPitamSplitBatch(selectedManageBatch.batchId);
       setPitamSplitUndoBatchId('');
-      setPitamManagePartialCancelConfirmOpen(false);
       reloadPitamSplitUndoBatches();
       onSaved();
     } catch (cancelError) {
@@ -1204,23 +1191,17 @@ export function AddTraderMovementModal({
   };
 
   const handleCancelSelectedRiwBatch = () => {
-    if (!selectedRiwManageBatch || selectedRiwManageBatch.availableQuantity === 0) return;
-    if (selectedRiwManageBatch.availableQuantity < selectedRiwManageBatch.quantity) {
-      setRiwManagePartialCancelConfirmOpen(true);
-      return;
-    }
+    if (!selectedRiwManageBatch || selectedRiwManageBatch.availableQuantity < selectedRiwManageBatch.quantity) return;
     performCancelSelectedRiwBatch();
   };
 
   const performCancelSelectedRiwBatch = async () => {
     if (!selectedRiwManageBatch) return;
-    const isPartial = selectedRiwManageBatch.availableQuantity < selectedRiwManageBatch.quantity;
     setError(null);
     try {
       setRiwManageActionSubmitting(true);
-      await undoRemainsInItalyWithdrawal(selectedRiwManageBatch.id, isPartial ? selectedRiwManageBatch.availableQuantity : undefined);
+      await undoRemainsInItalyWithdrawal(selectedRiwManageBatch.id);
       setRiwManageBatchId('');
-      setRiwManagePartialCancelConfirmOpen(false);
       reloadRiwBatches();
       onSaved();
     } catch (cancelError) {
@@ -1295,23 +1276,17 @@ export function AddTraderMovementModal({
   };
 
   const handleCancelSelectedReclassBatch = () => {
-    if (!selectedReclassManageBatch || selectedReclassManageBatch.availableQuantity === 0) return;
-    if (selectedReclassManageBatch.availableQuantity < selectedReclassManageBatch.quantity) {
-      setReclassManagePartialCancelConfirmOpen(true);
-      return;
-    }
+    if (!selectedReclassManageBatch || selectedReclassManageBatch.availableQuantity < selectedReclassManageBatch.quantity) return;
     performCancelSelectedReclassBatch();
   };
 
   const performCancelSelectedReclassBatch = async () => {
     if (!selectedReclassManageBatch) return;
-    const isPartial = selectedReclassManageBatch.availableQuantity < selectedReclassManageBatch.quantity;
     setError(null);
     try {
       setReclassManageActionSubmitting(true);
-      await undoReclassificationBatch(selectedReclassManageBatch.id, isPartial ? selectedReclassManageBatch.availableQuantity : undefined);
+      await undoReclassificationBatch(selectedReclassManageBatch.id);
       setReclassManageBatchId('');
-      setReclassManagePartialCancelConfirmOpen(false);
       reloadReclassificationBatches();
       onSaved();
     } catch (cancelError) {
@@ -3331,8 +3306,14 @@ export function AddTraderMovementModal({
                 onClick={handleCancelSelectedManageBatch}
                 isLoading={pitamManageActionSubmitting}
                 loadingText={f.pitamSplitManageCancelingLabel}
-                disabled={selectedManageBatch.availableQuantity === 0}
-                title={selectedManageBatch.availableQuantity === 0 ? f.fullyPackedLabel : undefined}
+                disabled={selectedManageBatch.availableQuantity < selectedManageBatch.withQty + selectedManageBatch.withoutQty}
+                title={
+                  selectedManageBatch.availableQuantity === 0
+                    ? f.fullyPackedLabel
+                    : selectedManageBatch.availableQuantity < selectedManageBatch.withQty + selectedManageBatch.withoutQty
+                      ? f.cancelRequiresFullAvailabilityLabel
+                      : undefined
+                }
               >
                 {f.pitamSplitManageCancelSplitLabel}
               </SubmitButton>
@@ -3370,8 +3351,14 @@ export function AddTraderMovementModal({
                 onClick={handleCancelSelectedRiwBatch}
                 isLoading={riwManageActionSubmitting}
                 loadingText={f.riwManageCancelingLabel}
-                disabled={selectedRiwManageBatch.availableQuantity === 0}
-                title={selectedRiwManageBatch.availableQuantity === 0 ? f.fullyPackedLabel : undefined}
+                disabled={selectedRiwManageBatch.availableQuantity < selectedRiwManageBatch.quantity}
+                title={
+                  selectedRiwManageBatch.availableQuantity === 0
+                    ? f.fullyPackedLabel
+                    : selectedRiwManageBatch.availableQuantity < selectedRiwManageBatch.quantity
+                      ? f.cancelRequiresFullAvailabilityLabel
+                      : undefined
+                }
               >
                 {f.riwManageCancelLabel}
               </SubmitButton>
@@ -3409,8 +3396,14 @@ export function AddTraderMovementModal({
                 onClick={handleCancelSelectedReclassBatch}
                 isLoading={reclassManageActionSubmitting}
                 loadingText={f.reclassificationManageCancelingLabel}
-                disabled={selectedReclassManageBatch.availableQuantity === 0}
-                title={selectedReclassManageBatch.availableQuantity === 0 ? f.fullyPackedLabel : undefined}
+                disabled={selectedReclassManageBatch.availableQuantity < selectedReclassManageBatch.quantity}
+                title={
+                  selectedReclassManageBatch.availableQuantity === 0
+                    ? f.fullyPackedLabel
+                    : selectedReclassManageBatch.availableQuantity < selectedReclassManageBatch.quantity
+                      ? f.cancelRequiresFullAvailabilityLabel
+                      : undefined
+                }
               >
                 {f.reclassificationManageCancelLabel}
               </SubmitButton>
@@ -3453,45 +3446,6 @@ export function AddTraderMovementModal({
           ) : null}
         </div>
       </div>
-      {selectedManageBatch ? (
-        <ConfirmDialog
-          open={pitamManagePartialCancelConfirmOpen}
-          title={f.partialCancelConfirmTitle}
-          message={f.partialCancelConfirmMessage(selectedManageBatch.availableQuantity, selectedManageBatch.withQty + selectedManageBatch.withoutQty)}
-          confirmLabel={f.partialCancelConfirmLabel}
-          cancelLabel={f.partialCancelDismissLabel}
-          onConfirm={performCancelSelectedManageBatch}
-          onCancel={() => setPitamManagePartialCancelConfirmOpen(false)}
-          isConfirming={pitamManageActionSubmitting}
-          confirmingLabel={f.pitamSplitManageCancelingLabel}
-        />
-      ) : null}
-      {selectedRiwManageBatch ? (
-        <ConfirmDialog
-          open={riwManagePartialCancelConfirmOpen}
-          title={f.partialCancelConfirmTitle}
-          message={f.partialCancelConfirmMessage(selectedRiwManageBatch.availableQuantity, selectedRiwManageBatch.quantity)}
-          confirmLabel={f.partialCancelConfirmLabel}
-          cancelLabel={f.partialCancelDismissLabel}
-          onConfirm={performCancelSelectedRiwBatch}
-          onCancel={() => setRiwManagePartialCancelConfirmOpen(false)}
-          isConfirming={riwManageActionSubmitting}
-          confirmingLabel={f.riwManageCancelingLabel}
-        />
-      ) : null}
-      {selectedReclassManageBatch ? (
-        <ConfirmDialog
-          open={reclassManagePartialCancelConfirmOpen}
-          title={f.partialCancelConfirmTitle}
-          message={f.partialCancelConfirmMessage(selectedReclassManageBatch.availableQuantity, selectedReclassManageBatch.quantity)}
-          confirmLabel={f.partialCancelConfirmLabel}
-          cancelLabel={f.partialCancelDismissLabel}
-          onConfirm={performCancelSelectedReclassBatch}
-          onCancel={() => setReclassManagePartialCancelConfirmOpen(false)}
-          isConfirming={reclassManageActionSubmitting}
-          confirmingLabel={f.reclassificationManageCancelingLabel}
-        />
-      ) : null}
     </div>
   );
 }

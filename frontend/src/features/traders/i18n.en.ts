@@ -497,11 +497,7 @@ export const TRADER_MOVEMENTS_I18N_EN: TraderMovementsI18n = {
 		reclassificationManageDiscardEditLabel: 'Back',
 		availableToCancelLabel: 'Available to cancel',
 		fullyPackedLabel: 'Fully packed',
-		partialCancelConfirmTitle: 'Partial cancellation',
-		partialCancelConfirmMessage: (available: number, requested: number) =>
-			`Only ${available} out of ${requested} units are still available to cancel — the rest has already been packed. Cancel the available ${available} units?`,
-		partialCancelConfirmLabel: 'Cancel available amount',
-		partialCancelDismissLabel: 'Close',
+		cancelRequiresFullAvailabilityLabel: 'Cannot cancel - part of this quantity is already packed. Cancellation is only allowed while the full quantity is available.',
 		availableQuantityHint: (quantity: number) => `Available: ${quantity}`,
 		adjustmentQuantityHint: 'Enter a negative number to deduct from stock or a positive number to add',
 		notesLabel: 'Notes',
