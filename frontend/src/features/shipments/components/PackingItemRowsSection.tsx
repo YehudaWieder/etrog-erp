@@ -142,10 +142,13 @@ export function PackingItemRowsSection({
   const isCustomBox = boxOwnershipType === 'CUSTOM';
   const [didTryAddRow, setDidTryAddRow] = useState(false);
   const lastRow = rows[rows.length - 1];
+  const lastRowHasExistingItem = lastRow
+    ? Object.values(lastRow.existingItemByCell).some((gradeMap) => Object.keys(gradeMap).length > 0)
+    : false;
   const lastRowHasQuantity = lastRow
     ? lastRow.isCustomFreeText
       ? Number(lastRow.draft.quantity) > 0
-      : !isMatrixEmpty(lastRow.draft.quantities)
+      : !isMatrixEmpty(lastRow.draft.quantities) || lastRowHasExistingItem
     : true;
   const canAddRow = !lastRow || (lastRow.hasCategorySelected && lastRowHasQuantity);
 
