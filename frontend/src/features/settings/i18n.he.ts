@@ -7,7 +7,8 @@ export const SETTINGS_I18N_HE: SettingsI18n = {
     { id: 'shipments', label: 'משלוחים', icon: 'fa-truck', href: '/shipments/shipment-items-summary' },
     { id: 'partners', label: 'מלאי סוחרים', icon: 'fa-handshake' },
     { id: 'customers', label: 'מלאי לקוחות', icon: 'fa-users' },
-    { id: 'workers', label: 'עובדים', icon: 'fa-person' },
+    { id: 'workers', label: 'קטיף א"י', icon: 'fa-person' },
+    { id: 'israel-shipments', label: 'משלוחים א"י', icon: 'fa-truck-fast' },
     { id: 'payments', label: 'הוצאות ותשלומים', icon: 'fa-money-bill' },
   ],
   pageTitle: 'הגדרות',
@@ -84,6 +85,18 @@ export const SETTINGS_I18N_HE: SettingsI18n = {
       items: [
         { id: 'customers', label: 'לקוחות', href: '/settings/customers', icon: 'fa-users' },
         { id: 'customerCategories', label: 'קטגוריות לקוחות', href: '/settings/customers/categories', icon: 'fa-tag' },
+      ],
+    },
+    {
+      id: 'israelHarvest',
+      title: 'הגדרות קטיף א"י',
+      href: '/settings/israel-harvest/sellers-fields',
+      icon: 'fa-leaf',
+      items: [
+        { id: 'harvestSellersFields', label: 'מוכרים/שדות', href: '/settings/israel-harvest/sellers-fields', icon: 'fa-user-tie' },
+        { id: 'harvestSellerCategories', label: 'קטגוריות מוכר', href: '/settings/israel-harvest/seller-categories', icon: 'fa-tag' },
+        { id: 'harvestSortingCategories', label: 'קטגוריות מיון', href: '/settings/israel-harvest/sorting-categories', icon: 'fa-layer-group' },
+        { id: 'harvestCategoryGrades', label: 'דרגות לקטגוריות', href: '/settings/israel-harvest/grades', icon: 'fa-star' },
       ],
     },
   ],

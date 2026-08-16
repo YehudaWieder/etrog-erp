@@ -11,6 +11,8 @@ import { useSettingsHeaderState } from './hooks/useSettingsHeaderState';
 import { useSettingsPreferences } from './hooks/useSettingsPreferences';
 import { normalizeSettingsChildId } from './utils/normalizeSettingsChildId.util';
 import { renderSettingsActiveChild } from './utils/settingsChildRenderers.util';
+import { IsraelHarvestSettingsSection } from './israelHarvestSettings/IsraelHarvestSettingsSection';
+import { getIsraelHarvestSettingsChildId, getIsraelHarvestSettingsTitle } from './israelHarvestSettings/israelHarvestSettings.i18n';
 import { fetchSeasons } from '../../store/seasonsSlice';
 import type { AppDispatch, RootState } from '../../store';
 import feedbackStyles from './styles/SettingsWorkspaceFeedback.module.css';
@@ -63,6 +65,7 @@ export default function SettingsPage(): JSX.Element {
   }, [navigate]);
 
   const t = getSettingsI18n(lang);
+  const isIsraelHarvestSettings = location.pathname.toLowerCase().includes('/settings/israel-harvest');
   const isManager = isManagerRole(currentUser?.role);
   const baseSidebarSections = isManager ? t.sidebarManager : t.sidebarWorker;
   const sidebarSections = useMemo<SidebarSection[]>(() => {
@@ -73,7 +76,7 @@ export default function SettingsPage(): JSX.Element {
     return baseSidebarSections.map((section) => ({
       ...section,
       items: section.items.map((item) =>
-        item.id === 'traderCategories' || item.id === 'traderPricing' || item.id === 'customerCategories'
+        item.id === 'traderCategories' || item.id === 'traderPricing' || item.id === 'customerCategories' || item.id === 'harvestCategoryGrades'
           ? { ...item, label: `${item.label} (${activeSeasonYearName})` }
           : item,
       ),
@@ -120,7 +123,7 @@ export default function SettingsPage(): JSX.Element {
     navigate(item.href || '/settings/site/language');
   };
 
-  const pageHeaderActions = (
+  const pageHeaderActions = isIsraelHarvestSettings ? undefined : (
     <SettingsSeasonsHeaderActions
       activeChildId={activeChildId}
       saveLabel={t.save}
@@ -143,11 +146,11 @@ export default function SettingsPage(): JSX.Element {
     <AppShell
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
-      pageTitle={pageTitle}
+      pageTitle={isIsraelHarvestSettings ? getIsraelHarvestSettingsTitle(lang, getIsraelHarvestSettingsChildId(location.pathname)) : pageTitle}
       pageHeaderActions={pageHeaderActions}
       topNav={t.topNav}
       sidebarSections={sidebarSections}
-      activeSidebarItemId={activeChildId}
+      activeSidebarItemId={isIsraelHarvestSettings ? getIsraelHarvestSettingsChildId(location.pathname) : activeChildId}
       onTopNavClick={handleTopNavClick}
       onSidebarClick={handleSidebarClick}
       onBrandClick={() => navigate('/home')}
@@ -166,41 +169,47 @@ export default function SettingsPage(): JSX.Element {
       }}
     >
       <section className={workspaceStyles.workspace}>
-        <p className={workspaceStyles.description}>{content.description}</p>
-        {setupNotice ? <p className={feedbackStyles.setupNotice}>{setupNotice}</p> : null}
-        {saveFeedback ? <p className={feedbackStyles.saved}>{saveFeedback}</p> : null}
+        {isIsraelHarvestSettings ? (
+          <IsraelHarvestSettingsSection lang={lang} />
+        ) : (
+          <>
+            <p className={workspaceStyles.description}>{content.description}</p>
+            {setupNotice ? <p className={feedbackStyles.setupNotice}>{setupNotice}</p> : null}
+            {saveFeedback ? <p className={feedbackStyles.saved}>{saveFeedback}</p> : null}
 
-        <SettingsSitePreferencesPanel
-          activeChildId={activeChildId}
-          t={t}
-          selectedLanguage={selectedLanguage}
-          setSelectedLanguage={setSelectedLanguage}
-          selectedPrimaryColor={selectedPrimaryColor}
-          setSelectedPrimaryColor={setSelectedPrimaryColor}
-          selectedAccentColor={selectedAccentColor}
-          setSelectedAccentColor={setSelectedAccentColor}
-          selectedTextColor={selectedTextColor}
-          setSelectedTextColor={setSelectedTextColor}
-          selectedDarkMode={selectedDarkMode}
-          setSelectedDarkMode={setSelectedDarkMode}
-          onReset={handleReset}
-        />
+            <SettingsSitePreferencesPanel
+              activeChildId={activeChildId}
+              t={t}
+              selectedLanguage={selectedLanguage}
+              setSelectedLanguage={setSelectedLanguage}
+              selectedPrimaryColor={selectedPrimaryColor}
+              setSelectedPrimaryColor={setSelectedPrimaryColor}
+              selectedAccentColor={selectedAccentColor}
+              setSelectedAccentColor={setSelectedAccentColor}
+              selectedTextColor={selectedTextColor}
+              setSelectedTextColor={setSelectedTextColor}
+              selectedDarkMode={selectedDarkMode}
+              setSelectedDarkMode={setSelectedDarkMode}
+              onReset={handleReset}
+            />
 
-        {renderSettingsActiveChild({
-          activeChildId,
-          isManager,
-          lang,
-          setSeasonsHeaderState,
-          setFieldsHeaderState,
-          setCartonsHeaderState,
-          setPricingHeaderState,
-          setTradersHeaderState,
-          setTraderCategoriesHeaderState,
-          setTraderPricingHeaderState,
-          setDefaultTraderCategoriesHeaderState,
-          setCustomersHeaderState,
-          setCustomerCategoriesHeaderState,
-        })}
+            {renderSettingsActiveChild({
+              activeChildId,
+              isManager,
+              lang,
+              setSeasonsHeaderState,
+              setFieldsHeaderState,
+              setCartonsHeaderState,
+              setPricingHeaderState,
+              setTradersHeaderState,
+              setTraderCategoriesHeaderState,
+              setTraderPricingHeaderState,
+              setDefaultTraderCategoriesHeaderState,
+              setCustomersHeaderState,
+              setCustomerCategoriesHeaderState,
+            })}
+          </>
+        )}
       </section>
     </AppShell>
   );

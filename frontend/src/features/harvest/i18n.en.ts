@@ -203,10 +203,11 @@ export const HARVEST_I18N_EN: HarvestI18n = {
       label: 'Shipments',
       href: '/shipments/shipment-items-summary',
     },
-    { id: 'partners', label: 'Trader Inventory' },
-    { id: 'customers', label: 'Customer Inventory' },
-    { id: 'workers', label: 'Workers' },
-    { id: 'payments', label: 'Expenses & Payments' },
+    { id: 'partners', label: 'Trader Inventory', icon: 'fa-handshake' },
+    { id: 'customers', label: 'Customer Inventory', icon: 'fa-users' },
+    { id: 'workers', label: 'Israel Harvest', icon: 'fa-person' },
+    { id: 'israel-shipments', label: 'Israel Shipments', icon: 'fa-truck-fast' },
+    { id: 'payments', label: 'Expenses & Payments', icon: 'fa-money-bill' },
   ],
   sidebar: [
     {

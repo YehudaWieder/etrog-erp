@@ -5,7 +5,8 @@ export const SHIPMENTS_I18N_HE = {
     { id: 'shipments', label: 'משלוחים', icon: 'fa-truck', href: '/shipments/shipment-items-summary' },
     { id: 'partners', label: 'מלאי סוחרים', icon: 'fa-handshake' },
     { id: 'customers', label: 'מלאי לקוחות', icon: 'fa-users' },
-    { id: 'workers', label: 'עובדים', icon: 'fa-person' },
+    { id: 'workers', label: 'קטיף א"י', icon: 'fa-person' },
+    { id: 'israel-shipments', label: 'משלוחים א"י', icon: 'fa-truck-fast' },
     { id: 'payments', label: 'הוצאות ותשלומים', icon: 'fa-money-bill' },
   ],
   sidebar: [

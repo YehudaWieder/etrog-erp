@@ -193,7 +193,8 @@ export const HARVEST_I18N_HE: HarvestI18n = {
     },
     { id: 'partners', label: 'מלאי סוחרים', icon: 'fa-handshake' },
     { id: 'customers', label: 'מלאי לקוחות', icon: 'fa-users' },
-    { id: 'workers', label: 'עובדים', icon: 'fa-person' },
+    { id: 'workers', label: 'קטיף א"י', icon: 'fa-person' },
+    { id: 'israel-shipments', label: 'משלוחים א"י', icon: 'fa-truck-fast' },
     { id: 'payments', label: 'הוצאות ותשלומים', icon: 'fa-money-bill' },
   ],
   sidebar: [

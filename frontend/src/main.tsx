@@ -23,6 +23,7 @@ import { TraderInventoryRoute } from './app/routes/TraderInventoryRoute';
 import { CustomerInventoryRoute } from './app/routes/CustomerInventoryRoute';
 import { WorkersRoute } from './app/routes/WorkersRoute';
 import { PaymentsRoute } from './app/routes/PaymentsRoute';
+import { IsraelShipmentsRoute } from './app/routes/IsraelShipmentsRoute';
 import { AuthCallbackRoute } from './app/routes/AuthCallbackRoute';
 import { ResetPasswordRoute } from './app/routes/ResetPasswordRoute';
 import { AUTH_SESSION_EXPIRED_EVENT } from './services/apiClient';
@@ -208,6 +209,7 @@ function AppRouter(): JSX.Element {
           <Route path="/customers/*" element={<CustomerInventoryRoute />} />
           <Route path="/shipments/*" element={<ShipmentsRoute />} />
           <Route path="/workers/*" element={<WorkersRoute />} />
+          <Route path="/israel-shipments/*" element={<IsraelShipmentsRoute />} />
           <Route path="/payments/*" element={<PaymentsRoute />} />
           <Route path="/settings/*" element={<SettingsPage />} />
           {/* <Route path="/seasons" element={<Navigate to="/settings/system/seasons" replace />} /> removed as per request */}

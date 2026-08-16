@@ -3,10 +3,11 @@ export const SHIPMENTS_I18N_EN = {
   topNav: [
     { id: 'harvest', label: 'Harvest & Sorting', href: '/harvest/harvest-summary' },
     { id: 'shipments', label: 'Shipments', href: '/shipments/shipment-items-summary' },
-    { id: 'partners', label: 'Partners Inventory' },
-    { id: 'customers', label: 'Customers Inventory' },
-    { id: 'workers', label: 'Workers' },
-    { id: 'payments', label: 'Expenses & Payments' },
+    { id: 'partners', label: 'Partners Inventory', icon: 'fa-handshake' },
+    { id: 'customers', label: 'Customers Inventory', icon: 'fa-users' },
+    { id: 'workers', label: 'Israel Harvest', icon: 'fa-person' },
+    { id: 'israel-shipments', label: 'Israel Shipments', icon: 'fa-truck-fast' },
+    { id: 'payments', label: 'Expenses & Payments', icon: 'fa-money-bill' },
   ],
   sidebar: [
     {

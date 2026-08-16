@@ -36,6 +36,10 @@ const NAV_ICON_MAP: Record<string, keyof typeof FAIcons> = {
   'fa-chart-bar': 'FaChartBar',
   'fa-list': 'FaList',
   'fa-trash': 'FaTrash',
+  'fa-truck-fast': 'FaTruckFast',
+  'fa-user-tie': 'FaUserTie',
+  'fa-layer-group': 'FaLayerGroup',
+  'fa-star': 'FaStar',
 };
 
 export function resolveNavigationIcon(iconKey?: string) {

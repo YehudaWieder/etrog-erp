@@ -8,7 +8,8 @@ export const CUSTOMER_INVENTORY_I18N_EN: CustomerInventoryI18n = {
     { id: 'shipments', label: 'Shipments', icon: 'fa-truck', href: '/shipments/shipment-items-summary' },
     { id: 'traders', label: 'Partners Inventory', icon: 'fa-handshake' },
     { id: 'customers', label: 'Customers Inventory', icon: 'fa-users' },
-    { id: 'workers', label: 'Workers', icon: 'fa-person' },
+    { id: 'workers', label: 'Israel Harvest', icon: 'fa-person' },
+    { id: 'israel-shipments', label: 'Israel Shipments', icon: 'fa-truck-fast' },
     { id: 'payments', label: 'Expenses & Payments', icon: 'fa-money-bill' },
   ],
   sidebar: [
