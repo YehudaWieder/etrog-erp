@@ -219,8 +219,14 @@ export function AddTraderMovementModal({
   // form's per-grade remainsInItalyGradeH/V checkboxes (HarvestBulkFormModal): when the flag for the
   // chosen "to" grade is on, the whole reclassified quantity is parked in the remains-in-Italy bucket
   // un-split instead of falling through the default per-trader share split.
-  const [reclassToRemainsInItalyGradeH, setReclassToRemainsInItalyGradeH] = useState(false);
-  const [reclassToRemainsInItalyGradeV, setReclassToRemainsInItalyGradeV] = useState(false);
+  const [reclassToRemainsInItalyGradeH, setReclassToRemainsInItalyGradeH] = useState(true);
+  const [reclassToRemainsInItalyGradeV, setReclassToRemainsInItalyGradeV] = useState(true);
+  // Ownership-change fields: source=GENERAL can land the quantity in one specific trader's private
+  // selection instead of the default share split; source=SPECIFIC_TRADER can send it back into the
+  // general pool (share split) instead of landing on the same trader. Mutually exclusive with the
+  // remains-in-Italy checkboxes above / the same-trader default, respectively.
+  const [reclassToTraderId, setReclassToTraderId] = useState('');
+  const [reclassToGeneral, setReclassToGeneral] = useState(false);
   // Update/cancel an existing RECLASSIFICATION batch — mirrors PITAM_SPLIT_MANAGE: pick a batch, then
   // either edit its quantity (delete+recreate in one backend transaction) or cancel it outright.
   const [reclassManageBatchId, setReclassManageBatchId] = useState('');
@@ -993,8 +999,10 @@ export function AddTraderMovementModal({
     setReclassToTraderCategoryId('');
     setReclassToGrade('');
     setReclassToPitamStatus('');
-    setReclassToRemainsInItalyGradeH(false);
-    setReclassToRemainsInItalyGradeV(false);
+    setReclassToRemainsInItalyGradeH(true);
+    setReclassToRemainsInItalyGradeV(true);
+    setReclassToTraderId('');
+    setReclassToGeneral(false);
     setReclassManageBatchId('');
     setReclassManageMode('select');
     setReclassManageEditQuantity('');
@@ -1044,8 +1052,10 @@ export function AddTraderMovementModal({
     setReclassToTraderCategoryId('');
     setReclassToGrade('');
     setReclassToPitamStatus('');
-    setReclassToRemainsInItalyGradeH(false);
-    setReclassToRemainsInItalyGradeV(false);
+    setReclassToRemainsInItalyGradeH(true);
+    setReclassToRemainsInItalyGradeV(true);
+    setReclassToTraderId('');
+    setReclassToGeneral(false);
     setReclassManageBatchId('');
     setReclassManageMode('select');
     setReclassManageEditQuantity('');
@@ -1245,6 +1255,17 @@ export function AddTraderMovementModal({
     // Source/from/to stay fixed on edit — only the quantity changes (mirrors PITAM_SPLIT_MANAGE).
     const toTuple = selectedReclassManageBatch.to ?? selectedReclassManageBatch.from;
 
+    // Ownership must be forwarded too, or re-saving a quantity edit on an ownership-changing batch
+    // would silently revert it to the default share split (see toTraderId/toTraderName on the batch).
+    const toTraderId =
+      selectedReclassManageBatch.source === 'GENERAL' && selectedReclassManageBatch.toTraderId !== null
+        ? selectedReclassManageBatch.toTraderId
+        : undefined;
+    const toGeneral =
+      selectedReclassManageBatch.source === 'SPECIFIC_TRADER' && selectedReclassManageBatch.toTraderId === null
+        ? true
+        : undefined;
+
     try {
       setReclassManageActionSubmitting(true);
       await updateReclassificationBatch(selectedReclassManageBatch.id, {
@@ -1257,6 +1278,8 @@ export function AddTraderMovementModal({
         toGrade: toTuple.grade,
         toPitamStatus: toTuple.pitamStatus,
         quantity: nextQuantity,
+        toTraderId,
+        toGeneral,
         notes: selectedReclassManageBatch.notes,
       });
       setReclassManageBatchId('');
@@ -1518,10 +1541,18 @@ export function AddTraderMovementModal({
           return;
         }
 
+        const reclassToSpecificTraderId =
+          reclassToTraderId && reclassToTraderId !== 'GENERAL' ? Number(reclassToTraderId) : undefined;
+
+        const reclassOwnershipChanges =
+          (reclassificationEffectiveSource === 'GENERAL' && reclassToSpecificTraderId !== undefined) ||
+          (reclassificationSource === 'SPECIFIC_TRADER' && reclassToGeneral);
+
         if (
           traderCategoryId === reclassToTraderCategoryId &&
           grade === reclassToGrade &&
-          pitamStatus === reclassToPitamStatus
+          pitamStatus === reclassToPitamStatus &&
+          !reclassOwnershipChanges
         ) {
           setError(f.reclassificationSameTupleError);
           return;
@@ -1542,8 +1573,11 @@ export function AddTraderMovementModal({
           toGrade: reclassToGrade,
           toPitamStatus: reclassToPitamStatus,
           quantity: quantityNumber,
+          toTraderId: reclassificationEffectiveSource === 'GENERAL' ? reclassToSpecificTraderId : undefined,
+          toGeneral: reclassificationSource === 'SPECIFIC_TRADER' && reclassToGeneral ? true : undefined,
           toRemainsInItaly:
-            reclassificationEffectiveSource === 'GENERAL' &&
+            ((reclassificationEffectiveSource === 'GENERAL' && reclassToSpecificTraderId === undefined) ||
+              (reclassificationSource === 'SPECIFIC_TRADER' && reclassToGeneral)) &&
             ((reclassToGrade === 'ה' && reclassToRemainsInItalyGradeH) || (reclassToGrade === 'ו' && reclassToRemainsInItalyGradeV))
               ? true
               : undefined,
@@ -2796,14 +2830,16 @@ export function AddTraderMovementModal({
                       setReclassToTraderCategoryId('');
                       setReclassToGrade('');
                       setReclassToPitamStatus('');
-                      setReclassToRemainsInItalyGradeH(false);
-                      setReclassToRemainsInItalyGradeV(false);
+                      setReclassToRemainsInItalyGradeH(true);
+                      setReclassToRemainsInItalyGradeV(true);
+                      setReclassToTraderId('');
+                      setReclassToGeneral(false);
                       setQuantity('');
                     }}
                   >
                     <option value="">{f.reclassificationSourcePlaceholder}</option>
-                    <option value="SPECIFIC_TRADER">{f.reclassificationSourceOptions.SPECIFIC_TRADER}</option>
                     <option value="GENERAL">{f.reclassificationSourceOptions.GENERAL}</option>
+                    <option value="SPECIFIC_TRADER">{f.reclassificationSourceOptions.SPECIFIC_TRADER}</option>
                   </select>
                 </div>
 
@@ -2825,18 +2861,26 @@ export function AddTraderMovementModal({
                   </div>
                 ) : null}
 
-                {/* Mirrors the harvest form's per-grade remainsInItalyGradeH/V checkboxes: only relevant
-                    when the "from" stock actually comes out of the GENERAL (modulo + traders) pool — when
-                    the chosen "from" tuple resolves to the remains-in-Italy bucket instead (grade ה/ו
-                    picked under "כללי"), the backend always routes the result through the default
-                    per-trader share split, so these would be silently ignored — hide them in that case. */}
-                {reclassificationEffectiveSource === 'GENERAL' ? (
+                {/* Mirrors the harvest form's per-grade remainsInItalyGradeH/V checkboxes: relevant
+                    whenever the "to" side would otherwise be distributed by share - either the
+                    GENERAL source's own split, or a SPECIFIC_TRADER batch explicitly reassigned to the
+                    general pool (ownership="GENERAL" below). Hidden when: the "from" tuple resolves to
+                    the remains-in-Italy bucket instead (grade ה/ו picked under "כללי" — the backend
+                    always routes that through the default per-trader share split, so these would be
+                    silently ignored); or the ownership field picked a specific destination trader
+                    (GENERAL→toTraderId) - landing in one trader's private selection is never the
+                    remains-in-Italy bucket. */}
+                {(reclassificationEffectiveSource === 'GENERAL' && !reclassToTraderId) ||
+                (reclassificationSource === 'SPECIFIC_TRADER' && reclassToGeneral) ? (
                   <>
                     <label className={remainsInItalyCheckboxStyles.field}>
                       <input
                         type="checkbox"
                         checked={reclassToRemainsInItalyGradeH}
-                        onChange={(event) => setReclassToRemainsInItalyGradeH(event.target.checked)}
+                        onChange={(event) => {
+                          setReclassToRemainsInItalyGradeH(event.target.checked);
+                          if (event.target.checked) setReclassToTraderId('');
+                        }}
                       />
                       <span>{f.reclassificationRemainsInItalyGradeHLabel}</span>
                     </label>
@@ -2844,7 +2888,10 @@ export function AddTraderMovementModal({
                       <input
                         type="checkbox"
                         checked={reclassToRemainsInItalyGradeV}
-                        onChange={(event) => setReclassToRemainsInItalyGradeV(event.target.checked)}
+                        onChange={(event) => {
+                          setReclassToRemainsInItalyGradeV(event.target.checked);
+                          if (event.target.checked) setReclassToTraderId('');
+                        }}
                       />
                       <span>{f.reclassificationRemainsInItalyGradeVLabel}</span>
                     </label>
@@ -2948,6 +2995,57 @@ export function AddTraderMovementModal({
               </div>
 
               <div style={ROW_STYLE}>
+                {/* Ownership field: GENERAL can land the quantity in one specific trader's private
+                    selection instead of the default share split (mutually exclusive with the
+                    remains-in-Italy checkboxes above); SPECIFIC_TRADER can send it back into the
+                    general pool instead of landing on the same trader. REMAINS_IN_ITALY-effective
+                    "from" always distributes via the normal share split, so no ownership choice there. */}
+                {reclassificationEffectiveSource === 'GENERAL' || reclassificationSource === 'SPECIFIC_TRADER' ? (
+                  <div style={FIELD_STYLE}>
+                    <label style={LABEL_STYLE}>{f.reclassificationOwnershipLabel}</label>
+                    <select
+                      className="seasons-manager__year-input"
+                      value={
+                        reclassificationEffectiveSource === 'GENERAL'
+                          ? reclassToTraderId
+                          : reclassToGeneral
+                            ? 'GENERAL'
+                            : traderId
+                              ? traderId
+                              : ''
+                      }
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        if (reclassificationEffectiveSource === 'GENERAL') {
+                          setReclassToTraderId(value);
+                          if (value && value !== 'GENERAL') {
+                            setReclassToRemainsInItalyGradeH(false);
+                            setReclassToRemainsInItalyGradeV(false);
+                          }
+                        } else {
+                          setReclassToGeneral(value === 'GENERAL');
+                        }
+                      }}
+                    >
+                      <option value="">{f.reclassificationOwnershipPlaceholder}</option>
+                      <option value="GENERAL">{f.reclassificationOwnershipGeneralOption}</option>
+                      {reclassificationEffectiveSource === 'GENERAL'
+                        ? sortedTraders.map((trader) => (
+                            <option key={`reclass-to-trader-${trader.id}`} value={String(trader.id)}>
+                              {trader.name}
+                            </option>
+                          ))
+                        : traderId
+                          ? (
+                            <option value={traderId}>
+                              {sortedTraders.find((trader) => String(trader.id) === traderId)?.name ?? ''}
+                            </option>
+                          )
+                          : null}
+                    </select>
+                  </div>
+                ) : null}
+
                 <div style={FIELD_STYLE}>
                   <label style={LABEL_STYLE}>{f.traderCategoryLabel}</label>
                   <select
@@ -3005,6 +3103,7 @@ export function AddTraderMovementModal({
                     ))}
                   </select>
                 </div>
+
               </div>
             </>
           ) : null}

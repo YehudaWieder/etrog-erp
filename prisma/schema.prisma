@@ -729,7 +729,7 @@ enum MovementType {
   REMAINS_IN_ITALY // Grade ה/ו sorted under GENERAL assignment; stays in Italy, not split among traders (Positive)
 
   // --- Reclassification ---
-  RECLASSIFICATION // Changes category/grade/pitamStatus for a quantity without changing ownership (Positive/Negative)
+  RECLASSIFICATION // Changes category/grade/pitamStatus and/or ownership (trader private selection <-> general pool) for a quantity (Positive/Negative)
 }
 
 enum ShipmentStatus {

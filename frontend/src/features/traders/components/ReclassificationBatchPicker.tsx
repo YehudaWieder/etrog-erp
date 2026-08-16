@@ -72,6 +72,24 @@ export function ReclassificationBatchPicker({
   const sourceLabel = (batch: ReclassificationBatch) =>
     batch.source === 'SPECIFIC_TRADER' && batch.traderName ? batch.traderName : labels.reclassificationSourceOptions[batch.source];
 
+  // Ownership-changing batches: GENERAL landing on one trader's private selection, or SPECIFIC_TRADER
+  // returning to the general pool - the source badge alone doesn't convey the destination in these
+  // two cases, so append it to the "to" tuple label.
+  const toDestinationNote = (batch: ReclassificationBatch) => {
+    if (batch.source === 'GENERAL' && batch.toTraderId !== null) {
+      return batch.toTraderName ?? `#${batch.toTraderId}`;
+    }
+    if (batch.source === 'SPECIFIC_TRADER' && batch.toTraderId === null) {
+      return labels.reclassificationSourceOptions.GENERAL;
+    }
+    return null;
+  };
+
+  const toLabel = (batch: ReclassificationBatch) => {
+    const note = toDestinationNote(batch);
+    return note ? `${tupleLabel(batch.to)} (${note})` : tupleLabel(batch.to);
+  };
+
   const selectedBatch = batches.find((batch) => String(batch.id) === value) ?? null;
 
   const placeholderText = isLoading
@@ -96,7 +114,7 @@ export function ReclassificationBatchPicker({
               {sourceLabel(selectedBatch)}
             </span>
             <span className={styles.triggerDetails}>
-              {tupleLabel(selectedBatch.from)} → {tupleLabel(selectedBatch.to)}
+              {tupleLabel(selectedBatch.from)} → {toLabel(selectedBatch)}
             </span>
             <span className={styles.triggerQty}>{labels.quantityLabel}: {selectedBatch.quantity}</span>
             {selectedBatch.availableQuantity < selectedBatch.quantity ? (
@@ -138,7 +156,7 @@ export function ReclassificationBatchPicker({
                 </div>
                 <div className={styles.rowBottom}>
                   <span className={styles.rowCategory}>
-                    {tupleLabel(batch.from)} → {tupleLabel(batch.to)}
+                    {tupleLabel(batch.from)} → {toLabel(batch)}
                   </span>
                   <span className={styles.rowQtyGroup}>
                     <span className={styles.qtyChip}>{labels.quantityLabel}: {batch.quantity}</span>

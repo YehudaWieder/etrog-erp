@@ -58,57 +58,59 @@ export class ReclassificationService {
     return Promise.all(
       anchors.map(async (anchor) => {
         const linked = linkedRows.filter((row) => row.MovementReferenceId === anchor.id);
-        const allRows = [{ ...anchor, trader: null as { id: number; name: string } | null }, ...linked];
 
-        const matchesFromTuple = (row: (typeof allRows)[number]) =>
-          row.traderCategoryId === anchor.traderCategoryId &&
-          row.grade === anchor.grade &&
-          row.pitamStatus === anchor.pitamStatus;
+        // Partition by sign, not by tuple equality: an ownership-only change (same category/grade/
+        // pitamStatus on both legs) would otherwise make the "to" row indistinguishable from "from"
+        // and silently vanish from the batch (toRow resolving to null).
+        const negativeLinked = linked.filter((row) => row.quantity < 0);
+        const positiveRows = linked.filter((row) => row.quantity > 0);
+        const toRow = positiveRows[0] ?? null;
 
         const quantity = Math.abs(
-          allRows.filter(matchesFromTuple).reduce((sum, row) => sum + row.quantity, 0),
+          anchor.quantity + negativeLinked.reduce((sum, row) => sum + row.quantity, 0),
         );
-
-        const toRow = allRows.find((row) => !matchesFromTuple(row));
 
         const source = this.inferSource(anchor, linked);
         const traderId = source === 'SPECIFIC_TRADER' ? anchor.traderId : null;
         const traderName = source === 'SPECIFIC_TRADER' ? (linked.find((r) => r.traderId === traderId)?.trader?.name ?? null) : null;
 
-        // GENERAL and REMAINS_IN_ITALY sources fan the "to" side out across multiple linked rows
-        // (one per trader/modulo share) via generalShareAllocationService.allocateGeneralQuantity,
-        // so partial-cancel isn't safe there - availableQuantity is 0-or-full: every positive row
-        // must still have its own full quantity available, otherwise the whole batch is blocked,
-        // mirroring what deleteBatchInTx's per-row assert would currently allow.
-        const positiveRows = linked.filter((row) => row.quantity > 0);
-        const availableQuantity =
-          source === 'SPECIFIC_TRADER'
-            ? await this.inventoryAvailabilityService.getTraderAvailableToReduce(this.prisma, {
-                seasonId: anchor.seasonId,
-                traderId: positiveRows[0]?.traderId ?? null,
-                traderCategoryId: positiveRows[0]?.traderCategoryId ?? anchor.traderCategoryId,
-                grade: positiveRows[0]?.grade ?? anchor.grade,
-                pitamStatus: positiveRows[0]?.pitamStatus ?? anchor.pitamStatus,
-                isModulo: positiveRows[0]?.isModulo ?? false,
-                requestedQuantity: positiveRows[0]?.quantity ?? 0,
-              })
-            : await (async () => {
-                const availabilities = await Promise.all(
-                  positiveRows.map((row) =>
-                    this.inventoryAvailabilityService.getTraderAvailableToReduce(this.prisma, {
-                      seasonId: row.seasonId,
-                      traderId: row.traderId,
-                      traderCategoryId: row.traderCategoryId,
-                      grade: row.grade,
-                      pitamStatus: row.pitamStatus,
-                      isModulo: row.isModulo,
-                      requestedQuantity: row.quantity,
-                    }),
-                  ),
-                );
-                const allFullyAvailable = positiveRows.every((row, index) => availabilities[index] >= row.quantity);
-                return allFullyAvailable ? quantity : 0;
-              })();
+        const toTraderId = positiveRows.length === 1 ? positiveRows[0].traderId : null;
+        const toTraderName = toTraderId !== null ? (positiveRows[0].trader?.name ?? null) : null;
+
+        // A single positive "to" row tagged isFromPrivateSelection is the signature of a landing on
+        // one specific trader's private selection (SPECIFIC_TRADER's own to-row, or GENERAL's
+        // toTraderId) - the only shape where partial-cancel is safe (reduce that one row in place).
+        // Ordinary share-splits (GENERAL/REMAINS_IN_ITALY/toGeneral), including the pre-existing
+        // edge case of a single-trader-100%-share category, never set that flag and stay all-or-nothing.
+        const isSingleOwnerLanding = positiveRows.length === 1 && positiveRows[0].isFromPrivateSelection === true;
+
+        const availableQuantity = isSingleOwnerLanding
+          ? await this.inventoryAvailabilityService.getTraderAvailableToReduce(this.prisma, {
+              seasonId: anchor.seasonId,
+              traderId: positiveRows[0]?.traderId ?? null,
+              traderCategoryId: positiveRows[0]?.traderCategoryId ?? anchor.traderCategoryId,
+              grade: positiveRows[0]?.grade ?? anchor.grade,
+              pitamStatus: positiveRows[0]?.pitamStatus ?? anchor.pitamStatus,
+              isModulo: positiveRows[0]?.isModulo ?? false,
+              requestedQuantity: positiveRows[0]?.quantity ?? 0,
+            })
+          : await (async () => {
+              const availabilities = await Promise.all(
+                positiveRows.map((row) =>
+                  this.inventoryAvailabilityService.getTraderAvailableToReduce(this.prisma, {
+                    seasonId: row.seasonId,
+                    traderId: row.traderId,
+                    traderCategoryId: row.traderCategoryId,
+                    grade: row.grade,
+                    pitamStatus: row.pitamStatus,
+                    isModulo: row.isModulo,
+                    requestedQuantity: row.quantity,
+                  }),
+                ),
+              );
+              const allFullyAvailable = positiveRows.every((row, index) => availabilities[index] >= row.quantity);
+              return allFullyAvailable ? quantity : 0;
+            })();
 
         return {
           id: anchor.id,
@@ -117,6 +119,8 @@ export class ReclassificationService {
           source,
           traderId,
           traderName,
+          toTraderId,
+          toTraderName,
           from: {
             traderCategoryId: anchor.traderCategoryId,
             grade: anchor.grade,
@@ -136,9 +140,14 @@ export class ReclassificationService {
   async getReclassificationSummary(seasonId?: number) {
     const batches = await this.listBatches({ seasonId });
 
-    const groups = new Map<string, { from: Tuple; to: Tuple; quantity: number }>();
+    const groups = new Map<
+      string,
+      { from: Tuple; to: Tuple; toTraderId: number | null; toTraderName: string | null; quantity: number }
+    >();
     for (const batch of batches) {
       if (!batch.to) continue;
+      // toTraderId is included so an ownership-only change (identical from/to tuple, landed on a
+      // specific trader) doesn't silently merge into an unrelated group sharing the same tuple.
       const key = [
         batch.from.traderCategoryId,
         batch.from.grade,
@@ -146,13 +155,20 @@ export class ReclassificationService {
         batch.to.traderCategoryId,
         batch.to.grade,
         batch.to.pitamStatus,
+        batch.toTraderId ?? 'GENERAL',
       ].join('|');
 
       const existing = groups.get(key);
       if (existing) {
         existing.quantity += batch.quantity;
       } else {
-        groups.set(key, { from: batch.from, to: batch.to, quantity: batch.quantity });
+        groups.set(key, {
+          from: batch.from,
+          to: batch.to,
+          toTraderId: batch.toTraderId,
+          toTraderName: batch.toTraderName,
+          quantity: batch.quantity,
+        });
       }
     }
 
@@ -208,7 +224,7 @@ export class ReclassificationService {
         isModulo: false,
         requiredQuantity: dto.quantity,
         onlyPrivateSelection: true,
-        contextLabel: 'שינוי סיווג',
+        contextLabel: 'שינוי סיווג ושיוך',
       });
 
       const negative = await tx.traderStock.create({
@@ -228,23 +244,57 @@ export class ReclassificationService {
         },
       });
 
-      await tx.traderStock.create({
-        data: {
+      if (dto.toGeneral && dto.toRemainsInItaly) {
+        // Same as GENERAL source's own toRemainsInItaly landing: park the quantity as a single
+        // un-split row in the regional-retention bucket instead of distributing it by share.
+        await tx.traderStock.create({
+          data: {
+            seasonId,
+            date,
+            traderId: null,
+            traderCategoryId: to.traderCategoryId,
+            grade: to.grade,
+            pitamStatus: to.pitamStatus,
+            quantity: dto.quantity,
+            isModulo: false,
+            type: MovementType.RECLASSIFICATION,
+            MovementReferenceId: negative.id,
+            updatedById: actorId,
+            notes: dto.notes,
+          },
+        });
+      } else if (dto.toGeneral) {
+        await this.generalShareAllocationService.allocateGeneralQuantity(tx, {
           seasonId,
           date,
-          traderId: dto.traderId!,
           traderCategoryId: to.traderCategoryId,
           grade: to.grade,
           pitamStatus: to.pitamStatus,
           quantity: dto.quantity,
-          isModulo: false,
           type: MovementType.RECLASSIFICATION,
-          isFromPrivateSelection: true,
-          MovementReferenceId: negative.id,
+          movementReferenceId: negative.id,
           updatedById: actorId,
           notes: dto.notes,
-        },
-      });
+        });
+      } else {
+        await tx.traderStock.create({
+          data: {
+            seasonId,
+            date,
+            traderId: dto.traderId!,
+            traderCategoryId: to.traderCategoryId,
+            grade: to.grade,
+            pitamStatus: to.pitamStatus,
+            quantity: dto.quantity,
+            isModulo: false,
+            type: MovementType.RECLASSIFICATION,
+            isFromPrivateSelection: true,
+            MovementReferenceId: negative.id,
+            updatedById: actorId,
+            notes: dto.notes,
+          },
+        });
+      }
 
       return negative;
     }
@@ -258,7 +308,7 @@ export class ReclassificationService {
         grade: from.grade,
         pitamStatus: from.pitamStatus,
         requiredQuantity: dto.quantity,
-        contextLabel: 'שינוי סיווג מנשאר באיטליה',
+        contextLabel: 'שינוי סיווג ושיוך מנשאר באיטליה',
       });
 
       const negative = await tx.traderStock.create({
@@ -302,7 +352,7 @@ export class ReclassificationService {
       pitamStatus: from.pitamStatus,
       quantity: dto.quantity,
       type: MovementType.RECLASSIFICATION,
-      contextLabel: 'שינוי סיווג כללי',
+      contextLabel: 'שינוי סיווג ושיוך כללי',
       excludePrivateSelection: true,
       updatedById: actorId,
       notes: dto.notes,
@@ -316,7 +366,32 @@ export class ReclassificationService {
       });
     }
 
-    if (dto.toRemainsInItaly) {
+    if (dto.toTraderId) {
+      const hasShare = await tx.traderCategoryShare.findFirst({
+        where: { seasonId, traderCategoryId: to.traderCategoryId, traderId: dto.toTraderId },
+      });
+      if (!hasShare) {
+        throw new BadRequestException('לסוחר היעד אין הגדרת אחוזים בקטגוריה המבוקשת.');
+      }
+
+      await tx.traderStock.create({
+        data: {
+          seasonId,
+          date,
+          traderId: dto.toTraderId,
+          traderCategoryId: to.traderCategoryId,
+          grade: to.grade,
+          pitamStatus: to.pitamStatus,
+          quantity: dto.quantity,
+          isModulo: false,
+          type: MovementType.RECLASSIFICATION,
+          isFromPrivateSelection: true,
+          MovementReferenceId: anchorId,
+          updatedById: actorId,
+          notes: dto.notes,
+        },
+      });
+    } else if (dto.toRemainsInItaly) {
       await tx.traderStock.create({
         data: {
           seasonId,
@@ -360,22 +435,26 @@ export class ReclassificationService {
     });
 
     if (!anchor) {
-      throw new NotFoundException(`שינוי סיווג (${anchorId}) לא נמצא.`);
+      throw new NotFoundException(`שינוי סיווג ושיוך (${anchorId}) לא נמצא.`);
     }
 
     const linked = await tx.traderStock.findMany({
       where: { MovementReferenceId: anchorId, isDeleted: false },
     });
 
-    const source = this.inferSource(anchor, linked);
     const positiveRows = linked.filter((row) => row.quantity > 0);
 
-    // GENERAL/REMAINS_IN_ITALY fan the "to" side across multiple linked rows - partial cancel
-    // isn't safe there (no single row to decrement), so it stays all-or-nothing.
-    if (source !== 'SPECIFIC_TRADER') {
+    // A single positive "to" row tagged isFromPrivateSelection is the signature of a landing on one
+    // specific trader's private selection (SPECIFIC_TRADER's own to-row, or GENERAL's toTraderId) -
+    // the only shape where partial-cancel is safe (reduce that one row in place). Ordinary
+    // share-splits (GENERAL/REMAINS_IN_ITALY/toGeneral), including the pre-existing edge case of a
+    // single-trader-100%-share category, never set that flag and stay all-or-nothing.
+    const isSingleOwnerLanding = positiveRows.length === 1 && positiveRows[0].isFromPrivateSelection === true;
+
+    if (!isSingleOwnerLanding) {
       const fullQuantity = positiveRows.reduce((sum, row) => sum + row.quantity, 0);
       if (quantity !== undefined && quantity !== fullQuantity) {
-        throw new BadRequestException('לא ניתן לבטל חלקית שינוי סיווג ממקור כללי/נשאר באיטליה - יש לבטל את כל הכמות.');
+        throw new BadRequestException('לא ניתן לבטל חלקית שינוי סיווג ושיוך ממקור כללי/נשאר באיטליה - יש לבטל את כל הכמות.');
       }
 
       for (const row of positiveRows) {
@@ -387,7 +466,7 @@ export class ReclassificationService {
           pitamStatus: row.pitamStatus,
           isModulo: row.isModulo,
           requiredQuantity: row.quantity,
-          contextLabel: 'ביטול שינוי סיווג',
+          contextLabel: 'ביטול שינוי סיווג ושיוך',
         });
       }
 
@@ -399,7 +478,7 @@ export class ReclassificationService {
       return { anchorId, deletedCount: 1 + linked.length, reducedQuantity: fullQuantity };
     }
 
-    // SPECIFIC_TRADER: single positive "to" row - safe to reduce in place for a partial cancel.
+    // Single private-selection landing row - safe to reduce in place for a partial cancel.
     const toRow = positiveRows[0];
     const fullQuantity = toRow?.quantity ?? 0;
     const reduceBy = quantity ?? fullQuantity;
@@ -416,7 +495,7 @@ export class ReclassificationService {
       pitamStatus: toRow.pitamStatus,
       isModulo: toRow.isModulo,
       requiredQuantity: reduceBy,
-      contextLabel: 'ביטול שינוי סיווג',
+      contextLabel: 'ביטול שינוי סיווג ושיוך',
     });
 
     if (reduceBy === fullQuantity) {
@@ -461,11 +540,15 @@ export class ReclassificationService {
       );
     }
 
-    if (
+    const tuplesEqual =
       dto.fromTraderCategoryId === dto.toTraderCategoryId &&
       dto.fromGrade === dto.toGrade &&
-      dto.fromPitamStatus === dto.toPitamStatus
-    ) {
+      dto.fromPitamStatus === dto.toPitamStatus;
+
+    const ownershipChanges =
+      (dto.source === 'GENERAL' && !!dto.toTraderId) || (dto.source === 'SPECIFIC_TRADER' && !!dto.toGeneral);
+
+    if (tuplesEqual && !ownershipChanges) {
       throw new BadRequestException('הסיווג החדש זהה לסיווג הישן - אין שינוי לבצע.');
     }
 
@@ -475,6 +558,26 @@ export class ReclassificationService {
 
     if (dto.source === 'SPECIFIC_TRADER' && !dto.traderId) {
       throw new BadRequestException('traderId is required when source=SPECIFIC_TRADER');
+    }
+
+    if (dto.toTraderId && dto.source !== 'GENERAL') {
+      throw new BadRequestException('toTraderId is only meaningful when source=GENERAL');
+    }
+
+    if (dto.toTraderId && dto.toRemainsInItaly) {
+      throw new BadRequestException('toTraderId cannot be combined with toRemainsInItaly');
+    }
+
+    if (dto.toGeneral && dto.source !== 'SPECIFIC_TRADER') {
+      throw new BadRequestException('toGeneral is only meaningful when source=SPECIFIC_TRADER');
+    }
+
+    if (dto.toRemainsInItaly && dto.source === 'SPECIFIC_TRADER' && !dto.toGeneral) {
+      throw new BadRequestException('toRemainsInItaly requires toGeneral when source=SPECIFIC_TRADER');
+    }
+
+    if (dto.toRemainsInItaly && dto.source === 'REMAINS_IN_ITALY') {
+      throw new BadRequestException('toRemainsInItaly is not meaningful when source=REMAINS_IN_ITALY');
     }
   }
 }

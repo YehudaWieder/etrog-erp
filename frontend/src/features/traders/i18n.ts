@@ -423,6 +423,9 @@ export type TraderMovementsI18n = {
 		reclassificationToLabel: string;
 		reclassificationRemainsInItalyGradeHLabel: string;
 		reclassificationRemainsInItalyGradeVLabel: string;
+		reclassificationOwnershipLabel: string;
+		reclassificationOwnershipPlaceholder: string;
+		reclassificationOwnershipGeneralOption: string;
 		reclassificationAvailableLabel: (quantity: number) => string;
 		reclassificationExceedsAvailableError: (quantity: number) => string;
 		reclassificationInsufficientStockError: string;

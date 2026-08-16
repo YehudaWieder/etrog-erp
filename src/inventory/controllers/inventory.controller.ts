@@ -603,6 +603,35 @@ export class InventoryController {
 					quantity: 15,
 				},
 			},
+			generalToSpecificTrader: {
+				summary: 'Move general stock into a specific trader private selection (ownership change)',
+				value: {
+					source: 'GENERAL',
+					fromTraderCategoryId: 3,
+					fromGrade: 'א',
+					fromPitamStatus: 'WITH_PITAM',
+					toTraderCategoryId: 3,
+					toGrade: 'א',
+					toPitamStatus: 'WITH_PITAM',
+					quantity: 5,
+					toTraderId: 4,
+				},
+			},
+			specificTraderToGeneral: {
+				summary: 'Move a trader private-selection stock back into the general pool (ownership change)',
+				value: {
+					source: 'SPECIFIC_TRADER',
+					traderId: 4,
+					fromTraderCategoryId: 3,
+					fromGrade: 'א',
+					fromPitamStatus: 'WITH_PITAM',
+					toTraderCategoryId: 3,
+					toGrade: 'א',
+					toPitamStatus: 'WITH_PITAM',
+					quantity: 5,
+					toGeneral: true,
+				},
+			},
 		},
 	})
 	@ApiResponse({ status: 201, description: 'Reclassification resolved successfully.' })
@@ -639,7 +668,7 @@ export class InventoryController {
 	@Get('reclassification/summary')
 	@ApiOperation({
 		summary:
-			'Aggregated reclassification totals for a season, grouped by (from classification -> to classification), for display as an informational deviation indicator alongside harvest/sorting summaries.',
+			'Aggregated reclassification totals for a season, grouped by (from classification -> to classification -> destination trader), for display as an informational deviation indicator alongside harvest/sorting summaries.',
 	})
 	@ApiQuery({ name: 'seasonId', type: Number, required: false, description: 'Defaults to active season.' })
 	@ApiResponse({ status: 200, description: 'Reclassification summary.' })
@@ -652,10 +681,10 @@ export class InventoryController {
 		summary:
 			'Undo a reclassification batch: permanently deletes every ledger row it created. ' +
 			'Fails if the stock it created has since been consumed downstream (e.g. packed into a shipment). ' +
-			'For SPECIFIC_TRADER-source batches, an optional partial quantity can be passed to cancel only the still-unpacked portion; GENERAL/REMAINS_IN_ITALY-source batches must be cancelled in full.',
+			'When the batch landed as a single row in one trader\'s private selection (SPECIFIC_TRADER, or GENERAL with toTraderId), an optional partial quantity can be passed to cancel only the still-unpacked portion; share-split batches (plain GENERAL, REMAINS_IN_ITALY, toRemainsInItaly, toGeneral) must be cancelled in full.',
 	})
 	@ApiParam({ name: 'id', type: Number })
-	@ApiQuery({ name: 'quantity', type: Number, required: false, description: 'Partial quantity to cancel; omit to cancel the full batch. GENERAL/REMAINS_IN_ITALY-source batches reject any value other than the full quantity.' })
+	@ApiQuery({ name: 'quantity', type: Number, required: false, description: 'Partial quantity to cancel; omit to cancel the full batch. Share-split batches reject any value other than the full quantity.' })
 	@ApiResponse({ status: 200, description: 'Reclassification batch undone (rows permanently deleted or reduced).' })
 	@ApiResponse({ status: 400, description: 'Created stock was already partially consumed and can no longer be undone.' })
 	@ApiResponse({ status: 404, description: 'Batch not found.' })

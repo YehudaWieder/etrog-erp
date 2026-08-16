@@ -289,6 +289,8 @@ export type CreateReclassificationPayload = {
   toPitamStatus: PitamStatus;
   quantity: number;
   toRemainsInItaly?: boolean;
+  toTraderId?: number;
+  toGeneral?: boolean;
   date?: string;
   notes?: string | null;
 };
@@ -313,6 +315,8 @@ export type ReclassificationBatch = {
   source: ReclassificationSource;
   traderId: number | null;
   traderName: string | null;
+  toTraderId: number | null;
+  toTraderName: string | null;
   from: ReclassificationTuple;
   to: ReclassificationTuple | null;
   quantity: number;
@@ -359,6 +363,8 @@ export async function updateReclassificationBatch(id: number, payload: CreateRec
 export type ReclassificationSummaryEntry = {
   from: ReclassificationTuple;
   to: ReclassificationTuple;
+  toTraderId: number | null;
+  toTraderName: string | null;
   quantity: number;
 };
 
