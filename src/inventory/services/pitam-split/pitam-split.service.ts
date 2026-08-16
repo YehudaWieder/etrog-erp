@@ -4,6 +4,7 @@ import { Grade, MovementType, PitamStatus, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { InventoryAvailabilityService } from '../inventory-availability.service';
+import { GeneralShareAllocationService } from '../general-share-allocation/general-share-allocation.service';
 import { calculateExactShareQuantity, calculateMinimalGrossByShares } from '../validation/share-math';
 import { ResolvePitamSplitDto } from './dto/resolve-pitam-split.dto';
 import { groupPitamSplitRowsIntoBatches } from './utils/pitam-split-batch.util';
@@ -18,6 +19,7 @@ export class PitamSplitService {
     private readonly prisma: PrismaService,
     private readonly seasonsService: SeasonsService,
     private readonly inventoryAvailabilityService: InventoryAvailabilityService,
+    private readonly generalShareAllocationService: GeneralShareAllocationService,
   ) {}
 
   async resolve(dto: ResolvePitamSplitDto, actorId: number) {
@@ -298,6 +300,23 @@ export class PitamSplitService {
           },
         }),
       );
+    }
+
+    if (params.isModulo) {
+      for (const pitamStatus of [
+        ...(params.withQty > 0 ? [PitamStatus.WITH_PITAM] : []),
+        ...(params.withoutQty > 0 ? [PitamStatus.WITHOUT_PITAM] : []),
+      ]) {
+        await this.generalShareAllocationService.tryAssignFromModuloPool(tx, {
+          seasonId: params.seasonId,
+          date: params.date,
+          traderCategoryId: params.traderCategoryId,
+          grade: params.grade,
+          pitamStatus,
+          updatedById: params.updatedById,
+          notes: params.notes,
+        });
+      }
     }
 
     return created;

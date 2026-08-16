@@ -9,6 +9,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { InventoryAvailabilityService } from '../inventory-availability.service';
 import { InventoryValidationService } from '../validation/inventory-validation.service';
+import { GeneralShareAllocationService } from '../general-share-allocation/general-share-allocation.service';
 import {
   calculateExactShareQuantity,
   calculateMinimalGrossByShares,
@@ -21,6 +22,7 @@ export class CustomerGeneralTransferService {
     private readonly seasonsService: SeasonsService,
     private readonly inventoryAvailabilityService: InventoryAvailabilityService,
     private readonly inventoryValidationService: InventoryValidationService,
+    private readonly generalShareAllocationService: GeneralShareAllocationService,
   ) {}
 
   async create(data: CustomerGeneralAllocationRequestDto, actorId: number) {
@@ -317,6 +319,17 @@ export class CustomerGeneralTransferService {
             updatedById: actorId,
             notes: data.notes,
           },
+        });
+
+        await this.generalShareAllocationService.tryAssignFromModuloPool(tx, {
+          seasonId,
+          date: new Date(data.date),
+          traderCategoryId: data.traderCategoryId,
+          grade: data.grade,
+          pitamStatus: data.pitamStatus,
+          updatedById: actorId,
+          notes: data.notes,
+          movementReferenceId,
         });
       }
     }

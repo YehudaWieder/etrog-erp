@@ -31,7 +31,7 @@ export class GeneralShareAllocationService {
     }));
   }
 
-  private async tryAssignFromModuloPool(
+  async tryAssignFromModuloPool(
     tx: Prisma.TransactionClient,
     params: {
       seasonId: number;
@@ -393,6 +393,17 @@ export class GeneralShareAllocationService {
             },
           }),
         );
+
+        await this.tryAssignFromModuloPool(tx, {
+          seasonId: params.seasonId,
+          date: params.date,
+          traderCategoryId: params.traderCategoryId,
+          grade: params.grade,
+          pitamStatus: params.pitamStatus,
+          updatedById: params.updatedById,
+          notes: params.notes ?? undefined,
+          movementReferenceId: params.movementReferenceId,
+        });
       }
     }
 
