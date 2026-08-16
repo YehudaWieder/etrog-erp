@@ -638,10 +638,15 @@ export function AddCustomerMovementModal({
                       className="seasons-manager__year-input"
                       value={grade}
                       onChange={(event) => {
-                        setGrade(event.target.value);
+                        const nextGrade = event.target.value;
+                        setGrade(nextGrade);
                         setQuantity('');
-                        setTransferToRemainsInItalyGradeH(false);
-                        setTransferToRemainsInItalyGradeV(false);
+                        // Default the remains-in-Italy checkbox to checked when the destination
+                        // is the general pool and the grade qualifies (ה/ו) - the user can still
+                        // uncheck it manually.
+                        const defaultChecked = traderId === GENERAL_TRADER_VALUE;
+                        setTransferToRemainsInItalyGradeH(defaultChecked && nextGrade === GRADE_OPTIONS[4]);
+                        setTransferToRemainsInItalyGradeV(defaultChecked && nextGrade === GRADE_OPTIONS[5]);
                       }}
                       disabled={!isGradeEnabled}
                     >
