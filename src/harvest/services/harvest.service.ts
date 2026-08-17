@@ -45,11 +45,11 @@ export class HarvestService {
     return this.harvestCommandService.updatePartialClassificationMode(id, isPartialClassification);
   }
 
-  removeAllSortings(harvestId: number) {
-    return this.harvestCommandService.removeAllSortings(harvestId);
+  removeAllSortings(harvestId: number, actorId: number) {
+    return this.harvestCommandService.removeAllSortings(harvestId, actorId);
   }
 
-  remove(id: number) {
-    return this.harvestCommandService.remove(id);
+  remove(id: number, actorId: number) {
+    return this.harvestCommandService.remove(id, actorId);
   }
 }

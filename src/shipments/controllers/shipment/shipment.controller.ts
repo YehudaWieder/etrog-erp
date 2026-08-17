@@ -119,7 +119,8 @@ export class ShipmentController {
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the shipment to permanently delete.' })
   @ApiResponse({ status: 200, description: 'Shipment and all related data permanently deleted.' })
   @ApiResponse({ status: 404, description: 'Shipment not found.' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.shipmentService.removeHard(id);
+  remove(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.shipmentService.removeHard(id, actor.id);
   }
 }

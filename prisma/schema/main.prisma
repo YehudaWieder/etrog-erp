@@ -84,10 +84,35 @@ model User {
   israelBoxes           IsraelBox[]
   israelShipmentItems   IsraelShipmentItem[]
   israelStocks          IsraelStock[]
+
+  auditLogs AuditLog[]
 }
 
 // -----------------------------------------------------------------------------
-// 3. Internal Messaging System
+// 3. Audit Trail
+// -----------------------------------------------------------------------------
+model AuditLog {
+  id Int @id @default(autoincrement())
+
+  userId Int?
+  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  action     AuditAction
+  entityType String
+  entityId   String
+
+  before Json?
+  after  Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// -----------------------------------------------------------------------------
+// 4. Internal Messaging System
 // -----------------------------------------------------------------------------
 model Message {
   id Int @id @default(autoincrement())
@@ -120,6 +145,12 @@ enum Role {
   MANAGER
   EDITOR
   WORKER
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
 }
 
 enum Priority {

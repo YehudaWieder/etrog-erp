@@ -47,7 +47,7 @@ export class BoxPackingWorkflowService {
         // A quantity of 0 means "remove this item" — there is no such thing as a packed item with
         // zero quantity, so route it to a delete instead of failing update's positive-quantity check.
         if (edit.quantity === 0) {
-          await this.itemService.removeInTx(tx, edit.id);
+          await this.itemService.removeInTx(tx, edit.id, actorId);
           continue;
         }
         const item = await this.itemService.updateInTx(tx, edit.id, { quantity: edit.quantity }, actorId);

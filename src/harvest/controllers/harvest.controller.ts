@@ -174,8 +174,9 @@ export class HarvestController {
   @ApiParam({ name: 'id', type: Number, description: 'The ID of the soft-deleted classification to permanently remove.' })
   @ApiResponse({ status: 200, description: 'Classification permanently deleted.' })
   @ApiResponse({ status: 404, description: 'Soft-deleted classification not found.' })
-  async permanentDeleteClassification(@Param('id', ParseIntPipe) id: number) {
-    return this.harvestBulkService.permanentDeleteClassification(id);
+  async permanentDeleteClassification(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.harvestBulkService.permanentDeleteClassification(id, actor.id);
   }
 
   @Get(':id')
@@ -188,14 +189,16 @@ export class HarvestController {
   @Delete(':id/sortings')
   @ApiOperation({ summary: 'Delete all sorting classifications for a harvest record' })
   @ApiParam({ name: 'id', type: Number })
-  removeAllSortings(@Param('id', ParseIntPipe) id: number) {
-    return this.harvestService.removeAllSortings(id);
+  removeAllSortings(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.harvestService.removeAllSortings(id, actor.id);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a harvest record by ID' })
   @ApiParam({ name: 'id', type: Number })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.harvestService.remove(id);
+  remove(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.harvestService.remove(id, actor.id);
   }
 }

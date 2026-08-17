@@ -13,6 +13,7 @@ import {
   requireAdjustmentQuantity,
   validateAdjustmentType,
 } from 'src/inventory/services/inventory-core/utils/adjustment-movement.util';
+import { AuditLogService } from 'src/audit/audit.service';
 
 @Injectable()
 export class CustomerAllocationService {
@@ -21,6 +22,7 @@ export class CustomerAllocationService {
     private seasonsService: SeasonsService,
     private inventoryAvailabilityService: InventoryAvailabilityService,
     private customerAllocationSummaryService: CustomerAllocationSummaryService,
+    private auditLog: AuditLogService,
   ) {}
 
   // Create a new allocation record
@@ -37,12 +39,22 @@ export class CustomerAllocationService {
       seasonId,
     });
 
-    return this.prisma.customerAllocation.create({
+    const created = await this.prisma.customerAllocation.create({
       data: {
         ...createPayload,
         seasonId,
       },
     });
+
+    await this.auditLog.record({
+      userId: actorId,
+      action: 'CREATE',
+      entityType: 'CustomerAllocation',
+      entityId: created.id,
+      after: created,
+    });
+
+    return created;
   }
 
   // Get the total allocated quantity for a customer in a season, optionally filtered by category and pitam status
@@ -102,11 +114,23 @@ export class CustomerAllocationService {
     });
   }
 
-  async update(id: number, data: Prisma.CustomerAllocationUncheckedUpdateInput) {
-    return this.prisma.customerAllocation.update({
+  async update(id: number, data: Prisma.CustomerAllocationUncheckedUpdateInput, actorId: number) {
+    const existing = await this.prisma.customerAllocation.findUniqueOrThrow({ where: { id } });
+    const updated = await this.prisma.customerAllocation.update({
       where: { id },
       data,
     });
+
+    await this.auditLog.record({
+      userId: actorId,
+      action: 'UPDATE',
+      entityType: 'CustomerAllocation',
+      entityId: id,
+      before: existing,
+      after: updated,
+    });
+
+    return updated;
   }
 
   async getInventorySummary(query: CustomerInventorySummaryQuery) {
@@ -174,7 +198,7 @@ export class CustomerAllocationService {
     const quantity = requireAdjustmentQuantity(createPayload.quantity);
     const normalizedQuantity = normalizeAdjustmentQuantity(movementType, quantity);
 
-    return this.prisma.$transaction(async (tx) => {
+    const created = await this.prisma.$transaction(async (tx) => {
       await this.assertNegativeCustomerMovementHasStock(tx, {
         ...createPayload,
         seasonId,
@@ -191,6 +215,16 @@ export class CustomerAllocationService {
         },
       });
     });
+
+    await this.auditLog.record({
+      userId: actorId,
+      action: 'CREATE',
+      entityType: 'CustomerAllocation',
+      entityId: created.id,
+      after: created,
+    });
+
+    return created;
   }
 
   async updateAdjustment(id: number, data: Prisma.CustomerAllocationUncheckedUpdateInput, actorId: number) {
@@ -199,7 +233,7 @@ export class CustomerAllocationService {
       updatedById: actorId,
     };
 
-    return this.prisma.$transaction(async (tx) => {
+    const { existing, updated } = await this.prisma.$transaction(async (tx) => {
       const existing = await tx.customerAllocation.findFirst({
         where: {
           id,
@@ -230,7 +264,7 @@ export class CustomerAllocationService {
         quantity: nextQuantity,
       }, Math.abs(existing.quantity));
 
-      return tx.customerAllocation.update({
+      const updated = await tx.customerAllocation.update({
         where: { id },
         data: {
           ...updatePayload,
@@ -239,11 +273,24 @@ export class CustomerAllocationService {
           quantity: updatePayload.quantity === undefined ? undefined : nextQuantity,
         },
       });
+
+      return { existing, updated };
     });
+
+    await this.auditLog.record({
+      userId: actorId,
+      action: 'UPDATE',
+      entityType: 'CustomerAllocation',
+      entityId: id,
+      before: existing,
+      after: updated,
+    });
+
+    return updated;
   }
 
-  async removeAdjustment(id: number) {
-    return this.prisma.$transaction(async (tx) => {
+  async removeAdjustment(id: number, actorId: number) {
+    const { existing, removed } = await this.prisma.$transaction(async (tx) => {
       const existing = await tx.customerAllocation.findFirst({
         where: {
           id,
@@ -256,19 +303,42 @@ export class CustomerAllocationService {
         throw new NotFoundException(`Customer adjustment ${id} not found`);
       }
 
-      return tx.customerAllocation.update({
+      const removed = await tx.customerAllocation.update({
         where: { id },
         data: { isDeleted: true },
       });
+
+      return { existing, removed };
     });
+
+    await this.auditLog.record({
+      userId: actorId,
+      action: 'DELETE',
+      entityType: 'CustomerAllocation',
+      entityId: id,
+      before: existing,
+    });
+
+    return removed;
   }
 
   // Hard delete
-  async remove(id: number) {
+  async remove(id: number, actorId: number) {
     try {
-      return await this.prisma.customerAllocation.delete({
+      const existing = await this.prisma.customerAllocation.findUniqueOrThrow({ where: { id } });
+      const removed = await this.prisma.customerAllocation.delete({
         where: { id },
       });
+
+      await this.auditLog.record({
+        userId: actorId,
+        action: 'DELETE',
+        entityType: 'CustomerAllocation',
+        entityId: id,
+        before: existing,
+      });
+
+      return removed;
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
         throw new ConflictException('Cannot delete customer allocation movement because related records exist in the system.');

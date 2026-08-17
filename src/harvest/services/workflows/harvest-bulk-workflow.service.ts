@@ -24,6 +24,7 @@ import {
 import { HarvestAllocationService } from 'src/harvest/services/workflows/harvest-allocation.service';
 import { InventoryAvailabilityService } from 'src/inventory/services/inventory-availability.service';
 import { Grade, MovementType, PitamStatus } from '@prisma/client';
+import { AuditLogService } from 'src/audit/audit.service';
 
 @Injectable()
 export class HarvestBulkWorkflowService {
@@ -32,6 +33,7 @@ export class HarvestBulkWorkflowService {
     private seasonsService: SeasonsService,
     private readonly allocationService: HarvestAllocationService,
     private readonly inventoryAvailabilityService: InventoryAvailabilityService,
+    private readonly auditLog: AuditLogService,
   ) {}
 
   private mapToClassificationBulkItem(c: Classification): ClassificationBulkItemDto {
@@ -99,6 +101,14 @@ export class HarvestBulkWorkflowService {
       updatedById: params.updatedById,
       remainsInItalyGradeH: params.remainsInItalyGradeH,
       remainsInItalyGradeV: params.remainsInItalyGradeV,
+    });
+
+    await this.auditLog.record({
+      userId: params.updatedById,
+      action: 'CREATE',
+      entityType: 'Classification',
+      entityId: classification.id,
+      after: classification,
     });
 
     return classification;
@@ -332,6 +342,14 @@ export class HarvestBulkWorkflowService {
       remainsInItalyGradeV,
     });
 
+    await this.auditLog.record({
+      userId: updatedById,
+      action: 'CREATE',
+      entityType: 'Classification',
+      entityId: classification.id,
+      after: classification,
+    });
+
     return classification;
   }
 
@@ -471,6 +489,16 @@ export class HarvestBulkWorkflowService {
         harvest,
         classifications,
       };
+    }).then(async (result) => {
+      await this.auditLog.record({
+        userId: bulkPayload.updatedById,
+        action: 'CREATE',
+        entityType: 'FieldHarvest',
+        entityId: result.harvest.id,
+        after: result.harvest,
+      });
+
+      return result;
     });
   }
 
@@ -518,7 +546,7 @@ export class HarvestBulkWorkflowService {
     const hasNoClassificationChanges = !hasClassificationStructuralChanges && updatePayload.notes === undefined;
 
     if (isOnlyNotesUpdate) {
-      return this.prisma.$transaction(async (tx) => {
+      const updated = await this.prisma.$transaction(async (tx) => {
         await this.applyHarvestInlineUpdate(tx, harvestId, updatePayload.harvestUpdate);
 
         const updated = await tx.classification.update({
@@ -530,6 +558,17 @@ export class HarvestBulkWorkflowService {
 
         return updated;
       });
+
+      await this.auditLog.record({
+        userId: actorId,
+        action: 'UPDATE',
+        entityType: 'Classification',
+        entityId: classificationId,
+        before: oldClassification,
+        after: updated,
+      });
+
+      return updated;
     }
 
     if (hasNoClassificationChanges) {
@@ -544,7 +583,7 @@ export class HarvestBulkWorkflowService {
     // Full reprocessing with movement reversal
     const { id: seasonId } = await this.seasonsService.findActiveSeason();
 
-    return this.prisma.$transaction(async (tx) => {
+    const updatedClassification = await this.prisma.$transaction(async (tx) => {
       const newQuantity = updatePayload.quantity ?? oldClassification.quantity;
 
       // Get the harvest to update quantities
@@ -636,6 +675,17 @@ export class HarvestBulkWorkflowService {
       // slow/loaded DB.
       timeout: 300_000,
     });
+
+    await this.auditLog.record({
+      userId: actorId,
+      action: 'UPDATE',
+      entityType: 'Classification',
+      entityId: classificationId,
+      before: oldClassification,
+      after: updatedClassification,
+    });
+
+    return updatedClassification;
   }
 
   // Quantity-only edit for an existing classification: deletes and recreates its allocation
@@ -687,7 +737,17 @@ export class HarvestBulkWorkflowService {
     await this.allocationService.deleteLinkedMovements(tx, classificationId);
 
     if (newQuantity === 0) {
-      return tx.classification.delete({ where: { id: classificationId } });
+      const deleted = await tx.classification.delete({ where: { id: classificationId } });
+
+      await this.auditLog.record({
+        userId: updatedById,
+        action: 'DELETE',
+        entityType: 'Classification',
+        entityId: classificationId,
+        before: oldClassification,
+      });
+
+      return deleted;
     }
 
     const updatedClassification = await tx.classification.update({
@@ -703,6 +763,15 @@ export class HarvestBulkWorkflowService {
       updatedById,
       remainsInItalyGradeH,
       remainsInItalyGradeV,
+    });
+
+    await this.auditLog.record({
+      userId: updatedById,
+      action: 'UPDATE',
+      entityType: 'Classification',
+      entityId: classificationId,
+      before: oldClassification,
+      after: updatedClassification,
     });
 
     return updatedClassification;
@@ -791,7 +860,7 @@ export class HarvestBulkWorkflowService {
     };
 
     try {
-      return await this.prisma.$transaction(async (tx) => {
+      const deleted = await this.prisma.$transaction(async (tx) => {
         const classification = await tx.classification.findFirst({
           where: { id: classificationId, isDeleted: false },
           select: {
@@ -858,6 +927,16 @@ export class HarvestBulkWorkflowService {
         // load. Give it a lot of headroom before failing outright, especially under a slow/loaded DB.
         timeout: 300_000,
       });
+
+      await this.auditLog.record({
+        userId: actorId,
+        action: 'DELETE',
+        entityType: 'Classification',
+        entityId: classificationId,
+        before: deleted,
+      });
+
+      return deleted;
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
         throw new ConflictException('Cannot delete classification because related records exist in the system.');
@@ -942,15 +1021,24 @@ export class HarvestBulkWorkflowService {
     }
   }
 
-  async permanentDeleteClassification(classificationId: number) {
+  async permanentDeleteClassification(classificationId: number, actorId: number) {
     const record = await this.prisma.classification.findFirst({
       where: { id: classificationId, isDeleted: true },
-      select: { id: true },
     });
     if (!record) {
       throw new NotFoundException(`Deleted classification ${classificationId} not found`);
     }
-    return this.prisma.classification.delete({ where: { id: classificationId } });
+    const deleted = await this.prisma.classification.delete({ where: { id: classificationId } });
+
+    await this.auditLog.record({
+      userId: actorId,
+      action: 'DELETE',
+      entityType: 'Classification',
+      entityId: classificationId,
+      before: record,
+    });
+
+    return deleted;
   }
 
   private async assertInventoryAvailableForDeletion(

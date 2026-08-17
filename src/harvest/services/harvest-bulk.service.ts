@@ -53,8 +53,8 @@ export class HarvestBulkService {
     return this.workflow.restoreClassification(deletedClassificationId, harvestId, createDto, actorId);
   }
 
-  permanentDeleteClassification(classificationId: number) {
-    return this.workflow.permanentDeleteClassification(classificationId);
+  permanentDeleteClassification(classificationId: number, actorId: number) {
+    return this.workflow.permanentDeleteClassification(classificationId, actorId);
   }
 
   saveSortingBatch(

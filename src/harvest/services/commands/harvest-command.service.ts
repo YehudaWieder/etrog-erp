@@ -20,6 +20,7 @@ import {
   normalizeOwnerInputs,
 } from 'src/harvest/services/harvest-core/utils/owner-fallback.util';
 import { SeasonsService } from 'src/seasons/seasons.service';
+import { AuditLogService } from 'src/audit/audit.service';
 
 @Injectable()
 export class HarvestCommandService {
@@ -28,6 +29,7 @@ export class HarvestCommandService {
     private readonly classificationRepository: ClassificationRepository,
     private readonly allocationRepository: AllocationRepository,
     private readonly seasonsService: SeasonsService,
+    private readonly auditLog: AuditLogService,
   ) {}
 
   async create(data: FieldHarvestCreateDto, actorId: number) {
@@ -61,7 +63,7 @@ export class HarvestCommandService {
       ownerRejected: normalizedOwners.ownerRejected,
     });
 
-    return this.harvestRepository.create({
+    const created = await this.harvestRepository.create({
       ...data,
       dateGregorian: new Date(data.dateGregorian),
       updatedById: actorId,
@@ -73,6 +75,16 @@ export class HarvestCommandService {
       ownerRejected: normalizedOwners.ownerRejected,
       ...rates,
     });
+
+    await this.auditLog.record({
+      userId: actorId,
+      action: 'CREATE',
+      entityType: 'FieldHarvest',
+      entityId: created.id,
+      after: created,
+    });
+
+    return created;
   }
 
   async update(id: number, data: Omit<FieldHarvestUpdateDto, 'id'>, actorId: number) {
@@ -158,7 +170,7 @@ export class HarvestCommandService {
       dateUpdate = { dateGregorian: new Date(data.dateGregorian), dateHebrew: data.dateHebrew ?? current.dateHebrew, slug };
     }
 
-    return this.harvestRepository.update(id, {
+    const updated = await this.harvestRepository.update(id, {
       ...data,
       updatedById: actorId,
       totalHarvested,
@@ -168,6 +180,17 @@ export class HarvestCommandService {
       ...rates,
       ...dateUpdate,
     });
+
+    await this.auditLog.record({
+      userId: actorId,
+      action: 'UPDATE',
+      entityType: 'FieldHarvest',
+      entityId: id,
+      before: current,
+      after: updated,
+    });
+
+    return updated;
   }
 
   async updatePartialClassificationMode(id: number, isPartialClassification: boolean) {
@@ -186,14 +209,14 @@ export class HarvestCommandService {
     return this.harvestRepository.update(id, { isPartialClassification });
   }
 
-  async removeAllSortings(harvestId: number) {
+  async removeAllSortings(harvestId: number, actorId: number) {
     const harvest = await this.harvestRepository.findUniqueById(harvestId);
     if (!harvest) {
       throw new NotFoundException(`Harvest report #${harvestId} not found`);
     }
 
-    const classificationIds = await this.classificationRepository.findIdsByHarvest(harvestId);
-    const ids = classificationIds.map((item) => item.id);
+    const classifications = await this.classificationRepository.findByHarvest(harvestId);
+    const ids = classifications.map((item) => item.id);
 
     if (ids.length === 0) {
       return;
@@ -203,9 +226,17 @@ export class HarvestCommandService {
     await this.allocationRepository.deleteTraderStocksByReferenceIds(ids);
     await this.classificationRepository.deleteManyByIds(ids);
     await this.harvestRepository.update(harvestId, { classifiedTotal: 0 });
+
+    await this.auditLog.record({
+      userId: actorId,
+      action: 'DELETE',
+      entityType: 'Classification',
+      entityId: `harvest-${harvestId}`,
+      before: classifications,
+    });
   }
 
-  async remove(id: number) {
+  async remove(id: number, actorId: number) {
     const harvest = await this.harvestRepository.findUniqueById(id);
     if (!harvest) {
       throw new NotFoundException(`Harvest report #${id} not found`);
@@ -223,7 +254,17 @@ export class HarvestCommandService {
       if (softDeletedIds.length > 0) {
         await this.classificationRepository.deleteManyByIds(softDeletedIds.map((c) => c.id));
       }
-      return await this.harvestRepository.delete(id);
+      const deleted = await this.harvestRepository.delete(id);
+
+      await this.auditLog.record({
+        userId: actorId,
+        action: 'DELETE',
+        entityType: 'FieldHarvest',
+        entityId: id,
+        before: harvest,
+      });
+
+      return deleted;
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
         throw new ConflictException(

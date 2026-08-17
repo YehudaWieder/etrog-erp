@@ -204,8 +204,9 @@ export class BoxController {
   @ApiResponse({ status: 400, description: 'Invalid input.' })
   @ApiResponse({ status: 404, description: 'One or more boxes not found.' })
   @ApiResponse({ status: 409, description: 'One or more boxes have associated items or linked trader stock.' })
-  bulkRemove(@Body() data: DeleteBoxesBulkDto) {
-    return this.boxService.removeHardBulk(data.ids);
+  bulkRemove(@Body() data: DeleteBoxesBulkDto, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.boxService.removeHardBulk(data.ids, actor.id);
   }
 
   @Delete(':id')
@@ -213,7 +214,8 @@ export class BoxController {
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the box to permanently delete.' })
   @ApiResponse({ status: 200, description: 'Box and all its items permanently deleted.' })
   @ApiResponse({ status: 404, description: 'Box not found.' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.boxService.removeHard(id);
+  remove(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.boxService.removeHard(id, actor.id);
   }
 }

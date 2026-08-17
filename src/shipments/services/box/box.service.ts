@@ -14,6 +14,7 @@ import {
   validateCreateBoxInput,
   validateUpdateBoxInput,
 } from './utils/box.utils';
+import { AuditLogService } from 'src/audit/audit.service';
 
 @Injectable()
 export class BoxService {
@@ -21,6 +22,7 @@ export class BoxService {
     private prisma: PrismaService,
     private seasonsService: SeasonsService,
     private shipmentsService: ShipmentsService,
+    private auditLog: AuditLogService,
   ) {}
 
   // Create a new box within a shipment
@@ -76,6 +78,16 @@ export class BoxService {
       }
 
       await this.shipmentsService.syncShipmentTotals(tx, data.shipmentId);
+
+      return box;
+    }).then(async (box) => {
+      await this.auditLog.record({
+        userId: actorId,
+        action: 'CREATE',
+        entityType: 'Box',
+        entityId: box.id,
+        after: box,
+      });
 
       return box;
     });
@@ -137,6 +149,16 @@ export class BoxService {
       await this.shipmentsService.syncShipmentTotals(tx, data.shipmentId);
 
       return boxes;
+    }).then(async (boxes) => {
+      await this.auditLog.record({
+        userId: actorId,
+        action: 'CREATE',
+        entityType: 'Box',
+        entityId: boxes[0].id,
+        after: boxes,
+      });
+
+      return boxes;
     });
   }
 
@@ -180,7 +202,6 @@ export class BoxService {
 
     const current = await tx.box.findFirst({
       where: { id, isDeleted: false },
-      select: { id: true, shipmentId: true, seasonId: true, boxNumber: true, ownershipType: true, traderId: true, customerId: true, status: true, totalQuantity: true, boxType: true },
     });
 
     if (!current) {
@@ -289,6 +310,15 @@ export class BoxService {
       await this.shipmentsService.syncShipmentTotals(tx, current.shipmentId);
     }
 
+    await this.auditLog.record({
+      userId: actorId,
+      action: 'UPDATE',
+      entityType: 'Box',
+      entityId: id,
+      before: current,
+      after: updatedBox,
+    });
+
     return updatedBox;
   }
 
@@ -374,11 +404,10 @@ export class BoxService {
   }
 
   // Hard (permanent) delete – blocked if any related records exist
-  async removeHard(id: number) {
+  async removeHard(id: number, actorId: number) {
     return this.prisma.$transaction(async (tx) => {
       const box = await tx.box.findFirst({
         where: { id },
-        select: { id: true, shipmentId: true },
       });
 
       if (!box) throw new NotFoundException(`Box #${id} not found`);
@@ -403,18 +432,25 @@ export class BoxService {
       await tx.box.delete({ where: { id } });
       await this.shipmentsService.syncShipmentTotals(tx, box.shipmentId);
 
+      await this.auditLog.record({
+        userId: actorId,
+        action: 'DELETE',
+        entityType: 'Box',
+        entityId: id,
+        before: box,
+      });
+
       return { deleted: true, id };
     });
   }
 
   // Hard (permanent) delete of multiple boxes at once – blocked atomically if any of them has related records
-  async removeHardBulk(ids: unknown) {
+  async removeHardBulk(ids: unknown, actorId: number) {
     validateBulkDeleteBoxInput(ids);
 
     return this.prisma.$transaction(async (tx) => {
       const boxes = await tx.box.findMany({
         where: { id: { in: ids } },
-        select: { id: true, boxNumber: true, shipmentId: true },
       });
 
       const foundIds = new Set(boxes.map((box) => box.id));
@@ -458,6 +494,14 @@ export class BoxService {
       for (const shipmentId of shipmentIds) {
         await this.shipmentsService.syncShipmentTotals(tx, shipmentId);
       }
+
+      await this.auditLog.record({
+        userId: actorId,
+        action: 'DELETE',
+        entityType: 'Box',
+        entityId: boxes[0].id,
+        before: boxes,
+      });
 
       return { deleted: true, ids };
     });

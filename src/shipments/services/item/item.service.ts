@@ -13,6 +13,7 @@ import {
   validateUpdateShipmentItemInput,
 } from './utils/item.utils';
 import { distributeQuantityByTraderSharesCapped } from 'src/inventory/services/validation/trader-share-distribution';
+import { AuditLogService } from 'src/audit/audit.service';
 
 @Injectable()
 export class ItemService {
@@ -21,6 +22,7 @@ export class ItemService {
     private seasonsService: SeasonsService,
     private shipmentsService: ShipmentsService,
     private inventoryAvailabilityService: InventoryAvailabilityService,
+    private auditLog: AuditLogService,
   ) {}
 
   private normalizeItemOwnershipForBox(params: {
@@ -767,13 +769,22 @@ export class ItemService {
       quantity: newItem.quantity,
     }, box);
 
+    let finalItem = newItem;
     if (generalSourceBreakdown !== null) {
-      await tx.shipmentItem.update({ where: { id: newItem.id }, data: { generalSourceBreakdown } });
+      finalItem = await tx.shipmentItem.update({ where: { id: newItem.id }, data: { generalSourceBreakdown } });
     }
 
     await this.shipmentsService.syncBoxAndShipmentTotals(tx, box.id, box.shipmentId);
 
-    return newItem;
+    await this.auditLog.record({
+      userId: actorId,
+      action: 'CREATE',
+      entityType: 'ShipmentItem',
+      entityId: finalItem.id,
+      after: finalItem,
+    });
+
+    return finalItem;
   }
 
   // Returns all soft-deleted shipment items with related entity details.
@@ -794,11 +805,21 @@ export class ItemService {
   }
 
   // Permanently deletes a soft-deleted item record. No inventory effects (already reversed at soft-delete time).
-  async hardDelete(id: number) {
+  async hardDelete(id: number, actorId: number) {
     return this.prisma.$transaction(async (tx) => {
       const item = await tx.shipmentItem.findFirst({ where: { id, isDeleted: true } });
       if (!item) throw new NotFoundException(`Soft-deleted shipment item #${id} not found`);
-      return tx.shipmentItem.delete({ where: { id } });
+      const deleted = await tx.shipmentItem.delete({ where: { id } });
+
+      await this.auditLog.record({
+        userId: actorId,
+        action: 'DELETE',
+        entityType: 'ShipmentItem',
+        entityId: id,
+        before: item,
+      });
+
+      return deleted;
     });
   }
 
@@ -841,6 +862,15 @@ export class ItemService {
       });
 
       await this.shipmentsService.syncBoxAndShipmentTotals(tx, item.boxId, item.shipmentId);
+
+      await this.auditLog.record({
+        userId: actorId,
+        action: 'UPDATE',
+        entityType: 'ShipmentItem',
+        entityId: id,
+        before: item,
+        after: restored,
+      });
 
       return restored;
     }, { timeout: 300_000 });
@@ -888,22 +918,6 @@ export class ItemService {
     {
       const currentItem = await tx.shipmentItem.findFirst({
         where: { id, isDeleted: false },
-        select: {
-          id: true,
-          boxId: true,
-          shipmentId: true,
-          seasonId: true,
-          quantity: true,
-          pitamStatus: true,
-          traderId: true,
-          customerId: true,
-          traderCategoryId: true,
-          customerCategoryId: true,
-          grade: true,
-          ownershipType: true,
-          updatedById: true,
-          isPrivateSelection: true,
-        },
       });
 
       if (!currentItem) {
@@ -1036,8 +1050,9 @@ export class ItemService {
         isPrivateSelection: nextIsPrivateSelection,
       });
 
+      let finalItem = updatedItem;
       if (generalSourceBreakdown !== null) {
-        await tx.shipmentItem.update({ where: { id: updatedItem.id }, data: { generalSourceBreakdown } });
+        finalItem = await tx.shipmentItem.update({ where: { id: updatedItem.id }, data: { generalSourceBreakdown } });
       }
 
       // Re-sync totals for the associated box and shipment
@@ -1047,7 +1062,16 @@ export class ItemService {
         await this.shipmentsService.syncBoxAndShipmentTotals(tx, updatedItem.boxId, updatedItem.shipmentId);
       }
 
-      return updatedItem;
+      await this.auditLog.record({
+        userId: actorId,
+        action: 'UPDATE',
+        entityType: 'ShipmentItem',
+        entityId: id,
+        before: currentItem,
+        after: finalItem,
+      });
+
+      return finalItem;
     }
   }
 
@@ -1191,16 +1215,15 @@ export class ItemService {
   }
 
   // Soft-deletes an item (sets isDeleted=true) and hard-deletes its inventory movements, then syncs totals.
-  async remove(id: number) {
-    return await this.prisma.$transaction((tx) => this.removeInTx(tx, id), { timeout: 300_000 });
+  async remove(id: number, actorId: number) {
+    return await this.prisma.$transaction((tx) => this.removeInTx(tx, id, actorId), { timeout: 300_000 });
   }
 
   // Tx-scoped body of remove(), reusable by callers that already hold an open transaction
   // (e.g. BoxPackingWorkflowService, when a packing edit brings an item's quantity down to 0).
-  async removeInTx(tx: Prisma.TransactionClient, id: number) {
+  async removeInTx(tx: Prisma.TransactionClient, id: number, actorId: number) {
     const existing = await tx.shipmentItem.findFirst({
       where: { id, isDeleted: false },
-      select: { boxId: true, shipmentId: true },
     });
 
     if (!existing) {
@@ -1224,6 +1247,14 @@ export class ItemService {
     });
 
     await this.shipmentsService.syncBoxAndShipmentTotals(tx, existing.boxId, existing.shipmentId);
+
+    await this.auditLog.record({
+      userId: actorId,
+      action: 'DELETE',
+      entityType: 'ShipmentItem',
+      entityId: id,
+      before: existing,
+    });
 
     return item;
   }

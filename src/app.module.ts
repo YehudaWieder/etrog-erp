@@ -22,6 +22,7 @@ import { ActiveGuard } from './authorization/guards/active.guard';
 import { WorkerAccessGuard } from './authorization/guards/worker-access.guard';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { IsraelModule } from './israel/israel.module';
+import { AuditModule } from './audit/audit.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { IsraelModule } from './israel/israel.module';
     AuthorizationModule,
     DashboardModule,
     IsraelModule,
+    AuditModule,
   ],
   controllers: [AppController],
   providers: [

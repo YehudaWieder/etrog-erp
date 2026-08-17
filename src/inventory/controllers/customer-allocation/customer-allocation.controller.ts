@@ -203,9 +203,11 @@ export class CustomerAllocationController {
   @ApiResponse({ status: 404, description: 'Allocation not found.' })
   update(
     @Body() updateData: UpdateCustomerAllocationAdjustmentDto,
+    @Req() req: Request,
   ) {
+    const actor = req.user as AuthenticatedUser;
     const { id, ...data } = updateData;
-    return this.allocationService.update(id, data as Prisma.CustomerAllocationUncheckedUpdateInput);
+    return this.allocationService.update(id, data as Prisma.CustomerAllocationUncheckedUpdateInput, actor.id);
   }
 
   @Delete(':id')
@@ -213,8 +215,9 @@ export class CustomerAllocationController {
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the allocation to delete.' })
   @ApiResponse({ status: 200, description: 'Allocation deleted successfully.' })
   @ApiResponse({ status: 404, description: 'Allocation not found.' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.allocationService.remove(id);
+  remove(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.allocationService.remove(id, actor.id);
   }
 
   @Post('adjustments')
@@ -312,7 +315,8 @@ export class CustomerAllocationController {
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Customer adjustment movement deleted successfully.' })
   @ApiResponse({ status: 404, description: 'Customer adjustment movement not found.' })
-  removeAdjustment(@Param('id', ParseIntPipe) id: number) {
-    return this.allocationService.removeAdjustment(id);
+  removeAdjustment(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.allocationService.removeAdjustment(id, actor.id);
   }
 }

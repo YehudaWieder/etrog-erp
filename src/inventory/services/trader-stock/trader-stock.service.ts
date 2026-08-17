@@ -13,6 +13,7 @@ import {
     validateAdjustmentType,
 } from 'src/inventory/services/inventory-core/utils/adjustment-movement.util';
 import { GeneralShareAllocationService } from '../general-share-allocation/general-share-allocation.service';
+import { AuditLogService } from 'src/audit/audit.service';
 
 @Injectable()
 export class TraderStockService {
@@ -22,6 +23,7 @@ export class TraderStockService {
         private inventoryAvailabilityService: InventoryAvailabilityService,
         private traderStockSummaryService: TraderStockSummaryService,
         private generalShareAllocationService: GeneralShareAllocationService,
+        private auditLog: AuditLogService,
     ) {}
 
     // Create a new stock movement
@@ -38,12 +40,22 @@ export class TraderStockService {
             seasonId,
         });
 
-        return this.prisma.traderStock.create({
+        const created = await this.prisma.traderStock.create({
             data: {
                 ...createPayload,
                 seasonId,
             },
         });
+
+        await this.auditLog.record({
+            userId: actorId,
+            action: 'CREATE',
+            entityType: 'TraderStock',
+            entityId: created.id,
+            after: created,
+        });
+
+        return created;
     }
 
     // Get all movements for a specific trader and category in a season
@@ -145,7 +157,7 @@ export class TraderStockService {
             isFromPrivateSelection,
         };
 
-        return this.prisma.$transaction(async (tx) => {
+        const created = await this.prisma.$transaction(async (tx) => {
             await this.assertNegativeTraderMovementHasStock(tx, {
                 ...createPayload,
                 seasonId,
@@ -162,6 +174,16 @@ export class TraderStockService {
                 },
             });
         });
+
+        await this.auditLog.record({
+            userId: actorId,
+            action: 'CREATE',
+            entityType: 'TraderStock',
+            entityId: created.id,
+            after: created,
+        });
+
+        return created;
     }
 
     // "כללי" WASTE: drain MODULO first, then split any deficit across traders by their
@@ -187,7 +209,7 @@ export class TraderStockService {
             throw new BadRequestException('Negative trader movement requires traderCategoryId, grade, and pitamStatus');
         }
 
-        return this.prisma.$transaction(async (tx) => {
+        const result = await this.prisma.$transaction(async (tx) => {
             const { rows: createdRows } = await this.generalShareAllocationService.deductGeneralQuantity(tx, {
                 seasonId,
                 date,
@@ -214,6 +236,16 @@ export class TraderStockService {
                 ? tx.traderStock.findUniqueOrThrow({ where: { id: createdRows[0].id } })
                 : { batchId: createdRows[0].id, movements: createdRows };
         });
+
+        await this.auditLog.record({
+            userId: actorId,
+            action: 'CREATE',
+            entityType: 'TraderStock',
+            entityId: 'batchId' in result ? result.batchId : result.id,
+            after: result,
+        });
+
+        return result;
     }
 
     async updateAdjustment(id: number, data: Prisma.TraderStockUncheckedUpdateInput, actorId: number) {
@@ -261,7 +293,7 @@ export class TraderStockService {
                 quantity: nextQuantity,
             }, Math.abs(existing.quantity));
 
-            return tx.traderStock.update({
+            const updated = await tx.traderStock.update({
                 where: { id },
                 data: {
                     ...updatePayload,
@@ -270,10 +302,23 @@ export class TraderStockService {
                     quantity: updatePayload.quantity === undefined ? undefined : nextQuantity,
                 },
             });
+
+            return { existing, updated };
+        }).then(async ({ existing, updated }) => {
+            await this.auditLog.record({
+                userId: actorId,
+                action: 'UPDATE',
+                entityType: 'TraderStock',
+                entityId: id,
+                before: existing,
+                after: updated,
+            });
+
+            return updated;
         });
     }
 
-    async removeAdjustment(id: number) {
+    async removeAdjustment(id: number, actorId: number) {
         return this.prisma.$transaction(async (tx) => {
             const existing = await tx.traderStock.findFirst({
                 where: {
@@ -288,19 +333,29 @@ export class TraderStockService {
             }
 
             if (existing.type === MovementType.WASTE && existing.MovementReferenceId !== null) {
-                return this.removeGeneralWasteBatch(tx, existing.MovementReferenceId);
+                return this.removeGeneralWasteBatch(tx, existing.MovementReferenceId, actorId);
             }
 
-            return tx.traderStock.update({
+            const removed = await tx.traderStock.update({
                 where: { id },
                 data: { isDeleted: true },
             });
+
+            await this.auditLog.record({
+                userId: actorId,
+                action: 'DELETE',
+                entityType: 'TraderStock',
+                entityId: id,
+                before: existing,
+            });
+
+            return removed;
         });
     }
 
     // Undoes a multi-row "כללי" WASTE split (see createGeneralWaste) — every row sharing the
     // batch's MovementReferenceId is soft-deleted together, mirroring PitamSplitService.deleteBatchInTx.
-    private async removeGeneralWasteBatch(tx: Prisma.TransactionClient, referenceId: number) {
+    private async removeGeneralWasteBatch(tx: Prisma.TransactionClient, referenceId: number, actorId: number) {
         const rows = await tx.traderStock.findMany({
             where: { MovementReferenceId: referenceId, type: { in: [MovementType.WASTE, MovementType.ASSIGNED] }, isDeleted: false },
         });
@@ -333,15 +388,34 @@ export class TraderStockService {
             data: { isDeleted: true },
         });
 
+        await this.auditLog.record({
+            userId: actorId,
+            action: 'DELETE',
+            entityType: 'TraderStock',
+            entityId: referenceId,
+            before: rows,
+        });
+
         return { batchId: referenceId, deletedCount: rows.length };
     }
 
     // Hard delete a movement
-    async remove(id: number) {
+    async remove(id: number, actorId: number) {
         try {
-            return await this.prisma.traderStock.delete({
-            where: { id },
+            const existing = await this.prisma.traderStock.findUniqueOrThrow({ where: { id } });
+            const removed = await this.prisma.traderStock.delete({
+                where: { id },
             });
+
+            await this.auditLog.record({
+                userId: actorId,
+                action: 'DELETE',
+                entityType: 'TraderStock',
+                entityId: id,
+                before: existing,
+            });
+
+            return removed;
         } catch (error) {
             if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
                 throw new ConflictException('Cannot delete trader stock movement because related records exist in the system.');

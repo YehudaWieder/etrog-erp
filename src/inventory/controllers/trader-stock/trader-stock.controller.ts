@@ -176,8 +176,9 @@ export class TraderStockController {
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the stock movement to delete.' })
   @ApiResponse({ status: 200, description: 'Stock movement deleted successfully.' })
   @ApiResponse({ status: 404, description: 'Stock movement not found.' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.stockService.remove(id);
+  remove(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.stockService.remove(id, actor.id);
   }
 
   @Post('adjustments')
@@ -275,7 +276,8 @@ export class TraderStockController {
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Trader adjustment movement deleted successfully.' })
   @ApiResponse({ status: 404, description: 'Trader adjustment movement not found.' })
-  removeAdjustment(@Param('id', ParseIntPipe) id: number) {
-    return this.stockService.removeAdjustment(id);
+  removeAdjustment(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.stockService.removeAdjustment(id, actor.id);
   }
 }

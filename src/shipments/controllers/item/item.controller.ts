@@ -101,8 +101,9 @@ export class ItemController {
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the shipment item to delete.' })
   @ApiResponse({ status: 200, description: 'Shipment item deleted successfully.' })
   @ApiResponse({ status: 404, description: 'Shipment item not found.' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.itemService.remove(id);
+  remove(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.itemService.remove(id, actor.id);
   }
 
   @Delete(':id/hard')
@@ -110,8 +111,9 @@ export class ItemController {
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the soft-deleted shipment item.' })
   @ApiResponse({ status: 200, description: 'Shipment item permanently deleted.' })
   @ApiResponse({ status: 404, description: 'Soft-deleted shipment item not found.' })
-  hardDelete(@Param('id', ParseIntPipe) id: number) {
-    return this.itemService.hardDelete(id);
+  hardDelete(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.itemService.hardDelete(id, actor.id);
   }
 
   @Post(':id/restore')

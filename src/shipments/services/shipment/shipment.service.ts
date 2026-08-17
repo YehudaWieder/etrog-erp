@@ -2,7 +2,7 @@
 
 import { BadRequestException, Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { BoxType, Prisma, ShipmentStatus } from '@prisma/client';
+import { BoxType, Prisma, Shipment, ShipmentStatus } from '@prisma/client';
 import { SeasonsService } from 'src/seasons/seasons.service';
 import { ShipmentsService } from '../../shipments.service';
 import {
@@ -12,6 +12,7 @@ import {
   validateCreateShipmentInput,
   validateUpdateShipmentInput,
 } from './utils/shipment.utils';
+import { AuditLogService } from 'src/audit/audit.service';
 
 @Injectable()
 export class ShipmentService {
@@ -19,6 +20,7 @@ export class ShipmentService {
     private prisma: PrismaService,
     private seasonsService: SeasonsService,
     private shipmentsService: ShipmentsService,
+    private auditLog: AuditLogService,
   ) {}
 
   // Create a new shipment shell
@@ -59,10 +61,20 @@ export class ShipmentService {
 
     const slug = `SHP-S${seasonId}-${shipment.shipmentNumber}`;
 
-    return this.prisma.shipment.update({
+    const finalized = await this.prisma.shipment.update({
       where: { id: shipment.id },
       data: { slug },
     });
+
+    await this.auditLog.record({
+      userId: actorId,
+      action: 'CREATE',
+      entityType: 'Shipment',
+      entityId: finalized.id,
+      after: finalized,
+    });
+
+    return finalized;
   }
 
   // Find by the new unique constraint (Season + Number)
@@ -126,7 +138,6 @@ export class ShipmentService {
 
     const existing = await this.prisma.shipment.findFirst({
       where: { id, isDeleted: false },
-      select: { id: true, status: true, shippedAt: true, seasonId: true, shipmentNumber: true },
     });
 
     if (!existing) {
@@ -170,9 +181,11 @@ export class ShipmentService {
       }
     }
 
+    let updated: Shipment;
+
     // If marking as SHIPPED, update all boxes to SHIPPED in the same transaction
     if (effectiveStatus === ShipmentStatus.SHIPPED) {
-      return this.prisma.$transaction(async (tx) => {
+      updated = await this.prisma.$transaction(async (tx) => {
         await tx.box.updateMany({
           where: { shipmentId: id, status: { not: 'SHIPPED' }, isDeleted: false },
           data: { status: 'SHIPPED' },
@@ -188,11 +201,9 @@ export class ShipmentService {
           },
         });
       });
-    }
-
-    // If reverting to PREPARING, restore each box status based on fill level
-    if (effectiveStatus === ShipmentStatus.PREPARING) {
-      return this.prisma.$transaction(async (tx) => {
+    } else if (effectiveStatus === ShipmentStatus.PREPARING) {
+      // Reverting to PREPARING: restore each box status based on fill level
+      updated = await this.prisma.$transaction(async (tx) => {
         const systemConfig = await tx.systemConfig.findFirst({
           where: { seasonId: existing.seasonId },
           select: { smallBoxCapacity: true, mediumBoxCapacity: true, largeBoxCapacity: true },
@@ -230,11 +241,9 @@ export class ShipmentService {
           },
         });
       });
-    }
-
-    // If marking as DELIVERED, update all boxes to DELIVERED in the same transaction
-    if (effectiveStatus === ShipmentStatus.DELIVERED) {
-      return this.prisma.$transaction(async (tx) => {
+    } else if (effectiveStatus === ShipmentStatus.DELIVERED) {
+      // Marking as DELIVERED: update all boxes to DELIVERED in the same transaction
+      updated = await this.prisma.$transaction(async (tx) => {
         await tx.box.updateMany({
           where: { shipmentId: id, isDeleted: false },
           data: { status: 'DELIVERED' },
@@ -250,19 +259,30 @@ export class ShipmentService {
           },
         });
       });
-    }
-
-    // Otherwise, just update the shipment
-    return this.prisma.shipment.update({
+    } else {
+      // Otherwise, just update the shipment
+      updated = await this.prisma.shipment.update({
       where: { id },
       data: {
-        ...updatableData,
-        ...(newSlug !== undefined ? { slug: newSlug } : {}),
-        updatedById: actorId,
-        status: effectiveStatus,
-        shippedAt: nextShippedAt,
-      },
+          ...updatableData,
+          ...(newSlug !== undefined ? { slug: newSlug } : {}),
+          updatedById: actorId,
+          status: effectiveStatus,
+          shippedAt: nextShippedAt,
+        },
+      });
+    }
+
+    await this.auditLog.record({
+      userId: actorId,
+      action: 'UPDATE',
+      entityType: 'Shipment',
+      entityId: id,
+      before: existing,
+      after: updated,
     });
+
+    return updated;
   }
 
   // Recalculate totals (call this when items/boxes are added/removed)
@@ -281,12 +301,11 @@ export class ShipmentService {
   }
 
   // Hard (permanent) delete – removes all items and boxes first, then the shipment
-  async removeHard(id: number) {
+  async removeHard(id: number, actorId: number) {
     try {
-      return await this.prisma.$transaction(async (tx) => {
+      const result = await this.prisma.$transaction(async (tx) => {
         const shipment = await tx.shipment.findFirst({
           where: { id },
-          select: { id: true },
         });
 
         if (!shipment) throw new NotFoundException(`Shipment #${id} not found`);
@@ -305,8 +324,18 @@ export class ShipmentService {
         await tx.box.deleteMany({ where: { shipmentId: id } });
         await tx.shipment.delete({ where: { id } });
 
-        return { deleted: true, id };
+        return shipment;
       });
+
+      await this.auditLog.record({
+        userId: actorId,
+        action: 'DELETE',
+        entityType: 'Shipment',
+        entityId: id,
+        before: result,
+      });
+
+      return { deleted: true, id };
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
         throw new ConflictException('Cannot delete shipment because related records exist in the system.');
