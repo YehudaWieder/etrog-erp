@@ -1,0 +1,158 @@
+// Database configuration
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// -----------------------------------------------------------------------------
+// 1. Season Management (The Time-Tenant)
+// -----------------------------------------------------------------------------
+model Season {
+  id       Int     @id @default(autoincrement())
+  yearName Int     @unique // e.g. "2026"
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  slug String @unique // URL-friendly slug
+
+  // Italy module
+  systemConfigs        SystemConfig[]
+  TradersCategories    TradersCategories[]
+  customerCategories   CustomerCategories[]
+  traderCategoryShares TraderCategoryShare[]
+  fieldHarvests        FieldHarvest[]
+  classifications      Classification[]
+  traderStocks         TraderStock[]
+  customerAllocations  CustomerAllocation[]
+  shipment             Shipment[]
+  box                  Box[]
+  shipmentItem         ShipmentItem[]
+  traderSeasonSettings TraderSeasonSettings[]
+
+  // Israel module
+  israelFieldCategories IsraelFieldCategory[]
+  israelCategoryGrades  IsraelCategoryGrade[]
+  israelHarvests        IsraelHarvest[]
+  israelClassifications IsraelClassification[]
+  israelShipments       IsraelShipment[]
+  israelBoxes           IsraelBox[]
+  israelShipmentItems   IsraelShipmentItem[]
+  israelStocks          IsraelStock[]
+}
+
+// -----------------------------------------------------------------------------
+// 2. User Management
+// -----------------------------------------------------------------------------
+model User {
+  id         Int     @id @default(autoincrement())
+  supabaseId String  @unique
+  name       String  @unique
+  email      String  @unique
+  phone      String? @unique
+  role       Role    @default(WORKER)
+  isActive   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  slug String @unique // URL-friendly slug
+
+  // Italy module
+  fieldHarvests       FieldHarvest[]
+  classifications     Classification[]
+  traderStocks        TraderStock[]
+  customerAllocations CustomerAllocation[]
+  shipment            Shipment[]
+  box                 Box[]
+  shipmentItem        ShipmentItem[]
+  sentMessages        Message[]            @relation("SentMessages")
+
+  // Israel module
+  israelFields          IsraelField[]
+  israelFieldCategories IsraelFieldCategory[]
+  israelSortCategories  IsraelSortCategory[]
+  israelCategoryGrades  IsraelCategoryGrade[]
+  israelHarvests        IsraelHarvest[]
+  israelClassifications IsraelClassification[]
+  israelShipments       IsraelShipment[]
+  israelBoxes           IsraelBox[]
+  israelShipmentItems   IsraelShipmentItem[]
+  israelStocks          IsraelStock[]
+}
+
+// -----------------------------------------------------------------------------
+// 3. Internal Messaging System
+// -----------------------------------------------------------------------------
+model Message {
+  id Int @id @default(autoincrement())
+
+  senderId Int
+  sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  recipientIds Int[] @default([])
+  readByIds    Int[] @default([])
+
+  replyToMessageId Int?
+  replyToMessage   Message?  @relation("MessageReplies", fields: [replyToMessageId], references: [id])
+  replies          Message[] @relation("MessageReplies")
+
+  subject  String
+  content  String   @db.Text
+  priority Priority @default(NORMAL)
+
+  createdAt DateTime @default(now())
+
+  @@index([senderId])
+  @@index([replyToMessageId])
+}
+
+// -----------------------------------------------------------------------------
+// Enums (shared across modules)
+// -----------------------------------------------------------------------------
+enum Role {
+  OWNER
+  MANAGER
+  EDITOR
+  WORKER
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum Currency {
+  ILS
+  USD
+  EUR
+}
+
+enum PitamStatus {
+  WITH_PITAM
+  WITHOUT_PITAM
+  MIXED
+}
+
+enum ShipmentStatus {
+  PREPARING // Not yet departed
+  SHIPPED // Gone from warehouse
+  DELIVERED // Reached customer
+  CANCELLED // Reverted
+}
+
+enum BoxStatus {
+  OPEN // Editing allowed
+  CLOSED // Packed and sealed
+  SHIPPED // Dispatched
+  DELIVERED // Delivered to recipient
+}
+
+

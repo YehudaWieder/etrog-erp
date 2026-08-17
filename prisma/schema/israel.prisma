@@ -1,0 +1,314 @@
+// -----------------------------------------------------------------------------
+// 1. Israel Fields (א"י — the field/grower a harvest comes from)
+// -----------------------------------------------------------------------------
+model IsraelField {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  notes String?
+
+  updatedById Int
+  updatedBy   User @relation(fields: [updatedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  categories IsraelFieldCategory[]
+  harvests   IsraelHarvest[]
+  stocks     IsraelStock[]
+
+  @@index([name])
+}
+
+// -----------------------------------------------------------------------------
+// 2. Israel Field Categories (seasonal, linked to a field)
+// -----------------------------------------------------------------------------
+model IsraelFieldCategory {
+  id Int @id @default(autoincrement())
+
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  fieldId Int
+  field   IsraelField @relation(fields: [fieldId], references: [id])
+
+  name     String
+  price    Decimal  @default(0)
+  currency Currency
+
+  notes String?
+
+  updatedById Int
+  updatedBy   User @relation(fields: [updatedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([seasonId, fieldId, name])
+  @@index([seasonId])
+  @@index([seasonId, fieldId])
+}
+
+// -----------------------------------------------------------------------------
+// 3. Israel Sort Categories (spans multiple seasons, not linked to a field)
+// -----------------------------------------------------------------------------
+model IsraelSortCategory {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  notes String?
+
+  updatedById Int
+  updatedBy   User @relation(fields: [updatedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  grades          IsraelCategoryGrade[]
+  classifications IsraelClassification[]
+  shipmentItems   IsraelShipmentItem[]
+  stocks          IsraelStock[]
+
+  @@index([name])
+}
+
+// -----------------------------------------------------------------------------
+// 4. Israel Category Grades (seasonal, linked to a sort category)
+// -----------------------------------------------------------------------------
+model IsraelCategoryGrade {
+  id Int @id @default(autoincrement())
+
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  categoryId Int
+  category   IsraelSortCategory @relation(fields: [categoryId], references: [id])
+
+  grades Json @default("{}")
+
+  notes String?
+
+  updatedById Int
+  updatedBy   User @relation(fields: [updatedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([seasonId, categoryId])
+  @@index([seasonId])
+}
+
+// -----------------------------------------------------------------------------
+// 5. Israel Harvest (seasonal, linked to a field)
+// -----------------------------------------------------------------------------
+model IsraelHarvest {
+  id Int @id @default(autoincrement())
+
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  fieldId Int
+  field   IsraelField @relation(fields: [fieldId], references: [id])
+
+  dateGregorian DateTime
+  dateHebrew    String
+  quantity      Int      @default(0)
+
+  notes String?
+
+  updatedById Int
+  updatedBy   User @relation(fields: [updatedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  classifications IsraelClassification[]
+
+  @@unique([seasonId, fieldId, dateGregorian])
+  @@index([seasonId])
+  @@index([seasonId, fieldId])
+}
+
+// -----------------------------------------------------------------------------
+// 6. Israel Classification (seasonal, linked to a harvest and a sort category)
+// -----------------------------------------------------------------------------
+model IsraelClassification {
+  id Int @id @default(autoincrement())
+
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  harvestId Int
+  harvest   IsraelHarvest @relation(fields: [harvestId], references: [id])
+
+  categoryId Int
+  category   IsraelSortCategory @relation(fields: [categoryId], references: [id])
+
+  grade       String
+  pitamStatus PitamStatus
+  quantity    Int         @default(0)
+
+  notes String?
+
+  updatedById Int
+  updatedBy   User @relation(fields: [updatedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([seasonId])
+  @@index([seasonId, harvestId])
+  @@index([categoryId])
+}
+
+// -----------------------------------------------------------------------------
+// 7. Israel Shipment (seasonal, groups boxes)
+// -----------------------------------------------------------------------------
+model IsraelShipment {
+  id Int @id @default(autoincrement())
+
+  shipmentNumber Int @default(autoincrement())
+
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  totalBoxes    Int @default(0)
+  totalQuantity Int @default(0)
+
+  status    ShipmentStatus @default(PREPARING)
+  shippedAt DateTime?
+
+  notes String?
+
+  boxes IsraelBox[]
+
+  updatedById Int
+  updatedBy   User @relation(fields: [updatedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([seasonId, shipmentNumber])
+  @@index([seasonId])
+  @@index([seasonId, status])
+}
+
+// -----------------------------------------------------------------------------
+// 8. Israel Box (seasonal shipment container)
+// -----------------------------------------------------------------------------
+model IsraelBox {
+  id Int @id @default(autoincrement())
+
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  shipmentId Int?
+  shipment   IsraelShipment? @relation(fields: [shipmentId], references: [id])
+
+  boxNumber  Int
+  itemsCount Int       @default(0)
+  status     BoxStatus @default(OPEN)
+
+  notes String?
+
+  updatedById Int
+  updatedBy   User @relation(fields: [updatedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items  IsraelShipmentItem[]
+  stocks IsraelStock[]
+
+  @@unique([seasonId, boxNumber])
+  @@index([seasonId])
+  @@index([shipmentId])
+  @@index([seasonId, status])
+}
+
+// -----------------------------------------------------------------------------
+// 9. Israel Shipment Item (linked to a box, season, sort category, grade)
+// -----------------------------------------------------------------------------
+model IsraelShipmentItem {
+  id Int @id @default(autoincrement())
+
+  boxId Int
+  box   IsraelBox @relation(fields: [boxId], references: [id])
+
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  categoryId Int
+  category   IsraelSortCategory @relation(fields: [categoryId], references: [id])
+
+  grade       String
+  pitamStatus PitamStatus
+  quantity    Int         @default(0)
+
+  notes String?
+
+  updatedById Int
+  updatedBy   User @relation(fields: [updatedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([boxId])
+  @@index([seasonId])
+  @@index([categoryId])
+}
+
+// -----------------------------------------------------------------------------
+// 10. Israel Stock (movement ledger — what came in / went out, incl. non-shipment exits)
+// -----------------------------------------------------------------------------
+model IsraelStock {
+  id Int @id @default(autoincrement())
+
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  date DateTime
+
+  fieldId Int?
+  field   IsraelField? @relation(fields: [fieldId], references: [id])
+
+  categoryId Int
+  category   IsraelSortCategory @relation(fields: [categoryId], references: [id])
+
+  grade       String
+  pitamStatus PitamStatus
+  quantity    Int         @default(0)
+
+  type IsraelMovementType @default(HARVEST_IN)
+
+  movementReferenceId Int? // IsraelHarvestId, IsraelClassificationId or IsraelShipmentItemId
+
+  boxId Int?
+  box   IsraelBox? @relation(fields: [boxId], references: [id])
+
+  notes String?
+
+  updatedById Int
+  updatedBy   User @relation(fields: [updatedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  isDeleted Boolean @default(false)
+
+  @@index([seasonId, type])
+  @@index([seasonId, fieldId, type])
+  @@index([categoryId, grade, pitamStatus, type])
+  @@index([isDeleted])
+}
+
+// -----------------------------------------------------------------------------
+// Enums
+// -----------------------------------------------------------------------------
+enum IsraelMovementType {
+  HARVEST_IN // Initial entry from field harvest/classification (Positive)
+  PACKED_SHIPPED // Goods physically left via shipment (Negative)
+  SELF_PICKUP // Goods physically collected by the owner, not via shipment (Negative)
+  WASTE // Spoilage, damage, or quality rejection (Negative)
+  ADJUSTMENT // Manual inventory correction for typos or audits (Positive/Negative)
+}
