@@ -9,7 +9,7 @@ type ModuleSwitcherProps = {
 
 export function ModuleSwitcher({ lang, activeModule, onChange }: ModuleSwitcherProps) {
   const italyLabel = lang === 'he' ? 'איטליה' : 'Italy';
-  const israelLabel = lang === 'he' ? 'א״י' : 'Israel';
+  const israelLabel = lang === 'he' ? 'ישראל' : 'Israel';
 
   return (
     <div className={styles.switcher} role="group" aria-label={lang === 'he' ? 'החלפת מודול' : 'Switch module'}>

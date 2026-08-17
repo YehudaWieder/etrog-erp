@@ -1,10 +1,10 @@
 .switcher {
   display: inline-flex;
   align-items: center;
-  padding: 2px;
+  padding: 4px;
   border-radius: var(--radius-pill);
   background: rgba(45, 90, 39, 0.08);
-  gap: 2px;
+  gap: 4px;
 }
 
 .option {
@@ -15,7 +15,7 @@
   font-size: 0.8rem;
   font-weight: 600;
   line-height: 1;
-  padding: 6px 12px;
+  padding: 10px 18px;
   border-radius: var(--radius-pill);
   white-space: nowrap;
   transition: color var(--easing-standard), background var(--easing-standard);
