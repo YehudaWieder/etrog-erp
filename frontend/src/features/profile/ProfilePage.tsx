@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from '../../app/layout/AppShell';
+import { useActiveModule } from '../../hooks/useActiveModule';
 import { isAuthenticated, getCurrentUser, logout } from '../../services/authService';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { PROFILE_I18N } from './i18n';
@@ -25,6 +26,7 @@ import {
 export function ProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const activeModule = useActiveModule();
   const alertsCount = useUnreadAlertsCount();
   const currentUser = getCurrentUser();
 
@@ -158,7 +160,7 @@ export function ProfilePage() {
       activeSidebarItemId={activeSidebarId}
       onTopNavClick={handleTopNavClick}
       onSidebarClick={handleSidebarClick}
-      onBrandClick={() => navigate('/home')}
+      onBrandClick={() => navigate(`/${activeModule}/home`)}
       topBarOptions={{
         alertsCount,
         onAlertsClick: () => navigate('/messages'),
@@ -172,7 +174,7 @@ export function ProfilePage() {
         onProfile: () => navigate('/profile'),
         userName: currentUser?.name || t.userNameFallback,
       }}
-      sidebarFooterSlot={<ProfileSettingsSidebarButton lang={lang} label={t.settings} onClick={() => navigate('/settings')} />}
+      sidebarFooterSlot={<ProfileSettingsSidebarButton lang={lang} label={t.settings} onClick={() => navigate(`/${activeModule}/settings`)} />}
     >
       {activeSidebarId === 'my-profile' ? (
         <ProfileOverviewSection

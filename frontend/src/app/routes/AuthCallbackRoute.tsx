@@ -5,6 +5,7 @@ import { useAuthLanguage } from '../../features/auth/hooks/useAuthLanguage';
 import { AUTH_TOKEN_STORAGE_KEY, persistAuthSession } from '../../services/apiClient';
 import { type AuthProfile } from '../../services/authService';
 import { supabase } from '../../services/supabaseClient';
+import { getLastActiveModule } from '../../utils/activeModule';
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined ?? '/api').replace(/\/+$/, '');
 
@@ -85,7 +86,7 @@ export function AuthCallbackRoute(): JSX.Element {
             role: profile.role,
             isActive: profile.isActive,
           });
-          navigate('/home', { replace: true });
+          navigate(`/${getLastActiveModule()}/home`, { replace: true });
         } else {
           navigate('/login', {
             replace: true,

@@ -8,7 +8,7 @@ export function RegisterPage() {
   const lang = useAuthLanguage();
   const a = AUTH_I18N[lang];
   const dir = lang === 'he' ? 'rtl' : 'ltr';
-  const { topBarProps, formProps, successNotice } = useRegisterPage();
+  const { formProps, successNotice } = useRegisterPage();
 
   if (successNotice) {
     return (
@@ -26,5 +26,5 @@ export function RegisterPage() {
     );
   }
 
-  return <AuthPageShell topBarProps={topBarProps} formProps={formProps} />;
+  return <AuthPageShell lang={lang} formProps={formProps} />;
 }

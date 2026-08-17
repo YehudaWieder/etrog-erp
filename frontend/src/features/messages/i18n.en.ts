@@ -5,10 +5,12 @@ export const MESSAGES_I18N_EN: MessagesI18n = {
   topNav: [
     { id: 'harvest', label: 'Harvest & Sorting', href: '/harvest/harvest-summary' },
     { id: 'shipments', label: 'Shipments', href: '/shipments/shipment-items-summary' },
-    { id: 'partners', label: 'Partners Inventory', icon: 'fa-handshake' },
+    { id: 'partners', label: 'Partners Inventory', icon: 'fa-handshake', href: '/traders' },
     { id: 'customers', label: 'Customers Inventory', icon: 'fa-users' },
-    { id: 'workers', label: 'Israel Harvest', icon: 'fa-person' },
-    { id: 'israel-shipments', label: 'Israel Shipments', icon: 'fa-truck-fast' },
+    { id: 'workers', label: 'Israel Harvest', icon: 'fa-person', href: '/harvest' },
+    { id: 'israel-shipments', label: 'Israel Shipments', icon: 'fa-truck-fast', href: '/shipments' },
+    { id: 'israel-inventory', label: 'Israel Inventory', icon: 'fa-warehouse', href: '/inventory' },
+    { id: 'israel-payments', label: 'Israel Payments', icon: 'fa-file-invoice-dollar', href: '/payments' },
     { id: 'payments', label: 'Expenses & Payments', icon: 'fa-money-bill' },
   ],
   sidebar: [

@@ -2,6 +2,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppShell } from '../../app/layout/AppShell';
+import { useActiveModule } from '../../hooks/useActiveModule';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import type { NavItem } from '../../types/navigation';
 import { ApiError } from '../../services/apiClient';
@@ -97,6 +98,7 @@ export function HarvestPage() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const location = useLocation();
+  const activeModule = useActiveModule();
   const [activeTopId, setActiveTopId] = useState('harvest');
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [fields, setFields] = useState<Field[]>([]);
@@ -200,7 +202,7 @@ export function HarvestPage() {
 
   const activeSidebarId = useMemo(() => {
     const pathParts = location.pathname.split('/').filter(Boolean);
-    const subRoute = pathParts[1];
+    const subRoute = pathParts[2];
     return subRoute || DEFAULT_SIDEBAR_ITEM_ID;
   }, [location.pathname]);
 
@@ -229,7 +231,7 @@ export function HarvestPage() {
   };
 
   const handleSidebarClick = (item: NavItem) => {
-    navigate(item.href || `/harvest/${item.id}`);
+    navigate(`/${activeModule}${item.href || `/harvest/${item.id}`}`);
   };
 
   const isHarvestSummaryTab = activeSidebarId === 'harvest-summary';
@@ -1585,7 +1587,7 @@ export function HarvestPage() {
       activeSidebarItemId={activeSidebarId}
       onTopNavClick={handleTopNavClick}
       onSidebarClick={handleSidebarClick}
-      onBrandClick={() => navigate('/home')}
+      onBrandClick={() => navigate(`/${activeModule}/home`)}
       topBarOptions={{
         alertsCount,
         onAlertsClick: () => navigate('/messages'),
@@ -1603,7 +1605,7 @@ export function HarvestPage() {
         <button
           type="button"
           className="app-shell__sidebar-item app-shell__sidebar-settings"
-          onClick={() => navigate('/settings')}
+          onClick={() => navigate(`/${activeModule}/settings`)}
         >
           {lang === 'he' ? (
             <>

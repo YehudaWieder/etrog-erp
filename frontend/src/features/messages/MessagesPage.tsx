@@ -1,5 +1,6 @@
 import { FaPaperPlane } from 'react-icons/fa6';
 import { AppShell } from '../../app/layout/AppShell';
+import { useActiveModule } from '../../hooks/useActiveModule';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import { isAuthenticated, logout } from '../../services/authService';
 import { MessagesComposeModal } from './components/MessagesComposeModal';
@@ -7,6 +8,7 @@ import { MessagesList } from './components/MessagesList';
 import { useMessagesPage } from './hooks/useMessagesPage';
 
 export function MessagesPage() {
+  const activeModule = useActiveModule();
   const {
     navigate,
     lang,
@@ -64,7 +66,7 @@ export function MessagesPage() {
       activeSidebarItemId={activeSidebarId}
       onTopNavClick={handleTopNavClick}
       onSidebarClick={handleSidebarClick}
-      onBrandClick={() => navigate('/home')}
+      onBrandClick={() => navigate(`/${activeModule}/home`)}
       topBarOptions={{
         alertsCount: counts['unread-messages'],
         onAlertsClick: () => navigate('/messages'),
@@ -82,7 +84,7 @@ export function MessagesPage() {
         <button
           type="button"
           className="app-shell__sidebar-item app-shell__sidebar-settings"
-          onClick={() => navigate('/settings')}
+          onClick={() => navigate(`/${activeModule}/settings`)}
         >
           {lang === 'he' ? (
             <>

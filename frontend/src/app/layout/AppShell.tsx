@@ -14,10 +14,13 @@ import {
 
 import { Sidebar } from '../../components/navigation/Sidebar';
 import { AppTopBar } from '../../components/navigation/AppTopBar';
+import { filterNavByModule } from '../../components/navigation/navModules';
 import { StickyHeaderBar } from '../../components/StickyHeaderBar';
 import { TopLoadingBar } from '../../components/ui/TopLoadingBar';
 import type { ProfileMenuProps } from '../../components/navigation/ProfileMenu';
 import { directionFromLanguage, getPreferredLanguage } from '../../utils/locale';
+import { getModuleFromPath, setLastActiveModule, type AppModule } from '../../utils/activeModule';
+import { useActiveModule } from '../../hooks/useActiveModule';
 import { useApiLoading } from '../../hooks/useApiLoading';
 import { useSettledBoolean } from '../../hooks/useSettledBoolean';
 import brandLogo from '../../assets/logo.svg';
@@ -70,6 +73,7 @@ export function AppShell({
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const location = useLocation();
+  const activeModule = useActiveModule();
   const isApiLoading = useApiLoading();
   // Most in-app navigation (top bar and sidebar) reuses already-loaded data or is gated by
   // its own "already loaded for this season" guards, so it often triggers no new API call at
@@ -346,6 +350,13 @@ export function AppShell({
   }, [location.key, dispatch]);
 
   useEffect(() => {
+    const pathModule = getModuleFromPath(location.pathname);
+    if (pathModule) {
+      setLastActiveModule(pathModule);
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
     setIsNavigating(true);
     if (navigatingTimeoutRef.current) {
       clearTimeout(navigatingTimeoutRef.current);
@@ -372,7 +383,12 @@ export function AppShell({
 
   const handleTopBarNavigate = (item: NavItem) => {
     resetOnNavigateRef.current = true;
-    navigate(item.href ?? `/${item.id}`);
+    navigate(`/${activeModule}${item.href ?? `/${item.id}`}`);
+  };
+
+  const handleModuleChange = (module: AppModule) => {
+    setLastActiveModule(module);
+    navigate(`/${module}/home`);
   };
 
   const handleSidebarNavigate = onSidebarClick
@@ -385,13 +401,15 @@ export function AppShell({
   return (
     <div className="app-shell" data-direction={resolvedDirection}>
       <AppTopBar
-        links={topNav}
+        links={filterNavByModule(topNav, activeModule)}
         activeId={activeTopNavId}
         onNavigate={handleTopBarNavigate}
         brandName={brandName}
         logoSrc={logoSrc}
         lang={topBarLanguage}
         onBrandClick={onBrandClick}
+        activeModule={activeModule}
+        onModuleChange={handleModuleChange}
         alertsCount={typeof liveUnreadCount === 'number' ? liveUnreadCount : topBarOptions.alertsCount}
         onAlertsClick={topBarOptions.onAlertsClick}
         isAuthenticated={topBarOptions.isAuthenticated}

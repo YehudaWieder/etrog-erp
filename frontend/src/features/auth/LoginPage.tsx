@@ -7,7 +7,6 @@ export function LoginPage() {
   const lang = useAuthLanguage();
   const a = AUTH_I18N[lang];
   const {
-    topBarProps,
     formProps,
     showForgotPassword,
     forgotEmail,
@@ -19,7 +18,7 @@ export function LoginPage() {
 
   return (
     <>
-      <AuthPageShell topBarProps={topBarProps} formProps={formProps} />
+      <AuthPageShell lang={lang} formProps={formProps} />
 
       {showForgotPassword ? (
         <div className="login-container" style={{ paddingTop: '0.5rem' }}>

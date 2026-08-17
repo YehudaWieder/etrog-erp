@@ -26,12 +26,14 @@ import { getTraders, type Trader } from '../../services/tradersApi';
 import { getTraderCategoriesWithShares, type TraderCategoryWithShares } from '../../services/traderCategoriesApi';
 import { getCustomerCategoriesBySeason, type CustomerCategory } from '../../services/customerCategoriesApi';
 import { AddCustomerMovementModal } from './components/AddCustomerMovementModal';
+import { useActiveModule } from '../../hooks/useActiveModule';
 
 const DEFAULT_SIDEBAR_ITEM_ID = 'all';
 
 export function CustomerInventoryPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const activeModule = useActiveModule();
   const [activeTopId, setActiveTopId] = useState('customers');
   const [alertsCount, setAlertsCount] = useState<number>(0);
   const [seasons, setSeasons] = useState<Season[]>([]);
@@ -92,7 +94,7 @@ export function CustomerInventoryPage() {
 
   const activeSidebarId = useMemo(() => {
     const pathParts = location.pathname.split('/').filter(Boolean);
-    const subRoute = pathParts[1];
+    const subRoute = pathParts[2];
     return subRoute || DEFAULT_SIDEBAR_ITEM_ID;
   }, [location.pathname]);
 
@@ -553,11 +555,11 @@ export function CustomerInventoryPage() {
         filtersApiRef.current.setFilterValue('customerId', 'ALL');
         filtersApiRef.current.setFilterValue('inventoryStatus', 'ALL');
       }
-      navigate('/customers/all');
+      navigate(`/${activeModule}/customers/all`);
       return;
     }
 
-    navigate(item.href || `/customers/${item.id}`);
+    navigate(`/${activeModule}${item.href || `/customers/${item.id}`}`);
   };
 
   return (
@@ -588,7 +590,7 @@ export function CustomerInventoryPage() {
       activeSidebarItemId={activeSidebarId}
       onTopNavClick={handleTopNavClick}
       onSidebarClick={handleSidebarClick}
-      onBrandClick={() => navigate('/home')}
+      onBrandClick={() => navigate(`/${activeModule}/home`)}
       topBarOptions={{
         alertsCount,
         onAlertsClick: () => navigate('/messages'),
@@ -603,7 +605,7 @@ export function CustomerInventoryPage() {
         <button
           type="button"
           className="app-shell__sidebar-item app-shell__sidebar-settings"
-          onClick={() => navigate('/settings')}
+          onClick={() => navigate(`/${activeModule}/settings`)}
         >
           {lang === 'he' ? (
             <>

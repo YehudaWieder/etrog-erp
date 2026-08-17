@@ -6,10 +6,10 @@ import type { NavItem } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
 import { useActiveModule } from '../../hooks/useActiveModule';
 
-export function WorkersPage() {
+export function IsraelPaymentsPage() {
   const navigate = useNavigate();
   const activeModule = useActiveModule();
-  const [activeTopId, setActiveTopId] = useState('workers');
+  const [activeTopId, setActiveTopId] = useState('israel-payments');
   const currentUser = getCurrentUser();
   const [alertsCount, setAlertsCount] = useState<number>(0);
 

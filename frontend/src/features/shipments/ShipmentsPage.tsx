@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from '../../app/layout/AppShell';
+import { useActiveModule } from '../../hooks/useActiveModule';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import { SHIPMENTS_I18N } from './i18n';
 import type { NavItem } from '../../types/navigation';
@@ -44,6 +45,7 @@ const DEFAULT_SIDEBAR_ITEM_ID = 'all-shipments';
 export function ShipmentsPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const activeModule = useActiveModule();
   const [activeTopId, setActiveTopId] = useState('shipments');
   const [alertsCount, setAlertsCount] = useState<number>(0);
   const [selectedShipmentRow, setSelectedShipmentRow] = useState<ShipmentRecord | null>(null);
@@ -109,7 +111,7 @@ export function ShipmentsPage() {
 
   const activeSidebarId = useMemo(() => {
     const pathParts = location.pathname.split('/').filter(Boolean);
-    const subRoute = pathParts[1];
+    const subRoute = pathParts[2];
     return subRoute || DEFAULT_SIDEBAR_ITEM_ID;
   }, [location.pathname]);
 
@@ -220,7 +222,7 @@ export function ShipmentsPage() {
   };
 
   const handleSidebarClick = (item: NavItem) => {
-    navigate(item.href || `/shipments/${item.id}`);
+    navigate(`/${activeModule}${item.href || `/shipments/${item.id}`}`);
   };
 
   const handleCreateAction = (label: string) => {
@@ -474,7 +476,7 @@ export function ShipmentsPage() {
       activeSidebarItemId={activeSidebarId}
       onTopNavClick={handleTopNavClick}
       onSidebarClick={handleSidebarClick}
-      onBrandClick={() => navigate('/home')}
+      onBrandClick={() => navigate(`/${activeModule}/home`)}
       topBarOptions={{
         alertsCount,
         onAlertsClick: () => navigate('/messages'),
@@ -489,7 +491,7 @@ export function ShipmentsPage() {
         <button
           type="button"
           className="app-shell__sidebar-item app-shell__sidebar-settings"
-          onClick={() => navigate('/settings')}
+          onClick={() => navigate(`/${activeModule}/settings`)}
         >
           {lang === 'he' ? (
             <>

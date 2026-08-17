@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { FaCirclePlus } from 'react-icons/fa6';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from '../../app/layout/AppShell';
+import { useActiveModule } from '../../hooks/useActiveModule';
 import { GlobalScopedFilters, type GlobalScopedFilterConfig, type GlobalScopedFiltersApi } from '../../components/ui/GlobalScopedFilters';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import { openPrintableWindow } from '../../services/printWindow';
@@ -39,6 +40,7 @@ const DEFAULT_FILTER_VALUES: Record<string, string> = {
 export function TraderInventoryPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const activeModule = useActiveModule();
   const [activeTopId, setActiveTopId] = useState('traders');
   const [alertsCount, setAlertsCount] = useState<number>(0);
   const [seasons, setSeasons] = useState<Season[]>([]);
@@ -99,7 +101,7 @@ export function TraderInventoryPage() {
 
   const activeSidebarId = useMemo(() => {
     const pathParts = location.pathname.split('/').filter(Boolean);
-    const subRoute = pathParts[1];
+    const subRoute = pathParts[2];
     return subRoute || DEFAULT_SIDEBAR_ITEM_ID;
   }, [location.pathname]);
 
@@ -639,7 +641,7 @@ export function TraderInventoryPage() {
   };
 
   const handleSidebarClick = (item: NavItem) => {
-    const targetPath = item.href || `/traders/${item.id}`;
+    const targetPath = `/${activeModule}${item.href || `/traders/${item.id}`}`;
     navigate(targetPath);
   };
 
@@ -670,7 +672,7 @@ export function TraderInventoryPage() {
       activeSidebarItemId={activeSidebarId}
       onTopNavClick={handleTopNavClick}
       onSidebarClick={handleSidebarClick}
-      onBrandClick={() => navigate('/home')}
+      onBrandClick={() => navigate(`/${activeModule}/home`)}
       topBarOptions={{
         alertsCount,
         onAlertsClick: () => navigate('/messages'),
@@ -685,7 +687,7 @@ export function TraderInventoryPage() {
         <button
           type="button"
           className="app-shell__sidebar-item app-shell__sidebar-settings"
-          onClick={() => navigate('/settings')}
+          onClick={() => navigate(`/${activeModule}/settings`)}
         >
           {lang === 'he' ? (
             <>

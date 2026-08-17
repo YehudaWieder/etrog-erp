@@ -4,12 +4,19 @@ export type IsraelHarvestSettingsChildId =
   | 'harvestSortingCategories'
   | 'harvestCategoryGrades';
 
+export const ISRAEL_HARVEST_SETTINGS_PATH_SEGMENTS = [
+  '/sellers-fields',
+  '/seller-categories',
+  '/sorting-categories',
+  '/grades',
+];
+
 export function getIsraelHarvestSettingsChildId(pathname: string): IsraelHarvestSettingsChildId {
   const path = pathname.toLowerCase();
 
-  if (path.includes('/israel-harvest/seller-categories')) return 'harvestSellerCategories';
-  if (path.includes('/israel-harvest/sorting-categories')) return 'harvestSortingCategories';
-  if (path.includes('/israel-harvest/grades')) return 'harvestCategoryGrades';
+  if (path.includes('/seller-categories')) return 'harvestSellerCategories';
+  if (path.includes('/sorting-categories')) return 'harvestSortingCategories';
+  if (path.includes('/grades')) return 'harvestCategoryGrades';
 
   return 'harvestSellersFields';
 }

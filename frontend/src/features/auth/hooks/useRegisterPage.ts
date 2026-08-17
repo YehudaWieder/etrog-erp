@@ -1,21 +1,15 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import type { ComponentProps } from 'react';
 import { AuthForm } from '../../../components/forms/AuthForm';
-import { AppTopBar } from '../../../components/navigation/AppTopBar';
 import { ApiError } from '../../../services/apiClient';
-import { getCurrentUser, isAuthenticated, logout, register } from '../../../services/authService';
-import { SHIPMENTS_I18N } from '../../shipments/i18n';
+import { register } from '../../../services/authService';
 import { AUTH_I18N } from '../i18n';
 import { isValidEmail, isValidPhone, sanitizeEmail, sanitizePhone, sanitizeText } from '../../../utils/inputValidation';
 import { useAuthLanguage } from './useAuthLanguage';
 
 export function useRegisterPage() {
-  const navigate = useNavigate();
   const lang = useAuthLanguage();
-  const t = SHIPMENTS_I18N[lang];
   const a = AUTH_I18N[lang];
-  const currentUser = getCurrentUser();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -28,20 +22,7 @@ export function useRegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [activeTopId, setActiveTopId] = useState('shipments');
   const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
-
-  const handleLogin = () => navigate('/login');
-  const handleRegister = () => navigate('/shipments');
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
-
-  const handleTopNavClick = (item: { id: string; href?: string }) => {
-    setActiveTopId(item.id);
-    navigate(item.href ?? `/${item.id}`);
-  };
 
   const handleChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -130,20 +111,6 @@ export function useRegisterPage() {
     },
   ];
 
-  const topBarProps: ComponentProps<typeof AppTopBar> = {
-    links: t.topNav,
-    activeId: activeTopId,
-    onNavigate: handleTopNavClick,
-    onBrandClick: () => navigate('/home'),
-    lang,
-    isAuthenticated: isAuthenticated(),
-    onLogin: handleLogin,
-    onRegister: handleRegister,
-    onLogout: handleLogout,
-    onProfile: () => navigate('/profile'),
-    userName: currentUser?.name || '',
-  };
-
   const formProps: ComponentProps<typeof AuthForm> = {
     title: a.registerTitle,
     notice: successNotice,
@@ -159,7 +126,6 @@ export function useRegisterPage() {
   };
 
   return {
-    topBarProps,
     formProps,
     successNotice,
   };

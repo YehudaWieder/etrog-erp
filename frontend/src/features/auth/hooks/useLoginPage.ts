@@ -2,20 +2,17 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { ComponentProps } from 'react';
 import { AuthForm } from '../../../components/forms/AuthForm';
-import { AppTopBar } from '../../../components/navigation/AppTopBar';
 import { ApiError } from '../../../services/apiClient';
-import { getCurrentUser, isAuthenticated, login, logout, requestPasswordReset } from '../../../services/authService';
-import { SHIPMENTS_I18N } from '../../shipments/i18n';
+import { isAuthenticated, login, requestPasswordReset } from '../../../services/authService';
 import { AUTH_I18N } from '../i18n';
 import { useAuthLanguage } from './useAuthLanguage';
+import { getLastActiveModule } from '../../../utils/activeModule';
 
 export function useLoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const lang = useAuthLanguage();
-  const t = SHIPMENTS_I18N[lang];
   const a = AUTH_I18N[lang];
-  const currentUser = getCurrentUser();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -29,7 +26,7 @@ export function useLoginPage() {
 
   useEffect(() => {
     if (isAuthenticated()) {
-      navigate('/home', { replace: true });
+      navigate(`/${getLastActiveModule()}/home`, { replace: true });
     }
   }, [navigate]);
 
@@ -45,12 +42,6 @@ export function useLoginPage() {
     networkError: a.networkError,
     notFound: a.loginEndpointNotFound,
     submitLabel: a.loginSubmit,
-  };
-
-  const handleLogin = () => navigate('/home');
-  const handleRegister = () => navigate('/register');
-  const handleLogout = async () => {
-    await logout();
   };
 
   const handleChange = (name: string, value: string) => {
@@ -73,7 +64,7 @@ export function useLoginPage() {
       setIsSubmitting(true);
       setError('');
       await login(formData.email, formData.password);
-      navigate('/home');
+      navigate(`/${getLastActiveModule()}/home`);
     } catch (submitError) {
       if (submitError instanceof ApiError && submitError.status === 401) {
         setError(a.loginInvalidCredentials);
@@ -94,20 +85,6 @@ export function useLoginPage() {
     { id: 'email', name: 'email', label: a.emailLabel, type: 'email', placeholder: a.emailPlaceholder },
     { id: 'password', name: 'password', label: a.passwordLabel, type: 'password', placeholder: a.passwordPlaceholder },
   ];
-
-  const topBarProps: ComponentProps<typeof AppTopBar> = {
-    links: t.topNav,
-    activeId: undefined,
-    onNavigate: (item) => navigate(item.href ?? `/${item.id}`),
-    onBrandClick: () => navigate('/home'),
-    lang,
-    isAuthenticated: isAuthenticated(),
-    onLogin: handleLogin,
-    onRegister: handleRegister,
-    onLogout: handleLogout,
-    onProfile: () => navigate('/profile'),
-    userName: currentUser?.name || '',
-  };
 
   const formProps: ComponentProps<typeof AuthForm> = {
     title: a.loginTitle,
@@ -142,7 +119,6 @@ export function useLoginPage() {
   };
 
   return {
-    topBarProps,
     formProps,
     showForgotPassword,
     setShowForgotPassword,

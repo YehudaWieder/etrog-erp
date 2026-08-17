@@ -1,7 +1,9 @@
 
 import { FaEnvelope, FaGauge } from 'react-icons/fa6';
 import type { NavItem } from '../../types/navigation';
+import type { AppModule } from '../../utils/activeModule';
 import { CalendarPopover } from './CalendarPopover';
+import { ModuleSwitcher } from './ModuleSwitcher';
 import { ProfileMenu, type ProfileMenuProps } from './ProfileMenu';
 import { TopBar } from './TopBar';
 import { useUnreadMessagesCount } from '../../hooks/useUnreadMessagesCount';
@@ -17,6 +19,8 @@ type AppTopBarProps = {
   alertsCount?: number;
   onAlertsClick?: () => void;
   onBrandClick?: () => void;
+  activeModule: AppModule;
+  onModuleChange: (module: AppModule) => void;
 } & ProfileMenuProps;
 
 export function AppTopBar({
@@ -28,6 +32,8 @@ export function AppTopBar({
   alertsCount,
   onAlertsClick,
   onBrandClick,
+  activeModule,
+  onModuleChange,
   isAuthenticated,
   onLogin,
   onRegister,
@@ -65,6 +71,7 @@ export function AppTopBar({
       }
       rightSlot={
         <div className={navStyles.iconGroup}>
+          <ModuleSwitcher lang={lang} activeModule={activeModule} onChange={onModuleChange} />
           <CalendarPopover lang={lang} />
           <button
             className={navStyles.iconButton}

@@ -4,9 +4,11 @@ import { AppShell } from '../../app/layout/AppShell';
 import { SHIPMENTS_I18N } from '../shipments/i18n';
 import type { NavItem } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
+import { useActiveModule } from '../../hooks/useActiveModule';
 
 export function IsraelShipmentsPage() {
   const navigate = useNavigate();
+  const activeModule = useActiveModule();
   const [activeTopId, setActiveTopId] = useState('israel-shipments');
   const currentUser = getCurrentUser();
   const [alertsCount, setAlertsCount] = useState<number>(0);
@@ -48,7 +50,7 @@ export function IsraelShipmentsPage() {
       activeSidebarItemId=""
       onTopNavClick={handleTopNavClick}
       onSidebarClick={() => {}}
-      onBrandClick={() => navigate('/home')}
+      onBrandClick={() => navigate(`/${activeModule}/home`)}
       topBarOptions={{
         alertsCount,
         onAlertsClick: () => navigate('/messages'),

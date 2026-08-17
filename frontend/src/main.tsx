@@ -24,6 +24,8 @@ import { CustomerInventoryRoute } from './app/routes/CustomerInventoryRoute';
 import { WorkersRoute } from './app/routes/WorkersRoute';
 import { PaymentsRoute } from './app/routes/PaymentsRoute';
 import { IsraelShipmentsRoute } from './app/routes/IsraelShipmentsRoute';
+import { IsraelInventoryRoute } from './app/routes/IsraelInventoryRoute';
+import { IsraelPaymentsRoute } from './app/routes/IsraelPaymentsRoute';
 import { AuthCallbackRoute } from './app/routes/AuthCallbackRoute';
 import { ResetPasswordRoute } from './app/routes/ResetPasswordRoute';
 import { AUTH_SESSION_EXPIRED_EVENT } from './services/apiClient';
@@ -32,6 +34,7 @@ import { useSessionExpiryWarning } from './hooks/useSessionExpiryWarning';
 import SettingsPage from './features/settings/SettingsPage';
 import { isAuthenticated, getCurrentUser, isManagerRole } from './services/authService';
 import { getSetupStatus } from './services/setupApi';
+import { getLastActiveModule } from './utils/activeModule';
 
 // Load saved colors from localStorage and apply to CSS variables
 function initializeTheme(): void {
@@ -76,15 +79,15 @@ if (typeof window !== 'undefined') {
 type SetupRequirement = { path: string; step: 1 | 2 | 3 };
 
 const SETUP_ALLOWED_PATHS: Record<1 | 2 | 3, string[]> = {
-  1: ['/settings/traders'],
-  2: ['/settings/traders', '/settings/system/default-categories'],
-  3: ['/settings/traders', '/settings/system/default-categories', '/settings/system/seasons'],
+  1: ['/italy/settings/traders'],
+  2: ['/italy/settings/traders', '/italy/settings/system/default-categories'],
+  3: ['/italy/settings/traders', '/italy/settings/system/default-categories', '/italy/settings/system/seasons'],
 };
 
 function getSetupRequirement(status: { hasTraders: boolean; hasDefaultCategories: boolean; hasSeasons: boolean }): SetupRequirement | null {
-  if (!status.hasTraders) return { path: '/settings/traders', step: 1 };
-  if (!status.hasDefaultCategories) return { path: '/settings/system/default-categories', step: 2 };
-  if (!status.hasSeasons) return { path: '/settings/system/seasons', step: 3 };
+  if (!status.hasTraders) return { path: '/italy/settings/traders', step: 1 };
+  if (!status.hasDefaultCategories) return { path: '/italy/settings/system/default-categories', step: 2 };
+  if (!status.hasSeasons) return { path: '/italy/settings/system/seasons', step: 3 };
   return null;
 }
 
@@ -162,6 +165,10 @@ function SetupGuard({ children }: { children: React.ReactNode }): JSX.Element | 
   return ready ? <>{children}</> : null;
 }
 
+function DefaultHomeRedirect(): JSX.Element {
+  return <Navigate to={`/${getLastActiveModule()}/home`} replace />;
+}
+
 function SessionExpiryWarning(): JSX.Element | null {
   const { showWarning, isExtending, extendSession, dismissSession } = useSessionExpiryWarning();
 
@@ -200,20 +207,25 @@ function AppRouter(): JSX.Element {
           <Route path="/register" element={<RegisterRoute />} />
           <Route path="/auth/callback" element={<AuthCallbackRoute />} />
           <Route path="/auth/reset-password" element={<ResetPasswordRoute />} />
-          <Route path="/home" element={<HomeRoute />} />
           <Route path="/profile/*" element={<ProfileRoute />} />
           <Route path="/messages/*" element={<MessagesRoute />} />
-          <Route path="/harvest/*" element={<HarvestRoute />} />
-          <Route path="/traders/*" element={<TraderInventoryRoute />} />
-          <Route path="/partners/*" element={<Navigate to="/traders" replace />} />
-          <Route path="/customers/*" element={<CustomerInventoryRoute />} />
-          <Route path="/shipments/*" element={<ShipmentsRoute />} />
-          <Route path="/workers/*" element={<WorkersRoute />} />
-          <Route path="/israel-shipments/*" element={<IsraelShipmentsRoute />} />
-          <Route path="/payments/*" element={<PaymentsRoute />} />
-          <Route path="/settings/*" element={<SettingsPage />} />
-          {/* <Route path="/seasons" element={<Navigate to="/settings/system/seasons" replace />} /> removed as per request */}
-          <Route path="*" element={<Navigate to="/home" replace />} />
+
+          <Route path="/italy/home" element={<HomeRoute />} />
+          <Route path="/italy/harvest/*" element={<HarvestRoute />} />
+          <Route path="/italy/traders/*" element={<TraderInventoryRoute />} />
+          <Route path="/italy/customers/*" element={<CustomerInventoryRoute />} />
+          <Route path="/italy/shipments/*" element={<ShipmentsRoute />} />
+          <Route path="/italy/payments/*" element={<PaymentsRoute />} />
+          <Route path="/italy/settings/*" element={<SettingsPage />} />
+
+          <Route path="/israel/home" element={<HomeRoute />} />
+          <Route path="/israel/harvest/*" element={<WorkersRoute />} />
+          <Route path="/israel/shipments/*" element={<IsraelShipmentsRoute />} />
+          <Route path="/israel/inventory/*" element={<IsraelInventoryRoute />} />
+          <Route path="/israel/payments/*" element={<IsraelPaymentsRoute />} />
+          <Route path="/israel/settings/*" element={<SettingsPage />} />
+
+          <Route path="*" element={<DefaultHomeRedirect />} />
         </Routes>
       </SetupGuard>
     </AuthGuard>

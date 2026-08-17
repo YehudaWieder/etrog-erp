@@ -6,10 +6,12 @@ export const CUSTOMER_INVENTORY_I18N_HE: CustomerInventoryI18n = {
   topNav: [
     { id: 'harvest', label: 'קטיף ומיון', icon: 'fa-leaf', href: '/harvest/harvest-summary' },
     { id: 'shipments', label: 'משלוחים', icon: 'fa-truck', href: '/shipments/shipment-items-summary' },
-    { id: 'traders', label: 'מלאי סוחרים', icon: 'fa-handshake' },
+    { id: 'traders', label: 'מלאי סוחרים', icon: 'fa-handshake', href: '/traders' },
     { id: 'customers', label: 'מלאי לקוחות', icon: 'fa-users' },
-    { id: 'workers', label: 'קטיף א"י', icon: 'fa-person' },
-    { id: 'israel-shipments', label: 'משלוחים א"י', icon: 'fa-truck-fast' },
+    { id: 'workers', label: 'קטיף א"י', icon: 'fa-person', href: '/harvest' },
+    { id: 'israel-shipments', label: 'משלוחים א"י', icon: 'fa-truck-fast', href: '/shipments' },
+    { id: 'israel-inventory', label: 'מלאי א"י', icon: 'fa-warehouse', href: '/inventory' },
+    { id: 'israel-payments', label: 'הוצאות ותשלומים א"י', icon: 'fa-file-invoice-dollar', href: '/payments' },
     { id: 'payments', label: 'הוצאות ותשלומים', icon: 'fa-money-bill' },
   ],
   sidebar: [

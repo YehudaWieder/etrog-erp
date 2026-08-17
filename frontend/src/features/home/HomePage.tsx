@@ -8,10 +8,13 @@ import type { NavItem } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, isWorkerRole, logout } from '../../services/authService';
 import { NoPermissionBanner } from '../../components/ui/NoPermissionBanner';
 import { HomeDashboard } from './dashboard/components/HomeDashboard';
+import { IsraelDashboardPlaceholder } from './dashboard/components/IsraelDashboardPlaceholder';
 import { DashboardHeaderActions } from './dashboard/components/DashboardHeaderActions';
+import { useActiveModule } from '../../hooks/useActiveModule';
 
 export function HomePage() {
   const navigate = useNavigate();
+  const activeModule = useActiveModule();
   const [activeTopId, setActiveTopId] = useState('home');
   const currentUser = getCurrentUser();
   const isWorker = isWorkerRole(currentUser?.role);
@@ -41,9 +44,13 @@ export function HomePage() {
   const t = SHIPMENTS_I18N[lang];
   const home = HOME_I18N[lang];
 
-  const dashboardLabels = lang === 'he'
-    ? { title: 'דשבורד עונה', subtitle: 'סיכום ביצועים שוטף לעונה הנוכחית' }
-    : { title: 'Season Dashboard', subtitle: 'Live performance summary for the current season' };
+  const dashboardLabels = activeModule === 'israel'
+    ? (lang === 'he'
+        ? { title: 'דשבורד א"י', subtitle: 'סיכום ביצועים שוטף לעונה הנוכחית' }
+        : { title: 'Israel Dashboard', subtitle: 'Live performance summary for the current season' })
+    : (lang === 'he'
+        ? { title: 'דשבורד עונה', subtitle: 'סיכום ביצועים שוטף לעונה הנוכחית' }
+        : { title: 'Season Dashboard', subtitle: 'Live performance summary for the current season' });
 
   const qa = home.quickActions;
 
@@ -51,14 +58,20 @@ export function HomePage() {
     return null;
   }
 
-  const quickActions = [
-    { label: qa.addHarvest, icon: <FaLeaf />, onClick: () => navigate('/harvest', { state: { openHarvestForm: true } }) },
-    { label: qa.addSorting, icon: <FaSort />, onClick: () => navigate('/harvest', { state: { openSortingForm: true } }) },
-    { label: qa.newShipment, icon: <FaTruck />, onClick: () => navigate('/shipments', { state: { openNewShipment: true } }) },
-    { label: qa.newBox, icon: <FaBoxArchive />, onClick: () => navigate('/shipments', { state: { openNewBox: true } }) },
-    { label: qa.packItems, icon: <FaBoxesPacking />, onClick: () => navigate('/shipments', { state: { openPacking: true } }) },
-    { label: qa.settings, icon: <FaGear />, onClick: () => navigate('/settings') },
-  ];
+  const quickActions = activeModule === 'israel'
+    ? [
+        { label: qa.addHarvest, icon: <FaLeaf />, onClick: () => navigate('/israel/harvest') },
+        { label: qa.packItems, icon: <FaBoxesPacking />, onClick: () => navigate('/israel/shipments') },
+        { label: qa.settings, icon: <FaGear />, onClick: () => navigate('/israel/settings') },
+      ]
+    : [
+        { label: qa.addHarvest, icon: <FaLeaf />, onClick: () => navigate('/italy/harvest', { state: { openHarvestForm: true } }) },
+        { label: qa.addSorting, icon: <FaSort />, onClick: () => navigate('/italy/harvest', { state: { openSortingForm: true } }) },
+        { label: qa.newShipment, icon: <FaTruck />, onClick: () => navigate('/italy/shipments', { state: { openNewShipment: true } }) },
+        { label: qa.newBox, icon: <FaBoxArchive />, onClick: () => navigate('/italy/shipments', { state: { openNewBox: true } }) },
+        { label: qa.packItems, icon: <FaBoxesPacking />, onClick: () => navigate('/italy/shipments', { state: { openPacking: true } }) },
+        { label: qa.settings, icon: <FaGear />, onClick: () => navigate('/italy/settings') },
+      ];
 
   const handleTopNavClick = (item: NavItem) => {
     setActiveTopId(item.id);
@@ -85,7 +98,7 @@ export function HomePage() {
       activeSidebarItemId="packaging"
       onTopNavClick={handleTopNavClick}
       onSidebarClick={() => {}}
-      onBrandClick={() => navigate('/home')}
+      onBrandClick={() => navigate(`/${activeModule}/home`)}
       topBarOptions={{
         alertsCount,
         onAlertsClick: () => navigate('/messages'),
@@ -103,6 +116,8 @@ export function HomePage() {
     >
       {isWorker ? (
         <NoPermissionBanner message={lang === 'he' ? 'אין לך הרשאת גישה לאזור זה.' : "You don't have permission to access this area."} />
+      ) : activeModule === 'israel' ? (
+        <IsraelDashboardPlaceholder lang={lang} />
       ) : (
         <HomeDashboard lang={lang} />
       )}

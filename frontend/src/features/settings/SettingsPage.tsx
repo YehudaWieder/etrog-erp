@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppShell } from '../../app/layout/AppShell';
+import { useActiveModule } from '../../hooks/useActiveModule';
+import { filterSidebarByModule } from '../../components/navigation/navModules';
 import type { NavItem, SidebarSection } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
 import { SettingsSeasonsHeaderActions } from './components/SettingsSeasonsHeaderActions';
@@ -12,7 +14,7 @@ import { useSettingsPreferences } from './hooks/useSettingsPreferences';
 import { normalizeSettingsChildId } from './utils/normalizeSettingsChildId.util';
 import { renderSettingsActiveChild } from './utils/settingsChildRenderers.util';
 import { IsraelHarvestSettingsSection } from './israelHarvestSettings/IsraelHarvestSettingsSection';
-import { getIsraelHarvestSettingsChildId, getIsraelHarvestSettingsTitle } from './israelHarvestSettings/israelHarvestSettings.i18n';
+import { getIsraelHarvestSettingsChildId, getIsraelHarvestSettingsTitle, ISRAEL_HARVEST_SETTINGS_PATH_SEGMENTS } from './israelHarvestSettings/israelHarvestSettings.i18n';
 import { fetchSeasons } from '../../store/seasonsSlice';
 import type { AppDispatch, RootState } from '../../store';
 import feedbackStyles from './styles/SettingsWorkspaceFeedback.module.css';
@@ -21,6 +23,7 @@ import workspaceStyles from '../../components/ui/styles/WorkspaceSection.module.
 export default function SettingsPage(): JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
+  const activeModule = useActiveModule();
   const dispatch = useDispatch<AppDispatch>();
   const currentUser = getCurrentUser();
   const [alertsCount, setAlertsCount] = useState<number>(0);
@@ -65,9 +68,11 @@ export default function SettingsPage(): JSX.Element {
   }, [navigate]);
 
   const t = getSettingsI18n(lang);
-  const isIsraelHarvestSettings = location.pathname.toLowerCase().includes('/settings/israel-harvest');
+  const isIsraelHarvestSettings = ISRAEL_HARVEST_SETTINGS_PATH_SEGMENTS.some((segment) =>
+    location.pathname.toLowerCase().includes(segment),
+  );
   const isManager = isManagerRole(currentUser?.role);
-  const baseSidebarSections = isManager ? t.sidebarManager : t.sidebarWorker;
+  const baseSidebarSections = filterSidebarByModule(isManager ? t.sidebarManager : t.sidebarWorker, activeModule);
   const sidebarSections = useMemo<SidebarSection[]>(() => {
     if (activeSeasonYearName == null) {
       return baseSidebarSections;
@@ -76,7 +81,7 @@ export default function SettingsPage(): JSX.Element {
     return baseSidebarSections.map((section) => ({
       ...section,
       items: section.items.map((item) =>
-        item.id === 'traderCategories' || item.id === 'traderPricing' || item.id === 'customerCategories' || item.id === 'harvestCategoryGrades'
+        item.id === 'traderCategories' || item.id === 'traderPricing' || item.id === 'customerCategories' || item.id === 'harvestCategoryGrades' || item.id === 'harvestSellerCategories'
           ? { ...item, label: `${item.label} (${activeSeasonYearName})` }
           : item,
       ),
@@ -120,7 +125,7 @@ export default function SettingsPage(): JSX.Element {
   };
 
   const handleSidebarClick = (item: NavItem) => {
-    navigate(item.href || '/settings/site/language');
+    navigate(`/${activeModule}${item.href || '/settings/site/language'}`);
   };
 
   const pageHeaderActions = isIsraelHarvestSettings ? undefined : (
@@ -153,7 +158,7 @@ export default function SettingsPage(): JSX.Element {
       activeSidebarItemId={isIsraelHarvestSettings ? getIsraelHarvestSettingsChildId(location.pathname) : activeChildId}
       onTopNavClick={handleTopNavClick}
       onSidebarClick={handleSidebarClick}
-      onBrandClick={() => navigate('/home')}
+      onBrandClick={() => navigate(`/${activeModule}/home`)}
       topBarOptions={{
         alertsCount,
         onAlertsClick: () => navigate('/messages'),
