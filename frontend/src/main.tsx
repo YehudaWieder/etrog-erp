@@ -21,7 +21,7 @@ import { MessagesRoute } from './app/routes/MessagesRoute';
 import { HarvestRoute } from './app/routes/HarvestRoute';
 import { TraderInventoryRoute } from './app/routes/TraderInventoryRoute';
 import { CustomerInventoryRoute } from './app/routes/CustomerInventoryRoute';
-import { WorkersRoute } from './app/routes/WorkersRoute';
+import { IsraelHarvestRoute } from './app/routes/IsraelHarvestRoute';
 import { PaymentsRoute } from './app/routes/PaymentsRoute';
 import { IsraelShipmentsRoute } from './app/routes/IsraelShipmentsRoute';
 import { IsraelInventoryRoute } from './app/routes/IsraelInventoryRoute';
@@ -219,7 +219,7 @@ function AppRouter(): JSX.Element {
           <Route path="/italy/settings/*" element={<SettingsPage />} />
 
           <Route path="/israel/home" element={<HomeRoute />} />
-          <Route path="/israel/harvest/*" element={<WorkersRoute />} />
+          <Route path="/israel/harvest/*" element={<IsraelHarvestRoute />} />
           <Route path="/israel/shipments/*" element={<IsraelShipmentsRoute />} />
           <Route path="/israel/inventory/*" element={<IsraelInventoryRoute />} />
           <Route path="/israel/payments/*" element={<IsraelPaymentsRoute />} />

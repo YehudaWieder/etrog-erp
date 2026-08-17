@@ -1,13 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from '../../app/layout/AppShell';
-import { SHIPMENTS_I18N } from '../shipments/i18n';
+import { HARVEST_I18N } from '../harvest/i18n';
+import { ISRAEL_HARVEST_I18N } from './i18n';
 import type { NavItem } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
 import { useActiveModule } from '../../hooks/useActiveModule';
+import { SettingsIcon } from '../../components/ui/SettingsIcon';
 
-export function WorkersPage() {
+const DEFAULT_SIDEBAR_ITEM_ID = 'harvest-summary';
+
+export function IsraelHarvestPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const activeModule = useActiveModule();
   const [activeTopId, setActiveTopId] = useState('workers');
   const currentUser = getCurrentUser();
@@ -32,24 +37,39 @@ export function WorkersPage() {
     }
     return 'he';
   }, []);
-  const t = SHIPMENTS_I18N[lang];
+  const topNavT = HARVEST_I18N[lang];
+  const t = ISRAEL_HARVEST_I18N[lang];
+
+  const activeSidebarId = useMemo(() => {
+    const pathParts = location.pathname.split('/').filter(Boolean);
+    const subRoute = pathParts[2];
+    return subRoute || DEFAULT_SIDEBAR_ITEM_ID;
+  }, [location.pathname]);
+
+  const content = useMemo(() => {
+    return t.emptyState[activeSidebarId] ?? t.emptyState.default;
+  }, [activeSidebarId, t.emptyState]);
 
   const handleTopNavClick = (item: NavItem) => {
     setActiveTopId(item.id);
     navigate(item.href || `/${item.id}`);
   };
 
+  const handleSidebarClick = (item: NavItem) => {
+    navigate(`/${activeModule}${item.href || `/harvest/${item.id}`}`);
+  };
+
   return (
     <AppShell
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
-      pageTitle={undefined}
-      topNav={t.topNav}
+      pageTitle={t.pageTitle}
+      topNav={topNavT.topNav}
       activeTopNavId={activeTopId}
       sidebarSections={t.sidebar}
-      activeSidebarItemId=""
+      activeSidebarItemId={activeSidebarId}
       onTopNavClick={handleTopNavClick}
-      onSidebarClick={() => {}}
+      onSidebarClick={handleSidebarClick}
       onBrandClick={() => navigate(`/${activeModule}/home`)}
       topBarOptions={{
         alertsCount,
@@ -64,11 +84,30 @@ export function WorkersPage() {
         onProfile: () => navigate('/profile'),
         userName: currentUser?.name || '',
       }}
-      hideSidebar={true}
+      sidebarFooterSlot={
+        <button
+          type="button"
+          className="app-shell__sidebar-item app-shell__sidebar-settings"
+          onClick={() => navigate(`/${activeModule}/settings`)}
+        >
+          {lang === 'he' ? (
+            <>
+              {t.settings}
+              <SettingsIcon style={{ marginInlineStart: 8 }} />
+            </>
+          ) : (
+            <>
+              <SettingsIcon style={{ marginInlineEnd: 8 }} />
+              {t.settings}
+            </>
+          )}
+        </button>
+      }
     >
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-        <span style={{ fontSize: '4rem', fontWeight: 'bold' }}>בקרוב...</span>
-      </div>
+      <section className="shipments-empty-state">
+        <h2 className="shipments-empty-title">{content.title}</h2>
+        <p className="shipments-empty-desc">{content.description}</p>
+      </section>
     </AppShell>
   );
 }
