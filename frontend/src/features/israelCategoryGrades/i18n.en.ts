@@ -8,6 +8,7 @@ export const ISRAEL_CATEGORY_GRADES_I18N_EN: IsraelCategoryGradesI18n = {
   categoryLabel: 'Sorting category',
   selectCategory: 'Select sorting category',
   gradesLabel: 'Grades',
+  gradeLinePrefix: 'Grade',
   gradeKeyPlaceholder: 'Grade, e.g. A',
   gradeValuePlaceholder: 'Display grade, e.g. B',
   addRow: 'Add grade',

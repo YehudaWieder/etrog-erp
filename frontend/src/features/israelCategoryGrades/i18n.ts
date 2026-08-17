@@ -8,6 +8,7 @@ export type IsraelCategoryGradesI18n = {
   categoryLabel: string;
   selectCategory: string;
   gradesLabel: string;
+  gradeLinePrefix: string;
   gradeKeyPlaceholder: string;
   gradeValuePlaceholder: string;
   addRow: string;

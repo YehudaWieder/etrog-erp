@@ -8,6 +8,7 @@ export const ISRAEL_CATEGORY_GRADES_I18N_HE: IsraelCategoryGradesI18n = {
   categoryLabel: 'קטגוריית מיון',
   selectCategory: 'בחר קטגוריית מיון',
   gradesLabel: 'דרגות',
+  gradeLinePrefix: 'דרגה',
   gradeKeyPlaceholder: 'דרגה, לדוגמה: א',
   gradeValuePlaceholder: 'דרגה לתצוגה, לדוגמה: ש',
   addRow: 'הוסף דרגה',

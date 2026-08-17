@@ -85,11 +85,15 @@ const IsraelCategoryGradesManagement: React.FC<
                     </span>
                   }
                   bottomContent={
-                    <span className={`seasons-manager__meta ${styles.meta}`}>
+                    <span
+                      className={`seasons-manager__meta ${styles.gradesList}`}
+                    >
                       {gradeEntries.map(([key, value]) => (
-                        <span key={key} className={styles.gradeChip}>
-                          <b>{key}</b>
-                          <span>{value}</span>
+                        <span key={key} className={styles.gradeLine}>
+                          <span className={styles.gradeLineKey}>
+                            {t.gradeLinePrefix} {key}
+                          </span>
+                          : {value}
                         </span>
                       ))}
                     </span>
