@@ -20,7 +20,10 @@ const RESOURCE_LABELS: Record<string, ResourceLabel> = {
   field: { he: 'השדה', en: 'Field' },
   trader: { he: 'הסוחר', en: 'Trader' },
   traderCategory: { he: 'קטגוריית הסוחר', en: 'Trader category' },
-  defaultTraderCategory: { he: 'קטגוריית ברירת המחדל', en: 'Default trader category' },
+  defaultTraderCategory: {
+    he: 'קטגוריית ברירת המחדל',
+    en: 'Default trader category',
+  },
   customer: { he: 'הלקוח', en: 'Customer' },
   customerCategory: { he: 'קטגוריית הלקוח', en: 'Customer category' },
   message: { he: 'ההודעה', en: 'Message' },
@@ -37,7 +40,9 @@ function getCurrentLanguage(): 'he' | 'en' {
   return stored === 'en' ? 'en' : 'he';
 }
 
-export function dispatchApiFeedback(detail: Omit<ApiFeedbackDetail, 'timestamp'>): void {
+export function dispatchApiFeedback(
+  detail: Omit<ApiFeedbackDetail, 'timestamp'>,
+): void {
   if (typeof window === 'undefined') {
     return;
   }
@@ -57,16 +62,21 @@ export function shouldNotifySuccess(method: string): boolean {
 }
 
 function resolveResourceKey(path: string): keyof typeof RESOURCE_LABELS | null {
-  const cleanPath = path.split('?')[0].replace(/^https?:\/\/[^/]+/, '').replace(/^\/+/, '');
+  const cleanPath = path
+    .split('?')[0]
+    .replace(/^https?:\/\/[^/]+/, '')
+    .replace(/^\/+/, '');
   const [first, second] = cleanPath.split('/');
 
   if (first === 'seasons') return 'season';
   if (first === 'fields') return 'field';
   if (first === 'traders' && second === 'categories') return 'traderCategory';
-  if (first === 'traders' && second === 'default-categories') return 'defaultTraderCategory';
+  if (first === 'traders' && second === 'default-categories')
+    return 'defaultTraderCategory';
   if (first === 'traders') return 'trader';
   if (first === 'customer-categories') return 'customerCategory';
-  if (first === 'customers' && second === 'categories') return 'customerCategory';
+  if (first === 'customers' && second === 'categories')
+    return 'customerCategory';
   if (first === 'customers') return 'customer';
   if (first === 'messages') return 'message';
   if (first === 'users') return 'user';
@@ -135,32 +145,73 @@ export function buildSuccessMessage(method: string, path: string): string {
   return 'הפעולה הושלמה בהצלחה.';
 }
 
-export function buildSafeErrorMessage(status: number, serverMessage?: string, explicitMessage?: string, isSessionExpiry?: boolean): string {
+// The framework's own fallback text for an unmatched route (e.g. "Cannot GET /api/israel/fields"
+// when the backend is unreachable or a route doesn't exist) is never meaningful to an end user —
+// treat it the same as having no server message at all so a generic, localized message is shown.
+const ROUTE_NOT_FOUND_PATTERN =
+  /^cannot\s+(get|post|put|patch|delete|head|options)\s+\S+/i;
+
+function sanitizeServerMessage(serverMessage?: string): string | undefined {
+  if (!serverMessage || ROUTE_NOT_FOUND_PATTERN.test(serverMessage.trim())) {
+    return undefined;
+  }
+
+  return serverMessage;
+}
+
+export function buildSafeErrorMessage(
+  status: number,
+  serverMessage?: string,
+  explicitMessage?: string,
+  isSessionExpiry?: boolean,
+): string {
   if (explicitMessage && explicitMessage.trim()) {
     return explicitMessage;
   }
 
+  const cleanServerMessage = sanitizeServerMessage(serverMessage);
+
   if (status === 400 || status === 422) {
     const lang = getCurrentLanguage();
-    const translatedServerMessage = serverMessage ? translateApiErrorMessage(serverMessage, lang) : undefined;
-    return translatedServerMessage || (lang === 'en' ? 'Missing or invalid input.' : 'יש נתונים חסרים או לא תקינים.');
+    const translatedServerMessage = cleanServerMessage
+      ? translateApiErrorMessage(cleanServerMessage, lang)
+      : undefined;
+    return (
+      translatedServerMessage ||
+      (lang === 'en'
+        ? 'Missing or invalid input.'
+        : 'יש נתונים חסרים או לא תקינים.')
+    );
   }
 
   if (status === 401) {
     if (isSessionExpiry) {
-      return getCurrentLanguage() === 'en' ? 'Your session expired. Please sign in again.' : 'פג תוקף ההתחברות. התחבר מחדש כדי להמשיך.';
+      return getCurrentLanguage() === 'en'
+        ? 'Your session expired. Please sign in again.'
+        : 'פג תוקף ההתחברות. התחבר מחדש כדי להמשיך.';
     }
-    return getCurrentLanguage() === 'en' ? 'Operation failed. Please try again.' : 'הפעולה נכשלה. נסה שוב.';
+    return getCurrentLanguage() === 'en'
+      ? 'Operation failed. Please try again.'
+      : 'הפעולה נכשלה. נסה שוב.';
   }
 
   if (status === 403) {
-    return getCurrentLanguage() === 'en' ? 'You do not have permission to perform this action.' : 'אין לך הרשאה לבצע פעולה זו.';
+    return getCurrentLanguage() === 'en'
+      ? 'You do not have permission to perform this action.'
+      : 'אין לך הרשאה לבצע פעולה זו.';
   }
 
   if (status === 404) {
     const lang = getCurrentLanguage();
-    const translatedServerMessage = serverMessage ? translateApiErrorMessage(serverMessage, lang) : undefined;
-    return translatedServerMessage || (lang === 'en' ? 'Requested resource was not found.' : 'המידע המבוקש לא נמצא.');
+    const translatedServerMessage = cleanServerMessage
+      ? translateApiErrorMessage(cleanServerMessage, lang)
+      : undefined;
+    return (
+      translatedServerMessage ||
+      (lang === 'en'
+        ? 'Requested resource was not found.'
+        : 'המידע המבוקש לא נמצא.')
+    );
   }
 
   if (status >= 500) {
@@ -170,8 +221,15 @@ export function buildSafeErrorMessage(status: number, serverMessage?: string, ex
   }
 
   const lang = getCurrentLanguage();
-  const translatedServerMessage = serverMessage ? translateApiErrorMessage(serverMessage, lang) : undefined;
-  return translatedServerMessage || (lang === 'en' ? 'Operation failed. Please try again.' : 'הפעולה נכשלה. נסה שוב.');
+  const translatedServerMessage = cleanServerMessage
+    ? translateApiErrorMessage(cleanServerMessage, lang)
+    : undefined;
+  return (
+    translatedServerMessage ||
+    (lang === 'en'
+      ? 'Operation failed. Please try again.'
+      : 'הפעולה נכשלה. נסה שוב.')
+  );
 }
 
 export function buildNetworkErrorMessage(explicitMessage?: string): string {
