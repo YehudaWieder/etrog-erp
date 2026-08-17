@@ -21,17 +21,17 @@ import { useSettingsHeaderState } from './hooks/useSettingsHeaderState';
 import { useSettingsPreferences } from './hooks/useSettingsPreferences';
 import { normalizeSettingsChildId } from './utils/normalizeSettingsChildId.util';
 import { renderSettingsActiveChild } from './utils/settingsChildRenderers.util';
-import { IsraelHarvestSettingsSection } from './israelHarvestSettings/IsraelHarvestSettingsSection';
-import { IsraelHarvestSettingsHeaderActions } from './israelHarvestSettings/IsraelHarvestSettingsHeaderActions';
+import { IsraelHarvestSettingsSection } from '../israel/settings/harvestSettings/IsraelHarvestSettingsSection';
+import { IsraelHarvestSettingsHeaderActions } from '../israel/settings/harvestSettings/IsraelHarvestSettingsHeaderActions';
 import {
   getIsraelHarvestSettingsChildId,
   getIsraelHarvestSettingsTitle,
   ISRAEL_HARVEST_SETTINGS_PATH_SEGMENTS,
-} from './israelHarvestSettings/israelHarvestSettings.i18n';
-import type { IsraelFieldsHeaderState } from '../israelFields/components/IsraelFieldsManagement';
-import type { IsraelFieldCategoriesHeaderState } from '../israelFieldCategories/components/IsraelFieldCategoriesManagement';
-import type { IsraelSortCategoriesHeaderState } from '../israelSortCategories/components/IsraelSortCategoriesManagement';
-import type { IsraelCategoryGradesHeaderState } from '../israelCategoryGrades/components/IsraelCategoryGradesManagement';
+} from '../israel/settings/harvestSettings/israelHarvestSettings.i18n';
+import type { IsraelFieldsHeaderState } from '../israel/settings/fields/components/IsraelFieldsManagement';
+import type { IsraelFieldCategoriesHeaderState } from '../israel/settings/fieldCategories/components/IsraelFieldCategoriesManagement';
+import type { IsraelSortCategoriesHeaderState } from '../israel/settings/sortCategories/components/IsraelSortCategoriesManagement';
+import type { IsraelCategoryGradesHeaderState } from '../israel/settings/categoryGrades/components/IsraelCategoryGradesManagement';
 import { fetchSeasons } from '../../store/seasonsSlice';
 import type { AppDispatch, RootState } from '../../store';
 import feedbackStyles from './styles/SettingsWorkspaceFeedback.module.css';

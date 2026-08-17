@@ -1,4 +1,4 @@
-import { IsraelHarvestPage } from '../../features/israelHarvest/IsraelHarvestPage';
+import { IsraelHarvestPage } from '../../features/israel/harvest/IsraelHarvestPage';
 
 export function IsraelHarvestRoute() {
   return <IsraelHarvestPage />;
