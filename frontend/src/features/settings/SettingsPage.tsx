@@ -5,16 +5,33 @@ import { AppShell } from '../../app/layout/AppShell';
 import { useActiveModule } from '../../hooks/useActiveModule';
 import { filterSidebarByModule } from '../../components/navigation/navModules';
 import type { NavItem, SidebarSection } from '../../types/navigation';
-import { getCurrentUser, isAuthenticated, logout } from '../../services/authService';
+import {
+  getCurrentUser,
+  isAuthenticated,
+  logout,
+} from '../../services/authService';
 import { SettingsSeasonsHeaderActions } from './components/SettingsSeasonsHeaderActions';
 import { SettingsSitePreferencesPanel } from './components/SettingsSitePreferencesPanel';
-import { getSettingsHeaderActionText, getSettingsI18n, isManagerRole } from './i18n';
+import {
+  getSettingsHeaderActionText,
+  getSettingsI18n,
+  isManagerRole,
+} from './i18n';
 import { useSettingsHeaderState } from './hooks/useSettingsHeaderState';
 import { useSettingsPreferences } from './hooks/useSettingsPreferences';
 import { normalizeSettingsChildId } from './utils/normalizeSettingsChildId.util';
 import { renderSettingsActiveChild } from './utils/settingsChildRenderers.util';
 import { IsraelHarvestSettingsSection } from './israelHarvestSettings/IsraelHarvestSettingsSection';
-import { getIsraelHarvestSettingsChildId, getIsraelHarvestSettingsTitle, ISRAEL_HARVEST_SETTINGS_PATH_SEGMENTS } from './israelHarvestSettings/israelHarvestSettings.i18n';
+import { IsraelHarvestSettingsHeaderActions } from './israelHarvestSettings/IsraelHarvestSettingsHeaderActions';
+import {
+  getIsraelHarvestSettingsChildId,
+  getIsraelHarvestSettingsTitle,
+  ISRAEL_HARVEST_SETTINGS_PATH_SEGMENTS,
+} from './israelHarvestSettings/israelHarvestSettings.i18n';
+import type { IsraelFieldsHeaderState } from '../israelFields/components/IsraelFieldsManagement';
+import type { IsraelFieldCategoriesHeaderState } from '../israelFieldCategories/components/IsraelFieldCategoriesManagement';
+import type { IsraelSortCategoriesHeaderState } from '../israelSortCategories/components/IsraelSortCategoriesManagement';
+import type { IsraelCategoryGradesHeaderState } from '../israelCategoryGrades/components/IsraelCategoryGradesManagement';
 import { fetchSeasons } from '../../store/seasonsSlice';
 import type { AppDispatch, RootState } from '../../store';
 import feedbackStyles from './styles/SettingsWorkspaceFeedback.module.css';
@@ -27,6 +44,16 @@ export default function SettingsPage(): JSX.Element {
   const dispatch = useDispatch<AppDispatch>();
   const currentUser = getCurrentUser();
   const [alertsCount, setAlertsCount] = useState<number>(0);
+  const [israelFieldsHeaderState, setIsraelFieldsHeaderState] =
+    useState<IsraelFieldsHeaderState | null>(null);
+  const [
+    israelFieldCategoriesHeaderState,
+    setIsraelFieldCategoriesHeaderState,
+  ] = useState<IsraelFieldCategoriesHeaderState | null>(null);
+  const [israelSortCategoriesHeaderState, setIsraelSortCategoriesHeaderState] =
+    useState<IsraelSortCategoriesHeaderState | null>(null);
+  const [israelCategoryGradesHeaderState, setIsraelCategoryGradesHeaderState] =
+    useState<IsraelCategoryGradesHeaderState | null>(null);
 
   const seasons = useSelector((state: RootState) => state.seasons.items);
   const activeSeasonYearName = useMemo(
@@ -57,7 +84,9 @@ export default function SettingsPage(): JSX.Element {
 
   useEffect(() => {
     import('../../services/messagesApi').then(({ fetchUnreadCount }) => {
-      fetchUnreadCount().then((res) => setAlertsCount(res.count)).catch(() => setAlertsCount(0));
+      fetchUnreadCount()
+        .then((res) => setAlertsCount(res.count))
+        .catch(() => setAlertsCount(0));
     });
   }, []);
 
@@ -68,11 +97,35 @@ export default function SettingsPage(): JSX.Element {
   }, [navigate]);
 
   const t = getSettingsI18n(lang);
-  const isIsraelHarvestSettings = ISRAEL_HARVEST_SETTINGS_PATH_SEGMENTS.some((segment) =>
-    location.pathname.toLowerCase().includes(segment),
+  const isIsraelHarvestSettings = ISRAEL_HARVEST_SETTINGS_PATH_SEGMENTS.some(
+    (segment) => location.pathname.toLowerCase().includes(segment),
   );
+  const israelHarvestChildId = getIsraelHarvestSettingsChildId(
+    location.pathname,
+  );
+  const israelHarvestTitle = getIsraelHarvestSettingsTitle(
+    lang,
+    israelHarvestChildId,
+  );
+  const israelHarvestHeaderCount =
+    israelHarvestChildId === 'harvestSellersFields'
+      ? israelFieldsHeaderState?.count
+      : israelHarvestChildId === 'harvestSellerCategories'
+        ? israelFieldCategoriesHeaderState?.count
+        : israelHarvestChildId === 'harvestSortingCategories'
+          ? israelSortCategoriesHeaderState?.count
+          : israelHarvestChildId === 'harvestCategoryGrades'
+            ? israelCategoryGradesHeaderState?.count
+            : undefined;
+  const israelHarvestPageTitle =
+    israelHarvestHeaderCount !== undefined
+      ? `${israelHarvestTitle} (${israelHarvestHeaderCount})`
+      : israelHarvestTitle;
   const isManager = isManagerRole(currentUser?.role);
-  const baseSidebarSections = filterSidebarByModule(isManager ? t.sidebarManager : t.sidebarWorker, activeModule);
+  const baseSidebarSections = filterSidebarByModule(
+    isManager ? t.sidebarManager : t.sidebarWorker,
+    activeModule,
+  );
   const sidebarSections = useMemo<SidebarSection[]>(() => {
     if (activeSeasonYearName == null) {
       return baseSidebarSections;
@@ -81,7 +134,11 @@ export default function SettingsPage(): JSX.Element {
     return baseSidebarSections.map((section) => ({
       ...section,
       items: section.items.map((item) =>
-        item.id === 'traderCategories' || item.id === 'traderPricing' || item.id === 'customerCategories' || item.id === 'harvestCategoryGrades' || item.id === 'harvestSellerCategories'
+        item.id === 'traderCategories' ||
+        item.id === 'traderPricing' ||
+        item.id === 'customerCategories' ||
+        item.id === 'harvestCategoryGrades' ||
+        item.id === 'harvestSellerCategories'
           ? { ...item, label: `${item.label} (${activeSeasonYearName})` }
           : item,
       ),
@@ -90,8 +147,10 @@ export default function SettingsPage(): JSX.Element {
   const activeChildId = normalizeSettingsChildId(location.pathname, isManager);
   const content = t.content[activeChildId];
 
-  const setupStep = (location.state as { setupStep?: number } | null)?.setupStep;
-  const setupNotice = setupStep != null ? (t.setupNotices[setupStep as 1 | 2 | 3] ?? null) : null;
+  const setupStep = (location.state as { setupStep?: number } | null)
+    ?.setupStep;
+  const setupNotice =
+    setupStep != null ? (t.setupNotices[setupStep as 1 | 2 | 3] ?? null) : null;
 
   const {
     pageTitle,
@@ -128,7 +187,16 @@ export default function SettingsPage(): JSX.Element {
     navigate(`/${activeModule}${item.href || '/settings/site/language'}`);
   };
 
-  const pageHeaderActions = isIsraelHarvestSettings ? undefined : (
+  const pageHeaderActions = isIsraelHarvestSettings ? (
+    <IsraelHarvestSettingsHeaderActions
+      childId={israelHarvestChildId}
+      actionText={getSettingsHeaderActionText(lang)}
+      fieldsHeaderState={israelFieldsHeaderState}
+      fieldCategoriesHeaderState={israelFieldCategoriesHeaderState}
+      sortCategoriesHeaderState={israelSortCategoriesHeaderState}
+      categoryGradesHeaderState={israelCategoryGradesHeaderState}
+    />
+  ) : (
     <SettingsSeasonsHeaderActions
       activeChildId={activeChildId}
       saveLabel={t.save}
@@ -151,11 +219,13 @@ export default function SettingsPage(): JSX.Element {
     <AppShell
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
-      pageTitle={isIsraelHarvestSettings ? getIsraelHarvestSettingsTitle(lang, getIsraelHarvestSettingsChildId(location.pathname)) : pageTitle}
+      pageTitle={isIsraelHarvestSettings ? israelHarvestPageTitle : pageTitle}
       pageHeaderActions={pageHeaderActions}
       topNav={t.topNav}
       sidebarSections={sidebarSections}
-      activeSidebarItemId={isIsraelHarvestSettings ? getIsraelHarvestSettingsChildId(location.pathname) : activeChildId}
+      activeSidebarItemId={
+        isIsraelHarvestSettings ? israelHarvestChildId : activeChildId
+      }
       onTopNavClick={handleTopNavClick}
       onSidebarClick={handleSidebarClick}
       onBrandClick={() => navigate(`/${activeModule}/home`)}
@@ -175,12 +245,28 @@ export default function SettingsPage(): JSX.Element {
     >
       <section className={workspaceStyles.workspace}>
         {isIsraelHarvestSettings ? (
-          <IsraelHarvestSettingsSection lang={lang} />
+          <IsraelHarvestSettingsSection
+            lang={lang}
+            onFieldsHeaderStateChange={setIsraelFieldsHeaderState}
+            onFieldCategoriesHeaderStateChange={
+              setIsraelFieldCategoriesHeaderState
+            }
+            onSortCategoriesHeaderStateChange={
+              setIsraelSortCategoriesHeaderState
+            }
+            onCategoryGradesHeaderStateChange={
+              setIsraelCategoryGradesHeaderState
+            }
+          />
         ) : (
           <>
             <p className={workspaceStyles.description}>{content.description}</p>
-            {setupNotice ? <p className={feedbackStyles.setupNotice}>{setupNotice}</p> : null}
-            {saveFeedback ? <p className={feedbackStyles.saved}>{saveFeedback}</p> : null}
+            {setupNotice ? (
+              <p className={feedbackStyles.setupNotice}>{setupNotice}</p>
+            ) : null}
+            {saveFeedback ? (
+              <p className={feedbackStyles.saved}>{saveFeedback}</p>
+            ) : null}
 
             <SettingsSitePreferencesPanel
               activeChildId={activeChildId}

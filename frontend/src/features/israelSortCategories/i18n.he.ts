@@ -1,0 +1,26 @@
+import type { IsraelSortCategoriesI18n } from './i18n';
+
+export const ISRAEL_SORT_CATEGORIES_I18N_HE: IsraelSortCategoriesI18n = {
+  addFailed: 'הוספת קטגוריית המיון נכשלה.',
+  emptyName: 'שם הקטגוריה לא יכול להיות ריק.',
+  editFailed: 'עדכון קטגוריית המיון נכשל.',
+  deleteFailed: 'לא ניתן למחוק את קטגוריית המיון שנבחרה.',
+  newCategoryPlaceholder: 'שם קטגוריית מיון חדשה',
+  addCategory: 'הוסף קטגוריית מיון',
+  loading: 'טוען קטגוריות מיון...',
+  empty: 'אין קטגוריות מיון להצגה כרגע.',
+  categoryId: 'מזהה',
+  deleteTitle: 'מחיקת קטגוריית מיון',
+  deleteMessage: (name) =>
+    `האם למחוק את הקטגוריה ${name}? פעולה זו לא ניתנת לשחזור.`,
+  deleteFallback: 'האם למחוק את הקטגוריה שנבחרה?',
+  deleteConfirm: 'מחק',
+  cancel: 'ביטול',
+  editTitle: 'עריכת קטגוריית מיון',
+  editMessage: (name) => `עדכון שם הקטגוריה ${name}`,
+  editFallback: 'עדכון הקטגוריה שנבחרה',
+  editCategoryPlaceholder: 'שם קטגוריה',
+  save: 'שמור',
+  updating: 'מעדכן...',
+  adding: 'מוסיף...',
+};

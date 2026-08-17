@@ -1,0 +1,25 @@
+import type { IsraelFieldsI18n } from './i18n';
+
+export const ISRAEL_FIELDS_I18N_EN: IsraelFieldsI18n = {
+  addFailed: 'Failed to add seller/field.',
+  emptyName: 'Name cannot be empty.',
+  editFailed: 'Failed to update seller/field.',
+  deleteFailed: 'Unable to delete the selected seller/field.',
+  newFieldPlaceholder: 'New seller/field name',
+  addField: 'Add seller/field',
+  loading: 'Loading sellers/fields...',
+  empty: 'No sellers/fields to display yet.',
+  fieldId: 'ID',
+  deleteTitle: 'Delete seller/field',
+  deleteMessage: (name) => `Delete ${name}? This action cannot be undone.`,
+  deleteFallback: 'Delete the selected item?',
+  deleteConfirm: 'Delete',
+  cancel: 'Cancel',
+  editTitle: 'Edit seller/field',
+  editMessage: (name) => `Update details for ${name}`,
+  editFallback: 'Update selected item',
+  editFieldPlaceholder: 'Name',
+  save: 'Save',
+  updating: 'Updating...',
+  adding: 'Adding...',
+};

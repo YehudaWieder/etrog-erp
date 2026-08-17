@@ -6,6 +6,10 @@ import customersReducer from './customersSlice';
 import customerCategoriesReducer from './customerCategoriesSlice';
 import traderSeasonSettingsReducer from './traderSeasonSettingsSlice';
 import globalFiltersReducer from './globalFiltersSlice';
+import israelFieldsReducer from './israelFieldsSlice';
+import israelFieldCategoriesReducer from './israelFieldCategoriesSlice';
+import israelSortCategoriesReducer from './israelSortCategoriesSlice';
+import israelCategoryGradesReducer from './israelCategoryGradesSlice';
 // ... ייבוא רידוסרים נוספים בהמשך
 
 const store = configureStore({
@@ -17,6 +21,10 @@ const store = configureStore({
     customerCategories: customerCategoriesReducer,
     traderSeasonSettings: traderSeasonSettingsReducer,
     globalFilters: globalFiltersReducer,
+    israelFields: israelFieldsReducer,
+    israelFieldCategories: israelFieldCategoriesReducer,
+    israelSortCategories: israelSortCategoriesReducer,
+    israelCategoryGrades: israelCategoryGradesReducer,
     // ... רידוסרים נוספים
   },
 });

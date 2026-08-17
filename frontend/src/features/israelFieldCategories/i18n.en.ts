@@ -1,0 +1,33 @@
+import type { IsraelFieldCategoriesI18n } from './i18n';
+
+export const ISRAEL_FIELD_CATEGORIES_I18N_EN: IsraelFieldCategoriesI18n = {
+  loading: 'Loading seller categories...',
+  empty: 'No seller categories to display for the active season.',
+  noActiveSeason:
+    'No active season. Set an active season to manage seller categories.',
+  fieldLabel: 'Seller/Field',
+  selectField: 'Select seller/field',
+  nameLabel: 'Category name',
+  namePlaceholder: 'Category name',
+  priceLabel: 'Price',
+  pricePlaceholder: 'Price',
+  currencyLabel: 'Currency',
+  selectCurrency: 'Select currency',
+  addTitle: 'New seller category',
+  addMessage: 'Add a seller category for the active season',
+  editTitle: 'Edit seller category',
+  editMessage: (name) => `Update category "${name}"`,
+  addFailed: 'Failed to add category.',
+  editFailed: 'Failed to update category.',
+  deleteFailed: 'Unable to delete the selected category.',
+  invalidName: 'Category name cannot be empty.',
+  invalidPrice: 'Please enter a valid price.',
+  deleteTitle: 'Delete seller category',
+  deleteMessage: (name) =>
+    `Delete category "${name}"? This action cannot be undone.`,
+  deleteFallback: 'Delete the selected category?',
+  deleteConfirm: 'Delete',
+  cancel: 'Cancel',
+  save: 'Save',
+  saving: 'Saving...',
+};

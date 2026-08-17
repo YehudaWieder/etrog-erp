@@ -1,0 +1,25 @@
+import type { IsraelFieldsI18n } from './i18n';
+
+export const ISRAEL_FIELDS_I18N_HE: IsraelFieldsI18n = {
+  addFailed: 'הוספת המוכר/שדה נכשלה.',
+  emptyName: 'השם לא יכול להיות ריק.',
+  editFailed: 'עדכון המוכר/שדה נכשל.',
+  deleteFailed: 'לא ניתן למחוק את המוכר/שדה שנבחר.',
+  newFieldPlaceholder: 'שם מוכר/שדה חדש',
+  addField: 'הוסף מוכר/שדה',
+  loading: 'טוען מוכרים/שדות...',
+  empty: 'אין מוכרים/שדות להצגה כרגע.',
+  fieldId: 'מזהה',
+  deleteTitle: 'מחיקת מוכר/שדה',
+  deleteMessage: (name) => `האם למחוק את ${name}? פעולה זו לא ניתנת לשחזור.`,
+  deleteFallback: 'האם למחוק את הפריט שנבחר?',
+  deleteConfirm: 'מחק',
+  cancel: 'ביטול',
+  editTitle: 'עריכת מוכר/שדה',
+  editMessage: (name) => `עדכון פרטי ${name}`,
+  editFallback: 'עדכון הפריט שנבחר',
+  editFieldPlaceholder: 'שם',
+  save: 'שמור',
+  updating: 'מעדכן...',
+  adding: 'מוסיף...',
+};

@@ -11,7 +11,9 @@ export const ISRAEL_HARVEST_SETTINGS_PATH_SEGMENTS = [
   '/grades',
 ];
 
-export function getIsraelHarvestSettingsChildId(pathname: string): IsraelHarvestSettingsChildId {
+export function getIsraelHarvestSettingsChildId(
+  pathname: string,
+): IsraelHarvestSettingsChildId {
   const path = pathname.toLowerCase();
 
   if (path.includes('/seller-categories')) return 'harvestSellerCategories';
@@ -21,7 +23,10 @@ export function getIsraelHarvestSettingsChildId(pathname: string): IsraelHarvest
   return 'harvestSellersFields';
 }
 
-const TITLES: Record<'he' | 'en', Record<IsraelHarvestSettingsChildId, string>> = {
+const TITLES: Record<
+  'he' | 'en',
+  Record<IsraelHarvestSettingsChildId, string>
+> = {
   he: {
     harvestSellersFields: 'מוכרים/שדות',
     harvestSellerCategories: 'קטגוריות מוכר',
@@ -36,6 +41,9 @@ const TITLES: Record<'he' | 'en', Record<IsraelHarvestSettingsChildId, string>> 
   },
 };
 
-export function getIsraelHarvestSettingsTitle(lang: 'he' | 'en', childId: IsraelHarvestSettingsChildId): string {
+export function getIsraelHarvestSettingsTitle(
+  lang: 'he' | 'en',
+  childId: IsraelHarvestSettingsChildId,
+): string {
   return TITLES[lang][childId];
 }
