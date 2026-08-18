@@ -37,7 +37,6 @@ model Season {
 
   // Israel module
   israelFieldCategories IsraelFieldCategory[]
-  israelCategoryGrades  IsraelCategoryGrade[]
   israelHarvests        IsraelHarvest[]
   israelClassifications IsraelClassification[]
   israelShipments       IsraelShipment[]
@@ -77,7 +76,6 @@ model User {
   israelFields          IsraelField[]
   israelFieldCategories IsraelFieldCategory[]
   israelSortCategories  IsraelSortCategory[]
-  israelCategoryGrades  IsraelCategoryGrade[]
   israelHarvests        IsraelHarvest[]
   israelClassifications IsraelClassification[]
   israelShipments       IsraelShipment[]
@@ -185,5 +183,3 @@ enum BoxStatus {
   SHIPPED // Dispatched
   DELIVERED // Delivered to recipient
 }
-
-

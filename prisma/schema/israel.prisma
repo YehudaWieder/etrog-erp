@@ -44,6 +44,8 @@ model IsraelFieldCategory {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  classifications IsraelClassification[]
+
   @@unique([seasonId, fieldId, name])
   @@index([seasonId])
   @@index([seasonId, fieldId])
@@ -64,7 +66,9 @@ model IsraelSortCategory {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  grades          IsraelCategoryGrade[]
+  supportedGrades Grade[]
+  gradeGroups     Json    @default("[]")
+
   classifications IsraelClassification[]
   shipmentItems   IsraelShipmentItem[]
   stocks          IsraelStock[]
@@ -73,33 +77,7 @@ model IsraelSortCategory {
 }
 
 // -----------------------------------------------------------------------------
-// 4. Israel Category Grades (seasonal, linked to a sort category)
-// -----------------------------------------------------------------------------
-model IsraelCategoryGrade {
-  id Int @id @default(autoincrement())
-
-  seasonId Int
-  season   Season @relation(fields: [seasonId], references: [id])
-
-  categoryId Int
-  category   IsraelSortCategory @relation(fields: [categoryId], references: [id])
-
-  grades Json @default("{}")
-
-  notes String?
-
-  updatedById Int
-  updatedBy   User @relation(fields: [updatedById], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([seasonId, categoryId])
-  @@index([seasonId])
-}
-
-// -----------------------------------------------------------------------------
-// 5. Israel Harvest (seasonal, linked to a field)
+// 4. Israel Harvest (seasonal, linked to a field)
 // -----------------------------------------------------------------------------
 model IsraelHarvest {
   id Int @id @default(autoincrement())
@@ -130,7 +108,7 @@ model IsraelHarvest {
 }
 
 // -----------------------------------------------------------------------------
-// 6. Israel Classification (seasonal, linked to a harvest and a sort category)
+// 5. Israel Classification (seasonal, linked to a harvest and a sort category)
 // -----------------------------------------------------------------------------
 model IsraelClassification {
   id Int @id @default(autoincrement())
@@ -141,10 +119,13 @@ model IsraelClassification {
   harvestId Int
   harvest   IsraelHarvest @relation(fields: [harvestId], references: [id])
 
+  fieldCategoryId Int
+  fieldCategory   IsraelFieldCategory @relation(fields: [fieldCategoryId], references: [id])
+
   categoryId Int
   category   IsraelSortCategory @relation(fields: [categoryId], references: [id])
 
-  grade       String
+  grade       Grade
   pitamStatus PitamStatus
   quantity    Int         @default(0)
 
@@ -158,11 +139,12 @@ model IsraelClassification {
 
   @@index([seasonId])
   @@index([seasonId, harvestId])
+  @@index([fieldCategoryId])
   @@index([categoryId])
 }
 
 // -----------------------------------------------------------------------------
-// 7. Israel Shipment (seasonal, groups boxes)
+// 6. Israel Shipment (seasonal, groups boxes)
 // -----------------------------------------------------------------------------
 model IsraelShipment {
   id Int @id @default(autoincrement())
@@ -194,7 +176,7 @@ model IsraelShipment {
 }
 
 // -----------------------------------------------------------------------------
-// 8. Israel Box (seasonal shipment container)
+// 7. Israel Box (seasonal shipment container)
 // -----------------------------------------------------------------------------
 model IsraelBox {
   id Int @id @default(autoincrement())
@@ -227,7 +209,7 @@ model IsraelBox {
 }
 
 // -----------------------------------------------------------------------------
-// 9. Israel Shipment Item (linked to a box, season, sort category, grade)
+// 8. Israel Shipment Item (linked to a box, season, sort category, grade)
 // -----------------------------------------------------------------------------
 model IsraelShipmentItem {
   id Int @id @default(autoincrement())
@@ -241,7 +223,7 @@ model IsraelShipmentItem {
   categoryId Int
   category   IsraelSortCategory @relation(fields: [categoryId], references: [id])
 
-  grade       String
+  grade       Grade
   pitamStatus PitamStatus
   quantity    Int         @default(0)
 
@@ -259,7 +241,7 @@ model IsraelShipmentItem {
 }
 
 // -----------------------------------------------------------------------------
-// 10. Israel Stock (movement ledger — what came in / went out, incl. non-shipment exits)
+// 9. Israel Stock (movement ledger — what came in / went out, incl. non-shipment exits)
 // -----------------------------------------------------------------------------
 model IsraelStock {
   id Int @id @default(autoincrement())
@@ -275,7 +257,7 @@ model IsraelStock {
   categoryId Int
   category   IsraelSortCategory @relation(fields: [categoryId], references: [id])
 
-  grade       String
+  grade       Grade
   pitamStatus PitamStatus
   quantity    Int         @default(0)
 

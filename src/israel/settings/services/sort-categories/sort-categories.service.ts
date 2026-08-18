@@ -1,8 +1,9 @@
 // src/israel/settings/services/sort-categories/sort-categories.service.ts
 
 import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Grade, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { GradeGroup, validateGradeGroups } from 'src/categories/utils/trader-category-grade-groups.util';
 import { normalizeIsraelSortCategoryName } from './utils/israel-sort-categories.utils';
 
 @Injectable()
@@ -15,14 +16,22 @@ export class IsraelSortCategoriesService {
     });
   }
 
-  async addCategory(name: string, updatedById: number) {
+  async addCategory(
+    name: string,
+    updatedById: number,
+    supportedGrades: Grade[] = [],
+    gradeGroups: GradeGroup[] = [],
+  ) {
     const normalizedName = normalizeIsraelSortCategoryName(name);
+    validateGradeGroups(gradeGroups, supportedGrades);
 
     try {
       return await this.prisma.israelSortCategory.create({
         data: {
           name: normalizedName,
           updatedById,
+          supportedGrades,
+          gradeGroups,
         },
       });
     } catch (error) {
@@ -44,8 +53,15 @@ export class IsraelSortCategoriesService {
     }
   }
 
-  async updateCategory(id: number, newName: string, updatedById: number) {
+  async updateCategory(
+    id: number,
+    newName: string,
+    updatedById: number,
+    supportedGrades: Grade[] = [],
+    gradeGroups: GradeGroup[] = [],
+  ) {
     const normalizedName = normalizeIsraelSortCategoryName(newName);
+    validateGradeGroups(gradeGroups, supportedGrades);
 
     try {
       return await this.prisma.israelSortCategory.update({
@@ -53,6 +69,8 @@ export class IsraelSortCategoriesService {
         data: {
           name: normalizedName,
           updatedById,
+          supportedGrades,
+          gradeGroups,
         },
       });
     } catch (error) {

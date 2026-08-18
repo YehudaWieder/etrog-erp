@@ -75,7 +75,12 @@ export class IsraelSortCategoriesController {
   })
   addCategory(@Body() body: CreateIsraelSortCategoryDto, @Req() req: Request) {
     const actor = req.user as AuthenticatedUser;
-    return this.israelSortCategoriesService.addCategory(body.name, actor.id);
+    return this.israelSortCategoriesService.addCategory(
+      body.name,
+      actor.id,
+      body.supportedGrades,
+      body.gradeGroups,
+    );
   }
 
   @Delete(':id')
@@ -116,6 +121,12 @@ export class IsraelSortCategoriesController {
   })
   updateCategory(@Body() body: UpdateIsraelSortCategoryDto, @Req() req: Request) {
     const actor = req.user as AuthenticatedUser;
-    return this.israelSortCategoriesService.updateCategory(body.id, body.name, actor.id);
+    return this.israelSortCategoriesService.updateCategory(
+      body.id,
+      body.name,
+      actor.id,
+      body.supportedGrades,
+      body.gradeGroups,
+    );
   }
 }

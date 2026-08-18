@@ -6,8 +6,10 @@ import { IsraelFieldCategoriesService } from './settings/services/field-categori
 import { IsraelFieldCategoriesController } from './settings/controllers/field-categories/field-categories.controller';
 import { IsraelSortCategoriesService } from './settings/services/sort-categories/sort-categories.service';
 import { IsraelSortCategoriesController } from './settings/controllers/sort-categories/sort-categories.controller';
-import { IsraelCategoryGradesService } from './settings/services/category-grades/category-grades.service';
-import { IsraelCategoryGradesController } from './settings/controllers/category-grades/category-grades.controller';
+import { IsraelHarvestService } from './harvest/israel-harvest.service';
+import { IsraelHarvestController } from './harvest/israel-harvest.controller';
+import { IsraelClassificationService } from './classification/israel-classification.service';
+import { IsraelClassificationController } from './classification/israel-classification.controller';
 
 @Module({
   imports: [SeasonsModule],
@@ -15,13 +17,15 @@ import { IsraelCategoryGradesController } from './settings/controllers/category-
     IsraelFieldsController,
     IsraelFieldCategoriesController,
     IsraelSortCategoriesController,
-    IsraelCategoryGradesController,
+    IsraelHarvestController,
+    IsraelClassificationController,
   ],
   providers: [
     IsraelFieldsService,
     IsraelFieldCategoriesService,
     IsraelSortCategoriesService,
-    IsraelCategoryGradesService,
+    IsraelHarvestService,
+    IsraelClassificationService,
   ],
 })
 export class IsraelModule {}
