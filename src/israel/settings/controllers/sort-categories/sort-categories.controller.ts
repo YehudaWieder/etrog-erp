@@ -28,6 +28,7 @@ import { IsraelSortCategoriesService } from 'src/israel/settings/services/sort-c
 import { Roles } from 'src/authorization/decorators/roles.decorator';
 import { CreateIsraelSortCategoryDto } from 'src/israel/settings/services/sort-categories/dto/create-israel-sort-category.dto';
 import { UpdateIsraelSortCategoryDto } from 'src/israel/settings/services/sort-categories/dto/update-israel-sort-category.dto';
+import { ReorderIsraelSortCategoriesDto } from 'src/israel/settings/services/sort-categories/dto/reorder-israel-sort-categories.dto';
 
 @ApiTags('Israel Settings')
 @ApiBearerAuth('access-token')
@@ -80,6 +81,7 @@ export class IsraelSortCategoriesController {
       actor.id,
       body.supportedGrades,
       body.gradeGroups,
+      body.notes,
     );
   }
 
@@ -127,6 +129,29 @@ export class IsraelSortCategoriesController {
       actor.id,
       body.supportedGrades,
       body.gradeGroups,
+      body.notes,
     );
+  }
+
+  @Patch('reorder')
+  @ApiOperation({ summary: 'Persist a manual priority order for all Israel sorting categories.' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['orderedIds'],
+      properties: {
+        orderedIds: {
+          type: 'array',
+          items: { type: 'number' },
+          description: 'Sorting category IDs in the desired display order.',
+          example: [4, 2, 1, 3],
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Sorting categories reordered successfully.' })
+  @ApiResponse({ status: 400, description: 'orderedIds does not match the existing sorting categories.' })
+  reorder(@Body() body: ReorderIsraelSortCategoriesDto) {
+    return this.israelSortCategoriesService.reorder(body);
   }
 }

@@ -6,6 +6,9 @@ export class CreateIsraelSortCategoryDto {
   @ApiProperty({ description: 'Unique sorting category name.', example: 'Mehudar' })
   name!: string;
 
+  @ApiPropertyOptional({ description: 'Optional free-text notes.' })
+  notes?: string;
+
   @ApiPropertyOptional({
     enum: Grade,
     isArray: true,

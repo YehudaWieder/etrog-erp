@@ -5,6 +5,7 @@ import { Grade, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { GradeGroup, validateGradeGroups } from 'src/categories/utils/trader-category-grade-groups.util';
 import { normalizeIsraelSortCategoryName } from './utils/israel-sort-categories.utils';
+import { ReorderIsraelSortCategoriesDto } from './dto/reorder-israel-sort-categories.dto';
 
 @Injectable()
 export class IsraelSortCategoriesService {
@@ -12,7 +13,7 @@ export class IsraelSortCategoriesService {
 
   async getAllCategories() {
     return this.prisma.israelSortCategory.findMany({
-      orderBy: { name: 'asc' },
+      orderBy: [{ orderIndex: 'asc' }, { name: 'asc' }],
     });
   }
 
@@ -21,6 +22,7 @@ export class IsraelSortCategoriesService {
     updatedById: number,
     supportedGrades: Grade[] = [],
     gradeGroups: GradeGroup[] = [],
+    notes?: string,
   ) {
     const normalizedName = normalizeIsraelSortCategoryName(name);
     validateGradeGroups(gradeGroups, supportedGrades);
@@ -32,6 +34,7 @@ export class IsraelSortCategoriesService {
           updatedById,
           supportedGrades,
           gradeGroups,
+          notes,
         },
       });
     } catch (error) {
@@ -59,6 +62,7 @@ export class IsraelSortCategoriesService {
     updatedById: number,
     supportedGrades: Grade[] = [],
     gradeGroups: GradeGroup[] = [],
+    notes?: string,
   ) {
     const normalizedName = normalizeIsraelSortCategoryName(newName);
     validateGradeGroups(gradeGroups, supportedGrades);
@@ -71,10 +75,40 @@ export class IsraelSortCategoriesService {
           updatedById,
           supportedGrades,
           gradeGroups,
+          notes,
         },
       });
     } catch (error) {
       throw new BadRequestException('Sorting category update failed');
     }
+  }
+
+  // Persist a manual priority order for all Israel sorting categories.
+  async reorder(dto: ReorderIsraelSortCategoriesDto) {
+    const existing = await this.prisma.israelSortCategory.findMany({
+      select: { id: true },
+    });
+
+    const existingIds = new Set(existing.map((category) => category.id));
+    const uniqueOrderedIds = new Set(dto.orderedIds);
+
+    if (
+      uniqueOrderedIds.size !== dto.orderedIds.length ||
+      uniqueOrderedIds.size !== existingIds.size ||
+      dto.orderedIds.some((id) => !existingIds.has(id))
+    ) {
+      throw new BadRequestException('orderedIds must contain exactly the set of existing sorting category IDs.');
+    }
+
+    await this.prisma.$transaction(
+      dto.orderedIds.map((id, index) =>
+        this.prisma.israelSortCategory.update({
+          where: { id },
+          data: { orderIndex: index },
+        }),
+      ),
+    );
+
+    return { orderedIds: dto.orderedIds };
   }
 }

@@ -9,6 +9,9 @@ export class UpdateIsraelSortCategoryDto {
   @ApiProperty({ description: 'New unique sorting category name.', example: 'Mehudar' })
   name!: string;
 
+  @ApiPropertyOptional({ description: 'Optional free-text notes.' })
+  notes?: string;
+
   @ApiPropertyOptional({
     enum: Grade,
     isArray: true,

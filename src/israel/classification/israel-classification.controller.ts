@@ -33,6 +33,15 @@ export class IsraelClassificationController {
     return this.israelClassificationService.findAllByHarvest(harvestId);
   }
 
+  @Get('season')
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
+  @ApiOperation({ summary: 'Retrieve all Israel sorting records for a season' })
+  @ApiQuery({ name: 'seasonId', type: Number })
+  @ApiResponse({ status: 200, description: 'List of Israel sorting records returned successfully.' })
+  findAllBySeason(@Query('seasonId', ParseIntPipe) seasonId: number) {
+    return this.israelClassificationService.findAllBySeason(seasonId);
+  }
+
   @Post()
   @ApiOperation({ summary: 'Create a new Israel sorting (classification) record' })
   @ApiResponse({ status: 201, description: 'Israel sorting record created successfully.' })

@@ -68,6 +68,7 @@ model IsraelSortCategory {
 
   supportedGrades Grade[]
   gradeGroups     Json    @default("[]")
+  orderIndex      Int     @default(0)
 
   classifications IsraelClassification[]
   shipmentItems   IsraelShipmentItem[]

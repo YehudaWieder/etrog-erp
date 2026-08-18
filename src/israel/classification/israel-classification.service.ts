@@ -10,6 +10,20 @@ const classificationInclude = {
   harvest: { select: { id: true, quantity: true, field: { select: { id: true, name: true } } } },
 } satisfies Prisma.IsraelClassificationInclude;
 
+const seasonClassificationInclude = {
+  category: { select: { id: true, name: true, orderIndex: true, gradeGroups: true } },
+  fieldCategory: { select: { id: true, name: true } },
+  harvest: {
+    select: {
+      id: true,
+      fieldId: true,
+      dateGregorian: true,
+      dateHebrew: true,
+      field: { select: { id: true, name: true } },
+    },
+  },
+} satisfies Prisma.IsraelClassificationInclude;
+
 @Injectable()
 export class IsraelClassificationService {
   constructor(
@@ -22,6 +36,14 @@ export class IsraelClassificationService {
       where: { harvestId },
       include: classificationInclude,
       orderBy: { id: 'asc' },
+    });
+  }
+
+  async findAllBySeason(seasonId: number) {
+    return this.prisma.israelClassification.findMany({
+      where: { seasonId },
+      include: seasonClassificationInclude,
+      orderBy: [{ harvest: { dateGregorian: 'desc' } }, { id: 'asc' }],
     });
   }
 
