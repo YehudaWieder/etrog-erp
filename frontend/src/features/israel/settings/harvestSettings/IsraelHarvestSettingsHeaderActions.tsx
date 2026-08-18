@@ -91,6 +91,15 @@ export function IsraelHarvestSettingsHeaderActions({
         <button
           type="button"
           className={`${styles.button} ${styles.success}`}
+          onClick={sortCategoriesHeaderState.onAdd}
+          disabled={sortCategoriesHeaderState.isAddDisabled}
+        >
+          <FaCirclePlus />
+          <span>{actionText.add}</span>
+        </button>
+        <button
+          type="button"
+          className={`${styles.button} ${styles.success}`}
           onClick={sortCategoriesHeaderState.onEdit}
           disabled={sortCategoriesHeaderState.isEditDisabled}
         >

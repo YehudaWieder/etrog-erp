@@ -36,9 +36,32 @@ const TITLES: Record<
   },
 };
 
+const DESCRIPTIONS: Record<
+  'he' | 'en',
+  Record<IsraelHarvestSettingsChildId, string>
+> = {
+  he: {
+    harvestSellersFields: 'נהל את רשימת המוכרים/שדות במערכת, כולל הוספה, עריכה ומחיקה.',
+    harvestSellerCategories: 'הגדר וארגן קטגוריות מחיר לכל מוכר/שדה עבור העונה הפעילה.',
+    harvestSortingCategories: 'הגדר קטגוריות מיון ודרגות איכות תואמות עבור סיווג היבול.',
+  },
+  en: {
+    harvestSellersFields: 'Manage the list of sellers/fields in the system, including adding, editing, and deleting.',
+    harvestSellerCategories: 'Define and organize price categories per seller/field for the active season.',
+    harvestSortingCategories: 'Define sorting categories and matching quality grades for harvest classification.',
+  },
+};
+
 export function getIsraelHarvestSettingsTitle(
   lang: 'he' | 'en',
   childId: IsraelHarvestSettingsChildId,
 ): string {
   return TITLES[lang][childId];
+}
+
+export function getIsraelHarvestSettingsDescription(
+  lang: 'he' | 'en',
+  childId: IsraelHarvestSettingsChildId,
+): string {
+  return DESCRIPTIONS[lang][childId];
 }

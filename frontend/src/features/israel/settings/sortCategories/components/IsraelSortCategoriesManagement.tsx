@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FaXmark } from 'react-icons/fa6';
 import { ConfirmDialog } from '../../../../../components/ui/ConfirmDialog';
 import ManagementCardsGrid from '../../../../../components/ui/ManagementCardsGrid';
@@ -20,144 +20,96 @@ const IsraelSortCategoriesManagement: React.FC<
     loading,
     shownError,
     sortedCategories,
-    newCategoryName,
-    setNewCategoryName,
-    newCategorySupportedGrades,
-    toggleNewCategoryGrade,
-    newCategoryGradeGroupRows,
-    addNewCategoryGradeGroup,
-    removeNewCategoryGradeGroup,
-    renameNewCategoryGradeGroup,
-    toggleNewCategoryGradeInGroup,
     selectedCategoryId,
     setSelectedCategoryId,
     selectedCategory,
     isDeleteDialogOpen,
     setIsDeleteDialogOpen,
+    isAddDialogOpen,
     isEditDialogOpen,
-    setIsEditDialogOpen,
-    editCategoryName,
-    setEditCategoryName,
-    editCategorySupportedGrades,
-    toggleEditCategoryGrade,
-    editCategoryGradeGroupRows,
-    addEditCategoryGradeGroup,
-    removeEditCategoryGradeGroup,
-    renameEditCategoryGradeGroup,
-    toggleEditCategoryGradeInGroup,
+    closeDialogs,
+    formState,
+    setFormState,
+    toggleFormGrade,
+    addFormGradeGroup,
+    removeFormGradeGroup,
+    renameFormGradeGroup,
+    toggleFormGradeInGroup,
+    addError,
     editError,
-    isSavingEdit,
-    isAdding,
-    handleAdd,
+    isSubmitting,
+    handleAddCategory,
     handleDeleteCategory,
     handleEditCategory,
+    onReorderCategories,
   } = useIsraelSortCategoriesManagement({ lang, onHeaderStateChange });
+
+  const [draggedId, setDraggedId] = useState<number | null>(null);
+  const [dragOverId, setDragOverId] = useState<number | null>(null);
+
+  const handleDrop = (targetId: number) => {
+    if (draggedId === null || draggedId === targetId) {
+      setDraggedId(null);
+      setDragOverId(null);
+      return;
+    }
+
+    const currentIds = sortedCategories.map((category) => category.id);
+    const fromIndex = currentIds.indexOf(draggedId);
+    const toIndex = currentIds.indexOf(targetId);
+
+    if (fromIndex === -1 || toIndex === -1) {
+      setDraggedId(null);
+      setDragOverId(null);
+      return;
+    }
+
+    const reorderedIds = [...currentIds];
+    reorderedIds.splice(fromIndex, 1);
+    reorderedIds.splice(toIndex, 0, draggedId);
+
+    onReorderCategories(reorderedIds);
+    setDraggedId(null);
+    setDragOverId(null);
+  };
 
   return (
     <SettingsInnerTemplate
-      toolbar={
-        <div className="seasons-manager__create-row">
-          <input
-            className="seasons-manager__year-input"
-            type="text"
-            value={newCategoryName}
-            onChange={(e) => setNewCategoryName(e.target.value)}
-            placeholder={t.newCategoryPlaceholder}
-          />
-
-          <p className={gradeStyles.sharesSubtitle}>{t.supportedGradesLabel}</p>
-          <div className={gradeStyles.gradesChecklist}>
-            {TRADER_CATEGORY_GRADE_OPTIONS.map((grade) => (
-              <label key={grade} className={gradeStyles.gradeCheckboxItem}>
-                <input
-                  type="checkbox"
-                  checked={newCategorySupportedGrades.includes(grade)}
-                  onChange={() => toggleNewCategoryGrade(grade)}
-                />
-                <span>{grade}</span>
-              </label>
-            ))}
-          </div>
-
-          <p className={gradeStyles.sharesSubtitle}>{t.gradeGroupsLabel}</p>
-          <div className={gradeStyles.gradeGroupsArea}>
-            {newCategoryGradeGroupRows.map((group) => (
-              <div key={group.localId} className={gradeStyles.gradeGroupRow}>
-                <div className={gradeStyles.gradeGroupRowHead}>
-                  <input
-                    className="seasons-manager__year-input"
-                    type="text"
-                    value={group.name}
-                    onChange={(event) =>
-                      renameNewCategoryGradeGroup(
-                        group.localId,
-                        event.target.value,
-                      )
-                    }
-                    placeholder={t.groupNamePlaceholder}
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    onClick={() => removeNewCategoryGradeGroup(group.localId)}
-                  >
-                    {t.removeGroupLabel}
-                  </button>
-                </div>
-                <div className={gradeStyles.gradesChecklist}>
-                  {newCategorySupportedGrades.map((grade) => (
-                    <label
-                      key={grade}
-                      className={gradeStyles.gradeCheckboxItem}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={group.grades.includes(grade)}
-                        onChange={() =>
-                          toggleNewCategoryGradeInGroup(group.localId, grade)
-                        }
-                      />
-                      <span>{grade}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            ))}
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={addNewCategoryGradeGroup}
-            >
-              {t.addGroupLabel}
-            </button>
-          </div>
-
-          <SubmitButton
-            className="btn btn-primary"
-            onClick={() => {
-              void handleAdd();
-            }}
-            disabled={loading}
-            isLoading={isAdding}
-            loadingText={t.adding}
-          >
-            {t.addCategory}
-          </SubmitButton>
-        </div>
-      }
       loadingMessage={loading ? t.loading : null}
       errorMessage={shownError}
       emptyMessage={sortedCategories.length === 0 && !loading ? t.empty : null}
     >
       {sortedCategories.length > 0 ? (
         <ManagementCardsGrid>
-          {sortedCategories.map((category) => {
+          {sortedCategories.map((category, index) => {
             const isSelected = selectedCategoryId === category.id;
             const badgeLabel =
               category.name.trim().slice(0, 2).toUpperCase() || '#';
 
             return (
-              <li key={category.id}>
+              <li
+                key={category.id}
+                draggable
+                className={`${gradeStyles.draggableCard}${draggedId === category.id ? ` ${gradeStyles.draggingCard}` : ''}${dragOverId === category.id && draggedId !== category.id ? ` ${gradeStyles.dragOverCard}` : ''}`}
+                onDragStart={() => setDraggedId(category.id)}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  setDragOverId(category.id);
+                }}
+                onDragLeave={() =>
+                  setDragOverId((current) =>
+                    current === category.id ? null : current,
+                  )
+                }
+                onDrop={(event) => {
+                  event.preventDefault();
+                  handleDrop(category.id);
+                }}
+                onDragEnd={() => {
+                  setDraggedId(null);
+                  setDragOverId(null);
+                }}
+              >
                 <ManagementSelectableCard
                   isSelected={isSelected}
                   badgeLabel={badgeLabel}
@@ -166,8 +118,20 @@ const IsraelSortCategoriesManagement: React.FC<
                       previousSelectedId === category.id ? null : category.id,
                     );
                   }}
+                  topAside={
+                    <span
+                      className={gradeStyles.dragHandle}
+                      title={t.dragHandleLabel}
+                      aria-label={t.dragHandleLabel}
+                    >
+                      ⠿
+                    </span>
+                  }
                   topContent={
                     <>
+                      <span className={gradeStyles.priorityBadge}>
+                        {t.priorityLabel} {index + 1}
+                      </span>
                       <span className="seasons-manager__year">
                         {category.name}
                       </span>
@@ -199,32 +163,62 @@ const IsraelSortCategoriesManagement: React.FC<
         onCancel={() => setIsDeleteDialogOpen(false)}
       />
 
-      {isEditDialogOpen ? (
+      {isAddDialogOpen || isEditDialogOpen ? (
         <div className="modal-overlay">
-          <div className="modal-dialog">
+          <div className="modal-dialog modal-dialog--form">
             <button
               className="modal-close"
               type="button"
               aria-label={t.cancel}
-              onClick={() => setIsEditDialogOpen(false)}
+              onClick={closeDialogs}
             >
               <FaXmark />
             </button>
-            <h3 className="modal-title">{t.editTitle}</h3>
+            <h3 className="modal-title">
+              {isAddDialogOpen ? t.addTitle : t.editTitle}
+            </h3>
             <div className="modal-message">
-              {selectedCategory
-                ? t.editMessage(selectedCategory.name)
-                : t.editFallback}
+              {isAddDialogOpen
+                ? t.addMessage
+                : t.editMessage(selectedCategory?.name ?? '')}
             </div>
 
-            <input
-              className="seasons-manager__year-input"
-              type="text"
-              value={editCategoryName}
-              onChange={(event) => setEditCategoryName(event.target.value)}
-              placeholder={t.editCategoryPlaceholder}
-              autoFocus
-            />
+            <div className={gradeStyles.formGrid}>
+              <div className={gradeStyles.field}>
+                <label className={gradeStyles.label}>
+                  {t.categoryNameLabel}
+                </label>
+                <input
+                  className="seasons-manager__year-input"
+                  type="text"
+                  value={formState.name}
+                  onChange={(event) =>
+                    setFormState((previous) => ({
+                      ...previous,
+                      name: event.target.value,
+                    }))
+                  }
+                  placeholder={t.categoryNamePlaceholder}
+                  autoFocus
+                />
+              </div>
+
+              <div className={gradeStyles.field}>
+                <label className={gradeStyles.label}>{t.notesLabel}</label>
+                <input
+                  className="seasons-manager__year-input"
+                  type="text"
+                  value={formState.notes}
+                  onChange={(event) =>
+                    setFormState((previous) => ({
+                      ...previous,
+                      notes: event.target.value,
+                    }))
+                  }
+                  placeholder={t.notesPlaceholder}
+                />
+              </div>
+            </div>
 
             <p className={gradeStyles.sharesSubtitle}>
               {t.supportedGradesLabel}
@@ -234,8 +228,8 @@ const IsraelSortCategoriesManagement: React.FC<
                 <label key={grade} className={gradeStyles.gradeCheckboxItem}>
                   <input
                     type="checkbox"
-                    checked={editCategorySupportedGrades.includes(grade)}
-                    onChange={() => toggleEditCategoryGrade(grade)}
+                    checked={formState.supportedGrades.includes(grade)}
+                    onChange={() => toggleFormGrade(grade)}
                   />
                   <span>{grade}</span>
                 </label>
@@ -244,7 +238,7 @@ const IsraelSortCategoriesManagement: React.FC<
 
             <p className={gradeStyles.sharesSubtitle}>{t.gradeGroupsLabel}</p>
             <div className={gradeStyles.gradeGroupsArea}>
-              {editCategoryGradeGroupRows.map((group) => (
+              {formState.gradeGroupRows.map((group) => (
                 <div key={group.localId} className={gradeStyles.gradeGroupRow}>
                   <div className={gradeStyles.gradeGroupRowHead}>
                     <input
@@ -252,25 +246,20 @@ const IsraelSortCategoriesManagement: React.FC<
                       type="text"
                       value={group.name}
                       onChange={(event) =>
-                        renameEditCategoryGradeGroup(
-                          group.localId,
-                          event.target.value,
-                        )
+                        renameFormGradeGroup(group.localId, event.target.value)
                       }
                       placeholder={t.groupNamePlaceholder}
                     />
                     <button
                       type="button"
                       className="btn btn-danger"
-                      onClick={() =>
-                        removeEditCategoryGradeGroup(group.localId)
-                      }
+                      onClick={() => removeFormGradeGroup(group.localId)}
                     >
                       {t.removeGroupLabel}
                     </button>
                   </div>
                   <div className={gradeStyles.gradesChecklist}>
-                    {editCategorySupportedGrades.map((grade) => (
+                    {formState.supportedGrades.map((grade) => (
                       <label
                         key={grade}
                         className={gradeStyles.gradeCheckboxItem}
@@ -279,7 +268,7 @@ const IsraelSortCategoriesManagement: React.FC<
                           type="checkbox"
                           checked={group.grades.includes(grade)}
                           onChange={() =>
-                            toggleEditCategoryGradeInGroup(group.localId, grade)
+                            toggleFormGradeInGroup(group.localId, grade)
                           }
                         />
                         <span>{grade}</span>
@@ -291,33 +280,41 @@ const IsraelSortCategoriesManagement: React.FC<
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={addEditCategoryGradeGroup}
+                onClick={addFormGradeGroup}
               >
                 {t.addGroupLabel}
               </button>
             </div>
 
-            {editError ? (
+            {isAddDialogOpen && addError ? (
+              <p className="seasons-manager__error">{addError}</p>
+            ) : null}
+            {isEditDialogOpen && editError ? (
               <p className="seasons-manager__error">{editError}</p>
             ) : null}
 
             <div className="modal-actions">
               <button
                 className="btn btn-danger"
-                onClick={() => setIsEditDialogOpen(false)}
+                onClick={closeDialogs}
                 type="button"
-                disabled={isSavingEdit}
+                disabled={isSubmitting}
               >
                 {t.cancel}
               </button>
               <SubmitButton
                 className="btn btn-success"
                 onClick={() => {
+                  if (isAddDialogOpen) {
+                    void handleAddCategory();
+                    return;
+                  }
+
                   void handleEditCategory();
                 }}
                 type="button"
-                isLoading={isSavingEdit}
-                loadingText={t.updating}
+                isLoading={isSubmitting}
+                loadingText={t.saving}
               >
                 {t.save}
               </SubmitButton>

@@ -4,6 +4,7 @@ import {
   createIsraelSortCategory,
   deleteIsraelSortCategory,
   getIsraelSortCategories,
+  reorderIsraelSortCategories,
   updateIsraelSortCategory,
   type CreateIsraelSortCategoryPayload,
   type IsraelSortCategory,
@@ -14,12 +15,14 @@ type IsraelSortCategoriesState = {
   items: IsraelSortCategory[];
   loading: boolean;
   error: string | null;
+  previousOrderIds: number[] | null;
 };
 
 const initialState: IsraelSortCategoriesState = {
   items: [],
   loading: false,
   error: null,
+  previousOrderIds: null,
 };
 
 export const fetchIsraelSortCategories = createAsyncThunk(
@@ -64,6 +67,21 @@ export const editIsraelSortCategory = createAsyncThunk(
   async (payload: UpdateIsraelSortCategoryPayload, { rejectWithValue }) => {
     try {
       return await updateIsraelSortCategory(payload);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return rejectWithValue(error.message);
+      }
+
+      throw error;
+    }
+  },
+);
+
+export const reorderIsraelSortCategory = createAsyncThunk(
+  'israelSortCategories/reorderIsraelSortCategory',
+  async (orderedIds: number[], { rejectWithValue }) => {
+    try {
+      return await reorderIsraelSortCategories(orderedIds);
     } catch (error) {
       if (error instanceof ApiError) {
         return rejectWithValue(error.message);
@@ -150,6 +168,49 @@ const israelSortCategoriesSlice = createSlice({
           (action.payload as string | undefined) ??
           action.error.message ??
           'Failed to delete sorting category';
+      })
+      .addCase(reorderIsraelSortCategory.pending, (state, action) => {
+        state.error = null;
+        state.previousOrderIds = state.items.map((category) => category.id);
+
+        const orderedIds = action.meta.arg;
+        const itemsById = new Map(
+          state.items.map((category) => [category.id, category]),
+        );
+
+        state.items = orderedIds
+          .map((id, index) => {
+            const category = itemsById.get(id);
+            return category ? { ...category, orderIndex: index } : null;
+          })
+          .filter(
+            (category): category is IsraelSortCategory => category !== null,
+          );
+      })
+      .addCase(reorderIsraelSortCategory.fulfilled, (state) => {
+        state.previousOrderIds = null;
+      })
+      .addCase(reorderIsraelSortCategory.rejected, (state, action) => {
+        if (state.previousOrderIds) {
+          const itemsById = new Map(
+            state.items.map((category) => [category.id, category]),
+          );
+
+          state.items = state.previousOrderIds
+            .map((id, index) => {
+              const category = itemsById.get(id);
+              return category ? { ...category, orderIndex: index } : null;
+            })
+            .filter(
+              (category): category is IsraelSortCategory => category !== null,
+            );
+        }
+
+        state.previousOrderIds = null;
+        state.error =
+          (action.payload as string | undefined) ??
+          action.error.message ??
+          'Failed to reorder sorting categories';
       });
   },
 });

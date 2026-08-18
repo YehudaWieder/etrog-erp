@@ -25,6 +25,7 @@ import { IsraelHarvestSettingsSection } from '../israel/settings/harvestSettings
 import { IsraelHarvestSettingsHeaderActions } from '../israel/settings/harvestSettings/IsraelHarvestSettingsHeaderActions';
 import {
   getIsraelHarvestSettingsChildId,
+  getIsraelHarvestSettingsDescription,
   getIsraelHarvestSettingsTitle,
   ISRAEL_HARVEST_SETTINGS_PATH_SEGMENTS,
 } from '../israel/settings/harvestSettings/israelHarvestSettings.i18n';
@@ -101,6 +102,10 @@ export default function SettingsPage(): JSX.Element {
     location.pathname,
   );
   const israelHarvestTitle = getIsraelHarvestSettingsTitle(
+    lang,
+    israelHarvestChildId,
+  );
+  const israelHarvestDescription = getIsraelHarvestSettingsDescription(
     lang,
     israelHarvestChildId,
   );
@@ -238,16 +243,21 @@ export default function SettingsPage(): JSX.Element {
     >
       <section className={workspaceStyles.workspace}>
         {isIsraelHarvestSettings ? (
-          <IsraelHarvestSettingsSection
-            lang={lang}
-            onFieldsHeaderStateChange={setIsraelFieldsHeaderState}
-            onFieldCategoriesHeaderStateChange={
-              setIsraelFieldCategoriesHeaderState
-            }
-            onSortCategoriesHeaderStateChange={
-              setIsraelSortCategoriesHeaderState
-            }
-          />
+          <>
+            <p className={workspaceStyles.description}>
+              {israelHarvestDescription}
+            </p>
+            <IsraelHarvestSettingsSection
+              lang={lang}
+              onFieldsHeaderStateChange={setIsraelFieldsHeaderState}
+              onFieldCategoriesHeaderStateChange={
+                setIsraelFieldCategoriesHeaderState
+              }
+              onSortCategoriesHeaderStateChange={
+                setIsraelSortCategoriesHeaderState
+              }
+            />
+          </>
         ) : (
           <>
             <p className={workspaceStyles.description}>{content.description}</p>

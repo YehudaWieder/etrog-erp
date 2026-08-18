@@ -4,12 +4,15 @@ import type { GradeGroup } from './traderCategoriesApi';
 export type IsraelSortCategory = {
   id: number;
   name: string;
+  notes: string | null;
   supportedGrades: string[];
   gradeGroups: GradeGroup[];
+  orderIndex: number;
 };
 
 export type CreateIsraelSortCategoryPayload = {
   name: string;
+  notes?: string;
   supportedGrades: string[];
   gradeGroups: GradeGroup[];
 };
@@ -17,6 +20,7 @@ export type CreateIsraelSortCategoryPayload = {
 export type UpdateIsraelSortCategoryPayload = {
   id: number;
   name: string;
+  notes?: string;
   supportedGrades: string[];
   gradeGroups: GradeGroup[];
 };
@@ -49,4 +53,16 @@ export async function updateIsraelSortCategory(
     method: 'PATCH',
     body: JSON.stringify(payload),
   });
+}
+
+export async function reorderIsraelSortCategories(
+  orderedIds: number[],
+): Promise<{ orderedIds: number[] }> {
+  return apiClient<{ orderedIds: number[] }>(
+    '/israel/sort-categories/reorder',
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ orderedIds }),
+    },
+  );
 }
