@@ -5,6 +5,8 @@ export type IsraelFieldCategoriesI18n = {
   loading: string;
   empty: string;
   noActiveSeason: string;
+  fieldFilterLabel: string;
+  allFieldsOption: string;
   fieldLabel: string;
   selectField: string;
   nameLabel: string;

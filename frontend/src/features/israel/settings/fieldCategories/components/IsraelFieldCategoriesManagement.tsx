@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaXmark } from 'react-icons/fa6';
 import { ConfirmDialog } from '../../../../../components/ui/ConfirmDialog';
+import { GlobalScopedFilters } from '../../../../../components/ui/GlobalScopedFilters';
 import ManagementCardsGrid from '../../../../../components/ui/ManagementCardsGrid';
 import ManagementSelectableCard from '../../../../../components/ui/ManagementSelectableCard';
 import SettingsInnerTemplate from '../../../../../components/ui/SettingsInnerTemplate';
@@ -13,6 +14,7 @@ import styles from './styles/IsraelFieldCategoriesShared.module.css';
 export type { IsraelFieldCategoriesHeaderState } from '../israelFieldCategoriesPage.types';
 
 const CURRENCIES: Currency[] = ['ILS', 'USD', 'EUR'];
+const FILTER_SCOPE = 'israel-field-categories-management';
 
 const IsraelFieldCategoriesManagement: React.FC<
   IsraelFieldCategoriesManagementProps
@@ -22,9 +24,11 @@ const IsraelFieldCategoriesManagement: React.FC<
     loading,
     shownError,
     activeSeasonId,
+    filters,
     sortedFields,
     fieldById,
     sortedCategories,
+    categoriesByField,
     selectedCategory,
     selectedCategoryId,
     setSelectedCategoryId,
@@ -47,6 +51,14 @@ const IsraelFieldCategoriesManagement: React.FC<
 
   return (
     <SettingsInnerTemplate
+      filters={(
+        <GlobalScopedFilters
+          scope={FILTER_SCOPE}
+          filters={filters}
+          className="israel-field-categories-manager__filters"
+          direction={lang === 'he' ? 'rtl' : 'ltr'}
+        />
+      )}
       loadingMessage={loading ? t.loading : null}
       errorMessage={shownError}
       emptyMessage={
@@ -57,47 +69,52 @@ const IsraelFieldCategoriesManagement: React.FC<
             : null
       }
     >
-      {sortedCategories.length > 0 ? (
-        <ManagementCardsGrid>
-          {sortedCategories.map((category) => {
-            const fieldName =
-              category.field?.name ??
-              fieldById.get(category.fieldId) ??
-              `#${category.fieldId}`;
-            const isSelected = selectedCategoryId === category.id;
-            const badgeLabel =
-              category.name.trim().slice(0, 2).toUpperCase() || '#';
+      {categoriesByField.length > 0 ? (
+        <div className={styles.groups}>
+          {categoriesByField.map((group) => (
+            <section key={group.fieldId} className={styles.group}>
+              <h4 className="seasons-manager__section-title">{group.fieldName}</h4>
+              <ManagementCardsGrid className={styles.cards}>
+                {group.categories.map((category) => {
+                  const isSelected = selectedCategoryId === category.id;
+                  const badgeLabel =
+                    category.name.trim().slice(0, 2).toUpperCase() || '#';
 
-            return (
-              <li key={category.id}>
-                <ManagementSelectableCard
-                  isSelected={isSelected}
-                  badgeLabel={badgeLabel}
-                  onToggle={() => {
-                    setSelectedCategoryId((previousId) =>
-                      previousId === category.id ? null : category.id,
-                    );
-                  }}
-                  topContent={
-                    <>
-                      <span className="seasons-manager__year">
-                        {category.name}
-                      </span>
-                      <span className="seasons-manager__meta">{fieldName}</span>
-                    </>
-                  }
-                  bottomContent={
-                    <span className={`seasons-manager__meta ${styles.meta}`}>
-                      <span className={styles.metaLine}>
-                        {t.priceLabel}: {category.price} {category.currency}
-                      </span>
-                    </span>
-                  }
-                />
-              </li>
-            );
-          })}
-        </ManagementCardsGrid>
+                  return (
+                    <li key={category.id}>
+                      <ManagementSelectableCard
+                        isSelected={isSelected}
+                        badgeLabel={badgeLabel}
+                        onToggle={() => {
+                          setSelectedCategoryId((previousId) =>
+                            previousId === category.id ? null : category.id,
+                          );
+                        }}
+                        topContent={
+                          <>
+                            <span className="seasons-manager__year">
+                              {category.name}
+                            </span>
+                            <span className="seasons-manager__meta">
+                              {group.fieldName}
+                            </span>
+                          </>
+                        }
+                        bottomContent={
+                          <span className={`seasons-manager__meta ${styles.meta}`}>
+                            <span className={styles.metaLine}>
+                              {t.priceLabel}: {category.price} {category.currency}
+                            </span>
+                          </span>
+                        }
+                      />
+                    </li>
+                  );
+                })}
+              </ManagementCardsGrid>
+            </section>
+          ))}
+        </div>
       ) : null}
 
       <ConfirmDialog

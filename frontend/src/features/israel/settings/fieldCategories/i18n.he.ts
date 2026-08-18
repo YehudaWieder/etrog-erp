@@ -5,6 +5,8 @@ export const ISRAEL_FIELD_CATEGORIES_I18N_HE: IsraelFieldCategoriesI18n = {
   empty: 'אין קטגוריות מוכר להצגה בעונה הפעילה.',
   noActiveSeason:
     'אין עונה פעילה. יש להגדיר עונה פעילה כדי לנהל קטגוריות מוכר.',
+  fieldFilterLabel: 'סינון לפי מוכר/שדה',
+  allFieldsOption: 'כל המוכרים/שדות',
   fieldLabel: 'מוכר/שדה',
   selectField: 'בחר מוכר/שדה',
   nameLabel: 'שם קטגוריה',

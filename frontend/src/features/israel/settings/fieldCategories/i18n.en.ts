@@ -5,6 +5,8 @@ export const ISRAEL_FIELD_CATEGORIES_I18N_EN: IsraelFieldCategoriesI18n = {
   empty: 'No seller categories to display for the active season.',
   noActiveSeason:
     'No active season. Set an active season to manage seller categories.',
+  fieldFilterLabel: 'Filter by seller/field',
+  allFieldsOption: 'All sellers/fields',
   fieldLabel: 'Seller/Field',
   selectField: 'Select seller/field',
   nameLabel: 'Category name',

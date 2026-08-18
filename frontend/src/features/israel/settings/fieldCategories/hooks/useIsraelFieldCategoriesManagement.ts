@@ -11,10 +11,17 @@ import {
 import type { AppDispatch, RootState } from '../../../../../store';
 import type { Currency } from '../../../../../services/israelFieldCategoriesApi';
 import { getIsraelFieldCategoriesI18n } from '../i18n';
+import {
+  buildIsraelFieldCategoriesFiltersConfig,
+  parseFieldFilterId,
+} from '../utils/israelFieldCategoriesFilters.util';
 import type {
   IsraelFieldCategoriesManagementProps,
   IsraelFieldCategoryFormState,
 } from '../israelFieldCategoriesPage.types';
+
+const FILTER_SCOPE = 'israel-field-categories-management';
+const EMPTY_FILTERS: Record<string, string> = {};
 
 const createInitialFormState = (): IsraelFieldCategoryFormState => ({
   fieldId: '',
@@ -38,6 +45,9 @@ export function useIsraelFieldCategoriesManagement({
 }: IsraelFieldCategoriesManagementProps) {
   const dispatch = useDispatch<AppDispatch>();
   const t = getIsraelFieldCategoriesI18n(lang);
+  const globalFilterValues = useSelector(
+    (state: RootState) => state.globalFilters.scopes[FILTER_SCOPE] ?? EMPTY_FILTERS,
+  );
 
   const israelFields = useSelector(
     (state: RootState) => state.israelFields.items,
@@ -92,15 +102,55 @@ export function useIsraelFieldCategoriesManagement({
     [sortedFields],
   );
 
+  const fieldFilterId = useMemo<number | 'all'>(
+    () => parseFieldFilterId(globalFilterValues.fieldId ?? 'all'),
+    [globalFilterValues.fieldId],
+  );
+
+  const filters = useMemo(
+    () => buildIsraelFieldCategoriesFiltersConfig({ fields: sortedFields, t }),
+    [sortedFields, t],
+  );
+
   const sortedCategories = useMemo(
     () =>
-      [...categories].sort((a, b) => {
-        const nameA = a.field?.name ?? fieldById.get(a.fieldId) ?? '';
-        const nameB = b.field?.name ?? fieldById.get(b.fieldId) ?? '';
-        return nameA.localeCompare(nameB) || a.name.localeCompare(b.name);
-      }),
-    [categories, fieldById],
+      [...categories]
+        .filter((category) =>
+          fieldFilterId === 'all' ? true : category.fieldId === fieldFilterId,
+        )
+        .sort((a, b) => {
+          const nameA = a.field?.name ?? fieldById.get(a.fieldId) ?? '';
+          const nameB = b.field?.name ?? fieldById.get(b.fieldId) ?? '';
+          return nameA.localeCompare(nameB) || a.name.localeCompare(b.name);
+        }),
+    [categories, fieldById, fieldFilterId],
   );
+
+  const categoriesByField = useMemo(() => {
+    const groups = new Map<
+      number,
+      { fieldName: string; categories: typeof sortedCategories }
+    >();
+
+    sortedCategories.forEach((category) => {
+      const fieldName =
+        category.field?.name ?? fieldById.get(category.fieldId) ?? `#${category.fieldId}`;
+      const existingGroup = groups.get(category.fieldId);
+
+      if (existingGroup) {
+        existingGroup.categories.push(category);
+        return;
+      }
+
+      groups.set(category.fieldId, { fieldName, categories: [category] });
+    });
+
+    return Array.from(groups.entries()).map(([fieldId, group]) => ({
+      fieldId,
+      fieldName: group.fieldName,
+      categories: group.categories,
+    }));
+  }, [sortedCategories, fieldById]);
 
   useEffect(() => {
     if (
@@ -341,9 +391,11 @@ export function useIsraelFieldCategoriesManagement({
     loading,
     shownError,
     activeSeasonId,
+    filters,
     sortedFields,
     fieldById,
     sortedCategories,
+    categoriesByField,
     selectedCategory,
     selectedCategoryId,
     setSelectedCategoryId,
