@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from '../../../app/layout/AppShell';
 import { HARVEST_I18N } from '../../harvest/i18n';
@@ -27,16 +27,28 @@ import {
 } from '../../../services/israelFieldCategoriesApi';
 import {
   createIsraelHarvest,
+  deleteIsraelHarvest,
   getIsraelHarvestsBySeason,
   type IsraelHarvestRecord,
 } from '../../../services/israelHarvestsApi';
-import { createIsraelClassification } from '../../../services/israelClassificationsApi';
+import {
+  createIsraelClassification,
+  getIsraelClassificationsByHarvest,
+  getIsraelClassificationsBySeason,
+  type IsraelClassificationRecord,
+  type IsraelClassificationSeasonRecord,
+} from '../../../services/israelClassificationsApi';
+import { ApiError } from '../../../services/apiClient';
+import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import {
   getIsraelSortCategories,
   type IsraelSortCategory,
 } from '../../../services/israelSortCategoriesApi';
 import type { GlobalScopedFilterConfig } from '../../../components/ui/GlobalScopedFilters';
+import { HarvestPageHeaderActions } from '../../harvest/components/shared/HarvestPageHeaderActions';
 import { IsraelHarvestFieldReportSection } from './components/field-report/IsraelHarvestFieldReportSection';
+import { IsraelHarvestSortingSummarySection } from './components/sorting-summary/IsraelHarvestSortingSummarySection';
+import { IsraelHarvestDailyDetailsSection } from './components/daily-details/IsraelHarvestDailyDetailsSection';
 import {
   IsraelHarvestBulkFormModal,
   type IsraelHarvestBulkFormSubmitPayload,
@@ -48,6 +60,7 @@ import {
 import { buildIsraelHarvestFieldReportRows } from './utils/israelHarvestFieldReport.util';
 import { downloadStyledExcel } from '../../../services/exportExcel';
 import { HARVEST_PRINT_BASE_STYLE } from '../../harvest/services/harvestPrintStyles';
+import { formatHarvestGregorianDate } from '../../harvest/services/harvestDisplayFormatters.service';
 
 const DEFAULT_SIDEBAR_ITEM_ID = 'harvest-summary';
 
@@ -104,6 +117,8 @@ export function IsraelHarvestPage() {
   }, [location.pathname]);
 
   const isHarvestSummaryTab = activeSidebarId === 'harvest-summary';
+  const isSortingSummaryTab = activeSidebarId === 'sorting-summary';
+  const isDailyDetailsTab = activeSidebarId === 'harvest-daily-details';
 
   const content = useMemo(() => {
     return t.emptyState[activeSidebarId] ?? t.emptyState.default;
@@ -137,9 +152,15 @@ export function IsraelHarvestPage() {
   const [sortCategories, setSortCategories] = useState<IsraelSortCategory[]>(
     [],
   );
+  const [classificationRows, setClassificationRows] = useState<
+    IsraelClassificationSeasonRecord[]
+  >([]);
+  const [isClassificationsLoading, setIsClassificationsLoading] =
+    useState(false);
+  const [classificationsLoadError, setClassificationsLoadError] = useState('');
 
   useEffect(() => {
-    if (!isHarvestSummaryTab) {
+    if (!isHarvestSummaryTab && !isSortingSummaryTab && !isDailyDetailsTab) {
       return;
     }
 
@@ -164,17 +185,41 @@ export function IsraelHarvestPage() {
     getIsraelSortCategories()
       .then(setSortCategories)
       .catch(() => setSortCategories([]));
-  }, [isHarvestSummaryTab]);
+  }, [isHarvestSummaryTab, isSortingSummaryTab, isDailyDetailsTab]);
+
+  const loadClassifications = useCallback(() => {
+    if (seasonFilterId === null) {
+      return;
+    }
+
+    setIsClassificationsLoading(true);
+    setClassificationsLoadError('');
+    getIsraelClassificationsBySeason(seasonFilterId)
+      .then((records) => setClassificationRows(records))
+      .catch(() => setClassificationsLoadError(t.sortingSummary.loadError))
+      .finally(() => setIsClassificationsLoading(false));
+  }, [seasonFilterId, t.sortingSummary.loadError]);
 
   useEffect(() => {
-    if (!isHarvestSummaryTab || seasonFilterId === null) {
+    if (!isSortingSummaryTab || seasonFilterId === null) {
+      return;
+    }
+
+    loadClassifications();
+  }, [isSortingSummaryTab, seasonFilterId, loadClassifications]);
+
+  useEffect(() => {
+    if (
+      (!isHarvestSummaryTab && !isSortingSummaryTab && !isDailyDetailsTab) ||
+      seasonFilterId === null
+    ) {
       return;
     }
 
     getIsraelFieldCategoriesBySeason(seasonFilterId)
       .then(setFieldCategories)
       .catch(() => setFieldCategories([]));
-  }, [isHarvestSummaryTab, seasonFilterId]);
+  }, [isHarvestSummaryTab, isSortingSummaryTab, isDailyDetailsTab, seasonFilterId]);
 
   const loadHarvestRecords = useCallback(() => {
     if (seasonFilterId === null) {
@@ -190,16 +235,332 @@ export function IsraelHarvestPage() {
   }, [seasonFilterId, t.fieldReport.loadError]);
 
   useEffect(() => {
-    if (!isHarvestSummaryTab || seasonFilterId === null) {
+    if (
+      (!isHarvestSummaryTab && !isSortingSummaryTab && !isDailyDetailsTab) ||
+      seasonFilterId === null
+    ) {
       return;
     }
 
     loadHarvestRecords();
-  }, [isHarvestSummaryTab, seasonFilterId, loadHarvestRecords]);
+  }, [
+    isHarvestSummaryTab,
+    isSortingSummaryTab,
+    isDailyDetailsTab,
+    seasonFilterId,
+    loadHarvestRecords,
+  ]);
 
   const fieldReportRows = useMemo(
     () => buildIsraelHarvestFieldReportRows(harvestRecords),
     [harvestRecords],
+  );
+
+  const [selectedDailyHarvest, setSelectedDailyHarvest] =
+    useState<IsraelHarvestRecord | null>(null);
+  const [dailyRelatedSortings, setDailyRelatedSortings] = useState<
+    IsraelClassificationRecord[]
+  >([]);
+  const [isDailyRelatedSortingsLoading, setIsDailyRelatedSortingsLoading] =
+    useState(false);
+  const [dailyRelatedSortingsLoadError, setDailyRelatedSortingsLoadError] =
+    useState('');
+  const [isDeleteHarvestDialogOpen, setIsDeleteHarvestDialogOpen] =
+    useState(false);
+  const [isDeletingHarvest, setIsDeletingHarvest] = useState(false);
+  const detailsPrintRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isDailyDetailsTab) {
+      setSelectedDailyHarvest(null);
+    }
+  }, [isDailyDetailsTab]);
+
+  useEffect(() => {
+    if (!selectedDailyHarvest) {
+      setDailyRelatedSortings([]);
+      setDailyRelatedSortingsLoadError('');
+      return;
+    }
+
+    setIsDailyRelatedSortingsLoading(true);
+    setDailyRelatedSortingsLoadError('');
+    getIsraelClassificationsByHarvest(selectedDailyHarvest.id)
+      .then(setDailyRelatedSortings)
+      .catch(() =>
+        setDailyRelatedSortingsLoadError(
+          t.dailyDetails.detailsPanel.relatedSortingsLoadError,
+        ),
+      )
+      .finally(() => setIsDailyRelatedSortingsLoading(false));
+  }, [selectedDailyHarvest, t.dailyDetails.detailsPanel.relatedSortingsLoadError]);
+
+  const handlePrintDailyDetailsTable = () => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const header = [
+      t.dailyDetails.columns.fieldName,
+      t.dailyDetails.columns.dateGregorian,
+      t.dailyDetails.columns.dateHebrew,
+      t.dailyDetails.columns.quantity,
+      t.dailyDetails.columns.updatedBy,
+      t.dailyDetails.columns.notes,
+    ];
+    const rows = harvestRecords.map((row) => [
+      row.field?.name ?? '',
+      formatHarvestGregorianDate(row.dateGregorian, lang),
+      row.dateHebrew,
+      numberFormatter.format(row.quantity),
+      row.updatedBy?.name ?? '',
+      row.notes ?? '',
+    ]);
+
+    const tableHeaderHtml = header
+      .map((label) => `<th>${escapeHtml(String(label))}</th>`)
+      .join('');
+    const tableRowsHtml = rows
+      .map(
+        (row) =>
+          `<tr>${row.map((value) => `<td>${escapeHtml(String(value))}</td>`).join('')}</tr>`,
+      )
+      .join('');
+
+    const printWindow = window.open('', '_blank', 'width=1100,height=760');
+    if (!printWindow) {
+      return;
+    }
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html lang="${lang === 'he' ? 'he' : 'en'}" dir="${lang === 'he' ? 'rtl' : 'ltr'}">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>${escapeHtml(t.dailyDetails.printWindowTitle)}</title>
+          <style>${HARVEST_PRINT_BASE_STYLE}</style>
+        </head>
+        <body>
+          <h1>${escapeHtml(t.dailyDetails.printWindowTitle)}</h1>
+          <table>
+            <thead><tr>${tableHeaderHtml}</tr></thead>
+            <tbody>${tableRowsHtml}</tbody>
+          </table>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
+
+  const handleExportDailyDetailsTableToExcel = async () => {
+    const header = [
+      t.dailyDetails.columns.fieldName,
+      t.dailyDetails.columns.dateGregorian,
+      t.dailyDetails.columns.dateHebrew,
+      t.dailyDetails.columns.quantity,
+      t.dailyDetails.columns.updatedBy,
+      t.dailyDetails.columns.notes,
+    ];
+    const rows = harvestRecords.map((row) => [
+      row.field?.name ?? '',
+      formatHarvestGregorianDate(row.dateGregorian, lang),
+      row.dateHebrew,
+      row.quantity,
+      row.updatedBy?.name ?? '',
+      row.notes ?? '',
+    ]);
+    const dateStamp = new Date().toISOString().slice(0, 10);
+
+    try {
+      await downloadStyledExcel({
+        sheetName: t.dailyDetails.sheetName,
+        fileName: `israel-harvest-daily-details-${dateStamp}.xlsx`,
+        header,
+        rows,
+        rightToLeft: lang === 'he',
+      });
+    } catch {
+      window.alert(t.dailyDetails.exportError);
+    }
+  };
+
+  const handlePrintDailyDetails = () => {
+    if (typeof window === 'undefined' || !detailsPrintRef.current) {
+      return;
+    }
+
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
+    if (!printWindow) {
+      return;
+    }
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html lang="${lang === 'he' ? 'he' : 'en'}" dir="${lang === 'he' ? 'rtl' : 'ltr'}">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>${escapeHtml(t.dailyDetails.detailsPanel.printWindowTitle)}</title>
+          <style>${HARVEST_PRINT_BASE_STYLE}</style>
+        </head>
+        <body>
+          <h1>${escapeHtml(t.dailyDetails.detailsPanel.printWindowTitle)}</h1>
+          ${detailsPrintRef.current.innerHTML}
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
+
+  const handleDeleteDailyHarvest = async () => {
+    if (!selectedDailyHarvest) {
+      return;
+    }
+
+    setIsDeletingHarvest(true);
+    try {
+      await deleteIsraelHarvest(selectedDailyHarvest.id);
+      setHarvestRecords((rows) =>
+        rows.filter((row) => row.id !== selectedDailyHarvest.id),
+      );
+      setSelectedDailyHarvest(null);
+      setIsDeleteHarvestDialogOpen(false);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 409) {
+        window.alert(t.pageControls.deleteHarvestHasSortingsTitle);
+      } else {
+        window.alert(t.pageControls.deleteHarvestFailedError);
+      }
+    } finally {
+      setIsDeletingHarvest(false);
+    }
+  };
+
+  const [sortingDateFilterId, setSortingDateFilterId] = useState<string>('all');
+  const [sortingFieldFilterId, setSortingFieldFilterId] = useState<
+    number | 'all'
+  >('all');
+
+  const sortingHarvestDateOptions = useMemo(() => {
+    const uniqueDates = [
+      ...new Set(
+        classificationRows
+          .map((row) => (row.harvest?.dateGregorian ?? '').slice(0, 10))
+          .filter((date) => date !== ''),
+      ),
+    ];
+    uniqueDates.sort((a, b) => b.localeCompare(a));
+    return [
+      { value: 'all', label: t.sortingSummary.filters.allDatesOption },
+      ...uniqueDates.map((date) => ({
+        value: date,
+        label: formatHarvestGregorianDate(date, lang),
+      })),
+    ];
+  }, [classificationRows, t.sortingSummary.filters.allDatesOption, lang]);
+
+  const filteredClassificationRows = useMemo(() => {
+    return classificationRows.filter((row) => {
+      if (
+        sortingDateFilterId !== 'all' &&
+        (row.harvest?.dateGregorian ?? '').slice(0, 10) !== sortingDateFilterId
+      ) {
+        return false;
+      }
+      if (
+        sortingFieldFilterId !== 'all' &&
+        row.harvest?.fieldId !== sortingFieldFilterId
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [classificationRows, sortingDateFilterId, sortingFieldFilterId]);
+
+  const sortingSummaryFilters = useMemo<GlobalScopedFilterConfig[]>(() => {
+    const seasonFilter: GlobalScopedFilterConfig = {
+      key: 'seasonId',
+      label: t.sortingSummary.seasonFilterLabel,
+      defaultValue: activeSeasonId ? String(activeSeasonId) : '',
+      queryParam: 'ihsSeason',
+      options:
+        seasons.length > 0
+          ? seasons.map((season) => ({
+              value: String(season.id),
+              label: `${season.yearName}${season.isActive ? ` (${lang === 'he' ? 'פעילה' : 'Active'})` : ''}`,
+            }))
+          : [
+              {
+                value: '',
+                label:
+                  lang === 'he'
+                    ? 'אין עונה פעילה כרגע'
+                    : 'No active season right now',
+              },
+            ],
+    };
+
+    const dateFilter: GlobalScopedFilterConfig = {
+      key: 'harvestDate',
+      label: t.sortingSummary.filters.dateFilterLabel,
+      defaultValue: 'all',
+      queryParam: 'ihsDate',
+      options: sortingHarvestDateOptions,
+      type: 'calendar',
+      lang,
+    };
+
+    const fieldFilter: GlobalScopedFilterConfig = {
+      key: 'fieldId',
+      label: t.sortingSummary.filters.fieldFilterLabel,
+      defaultValue: 'all',
+      queryParam: 'ihsField',
+      options: [
+        { value: 'all', label: t.sortingSummary.filters.allFieldsOption },
+        ...fields.map((field) => ({
+          value: String(field.id),
+          label: field.name,
+        })),
+      ],
+    };
+
+    return [seasonFilter, dateFilter, fieldFilter];
+  }, [
+    activeSeasonId,
+    fields,
+    lang,
+    seasons,
+    sortingHarvestDateOptions,
+    t.sortingSummary.seasonFilterLabel,
+    t.sortingSummary.filters,
+  ]);
+
+  const handleSortingSummaryFiltersChange = useCallback(
+    (values: Record<string, string>) => {
+      const parsedSeason = Number(values.seasonId);
+      setSeasonFilterId(
+        Number.isFinite(parsedSeason) && parsedSeason > 0 ? parsedSeason : null,
+      );
+      setSortingDateFilterId(values.harvestDate || 'all');
+      const parsedField = Number(values.fieldId);
+      setSortingFieldFilterId(
+        values.fieldId &&
+          values.fieldId !== 'all' &&
+          Number.isFinite(parsedField)
+          ? parsedField
+          : 'all',
+      );
+    },
+    [],
   );
 
   const filters = useMemo<GlobalScopedFilterConfig[]>(() => {
@@ -271,6 +632,9 @@ export function IsraelHarvestPage() {
 
       setIsHarvestFormOpen(false);
       loadHarvestRecords();
+      if (isSortingSummaryTab) {
+        loadClassifications();
+      }
     } catch {
       window.alert(t.harvestForm.saveFailedError);
     } finally {
@@ -294,6 +658,9 @@ export function IsraelHarvestPage() {
       }
       setIsSortingFormOpen(false);
       loadHarvestRecords();
+      if (isSortingSummaryTab) {
+        loadClassifications();
+      }
     } catch {
       window.alert(t.sortingForm.saveFailedError);
     } finally {
@@ -387,15 +754,28 @@ export function IsraelHarvestPage() {
     }
   };
 
-  const pageHeaderActions = isHarvestSummaryTab ? (
-    <HarvestSummaryHeaderActions
-      addHarvestLabel={t.pageControls.addHarvest}
-      addSortingLabel={t.pageControls.addSorting}
-      onAddHarvest={() => setIsHarvestFormOpen(true)}
-      onAddSorting={() => setIsSortingFormOpen(true)}
-      addDisabled={seasonFilterId === null}
-    />
-  ) : null;
+  const pageHeaderActions =
+    isHarvestSummaryTab || isSortingSummaryTab ? (
+      <HarvestSummaryHeaderActions
+        addHarvestLabel={t.pageControls.addHarvest}
+        addSortingLabel={t.pageControls.addSorting}
+        onAddHarvest={() => setIsHarvestFormOpen(true)}
+        onAddSorting={() => setIsSortingFormOpen(true)}
+        addDisabled={seasonFilterId === null}
+      />
+    ) : isDailyDetailsTab ? (
+      <HarvestPageHeaderActions
+        addActionLabel={t.pageControls.addHarvest}
+        editActionLabel={t.pageControls.editHarvest}
+        deleteActionLabel={t.pageControls.deleteHarvest}
+        onAdd={() => setIsHarvestFormOpen(true)}
+        onDelete={() => setIsDeleteHarvestDialogOpen(true)}
+        addDisabled={seasonFilterId === null}
+        editDisabled
+        deleteDisabled={selectedDailyHarvest === null}
+        showEdit={false}
+      />
+    ) : null;
 
   return (
     <AppShell
@@ -482,6 +862,101 @@ export function IsraelHarvestPage() {
             isSubmitting={isSubmittingSorting}
             onClose={() => setIsSortingFormOpen(false)}
             onSubmit={handleAddSorting}
+          />
+        </>
+      ) : isSortingSummaryTab ? (
+        <>
+          <IsraelHarvestSortingSummarySection
+            lang={lang}
+            labels={t.sortingSummary}
+            filters={sortingSummaryFilters}
+            rows={filteredClassificationRows}
+            isLoading={isClassificationsLoading}
+            loadError={classificationsLoadError}
+            seasonLabel={(() => {
+              const yearName = seasons.find(
+                (season) => season.id === seasonFilterId,
+              )?.yearName;
+              return yearName !== undefined ? String(yearName) : null;
+            })()}
+            sortCategories={sortCategories}
+            onFiltersChange={handleSortingSummaryFiltersChange}
+          />
+
+          <IsraelHarvestBulkFormModal
+            isOpen={isHarvestFormOpen}
+            t={t}
+            activeSeasonYearName={
+              seasons.find((season) => season.id === seasonFilterId)
+                ?.yearName ?? null
+            }
+            fields={fields}
+            fieldCategories={fieldCategories}
+            categories={sortCategories}
+            isSubmitting={isSubmittingHarvest}
+            onClose={() => setIsHarvestFormOpen(false)}
+            onSubmit={handleAddHarvest}
+          />
+
+          <IsraelSortingFormModal
+            isOpen={isSortingFormOpen}
+            t={t}
+            harvests={harvestRecords}
+            fieldCategories={fieldCategories}
+            categories={sortCategories}
+            isSubmitting={isSubmittingSorting}
+            onClose={() => setIsSortingFormOpen(false)}
+            onSubmit={handleAddSorting}
+          />
+        </>
+      ) : isDailyDetailsTab ? (
+        <>
+          <IsraelHarvestDailyDetailsSection
+            lang={lang}
+            t={t}
+            filters={filters}
+            isLoading={isHarvestLoading}
+            loadError={harvestLoadError}
+            rows={harvestRecords}
+            onFiltersChange={handleFiltersChange}
+            onPrint={handlePrintDailyDetailsTable}
+            onExport={handleExportDailyDetailsTableToExcel}
+            numberFormatter={numberFormatter}
+            selectedRow={selectedDailyHarvest}
+            onSelectRow={setSelectedDailyHarvest}
+            relatedSortings={dailyRelatedSortings}
+            isRelatedSortingsLoading={isDailyRelatedSortingsLoading}
+            relatedSortingsLoadError={dailyRelatedSortingsLoadError}
+            onPrintDetails={handlePrintDailyDetails}
+            detailsPrintRef={detailsPrintRef}
+          />
+
+          <ConfirmDialog
+            open={isDeleteHarvestDialogOpen}
+            title={t.pageControls.deleteHarvestDialog.title}
+            message={t.pageControls.deleteHarvestDialog.message}
+            confirmLabel={t.pageControls.deleteHarvestDialog.confirm}
+            cancelLabel={t.pageControls.deleteHarvestDialog.cancel}
+            isConfirming={isDeletingHarvest}
+            onConfirm={() => {
+              void handleDeleteDailyHarvest();
+            }}
+            onCancel={() => setIsDeleteHarvestDialogOpen(false)}
+          />
+
+          <IsraelHarvestBulkFormModal
+            isOpen={isHarvestFormOpen}
+            t={t}
+            activeSeasonYearName={
+              seasons.find((season) => season.id === seasonFilterId)
+                ?.yearName ?? null
+            }
+            fields={fields}
+            fieldCategories={fieldCategories}
+            categories={sortCategories}
+            isSubmitting={isSubmittingHarvest}
+            onClose={() => setIsHarvestFormOpen(false)}
+            onSubmit={handleAddHarvest}
           />
         </>
       ) : (

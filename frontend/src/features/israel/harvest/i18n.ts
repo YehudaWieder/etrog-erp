@@ -17,6 +17,16 @@ export type IsraelHarvestI18n = {
   pageControls: {
     addHarvest: string;
     addSorting: string;
+    editHarvest: string;
+    deleteHarvest: string;
+    deleteHarvestDialog: {
+      title: string;
+      message: string;
+      confirm: string;
+      cancel: string;
+    };
+    deleteHarvestHasSortingsTitle: string;
+    deleteHarvestFailedError: string;
   };
   sortingForm: {
     ariaLabel: string;
@@ -119,6 +129,100 @@ export type IsraelHarvestI18n = {
       recordCount: string;
       totalQuantity: string;
       avgQuantityPerHarvest: string;
+    };
+  };
+  sortingSummary: {
+    loading: string;
+    loadError: string;
+    empty: string;
+    retry: string;
+    tableTitle: string;
+    seasonFilterLabel: string;
+    description: string;
+    actionsLabel: string;
+    printTitle: string;
+    printAriaLabel: string;
+    exportTitle: string;
+    exportAriaLabel: string;
+    exportError: string;
+    printWindowTitle: string;
+    columns: {
+      category: string;
+      withPitam: string;
+      withoutPitam: string;
+      mixed: string;
+      total: string;
+    };
+    grandTotalLabel: string;
+    breakdown: {
+      grade: string;
+    };
+    gradeGroups: {
+      title: string;
+      groupColumn: string;
+      percentColumn: string;
+      ungrouped: string;
+    };
+    filters: {
+      dateFilterLabel: string;
+      allDatesOption: string;
+      fieldFilterLabel: string;
+      allFieldsOption: string;
+    };
+  };
+  dailyDetails: {
+    description: string;
+    loading: string;
+    loadError: string;
+    empty: string;
+    tableActionsLabel: string;
+    printTitle: string;
+    printAriaLabel: string;
+    exportTitle: string;
+    exportAriaLabel: string;
+    exportError: string;
+    printWindowTitle: string;
+    sheetName: string;
+    seasonFilterLabel: string;
+    summary: {
+      totalQuantity: string;
+      totalRecordCount: string;
+      avgQuantityPerHarvest: string;
+    };
+    columns: {
+      fieldName: string;
+      dateGregorian: string;
+      dateHebrew: string;
+      quantity: string;
+      notes: string;
+      updatedBy: string;
+    };
+    detailsPanel: {
+      title: string;
+      closeLabel: string;
+      printLabel: string;
+      printWindowTitle: string;
+      noNotes: string;
+      fields: {
+        dateGregorian: string;
+        dateHebrew: string;
+        field: string;
+        quantity: string;
+        notes: string;
+        updatedBy: string;
+      };
+      relatedSortingsTitle: string;
+      relatedSortingsEmpty: string;
+      relatedSortingsLoading: string;
+      relatedSortingsLoadError: string;
+      relatedSortingsColumns: {
+        fieldCategory: string;
+        category: string;
+        grade: string;
+        pitamStatus: string;
+        quantity: string;
+        notes: string;
+      };
     };
   };
 };
