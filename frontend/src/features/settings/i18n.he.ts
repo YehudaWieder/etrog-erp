@@ -98,7 +98,6 @@ export const SETTINGS_I18N_HE: SettingsI18n = {
         { id: 'harvestSellersFields', label: 'מוכרים/שדות', href: '/settings/sellers-fields', icon: 'fa-user-tie' },
         { id: 'harvestSellerCategories', label: 'קטגוריות מוכר', href: '/settings/seller-categories', icon: 'fa-tag' },
         { id: 'harvestSortingCategories', label: 'קטגוריות מיון', href: '/settings/sorting-categories', icon: 'fa-layer-group' },
-        { id: 'harvestCategoryGrades', label: 'דרגות לקטגוריות', href: '/settings/grades', icon: 'fa-star' },
       ],
     },
   ],

@@ -5,6 +5,8 @@ import ManagementCardsGrid from '../../../../../components/ui/ManagementCardsGri
 import ManagementSelectableCard from '../../../../../components/ui/ManagementSelectableCard';
 import SettingsInnerTemplate from '../../../../../components/ui/SettingsInnerTemplate';
 import { SubmitButton } from '../../../../../components/ui/SubmitButton';
+import { TRADER_CATEGORY_GRADE_OPTIONS } from '../../../../traders/utils/traderCategoryGrades.util';
+import gradeStyles from '../../../../traders/components/styles/TraderCategoriesShared.module.css';
 import type { IsraelSortCategoriesManagementProps } from '../israelSortCategoriesPage.types';
 import { useIsraelSortCategoriesManagement } from '../hooks/useIsraelSortCategoriesManagement';
 
@@ -20,6 +22,13 @@ const IsraelSortCategoriesManagement: React.FC<
     sortedCategories,
     newCategoryName,
     setNewCategoryName,
+    newCategorySupportedGrades,
+    toggleNewCategoryGrade,
+    newCategoryGradeGroupRows,
+    addNewCategoryGradeGroup,
+    removeNewCategoryGradeGroup,
+    renameNewCategoryGradeGroup,
+    toggleNewCategoryGradeInGroup,
     selectedCategoryId,
     setSelectedCategoryId,
     selectedCategory,
@@ -29,6 +38,13 @@ const IsraelSortCategoriesManagement: React.FC<
     setIsEditDialogOpen,
     editCategoryName,
     setEditCategoryName,
+    editCategorySupportedGrades,
+    toggleEditCategoryGrade,
+    editCategoryGradeGroupRows,
+    addEditCategoryGradeGroup,
+    removeEditCategoryGradeGroup,
+    renameEditCategoryGradeGroup,
+    toggleEditCategoryGradeInGroup,
     editError,
     isSavingEdit,
     isAdding,
@@ -48,6 +64,74 @@ const IsraelSortCategoriesManagement: React.FC<
             onChange={(e) => setNewCategoryName(e.target.value)}
             placeholder={t.newCategoryPlaceholder}
           />
+
+          <p className={gradeStyles.sharesSubtitle}>{t.supportedGradesLabel}</p>
+          <div className={gradeStyles.gradesChecklist}>
+            {TRADER_CATEGORY_GRADE_OPTIONS.map((grade) => (
+              <label key={grade} className={gradeStyles.gradeCheckboxItem}>
+                <input
+                  type="checkbox"
+                  checked={newCategorySupportedGrades.includes(grade)}
+                  onChange={() => toggleNewCategoryGrade(grade)}
+                />
+                <span>{grade}</span>
+              </label>
+            ))}
+          </div>
+
+          <p className={gradeStyles.sharesSubtitle}>{t.gradeGroupsLabel}</p>
+          <div className={gradeStyles.gradeGroupsArea}>
+            {newCategoryGradeGroupRows.map((group) => (
+              <div key={group.localId} className={gradeStyles.gradeGroupRow}>
+                <div className={gradeStyles.gradeGroupRowHead}>
+                  <input
+                    className="seasons-manager__year-input"
+                    type="text"
+                    value={group.name}
+                    onChange={(event) =>
+                      renameNewCategoryGradeGroup(
+                        group.localId,
+                        event.target.value,
+                      )
+                    }
+                    placeholder={t.groupNamePlaceholder}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    onClick={() => removeNewCategoryGradeGroup(group.localId)}
+                  >
+                    {t.removeGroupLabel}
+                  </button>
+                </div>
+                <div className={gradeStyles.gradesChecklist}>
+                  {newCategorySupportedGrades.map((grade) => (
+                    <label
+                      key={grade}
+                      className={gradeStyles.gradeCheckboxItem}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={group.grades.includes(grade)}
+                        onChange={() =>
+                          toggleNewCategoryGradeInGroup(group.localId, grade)
+                        }
+                      />
+                      <span>{grade}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={addNewCategoryGradeGroup}
+            >
+              {t.addGroupLabel}
+            </button>
+          </div>
+
           <SubmitButton
             className="btn btn-primary"
             onClick={() => {
@@ -141,6 +225,77 @@ const IsraelSortCategoriesManagement: React.FC<
               placeholder={t.editCategoryPlaceholder}
               autoFocus
             />
+
+            <p className={gradeStyles.sharesSubtitle}>
+              {t.supportedGradesLabel}
+            </p>
+            <div className={gradeStyles.gradesChecklist}>
+              {TRADER_CATEGORY_GRADE_OPTIONS.map((grade) => (
+                <label key={grade} className={gradeStyles.gradeCheckboxItem}>
+                  <input
+                    type="checkbox"
+                    checked={editCategorySupportedGrades.includes(grade)}
+                    onChange={() => toggleEditCategoryGrade(grade)}
+                  />
+                  <span>{grade}</span>
+                </label>
+              ))}
+            </div>
+
+            <p className={gradeStyles.sharesSubtitle}>{t.gradeGroupsLabel}</p>
+            <div className={gradeStyles.gradeGroupsArea}>
+              {editCategoryGradeGroupRows.map((group) => (
+                <div key={group.localId} className={gradeStyles.gradeGroupRow}>
+                  <div className={gradeStyles.gradeGroupRowHead}>
+                    <input
+                      className="seasons-manager__year-input"
+                      type="text"
+                      value={group.name}
+                      onChange={(event) =>
+                        renameEditCategoryGradeGroup(
+                          group.localId,
+                          event.target.value,
+                        )
+                      }
+                      placeholder={t.groupNamePlaceholder}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      onClick={() =>
+                        removeEditCategoryGradeGroup(group.localId)
+                      }
+                    >
+                      {t.removeGroupLabel}
+                    </button>
+                  </div>
+                  <div className={gradeStyles.gradesChecklist}>
+                    {editCategorySupportedGrades.map((grade) => (
+                      <label
+                        key={grade}
+                        className={gradeStyles.gradeCheckboxItem}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={group.grades.includes(grade)}
+                          onChange={() =>
+                            toggleEditCategoryGradeInGroup(group.localId, grade)
+                          }
+                        />
+                        <span>{grade}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={addEditCategoryGradeGroup}
+              >
+                {t.addGroupLabel}
+              </button>
+            </div>
 
             {editError ? (
               <p className="seasons-manager__error">{editError}</p>

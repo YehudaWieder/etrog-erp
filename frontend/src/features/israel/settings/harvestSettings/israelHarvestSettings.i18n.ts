@@ -1,14 +1,12 @@
 export type IsraelHarvestSettingsChildId =
   | 'harvestSellersFields'
   | 'harvestSellerCategories'
-  | 'harvestSortingCategories'
-  | 'harvestCategoryGrades';
+  | 'harvestSortingCategories';
 
 export const ISRAEL_HARVEST_SETTINGS_PATH_SEGMENTS = [
   '/sellers-fields',
   '/seller-categories',
   '/sorting-categories',
-  '/grades',
 ];
 
 export function getIsraelHarvestSettingsChildId(
@@ -18,7 +16,6 @@ export function getIsraelHarvestSettingsChildId(
 
   if (path.includes('/seller-categories')) return 'harvestSellerCategories';
   if (path.includes('/sorting-categories')) return 'harvestSortingCategories';
-  if (path.includes('/grades')) return 'harvestCategoryGrades';
 
   return 'harvestSellersFields';
 }
@@ -31,13 +28,11 @@ const TITLES: Record<
     harvestSellersFields: 'מוכרים/שדות',
     harvestSellerCategories: 'קטגוריות מוכר',
     harvestSortingCategories: 'קטגוריות מיון',
-    harvestCategoryGrades: 'דרגות לקטגוריות',
   },
   en: {
     harvestSellersFields: 'Sellers/Fields',
     harvestSellerCategories: 'Seller Categories',
     harvestSortingCategories: 'Sorting Categories',
-    harvestCategoryGrades: 'Category Grades',
   },
 };
 

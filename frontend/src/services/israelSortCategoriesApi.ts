@@ -1,17 +1,24 @@
 import { apiClient } from './apiClient';
+import type { GradeGroup } from './traderCategoriesApi';
 
 export type IsraelSortCategory = {
   id: number;
   name: string;
+  supportedGrades: string[];
+  gradeGroups: GradeGroup[];
 };
 
 export type CreateIsraelSortCategoryPayload = {
   name: string;
+  supportedGrades: string[];
+  gradeGroups: GradeGroup[];
 };
 
 export type UpdateIsraelSortCategoryPayload = {
   id: number;
   name: string;
+  supportedGrades: string[];
+  gradeGroups: GradeGroup[];
 };
 
 export async function getIsraelSortCategories(): Promise<IsraelSortCategory[]> {

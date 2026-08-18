@@ -8,9 +8,6 @@ import IsraelFieldCategoriesManagement, {
 import IsraelSortCategoriesManagement, {
   type IsraelSortCategoriesHeaderState,
 } from '../sortCategories/components/IsraelSortCategoriesManagement';
-import IsraelCategoryGradesManagement, {
-  type IsraelCategoryGradesHeaderState,
-} from '../categoryGrades/components/IsraelCategoryGradesManagement';
 import {
   getIsraelHarvestSettingsChildId,
   getIsraelHarvestSettingsTitle,
@@ -25,9 +22,6 @@ type IsraelHarvestSettingsSectionProps = {
   onSortCategoriesHeaderStateChange?: (
     state: IsraelSortCategoriesHeaderState | null,
   ) => void;
-  onCategoryGradesHeaderStateChange?: (
-    state: IsraelCategoryGradesHeaderState | null,
-  ) => void;
 };
 
 export function IsraelHarvestSettingsSection({
@@ -35,7 +29,6 @@ export function IsraelHarvestSettingsSection({
   onFieldsHeaderStateChange,
   onFieldCategoriesHeaderStateChange,
   onSortCategoriesHeaderStateChange,
-  onCategoryGradesHeaderStateChange,
 }: IsraelHarvestSettingsSectionProps) {
   const location = useLocation();
   const childId = getIsraelHarvestSettingsChildId(location.pathname);
@@ -64,15 +57,6 @@ export function IsraelHarvestSettingsSection({
       <IsraelSortCategoriesManagement
         lang={lang}
         onHeaderStateChange={onSortCategoriesHeaderStateChange}
-      />
-    );
-  }
-
-  if (childId === 'harvestCategoryGrades') {
-    return (
-      <IsraelCategoryGradesManagement
-        lang={lang}
-        onHeaderStateChange={onCategoryGradesHeaderStateChange}
       />
     );
   }

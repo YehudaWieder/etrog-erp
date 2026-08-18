@@ -9,7 +9,6 @@ import globalFiltersReducer from './globalFiltersSlice';
 import israelFieldsReducer from './israelFieldsSlice';
 import israelFieldCategoriesReducer from './israelFieldCategoriesSlice';
 import israelSortCategoriesReducer from './israelSortCategoriesSlice';
-import israelCategoryGradesReducer from './israelCategoryGradesSlice';
 // ... ייבוא רידוסרים נוספים בהמשך
 
 const store = configureStore({
@@ -24,7 +23,6 @@ const store = configureStore({
     israelFields: israelFieldsReducer,
     israelFieldCategories: israelFieldCategoriesReducer,
     israelSortCategories: israelSortCategoriesReducer,
-    israelCategoryGrades: israelCategoryGradesReducer,
     // ... רידוסרים נוספים
   },
 });

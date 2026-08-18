@@ -31,7 +31,6 @@ import {
 import type { IsraelFieldsHeaderState } from '../israel/settings/fields/components/IsraelFieldsManagement';
 import type { IsraelFieldCategoriesHeaderState } from '../israel/settings/fieldCategories/components/IsraelFieldCategoriesManagement';
 import type { IsraelSortCategoriesHeaderState } from '../israel/settings/sortCategories/components/IsraelSortCategoriesManagement';
-import type { IsraelCategoryGradesHeaderState } from '../israel/settings/categoryGrades/components/IsraelCategoryGradesManagement';
 import { fetchSeasons } from '../../store/seasonsSlice';
 import type { AppDispatch, RootState } from '../../store';
 import feedbackStyles from './styles/SettingsWorkspaceFeedback.module.css';
@@ -52,8 +51,6 @@ export default function SettingsPage(): JSX.Element {
   ] = useState<IsraelFieldCategoriesHeaderState | null>(null);
   const [israelSortCategoriesHeaderState, setIsraelSortCategoriesHeaderState] =
     useState<IsraelSortCategoriesHeaderState | null>(null);
-  const [israelCategoryGradesHeaderState, setIsraelCategoryGradesHeaderState] =
-    useState<IsraelCategoryGradesHeaderState | null>(null);
 
   const seasons = useSelector((state: RootState) => state.seasons.items);
   const activeSeasonYearName = useMemo(
@@ -114,9 +111,7 @@ export default function SettingsPage(): JSX.Element {
         ? israelFieldCategoriesHeaderState?.count
         : israelHarvestChildId === 'harvestSortingCategories'
           ? israelSortCategoriesHeaderState?.count
-          : israelHarvestChildId === 'harvestCategoryGrades'
-            ? israelCategoryGradesHeaderState?.count
-            : undefined;
+          : undefined;
   const israelHarvestPageTitle =
     israelHarvestHeaderCount !== undefined
       ? `${israelHarvestTitle} (${israelHarvestHeaderCount})`
@@ -137,7 +132,6 @@ export default function SettingsPage(): JSX.Element {
         item.id === 'traderCategories' ||
         item.id === 'traderPricing' ||
         item.id === 'customerCategories' ||
-        item.id === 'harvestCategoryGrades' ||
         item.id === 'harvestSellerCategories'
           ? { ...item, label: `${item.label} (${activeSeasonYearName})` }
           : item,
@@ -194,7 +188,6 @@ export default function SettingsPage(): JSX.Element {
       fieldsHeaderState={israelFieldsHeaderState}
       fieldCategoriesHeaderState={israelFieldCategoriesHeaderState}
       sortCategoriesHeaderState={israelSortCategoriesHeaderState}
-      categoryGradesHeaderState={israelCategoryGradesHeaderState}
     />
   ) : (
     <SettingsSeasonsHeaderActions
@@ -253,9 +246,6 @@ export default function SettingsPage(): JSX.Element {
             }
             onSortCategoriesHeaderStateChange={
               setIsraelSortCategoriesHeaderState
-            }
-            onCategoryGradesHeaderStateChange={
-              setIsraelCategoryGradesHeaderState
             }
           />
         ) : (

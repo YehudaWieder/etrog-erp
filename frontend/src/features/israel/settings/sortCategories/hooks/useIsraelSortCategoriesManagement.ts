@@ -7,6 +7,16 @@ import {
   removeIsraelSortCategory,
 } from '../../../../../store/israelSortCategoriesSlice';
 import type { AppDispatch, RootState } from '../../../../../store';
+import { toggleGradeSelection } from '../../../../traders/utils/traderCategoryGrades.util';
+import {
+  addGradeGroupRow,
+  gradeGroupsToRows,
+  removeGradeGroupRow,
+  renameGradeGroupRow,
+  rowsToGradeGroups,
+  toggleGradeInGroupRow,
+  type GradeGroupRow,
+} from '../../../../traders/utils/traderCategoryGradeGroups.util';
 import { getIsraelSortCategoriesI18n } from '../i18n';
 import type { IsraelSortCategoriesManagementProps } from '../israelSortCategoriesPage.types';
 
@@ -21,6 +31,12 @@ export function useIsraelSortCategoriesManagement({
     error,
   } = useSelector((state: RootState) => state.israelSortCategories);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategorySupportedGrades, setNewCategorySupportedGrades] = useState<
+    string[]
+  >([]);
+  const [newCategoryGradeGroupRows, setNewCategoryGradeGroupRows] = useState<
+    GradeGroupRow[]
+  >([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
     null,
   );
@@ -30,6 +46,11 @@ export function useIsraelSortCategoriesManagement({
   const [addError, setAddError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [editCategoryName, setEditCategoryName] = useState('');
+  const [editCategorySupportedGrades, setEditCategorySupportedGrades] =
+    useState<string[]>([]);
+  const [editCategoryGradeGroupRows, setEditCategoryGradeGroupRows] = useState<
+    GradeGroupRow[]
+  >([]);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const t = getIsraelSortCategoriesI18n(lang);
@@ -71,11 +92,17 @@ export function useIsraelSortCategoriesManagement({
 
     try {
       const actionResult = await dispatch(
-        addIsraelSortCategory({ name: trimmedName }),
+        addIsraelSortCategory({
+          name: trimmedName,
+          supportedGrades: newCategorySupportedGrades,
+          gradeGroups: rowsToGradeGroups(newCategoryGradeGroupRows),
+        }),
       );
 
       if (addIsraelSortCategory.fulfilled.match(actionResult)) {
         setNewCategoryName('');
+        setNewCategorySupportedGrades([]);
+        setNewCategoryGradeGroupRows([]);
         return;
       }
 
@@ -106,6 +133,10 @@ export function useIsraelSortCategoriesManagement({
 
     setEditError(null);
     setEditCategoryName(selectedCategory.name);
+    setEditCategorySupportedGrades(selectedCategory.supportedGrades);
+    setEditCategoryGradeGroupRows(
+      gradeGroupsToRows(selectedCategory.gradeGroups),
+    );
     setIsEditDialogOpen(true);
   };
 
@@ -125,6 +156,8 @@ export function useIsraelSortCategoriesManagement({
       editIsraelSortCategory({
         id: selectedCategory.id,
         name: trimmedName,
+        supportedGrades: editCategorySupportedGrades,
+        gradeGroups: rowsToGradeGroups(editCategoryGradeGroupRows),
       }),
     );
 
@@ -168,6 +201,58 @@ export function useIsraelSortCategoriesManagement({
     setIsDeleteDialogOpen(false);
   };
 
+  const toggleNewCategoryGrade = (grade: string) => {
+    setNewCategorySupportedGrades((current) =>
+      toggleGradeSelection(current, grade),
+    );
+  };
+
+  const addNewCategoryGradeGroup = () => {
+    setNewCategoryGradeGroupRows((rows) => addGradeGroupRow(rows));
+  };
+
+  const removeNewCategoryGradeGroup = (localId: number) => {
+    setNewCategoryGradeGroupRows((rows) => removeGradeGroupRow(rows, localId));
+  };
+
+  const renameNewCategoryGradeGroup = (localId: number, name: string) => {
+    setNewCategoryGradeGroupRows((rows) =>
+      renameGradeGroupRow(rows, localId, name),
+    );
+  };
+
+  const toggleNewCategoryGradeInGroup = (localId: number, grade: string) => {
+    setNewCategoryGradeGroupRows((rows) =>
+      toggleGradeInGroupRow(rows, localId, grade),
+    );
+  };
+
+  const toggleEditCategoryGrade = (grade: string) => {
+    setEditCategorySupportedGrades((current) =>
+      toggleGradeSelection(current, grade),
+    );
+  };
+
+  const addEditCategoryGradeGroup = () => {
+    setEditCategoryGradeGroupRows((rows) => addGradeGroupRow(rows));
+  };
+
+  const removeEditCategoryGradeGroup = (localId: number) => {
+    setEditCategoryGradeGroupRows((rows) => removeGradeGroupRow(rows, localId));
+  };
+
+  const renameEditCategoryGradeGroup = (localId: number, name: string) => {
+    setEditCategoryGradeGroupRows((rows) =>
+      renameGradeGroupRow(rows, localId, name),
+    );
+  };
+
+  const toggleEditCategoryGradeInGroup = (localId: number, grade: string) => {
+    setEditCategoryGradeGroupRows((rows) =>
+      toggleGradeInGroupRow(rows, localId, grade),
+    );
+  };
+
   const isEditDisabled = !selectedCategory || loading;
   const isDeleteDisabled = !selectedCategory || loading;
   const shownError = addError ?? editError ?? deleteError ?? error;
@@ -207,6 +292,13 @@ export function useIsraelSortCategoriesManagement({
     sortedCategories,
     newCategoryName,
     setNewCategoryName,
+    newCategorySupportedGrades,
+    toggleNewCategoryGrade,
+    newCategoryGradeGroupRows,
+    addNewCategoryGradeGroup,
+    removeNewCategoryGradeGroup,
+    renameNewCategoryGradeGroup,
+    toggleNewCategoryGradeInGroup,
     selectedCategory,
     selectedCategoryId,
     setSelectedCategoryId,
@@ -216,6 +308,13 @@ export function useIsraelSortCategoriesManagement({
     setIsEditDialogOpen,
     editCategoryName,
     setEditCategoryName,
+    editCategorySupportedGrades,
+    toggleEditCategoryGrade,
+    editCategoryGradeGroupRows,
+    addEditCategoryGradeGroup,
+    removeEditCategoryGradeGroup,
+    renameEditCategoryGradeGroup,
+    toggleEditCategoryGradeInGroup,
     editError,
     isSavingEdit,
     isAdding,

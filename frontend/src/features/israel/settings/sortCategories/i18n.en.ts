@@ -23,4 +23,9 @@ export const ISRAEL_SORT_CATEGORIES_I18N_EN: IsraelSortCategoriesI18n = {
   save: 'Save',
   updating: 'Updating...',
   adding: 'Adding...',
+  supportedGradesLabel: 'Supported grades',
+  gradeGroupsLabel: 'Grade groups',
+  addGroupLabel: 'Add group',
+  removeGroupLabel: 'Remove group',
+  groupNamePlaceholder: 'Group name',
 };

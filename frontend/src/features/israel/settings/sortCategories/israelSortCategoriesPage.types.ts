@@ -1,3 +1,5 @@
+export type { GradeGroup } from '../../../../services/traderCategoriesApi';
+
 export type IsraelSortCategoriesHeaderState = {
   count: number;
   isEditDisabled: boolean;

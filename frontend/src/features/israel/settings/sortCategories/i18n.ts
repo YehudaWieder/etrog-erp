@@ -23,6 +23,11 @@ export type IsraelSortCategoriesI18n = {
   save: string;
   updating: string;
   adding: string;
+  supportedGradesLabel: string;
+  gradeGroupsLabel: string;
+  addGroupLabel: string;
+  removeGroupLabel: string;
+  groupNamePlaceholder: string;
 };
 
 const ISRAEL_SORT_CATEGORIES_I18N: Record<
