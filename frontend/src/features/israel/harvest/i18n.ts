@@ -27,6 +27,23 @@ export type IsraelHarvestI18n = {
     };
     deleteHarvestHasSortingsTitle: string;
     deleteHarvestFailedError: string;
+    editSorting: string;
+    deleteSorting: string;
+    editSortingDialog: {
+      title: string;
+      quantityLabel: string;
+      notesLabel: string;
+      confirm: string;
+      cancel: string;
+      saveFailedError: string;
+    };
+    deleteSortingDialog: {
+      title: string;
+      message: string;
+      confirm: string;
+      cancel: string;
+    };
+    deleteSortingFailedError: string;
   };
   sortingForm: {
     ariaLabel: string;
@@ -155,6 +172,22 @@ export type IsraelHarvestI18n = {
       totalQuantity: string;
       avgQuantityPerHarvest: string;
     };
+    detailsColumnHeader: string;
+    detailsPanel: {
+      openDetailsAriaLabel: (fieldName: string) => string;
+      title: (fieldName?: string) => string;
+      closeLabel: string;
+      printLabel: string;
+      printWindowTitle: string;
+      empty: string;
+      columns: {
+        dateGregorian: string;
+        dateHebrew: string;
+        quantity: string;
+        notes: string;
+        updatedBy: string;
+      };
+    };
   };
   sortingSummary: {
     loading: string;
@@ -195,6 +228,31 @@ export type IsraelHarvestI18n = {
       allFieldsOption: string;
     };
   };
+  sortingList: {
+    description: string;
+    loading: string;
+    loadError: string;
+    empty: string;
+    tableActionsLabel: string;
+    printTitle: string;
+    printAriaLabel: string;
+    exportTitle: string;
+    exportAriaLabel: string;
+    exportError: string;
+    printWindowTitle: string;
+    sheetName: string;
+    columns: {
+      dateGregorian: string;
+      dateHebrew: string;
+      fieldName: string;
+      fieldCategory: string;
+      category: string;
+      grade: string;
+      pitamStatus: string;
+      quantity: string;
+      notes: string;
+    };
+  };
   dailyDetails: {
     description: string;
     loading: string;
@@ -222,12 +280,14 @@ export type IsraelHarvestI18n = {
       notes: string;
       updatedBy: string;
     };
+    detailsColumnHeader: string;
     detailsPanel: {
       title: string;
       closeLabel: string;
       printLabel: string;
       printWindowTitle: string;
       noNotes: string;
+      openDetailsAriaLabel: string;
       fields: {
         dateGregorian: string;
         dateHebrew: string;

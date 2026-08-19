@@ -123,6 +123,8 @@ function buildSortingMatrix(
   grandTotalLabel: string,
   gradeFallback: string,
   categoryOrder: Map<string, number> | null,
+  allCategoryNames: string[],
+  fallbackGrades: readonly string[],
 ): SortingMatrix {
   const catGradeMap = new Map<string, Map<string, PitamGradeCell>>();
 
@@ -139,9 +141,14 @@ function buildSortingMatrix(
   for (const gradeMap of catGradeMap.values()) {
     for (const grade of gradeMap.keys()) usedGrades.add(grade);
   }
-  const grades = sortGrades([...usedGrades], gradeFallback);
+  const grades =
+    usedGrades.size > 0
+      ? sortGrades([...usedGrades], gradeFallback)
+      : sortGrades([...fallbackGrades], gradeFallback);
 
-  const sortedCats = sortCategoryNames([...catGradeMap.keys()], categoryOrder);
+  const catNames =
+    catGradeMap.size > 0 ? [...catGradeMap.keys()] : allCategoryNames;
+  const sortedCats = sortCategoryNames(catNames, categoryOrder);
   const rows: MatrixRow[] = sortedCats.map((cat) => ({
     key: cat,
     label: cat,
@@ -196,6 +203,11 @@ export function IsraelHarvestSortingSummarySection({
     [sortCategories],
   );
 
+  const allCategoryNames = useMemo(
+    () => sortCategories.map((category) => category.name),
+    [sortCategories],
+  );
+
   const matrix = useMemo(
     () =>
       buildSortingMatrix(
@@ -203,10 +215,19 @@ export function IsraelHarvestSortingSummarySection({
         labels.grandTotalLabel,
         labels.breakdown.grade,
         categoryOrder,
+        allCategoryNames,
+        HARVEST_GRADE_OPTIONS,
       ),
-    [rows, labels.grandTotalLabel, labels.breakdown.grade, categoryOrder],
+    [
+      rows,
+      labels.grandTotalLabel,
+      labels.breakdown.grade,
+      categoryOrder,
+      allCategoryNames,
+    ],
   );
 
+  const hasRealData = rows.some((row) => (row.quantity || 0) > 0);
   const hasData = matrix.rows.length > 0;
 
   const gradeGroupSplits = useMemo(() => {
@@ -281,7 +302,7 @@ export function IsraelHarvestSortingSummarySection({
         direction={lang === 'he' ? 'rtl' : 'ltr'}
         onValuesChange={onFiltersChange}
         actions={
-          hasData ? (
+          hasRealData ? (
             <div
               className={`global-filters-bar__icon-actions ${sharedFilterStyles.iconActions}`}
               aria-label={labels.actionsLabel}
@@ -319,7 +340,7 @@ export function IsraelHarvestSortingSummarySection({
         <div className={styles.statusBox}>{labels.empty}</div>
       ) : null}
 
-      {hasData ? (
+      {!isLoading && hasData ? (
         <>
           <section className={styles.matrixSection}>
             <h3 className={styles.matrixTitle}>{labels.tableTitle}</h3>
@@ -339,13 +360,15 @@ export function IsraelHarvestSortingSummarySection({
             />
           </section>
 
-          <GradeGroupSplitCards
-            title={labels.gradeGroups.title}
-            splits={gradeGroupSplits}
-            groupColumnLabel={labels.gradeGroups.groupColumn}
-            percentColumnLabel={labels.gradeGroups.percentColumn}
-            locale={locale}
-          />
+          {hasRealData ? (
+            <GradeGroupSplitCards
+              title={labels.gradeGroups.title}
+              splits={gradeGroupSplits}
+              groupColumnLabel={labels.gradeGroups.groupColumn}
+              percentColumnLabel={labels.gradeGroups.percentColumn}
+              locale={locale}
+            />
+          ) : null}
         </>
       ) : null}
 

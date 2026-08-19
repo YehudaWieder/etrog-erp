@@ -1,6 +1,7 @@
 import { useMemo, type RefObject } from 'react';
 import { FaLemon, FaListCheck, FaPrint, FaScaleBalanced } from 'react-icons/fa6';
 import {
+  GLOBAL_DATA_TABLE_WIDTHS,
   GlobalDataTable,
   type GlobalDataTableColumn,
 } from '../../../../../components/ui/GlobalDataTable';
@@ -11,6 +12,7 @@ import {
 } from '../../../../../components/ui/GlobalScopedFilters';
 import type { IsraelHarvestRecord } from '../../../../../services/israelHarvestsApi';
 import type { IsraelClassificationRecord } from '../../../../../services/israelClassificationsApi';
+import { HarvestDetailsTriggerButton } from '../../../../harvest/components/shared/HarvestDetailsTriggerButton';
 import { HarvestPrintExportActions } from '../../../../harvest/components/shared/HarvestPrintExportActions';
 import { HarvestStatCardGrid } from '../../../../harvest/components/shared/HarvestStatCard';
 import { formatHarvestGregorianDate } from '../../../../harvest/services/harvestDisplayFormatters.service';
@@ -83,6 +85,19 @@ export function IsraelHarvestDailyDetailsSection({
   const columns = useMemo<GlobalDataTableColumn<IsraelHarvestRecord>[]>(
     () => [
       {
+        id: 'details',
+        header: dailyT.detailsColumnHeader,
+        minWidth: GLOBAL_DATA_TABLE_WIDTHS.action,
+        gridTemplate: GLOBAL_DATA_TABLE_WIDTHS.action,
+        align: 'center',
+        render: (row) => (
+          <HarvestDetailsTriggerButton
+            ariaLabel={dailyT.detailsPanel.openDetailsAriaLabel}
+            onClick={() => onSelectRow(row)}
+          />
+        ),
+      },
+      {
         id: 'fieldName',
         header: dailyT.columns.fieldName,
         sortKey: 'fieldName',
@@ -125,7 +140,7 @@ export function IsraelHarvestDailyDetailsSection({
         render: (row) => row.notes || '',
       },
     ],
-    [dailyT.columns, lang, numberFormatter],
+    [dailyT.columns, dailyT.detailsColumnHeader, dailyT.detailsPanel.openDetailsAriaLabel, lang, numberFormatter, onSelectRow],
   );
 
   return (
@@ -186,20 +201,20 @@ export function IsraelHarvestDailyDetailsSection({
         {isLoading ? <p className="seasons-manager__state">{dailyT.loading}</p> : null}
 
         {!isLoading ? (
-          hasRows ? (
-            <>
-              <GlobalDataTable
-                columns={columns}
-                rows={rows}
-                getRowKey={(row) => row.id}
-                emptyLabel={dailyT.empty}
-                defaultSortState={{ key: 'dateGregorian', direction: 'desc' }}
-                selectedRowKey={selectedRow?.id ?? null}
-                onRowClick={(row) =>
-                  onSelectRow(selectedRow?.id === row.id ? null : row)
-                }
-              />
+          <>
+            <GlobalDataTable
+              columns={columns}
+              rows={rows}
+              getRowKey={(row) => row.id}
+              emptyLabel={dailyT.empty}
+              defaultSortState={{ key: 'dateGregorian', direction: 'desc' }}
+              selectedRowKey={selectedRow?.id ?? null}
+              onRowClick={(row) =>
+                onSelectRow(selectedRow?.id === row.id ? null : row)
+              }
+            />
 
+            {hasRows ? (
               <GlobalLeftDetailsPanel
                 isOpen={selectedRow !== null}
                 title={dailyT.detailsPanel.title}
@@ -298,10 +313,8 @@ export function IsraelHarvestDailyDetailsSection({
                   </div>
                 ) : null}
               </GlobalLeftDetailsPanel>
-            </>
-          ) : (
-            <p className="seasons-manager__state">{dailyT.empty}</p>
-          )
+            ) : null}
+          </>
         ) : null}
       </div>
     </section>

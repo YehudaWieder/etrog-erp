@@ -64,9 +64,26 @@ export function CategoryGradeMatrixTable({
     [rows, grandTotalRow],
   );
 
+  const hasAnyValue = useMemo(
+    () =>
+      visibilityRows.some((r) =>
+        grades.some((grade) => {
+          const cell = r.cells[grade];
+          return cell
+            ? cell.withPitam > 0 || cell.withoutPitam > 0 || cell.mixed > 0
+            : false;
+        }),
+      ),
+    [visibilityRows, grades],
+  );
+
   const gradeColumns = useMemo(() => {
     const result: Record<string, GradeColumns> = {};
     for (const grade of grades) {
+      if (!hasAnyValue) {
+        result[grade] = { withPitam: true, withoutPitam: true, mixed: false };
+        continue;
+      }
       const hasWithPitam = visibilityRows.some(
         (r) => (r.cells[grade]?.withPitam ?? 0) > 0,
       );
@@ -83,7 +100,7 @@ export function CategoryGradeMatrixTable({
       };
     }
     return result;
-  }, [visibilityRows, grades]);
+  }, [visibilityRows, grades, hasAnyValue]);
 
   if (rows.length === 0 || grades.length === 0) {
     return <p className={styles.emptyMessage}>{emptyLabel}</p>;
