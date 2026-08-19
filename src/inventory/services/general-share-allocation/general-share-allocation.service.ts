@@ -1,6 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Grade, MovementType, PitamStatus, Prisma } from '@prisma/client';
-import { calculateExactShareQuantity, calculateMinimalGrossByShares } from '../validation/share-math';
+import {
+  calculateExactShareQuantity,
+  calculateMaximalDistributableByShares,
+  calculateMinimalGrossByShares,
+} from '../validation/share-math';
 import { InventoryAvailabilityService } from '../inventory-availability.service';
 
 @Injectable()
@@ -21,13 +25,19 @@ export class GeneralShareAllocationService {
     });
   }
 
+  // Splits `quantity` into whole "fair packages" only (e.g. for 40/40/20 shares, every full
+  // group of 5 splits exactly into 2/2/1). Whatever doesn't complete a full package stays
+  // undistributed so the caller can route it to modulo instead of rounding it away unevenly.
   private calculateShareAllocations(
     quantity: number,
     shares: Array<{ traderId: number; percent: Prisma.Decimal | number | string }>,
   ) {
-    return shares.map((share) => ({
+    const percentTexts = shares.map((share) => new Prisma.Decimal(share.percent).toString());
+    const distributable = calculateMaximalDistributableByShares(quantity, percentTexts);
+
+    return shares.map((share, index) => ({
       share,
-      quantity: Math.floor((quantity * Number(share.percent)) / 100),
+      quantity: distributable === 0 ? 0 : calculateExactShareQuantity(distributable, percentTexts[index]),
     }));
   }
 
@@ -305,7 +315,7 @@ export class GeneralShareAllocationService {
       });
 
       if (shares.length === 0) {
-        throw new BadRequestException(`לא הוגדרה חלוקת אחוזים בין הסוחרים עבור קטגוריה זו.`);
+        throw new BadRequestException(`No trader shares found for category ${params.traderCategoryId} in season ${params.seasonId}`);
       }
 
       const normalizedShares = shares.map((share) => ({
@@ -317,7 +327,7 @@ export class GeneralShareAllocationService {
       const totalPercent = normalizedShares.reduce((sum, share) => sum + share.percent, 0);
       if (Math.abs(totalPercent - 100) > 1e-9) {
         throw new BadRequestException(
-          `סכום האחוזים בין הסוחרים עבור קטגוריה ${params.traderCategoryId} חייב להיות 100.`,
+          `Invalid trader shares configuration for category ${params.traderCategoryId}: total percent is ${totalPercent}, expected 100`,
         );
       }
 
@@ -332,7 +342,7 @@ export class GeneralShareAllocationService {
 
       if (traderAllocations.some((allocation) => allocation.quantity <= 0)) {
         throw new BadRequestException(
-          'לא ניתן לחלק את הכמות המבוקשת בין כל הסוחרים לפי האחוזים שהוגדרו; יש להגדיל את הכמות או לעדכן את האחוזים.',
+          'Invalid trader shares configuration: at least one trader would receive a non-positive quantity for the requested deficit',
         );
       }
 

@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 
-export function calculateMinimalGrossByShares(deficit: number, sharePercents: string[]) {
-  const deficitBig = BigInt(deficit);
+// Smallest total that splits into whole units for every share (e.g. 5 for 40/40/20).
+export function calculateShareStep(sharePercents: string[]): bigint {
   const hundred = 100n;
 
   let step = 1n;
@@ -16,12 +16,30 @@ export function calculateMinimalGrossByShares(deficit: number, sharePercents: st
     step = lcm(step, unitStep);
   }
 
+  return step;
+}
+
+export function calculateMinimalGrossByShares(deficit: number, sharePercents: string[]) {
+  const deficitBig = BigInt(deficit);
+  const step = calculateShareStep(sharePercents);
+
   const gross = ((deficitBig + step - 1n) / step) * step;
   if (gross > BigInt(Number.MAX_SAFE_INTEGER)) {
     throw new BadRequestException('Calculated gross quantity is too large');
   }
 
   return Number(gross);
+}
+
+// Largest total ≤ quantity that still splits into whole units for every share (e.g. for
+// quantity=9 and shares 40/40/20, the step is 5, so this returns 5 rather than rounding up to 10).
+// Whatever is left over (quantity - result) does not divide fairly and must stay undistributed.
+export function calculateMaximalDistributableByShares(quantity: number, sharePercents: string[]) {
+  const quantityBig = BigInt(quantity);
+  const step = calculateShareStep(sharePercents);
+
+  const distributable = (quantityBig / step) * step;
+  return Number(distributable);
 }
 
 export function calculateExactShareQuantity(total: number, percentText: string) {
