@@ -930,7 +930,7 @@ export class ItemService {
       });
 
       if (currentBox && (currentBox.status === 'SHIPPED' || currentBox.status === 'DELIVERED')) {
-        throw new BadRequestException('לא ניתן לערוך פריט שנמצא בקרטון שנשלח או נמסר');
+        throw new BadRequestException('Cannot edit item from a shipped or delivered box');
       }
 
       const nextBoxId = Number(updatePayload.boxId ?? currentItem.boxId);
@@ -1236,7 +1236,7 @@ export class ItemService {
     });
 
     if (box && (box.status === 'SHIPPED' || box.status === 'DELIVERED')) {
-      throw new BadRequestException('לא ניתן למחוק פריט שנמצא בקרטון שנשלח או נמסר');
+      throw new BadRequestException('Cannot delete item from a shipped or delivered box');
     }
 
     await this.deletePackedMovementsByItemId(tx, id);

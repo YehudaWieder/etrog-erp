@@ -56,13 +56,13 @@ export class PitamSplitService {
     const date = dto.date ? new Date(dto.date) : new Date();
 
     if (!dto.traderCategoryId || !dto.grade) {
-      throw new BadRequestException('יש לבחור קטגוריית סוחר ודרגה.');
+      throw new BadRequestException('Trader category and grade must be selected.');
     }
 
     switch (dto.source) {
       case 'SPECIFIC_TRADER': {
         if (!dto.traderId) {
-          throw new BadRequestException('יש לבחור סוחר כאשר המקור הוא "סוחר ספציפי".');
+          throw new BadRequestException('A trader must be selected when the source is "specific trader".');
         }
         return this.createTraderStockSplitTriple(tx, {
           seasonId,
@@ -107,7 +107,7 @@ export class PitamSplitService {
         });
       }
       default:
-        throw new BadRequestException('יש לבחור מקור: סוחר ספציפי, מודולו או כללי.');
+        throw new BadRequestException('A source must be selected: specific trader, modulo, or general.');
     }
   }
 
@@ -181,7 +181,7 @@ export class PitamSplitService {
     });
 
     if (rows.length === 0) {
-      throw new NotFoundException(`פעולת הסיווג המבוקשת (${batchId}) לא נמצאה.`);
+      throw new NotFoundException(`Requested pitam split batch (${batchId}) not found.`);
     }
 
     const { seasonId } = rows[0];
@@ -357,7 +357,7 @@ export class PitamSplitService {
     });
 
     if (shares.length === 0) {
-      throw new BadRequestException('לא הוגדרה חלוקת אחוזים בין סוחרים עבור קטגוריה זו בעונה הנוכחית.');
+      throw new BadRequestException('No percentage split between traders is defined for this category in the current season.');
     }
 
     const positiveShares = shares
@@ -365,7 +365,7 @@ export class PitamSplitService {
       .filter((s) => Number(s.percentText) > 0);
 
     if (positiveShares.length === 0) {
-      throw new BadRequestException('כל האחוזים המוגדרים לסוחרים בקטגוריה זו הם אפס או שליליים.');
+      throw new BadRequestException('All percentages defined for traders in this category are zero or negative.');
     }
 
     const percentTexts = positiveShares.map((s) => s.percentText);
@@ -411,12 +411,12 @@ export class PitamSplitService {
       if (moduloAvailable < moduloRemainder) {
         throw new BadRequestException(
           traderPortion > 0
-            ? `לא ניתן לסווג ${totalQty} יחידות כ"כללי": רק ${traderPortion} יחידות ניתנות לחלוקה הוגנת בין הסוחרים (לפי היתרה בפועל של כל סוחר), ` +
-              `וה-${moduloRemainder} הנותרות אמורות להגיע מהמודולו — אך במודולו יש רק ${moduloAvailable} יחידות מעורב. ` +
-              `אפשר לבקש כמות קטנה יותר, או לסווג את ההפרש ממקור ספציפי (סוחר/מודולו).`
-            : `לא ניתן לסווג ${totalQty} יחידות כ"כללי": הכמות אינה מתחלקת בצורה הוגנת בין הסוחרים (נדרשת כמות שהיא כפולה של ${fairStep}), ` +
-              `ובמודולו יש רק ${moduloAvailable} מתוך ${moduloRemainder} הדרושות. ` +
-              `אפשר לבקש כפולה של ${fairStep} יחידות לחלוקה הוגנת, או לסווג ממקור ספציפי (סוחר/מודולו).`,
+            ? `Cannot classify ${totalQty} units as "general": only ${traderPortion} units can be fairly split between traders (based on each trader's actual balance), ` +
+              `and the remaining ${moduloRemainder} were expected to come from modulo — but modulo only has ${moduloAvailable} mixed units. ` +
+              `You can request a smaller quantity, or classify the difference from a specific source (trader/modulo).`
+            : `Cannot classify ${totalQty} units as "general": the quantity does not split fairly between traders (a multiple of ${fairStep} is required), ` +
+              `and modulo only has ${moduloAvailable} out of the ${moduloRemainder} needed. ` +
+              `You can request a multiple of ${fairStep} units for a fair split, or classify from a specific source (trader/modulo).`,
         );
       }
     }
@@ -492,10 +492,10 @@ export class PitamSplitService {
 
   private validateQuantities(withQty: number, withoutQty: number) {
     if (!Number.isInteger(withQty) || !Number.isInteger(withoutQty) || withQty < 0 || withoutQty < 0) {
-      throw new BadRequestException('הכמויות "עם פיטם" ו"בלי פיטם" חייבות להיות מספרים שלמים וחיוביים.');
+      throw new BadRequestException('The "with pitam" and "without pitam" quantities must be positive integers.');
     }
     if (withQty + withoutQty <= 0) {
-      throw new BadRequestException('סכום הכמויות "עם פיטם" ו"בלי פיטם" חייב להיות גדול מאפס.');
+      throw new BadRequestException('The sum of the "with pitam" and "without pitam" quantities must be greater than zero.');
     }
   }
 }

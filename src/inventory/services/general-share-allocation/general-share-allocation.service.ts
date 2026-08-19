@@ -356,7 +356,7 @@ export class GeneralShareAllocationService {
           isModulo: false,
           requiredQuantity: allocation.quantity,
           excludePrivateSelection,
-          contextLabel: `${params.contextLabel} (סוחר ${allocation.traderId})`,
+          contextLabel: `${params.contextLabel} (trader ${allocation.traderId})`,
         });
       }
 
@@ -419,7 +419,7 @@ export class GeneralShareAllocationService {
 
     if (rows.length === 0) {
       throw new BadRequestException(
-        `${params.contextLabel}: אין מספיק מלאי לא ארוז. נדרש=${params.quantity}, זמין=${moduloAvailable}`,
+        `No quantity was deducted for category ${params.traderCategoryId} in season ${params.seasonId}. Either the requested quantity is zero or there is no available stock to deduct.`,
       );
     }
 

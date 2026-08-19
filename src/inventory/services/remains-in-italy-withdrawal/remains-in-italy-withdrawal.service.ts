@@ -193,7 +193,7 @@ export class RemainsInItalyWithdrawalService {
       grade: dto.grade,
       pitamStatus: dto.pitamStatus,
       requiredQuantity: dto.quantity,
-      contextLabel: 'הוצאה מנשאר באיטליה',
+      contextLabel: 'Withdrawal from remains in Italy',
     });
 
     const negative = await tx.traderStock.create({
@@ -274,7 +274,7 @@ export class RemainsInItalyWithdrawalService {
     });
 
     if (!anchor) {
-      throw new NotFoundException(`הוצאה מנשאר באיטליה (${anchorId}) לא נמצאה.`);
+      throw new NotFoundException(`Withdrawal from remains in Italy (${anchorId}) not found.`);
     }
 
     const [traderRows, customerRows] = await Promise.all([
@@ -300,7 +300,7 @@ export class RemainsInItalyWithdrawalService {
           pitamStatus: row.pitamStatus,
           isModulo: row.isModulo,
           requiredQuantity: row.quantity,
-          contextLabel: 'ביטול הוצאה מנשאר באיטליה',
+          contextLabel: 'Cancel withdrawal from remains in Italy',
         });
       }
 
@@ -322,7 +322,7 @@ export class RemainsInItalyWithdrawalService {
         pitamStatus: row.pitamStatus,
         isModulo: row.isModulo,
         requiredQuantity: fullQuantity,
-        contextLabel: 'ביטול הוצאה מנשאר באיטליה',
+        contextLabel: 'Cancel withdrawal from remains in Italy',
       });
 
       await tx.traderStock.deleteMany({ where: { id: anchorId } });
@@ -338,7 +338,7 @@ export class RemainsInItalyWithdrawalService {
       customerCategoryId: row.customerCategoryId,
       pitamStatus: row.pitamStatus,
       requiredQuantity: fullQuantity,
-      contextLabel: 'ביטול הוצאה מנשאר באיטליה',
+      contextLabel: 'Cancel withdrawal from remains in Italy',
     });
 
     await tx.traderStock.deleteMany({ where: { id: anchorId } });

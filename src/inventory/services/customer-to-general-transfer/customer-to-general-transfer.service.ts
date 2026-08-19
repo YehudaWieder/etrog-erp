@@ -41,7 +41,7 @@ export class CustomerToGeneralTransferService {
       customerCategoryId: dto.customerCategoryId,
       pitamStatus: dto.pitamStatus,
       requiredQuantity: dto.quantity,
-      contextLabel: 'העברת מלאי לקוח למאגר הכללי',
+      contextLabel: 'Customer stock transfer to general pool',
     });
 
     const anchor = await tx.customerAllocation.create({

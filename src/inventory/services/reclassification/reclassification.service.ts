@@ -224,7 +224,7 @@ export class ReclassificationService {
         isModulo: false,
         requiredQuantity: dto.quantity,
         onlyPrivateSelection: true,
-        contextLabel: 'שינוי סיווג ושיוך',
+        contextLabel: 'Reclassification and reassignment',
       });
 
       const negative = await tx.traderStock.create({
@@ -308,7 +308,7 @@ export class ReclassificationService {
         grade: from.grade,
         pitamStatus: from.pitamStatus,
         requiredQuantity: dto.quantity,
-        contextLabel: 'שינוי סיווג ושיוך מנשאר באיטליה',
+        contextLabel: 'Reclassification and reassignment from remains in Italy',
       });
 
       const negative = await tx.traderStock.create({
@@ -352,7 +352,7 @@ export class ReclassificationService {
       pitamStatus: from.pitamStatus,
       quantity: dto.quantity,
       type: MovementType.RECLASSIFICATION,
-      contextLabel: 'שינוי סיווג ושיוך כללי',
+      contextLabel: 'General reclassification and reassignment',
       excludePrivateSelection: true,
       updatedById: actorId,
       notes: dto.notes,
@@ -371,7 +371,7 @@ export class ReclassificationService {
         where: { seasonId, traderCategoryId: to.traderCategoryId, traderId: dto.toTraderId },
       });
       if (!hasShare) {
-        throw new BadRequestException('לסוחר היעד אין הגדרת אחוזים בקטגוריה המבוקשת.');
+        throw new BadRequestException('Destination trader has no share configured for the requested category.');
       }
 
       await tx.traderStock.create({
@@ -436,7 +436,7 @@ export class ReclassificationService {
     });
 
     if (!anchor) {
-      throw new NotFoundException(`שינוי סיווג ושיוך (${anchorId}) לא נמצא.`);
+      throw new NotFoundException(`Reclassification and reassignment (${anchorId}) not found.`);
     }
 
     const linked = await tx.traderStock.findMany({
@@ -455,7 +455,7 @@ export class ReclassificationService {
         pitamStatus: row.pitamStatus,
         isModulo: row.isModulo,
         requiredQuantity: row.quantity,
-        contextLabel: 'ביטול שינוי סיווג ושיוך',
+        contextLabel: 'Cancel reclassification and reassignment',
       });
     }
 
@@ -506,7 +506,7 @@ export class ReclassificationService {
       (dto.source === 'GENERAL' && !!dto.toTraderId) || (dto.source === 'SPECIFIC_TRADER' && !!dto.toGeneral);
 
     if (tuplesEqual && !ownershipChanges) {
-      throw new BadRequestException('הסיווג החדש זהה לסיווג הישן - אין שינוי לבצע.');
+      throw new BadRequestException('The new classification is identical to the old one - no change to make.');
     }
 
     if (!['SPECIFIC_TRADER', 'GENERAL', 'REMAINS_IN_ITALY'].includes(dto.source)) {

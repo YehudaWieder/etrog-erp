@@ -218,7 +218,7 @@ export class TraderStockService {
                 pitamStatus,
                 quantity: requestQuantity,
                 type: MovementType.WASTE,
-                contextLabel: 'פחת כללי',
+                contextLabel: 'General waste',
                 excludePrivateSelection: true,
                 updatedById: actorId,
                 notes,
@@ -269,7 +269,7 @@ export class TraderStockService {
 
             if (existing.type === MovementType.WASTE && existing.MovementReferenceId !== null) {
                 throw new BadRequestException(
-                    'תנועת פחת כללי מפוצלת בין מספר סוחרים לא ניתנת לעריכה — יש למחוק ולהזין מחדש.',
+                    'A general waste movement split across multiple traders cannot be edited — delete and re-enter it instead.',
                 );
             }
 

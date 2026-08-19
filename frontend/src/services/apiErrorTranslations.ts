@@ -18,6 +18,14 @@ const CONTEXT_LABELS_HE: Record<string, string> = {
   'Packing GENERAL item (modulo fallback)': 'אריזת פריט כללי (גיבוי מהכללי)',
   'Delete classification': 'מחיקת מיון',
   'Update classification quantity': 'עדכון כמות מיון',
+  'Customer stock transfer to general pool': 'העברת מלאי לקוח למאגר הכללי',
+  'Withdrawal from remains in Italy': 'הוצאה מנשאר באיטליה',
+  'Cancel withdrawal from remains in Italy': 'ביטול הוצאה מנשאר באיטליה',
+  'Reclassification and reassignment': 'שינוי סיווג ושיוך',
+  'Reclassification and reassignment from remains in Italy': 'שינוי סיווג ושיוך מנשאר באיטליה',
+  'General reclassification and reassignment': 'שינוי סיווג ושיוך כללי',
+  'Cancel reclassification and reassignment': 'ביטול שינוי סיווג ושיוך',
+  'General waste': 'פחת כללי',
 };
 
 const EXACT_TRANSLATIONS_HE: Record<string, string> = {
@@ -57,12 +65,44 @@ const EXACT_TRANSLATIONS_HE: Record<string, string> = {
     'לא ניתן למחוק את רשומת הקטיף כי קיימות רשומות מקושרות במערכת.',
   'Ledger mismatch while updating transfer operation': 'חוסר התאמה בנתוני ההעברה בעת העדכון',
   'Cannot delete item from a shipped or delivered box': 'לא ניתן למחוק פריט מקרטון שסומן כנשלח או נמסר',
+  'Cannot edit item from a shipped or delivered box': 'לא ניתן לערוך פריט שנמצא בקרטון שנשלח או נמסר',
+  'Destination trader has no share configured for the requested category.':
+    'לסוחר היעד אין הגדרת אחוזים בקטגוריה המבוקשת.',
+  'The new classification is identical to the old one - no change to make.':
+    'הסיווג החדש זהה לסיווג הישן - אין שינוי לבצע.',
+  'Trader category and grade must be selected.': 'יש לבחור קטגוריית סוחר ודרגה.',
+  'A trader must be selected when the source is "specific trader".': 'יש לבחור סוחר כאשר המקור הוא "סוחר ספציפי".',
+  'A source must be selected: specific trader, modulo, or general.': 'יש לבחור מקור: סוחר ספציפי, מודולו או כללי.',
+  'No percentage split between traders is defined for this category in the current season.':
+    'לא הוגדרה חלוקת אחוזים בין סוחרים עבור קטגוריה זו בעונה הנוכחית.',
+  'All percentages defined for traders in this category are zero or negative.':
+    'כל האחוזים המוגדרים לסוחרים בקטגוריה זו הם אפס או שליליים.',
+  'The "with pitam" and "without pitam" quantities must be positive integers.':
+    'הכמויות "עם פיטם" ו"בלי פיטם" חייבות להיות מספרים שלמים וחיוביים.',
+  'The sum of the "with pitam" and "without pitam" quantities must be greater than zero.':
+    'סכום הכמויות "עם פיטם" ו"בלי פיטם" חייב להיות גדול מאפס.',
+  'A general waste movement split across multiple traders cannot be edited — delete and re-enter it instead.':
+    'תנועת פחת כללי מפוצלת בין מספר סוחרים לא ניתנת לעריכה — יש למחוק ולהזין מחדש.',
 };
 
 type PatternTranslation = {
   regex: RegExp;
   translate: (...groups: string[]) => string;
 };
+
+// contextLabel values can carry a "(trader N)" suffix (see general-share-allocation.service.ts);
+// translate the base label and re-attach the trader id in Hebrew.
+const TRADER_SUFFIX_PATTERN = /^(.+) \(trader (\d+)\)$/;
+
+function resolveContextLabel(context: string): string {
+  const suffixMatch = context.match(TRADER_SUFFIX_PATTERN);
+  if (suffixMatch) {
+    const [, base, traderId] = suffixMatch;
+    return `${CONTEXT_LABELS_HE[base] ?? base} (סוחר ${traderId})`;
+  }
+
+  return CONTEXT_LABELS_HE[context] ?? context;
+}
 
 const PATTERN_TRANSLATIONS_HE: PatternTranslation[] = [
   {
@@ -88,12 +128,12 @@ const PATTERN_TRANSLATIONS_HE: PatternTranslation[] = [
   {
     regex: /^(.+?): insufficient unshipped trader stock\. Required=([\d.]+), available=([\d.]+)$/,
     translate: (context, required, available) =>
-      `${CONTEXT_LABELS_HE[context] ?? context}: אין מספיק מלאי זמין לסוחר. נדרש: ${required}, קיים: ${available}`,
+      `${resolveContextLabel(context)}: אין מספיק מלאי זמין לסוחר. נדרש: ${required}, קיים: ${available}`,
   },
   {
     regex: /^(.+?): insufficient unshipped customer stock\. Required=([\d.]+), available=([\d.]+)$/,
     translate: (context, required, available) =>
-      `${CONTEXT_LABELS_HE[context] ?? context}: אין מספיק מלאי זמין ללקוח. נדרש: ${required}, קיים: ${available}`,
+      `${resolveContextLabel(context)}: אין מספיק מלאי זמין ללקוח. נדרש: ${required}, קיים: ${available}`,
   },
   {
     regex: /^(from|to)PitamStatus is required$/,
@@ -122,6 +162,32 @@ const PATTERN_TRANSLATIONS_HE: PatternTranslation[] = [
   {
     regex: /^Trader adjustment (\d+) not found$/,
     translate: (id) => `תנועת ההתאמה (#${id}) לא נמצאה`,
+  },
+  {
+    regex: /^Withdrawal from remains in Italy \((\d+)\) not found\.$/,
+    translate: (anchorId) => `הוצאה מנשאר באיטליה (${anchorId}) לא נמצאה.`,
+  },
+  {
+    regex: /^Reclassification and reassignment \((\d+)\) not found\.$/,
+    translate: (anchorId) => `שינוי סיווג ושיוך (${anchorId}) לא נמצא.`,
+  },
+  {
+    regex: /^Requested pitam split batch \((.+)\) not found\.$/,
+    translate: (batchId) => `פעולת הסיווג המבוקשת (${batchId}) לא נמצאה.`,
+  },
+  {
+    regex: /^Cannot classify (\d+) units as "general": only (\d+) units can be fairly split between traders \(based on each trader's actual balance\), and the remaining (\d+) were expected to come from modulo — but modulo only has (\d+) mixed units\. You can request a smaller quantity, or classify the difference from a specific source \(trader\/modulo\)\.$/,
+    translate: (totalQty, traderPortion, moduloRemainder, moduloAvailable) =>
+      `לא ניתן לסווג ${totalQty} יחידות כ"כללי": רק ${traderPortion} יחידות ניתנות לחלוקה הוגנת בין הסוחרים (לפי היתרה בפועל של כל סוחר), ` +
+      `וה-${moduloRemainder} הנותרות אמורות להגיע מהמודולו — אך במודולו יש רק ${moduloAvailable} יחידות מעורב. ` +
+      `אפשר לבקש כמות קטנה יותר, או לסווג את ההפרש ממקור ספציפי (סוחר/מודולו).`,
+  },
+  {
+    regex: /^Cannot classify (\d+) units as "general": the quantity does not split fairly between traders \(a multiple of (\d+) is required\), and modulo only has (\d+) out of the (\d+) needed\. You can request a multiple of (\d+) units for a fair split, or classify from a specific source \(trader\/modulo\)\.$/,
+    translate: (totalQty, fairStep, moduloAvailable, moduloRemainder) =>
+      `לא ניתן לסווג ${totalQty} יחידות כ"כללי": הכמות אינה מתחלקת בצורה הוגנת בין הסוחרים (נדרשת כמות שהיא כפולה של ${fairStep}), ` +
+      `ובמודולו יש רק ${moduloAvailable} מתוך ${moduloRemainder} הדרושות. ` +
+      `אפשר לבקש כפולה של ${fairStep} יחידות לחלוקה הוגנת, או לסווג ממקור ספציפי (סוחר/מודולו).`,
   },
 ];
 
