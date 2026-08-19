@@ -155,6 +155,33 @@ export const ISRAEL_HARVEST_I18N_EN: IsraelHarvestI18n = {
     sortingSaveFailedError:
       'The harvest was saved, but some sorting rows failed to save. You can add them via "Add Sorting".',
   },
+  editHarvestForm: {
+    ariaLabel: 'Edit harvest form',
+    closeLabel: 'Close',
+    title: 'Edit Harvest',
+    instructions: 'Edit the details of the selected harvest record.',
+    fieldLabel: 'Field',
+    fieldPlaceholder: 'Select field',
+    gregorianDateLabel: 'Gregorian date',
+    hebrewDateLabel: 'Hebrew date',
+    quantityLabel: 'Quantity',
+    quantityPlaceholder: 'Quantity',
+    notesLabel: 'Notes',
+    notesPlaceholder: 'Harvest notes',
+    cancel: 'Cancel',
+    save: 'Save changes',
+    saving: 'Saving...',
+    fieldRequiredError: 'Please select a field.',
+    gregorianDateRequiredError: 'Please provide a valid Gregorian date.',
+    quantityRequiredError: 'Please enter a quantity greater than zero.',
+    saveFailedError: 'Failed to update the harvest. Please try again.',
+    classificationsSaveFailedError:
+      'The harvest details were updated, but some sorting rows failed to save. Please try editing again.',
+    pendingRemovedSortingRowsTitle: 'Removed sortings (not saved yet)',
+    pendingRemovedSortingRowsHint:
+      'A removed sorting can be restored as long as the form has not been saved.',
+    restorePendingRemovedSortingRow: 'Restore',
+  },
   fieldReport: {
     description:
       'Centralized harvest records by field for the selected season.',

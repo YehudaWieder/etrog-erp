@@ -81,3 +81,25 @@ export async function createIsraelClassification(
     body: JSON.stringify(payload),
   });
 }
+
+export type UpdateIsraelClassificationPayload = Partial<
+  Omit<CreateIsraelClassificationPayload, 'harvestId'>
+>;
+
+export async function updateIsraelClassification(
+  id: number,
+  payload: UpdateIsraelClassificationPayload,
+): Promise<IsraelClassificationRecord> {
+  return apiClient<IsraelClassificationRecord>(`/israel/classifications/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteIsraelClassification(
+  id: number,
+): Promise<IsraelClassificationRecord> {
+  return apiClient<IsraelClassificationRecord>(`/israel/classifications/${id}`, {
+    method: 'DELETE',
+  });
+}

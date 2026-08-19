@@ -1,8 +1,11 @@
 import type { IsraelSortCategory } from '../../../../services/israelSortCategoriesApi';
+import type { IsraelClassificationRecord } from '../../../../services/israelClassificationsApi';
 import {
   createEmptyGradeQuantityMatrix,
   getMatrixTotalQuantity,
+  setMatrixQuantity,
 } from '../../../harvest/utils/harvestClassificationMatrix.util';
+import type { PitamRowKey } from '../../../harvest/utils/harvestClassificationMatrix.util';
 import type { IsraelHarvestFormClassificationDraft } from '../israelHarvestPage.types';
 
 export function createEmptyIsraelHarvestClassificationDraft(
@@ -81,4 +84,38 @@ export function getIsraelHarvestDraftsTotalQuantity(
     (sum, draft) => sum + getMatrixTotalQuantity(draft.quantities),
     0,
   );
+}
+
+// Groups a harvest's existing classification records into one draft per (fieldCategory, category)
+// combo, so the edit dialog can show them pre-filled instead of starting from an empty form.
+export function buildInitialIsraelClassificationDraftsFromExisting(
+  existingClassifications: IsraelClassificationRecord[],
+): IsraelHarvestFormClassificationDraft[] {
+  const draftsByComboKey = new Map<string, IsraelHarvestFormClassificationDraft>();
+
+  for (const record of existingClassifications) {
+    const comboKey = `${record.fieldCategoryId}:${record.categoryId}`;
+    let draft = draftsByComboKey.get(comboKey);
+    if (!draft) {
+      draft = {
+        id: `existing-${comboKey}`,
+        fieldCategoryId: String(record.fieldCategoryId),
+        categoryId: String(record.categoryId),
+        notes: record.notes ?? '',
+        quantities: createEmptyGradeQuantityMatrix(),
+      };
+      draftsByComboKey.set(comboKey, draft);
+    } else if (!draft.notes && record.notes) {
+      draft.notes = record.notes;
+    }
+
+    draft.quantities = setMatrixQuantity(
+      draft.quantities,
+      record.pitamStatus as PitamRowKey,
+      record.grade,
+      String(record.quantity),
+    );
+  }
+
+  return [...draftsByComboKey.values()];
 }

@@ -104,6 +104,31 @@ export type IsraelHarvestI18n = {
     saveFailedError: string;
     sortingSaveFailedError: string;
   };
+  editHarvestForm: {
+    ariaLabel: string;
+    closeLabel: string;
+    title: string;
+    instructions: string;
+    fieldLabel: string;
+    fieldPlaceholder: string;
+    gregorianDateLabel: string;
+    hebrewDateLabel: string;
+    quantityLabel: string;
+    quantityPlaceholder: string;
+    notesLabel: string;
+    notesPlaceholder: string;
+    cancel: string;
+    save: string;
+    saving: string;
+    fieldRequiredError: string;
+    gregorianDateRequiredError: string;
+    quantityRequiredError: string;
+    saveFailedError: string;
+    classificationsSaveFailedError: string;
+    pendingRemovedSortingRowsTitle: string;
+    pendingRemovedSortingRowsHint: string;
+    restorePendingRemovedSortingRow: string;
+  };
   fieldReport: {
     description: string;
     loading: string;

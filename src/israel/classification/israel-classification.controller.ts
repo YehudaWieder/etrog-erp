@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, ParseIntPipe, Req } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, ParseIntPipe, Req } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -6,6 +6,7 @@ import {
   ApiBearerAuth,
   ApiUnauthorizedResponse,
   ApiForbiddenResponse,
+  ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
 import { Request } from 'express';
@@ -14,6 +15,7 @@ import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interf
 import { Roles } from 'src/authorization/decorators/roles.decorator';
 import { IsraelClassificationService } from './israel-classification.service';
 import { CreateIsraelClassificationDto } from './dto/create-israel-classification.dto';
+import { UpdateIsraelClassificationDto } from './dto/update-israel-classification.dto';
 
 @ApiTags('Israel Harvest')
 @ApiBearerAuth('access-token')
@@ -49,5 +51,25 @@ export class IsraelClassificationController {
   create(@Body() body: CreateIsraelClassificationDto, @Req() req: Request) {
     const actor = req.user as AuthenticatedUser;
     return this.israelClassificationService.create(body, actor.id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update an existing Israel sorting (classification) record' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: 'Israel sorting record updated successfully.' })
+  @ApiResponse({ status: 404, description: 'Israel sorting record not found.' })
+  update(@Param('id', ParseIntPipe) id: number, @Body() body: UpdateIsraelClassificationDto, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.israelClassificationService.update(id, body, actor.id);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete an Israel sorting (classification) record' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: 'Israel sorting record deleted successfully.' })
+  @ApiResponse({ status: 404, description: 'Israel sorting record not found.' })
+  remove(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    const actor = req.user as AuthenticatedUser;
+    return this.israelClassificationService.remove(id, actor.id);
   }
 }

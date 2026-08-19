@@ -29,12 +29,15 @@ import {
   createIsraelHarvest,
   deleteIsraelHarvest,
   getIsraelHarvestsBySeason,
+  updateIsraelHarvest,
   type IsraelHarvestRecord,
 } from '../../../services/israelHarvestsApi';
 import {
   createIsraelClassification,
+  deleteIsraelClassification,
   getIsraelClassificationsByHarvest,
   getIsraelClassificationsBySeason,
+  updateIsraelClassification,
   type IsraelClassificationRecord,
   type IsraelClassificationSeasonRecord,
 } from '../../../services/israelClassificationsApi';
@@ -53,6 +56,10 @@ import {
   IsraelHarvestBulkFormModal,
   type IsraelHarvestBulkFormSubmitPayload,
 } from './components/forms/IsraelHarvestBulkFormModal';
+import {
+  IsraelHarvestEditModal,
+  type IsraelHarvestEditSubmitPayload,
+} from './components/forms/IsraelHarvestEditModal';
 import {
   IsraelSortingFormModal,
   type IsraelSortingFormSubmitPayload,
@@ -268,6 +275,9 @@ export function IsraelHarvestPage() {
   const [isDeleteHarvestDialogOpen, setIsDeleteHarvestDialogOpen] =
     useState(false);
   const [isDeletingHarvest, setIsDeletingHarvest] = useState(false);
+  const [isEditHarvestFormOpen, setIsEditHarvestFormOpen] = useState(false);
+  const [isSubmittingHarvestEdit, setIsSubmittingHarvestEdit] =
+    useState(false);
   const detailsPrintRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -419,6 +429,94 @@ export function IsraelHarvestPage() {
     printWindow.focus();
     printWindow.print();
     printWindow.close();
+  };
+
+  const handleEditDailyHarvest = async (
+    payload: IsraelHarvestEditSubmitPayload,
+  ) => {
+    if (!selectedDailyHarvest) {
+      return;
+    }
+
+    setIsSubmittingHarvestEdit(true);
+    try {
+      const updated = await updateIsraelHarvest(selectedDailyHarvest.id, {
+        fieldId: payload.fieldId,
+        dateGregorian: payload.dateGregorian,
+        dateHebrew: payload.dateHebrew,
+        quantity: payload.quantity,
+        notes: payload.notes || undefined,
+      });
+
+      const classificationKey = (row: {
+        fieldCategoryId: number;
+        categoryId: number;
+        grade: string;
+        pitamStatus: string;
+      }) =>
+        `${row.fieldCategoryId}:${row.categoryId}:${row.grade}:${row.pitamStatus}`;
+
+      const remainingNewRows = new Map(
+        payload.classifications.map((row) => [classificationKey(row), row]),
+      );
+      let hasClassificationError = false;
+
+      for (const record of dailyRelatedSortings) {
+        const key = classificationKey(record);
+        const match = remainingNewRows.get(key);
+
+        if (match) {
+          remainingNewRows.delete(key);
+          const notesChanged = (match.notes || '') !== (record.notes || '');
+          if (match.quantity !== record.quantity || notesChanged) {
+            try {
+              await updateIsraelClassification(record.id, {
+                quantity: match.quantity,
+                notes: match.notes || undefined,
+              });
+            } catch {
+              hasClassificationError = true;
+            }
+          }
+        } else {
+          try {
+            await deleteIsraelClassification(record.id);
+          } catch {
+            hasClassificationError = true;
+          }
+        }
+      }
+
+      for (const newRow of remainingNewRows.values()) {
+        try {
+          await createIsraelClassification({
+            harvestId: selectedDailyHarvest.id,
+            fieldCategoryId: newRow.fieldCategoryId,
+            categoryId: newRow.categoryId,
+            grade: newRow.grade,
+            pitamStatus: newRow.pitamStatus,
+            quantity: newRow.quantity,
+            notes: newRow.notes || undefined,
+          });
+        } catch {
+          hasClassificationError = true;
+        }
+      }
+
+      setHarvestRecords((rows) =>
+        rows.map((row) => (row.id === updated.id ? updated : row)),
+      );
+      setSelectedDailyHarvest(updated);
+      setIsEditHarvestFormOpen(false);
+
+      if (hasClassificationError) {
+        window.alert(t.editHarvestForm.classificationsSaveFailedError);
+      }
+    } catch {
+      window.alert(t.editHarvestForm.saveFailedError);
+    } finally {
+      setIsSubmittingHarvestEdit(false);
+    }
   };
 
   const handleDeleteDailyHarvest = async () => {
@@ -769,11 +867,13 @@ export function IsraelHarvestPage() {
         editActionLabel={t.pageControls.editHarvest}
         deleteActionLabel={t.pageControls.deleteHarvest}
         onAdd={() => setIsHarvestFormOpen(true)}
+        onEdit={() => setIsEditHarvestFormOpen(true)}
         onDelete={() => setIsDeleteHarvestDialogOpen(true)}
         addDisabled={seasonFilterId === null}
-        editDisabled
+        editDisabled={
+          selectedDailyHarvest === null || isDailyRelatedSortingsLoading
+        }
         deleteDisabled={selectedDailyHarvest === null}
-        showEdit={false}
       />
     ) : null;
 
@@ -957,6 +1057,19 @@ export function IsraelHarvestPage() {
             isSubmitting={isSubmittingHarvest}
             onClose={() => setIsHarvestFormOpen(false)}
             onSubmit={handleAddHarvest}
+          />
+
+          <IsraelHarvestEditModal
+            isOpen={isEditHarvestFormOpen}
+            t={t}
+            harvest={selectedDailyHarvest}
+            fields={fields}
+            fieldCategories={fieldCategories}
+            categories={sortCategories}
+            existingClassifications={dailyRelatedSortings}
+            isSubmitting={isSubmittingHarvestEdit}
+            onClose={() => setIsEditHarvestFormOpen(false)}
+            onSubmit={handleEditDailyHarvest}
           />
         </>
       ) : (

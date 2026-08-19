@@ -151,6 +151,33 @@ export const ISRAEL_HARVEST_I18N_HE: IsraelHarvestI18n = {
     sortingSaveFailedError:
       'הקטיף נשמר, אך שמירת חלק מהמיונים נכשלה. ניתן להוסיף אותם דרך "הוסף מיון".',
   },
+  editHarvestForm: {
+    ariaLabel: 'טופס עריכת קטיף',
+    closeLabel: 'סגירה',
+    title: 'עריכת קטיף',
+    instructions: 'ניתן לערוך את פרטי רשומת הקטיף שנבחרה.',
+    fieldLabel: 'שדה',
+    fieldPlaceholder: 'בחר שדה',
+    gregorianDateLabel: 'תאריך לועזי',
+    hebrewDateLabel: 'תאריך עברי',
+    quantityLabel: 'כמות',
+    quantityPlaceholder: 'כמות',
+    notesLabel: 'הערות',
+    notesPlaceholder: 'הערות קטיף',
+    cancel: 'ביטול',
+    save: 'שמירת שינויים',
+    saving: 'שומר...',
+    fieldRequiredError: 'יש לבחור שדה.',
+    gregorianDateRequiredError: 'יש להזין תאריך לועזי תקין.',
+    quantityRequiredError: 'יש להזין כמות גדולה מאפס.',
+    saveFailedError: 'עדכון הקטיף נכשל. נסה שוב.',
+    classificationsSaveFailedError:
+      'פרטי הקטיף עודכנו, אך עדכון חלק מהמיונים נכשל. נסה לערוך שוב.',
+    pendingRemovedSortingRowsTitle: 'מיונים שהוסרו (טרם נשמר)',
+    pendingRemovedSortingRowsHint:
+      'ניתן לשחזר מיון שהוסר כל עוד לא נשמר הטופס.',
+    restorePendingRemovedSortingRow: 'שחזור',
+  },
   fieldReport: {
     description: 'ריכוז כל רשומות הקטיף לפי שדות, לעונה הנבחרת.',
     loading: 'טוען נתוני קטיף...',
