@@ -91,13 +91,17 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       });
     };
 
+    // Measure immediately so the menu never paints unpositioned (it would otherwise render
+    // in normal document flow as the last element in <body> for a frame, jumping the page),
+    // then keep re-measuring every frame in case the trigger shifts right after opening
+    // (e.g. web fonts finishing their async load and reflowing surrounding text).
     updatePosition();
-    window.addEventListener('resize', updatePosition);
-    window.addEventListener('scroll', updatePosition, true);
-    return () => {
-      window.removeEventListener('resize', updatePosition);
-      window.removeEventListener('scroll', updatePosition, true);
-    };
+    let frameId = requestAnimationFrame(function loop() {
+      updatePosition();
+      frameId = requestAnimationFrame(loop);
+    });
+
+    return () => cancelAnimationFrame(frameId);
   }, [open]);
 
   useEffect(() => {

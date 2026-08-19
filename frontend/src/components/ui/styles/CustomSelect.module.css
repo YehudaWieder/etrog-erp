@@ -62,6 +62,11 @@
 }
 
 .menu {
+  /* Fallback so the menu can never fall into normal document flow (which would jump page
+     height) before its inline position style is computed; the inline style always wins once set. */
+  position: fixed;
+  top: -9999px;
+  left: -9999px;
   z-index: 2000;
   overflow-y: auto;
   margin: 0;
