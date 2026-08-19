@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AuditLogService } from 'src/audit/audit.service';
@@ -8,11 +12,19 @@ import { UpdateIsraelClassificationDto } from './dto/update-israel-classificatio
 const classificationInclude = {
   category: { select: { id: true, name: true } },
   fieldCategory: { select: { id: true, name: true } },
-  harvest: { select: { id: true, quantity: true, field: { select: { id: true, name: true } } } },
+  harvest: {
+    select: {
+      id: true,
+      quantity: true,
+      field: { select: { id: true, name: true } },
+    },
+  },
 } satisfies Prisma.IsraelClassificationInclude;
 
 const seasonClassificationInclude = {
-  category: { select: { id: true, name: true, orderIndex: true, gradeGroups: true } },
+  category: {
+    select: { id: true, name: true, orderIndex: true, gradeGroups: true },
+  },
   fieldCategory: { select: { id: true, name: true } },
   harvest: {
     select: {
@@ -53,27 +65,40 @@ export class IsraelClassificationService {
       throw new BadRequestException('Quantity must be greater than zero.');
     }
 
-    const harvest = await this.prisma.israelHarvest.findUnique({ where: { id: dto.harvestId } });
+    const harvest = await this.prisma.israelHarvest.findUnique({
+      where: { id: dto.harvestId },
+    });
     if (!harvest) {
       throw new NotFoundException('Israel harvest record not found.');
     }
 
-    const category = await this.prisma.israelSortCategory.findUnique({ where: { id: dto.categoryId } });
+    const category = await this.prisma.israelSortCategory.findUnique({
+      where: { id: dto.categoryId },
+    });
     if (!category) {
       throw new NotFoundException('Israel sort category not found.');
     }
 
     if (!category.supportedGrades.includes(dto.grade)) {
-      throw new BadRequestException(`Grade "${dto.grade}" is not supported by category "${category.name}".`);
+      throw new BadRequestException(
+        `Grade "${dto.grade}" is not supported by category "${category.name}".`,
+      );
     }
 
-    const fieldCategory = await this.prisma.israelFieldCategory.findUnique({ where: { id: dto.fieldCategoryId } });
+    const fieldCategory = await this.prisma.israelFieldCategory.findUnique({
+      where: { id: dto.fieldCategoryId },
+    });
     if (!fieldCategory) {
       throw new NotFoundException('Israel seller/field category not found.');
     }
 
-    if (fieldCategory.fieldId !== harvest.fieldId || fieldCategory.seasonId !== harvest.seasonId) {
-      throw new BadRequestException('The selected seller/field category does not belong to this harvest.');
+    if (
+      fieldCategory.fieldId !== harvest.fieldId ||
+      fieldCategory.seasonId !== harvest.seasonId
+    ) {
+      throw new BadRequestException(
+        'The selected seller/field category does not belong to this harvest.',
+      );
     }
 
     const existingTotal = await this.prisma.israelClassification.aggregate({
@@ -88,19 +113,39 @@ export class IsraelClassificationService {
       );
     }
 
-    const created = await this.prisma.israelClassification.create({
-      data: {
-        seasonId: harvest.seasonId,
-        harvestId: dto.harvestId,
-        fieldCategoryId: dto.fieldCategoryId,
-        categoryId: dto.categoryId,
-        grade: dto.grade,
-        pitamStatus: dto.pitamStatus,
-        quantity: dto.quantity,
-        notes: dto.notes,
-        updatedById: actorId,
-      },
-      include: classificationInclude,
+    const created = await this.prisma.$transaction(async (tx) => {
+      const createdClassification = await tx.israelClassification.create({
+        data: {
+          seasonId: harvest.seasonId,
+          harvestId: dto.harvestId,
+          fieldCategoryId: dto.fieldCategoryId,
+          categoryId: dto.categoryId,
+          grade: dto.grade,
+          pitamStatus: dto.pitamStatus,
+          quantity: dto.quantity,
+          notes: dto.notes,
+          updatedById: actorId,
+        },
+        include: classificationInclude,
+      });
+
+      await tx.israelStock.create({
+        data: {
+          seasonId: harvest.seasonId,
+          date: harvest.dateGregorian,
+          fieldId: harvest.fieldId,
+          categoryId: dto.categoryId,
+          grade: dto.grade,
+          pitamStatus: dto.pitamStatus,
+          quantity: dto.quantity,
+          type: 'HARVEST_IN',
+          movementReferenceId: createdClassification.id,
+          notes: dto.notes,
+          updatedById: actorId,
+        },
+      });
+
+      return createdClassification;
     });
 
     await this.auditLog.record({
@@ -114,13 +159,21 @@ export class IsraelClassificationService {
     return created;
   }
 
-  async update(id: number, dto: UpdateIsraelClassificationDto, actorId: number) {
-    const current = await this.prisma.israelClassification.findUnique({ where: { id } });
+  async update(
+    id: number,
+    dto: UpdateIsraelClassificationDto,
+    actorId: number,
+  ) {
+    const current = await this.prisma.israelClassification.findUnique({
+      where: { id },
+    });
     if (!current) {
       throw new NotFoundException('Israel sorting record not found.');
     }
 
-    const harvest = await this.prisma.israelHarvest.findUnique({ where: { id: current.harvestId } });
+    const harvest = await this.prisma.israelHarvest.findUnique({
+      where: { id: current.harvestId },
+    });
     if (!harvest) {
       throw new NotFoundException('Israel harvest record not found.');
     }
@@ -134,22 +187,33 @@ export class IsraelClassificationService {
       throw new BadRequestException('Quantity must be greater than zero.');
     }
 
-    const category = await this.prisma.israelSortCategory.findUnique({ where: { id: nextCategoryId } });
+    const category = await this.prisma.israelSortCategory.findUnique({
+      where: { id: nextCategoryId },
+    });
     if (!category) {
       throw new NotFoundException('Israel sort category not found.');
     }
 
     if (!category.supportedGrades.includes(nextGrade)) {
-      throw new BadRequestException(`Grade "${nextGrade}" is not supported by category "${category.name}".`);
+      throw new BadRequestException(
+        `Grade "${nextGrade}" is not supported by category "${category.name}".`,
+      );
     }
 
-    const fieldCategory = await this.prisma.israelFieldCategory.findUnique({ where: { id: nextFieldCategoryId } });
+    const fieldCategory = await this.prisma.israelFieldCategory.findUnique({
+      where: { id: nextFieldCategoryId },
+    });
     if (!fieldCategory) {
       throw new NotFoundException('Israel seller/field category not found.');
     }
 
-    if (fieldCategory.fieldId !== harvest.fieldId || fieldCategory.seasonId !== harvest.seasonId) {
-      throw new BadRequestException('The selected seller/field category does not belong to this harvest.');
+    if (
+      fieldCategory.fieldId !== harvest.fieldId ||
+      fieldCategory.seasonId !== harvest.seasonId
+    ) {
+      throw new BadRequestException(
+        'The selected seller/field category does not belong to this harvest.',
+      );
     }
 
     const existingTotal = await this.prisma.israelClassification.aggregate({
@@ -164,18 +228,47 @@ export class IsraelClassificationService {
       );
     }
 
-    const updated = await this.prisma.israelClassification.update({
-      where: { id },
-      data: {
-        fieldCategoryId: dto.fieldCategoryId,
-        categoryId: dto.categoryId,
-        grade: dto.grade,
-        pitamStatus: dto.pitamStatus,
-        quantity: dto.quantity,
-        notes: dto.notes,
-        updatedById: actorId,
-      },
-      include: classificationInclude,
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const updatedClassification = await tx.israelClassification.update({
+        where: { id },
+        data: {
+          fieldCategoryId: dto.fieldCategoryId,
+          categoryId: dto.categoryId,
+          grade: dto.grade,
+          pitamStatus: dto.pitamStatus,
+          quantity: dto.quantity,
+          notes: dto.notes,
+          updatedById: actorId,
+        },
+        include: classificationInclude,
+      });
+
+      await tx.israelStock.updateMany({
+        where: {
+          movementReferenceId: id,
+          type: 'HARVEST_IN',
+          isDeleted: false,
+        },
+        data: { isDeleted: true },
+      });
+
+      await tx.israelStock.create({
+        data: {
+          seasonId: harvest.seasonId,
+          date: harvest.dateGregorian,
+          fieldId: harvest.fieldId,
+          categoryId: nextCategoryId,
+          grade: nextGrade,
+          pitamStatus: dto.pitamStatus ?? current.pitamStatus,
+          quantity: nextQuantity,
+          type: 'HARVEST_IN',
+          movementReferenceId: id,
+          notes: dto.notes ?? current.notes,
+          updatedById: actorId,
+        },
+      });
+
+      return updatedClassification;
     });
 
     await this.auditLog.record({
@@ -191,12 +284,25 @@ export class IsraelClassificationService {
   }
 
   async remove(id: number, actorId: number) {
-    const current = await this.prisma.israelClassification.findUnique({ where: { id } });
+    const current = await this.prisma.israelClassification.findUnique({
+      where: { id },
+    });
     if (!current) {
       throw new NotFoundException('Israel sorting record not found.');
     }
 
-    const deleted = await this.prisma.israelClassification.delete({ where: { id } });
+    const deleted = await this.prisma.$transaction(async (tx) => {
+      await tx.israelStock.updateMany({
+        where: {
+          movementReferenceId: id,
+          type: 'HARVEST_IN',
+          isDeleted: false,
+        },
+        data: { isDeleted: true },
+      });
+
+      return tx.israelClassification.delete({ where: { id } });
+    });
 
     await this.auditLog.record({
       userId: actorId,

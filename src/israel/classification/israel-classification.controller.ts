@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, ParseIntPipe, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  ParseIntPipe,
+  Req,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -19,18 +30,29 @@ import { UpdateIsraelClassificationDto } from './dto/update-israel-classificatio
 
 @ApiTags('Israel Harvest')
 @ApiBearerAuth('access-token')
-@ApiUnauthorizedResponse({ description: 'JWT authentication failed or token is missing.' })
-@ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
+@ApiUnauthorizedResponse({
+  description: 'JWT authentication failed or token is missing.',
+})
+@ApiForbiddenResponse({
+  description: 'Access denied due to insufficient role or inactive user.',
+})
 @Roles(Role.OWNER, Role.MANAGER)
 @Controller('israel/classifications')
 export class IsraelClassificationController {
-  constructor(private readonly israelClassificationService: IsraelClassificationService) {}
+  constructor(
+    private readonly israelClassificationService: IsraelClassificationService,
+  ) {}
 
   @Get()
   @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
-  @ApiOperation({ summary: 'Retrieve all Israel sorting records for a harvest' })
+  @ApiOperation({
+    summary: 'Retrieve all Israel sorting records for a harvest',
+  })
   @ApiQuery({ name: 'harvestId', type: Number })
-  @ApiResponse({ status: 200, description: 'List of Israel sorting records returned successfully.' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of Israel sorting records returned successfully.',
+  })
   findAllByHarvest(@Query('harvestId', ParseIntPipe) harvestId: number) {
     return this.israelClassificationService.findAllByHarvest(harvestId);
   }
@@ -39,14 +61,22 @@ export class IsraelClassificationController {
   @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
   @ApiOperation({ summary: 'Retrieve all Israel sorting records for a season' })
   @ApiQuery({ name: 'seasonId', type: Number })
-  @ApiResponse({ status: 200, description: 'List of Israel sorting records returned successfully.' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of Israel sorting records returned successfully.',
+  })
   findAllBySeason(@Query('seasonId', ParseIntPipe) seasonId: number) {
     return this.israelClassificationService.findAllBySeason(seasonId);
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create a new Israel sorting (classification) record' })
-  @ApiResponse({ status: 201, description: 'Israel sorting record created successfully.' })
+  @ApiOperation({
+    summary: 'Create a new Israel sorting (classification) record',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Israel sorting record created successfully.',
+  })
   @ApiResponse({ status: 400, description: 'Invalid input.' })
   create(@Body() body: CreateIsraelClassificationDto, @Req() req: Request) {
     const actor = req.user as AuthenticatedUser;
@@ -54,11 +84,20 @@ export class IsraelClassificationController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update an existing Israel sorting (classification) record' })
+  @ApiOperation({
+    summary: 'Update an existing Israel sorting (classification) record',
+  })
   @ApiParam({ name: 'id', type: Number })
-  @ApiResponse({ status: 200, description: 'Israel sorting record updated successfully.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Israel sorting record updated successfully.',
+  })
   @ApiResponse({ status: 404, description: 'Israel sorting record not found.' })
-  update(@Param('id', ParseIntPipe) id: number, @Body() body: UpdateIsraelClassificationDto, @Req() req: Request) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateIsraelClassificationDto,
+    @Req() req: Request,
+  ) {
     const actor = req.user as AuthenticatedUser;
     return this.israelClassificationService.update(id, body, actor.id);
   }
@@ -66,7 +105,10 @@ export class IsraelClassificationController {
   @Delete(':id')
   @ApiOperation({ summary: 'Delete an Israel sorting (classification) record' })
   @ApiParam({ name: 'id', type: Number })
-  @ApiResponse({ status: 200, description: 'Israel sorting record deleted successfully.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Israel sorting record deleted successfully.',
+  })
   @ApiResponse({ status: 404, description: 'Israel sorting record not found.' })
   remove(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     const actor = req.user as AuthenticatedUser;

@@ -41,9 +41,15 @@ export const ISRAEL_HARVEST_I18N_HE: IsraelHarvestI18n = {
     {
       id: 'sortings',
       title: 'מיונים',
-      href: '/harvest/sorting-list',
+      href: '/harvest/sorting-daily-details',
       icon: 'fa-grip',
       items: [
+        {
+          id: 'sorting-daily-details',
+          label: 'פירוט לפי ימים',
+          href: '/harvest/sorting-daily-details',
+          icon: 'fa-calendar',
+        },
         {
           id: 'sorting-list',
           label: 'רשימת מיונים',
@@ -302,6 +308,56 @@ export const ISRAEL_HARVEST_I18N_HE: IsraelHarvestI18n = {
       notes: 'הערות',
     },
   },
+  sortingDailyDetails: {
+    description: 'פירוט המיונים היומיים לפי שדות, לעונה הנבחרת.',
+    loading: 'טוען פירוט מיונים יומי...',
+    loadError: 'לא ניתן היה לטעון את פירוט המיונים היומי כעת.',
+    empty: 'לא נמצאו רשומות מיון להצגה לעונה הנבחרת.',
+    tableActionsLabel: 'פעולות טבלה',
+    printTitle: 'הדפסה',
+    printAriaLabel: 'הדפסת טבלת המיונים היומית',
+    exportTitle: 'ייצוא לאקסל',
+    exportAriaLabel: 'ייצוא טבלת המיונים היומית לאקסל',
+    exportError: 'לא ניתן לייצא כרגע לאקסל.',
+    printWindowTitle: 'פירוט מיונים לפי ימים',
+    sheetName: 'פירוט מיונים יומי',
+    columns: {
+      dateGregorian: 'תאריך לועזי',
+      dateHebrew: 'תאריך עברי',
+      fieldName: 'שדה',
+      total: 'סה"כ',
+    },
+    summary: {
+      totalSorted: 'סה"כ מוין',
+      totalHarvests: 'סה"כ קטיפים',
+    },
+    detailsColumnHeader: 'פרטים',
+    detailsPanel: {
+      title: 'פירוט מיון יומי',
+      closeLabel: 'סגירה',
+      printLabel: 'הדפסה',
+      printWindowTitle: 'פירוט מיון יומי',
+      openDetailsAriaLabel: 'הצג פירוט מיון',
+      matrixTitle: 'פילוח לפי קטגוריה ודרגה',
+      matrixColumns: {
+        category: 'קטגוריה',
+        withPitam: 'פיטם',
+        withoutPitam: 'בלי פיטם',
+        mixed: 'מעורב',
+        total: 'סה"כ',
+      },
+      grandTotalLabel: 'סה"כ כולל',
+      breakdown: {
+        grade: 'דרגה',
+      },
+      gradeGroups: {
+        title: 'פילוח אחוזים לפי קבוצות דרגות',
+        groupColumn: 'קבוצה',
+        percentColumn: 'אחוז',
+        ungrouped: 'ללא קיבוץ',
+      },
+    },
+  },
   dailyDetails: {
     description: 'פירוט רשומות הקטיף היומיות לפי שדות, לעונה הנבחרת.',
     loading: 'טוען נתוני קטיף...',
@@ -375,6 +431,10 @@ export const ISRAEL_HARVEST_I18N_HE: IsraelHarvestI18n = {
     'sorting-list': {
       title: 'רשימת מיונים תוצג כאן',
       description: 'כאן תוצג רשימה מלאה של כל רשומות המיון לעונה הנבחרת.',
+    },
+    'sorting-daily-details': {
+      title: 'פירוט מיונים לפי ימים יוצג כאן',
+      description: 'כאן יוצגו נתוני מיון יומיים לפי תאריך ותפוקה.',
     },
     default: {
       title: 'אין נתונים להצגה',

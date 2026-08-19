@@ -41,9 +41,15 @@ export const ISRAEL_HARVEST_I18N_EN: IsraelHarvestI18n = {
     {
       id: 'sortings',
       title: 'Sortings',
-      href: '/harvest/sorting-list',
+      href: '/harvest/sorting-daily-details',
       icon: 'fa-grip',
       items: [
+        {
+          id: 'sorting-daily-details',
+          label: 'Daily Breakdown',
+          href: '/harvest/sorting-daily-details',
+          icon: 'fa-calendar',
+        },
         {
           id: 'sorting-list',
           label: 'Sorting List',
@@ -309,6 +315,56 @@ export const ISRAEL_HARVEST_I18N_EN: IsraelHarvestI18n = {
       notes: 'Notes',
     },
   },
+  sortingDailyDetails: {
+    description: 'Daily sorting breakdown by field for the selected season.',
+    loading: 'Loading daily sorting breakdown...',
+    loadError: 'Failed to load the daily sorting breakdown right now.',
+    empty: 'No sorting records found for the selected season.',
+    tableActionsLabel: 'Table actions',
+    printTitle: 'Print',
+    printAriaLabel: 'Print the daily sorting table',
+    exportTitle: 'Export to Excel',
+    exportAriaLabel: 'Export the daily sorting table to Excel',
+    exportError: 'Could not export to Excel right now.',
+    printWindowTitle: 'Daily Sorting Breakdown',
+    sheetName: 'Daily Sorting',
+    columns: {
+      dateGregorian: 'Gregorian date',
+      dateHebrew: 'Hebrew date',
+      fieldName: 'Field',
+      total: 'Total',
+    },
+    summary: {
+      totalSorted: 'Total Sorted',
+      totalHarvests: 'Total Harvests',
+    },
+    detailsColumnHeader: 'Details',
+    detailsPanel: {
+      title: 'Daily Sorting Details',
+      closeLabel: 'Close',
+      printLabel: 'Print',
+      printWindowTitle: 'Daily Sorting Details',
+      openDetailsAriaLabel: 'View sorting details',
+      matrixTitle: 'Breakdown by category and grade',
+      matrixColumns: {
+        category: 'Category',
+        withPitam: 'With Pitam',
+        withoutPitam: 'Without Pitam',
+        mixed: 'Mixed',
+        total: 'Total',
+      },
+      grandTotalLabel: 'Grand Total',
+      breakdown: {
+        grade: 'Grade',
+      },
+      gradeGroups: {
+        title: 'Percentage breakdown by grade groups',
+        groupColumn: 'Group',
+        percentColumn: 'Percent',
+        ungrouped: 'Ungrouped',
+      },
+    },
+  },
   dailyDetails: {
     description: 'Daily harvest records by field for the selected season.',
     loading: 'Loading harvest data...',
@@ -386,6 +442,11 @@ export const ISRAEL_HARVEST_I18N_EN: IsraelHarvestI18n = {
       title: 'Sorting list will appear here',
       description:
         'A full list of all sorting records for the selected season will be shown here.',
+    },
+    'sorting-daily-details': {
+      title: 'Daily sorting breakdown will appear here',
+      description:
+        'Daily sorting data by date and output will be shown here.',
     },
     default: {
       title: 'No data to display',

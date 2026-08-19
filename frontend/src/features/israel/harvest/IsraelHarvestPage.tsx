@@ -52,6 +52,7 @@ import { HarvestPageHeaderActions } from '../../harvest/components/shared/Harves
 import { IsraelHarvestFieldReportSection } from './components/field-report/IsraelHarvestFieldReportSection';
 import { IsraelHarvestSortingSummarySection } from './components/sorting-summary/IsraelHarvestSortingSummarySection';
 import { IsraelHarvestSortingListSection } from './components/sorting-list/IsraelHarvestSortingListSection';
+import { IsraelHarvestSortingDailySection } from './components/sorting-daily/IsraelHarvestSortingDailySection';
 import { IsraelHarvestDailyDetailsSection } from './components/daily-details/IsraelHarvestDailyDetailsSection';
 import {
   IsraelHarvestBulkFormModal,
@@ -67,6 +68,7 @@ import {
 } from './components/forms/IsraelSortingFormModal';
 import { IsraelClassificationEditModal } from './components/forms/IsraelClassificationEditModal';
 import { buildIsraelHarvestFieldReportRows } from './utils/israelHarvestFieldReport.util';
+import { buildIsraelSortingDailyRows } from './utils/israelHarvestSortingDaily.util';
 import type { IsraelHarvestFieldReportRow } from './israelHarvestPage.types';
 import { downloadStyledExcel } from '../../../services/exportExcel';
 import { HARVEST_PRINT_BASE_STYLE } from '../../harvest/services/harvestPrintStyles';
@@ -130,6 +132,7 @@ export function IsraelHarvestPage() {
   const isSortingSummaryTab = activeSidebarId === 'sorting-summary';
   const isDailyDetailsTab = activeSidebarId === 'harvest-daily-details';
   const isSortingListTab = activeSidebarId === 'sorting-list';
+  const isSortingDailyDetailsTab = activeSidebarId === 'sorting-daily-details';
 
   const content = useMemo(() => {
     return t.emptyState[activeSidebarId] ?? t.emptyState.default;
@@ -186,7 +189,8 @@ export function IsraelHarvestPage() {
       !isHarvestSummaryTab &&
       !isSortingSummaryTab &&
       !isDailyDetailsTab &&
-      !isSortingListTab
+      !isSortingListTab &&
+      !isSortingDailyDetailsTab
     ) {
       return;
     }
@@ -217,6 +221,7 @@ export function IsraelHarvestPage() {
     isSortingSummaryTab,
     isDailyDetailsTab,
     isSortingListTab,
+    isSortingDailyDetailsTab,
   ]);
 
   const loadClassifications = useCallback(() => {
@@ -234,21 +239,28 @@ export function IsraelHarvestPage() {
 
   useEffect(() => {
     if (
-      (!isSortingSummaryTab && !isSortingListTab) ||
+      (!isSortingSummaryTab && !isSortingListTab && !isSortingDailyDetailsTab) ||
       seasonFilterId === null
     ) {
       return;
     }
 
     loadClassifications();
-  }, [isSortingSummaryTab, isSortingListTab, seasonFilterId, loadClassifications]);
+  }, [
+    isSortingSummaryTab,
+    isSortingListTab,
+    isSortingDailyDetailsTab,
+    seasonFilterId,
+    loadClassifications,
+  ]);
 
   useEffect(() => {
     if (
       (!isHarvestSummaryTab &&
         !isSortingSummaryTab &&
         !isDailyDetailsTab &&
-        !isSortingListTab) ||
+        !isSortingListTab &&
+        !isSortingDailyDetailsTab) ||
       seasonFilterId === null
     ) {
       return;
@@ -262,6 +274,7 @@ export function IsraelHarvestPage() {
     isSortingSummaryTab,
     isDailyDetailsTab,
     isSortingListTab,
+    isSortingDailyDetailsTab,
     seasonFilterId,
   ]);
 
@@ -283,7 +296,8 @@ export function IsraelHarvestPage() {
       (!isHarvestSummaryTab &&
         !isSortingSummaryTab &&
         !isDailyDetailsTab &&
-        !isSortingListTab) ||
+        !isSortingListTab &&
+        !isSortingDailyDetailsTab) ||
       seasonFilterId === null
     ) {
       return;
@@ -295,6 +309,7 @@ export function IsraelHarvestPage() {
     isSortingSummaryTab,
     isDailyDetailsTab,
     isSortingListTab,
+    isSortingDailyDetailsTab,
     seasonFilterId,
     loadHarvestRecords,
   ]);
@@ -360,6 +375,170 @@ export function IsraelHarvestPage() {
       setSelectedSortingListRow(null);
     }
   }, [isSortingListTab]);
+
+  const [selectedSortingDailyHarvestId, setSelectedSortingDailyHarvestId] =
+    useState<number | null>(null);
+  const sortingDailyDetailsPrintRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isSortingDailyDetailsTab) {
+      setSelectedSortingDailyHarvestId(null);
+    }
+  }, [isSortingDailyDetailsTab]);
+
+  const handlePrintSortingDailyDetails = () => {
+    if (
+      typeof window === 'undefined' ||
+      !sortingDailyDetailsPrintRef.current
+    ) {
+      return;
+    }
+
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
+    if (!printWindow) {
+      return;
+    }
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html lang="${lang === 'he' ? 'he' : 'en'}" dir="${lang === 'he' ? 'rtl' : 'ltr'}">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>${escapeHtml(t.sortingDailyDetails.detailsPanel.printWindowTitle)}</title>
+          <style>${HARVEST_PRINT_BASE_STYLE}</style>
+        </head>
+        <body>
+          <h1>${escapeHtml(t.sortingDailyDetails.detailsPanel.printWindowTitle)}</h1>
+          ${sortingDailyDetailsPrintRef.current.innerHTML}
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
+
+  const sortingDailyCategoryOrder = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const category of sortCategories) {
+      map.set(category.name, category.orderIndex);
+    }
+    return map;
+  }, [sortCategories]);
+
+  const sortingDailyAllCategoryNames = useMemo(
+    () => sortCategories.map((category) => category.name),
+    [sortCategories],
+  );
+
+  const handlePrintSortingDailyTable = () => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const { rows: dailyRows, categories } = buildIsraelSortingDailyRows(
+      filteredClassificationRows,
+      sortingDailyCategoryOrder,
+      sortingDailyAllCategoryNames,
+    );
+
+    const header = [
+      t.sortingDailyDetails.columns.dateGregorian,
+      t.sortingDailyDetails.columns.dateHebrew,
+      t.sortingDailyDetails.columns.fieldName,
+      ...categories,
+      t.sortingDailyDetails.columns.total,
+    ];
+
+    const rows = dailyRows.map((row) => [
+      formatHarvestGregorianDate(row.dateGregorian, lang),
+      row.dateHebrew,
+      row.fieldName,
+      ...categories.map((category) =>
+        numberFormatter.format(row.categoryTotals[category] ?? 0),
+      ),
+      numberFormatter.format(row.totalSorted),
+    ]);
+
+    const tableHeaderHtml = header
+      .map((label) => `<th>${escapeHtml(String(label))}</th>`)
+      .join('');
+    const tableRowsHtml = rows
+      .map(
+        (row) =>
+          `<tr>${row.map((value) => `<td>${escapeHtml(String(value))}</td>`).join('')}</tr>`,
+      )
+      .join('');
+
+    const printWindow = window.open('', '_blank', 'width=1100,height=760');
+    if (!printWindow) {
+      return;
+    }
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html lang="${lang === 'he' ? 'he' : 'en'}" dir="${lang === 'he' ? 'rtl' : 'ltr'}">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>${escapeHtml(t.sortingDailyDetails.printWindowTitle)}</title>
+          <style>${HARVEST_PRINT_BASE_STYLE}</style>
+        </head>
+        <body>
+          <h1>${escapeHtml(t.sortingDailyDetails.printWindowTitle)}</h1>
+          <table>
+            <thead><tr>${tableHeaderHtml}</tr></thead>
+            <tbody>${tableRowsHtml}</tbody>
+          </table>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
+
+  const handleExportSortingDailyTableToExcel = async () => {
+    const { rows: dailyRows, categories } = buildIsraelSortingDailyRows(
+      filteredClassificationRows,
+      sortingDailyCategoryOrder,
+      sortingDailyAllCategoryNames,
+    );
+
+    const header = [
+      t.sortingDailyDetails.columns.dateGregorian,
+      t.sortingDailyDetails.columns.dateHebrew,
+      t.sortingDailyDetails.columns.fieldName,
+      ...categories,
+      t.sortingDailyDetails.columns.total,
+    ];
+
+    const rows = dailyRows.map((row) => [
+      formatHarvestGregorianDate(row.dateGregorian, lang),
+      row.dateHebrew,
+      row.fieldName,
+      ...categories.map((category) => row.categoryTotals[category] ?? 0),
+      row.totalSorted,
+    ]);
+    const dateStamp = new Date().toISOString().slice(0, 10);
+
+    try {
+      await downloadStyledExcel({
+        sheetName: t.sortingDailyDetails.sheetName,
+        fileName: `israel-harvest-sorting-daily-${dateStamp}.xlsx`,
+        header,
+        rows,
+        rightToLeft: lang === 'he',
+      });
+    } catch {
+      window.alert(t.sortingDailyDetails.exportError);
+    }
+  };
 
   const handleEditSortingListRow = () => {
     if (!selectedSortingListRow) {
@@ -881,7 +1060,7 @@ export function IsraelHarvestPage() {
 
       setIsHarvestFormOpen(false);
       loadHarvestRecords();
-      if (isSortingSummaryTab || isSortingListTab) {
+      if (isSortingSummaryTab || isSortingListTab || isSortingDailyDetailsTab) {
         loadClassifications();
       }
     } catch {
@@ -907,7 +1086,7 @@ export function IsraelHarvestPage() {
       }
       setIsSortingFormOpen(false);
       loadHarvestRecords();
-      if (isSortingSummaryTab || isSortingListTab) {
+      if (isSortingSummaryTab || isSortingListTab || isSortingDailyDetailsTab) {
         loadClassifications();
       }
     } catch {
@@ -1120,7 +1299,7 @@ export function IsraelHarvestPage() {
   };
 
   const pageHeaderActions =
-    isHarvestSummaryTab || isSortingSummaryTab ? (
+    isHarvestSummaryTab || isSortingSummaryTab || isSortingDailyDetailsTab ? (
       <HarvestSummaryHeaderActions
         addHarvestLabel={t.pageControls.addHarvest}
         addSortingLabel={t.pageControls.addSorting}
@@ -1265,6 +1444,52 @@ export function IsraelHarvestPage() {
             })()}
             sortCategories={sortCategories}
             onFiltersChange={handleSortingSummaryFiltersChange}
+          />
+
+          <IsraelHarvestBulkFormModal
+            isOpen={isHarvestFormOpen}
+            t={t}
+            activeSeasonYearName={
+              seasons.find((season) => season.id === seasonFilterId)
+                ?.yearName ?? null
+            }
+            fields={fields}
+            fieldCategories={fieldCategories}
+            categories={sortCategories}
+            isSubmitting={isSubmittingHarvest}
+            onClose={() => setIsHarvestFormOpen(false)}
+            onSubmit={handleAddHarvest}
+          />
+
+          <IsraelSortingFormModal
+            isOpen={isSortingFormOpen}
+            t={t}
+            harvests={harvestRecords}
+            fieldCategories={fieldCategories}
+            categories={sortCategories}
+            isSubmitting={isSubmittingSorting}
+            onClose={() => setIsSortingFormOpen(false)}
+            onSubmit={handleAddSorting}
+          />
+        </>
+      ) : isSortingDailyDetailsTab ? (
+        <>
+          <IsraelHarvestSortingDailySection
+            lang={lang}
+            t={t}
+            filters={sortingSummaryFilters}
+            rows={filteredClassificationRows}
+            isLoading={isClassificationsLoading}
+            loadError={classificationsLoadError}
+            numberFormatter={numberFormatter}
+            sortCategories={sortCategories}
+            onFiltersChange={handleSortingSummaryFiltersChange}
+            onPrint={handlePrintSortingDailyTable}
+            onExport={handleExportSortingDailyTableToExcel}
+            selectedHarvestId={selectedSortingDailyHarvestId}
+            onSelectHarvestId={setSelectedSortingDailyHarvestId}
+            detailsPrintRef={sortingDailyDetailsPrintRef}
+            onPrintDetails={handlePrintSortingDailyDetails}
           />
 
           <IsraelHarvestBulkFormModal

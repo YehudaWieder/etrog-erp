@@ -10,6 +10,8 @@ import { IsraelHarvestService } from './harvest/israel-harvest.service';
 import { IsraelHarvestController } from './harvest/israel-harvest.controller';
 import { IsraelClassificationService } from './classification/israel-classification.service';
 import { IsraelClassificationController } from './classification/israel-classification.controller';
+import { IsraelStockService } from './stock/israel-stock.service';
+import { IsraelStockController } from './stock/israel-stock.controller';
 
 @Module({
   imports: [SeasonsModule],
@@ -19,6 +21,7 @@ import { IsraelClassificationController } from './classification/israel-classifi
     IsraelSortCategoriesController,
     IsraelHarvestController,
     IsraelClassificationController,
+    IsraelStockController,
   ],
   providers: [
     IsraelFieldsService,
@@ -26,6 +29,7 @@ import { IsraelClassificationController } from './classification/israel-classifi
     IsraelSortCategoriesService,
     IsraelHarvestService,
     IsraelClassificationService,
+    IsraelStockService,
   ],
 })
 export class IsraelModule {}

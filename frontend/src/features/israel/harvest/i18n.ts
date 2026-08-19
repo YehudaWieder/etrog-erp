@@ -253,6 +253,56 @@ export type IsraelHarvestI18n = {
       notes: string;
     };
   };
+  sortingDailyDetails: {
+    description: string;
+    loading: string;
+    loadError: string;
+    empty: string;
+    tableActionsLabel: string;
+    printTitle: string;
+    printAriaLabel: string;
+    exportTitle: string;
+    exportAriaLabel: string;
+    exportError: string;
+    printWindowTitle: string;
+    sheetName: string;
+    columns: {
+      dateGregorian: string;
+      dateHebrew: string;
+      fieldName: string;
+      total: string;
+    };
+    summary: {
+      totalSorted: string;
+      totalHarvests: string;
+    };
+    detailsColumnHeader: string;
+    detailsPanel: {
+      title: string;
+      closeLabel: string;
+      printLabel: string;
+      printWindowTitle: string;
+      openDetailsAriaLabel: string;
+      matrixTitle: string;
+      matrixColumns: {
+        category: string;
+        withPitam: string;
+        withoutPitam: string;
+        mixed: string;
+        total: string;
+      };
+      grandTotalLabel: string;
+      breakdown: {
+        grade: string;
+      };
+      gradeGroups: {
+        title: string;
+        groupColumn: string;
+        percentColumn: string;
+        ungrouped: string;
+      };
+    };
+  };
   dailyDetails: {
     description: string;
     loading: string;

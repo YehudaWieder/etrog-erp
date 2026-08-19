@@ -40,6 +40,8 @@ const NAV_ICON_MAP: Record<string, keyof typeof FAIcons> = {
   'fa-user-tie': 'FaUserTie',
   'fa-layer-group': 'FaLayerGroup',
   'fa-star': 'FaStar',
+  'fa-warehouse': 'FaWarehouse',
+  'fa-right-left': 'FaRightLeft',
 };
 
 export function resolveNavigationIcon(iconKey?: string) {
