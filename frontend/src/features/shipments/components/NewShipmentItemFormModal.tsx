@@ -1,5 +1,6 @@
 ﻿import { FaXmark } from 'react-icons/fa6';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
+import { CustomSelect } from '../../../components/ui/CustomSelect';
 import type { OpenBoxRecord } from '../../../services/boxesApi';
 import type { StockSource } from '../hooks/useNewShipmentItemForm';
 import styles from './styles/NewShipmentItemFormModal.module.css';
@@ -201,24 +202,16 @@ export function NewShipmentItemFormModal({
             {/* Box selection */}
             <div className={styles.field}>
               <label className={styles.label}>{t.boxLabel}</label>
-              <select
+              <CustomSelect
                 className="seasons-manager__year-input"
                 value={selectedBoxId}
-                onChange={(e) => onBoxIdChange(e.target.value)}
+                onChange={(value) => onBoxIdChange(value)}
                 disabled={isFormBusy}
-                autoFocus
-              >
-                <option value="">{t.boxPlaceholder}</option>
-                {Array.from(shipmentGroups.entries()).map(([shipmentNumber, opts]) => (
-                  <optgroup key={shipmentNumber} label={`משלוח ${shipmentNumber}`}>
-                    {opts.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
+                placeholder={t.boxPlaceholder}
+                options={Array.from(shipmentGroups.entries()).flatMap(([shipmentNumber, opts]) =>
+                  opts.map((opt) => ({ value: opt.value, label: opt.label, group: `משלוח ${shipmentNumber}` }))
+                )}
+              />
             </div>
 
             {/* Shipment number (read-only info) */}
@@ -265,19 +258,14 @@ export function NewShipmentItemFormModal({
             <div className={styles.sharedRow}>
               <div className={styles.field}>
                 <label className={styles.label}>{t.itemOwnershipLabel}</label>
-                <select
+                <CustomSelect
                   className="seasons-manager__year-input"
                   value={itemOwnership}
-                  onChange={(e) => onItemOwnershipChange(e.target.value)}
+                  onChange={(value) => onItemOwnershipChange(value)}
                   disabled={isFormBusy}
-                >
-                  <option value="">{t.itemOwnershipPlaceholder}</option>
-                  {ITEM_OWNERSHIP_OPTIONS.map((type) => (
-                    <option key={type} value={type}>
-                      {t.ownershipLabels[type]}
-                    </option>
-                  ))}
-                </select>
+                  placeholder={t.itemOwnershipPlaceholder}
+                  options={ITEM_OWNERSHIP_OPTIONS.map((type) => ({ value: type, label: t.ownershipLabels[type] }))}
+                />
               </div>
 
               {!isSharedUnassignedItem && (
@@ -286,17 +274,14 @@ export function NewShipmentItemFormModal({
                   {t.ownerNameLabel}
                 </label>
                 {itemOwnership === 'CUSTOMER' ? (
-                  <select
+                  <CustomSelect
                     className="seasons-manager__year-input"
                     value={customerId}
-                    onChange={(e) => onCustomerIdChange(e.target.value)}
+                    onChange={(value) => onCustomerIdChange(value)}
                     disabled={isFormBusy}
-                  >
-                    <option value="">{t.customerPlaceholder}</option>
-                    {availableCustomersFromInventory.map((cu) => (
-                      <option key={cu.id} value={String(cu.id)}>{cu.name}</option>
-                    ))}
-                  </select>
+                    placeholder={t.customerPlaceholder}
+                    options={availableCustomersFromInventory.map((cu) => ({ value: String(cu.id), label: cu.name }))}
+                  />
                 ) : isSharedCustomItem ? (
                   <input
                     className="seasons-manager__year-input"
@@ -307,17 +292,14 @@ export function NewShipmentItemFormModal({
                     disabled={isFormBusy}
                   />
                 ) : (
-                  <select
+                  <CustomSelect
                     className="seasons-manager__year-input"
                     value={traderId}
-                    onChange={(e) => onTraderIdChange(e.target.value)}
+                    onChange={(value) => onTraderIdChange(value)}
                     disabled={isFormBusy || isInventoryLoading || itemOwnership !== 'TRADER'}
-                  >
-                    <option value="">{t.traderPlaceholder}</option>
-                    {availableTradersFromInventory.map((tr) => (
-                      <option key={tr.id} value={String(tr.id)}>{tr.name}</option>
-                    ))}
-                  </select>
+                    placeholder={t.traderPlaceholder}
+                    options={availableTradersFromInventory.map((tr) => ({ value: String(tr.id), label: tr.name }))}
+                  />
                 )}
               </div>
               )}
@@ -329,15 +311,16 @@ export function NewShipmentItemFormModal({
             <div className={styles.sharedRow}>
               <div className={styles.field}>
                 <label className={styles.label}>{t.stockSourceLabel}</label>
-                <select
+                <CustomSelect
                   className="seasons-manager__year-input"
                   value={stockSource}
-                  onChange={(e) => onStockSourceChange(e.target.value as StockSource)}
+                  onChange={(value) => onStockSourceChange(value as StockSource)}
                   disabled={isFormBusy}
-                >
-                  <option value="GENERAL">{t.stockSourceLabels.GENERAL}</option>
-                  <option value="PRIVATE_SELECTION">{t.stockSourceLabels.PRIVATE_SELECTION}</option>
-                </select>
+                  options={[
+                    { value: 'GENERAL', label: t.stockSourceLabels.GENERAL },
+                    { value: 'PRIVATE_SELECTION', label: t.stockSourceLabels.PRIVATE_SELECTION },
+                  ]}
+                />
               </div>
             </div>
           )}
@@ -357,31 +340,23 @@ export function NewShipmentItemFormModal({
                   disabled={isFormBusy}
                 />
               ) : isCustomerItem ? (
-                <select
+                <CustomSelect
                   className="seasons-manager__year-input"
                   value={customerCategoryId}
-                  onChange={(e) => onCustomerCategoryIdChange(e.target.value)}
+                  onChange={(value) => onCustomerCategoryIdChange(value)}
                   disabled={isFormBusy || isInventoryLoading || availableCustomerCategories.length === 0}
-                >
-                  <option value="">{isInventoryLoading ? t.loadingInventory : t.categoryPlaceholder}</option>
-                  {availableCustomerCategories.map((cat) => (
-                    <option key={cat.id} value={String(cat.id)}>
-                      {cat.name} - {cat.grade}
-                    </option>
-                  ))}
-                </select>
+                  placeholder={isInventoryLoading ? t.loadingInventory : t.categoryPlaceholder}
+                  options={availableCustomerCategories.map((cat) => ({ value: String(cat.id), label: `${cat.name} - ${cat.grade}` }))}
+                />
               ) : (
-                <select
+                <CustomSelect
                   className="seasons-manager__year-input"
                   value={traderCategoryId}
-                  onChange={(e) => onTraderCategoryIdChange(e.target.value)}
+                  onChange={(value) => onTraderCategoryIdChange(value)}
                   disabled={isFormBusy || isInventoryLoading || (!isTraderItem && !isUnassignedBox && !isSharedUnassignedItem) || availableTraderCategories.length === 0}
-                >
-                  <option value="">{isInventoryLoading ? t.loadingInventory : t.categoryPlaceholder}</option>
-                  {availableTraderCategories.map((cat) => (
-                    <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
-                  ))}
-                </select>
+                  placeholder={isInventoryLoading ? t.loadingInventory : t.categoryPlaceholder}
+                  options={availableTraderCategories.map((cat) => ({ value: String(cat.id), label: cat.name }))}
+                />
               )}
             </div>
 
@@ -402,36 +377,28 @@ export function NewShipmentItemFormModal({
                   {availableCustomerCategories.find((c) => String(c.id) === customerCategoryId)?.grade ?? ''}
                 </div>
               ) : (
-                <select
+                <CustomSelect
                   className="seasons-manager__year-input"
                   value={grade}
-                  onChange={(e) => onGradeChange(e.target.value)}
+                  onChange={(value) => onGradeChange(value)}
                   disabled={isFormBusy || isInventoryLoading || (!isTraderItem && !isUnassignedBox && !isSharedUnassignedItem) || !traderCategoryId || availableGrades.length === 0}
-                >
-                  <option value="">{t.gradePlaceholder}</option>
-                  {availableGrades.map((g) => (
-                    <option key={g} value={g}>{g}</option>
-                  ))}
-                </select>
+                  placeholder={t.gradePlaceholder}
+                  options={availableGrades.map((g) => ({ value: g, label: g }))}
+                />
               )}
             </div>
 
             {/* Pitam status */}
             <div className={styles.field}>
               <label className={styles.label}>{t.pitamStatusLabel}</label>
-              <select
+              <CustomSelect
                 className="seasons-manager__year-input"
                 value={pitamStatus}
-                onChange={(e) => onPitamStatusChange(e.target.value)}
+                onChange={(value) => onPitamStatusChange(value)}
                 disabled={isFormBusy || (!isCustomFreeText && (isInventoryLoading || availablePitamStatuses.length === 0 || (!isTraderItem && !isCustomerItem && !isUnassignedBox && !isSharedUnassignedItem)))}
-              >
-                <option value="">{t.pitamStatusPlaceholder}</option>
-                {(isCustomFreeText ? Object.keys(t.pitamStatusLabels) : availablePitamStatuses).map((ps) => (
-                  <option key={ps} value={ps}>
-                    {t.pitamStatusLabels[ps] ?? ps}
-                  </option>
-                ))}
-              </select>
+                placeholder={t.pitamStatusPlaceholder}
+                options={(isCustomFreeText ? Object.keys(t.pitamStatusLabels) : availablePitamStatuses).map((ps) => ({ value: ps, label: t.pitamStatusLabels[ps] ?? ps }))}
+              />
             </div>
 
             {/* Quantity */}

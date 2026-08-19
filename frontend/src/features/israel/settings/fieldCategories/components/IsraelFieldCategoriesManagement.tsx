@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaXmark } from 'react-icons/fa6';
 import { ConfirmDialog } from '../../../../../components/ui/ConfirmDialog';
+import { CustomSelect } from '../../../../../components/ui/CustomSelect';
 import { GlobalScopedFilters } from '../../../../../components/ui/GlobalScopedFilters';
 import ManagementCardsGrid from '../../../../../components/ui/ManagementCardsGrid';
 import ManagementSelectableCard from '../../../../../components/ui/ManagementSelectableCard';
@@ -159,36 +160,34 @@ const IsraelFieldCategoriesManagement: React.FC<
             <div className={styles.formGrid}>
               <div className={styles.field}>
                 <label className={styles.label}>{t.fieldLabel}</label>
-                <select
+                <CustomSelect
                   className="seasons-manager__year-input"
-                  value={formState.fieldId}
+                  value={String(formState.fieldId)}
                   disabled={isEditDialogOpen}
-                  onChange={(event) => {
+                  onChange={(value) => {
                     setFormState((previous) => ({
                       ...previous,
-                      fieldId: event.target.value
-                        ? Number(event.target.value)
-                        : '',
+                      fieldId: value ? Number(value) : '',
                     }));
                   }}
-                >
-                  <option value="" disabled>
-                    {t.selectField}
-                  </option>
-                  {isEditDialogOpen && selectedCategory ? (
-                    <option value={selectedCategory.fieldId}>
-                      {selectedCategory.field?.name ??
-                        fieldById.get(selectedCategory.fieldId) ??
-                        ''}
-                    </option>
-                  ) : (
-                    sortedFields.map((field) => (
-                      <option key={field.id} value={field.id}>
-                        {field.name}
-                      </option>
-                    ))
-                  )}
-                </select>
+                  placeholder={t.selectField}
+                  options={
+                    isEditDialogOpen && selectedCategory
+                      ? [
+                          {
+                            value: String(selectedCategory.fieldId),
+                            label:
+                              selectedCategory.field?.name ??
+                              fieldById.get(selectedCategory.fieldId) ??
+                              '',
+                          },
+                        ]
+                      : sortedFields.map((field) => ({
+                          value: String(field.id),
+                          label: field.name,
+                        }))
+                  }
+                />
               </div>
 
               <div className={styles.field}>
@@ -227,25 +226,21 @@ const IsraelFieldCategoriesManagement: React.FC<
 
               <div className={styles.field}>
                 <label className={styles.label}>{t.currencyLabel}</label>
-                <select
+                <CustomSelect
                   className="seasons-manager__year-input"
                   value={formState.currency}
-                  onChange={(event) => {
+                  onChange={(value) => {
                     setFormState((previous) => ({
                       ...previous,
-                      currency: event.target.value as Currency | '',
+                      currency: value as Currency | '',
                     }));
                   }}
-                >
-                  <option value="" disabled>
-                    {t.selectCurrency}
-                  </option>
-                  {CURRENCIES.map((currency) => (
-                    <option key={currency} value={currency}>
-                      {currency}
-                    </option>
-                  ))}
-                </select>
+                  placeholder={t.selectCurrency}
+                  options={CURRENCIES.map((currency) => ({
+                    value: currency,
+                    label: currency,
+                  }))}
+                />
               </div>
             </div>
 

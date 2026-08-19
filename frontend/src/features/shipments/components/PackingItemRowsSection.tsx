@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FaTrashCan } from 'react-icons/fa6';
+import { CustomSelect } from '../../../components/ui/CustomSelect';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
 import type { Trader } from '../../../services/tradersApi';
 import type { Customer } from '../../../services/customersApi';
@@ -378,11 +379,11 @@ export function PackingItemRowsSection({
               ) : isSharedBox ? (
                 <div className={styles.field}>
                   <label className={styles.label}>{fieldsT.itemOwnershipLabel}</label>
-                  <select
+                  <CustomSelect
                     className="seasons-manager__year-input"
                     value={draft.itemOwnership}
-                    onChange={(e) => onUpdateRow(draft.id, {
-                      itemOwnership: e.target.value,
+                    onChange={(value) => onUpdateRow(draft.id, {
+                      itemOwnership: value,
                       stockSource: '',
                       traderId: '',
                       customerId: '',
@@ -393,12 +394,12 @@ export function PackingItemRowsSection({
                       quantity: '',
                       quantities: createEmptyGradeQuantityMatrix(),
                     })}
-                  >
-                    <option value="">{fieldsT.itemOwnershipPlaceholder}</option>
-                    {ITEM_OWNERSHIP_OPTIONS.map((type) => (
-                      <option key={type} value={type}>{fieldsT.ownershipLabels[type]}</option>
-                    ))}
-                  </select>
+                    placeholder={fieldsT.itemOwnershipPlaceholder}
+                    options={ITEM_OWNERSHIP_OPTIONS.map((type) => ({
+                      value: type,
+                      label: fieldsT.ownershipLabels[type],
+                    }))}
+                  />
                 </div>
               ) : null}
 
@@ -406,16 +407,13 @@ export function PackingItemRowsSection({
                 <div className={styles.field}>
                   <label className={styles.label}>{fieldsT.ownerNameLabel}</label>
                   {draft.itemOwnership === 'CUSTOMER' ? (
-                    <select
+                    <CustomSelect
                       className="seasons-manager__year-input"
                       value={draft.customerId}
-                      onChange={(e) => onUpdateRow(draft.id, { customerId: e.target.value, customerCategoryId: '', quantities: createEmptyGradeQuantityMatrix() })}
-                    >
-                      <option value="">{fieldsT.customerPlaceholder}</option>
-                      {customers.map((c) => (
-                        <option key={c.id} value={String(c.id)}>{c.customerName}</option>
-                      ))}
-                    </select>
+                      onChange={(value) => onUpdateRow(draft.id, { customerId: value, customerCategoryId: '', quantities: createEmptyGradeQuantityMatrix() })}
+                      placeholder={fieldsT.customerPlaceholder}
+                      options={customers.map((c) => ({ value: String(c.id), label: c.customerName }))}
+                    />
                   ) : isSharedCustomItem ? (
                     <input
                       className="seasons-manager__year-input"
@@ -425,16 +423,13 @@ export function PackingItemRowsSection({
                       placeholder={fieldsT.ownerNameLabel}
                     />
                   ) : (
-                    <select
+                    <CustomSelect
                       className="seasons-manager__year-input"
                       value={draft.traderId}
-                      onChange={(e) => onUpdateRow(draft.id, { traderId: e.target.value, traderCategoryId: '', quantities: createEmptyGradeQuantityMatrix() })}
-                    >
-                      <option value="">{fieldsT.traderPlaceholder}</option>
-                      {traders.map((tr) => (
-                        <option key={tr.id} value={String(tr.id)}>{tr.name}</option>
-                      ))}
-                    </select>
+                      onChange={(value) => onUpdateRow(draft.id, { traderId: value, traderCategoryId: '', quantities: createEmptyGradeQuantityMatrix() })}
+                      placeholder={fieldsT.traderPlaceholder}
+                      options={traders.map((tr) => ({ value: String(tr.id), label: tr.name }))}
+                    />
                   )}
                 </div>
               ) : null}
@@ -442,15 +437,16 @@ export function PackingItemRowsSection({
               {view.isTraderItem ? (
                 <div className={styles.field}>
                   <label className={styles.label}>{fieldsT.stockSourceLabel}</label>
-                  <select
+                  <CustomSelect
                     className="seasons-manager__year-input"
                     value={draft.stockSource}
-                    onChange={(e) => onUpdateRow(draft.id, { stockSource: e.target.value as StockSource, traderCategoryId: '', quantities: createEmptyGradeQuantityMatrix() })}
-                  >
-                    <option value="">{fieldsT.stockSourcePlaceholder}</option>
-                    <option value="GENERAL">{fieldsT.stockSourceLabels.GENERAL}</option>
-                    <option value="PRIVATE_SELECTION">{fieldsT.stockSourceLabels.PRIVATE_SELECTION}</option>
-                  </select>
+                    onChange={(value) => onUpdateRow(draft.id, { stockSource: value as StockSource, traderCategoryId: '', quantities: createEmptyGradeQuantityMatrix() })}
+                    placeholder={fieldsT.stockSourcePlaceholder}
+                    options={[
+                      { value: 'GENERAL', label: fieldsT.stockSourceLabels.GENERAL },
+                      { value: 'PRIVATE_SELECTION', label: fieldsT.stockSourceLabels.PRIVATE_SELECTION },
+                    ]}
+                  />
                 </div>
               ) : null}
 
@@ -465,29 +461,29 @@ export function PackingItemRowsSection({
                     placeholder={fieldsT.categoryPlaceholder}
                   />
                 ) : view.isCustomerItem ? (
-                  <select
+                  <CustomSelect
                     className="seasons-manager__year-input"
                     value={draft.customerCategoryId}
-                    onChange={(e) => onUpdateRow(draft.id, { customerCategoryId: e.target.value, quantities: createEmptyGradeQuantityMatrix() })}
+                    onChange={(value) => onUpdateRow(draft.id, { customerCategoryId: value, quantities: createEmptyGradeQuantityMatrix() })}
                     disabled={isLoadingInventory || view.availableCustomerCategories.length === 0}
-                  >
-                    <option value="">{isLoadingInventory ? fieldsT.loadingInventory : fieldsT.categoryPlaceholder}</option>
-                    {view.availableCustomerCategories.map((cat) => (
-                      <option key={cat.id} value={String(cat.id)}>{cat.name} - {cat.grade}</option>
-                    ))}
-                  </select>
+                    placeholder={isLoadingInventory ? fieldsT.loadingInventory : fieldsT.categoryPlaceholder}
+                    options={view.availableCustomerCategories.map((cat) => ({
+                      value: String(cat.id),
+                      label: `${cat.name} - ${cat.grade}`,
+                    }))}
+                  />
                 ) : (
-                  <select
+                  <CustomSelect
                     className="seasons-manager__year-input"
                     value={draft.traderCategoryId}
-                    onChange={(e) => onUpdateRow(draft.id, { traderCategoryId: e.target.value, quantities: createEmptyGradeQuantityMatrix() })}
+                    onChange={(value) => onUpdateRow(draft.id, { traderCategoryId: value, quantities: createEmptyGradeQuantityMatrix() })}
                     disabled={isLoadingInventory || view.availableTraderCategories.length === 0}
-                  >
-                    <option value="">{isLoadingInventory ? fieldsT.loadingInventory : fieldsT.categoryPlaceholder}</option>
-                    {view.availableTraderCategories.map((cat) => (
-                      <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
-                    ))}
-                  </select>
+                    placeholder={isLoadingInventory ? fieldsT.loadingInventory : fieldsT.categoryPlaceholder}
+                    options={view.availableTraderCategories.map((cat) => ({
+                      value: String(cat.id),
+                      label: cat.name,
+                    }))}
+                  />
                 )}
               </div>
             </div>
@@ -507,16 +503,16 @@ export function PackingItemRowsSection({
 
                 <div className={styles.field}>
                   <label className={styles.label}>{fieldsT.pitamStatusLabel}</label>
-                  <select
+                  <CustomSelect
                     className="seasons-manager__year-input"
                     value={draft.pitamStatus}
-                    onChange={(e) => onUpdateRow(draft.id, { pitamStatus: e.target.value })}
-                  >
-                    <option value="">{fieldsT.pitamStatusPlaceholder}</option>
-                    {Object.keys(fieldsT.pitamStatusLabels).map((ps) => (
-                      <option key={ps} value={ps}>{fieldsT.pitamStatusLabels[ps] ?? ps}</option>
-                    ))}
-                  </select>
+                    onChange={(value) => onUpdateRow(draft.id, { pitamStatus: value })}
+                    placeholder={fieldsT.pitamStatusPlaceholder}
+                    options={Object.keys(fieldsT.pitamStatusLabels).map((ps) => ({
+                      value: ps,
+                      label: fieldsT.pitamStatusLabels[ps] ?? ps,
+                    }))}
+                  />
                 </div>
 
                 <div className={styles.field}>

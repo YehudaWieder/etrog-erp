@@ -4,6 +4,7 @@ import ManagementCardsGrid from '../../../components/ui/ManagementCardsGrid';
 import ManagementSelectableCard from '../../../components/ui/ManagementSelectableCard';
 import SettingsInnerTemplate from '../../../components/ui/SettingsInnerTemplate';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
+import { CustomSelect } from '../../../components/ui/CustomSelect';
 import seasonCardStyles from '../../seasons/components/styles/SeasonsCardsSection.module.css';
 import type { Lang } from '../../settings/settingsPage.types';
 import feedbackStyles from '../../settings/styles/SettingsWorkspaceFeedback.module.css';
@@ -129,17 +130,16 @@ const PricingManagement: React.FC<Props> = ({ lang, onHeaderStateChange }) => {
             <div className="management-form-grid">
               <div>
                 <label htmlFor="edit-currency">{t.currencyLabel}</label>
-                <select
+                <CustomSelect
                   id="edit-currency"
                   className="seasons-manager__year-input"
                   value={currency}
-                  onChange={(e) => setCurrency(e.target.value as typeof currency)}
-                >
-                  <option value="">—</option>
-                  {CURRENCIES.map((c) => (
-                    <option key={c} value={c}>{t.currencyOptions[c]}</option>
-                  ))}
-                </select>
+                  onChange={(value) => setCurrency(value as typeof currency)}
+                  options={[
+                    { value: '', label: '—' },
+                    ...CURRENCIES.map((c) => ({ value: c, label: t.currencyOptions[c] })),
+                  ]}
+                />
               </div>
               <div>
                 <label htmlFor="edit-unit-price">{t.unitPriceLabel}</label>

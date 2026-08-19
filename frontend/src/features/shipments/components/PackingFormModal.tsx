@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { FaXmark } from 'react-icons/fa6';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
 import { TopLoadingBar } from '../../../components/ui/TopLoadingBar';
+import { CustomSelect } from '../../../components/ui/CustomSelect';
 import type { BoxStatus } from '../../../services/boxesApi';
 import type { ShipmentRecord } from '../../../services/shipmentsApi';
 import type { Trader } from '../../../services/tradersApi';
@@ -473,19 +474,14 @@ export function PackingFormModal({
 
           <div className={gridStyles.field}>
             <label className={gridStyles.label}>{t.shipmentLabel}</label>
-            <select
+            <CustomSelect
               className="seasons-manager__year-input"
               value={selectedShipmentId}
-              onChange={(e) => onShipmentIdChange(e.target.value)}
+              onChange={(v) => onShipmentIdChange(v)}
               disabled={isFieldsDisabled}
-            >
-              <option value="">{t.shipmentPlaceholder}</option>
-              {shipments.map((s) => (
-                <option key={s.id} value={String(s.id)}>
-                  {s.shipmentNumber}
-                </option>
-              ))}
-            </select>
+              placeholder={t.shipmentPlaceholder}
+              options={shipments.map((s) => ({ value: String(s.id), label: String(s.shipmentNumber) }))}
+            />
           </div>
 
           <div className={gridStyles.field}>
@@ -512,18 +508,16 @@ export function PackingFormModal({
           {!isChangingShipment ? (
             <div className={gridStyles.field}>
               <label className={gridStyles.label}>{t.statusLabel}</label>
-              <select
+              <CustomSelect
                 className="seasons-manager__year-input"
                 value={status}
-                onChange={(e) => onStatusChange(e.target.value as BoxStatus)}
+                onChange={(v) => onStatusChange(v as BoxStatus)}
                 disabled={isFieldsDisabled}
-              >
-                {(status === 'SHIPPED' || status === 'DELIVERED' ? BOX_STATUSES_SHIPPED_ONLY : ['OPEN', 'CLOSED'] as BoxStatus[]).map((s) => (
-                  <option key={s} value={s}>
-                    {t.statusOptions[s]}
-                  </option>
-                ))}
-              </select>
+                options={(status === 'SHIPPED' || status === 'DELIVERED' ? BOX_STATUSES_SHIPPED_ONLY : ['OPEN', 'CLOSED'] as BoxStatus[]).map((s) => ({
+                  value: s,
+                  label: t.statusOptions[s],
+                }))}
+              />
             </div>
           ) : null}
 
@@ -532,19 +526,14 @@ export function PackingFormModal({
               {ownershipType !== 'EXTERNAL_TRADER' ? (
                 <div className={gridStyles.field}>
                   <label className={gridStyles.label}>{t.boxTypeLabel}</label>
-                  <select
+                  <CustomSelect
                     className="seasons-manager__year-input"
                     value={boxType}
-                    onChange={(e) => onBoxTypeChange(e.target.value)}
+                    onChange={(v) => onBoxTypeChange(v)}
                     disabled={isFieldsDisabled}
-                  >
-                    <option value="">{t.boxTypePlaceholder}</option>
-                    {BOX_TYPES.map((type) => (
-                      <option key={type} value={type}>
-                        {t.boxTypeOptions[type]}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder={t.boxTypePlaceholder}
+                    options={BOX_TYPES.map((type) => ({ value: type, label: t.boxTypeOptions[type] }))}
+                  />
                 </div>
               ) : null}
 
@@ -573,19 +562,14 @@ export function PackingFormModal({
                     {t.ownershipTypeOptions[ownershipType as BoxOwnership] || ownershipType || '—'}
                   </div>
                 ) : (
-                  <select
+                  <CustomSelect
                     className="seasons-manager__year-input"
                     value={ownershipType}
-                    onChange={(e) => onOwnershipTypeChange(e.target.value)}
+                    onChange={(v) => onOwnershipTypeChange(v)}
                     disabled={isFieldsDisabled}
-                  >
-                    <option value="">{t.ownershipTypePlaceholder}</option>
-                    {OWNERSHIP_TYPES.map((type) => (
-                      <option key={type} value={type}>
-                        {t.ownershipTypeOptions[type]}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder={t.ownershipTypePlaceholder}
+                    options={OWNERSHIP_TYPES.map((type) => ({ value: type, label: t.ownershipTypeOptions[type] }))}
+                  />
                 )}
               </div>
 
@@ -597,19 +581,14 @@ export function PackingFormModal({
                       {traders.find((tr) => String(tr.id) === traderId)?.name || traderId || '—'}
                     </div>
                   ) : (
-                    <select
+                    <CustomSelect
                       className="seasons-manager__year-input"
                       value={traderId}
-                      onChange={(e) => onTraderIdChange(e.target.value)}
+                      onChange={(v) => onTraderIdChange(v)}
                       disabled={isFieldsDisabled}
-                    >
-                      <option value="">{t.traderPlaceholder}</option>
-                      {traders.map((trader) => (
-                        <option key={trader.id} value={String(trader.id)}>
-                          {trader.name}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder={t.traderPlaceholder}
+                      options={traders.map((trader) => ({ value: String(trader.id), label: trader.name }))}
+                    />
                   )}
                 </div>
               ) : null}
@@ -622,19 +601,14 @@ export function PackingFormModal({
                       {customers.find((c) => String(c.id) === customerId)?.customerName || customerId || '—'}
                     </div>
                   ) : (
-                    <select
+                    <CustomSelect
                       className="seasons-manager__year-input"
                       value={customerId}
-                      onChange={(e) => onCustomerIdChange(e.target.value)}
+                      onChange={(v) => onCustomerIdChange(v)}
                       disabled={isFieldsDisabled}
-                    >
-                      <option value="">{t.customerPlaceholder}</option>
-                      {customers.map((customer) => (
-                        <option key={customer.id} value={String(customer.id)}>
-                          {customer.customerName}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder={t.customerPlaceholder}
+                      options={customers.map((customer) => ({ value: String(customer.id), label: customer.customerName }))}
+                    />
                   )}
                 </div>
               ) : null}

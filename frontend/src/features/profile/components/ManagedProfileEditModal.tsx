@@ -1,5 +1,6 @@
 import { FaFloppyDisk, FaXmark } from 'react-icons/fa6';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
+import { CustomSelect } from '../../../components/ui/CustomSelect';
 import type { AuthUserListItem } from '../../../services/authService';
 import type { ProfileI18nLabels, ProfileLang } from '../profilePage.types';
 import styles from './styles/ProfileFeature.module.css';
@@ -74,25 +75,32 @@ export function ManagedProfileEditModal({
 
           <label className="form-group">
             <span className="form-label">{t.profileCard.fields.role}</span>
-            <select className="form-input" value={managedRole} onChange={(event) => onRoleChange(event.target.value)} disabled={isUpdatingManagedProfile}>
-              <option value="WORKER">{t.managedEditProfile.roleLabels.worker}</option>
-              <option value="EDITOR">{t.managedEditProfile.roleLabels.editor}</option>
-              <option value="MANAGER">{t.managedEditProfile.roleLabels.manager}</option>
-              <option value="OWNER">{t.managedEditProfile.roleLabels.owner}</option>
-            </select>
+            <CustomSelect
+              className="form-input"
+              value={managedRole}
+              onChange={(value) => onRoleChange(value)}
+              disabled={isUpdatingManagedProfile}
+              options={[
+                { value: 'WORKER', label: t.managedEditProfile.roleLabels.worker },
+                { value: 'EDITOR', label: t.managedEditProfile.roleLabels.editor },
+                { value: 'MANAGER', label: t.managedEditProfile.roleLabels.manager },
+                { value: 'OWNER', label: t.managedEditProfile.roleLabels.owner },
+              ]}
+            />
           </label>
 
           <label className="form-group">
             <span className="form-label">{t.profileCard.fields.status}</span>
-            <select
+            <CustomSelect
               className="form-input"
               value={managedIsActive ? 'active' : 'inactive'}
-              onChange={(event) => onStatusChange(event.target.value === 'active')}
+              onChange={(value) => onStatusChange(value === 'active')}
               disabled={isUpdatingManagedProfile}
-            >
-              <option value="active">{t.profileCard.active}</option>
-              <option value="inactive">{t.profileCard.inactive}</option>
-            </select>
+              options={[
+                { value: 'active', label: t.profileCard.active },
+                { value: 'inactive', label: t.profileCard.inactive },
+              ]}
+            />
           </label>
         </div>
 

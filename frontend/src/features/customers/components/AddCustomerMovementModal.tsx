@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { FaArrowRight, FaArrowLeft } from 'react-icons/fa6';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
 import { TopLoadingBar } from '../../../components/ui/TopLoadingBar';
+import { CustomSelect } from '../../../components/ui/CustomSelect';
 import type { Customer } from '../../../services/customersApi';
 import type { Trader } from '../../../services/tradersApi';
 import type { TraderCategoryWithShares } from '../../../services/traderCategoriesApi';
@@ -493,35 +494,28 @@ export function AddCustomerMovementModal({
               <div style={ROW_STYLE}>
                 <div style={FIELD_STYLE}>
                   <label style={LABEL_STYLE}>{f.customerLabel}</label>
-                  <select
+                  <CustomSelect
                     className="seasons-manager__year-input"
                     value={customerId}
-                    onChange={(event) => setCustomerId(event.target.value)}
-                  >
-                    <option value="">{f.customerPlaceholder}</option>
-                    {sortedCustomers.map((customer) => (
-                      <option key={customer.id} value={String(customer.id)}>
-                        {customer.customerName}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(value) => setCustomerId(value)}
+                    placeholder={f.customerPlaceholder}
+                    options={sortedCustomers.map((customer) => ({ value: String(customer.id), label: customer.customerName }))}
+                  />
                 </div>
 
                 <div style={FIELD_STYLE}>
                   <label style={LABEL_STYLE}>{f.customerCategoryLabel}</label>
-                  <select
+                  <CustomSelect
                     className="seasons-manager__year-input"
                     value={customerCategoryId}
-                    onChange={(event) => setCustomerCategoryId(event.target.value)}
+                    onChange={(value) => setCustomerCategoryId(value)}
                     disabled={!isCategoryEnabled || availableCategoryOptions.length === 0}
-                  >
-                    <option value="">{f.customerCategoryPlaceholder}</option>
-                    {availableCategoryOptions.map((cat) => (
-                      <option key={cat.id} value={String(cat.id)}>
-                        {cat.name}{cat.grade ? ` - ${cat.grade}` : ''}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder={f.customerCategoryPlaceholder}
+                    options={availableCategoryOptions.map((cat) => ({
+                      value: String(cat.id),
+                      label: `${cat.name}${cat.grade ? ` - ${cat.grade}` : ''}`,
+                    }))}
+                  />
                 </div>
 
                 <div style={FIELD_STYLE}>
@@ -538,19 +532,14 @@ export function AddCustomerMovementModal({
 
                 <div style={FIELD_STYLE}>
                   <label style={LABEL_STYLE}>{f.pitamStatusLabel}</label>
-                  <select
+                  <CustomSelect
                     className="seasons-manager__year-input"
                     value={pitamStatus}
-                    onChange={(event) => setPitamStatus(event.target.value as PitamStatus | '')}
+                    onChange={(value) => setPitamStatus(value as PitamStatus | '')}
                     disabled={!isPitamEnabled || availablePitamOptions.length === 0}
-                  >
-                    <option value="">{f.pitamStatusPlaceholder}</option>
-                    {availablePitamOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {f.pitamStatuses[option] || option}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder={f.pitamStatusPlaceholder}
+                    options={availablePitamOptions.map((option) => ({ value: option, label: f.pitamStatuses[option] || option }))}
+                  />
                 </div>
               </div>
 
@@ -587,11 +576,11 @@ export function AddCustomerMovementModal({
                 <div style={ROW_STYLE}>
                   <div style={FIELD_STYLE}>
                     <label style={LABEL_STYLE}>{f.traderLabel}</label>
-                    <select
+                    <CustomSelect
                       className="seasons-manager__year-input"
                       value={traderId}
-                      onChange={(event) => {
-                        setTraderId(event.target.value);
+                      onChange={(value) => {
+                        setTraderId(value);
                         setTraderCategoryId('');
                         setGrade('');
                         setQuantity('');
@@ -600,45 +589,37 @@ export function AddCustomerMovementModal({
                         setToPitamStatus('');
                       }}
                       disabled={!isTraderEnabled}
-                    >
-                      <option value="">{f.traderPlaceholder}</option>
-                      <option value={GENERAL_TRADER_VALUE}>{f.generalOption}</option>
-                      {sortedTraders.map((trader) => (
-                        <option key={trader.id} value={String(trader.id)}>
-                          {trader.name}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder={f.traderPlaceholder}
+                      options={[
+                        { value: GENERAL_TRADER_VALUE, label: f.generalOption },
+                        ...sortedTraders.map((trader) => ({ value: String(trader.id), label: trader.name })),
+                      ]}
+                    />
                   </div>
 
                   <div style={FIELD_STYLE}>
                     <label style={LABEL_STYLE}>{f.traderCategoryLabel}</label>
-                    <select
+                    <CustomSelect
                       className="seasons-manager__year-input"
                       value={traderCategoryId}
-                      onChange={(event) => {
-                        setTraderCategoryId(event.target.value);
+                      onChange={(value) => {
+                        setTraderCategoryId(value);
                         setGrade('');
                         setQuantity('');
                       }}
                       disabled={!isTraderCategoryEnabled}
-                    >
-                      <option value="">{f.traderCategoryPlaceholder}</option>
-                      {traderCategories.map((cat) => (
-                        <option key={cat.id} value={String(cat.id)}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder={f.traderCategoryPlaceholder}
+                      options={traderCategories.map((cat) => ({ value: String(cat.id), label: cat.name }))}
+                    />
                   </div>
 
                   <div style={FIELD_STYLE}>
                     <label style={LABEL_STYLE}>{f.gradeLabel}</label>
-                    <select
+                    <CustomSelect
                       className="seasons-manager__year-input"
                       value={grade}
-                      onChange={(event) => {
-                        const nextGrade = event.target.value;
+                      onChange={(value) => {
+                        const nextGrade = value;
                         setGrade(nextGrade);
                         setQuantity('');
                         // Default the remains-in-Italy checkbox to checked when the destination
@@ -649,28 +630,24 @@ export function AddCustomerMovementModal({
                         setTransferToRemainsInItalyGradeV(defaultChecked && nextGrade === GRADE_OPTIONS[5]);
                       }}
                       disabled={!isGradeEnabled}
-                    >
-                      <option value="">{f.gradePlaceholder}</option>
-                      {GRADE_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder={f.gradePlaceholder}
+                      options={GRADE_OPTIONS.map((option) => ({ value: option, label: option }))}
+                    />
                   </div>
 
                   {pitamStatus === 'MIXED' ? (
                     <div style={FIELD_STYLE}>
                       <label style={LABEL_STYLE}>{f.toPitamStatusLabel}</label>
-                      <select
+                      <CustomSelect
                         className="seasons-manager__year-input"
                         value={toPitamStatus}
-                        onChange={(event) => setToPitamStatus(event.target.value as PitamStatus | '')}
-                      >
-                        <option value="">{f.pitamStatuses.MIXED}</option>
-                        <option value="WITH_PITAM">{f.pitamStatuses.WITH_PITAM}</option>
-                        <option value="WITHOUT_PITAM">{f.pitamStatuses.WITHOUT_PITAM}</option>
-                      </select>
+                        onChange={(value) => setToPitamStatus(value as PitamStatus | '')}
+                        options={[
+                          { value: '', label: f.pitamStatuses.MIXED },
+                          { value: 'WITH_PITAM', label: f.pitamStatuses.WITH_PITAM },
+                          { value: 'WITHOUT_PITAM', label: f.pitamStatuses.WITHOUT_PITAM },
+                        ]}
+                      />
                     </div>
                   ) : null}
                 </div>

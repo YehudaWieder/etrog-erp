@@ -1,5 +1,6 @@
 import { FaXmark } from 'react-icons/fa6';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
+import { CustomSelect } from '../../../components/ui/CustomSelect';
 import type { BoxStatus } from '../../../services/boxesApi';
 import type { ShipmentRecord } from '../../../services/shipmentsApi';
 import type { Trader } from '../../../services/tradersApi';
@@ -144,19 +145,14 @@ export function EditBoxFormModal({
         <div className={styles.formGrid}>
           <div className={styles.field}>
             <label className={styles.label}>{t.shipmentLabel}</label>
-            <select
+            <CustomSelect
               className="seasons-manager__year-input"
               value={selectedShipmentId}
-              onChange={(e) => onShipmentIdChange(e.target.value)}
+              onChange={(value) => onShipmentIdChange(value)}
               disabled={isLoadingOptions}
-            >
-              <option value="">{t.shipmentPlaceholder}</option>
-              {shipments.map((s) => (
-                <option key={s.id} value={String(s.id)}>
-                  {s.shipmentNumber}
-                </option>
-              ))}
-            </select>
+              placeholder={t.shipmentPlaceholder}
+              options={shipments.map((s) => ({ value: String(s.id), label: String(s.shipmentNumber) }))}
+            />
           </div>
 
           <div className={styles.field}>
@@ -182,17 +178,12 @@ export function EditBoxFormModal({
           {!isChangingShipment ? (
             <div className={styles.field}>
               <label className={styles.label}>{t.statusLabel}</label>
-              <select
+              <CustomSelect
                 className="seasons-manager__year-input"
                 value={status}
-                onChange={(e) => onStatusChange(e.target.value as BoxStatus)}
-              >
-                {(status === 'SHIPPED' || status === 'DELIVERED' ? BOX_STATUSES_SHIPPED_ONLY : ['OPEN', 'CLOSED'] as BoxStatus[]).map((s) => (
-                  <option key={s} value={s}>
-                    {t.statusOptions[s]}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) => onStatusChange(value as BoxStatus)}
+                options={(status === 'SHIPPED' || status === 'DELIVERED' ? BOX_STATUSES_SHIPPED_ONLY : ['OPEN', 'CLOSED'] as BoxStatus[]).map((s) => ({ value: s, label: t.statusOptions[s] }))}
+              />
             </div>
           ) : null}
 
@@ -201,18 +192,13 @@ export function EditBoxFormModal({
               {ownershipType !== 'EXTERNAL_TRADER' ? (
                 <div className={styles.field}>
                   <label className={styles.label}>{t.boxTypeLabel}</label>
-                  <select
+                  <CustomSelect
                     className="seasons-manager__year-input"
                     value={boxType}
-                    onChange={(e) => onBoxTypeChange(e.target.value)}
-                  >
-                    <option value="">{t.boxTypePlaceholder}</option>
-                    {BOX_TYPES.map((type) => (
-                      <option key={type} value={type}>
-                        {t.boxTypeOptions[type]}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(value) => onBoxTypeChange(value)}
+                    placeholder={t.boxTypePlaceholder}
+                    options={BOX_TYPES.map((type) => ({ value: type, label: t.boxTypeOptions[type] }))}
+                  />
                 </div>
               ) : null}
 
@@ -234,18 +220,13 @@ export function EditBoxFormModal({
                     {t.ownershipTypeOptions[ownershipType as BoxOwnership] || ownershipType || '—'}
                   </div>
                 ) : (
-                  <select
+                  <CustomSelect
                     className="seasons-manager__year-input"
                     value={ownershipType}
-                    onChange={(e) => onOwnershipTypeChange(e.target.value)}
-                  >
-                    <option value="">{t.ownershipTypePlaceholder}</option>
-                    {OWNERSHIP_TYPES.map((type) => (
-                      <option key={type} value={type}>
-                        {t.ownershipTypeOptions[type]}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(value) => onOwnershipTypeChange(value)}
+                    placeholder={t.ownershipTypePlaceholder}
+                    options={OWNERSHIP_TYPES.map((type) => ({ value: type, label: t.ownershipTypeOptions[type] }))}
+                  />
                 )}
               </div>
 
@@ -257,19 +238,14 @@ export function EditBoxFormModal({
                       {traders.find((tr) => String(tr.id) === traderId)?.name || traderId || '—'}
                     </div>
                   ) : (
-                    <select
+                    <CustomSelect
                       className="seasons-manager__year-input"
                       value={traderId}
-                      onChange={(e) => onTraderIdChange(e.target.value)}
+                      onChange={(value) => onTraderIdChange(value)}
                       disabled={isLoadingOptions}
-                    >
-                      <option value="">{t.traderPlaceholder}</option>
-                      {traders.map((trader) => (
-                        <option key={trader.id} value={String(trader.id)}>
-                          {trader.name}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder={t.traderPlaceholder}
+                      options={traders.map((trader) => ({ value: String(trader.id), label: trader.name }))}
+                    />
                   )}
                 </div>
               ) : null}
@@ -282,19 +258,14 @@ export function EditBoxFormModal({
                       {customers.find((c) => String(c.id) === customerId)?.customerName || customerId || '—'}
                     </div>
                   ) : (
-                    <select
+                    <CustomSelect
                       className="seasons-manager__year-input"
                       value={customerId}
-                      onChange={(e) => onCustomerIdChange(e.target.value)}
+                      onChange={(value) => onCustomerIdChange(value)}
                       disabled={isLoadingOptions}
-                    >
-                      <option value="">{t.customerPlaceholder}</option>
-                      {customers.map((customer) => (
-                        <option key={customer.id} value={String(customer.id)}>
-                          {customer.customerName}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder={t.customerPlaceholder}
+                      options={customers.map((customer) => ({ value: String(customer.id), label: customer.customerName }))}
+                    />
                   )}
                 </div>
               ) : null}

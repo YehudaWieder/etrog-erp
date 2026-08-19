@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { CustomSelect } from '../../../../../components/ui/CustomSelect';
 import { SubmitButton } from '../../../../../components/ui/SubmitButton';
 import { TopLoadingBar } from '../../../../../components/ui/TopLoadingBar';
 import type { IsraelHarvestRecord } from '../../../../../services/israelHarvestsApi';
@@ -246,20 +247,18 @@ export function IsraelSortingFormModal({
         >
           <label className={styles.selectionField}>
             <span>{sf.harvestLabel}</span>
-            <select
+            <CustomSelect
               className={`seasons-manager__year-input ${styles.compactSelect}`}
               value={harvestId}
-              onChange={(event) => handleHarvestChange(event.target.value)}
-              autoFocus
-            >
-              <option value="">{sf.harvestPlaceholder}</option>
-              {harvests.map((harvest) => (
-                <option key={harvest.id} value={harvest.id}>
-                  {harvest.field?.name ?? ''} —{' '}
-                  {harvest.dateHebrew || harvest.dateGregorian.slice(0, 10)}
-                </option>
-              ))}
-            </select>
+              onChange={(value) => handleHarvestChange(value)}
+              placeholder={sf.harvestPlaceholder}
+              options={harvests.map((harvest) => ({
+                value: String(harvest.id),
+                label: `${harvest.field?.name ?? ''} — ${
+                  harvest.dateHebrew || harvest.dateGregorian.slice(0, 10)
+                }`,
+              }))}
+            />
           </label>
 
           <label className={styles.summaryField}>

@@ -1,4 +1,5 @@
 import { SubmitButton } from '../../../../components/ui/SubmitButton';
+import { CustomSelect } from '../../../../components/ui/CustomSelect';
 import type { Customer } from '../../../../services/customersApi';
 import type { CustomerCategory } from '../../../../services/customerCategoriesApi';
 import type { ClassificationRecord } from '../../../../services/classificationsApi';
@@ -141,17 +142,14 @@ export function HarvestEditModal({
         <div className={`management-form-grid ${styles.grid} ${styles.gridPrimary}`}>
           <label className={styles.selectionField}>
             <span>{ed.fieldLabel}</span>
-            <select
+            <CustomSelect
               className="seasons-manager__year-input"
-              value={fieldId}
-              onChange={(e) => onFieldIdChange(Number(e.target.value))}
-              aria-label={ed.fieldLabel}
-            >
-              <option value={0} disabled>{ed.fieldPlaceholder}</option>
-              {fields.map((field) => (
-                <option key={field.id} value={field.id}>{field.name}</option>
-              ))}
-            </select>
+              value={fieldId === 0 ? '' : String(fieldId)}
+              onChange={(value) => onFieldIdChange(Number(value))}
+              ariaLabel={ed.fieldLabel}
+              placeholder={ed.fieldPlaceholder}
+              options={fields.map((field) => ({ value: String(field.id), label: field.name }))}
+            />
           </label>
 
           <label className={styles.summaryField}>

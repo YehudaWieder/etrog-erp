@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { CustomSelect } from '../../../../../components/ui/CustomSelect';
 import { SubmitButton } from '../../../../../components/ui/SubmitButton';
 import type { IsraelField } from '../../../../../services/israelFieldsApi';
 import type { IsraelFieldCategory } from '../../../../../services/israelFieldCategoriesApi';
@@ -291,23 +292,17 @@ export function IsraelHarvestEditModal({
         >
           <label className={styles.selectionField}>
             <span>{form.fieldLabel}</span>
-            <select
+            <CustomSelect
               className="seasons-manager__year-input"
               value={fieldId}
-              onChange={(event) => setFieldId(event.target.value)}
-              aria-label={form.fieldLabel}
-              autoFocus
-            >
-              <option value="">{form.fieldPlaceholder}</option>
-              {fields.map((field) => (
-                <option
-                  key={`israel-harvest-edit-field-${field.id}`}
-                  value={String(field.id)}
-                >
-                  {field.name}
-                </option>
-              ))}
-            </select>
+              onChange={(value) => setFieldId(value)}
+              ariaLabel={form.fieldLabel}
+              placeholder={form.fieldPlaceholder}
+              options={fields.map((field) => ({
+                value: String(field.id),
+                label: field.name,
+              }))}
+            />
           </label>
 
           <label className={styles.summaryField}>

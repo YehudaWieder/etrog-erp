@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ConfirmDialog } from '../../../../components/ui/ConfirmDialog';
+import { CustomSelect } from '../../../../components/ui/CustomSelect';
 import type { Trader } from '../../../../services/tradersApi';
 import type { Customer } from '../../../../services/customersApi';
 import type { CustomerCategory } from '../../../../services/customerCategoriesApi';
@@ -445,56 +446,47 @@ export function HarvestClassificationRowsSection({
             <div className={`management-form-grid ${styles.grid} ${styles.classificationGrid}`}>
               <label className={styles.summaryField}>
                 <span>{form.assignmentTypeLabel}</span>
-                <select
+                <CustomSelect
                   className="seasons-manager__year-input"
                   value={draft.assignmentType}
-                  onChange={(event) =>
+                  onChange={(value) =>
                     onUpdateClassificationDraft(draft.id, {
-                      assignmentType: event.target.value as HarvestFormClassificationDraft['assignmentType'],
+                      assignmentType: value as HarvestFormClassificationDraft['assignmentType'],
                     })
                   }
-                >
-                  <option value="GENERAL">{form.assignmentOptions.general}</option>
-                  <option value="TRADER">{form.assignmentOptions.trader}</option>
-                  <option value="CUSTOMER">{form.assignmentOptions.customer}</option>
-                </select>
+                  options={[
+                    { value: 'GENERAL', label: form.assignmentOptions.general },
+                    { value: 'TRADER', label: form.assignmentOptions.trader },
+                    { value: 'CUSTOMER', label: form.assignmentOptions.customer },
+                  ]}
+                />
               </label>
 
               {draft.assignmentType === 'TRADER' ? (
                 <label className={styles.summaryField}>
                   <span>{form.traderLabel}</span>
-                  <select
+                  <CustomSelect
                     className="seasons-manager__year-input"
                     value={draft.traderId}
-                    onChange={(event) => onUpdateClassificationDraft(draft.id, { traderId: event.target.value })}
-                  >
-                    <option value="">{form.traderPlaceholder}</option>
-                    {[...traders]
+                    onChange={(value) => onUpdateClassificationDraft(draft.id, { traderId: value })}
+                    placeholder={form.traderPlaceholder}
+                    options={[...traders]
                       .sort((left, right) => left.name.localeCompare(right.name))
-                      .map((trader) => (
-                      <option key={`harvest-form-trader-${trader.id}`} value={String(trader.id)}>
-                        {trader.name}
-                      </option>
-                    ))}
-                  </select>
+                      .map((trader) => ({ value: String(trader.id), label: trader.name }))}
+                  />
                 </label>
               ) : null}
 
               {draft.assignmentType === 'GENERAL' || draft.assignmentType === 'TRADER' ? (
                 <label className={styles.summaryField}>
                   <span>{form.traderCategoryLabel}</span>
-                  <select
+                  <CustomSelect
                     className="seasons-manager__year-input"
                     value={draft.traderCategoryId}
-                    onChange={(event) => onUpdateClassificationDraft(draft.id, { traderCategoryId: event.target.value })}
-                  >
-                    <option value="">{form.traderCategoryPlaceholder}</option>
-                    {selectableTraderCategories.map((category) => (
-                      <option key={`harvest-form-trader-category-${category.id}`} value={String(category.id)}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(value) => onUpdateClassificationDraft(draft.id, { traderCategoryId: value })}
+                    placeholder={form.traderCategoryPlaceholder}
+                    options={selectableTraderCategories.map((category) => ({ value: String(category.id), label: category.name }))}
+                  />
                 </label>
               ) : null}
 
@@ -502,35 +494,28 @@ export function HarvestClassificationRowsSection({
                 <>
                   <label className={styles.summaryField}>
                     <span>{form.customerLabel}</span>
-                    <select
+                    <CustomSelect
                       className="seasons-manager__year-input"
                       value={draft.customerId}
-                      onChange={(event) => onUpdateClassificationDraft(draft.id, { customerId: event.target.value })}
-                    >
-                      <option value="">{form.customerPlaceholder}</option>
-                      {customers.map((customer) => (
-                        <option key={`harvest-form-customer-${customer.id}`} value={String(customer.id)}>
-                          {customer.customerName}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(value) => onUpdateClassificationDraft(draft.id, { customerId: value })}
+                      placeholder={form.customerPlaceholder}
+                      options={customers.map((customer) => ({ value: String(customer.id), label: customer.customerName }))}
+                    />
                   </label>
 
                   <label className={styles.summaryField}>
                     <span>{form.customerCategoryLabel}</span>
-                    <select
+                    <CustomSelect
                       className="seasons-manager__year-input"
                       value={draft.customerCategoryId}
-                      onChange={(event) => onUpdateClassificationDraft(draft.id, { customerCategoryId: event.target.value })}
+                      onChange={(value) => onUpdateClassificationDraft(draft.id, { customerCategoryId: value })}
                       disabled={!draft.customerId}
-                    >
-                      <option value="">{form.customerCategoryPlaceholder}</option>
-                      {selectableCustomerCategories.map((category) => (
-                        <option key={`harvest-form-customer-category-${category.id}`} value={String(category.id)}>
-                          {`${category.name} (${category.grade})`}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder={form.customerCategoryPlaceholder}
+                      options={selectableCustomerCategories.map((category) => ({
+                        value: String(category.id),
+                        label: `${category.name} (${category.grade})`,
+                      }))}
+                    />
                   </label>
                 </>
               ) : null}

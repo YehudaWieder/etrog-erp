@@ -1,3 +1,4 @@
+import { CustomSelect } from '../../../../../components/ui/CustomSelect';
 import type { IsraelFieldCategory } from '../../../../../services/israelFieldCategoriesApi';
 import type { IsraelSortCategory } from '../../../../../services/israelSortCategoriesApi';
 import type { IsraelHarvestFormClassificationDraft } from '../../israelHarvestPage.types';
@@ -104,47 +105,37 @@ export function IsraelHarvestClassificationRowsSection({
             >
               <label className={styles.summaryField}>
                 <span>{form.fieldCategoryLabel}</span>
-                <select
+                <CustomSelect
                   className="seasons-manager__year-input"
                   value={draft.fieldCategoryId}
-                  onChange={(event) =>
+                  onChange={(value) =>
                     onUpdateDraft(draft.id, {
-                      fieldCategoryId: event.target.value,
+                      fieldCategoryId: value,
                     })
                   }
-                >
-                  <option value="">{form.fieldCategoryPlaceholder}</option>
-                  {fieldCategories.map((fieldCategory) => (
-                    <option
-                      key={`israel-harvest-form-field-category-${fieldCategory.id}`}
-                      value={String(fieldCategory.id)}
-                    >
-                      {fieldCategory.name}
-                    </option>
-                  ))}
-                </select>
+                  placeholder={form.fieldCategoryPlaceholder}
+                  options={fieldCategories.map((fieldCategory) => ({
+                    value: String(fieldCategory.id),
+                    label: fieldCategory.name,
+                  }))}
+                />
               </label>
 
               <label className={styles.summaryField}>
                 <span>{form.categoryLabel}</span>
-                <select
+                <CustomSelect
                   className="seasons-manager__year-input"
                   value={draft.categoryId}
-                  onChange={(event) =>
-                    onUpdateDraft(draft.id, { categoryId: event.target.value })
+                  onChange={(value) =>
+                    onUpdateDraft(draft.id, { categoryId: value })
                   }
                   disabled={!draft.fieldCategoryId}
-                >
-                  <option value="">{form.categoryPlaceholder}</option>
-                  {categories.map((category) => (
-                    <option
-                      key={`israel-harvest-form-category-${category.id}`}
-                      value={String(category.id)}
-                    >
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
+                  placeholder={form.categoryPlaceholder}
+                  options={categories.map((category) => ({
+                    value: String(category.id),
+                    label: category.name,
+                  }))}
+                />
               </label>
             </div>
 

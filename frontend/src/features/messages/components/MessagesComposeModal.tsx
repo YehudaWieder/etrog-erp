@@ -1,6 +1,7 @@
 import { FaChevronDown, FaPaperPlane, FaXmark } from 'react-icons/fa6';
 import type { FormEvent, KeyboardEvent } from 'react';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
+import { CustomSelect } from '../../../components/ui/CustomSelect';
 import type { ComposeFormState, RecipientOption } from '../messagesPage.types';
 import type { MessagePriority } from '../../../services/messagesApi';
 import styles from './styles/MessagesFeature.module.css';
@@ -144,17 +145,18 @@ export function MessagesComposeModal(props: MessagesComposeModalProps) {
 
             <div className="form-group">
               <label className="form-label" htmlFor="messagePriority">{priorityLabel}</label>
-              <select
+              <CustomSelect
                 id="messagePriority"
                 className="form-input"
                 value={composeForm.priority}
-                onChange={(event) => onPriorityChange(event.target.value as MessagePriority)}
-              >
-                <option value="LOW">{priorities.LOW}</option>
-                <option value="NORMAL">{priorities.NORMAL}</option>
-                <option value="HIGH">{priorities.HIGH}</option>
-                <option value="URGENT">{priorities.URGENT}</option>
-              </select>
+                onChange={(value) => onPriorityChange(value as MessagePriority)}
+                options={[
+                  { value: 'LOW', label: priorities.LOW },
+                  { value: 'NORMAL', label: priorities.NORMAL },
+                  { value: 'HIGH', label: priorities.HIGH },
+                  { value: 'URGENT', label: priorities.URGENT },
+                ]}
+              />
             </div>
 
             <div className={`form-group ${styles.composeFullWidth}`}>

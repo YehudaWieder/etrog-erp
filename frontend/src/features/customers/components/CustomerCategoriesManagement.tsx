@@ -2,6 +2,7 @@ import React from 'react';
 import { FaTriangleExclamation, FaXmark } from 'react-icons/fa6';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
+import { CustomSelect } from '../../../components/ui/CustomSelect';
 import { GlobalScopedFilters } from '../../../components/ui/GlobalScopedFilters';
 import ManagementCardsGrid from '../../../components/ui/ManagementCardsGrid';
 import ManagementSelectableCard from '../../../components/ui/ManagementSelectableCard';
@@ -163,26 +164,19 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
             <div className={styles.formGrid}>
               <div className={styles.field}>
                 <label className={styles.label}>{t.customerLabel}</label>
-                <select
+                <CustomSelect
                   className="seasons-manager__year-input"
-                  value={formState.customerId}
+                  value={String(formState.customerId)}
                   disabled={isEditDialogOpen}
-                  onChange={(event) => {
+                  onChange={(value) => {
                     setFormState((previous) => ({
                       ...previous,
-                      customerId: event.target.value ? Number(event.target.value) : '',
+                      customerId: value ? Number(value) : '',
                     }));
                   }}
-                >
-                  <option value="" disabled>
-                    {t.selectCustomer}
-                  </option>
-                  {sortedCustomers.map((customer) => (
-                    <option key={customer.id} value={customer.id}>
-                      {customer.customerName}
-                    </option>
-                  ))}
-                </select>
+                  placeholder={t.selectCustomer}
+                  options={sortedCustomers.map((customer) => ({ value: String(customer.id), label: customer.customerName }))}
+                />
               </div>
 
               <div className={styles.field}>
@@ -238,25 +232,18 @@ const CustomerCategoriesManagement: React.FC<CustomerCategoriesManagementProps> 
 
               <div className={styles.field}>
                 <label className={styles.label}>{t.currencyLabel}</label>
-                <select
+                <CustomSelect
                   className="seasons-manager__year-input"
                   value={formState.currency}
-                  onChange={(event) => {
+                  onChange={(value) => {
                     setFormState((previous) => ({
                       ...previous,
-                      currency: event.target.value as Currency | '',
+                      currency: value as Currency | '',
                     }));
                   }}
-                >
-                  <option value="" disabled>
-                    {t.selectCurrency}
-                  </option>
-                  {CURRENCIES.map((currency) => (
-                    <option key={currency} value={currency}>
-                      {currency}
-                    </option>
-                  ))}
-                </select>
+                  placeholder={t.selectCurrency}
+                  options={CURRENCIES.map((currency) => ({ value: currency, label: currency }))}
+                />
               </div>
             </div>
 

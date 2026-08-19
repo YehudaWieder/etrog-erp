@@ -1,5 +1,6 @@
 import { FaXmark } from 'react-icons/fa6';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
+import { CustomSelect } from '../../../components/ui/CustomSelect';
 import type { ShareRow } from '../tradersManagement.types';
 import { DEFAULT_PERCENT_STEP } from '../utils/traderShares.util';
 import { TRADER_CATEGORY_GRADE_OPTIONS } from '../utils/traderCategoryGrades.util';
@@ -201,21 +202,18 @@ export function TraderCategoryFormModal({
 
             return (
               <div key={row.rowId} className={styles.shareRow}>
-                <select
+                <CustomSelect
                   className="seasons-manager__year-input"
-                  value={row.traderId ?? ''}
-                  onChange={(event) => {
-                    const traderId = Number(event.target.value);
+                  value={row.traderId !== null && row.traderId !== undefined ? String(row.traderId) : ''}
+                  onChange={(value) => {
+                    const traderId = Number(value);
                     updateShareRow(row.rowId, {
                       traderId: Number.isFinite(traderId) && traderId > 0 ? traderId : null,
                     });
                   }}
-                >
-                  <option value="">{t.selectTraderOption}</option>
-                  {availableTraders.map((trader) => (
-                    <option key={trader.id} value={trader.id}>{trader.name}</option>
-                  ))}
-                </select>
+                  placeholder={t.selectTraderOption}
+                  options={availableTraders.map((trader) => ({ value: String(trader.id), label: trader.name }))}
+                />
 
                 <input
                   className="seasons-manager__year-input"

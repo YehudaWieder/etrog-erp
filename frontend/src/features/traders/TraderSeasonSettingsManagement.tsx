@@ -2,6 +2,7 @@ import React from 'react';
 import { FaTriangleExclamation, FaXmark } from 'react-icons/fa6';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { SubmitButton } from '../../components/ui/SubmitButton';
+import { CustomSelect } from '../../components/ui/CustomSelect';
 import { GlobalScopedFilters } from '../../components/ui/GlobalScopedFilters';
 import ManagementCardsGrid from '../../components/ui/ManagementCardsGrid';
 import ManagementSelectableCard from '../../components/ui/ManagementSelectableCard';
@@ -138,30 +139,23 @@ const TraderSeasonSettingsManagement: React.FC<TraderSeasonSettingsManagementPro
             <div className={styles.formGrid}>
               <div className={styles.field}>
                 <label className={styles.label}>{t.traderLabel}</label>
-                <select
+                <CustomSelect
                   className="seasons-manager__year-input"
-                  value={formState.traderId}
+                  value={String(formState.traderId)}
                   disabled={isEditDialogOpen}
-                  onChange={(event) => {
+                  onChange={(value) => {
                     setFormState((previous) => ({
                       ...previous,
-                      traderId: event.target.value ? Number(event.target.value) : '',
+                      traderId: value ? Number(value) : '',
                     }));
                   }}
-                >
-                  <option value="" disabled>
-                    {t.selectTrader}
-                  </option>
-                  {isEditDialogOpen && selectedEntry ? (
-                    <option value={selectedEntry.traderId}>{selectedEntryTraderName}</option>
-                  ) : (
-                    availableTradersForAdd.map((trader) => (
-                      <option key={trader.id} value={trader.id}>
-                        {trader.name}
-                      </option>
-                    ))
-                  )}
-                </select>
+                  placeholder={t.selectTrader}
+                  options={
+                    isEditDialogOpen && selectedEntry
+                      ? [{ value: String(selectedEntry.traderId), label: selectedEntryTraderName }]
+                      : availableTradersForAdd.map((trader) => ({ value: String(trader.id), label: trader.name }))
+                  }
+                />
               </div>
 
               <div className={styles.field}>
@@ -197,22 +191,15 @@ const TraderSeasonSettingsManagement: React.FC<TraderSeasonSettingsManagementPro
 
               <div className={styles.field}>
                 <label className={styles.label}>{t.currencyLabel}</label>
-                <select
+                <CustomSelect
                   className="seasons-manager__year-input"
                   value={formState.currency}
-                  onChange={(event) => {
-                    setFormState((previous) => ({ ...previous, currency: event.target.value as Currency | '' }));
+                  onChange={(value) => {
+                    setFormState((previous) => ({ ...previous, currency: value as Currency | '' }));
                   }}
-                >
-                  <option value="" disabled>
-                    {t.selectCurrency}
-                  </option>
-                  {CURRENCIES.map((currency) => (
-                    <option key={currency} value={currency}>
-                      {currency}
-                    </option>
-                  ))}
-                </select>
+                  placeholder={t.selectCurrency}
+                  options={CURRENCIES.map((currency) => ({ value: currency, label: currency }))}
+                />
               </div>
             </div>
 

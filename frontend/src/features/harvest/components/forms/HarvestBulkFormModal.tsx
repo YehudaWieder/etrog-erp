@@ -8,6 +8,7 @@ import type { HarvestFormClassificationDraft } from '../../harvestPage.types';
 import type { HarvestI18n } from '../../i18n';
 import { HarvestClassificationRowsSection } from './HarvestClassificationRowsSection';
 import type { PitamRowKey } from '../../utils/harvestClassificationMatrix.util';
+import { CustomSelect } from '../../../../components/ui/CustomSelect';
 import styles from './styles/HarvestBulkFormModal.module.css';
 
 type HarvestBulkFormModalProps = {
@@ -135,20 +136,14 @@ export function HarvestBulkFormModal({
         <div className={`management-form-grid ${styles.grid} ${styles.gridPrimary}`}>
           <label className={styles.selectionField}>
             <span>{form.fieldLabel}</span>
-            <select
+            <CustomSelect
               className="seasons-manager__year-input"
               value={harvestFormFieldId}
-              onChange={(event) => onFieldIdChange(event.target.value)}
-              aria-label={form.fieldLabel}
-              autoFocus
-            >
-              <option value="">{form.fieldPlaceholder}</option>
-              {fields.map((field) => (
-                <option key={`harvest-form-field-${field.id}`} value={String(field.id)}>
-                  {field.name}
-                </option>
-              ))}
-            </select>
+              onChange={(value) => onFieldIdChange(value)}
+              ariaLabel={form.fieldLabel}
+              placeholder={form.fieldPlaceholder}
+              options={fields.map((field) => ({ value: String(field.id), label: field.name }))}
+            />
           </label>
 
           <label className={styles.summaryField}>

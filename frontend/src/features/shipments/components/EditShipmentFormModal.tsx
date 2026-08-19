@@ -1,5 +1,6 @@
 import { FaXmark } from 'react-icons/fa6';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
+import { CustomSelect } from '../../../components/ui/CustomSelect';
 import type { ShipmentStatus } from '../../../services/shipmentsApi';
 import styles from './styles/EditShipmentFormModal.module.css';
 
@@ -87,15 +88,12 @@ export function EditShipmentFormModal({
 
           <div className={styles.field}>
             <label className={styles.label}>{t.statusLabel}</label>
-            <select
+            <CustomSelect
               className="seasons-manager__year-input"
               value={status}
-              onChange={(e) => onStatusChange(e.target.value as ShipmentStatus)}
-            >
-              {STATUS_ORDER.map((s) => (
-                <option key={s} value={s}>{t.statusOptions[s]}</option>
-              ))}
-            </select>
+              onChange={(value) => onStatusChange(value as ShipmentStatus)}
+              options={STATUS_ORDER.map((s) => ({ value: s, label: t.statusOptions[s] }))}
+            />
           </div>
 
           {!isShippedAtDisabled && (

@@ -9,6 +9,7 @@ import type { HarvestFormClassificationDraft } from '../../harvestPage.types';
 import type { HarvestI18n } from '../../i18n';
 import { HarvestClassificationRowsSection } from './HarvestClassificationRowsSection';
 import type { PitamRowKey } from '../../utils/harvestClassificationMatrix.util';
+import { CustomSelect } from '../../../../components/ui/CustomSelect';
 import styles from './styles/HarvestBulkFormModal.module.css';
 
 type HarvestSortingFormHarvestOption = {
@@ -256,19 +257,14 @@ export function HarvestSortingFormModal({
                 aria-label={t.sortingForm.harvestLabel}
               />
             ) : (
-              <select
+              <CustomSelect
                 className={`seasons-manager__year-input ${styles.compactSelect}`}
                 value={harvestSortingFormHarvestId}
-                onChange={(event) => onHarvestIdChange(event.target.value)}
+                onChange={(value) => onHarvestIdChange(value)}
                 disabled={isLoadingHarvestOptions}
-              >
-                <option value="">{isLoadingHarvestOptions ? t.sortingForm.loadingHarvestOptions : t.sortingForm.harvestPlaceholder}</option>
-                {harvestOptions.map((option) => (
-                  <option key={`sorting-form-harvest-${option.value}`} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                placeholder={isLoadingHarvestOptions ? t.sortingForm.loadingHarvestOptions : t.sortingForm.harvestPlaceholder}
+                options={harvestOptions.map((option) => ({ value: option.value, label: option.label }))}
+              />
             )}
           </label>
 
