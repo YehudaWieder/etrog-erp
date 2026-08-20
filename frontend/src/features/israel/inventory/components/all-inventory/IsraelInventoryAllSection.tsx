@@ -1,6 +1,11 @@
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
-import { FaScaleBalanced } from 'react-icons/fa6';
+import {
+  FaScaleBalanced,
+  FaBoxOpen,
+  FaBoxesStacked,
+  FaTruckFast,
+} from 'react-icons/fa6';
 import type { IsraelStockRecord } from '../../../../../services/israelStockApi';
 import type { IsraelSortCategory } from '../../../../../services/israelSortCategoriesApi';
 import type { IsraelInventoryI18n } from '../../i18n';
@@ -9,8 +14,20 @@ import { CategoryGradeMatrixTable } from '../../../../harvest/components/shared/
 import {
   buildStockStatusMatrix,
   type IsraelInventoryStatusScope,
+  type StockStatusMatrix,
 } from '../../utils/buildStockStatusMatrix.util';
 import styles from '../../../../traders/components/styles/TraderInventoryAllSection.module.css';
+
+function sumMatrixTotal(matrix: StockStatusMatrix): number {
+  return matrix.rows.reduce((sum, row) => {
+    const rowTotal = matrix.grades.reduce((gradeSum, grade) => {
+      const cell = row.cells[grade];
+      if (!cell) return gradeSum;
+      return gradeSum + cell.withPitam + cell.withoutPitam + cell.mixed;
+    }, 0);
+    return sum + rowTotal;
+  }, 0);
+}
 
 type IsraelInventoryAllSectionProps = {
   lang: 'he' | 'en';
@@ -77,16 +94,51 @@ export function IsraelInventoryAllSection({
 
   const hasData = matrix.rows.length > 0;
 
-  const totalQuantity = useMemo(() => {
-    return matrix.rows.reduce((sum, row) => {
-      const rowTotal = matrix.grades.reduce((gradeSum, grade) => {
-        const cell = row.cells[grade];
-        if (!cell) return gradeSum;
-        return gradeSum + cell.withPitam + cell.withoutPitam + cell.mixed;
-      }, 0);
-      return sum + rowTotal;
-    }, 0);
-  }, [matrix]);
+  const totalQuantity = useMemo(() => sumMatrixTotal(matrix), [matrix]);
+
+  const buildScopeMatrix = (scope: IsraelInventoryStatusScope) =>
+    buildStockStatusMatrix(
+      rows,
+      scope,
+      labels.totals.totalQuantity,
+      labels.noGradeLabel,
+      categoryOrder,
+      allCategoryNames,
+      HARVEST_GRADE_OPTIONS,
+    );
+
+  const notPackedQuantity = useMemo(
+    () => sumMatrixTotal(buildScopeMatrix('NOT_PACKED')),
+    [
+      rows,
+      categoryOrder,
+      allCategoryNames,
+      labels.totals.totalQuantity,
+      labels.noGradeLabel,
+    ],
+  );
+
+  const packedQuantity = useMemo(
+    () => sumMatrixTotal(buildScopeMatrix('PACKED')),
+    [
+      rows,
+      categoryOrder,
+      allCategoryNames,
+      labels.totals.totalQuantity,
+      labels.noGradeLabel,
+    ],
+  );
+
+  const sentQuantity = useMemo(
+    () => sumMatrixTotal(buildScopeMatrix('SENT')),
+    [
+      rows,
+      categoryOrder,
+      allCategoryNames,
+      labels.totals.totalQuantity,
+      labels.noGradeLabel,
+    ],
+  );
 
   return (
     <section className={styles.section}>
@@ -104,6 +156,42 @@ export function IsraelInventoryAllSection({
           </span>
           <strong className={styles.summaryValue}>
             {numberFormatter.format(totalQuantity)}
+          </strong>
+        </article>
+
+        <article className={styles.summaryCard}>
+          <div className={styles.summaryIcon}>
+            <FaBoxOpen aria-hidden="true" />
+          </div>
+          <span className={styles.summaryLabel}>
+            {labels.statusOptions.notPacked}
+          </span>
+          <strong className={styles.summaryValue}>
+            {numberFormatter.format(notPackedQuantity)}
+          </strong>
+        </article>
+
+        <article className={styles.summaryCard}>
+          <div className={styles.summaryIcon}>
+            <FaBoxesStacked aria-hidden="true" />
+          </div>
+          <span className={styles.summaryLabel}>
+            {labels.statusOptions.packed}
+          </span>
+          <strong className={styles.summaryValue}>
+            {numberFormatter.format(packedQuantity)}
+          </strong>
+        </article>
+
+        <article className={styles.summaryCard}>
+          <div className={styles.summaryIcon}>
+            <FaTruckFast aria-hidden="true" />
+          </div>
+          <span className={styles.summaryLabel}>
+            {labels.statusOptions.sent}
+          </span>
+          <strong className={styles.summaryValue}>
+            {numberFormatter.format(sentQuantity)}
           </strong>
         </article>
       </div>

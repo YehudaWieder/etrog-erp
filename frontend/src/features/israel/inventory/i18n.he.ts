@@ -79,7 +79,8 @@ export const ISRAEL_INVENTORY_I18N_HE: IsraelInventoryI18n = {
     },
   },
   movements: {
-    description: 'היסטוריה מלאה של תנועות המלאי לפי שדה, קטגוריה, דרגה וסטטוס פיטם.',
+    description:
+      'היסטוריה מלאה של תנועות המלאי לפי שדה, קטגוריה, דרגה וסטטוס פיטם.',
     loading: 'טוען תנועות...',
     empty: 'אין תנועות להצגה.',
     loadError: 'טעינת נתוני התנועות נכשלה.',

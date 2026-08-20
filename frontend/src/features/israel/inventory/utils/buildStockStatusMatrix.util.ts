@@ -117,8 +117,14 @@ function toCellsRecord(
 }
 
 const TYPES_BY_SCOPE: Record<IsraelInventoryStatusScope, string[]> = {
-  ALL: ['HARVEST_IN', 'WASTE'],
-  NOT_PACKED: ['HARVEST_IN', 'WASTE', 'PACKED_SHIPPED', 'SELF_PICKUP'],
+  ALL: ['HARVEST_IN', 'WASTE', 'ADJUSTMENT'],
+  NOT_PACKED: [
+    'HARVEST_IN',
+    'WASTE',
+    'PACKED_SHIPPED',
+    'SELF_PICKUP',
+    'ADJUSTMENT',
+  ],
   // No dedicated "packed" ledger entry exists yet (packing into a box happens
   // in the not-yet-built shipments module) — this scope stays empty until then.
   PACKED: [],

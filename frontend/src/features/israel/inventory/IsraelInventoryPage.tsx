@@ -112,10 +112,12 @@ export function IsraelInventoryPage() {
   const [isMovementModalOpen, setIsMovementModalOpen] = useState(false);
   const [isSubmittingMovement, setIsSubmittingMovement] = useState(false);
   const [movementError, setMovementError] = useState('');
-  const [movementsFieldFilterId, setMovementsFieldFilterId] =
-    useState<number | 'all'>('all');
-  const [movementsCategoryFilterId, setMovementsCategoryFilterId] =
-    useState<number | 'all'>('all');
+  const [movementsFieldFilterId, setMovementsFieldFilterId] = useState<
+    number | 'all'
+  >('all');
+  const [movementsCategoryFilterId, setMovementsCategoryFilterId] = useState<
+    number | 'all'
+  >('all');
   const [movementsStatusFilter, setMovementsStatusFilter] = useState<
     'ALL' | 'NON_SHIPMENT' | 'SHIPMENT'
   >('ALL');
@@ -297,7 +299,9 @@ export function IsraelInventoryPage() {
         {
           value: '',
           label:
-            lang === 'he' ? 'אין עונה פעילה כרגע' : 'No active season right now',
+            lang === 'he'
+              ? 'אין עונה פעילה כרגע'
+              : 'No active season right now',
         },
       ];
     }
@@ -308,7 +312,8 @@ export function IsraelInventoryPage() {
   }, [seasons, lang]);
 
   const movementsFieldOptions = useMemo(
-    () => fields.map((field) => ({ value: String(field.id), label: field.name })),
+    () =>
+      fields.map((field) => ({ value: String(field.id), label: field.name })),
     [fields],
   );
 
@@ -462,9 +467,7 @@ export function IsraelInventoryPage() {
           }}
           onMovementStatusChange={(value) =>
             setMovementsStatusFilter(
-              value === 'NON_SHIPMENT' || value === 'SHIPMENT'
-                ? value
-                : 'ALL',
+              value === 'NON_SHIPMENT' || value === 'SHIPMENT' ? value : 'ALL',
             )
           }
           onGradeChange={setMovementsGradeFilter}

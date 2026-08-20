@@ -1,10 +1,25 @@
 import { useCallback, useMemo } from 'react';
-import { FaWarehouse, FaBoxOpen, FaBoxesStacked, FaSeedling, FaPersonWalking, FaTrashCan, FaScaleBalanced } from 'react-icons/fa6';
+import {
+  FaWarehouse,
+  FaBoxOpen,
+  FaBoxesStacked,
+  FaSeedling,
+  FaPersonWalking,
+  FaTrashCan,
+  FaScaleBalanced,
+} from 'react-icons/fa6';
 import type { IsraelStockRecord } from '../../../../../services/israelStockApi';
 import type { IsraelInventoryI18n } from '../../i18n';
 import { HARVEST_GRADE_OPTIONS } from '../../../../harvest/utils/harvestPage.utils';
-import { GlobalDataTable, type GlobalDataTableColumn, GLOBAL_DATA_TABLE_WIDTHS } from '../../../../../components/ui/GlobalDataTable';
-import { GlobalFiltersBar, type GlobalFilterControl } from '../../../../../components/ui/GlobalFiltersBar';
+import {
+  GlobalDataTable,
+  type GlobalDataTableColumn,
+  GLOBAL_DATA_TABLE_WIDTHS,
+} from '../../../../../components/ui/GlobalDataTable';
+import {
+  GlobalFiltersBar,
+  type GlobalFilterControl,
+} from '../../../../../components/ui/GlobalFiltersBar';
 import { openPrintableWindow } from '../../../../../services/printWindow';
 import { downloadStyledExcel } from '../../../../../services/exportExcel';
 import { TraderMovementsPrintExportActions } from '../../../../traders/components/TraderMovementsPrintExportActions';
@@ -19,7 +34,13 @@ const MOVEMENT_TYPE_ICONS: Record<string, JSX.Element> = {
   WASTE: <FaTrashCan aria-hidden="true" />,
   ADJUSTMENT: <FaScaleBalanced aria-hidden="true" />,
 };
-const MOVEMENT_TYPE_ORDER = ['HARVEST_IN', 'PACKED_SHIPPED', 'SELF_PICKUP', 'WASTE', 'ADJUSTMENT'];
+const MOVEMENT_TYPE_ORDER = [
+  'HARVEST_IN',
+  'PACKED_SHIPPED',
+  'SELF_PICKUP',
+  'WASTE',
+  'ADJUSTMENT',
+];
 
 type FilterOption = {
   value: string;
@@ -76,7 +97,10 @@ export function IsraelMovementsSection({
   const movementStatusOptions = useMemo<FilterOption[]>(
     () => [
       { value: 'ALL', label: labels.movementStatusOptions.all },
-      { value: 'NON_SHIPMENT', label: labels.movementStatusOptions.nonShipment },
+      {
+        value: 'NON_SHIPMENT',
+        label: labels.movementStatusOptions.nonShipment,
+      },
       { value: 'SHIPMENT', label: labels.movementStatusOptions.shipment },
     ],
     [labels],
@@ -84,10 +108,16 @@ export function IsraelMovementsSection({
 
   const gradeOptions = useMemo<FilterOption[]>(() => {
     const defaultGrades = [...HARVEST_GRADE_OPTIONS] as string[];
-    const dataGrades = Array.from(new Set(movements.map((movement) => movement.grade).filter(Boolean)));
+    const dataGrades = Array.from(
+      new Set(movements.map((movement) => movement.grade).filter(Boolean)),
+    );
     const extraGrades = dataGrades
       .filter((value) => !defaultGrades.includes(value))
-      .sort((left, right) => left.localeCompare(right, lang === 'he' ? 'he' : 'en', { sensitivity: 'base' }));
+      .sort((left, right) =>
+        left.localeCompare(right, lang === 'he' ? 'he' : 'en', {
+          sensitivity: 'base',
+        }),
+      );
     const uniqueGrades = [...defaultGrades, ...extraGrades];
 
     return [
@@ -98,15 +128,26 @@ export function IsraelMovementsSection({
 
   const pitamStatusOptions = useMemo<FilterOption[]>(() => {
     const defaultPitamStatuses = ['WITH_PITAM', 'WITHOUT_PITAM', 'MIXED'];
-    const dataPitamStatuses = Array.from(new Set(movements.map((movement) => movement.pitamStatus).filter(Boolean)));
-    const extraPitamStatuses = dataPitamStatuses.filter((status) => !defaultPitamStatuses.includes(status));
-    const uniquePitamStatuses = [...defaultPitamStatuses, ...extraPitamStatuses];
+    const dataPitamStatuses = Array.from(
+      new Set(
+        movements.map((movement) => movement.pitamStatus).filter(Boolean),
+      ),
+    );
+    const extraPitamStatuses = dataPitamStatuses.filter(
+      (status) => !defaultPitamStatuses.includes(status),
+    );
+    const uniquePitamStatuses = [
+      ...defaultPitamStatuses,
+      ...extraPitamStatuses,
+    ];
 
     return [
       { value: 'ALL', label: labels.allPitamStatusesOption },
       ...uniquePitamStatuses.map((value) => ({
         value,
-        label: labels.pitamStatuses[value as keyof typeof labels.pitamStatuses] || value,
+        label:
+          labels.pitamStatuses[value as keyof typeof labels.pitamStatuses] ||
+          value,
       })),
     ];
   }, [labels, movements]);
@@ -117,11 +158,17 @@ export function IsraelMovementsSection({
         return false;
       }
 
-      if (movementStatus === 'SHIPMENT' && !SHIPMENT_MOVEMENT_TYPES.has(movement.type)) {
+      if (
+        movementStatus === 'SHIPMENT' &&
+        !SHIPMENT_MOVEMENT_TYPES.has(movement.type)
+      ) {
         return false;
       }
 
-      if (movementStatus === 'NON_SHIPMENT' && SHIPMENT_MOVEMENT_TYPES.has(movement.type)) {
+      if (
+        movementStatus === 'NON_SHIPMENT' &&
+        SHIPMENT_MOVEMENT_TYPES.has(movement.type)
+      ) {
         return false;
       }
 
@@ -137,7 +184,10 @@ export function IsraelMovementsSection({
     });
   }, [categoryId, grade, movementStatus, movements, pitamStatus]);
 
-  const numberFormatter = useMemo(() => new Intl.NumberFormat(lang === 'he' ? 'he-IL' : 'en-US'), [lang]);
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(lang === 'he' ? 'he-IL' : 'en-US'),
+    [lang],
+  );
 
   const summaryTotals = useMemo(() => {
     let totalInventory = 0;
@@ -157,13 +207,20 @@ export function IsraelMovementsSection({
   const summaryByType = useMemo(() => {
     const totals = new Map<string, number>();
     for (const movement of filteredMovements) {
-      totals.set(movement.type, (totals.get(movement.type) ?? 0) + Math.abs(movement.quantity));
+      totals.set(
+        movement.type,
+        (totals.get(movement.type) ?? 0) + Math.abs(movement.quantity),
+      );
     }
-    return MOVEMENT_TYPE_ORDER.filter((type) => totals.has(type)).map((type) => ({
-      type,
-      label: labels.movementTypes[type as keyof typeof labels.movementTypes] || type,
-      quantity: totals.get(type) ?? 0,
-    }));
+    return MOVEMENT_TYPE_ORDER.filter((type) => totals.has(type)).map(
+      (type) => ({
+        type,
+        label:
+          labels.movementTypes[type as keyof typeof labels.movementTypes] ||
+          type,
+        quantity: totals.get(type) ?? 0,
+      }),
+    );
   }, [filteredMovements, labels]);
 
   const filterControls = useMemo<GlobalFilterControl[]>(() => {
@@ -174,7 +231,10 @@ export function IsraelMovementsSection({
         id: 'movements-seasonId',
         label: labels.seasonFilterLabel,
         value: seasonId || '',
-        options: seasonOptions.map((opt) => ({ value: opt.value, label: opt.label })),
+        options: seasonOptions.map((opt) => ({
+          value: opt.value,
+          label: opt.label,
+        })),
         onChange: (value) => onSeasonChange?.(value),
       });
     }
@@ -183,7 +243,10 @@ export function IsraelMovementsSection({
       id: 'movements-fieldId',
       label: labels.fieldFilterLabel,
       value: fieldId || 'all',
-      options: [{ value: 'all', label: labels.allFieldsOption }, ...fieldOptions.map((opt) => ({ value: opt.value, label: opt.label }))],
+      options: [
+        { value: 'all', label: labels.allFieldsOption },
+        ...fieldOptions.map((opt) => ({ value: opt.value, label: opt.label })),
+      ],
       onChange: (value) => onFieldChange?.(value),
     });
 
@@ -191,7 +254,13 @@ export function IsraelMovementsSection({
       id: 'movements-category',
       label: labels.categoryFilterLabel,
       value: categoryId || 'all',
-      options: [{ value: 'all', label: labels.allCategoriesOption }, ...categoryOptions.map((opt) => ({ value: opt.value, label: opt.label }))],
+      options: [
+        { value: 'all', label: labels.allCategoriesOption },
+        ...categoryOptions.map((opt) => ({
+          value: opt.value,
+          label: opt.label,
+        })),
+      ],
       onChange: (value) => onCategoryChange?.(value),
     });
 
@@ -199,7 +268,10 @@ export function IsraelMovementsSection({
       id: 'movements-status',
       label: labels.movementStatusFilterLabel,
       value: movementStatus || 'ALL',
-      options: movementStatusOptions.map((opt) => ({ value: opt.value, label: opt.label })),
+      options: movementStatusOptions.map((opt) => ({
+        value: opt.value,
+        label: opt.label,
+      })),
       onChange: (value) => onMovementStatusChange?.(value),
     });
 
@@ -207,7 +279,10 @@ export function IsraelMovementsSection({
       id: 'movements-grade',
       label: labels.gradeFilterLabel,
       value: grade || 'ALL',
-      options: gradeOptions.map((opt) => ({ value: opt.value, label: opt.label })),
+      options: gradeOptions.map((opt) => ({
+        value: opt.value,
+        label: opt.label,
+      })),
       onChange: (value) => onGradeChange?.(value),
     });
 
@@ -215,7 +290,10 @@ export function IsraelMovementsSection({
       id: 'movements-pitamStatus',
       label: labels.pitamStatusFilterLabel,
       value: pitamStatus || 'ALL',
-      options: pitamStatusOptions.map((opt) => ({ value: opt.value, label: opt.label })),
+      options: pitamStatusOptions.map((opt) => ({
+        value: opt.value,
+        label: opt.label,
+      })),
       onChange: (value) => onPitamStatusChange?.(value),
     });
 
@@ -244,7 +322,9 @@ export function IsraelMovementsSection({
 
   const formatDate = (dateStr: string) => {
     try {
-      return new Date(dateStr).toLocaleDateString(lang === 'he' ? 'he-IL' : 'en-US');
+      return new Date(dateStr).toLocaleDateString(
+        lang === 'he' ? 'he-IL' : 'en-US',
+      );
     } catch {
       return dateStr;
     }
@@ -258,11 +338,13 @@ export function IsraelMovementsSection({
 
   const getMovementStatusLabel = (status: string): string => {
     if (status === 'SHIPMENT') return labels.movementStatusOptions.shipment;
-    if (status === 'NON_SHIPMENT') return labels.movementStatusOptions.nonShipment;
+    if (status === 'NON_SHIPMENT')
+      return labels.movementStatusOptions.nonShipment;
     return labels.movementStatusOptions.all;
   };
 
-  const getFieldLabel = (movement: IsraelStockRecord): string => movement.field?.name || '—';
+  const getFieldLabel = (movement: IsraelStockRecord): string =>
+    movement.field?.name || '—';
 
   const columns = useMemo<GlobalDataTableColumn<IsraelStockRecord>[]>(() => {
     return [
@@ -341,7 +423,13 @@ export function IsraelMovementsSection({
 
   const handlePrint = useCallback(() => {
     const escapeHtml = (text: string): string => {
-      const map: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+      const map: Record<string, string> = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;',
+      };
       return String(text).replace(/[&<>"']/g, (char) => map[char]);
     };
 
@@ -349,22 +437,31 @@ export function IsraelMovementsSection({
       const filters: string[] = [];
 
       if (seasonId) {
-        const seasonLabel = seasonOptions.find((opt) => opt.value === seasonId)?.label || seasonId;
+        const seasonLabel =
+          seasonOptions.find((opt) => opt.value === seasonId)?.label ||
+          seasonId;
         filters.push(`${labels.seasonFilterLabel}: ${escapeHtml(seasonLabel)}`);
       }
 
       if (fieldId && fieldId !== 'all') {
-        const fieldLabel = fieldOptions.find((opt) => opt.value === fieldId)?.label || fieldId;
+        const fieldLabel =
+          fieldOptions.find((opt) => opt.value === fieldId)?.label || fieldId;
         filters.push(`${labels.fieldFilterLabel}: ${escapeHtml(fieldLabel)}`);
       }
 
       if (categoryId && categoryId !== 'all') {
-        const categoryLabel = categoryOptions.find((opt) => opt.value === categoryId)?.label || categoryId;
-        filters.push(`${labels.categoryFilterLabel}: ${escapeHtml(categoryLabel)}`);
+        const categoryLabel =
+          categoryOptions.find((opt) => opt.value === categoryId)?.label ||
+          categoryId;
+        filters.push(
+          `${labels.categoryFilterLabel}: ${escapeHtml(categoryLabel)}`,
+        );
       }
 
       if (movementStatus && movementStatus !== 'ALL') {
-        filters.push(`${labels.movementStatusFilterLabel}: ${escapeHtml(getMovementStatusLabel(movementStatus))}`);
+        filters.push(
+          `${labels.movementStatusFilterLabel}: ${escapeHtml(getMovementStatusLabel(movementStatus))}`,
+        );
       }
 
       if (grade && grade !== 'ALL') {
@@ -372,7 +469,9 @@ export function IsraelMovementsSection({
       }
 
       if (pitamStatus && pitamStatus !== 'ALL') {
-        filters.push(`${labels.pitamStatusFilterLabel}: ${escapeHtml(getPitamStatusLabel(pitamStatus))}`);
+        filters.push(
+          `${labels.pitamStatusFilterLabel}: ${escapeHtml(getPitamStatusLabel(pitamStatus))}`,
+        );
       }
 
       return filters;
@@ -443,7 +542,20 @@ export function IsraelMovementsSection({
       direction: lang === 'he' ? 'rtl' : 'ltr',
       extraStyles: tableStyles,
     });
-  }, [lang, filteredMovements, labels, seasonId, fieldId, categoryId, movementStatus, grade, pitamStatus, seasonOptions, fieldOptions, categoryOptions]);
+  }, [
+    lang,
+    filteredMovements,
+    labels,
+    seasonId,
+    fieldId,
+    categoryId,
+    movementStatus,
+    grade,
+    pitamStatus,
+    seasonOptions,
+    fieldOptions,
+    categoryOptions,
+  ]);
 
   const handleExport = useCallback(async () => {
     try {
@@ -451,30 +563,83 @@ export function IsraelMovementsSection({
         const filters: Array<string[]> = [];
 
         if (seasonId) {
-          const seasonLabel = seasonOptions.find((opt) => opt.value === seasonId)?.label || seasonId;
-          filters.push([`${labels.seasonFilterLabel}: ${seasonLabel}`, '', '', '', '', '', '']);
+          const seasonLabel =
+            seasonOptions.find((opt) => opt.value === seasonId)?.label ||
+            seasonId;
+          filters.push([
+            `${labels.seasonFilterLabel}: ${seasonLabel}`,
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+          ]);
         }
 
         if (fieldId && fieldId !== 'all') {
-          const fieldLabel = fieldOptions.find((opt) => opt.value === fieldId)?.label || fieldId;
-          filters.push([`${labels.fieldFilterLabel}: ${fieldLabel}`, '', '', '', '', '', '']);
+          const fieldLabel =
+            fieldOptions.find((opt) => opt.value === fieldId)?.label || fieldId;
+          filters.push([
+            `${labels.fieldFilterLabel}: ${fieldLabel}`,
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+          ]);
         }
 
         if (categoryId && categoryId !== 'all') {
-          const categoryLabel = categoryOptions.find((opt) => opt.value === categoryId)?.label || categoryId;
-          filters.push([`${labels.categoryFilterLabel}: ${categoryLabel}`, '', '', '', '', '', '']);
+          const categoryLabel =
+            categoryOptions.find((opt) => opt.value === categoryId)?.label ||
+            categoryId;
+          filters.push([
+            `${labels.categoryFilterLabel}: ${categoryLabel}`,
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+          ]);
         }
 
         if (movementStatus && movementStatus !== 'ALL') {
-          filters.push([`${labels.movementStatusFilterLabel}: ${getMovementStatusLabel(movementStatus)}`, '', '', '', '', '', '']);
+          filters.push([
+            `${labels.movementStatusFilterLabel}: ${getMovementStatusLabel(movementStatus)}`,
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+          ]);
         }
 
         if (grade && grade !== 'ALL') {
-          filters.push([`${labels.gradeFilterLabel}: ${grade}`, '', '', '', '', '', '']);
+          filters.push([
+            `${labels.gradeFilterLabel}: ${grade}`,
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+          ]);
         }
 
         if (pitamStatus && pitamStatus !== 'ALL') {
-          filters.push([`${labels.pitamStatusFilterLabel}: ${getPitamStatusLabel(pitamStatus)}`, '', '', '', '', '', '']);
+          filters.push([
+            `${labels.pitamStatusFilterLabel}: ${getPitamStatusLabel(pitamStatus)}`,
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+          ]);
         }
 
         return filters;
@@ -517,9 +682,24 @@ export function IsraelMovementsSection({
       });
     } catch (err) {
       console.error('Export failed:', err);
-      window.alert(lang === 'he' ? 'לא ניתן לייצא כעת' : 'Could not export right now');
+      window.alert(
+        lang === 'he' ? 'לא ניתן לייצא כעת' : 'Could not export right now',
+      );
     }
-  }, [lang, filteredMovements, labels, seasonId, fieldId, categoryId, movementStatus, grade, pitamStatus, seasonOptions, fieldOptions, categoryOptions]);
+  }, [
+    lang,
+    filteredMovements,
+    labels,
+    seasonId,
+    fieldId,
+    categoryId,
+    movementStatus,
+    grade,
+    pitamStatus,
+    seasonOptions,
+    fieldOptions,
+    categoryOptions,
+  ]);
 
   const renderFiltersBar = () => {
     const actions =
@@ -537,7 +717,11 @@ export function IsraelMovementsSection({
 
     return (
       <section className={styles.filtersBarSection}>
-        <GlobalFiltersBar controls={filterControls} direction={lang === 'he' ? 'rtl' : 'ltr'} actions={actions} />
+        <GlobalFiltersBar
+          controls={filterControls}
+          direction={lang === 'he' ? 'rtl' : 'ltr'}
+          actions={actions}
+        />
       </section>
     );
   };
@@ -554,28 +738,46 @@ export function IsraelMovementsSection({
             <div className={summaryStyles.summaryIcon}>
               <FaWarehouse aria-hidden="true" />
             </div>
-            <span className={summaryStyles.summaryLabel}>{labels.summary.totalInventory}</span>
-            <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.totalInventory)}</strong>
+            <span className={summaryStyles.summaryLabel}>
+              {labels.summary.totalInventory}
+            </span>
+            <strong className={summaryStyles.summaryValue}>
+              {numberFormatter.format(summaryTotals.totalInventory)}
+            </strong>
           </article>
           <article className={summaryStyles.summaryCard}>
             <div className={summaryStyles.summaryIcon}>
               <FaBoxOpen aria-hidden="true" />
             </div>
-            <span className={summaryStyles.summaryLabel}>{labels.summary.notPacked}</span>
-            <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.notPacked)}</strong>
+            <span className={summaryStyles.summaryLabel}>
+              {labels.summary.notPacked}
+            </span>
+            <strong className={summaryStyles.summaryValue}>
+              {numberFormatter.format(summaryTotals.notPacked)}
+            </strong>
           </article>
           <article className={summaryStyles.summaryCard}>
             <div className={summaryStyles.summaryIcon}>
               <FaBoxesStacked aria-hidden="true" />
             </div>
-            <span className={summaryStyles.summaryLabel}>{labels.summary.packed}</span>
-            <strong className={summaryStyles.summaryValue}>{numberFormatter.format(summaryTotals.packed)}</strong>
+            <span className={summaryStyles.summaryLabel}>
+              {labels.summary.packed}
+            </span>
+            <strong className={summaryStyles.summaryValue}>
+              {numberFormatter.format(summaryTotals.packed)}
+            </strong>
           </article>
           {summaryByType.map(({ type, label, quantity }) => (
             <article className={summaryStyles.summaryCard} key={type}>
-              <div className={summaryStyles.summaryIcon}>{MOVEMENT_TYPE_ICONS[type] ?? <FaScaleBalanced aria-hidden="true" />}</div>
+              <div className={summaryStyles.summaryIcon}>
+                {MOVEMENT_TYPE_ICONS[type] ?? (
+                  <FaScaleBalanced aria-hidden="true" />
+                )}
+              </div>
               <span className={summaryStyles.summaryLabel}>{label}</span>
-              <strong className={summaryStyles.summaryValue}>{numberFormatter.format(quantity)}</strong>
+              <strong className={summaryStyles.summaryValue}>
+                {numberFormatter.format(quantity)}
+              </strong>
             </article>
           ))}
         </div>
@@ -599,7 +801,11 @@ export function IsraelMovementsSection({
           columns={columns}
           rows={filteredMovements}
           getRowKey={(row) => row.id}
-          emptyLabel={movements && movements.length > 0 ? labels.noMatchingFilters : labels.empty}
+          emptyLabel={
+            movements && movements.length > 0
+              ? labels.noMatchingFilters
+              : labels.empty
+          }
           defaultSortState={{ key: 'date', direction: 'desc' }}
         />
       )}

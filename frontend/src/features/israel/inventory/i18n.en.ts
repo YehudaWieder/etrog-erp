@@ -79,7 +79,8 @@ export const ISRAEL_INVENTORY_I18N_EN: IsraelInventoryI18n = {
     },
   },
   movements: {
-    description: 'Full history of inventory movements by field, category, grade, and pitam status.',
+    description:
+      'Full history of inventory movements by field, category, grade, and pitam status.',
     loading: 'Loading movements...',
     empty: 'No movements to display.',
     loadError: 'Failed to load movement data.',
