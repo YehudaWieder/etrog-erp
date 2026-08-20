@@ -907,6 +907,7 @@ export class ItemService {
     id: number,
     data: Prisma.ShipmentItemUncheckedUpdateInput,
     actorId: number,
+    options?: { skipCapacityCheck?: boolean },
   ) {
     const updatePayload = {
       ...data,
@@ -965,8 +966,12 @@ export class ItemService {
         throw new NotFoundException(`Box ${nextBoxId} not found in active season`);
       }
 
-      // Enforce box capacity on quantity change (skip for CUSTOM box type)
-      if (targetBox.boxType !== 'CUSTOM') {
+      // Enforce box capacity on quantity change (skip for CUSTOM box type). Callers batching
+      // multiple edits in one transaction (e.g. BoxPackingWorkflowService) pre-validate the net
+      // capacity effect of the whole batch and pass skipCapacityCheck — otherwise checking here
+      // against the box's running total mid-batch would spuriously reject an increase that's
+      // processed before its paired decrease, even when the batch nets to within capacity.
+      if (targetBox.boxType !== 'CUSTOM' && !options?.skipCapacityCheck) {
         const systemConfig = await tx.systemConfig.findFirst({ where: { seasonId: currentItem.seasonId } });
         const capacityMap: Record<string, number | null | undefined> = {
           SMALL: systemConfig?.smallBoxCapacity,

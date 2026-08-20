@@ -42,6 +42,39 @@ export class BoxPackingWorkflowService {
         throw new BadRequestException('Cannot add items to an external-trader box');
       }
 
+      // Validate the *net* capacity effect of the whole edit batch up front, against the box's
+      // current total. Applying edits one at a time and re-checking capacity after each one (as
+      // ItemService.updateInTx does standalone) is order-dependent: an increase processed before
+      // its paired decrease would spuriously exceed capacity mid-batch even though the batch nets
+      // to within capacity. Checking once here lets us safely skip the per-edit check below.
+      if (itemEdits.length > 0 && box.boxType !== 'CUSTOM') {
+        const systemConfig = await tx.systemConfig.findFirst({ where: { seasonId: box.seasonId } });
+        const capacityMap: Record<string, number | null | undefined> = {
+          SMALL: systemConfig?.smallBoxCapacity,
+          MEDIUM: systemConfig?.mediumBoxCapacity,
+          LARGE: systemConfig?.largeBoxCapacity,
+        };
+        const capacity = capacityMap[box.boxType];
+        if (capacity != null) {
+          const editedItemIds = itemEdits.map((edit) => edit.id);
+          const currentItems = await tx.shipmentItem.findMany({
+            where: { id: { in: editedItemIds }, boxId: id, isDeleted: false },
+            select: { id: true, quantity: true },
+          });
+          const currentQuantityById = new Map(currentItems.map((item) => [item.id, Number(item.quantity)]));
+          const netDelta = itemEdits.reduce((sum, edit) => {
+            const currentQuantity = currentQuantityById.get(edit.id) ?? 0;
+            return sum + (edit.quantity - currentQuantity);
+          }, 0);
+          const netFinalTotal = box.totalQuantity + netDelta;
+          if (netFinalTotal > capacity) {
+            throw new BadRequestException(
+              `Box capacity exceeded: box can hold ${capacity} items, current total is ${box.totalQuantity}, applying these edits would bring total to ${netFinalTotal}`,
+            );
+          }
+        }
+      }
+
       const editedItems = [] as Awaited<ReturnType<ItemService['updateInTx']>>[];
       for (const edit of itemEdits) {
         // A quantity of 0 means "remove this item" — there is no such thing as a packed item with
@@ -50,7 +83,13 @@ export class BoxPackingWorkflowService {
           await this.itemService.removeInTx(tx, edit.id, actorId);
           continue;
         }
-        const item = await this.itemService.updateInTx(tx, edit.id, { quantity: edit.quantity }, actorId);
+        const item = await this.itemService.updateInTx(
+          tx,
+          edit.id,
+          { quantity: edit.quantity },
+          actorId,
+          { skipCapacityCheck: true },
+        );
         editedItems.push(item);
       }
 
