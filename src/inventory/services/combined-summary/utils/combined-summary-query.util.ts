@@ -95,21 +95,20 @@ function applyExcludePrivateSelection(where: Prisma.TraderStockWhereInput) {
 
   if (!existing) {
     where.type = { not: 'PRIVATE_SELECTION' } as Prisma.EnumMovementTypeFilter;
-    return;
-  }
-
-  if (typeof existing === 'object' && 'notIn' in existing && Array.isArray(existing.notIn)) {
+  } else if (typeof existing === 'object' && 'notIn' in existing && Array.isArray(existing.notIn)) {
     if (!(existing.notIn as string[]).includes('PRIVATE_SELECTION')) {
       (existing.notIn as string[]).push('PRIVATE_SELECTION');
     }
-    return;
-  }
-
-  if (typeof existing === 'object' && 'not' in existing) {
+  } else if (typeof existing === 'object' && 'not' in existing) {
     where.type = { notIn: [existing.not as string, 'PRIVATE_SELECTION'] } as Prisma.EnumMovementTypeFilter;
-    return;
   }
   // exact-match string scope (e.g. 'HARVEST_IN') already excludes PRIVATE_SELECTION — nothing to do
+
+  // Also exclude deductions drawn from a trader's private-selection pool (e.g. PACKED_SHIPPED
+  // rows with isFromPrivateSelection=true) — otherwise general-stock totals get debited by
+  // movements that never belonged to the general pool in the first place.
+  const andConditions = Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : [];
+  where.AND = [...andConditions, { isFromPrivateSelection: false }];
 }
 
 function excludeRemainsInItaly(where: Prisma.TraderStockWhereInput) {
