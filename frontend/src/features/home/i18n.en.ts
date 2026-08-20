@@ -67,6 +67,7 @@ export const HOME_I18N_EN = {
         totalColumn: 'Total',
         empty: 'No shipment data to display',
         tableNote: 'The table shows general/trader shipments only, by category and grade',
+        customerOfWhichNote: 'excluding {value} for customers',
         customerNote: 'Customer shipments (not included in the table)',
         selfPickupNote: "Self pickup (doesn't go through shipments, not included in the table)",
         columns: {

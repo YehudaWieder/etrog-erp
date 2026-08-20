@@ -67,6 +67,7 @@ export const HOME_I18N_HE = {
         totalColumn: 'סה"כ',
         empty: 'אין נתוני משלוחים להצגה',
         tableNote: 'הטבלה מציגה משלוחים כלליים/סוחרים בלבד, לפי קטגוריה ודרגה',
+        customerOfWhichNote: 'לא כולל {value} ללקוחות',
         customerNote: 'משלוחי לקוחות (לא נכללים בטבלה)',
         selfPickupNote: 'איסוף עצמי (לא עובר דרך משלוחים ואינו נכלל בטבלה)',
         columns: {

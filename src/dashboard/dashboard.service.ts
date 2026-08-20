@@ -529,7 +529,7 @@ export class DashboardService {
     }
 
     const buildShipmentStatusSummary = (total: number, bucket: ShipmentBucket) => ({
-      total,
+      total: total - bucket.customerTotal,
       categories: categoriesUsedIn(bucket.matrix),
       grades: gradesUsedIn(bucket.matrix),
       matrix: flattenPitamMatrix(bucket.matrix),

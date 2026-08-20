@@ -1,0 +1,71 @@
+.modeToggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-block-start: 0.75rem;
+}
+
+.modeButton {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border, #d1d5db);
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--color-text-secondary, #4b5563);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.modeButtonActive {
+  background: var(--color-primary, #2563eb);
+  border-color: var(--color-primary, #2563eb);
+  color: #fff;
+}
+
+.formGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-block: 1.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  width: 100%;
+  max-width: 320px;
+  margin-inline: auto;
+}
+
+.topRow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+.topRow .field {
+  max-width: none;
+  margin-inline: 0;
+}
+
+.fieldFull {
+  max-width: none;
+  margin-inline: 0;
+  width: 100%;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #4b5563);
+}
+
+.textarea {
+  resize: none;
+  overflow: hidden;
+  field-sizing: content;
+  padding-block: 10px;
+}

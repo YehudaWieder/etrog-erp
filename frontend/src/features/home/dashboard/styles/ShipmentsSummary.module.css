@@ -47,6 +47,11 @@
   color: var(--color-text-accent);
 }
 
+.customerOfWhichNote {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
 .tableNote {
   margin: 0;
   font-size: 0.82rem;

@@ -21,6 +21,7 @@ type ShipmentsSummaryProps = {
     totalColumn: string;
     empty: string;
     tableNote: string;
+    customerOfWhichNote: string;
     customerNote: string;
     selfPickupNote: string;
     columns: {
@@ -53,6 +54,12 @@ export function ShipmentsSummary({ lang, data, unit, activeStatus, onActiveStatu
 
       <div className={styles.totalLine}>
         {labels.totalLabels[activeStatus]}: <strong>{formatter.format(statusData.total)} {unit}</strong>
+        {statusData.customerTotal > 0 && (
+          <span className={styles.customerOfWhichNote}>
+            {' '}
+            ({labels.customerOfWhichNote.replace('{value}', `${formatter.format(statusData.customerTotal)} ${unit}`)})
+          </span>
+        )}
       </div>
 
       <CategoryGradeTable
