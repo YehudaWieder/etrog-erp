@@ -111,6 +111,41 @@ export class ShipmentService {
     });
   }
 
+  // Lightweight per-shipment summary (boxes, quantity, trader/customer split, status) for a season.
+  // Avoids loading every box and item, unlike findAllBySeason/findOne, so the shipments-summary
+  // sidebar tab stays fast even with many shipments.
+  async findSummaryBySeason(seasonId: number) {
+    await this.seasonsService.assertSeasonExists(seasonId);
+
+    const [shipments, customerTotals] = await Promise.all([
+      this.prisma.shipment.findMany({
+        where: { seasonId, isDeleted: false },
+        select: { id: true, shipmentNumber: true, status: true, totalBoxes: true, totalQuantity: true },
+        orderBy: { shipmentNumber: 'desc' },
+      }),
+      this.prisma.shipmentItem.groupBy({
+        by: ['shipmentId'],
+        where: { shipment: { seasonId, isDeleted: false }, isDeleted: false, ownershipType: 'CUSTOMER' },
+        _sum: { quantity: true },
+      }),
+    ]);
+
+    const customerQuantityByShipment = new Map(customerTotals.map((row) => [row.shipmentId, row._sum.quantity ?? 0]));
+
+    return shipments.map((shipment) => {
+      const customerQuantity = customerQuantityByShipment.get(shipment.id) ?? 0;
+      return {
+        id: shipment.id,
+        shipmentNumber: shipment.shipmentNumber,
+        status: shipment.status,
+        totalBoxes: shipment.totalBoxes,
+        totalQuantity: shipment.totalQuantity,
+        traderQuantity: shipment.totalQuantity - customerQuantity,
+        customerQuantity,
+      };
+    });
+  }
+
   // Get full shipment details including boxes and items
   async findOne(id: number) {
     const shipment = await this.prisma.shipment.findFirst({

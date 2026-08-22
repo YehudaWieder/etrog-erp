@@ -52,7 +52,7 @@ function sortCategoryNames(names: string[], orderByName: Map<string, number> | n
   });
 }
 
-function buildGroupMatrix(
+export function buildGroupMatrix(
   groupRows: ShipmentItemsTableRow[],
   gradeFallback: string,
   grandTotalLabel: string,

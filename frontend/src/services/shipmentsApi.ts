@@ -34,6 +34,20 @@ export async function getShipmentsBySeason(seasonId: number): Promise<ShipmentRe
   return apiClient<ShipmentRecord[]>(`/shipments?seasonId=${seasonId}`);
 }
 
+export type ShipmentSummaryRecord = {
+  id: number;
+  shipmentNumber: number;
+  status: ShipmentStatus;
+  totalBoxes: number;
+  totalQuantity: number;
+  traderQuantity: number;
+  customerQuantity: number;
+};
+
+export async function getShipmentsSummaryBySeason(seasonId: number): Promise<ShipmentSummaryRecord[]> {
+  return apiClient<ShipmentSummaryRecord[]>(`/shipments/summary?seasonId=${seasonId}`);
+}
+
 export async function updateShipment(
   payload: UpdateShipmentPayload,
   init?: Pick<ApiClientInit, 'suppressGlobalFeedback'>,

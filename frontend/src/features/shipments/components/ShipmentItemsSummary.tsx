@@ -1,27 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FaFileArrowDown, FaPrint } from 'react-icons/fa6';
+import { useEffect, useMemo, useState } from 'react';
 import { GlobalScopedFilters } from '../../../components/ui/GlobalScopedFilters';
+import { GlobalDataTable, type GlobalDataTableColumn } from '../../../components/ui/GlobalDataTable';
 import { ShipmentsSummaryCards } from './shared/ShipmentsSummaryCards';
-import { buildShipmentItemsSummaryTotals } from '../services/shipmentsSummary.service';
-import { buildShipmentItemsPerShipmentMatrices } from '../services/shipmentItemsCategoryMatrix.service';
-import { buildShipmentItemsSummaryMatrix } from '../services/shipmentItemsSummaryMatrix.service';
-import { buildShipmentDetailedMatrices } from '../services/shipmentItemsDetailedMatrix.service';
-import { printShipmentsSummary, exportShipmentsSummaryToExcel } from '../services/shipmentItemsSummaryExport.service';
-import { useShipmentItemsFilters } from '../hooks/useShipmentItemsFilters';
-import { useShipmentItemsTable } from '../hooks/useShipmentItemsTable';
-import { ShipmentDetailedBreakdownTable } from './ShipmentDetailedBreakdownTable';
-import { ShipmentsSummaryMatrix } from './ShipmentsSummaryMatrix';
-import { ShipmentsBoxStatusTable } from './ShipmentsBoxStatusTable';
-import { getShipmentsBySeason } from '../../../services/shipmentsApi';
-import { getTraderCategoriesWithShares } from '../../../services/traderCategoriesApi';
-import type { ShipmentItemsTableLabels, ShipmentRecord } from '../shipments.types';
-import sharedFilterStyles from '../../../components/ui/styles/GlobalFiltersBar.module.css';
+import { useAllShipmentsFilters } from '../hooks/useAllShipmentsFilters';
+import { getShipmentsSummaryBySeason, type ShipmentSummaryRecord } from '../../../services/shipmentsApi';
+import type { ShipmentsTableLabels } from '../shipments.types';
 import workspaceStyles from '../../../components/ui/styles/WorkspaceSection.module.css';
 import styles from './styles/ShipmentItemsSummary.module.css';
 
 type ShipmentItemsSummaryProps = {
   lang: 'he' | 'en';
-  labels: ShipmentItemsTableLabels;
+  labels: ShipmentsTableLabels;
   description: string;
   refreshKey?: number;
   onSeasonInfoChange?: (info: { selectedSeasonId: number | null; activeSeasonId: number | null }) => void;
@@ -32,84 +21,130 @@ export function ShipmentItemsSummary({ lang, labels, description, refreshKey, on
     filters,
     activeSeasonId,
     selectedSeasonId,
-    selectedOwnership,
-    filterDisplayValues,
+    selectedStatus,
     handleFilterValuesChange,
     handleFiltersApiReady,
-  } = useShipmentItemsFilters(labels);
+  } = useAllShipmentsFilters(labels);
 
   useEffect(() => {
     onSeasonInfoChange?.({ selectedSeasonId, activeSeasonId });
   }, [onSeasonInfoChange, selectedSeasonId, activeSeasonId]);
 
-  const summaryFilters = useMemo(
-    () => filters.filter((f) => f.key === 'seasonId' || f.key === 'ownership'),
-    [filters],
-  );
-
-  const { rows, isLoading, error } = useShipmentItemsTable(
-    labels,
-    selectedSeasonId,
-    'all',
-    'all',
-    selectedOwnership,
-    refreshKey,
-  );
-
-  const [traderCategoryOrder, setTraderCategoryOrder] = useState<Map<string, number>>(new Map());
-
-  const summaryTotals = useMemo(() => buildShipmentItemsSummaryTotals(rows), [rows]);
-  const summaryMatrix = useMemo(
-    () => buildShipmentItemsSummaryMatrix(rows, traderCategoryOrder),
-    [rows, traderCategoryOrder],
-  );
-  const perShipmentMatrices = useMemo(
-    () => buildShipmentItemsPerShipmentMatrices(rows, traderCategoryOrder),
-    [rows, traderCategoryOrder],
-  );
-  const detailedMatrices = useMemo(
-    () => buildShipmentDetailedMatrices(rows, labels.noGrade, labels.summary.total, traderCategoryOrder),
-    [rows, labels.noGrade, labels.summary.total, traderCategoryOrder],
-  );
-  const [shipments, setShipments] = useState<ShipmentRecord[]>([]);
-
-  const hasData = summaryMatrix.shipmentNumbers.length > 0;
-
-  const handlePrint = useCallback(() => {
-    printShipmentsSummary({ lang, labels, summaryMatrix, shipments, perShipmentMatrices, filterDisplayValues });
-  }, [lang, labels, summaryMatrix, shipments, perShipmentMatrices, filterDisplayValues]);
-
-  const handleExport = useCallback(async () => {
-    try {
-      await exportShipmentsSummaryToExcel({ lang, labels, summaryMatrix, shipments, perShipmentMatrices, filterDisplayValues });
-    } catch {
-      window.alert(labels.summaryExportError);
-    }
-  }, [lang, labels, summaryMatrix, shipments, perShipmentMatrices, filterDisplayValues]);
+  const [allRows, setAllRows] = useState<ShipmentSummaryRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!selectedSeasonId) {
-      setShipments([]);
+      setAllRows([]);
+      setError('');
+      setIsLoading(false);
       return;
     }
-    getShipmentsBySeason(selectedSeasonId).then(setShipments).catch(() => setShipments([]));
-  }, [selectedSeasonId]);
 
-  useEffect(() => {
-    if (!selectedSeasonId) {
-      setTraderCategoryOrder(new Map());
-      return;
-    }
-    getTraderCategoriesWithShares(selectedSeasonId)
-      .then((categories) => {
-        const map = new Map<string, number>();
-        for (const category of categories) {
-          map.set(category.name, category.orderIndex);
-        }
-        setTraderCategoryOrder(map);
+    let isMounted = true;
+    setIsLoading(true);
+    setError('');
+
+    getShipmentsSummaryBySeason(selectedSeasonId)
+      .then((nextRows) => {
+        if (!isMounted) return;
+        setAllRows(nextRows);
       })
-      .catch(() => setTraderCategoryOrder(new Map()));
-  }, [selectedSeasonId]);
+      .catch(() => {
+        if (!isMounted) return;
+        setError(labels.error);
+        setAllRows([]);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedSeasonId, labels.error, refreshKey]);
+
+  const rows = useMemo(
+    () => allRows.filter((row) => selectedStatus === 'all' || row.status === selectedStatus),
+    [allRows, selectedStatus],
+  );
+
+  const summaryTotals = useMemo(
+    () =>
+      rows.reduce(
+        (totals, row) => ({
+          totalShipments: totals.totalShipments + 1,
+          totalBoxes: totals.totalBoxes + row.totalBoxes,
+          totalQuantity: totals.totalQuantity + row.totalQuantity,
+          traderQuantity: totals.traderQuantity + row.traderQuantity,
+          customerQuantity: totals.customerQuantity + row.customerQuantity,
+        }),
+        { totalShipments: 0, totalBoxes: 0, totalQuantity: 0, traderQuantity: 0, customerQuantity: 0 },
+      ),
+    [rows],
+  );
+
+  const columns = useMemo<GlobalDataTableColumn<ShipmentSummaryRecord>[]>(
+    () => [
+      {
+        id: 'shipmentNumber',
+        header: labels.colShipmentNumber,
+        headerLabel: labels.colShipmentNumber,
+        sortKey: 'shipmentNumber',
+        sortAccessor: (row) => row.shipmentNumber,
+        defaultSortDirection: 'desc',
+        align: 'center',
+        render: (row) => <strong>{row.shipmentNumber}</strong>,
+      },
+      {
+        id: 'totalBoxes',
+        header: labels.colBoxCount,
+        headerLabel: labels.colBoxCount,
+        sortKey: 'totalBoxes',
+        sortAccessor: (row) => row.totalBoxes,
+        align: 'center',
+        render: (row) => row.totalBoxes.toLocaleString(),
+      },
+      {
+        id: 'totalQuantity',
+        header: labels.colQuantity,
+        headerLabel: labels.colQuantity,
+        sortKey: 'totalQuantity',
+        sortAccessor: (row) => row.totalQuantity,
+        align: 'center',
+        render: (row) => row.totalQuantity.toLocaleString(),
+      },
+      {
+        id: 'traderQuantity',
+        header: labels.colTraderQuantity,
+        headerLabel: labels.colTraderQuantity,
+        sortKey: 'traderQuantity',
+        sortAccessor: (row) => row.traderQuantity,
+        align: 'center',
+        render: (row) => row.traderQuantity.toLocaleString(),
+      },
+      {
+        id: 'customerQuantity',
+        header: labels.colCustomerQuantity,
+        headerLabel: labels.colCustomerQuantity,
+        sortKey: 'customerQuantity',
+        sortAccessor: (row) => row.customerQuantity,
+        align: 'center',
+        render: (row) => row.customerQuantity.toLocaleString(),
+      },
+      {
+        id: 'status',
+        header: labels.colStatus,
+        headerLabel: labels.colStatus,
+        sortKey: 'status',
+        sortAccessor: (row) => labels.statusLabels[row.status],
+        align: 'center',
+        render: (row) => labels.statusLabels[row.status],
+      },
+    ],
+    [labels],
+  );
 
   return (
     <section className={workspaceStyles.workspace}>
@@ -122,76 +157,31 @@ export function ShipmentItemsSummary({ lang, labels, description, refreshKey, on
           { key: 'total-shipments', label: labels.summary.totalShipments, value: summaryTotals.totalShipments },
           { key: 'total-boxes', label: labels.summary.totalBoxes, value: summaryTotals.totalBoxes },
           { key: 'total-quantity', label: labels.summary.totalQuantity, value: summaryTotals.totalQuantity },
-          { key: 'general', label: labels.summary.generalQuantity, value: summaryTotals.generalQuantity },
-          { key: 'private', label: labels.summary.privateSelectionQuantity, value: summaryTotals.privateSelectionQuantity },
-          { key: 'customer', label: labels.summary.customerQuantity, value: summaryTotals.customerQuantity },
+          { key: 'trader-general', label: labels.colTraderQuantity, value: summaryTotals.traderQuantity },
+          { key: 'customer', label: labels.colCustomerQuantity, value: summaryTotals.customerQuantity },
         ]}
       />
       <GlobalScopedFilters
         className={styles.filtersSection}
         scope="shipments-shipment-items-summary"
-        filters={summaryFilters}
+        filters={filters}
         onValuesChange={handleFilterValuesChange}
         onApiReady={handleFiltersApiReady}
-        actions={hasData ? (
-          <div className={`global-filters-bar__icon-actions ${sharedFilterStyles.iconActions}`} aria-label={labels.summaryTableActionsLabel}>
-            <button
-              type="button"
-              className={`global-filters-bar__icon-btn ${sharedFilterStyles.iconBtn}`}
-              onClick={handlePrint}
-              aria-label={labels.summaryPrintAriaLabel}
-              title={labels.summaryPrintTitle}
-            >
-              <FaPrint />
-            </button>
-            <button
-              type="button"
-              className={`global-filters-bar__icon-btn ${sharedFilterStyles.iconBtn}`}
-              onClick={() => { void handleExport(); }}
-              aria-label={labels.summaryExportAriaLabel}
-              title={labels.summaryExportTitle}
-            >
-              <FaFileArrowDown />
-            </button>
-          </div>
-        ) : undefined}
       />
       {error ? (
         <p>{error}</p>
       ) : isLoading ? (
         <p>{labels.loading}</p>
+      ) : rows.length === 0 ? (
+        <p>{labels.empty}</p>
       ) : (
-        <>
-          {shipments.length > 0 && (
-            <ShipmentsBoxStatusTable
-              lang={lang}
-              shipments={shipments}
-              title={labels.perShipmentTable.title}
-              rowBoxesLabel={labels.perShipmentTable.rowBoxes}
-              rowStatusLabel={labels.perShipmentTable.rowStatus}
-              shipmentColumnLabel={labels.colShipmentNumber}
-              statusLabels={labels.perShipmentTable.statusLabels}
-            />
-          )}
-          <ShipmentsSummaryMatrix
-            lang={lang}
-            matrix={summaryMatrix}
-            labels={labels}
-          />
-          <div className={styles.breakdownPanel}>
-            <h3 className={styles.categoriesTitle}>{labels.summaryMatrix.categoriesTitle}</h3>
-            <div className={styles.categoryTablesStack}>
-              {detailedMatrices.map((matrix) => (
-                <ShipmentDetailedBreakdownTable
-                  key={matrix.shipmentNumber}
-                  lang={lang}
-                  data={matrix}
-                  labels={labels}
-                />
-              ))}
-            </div>
-          </div>
-        </>
+        <GlobalDataTable<ShipmentSummaryRecord>
+          columns={columns}
+          rows={rows}
+          getRowKey={(row) => row.id}
+          emptyLabel={labels.empty}
+          defaultSortState={{ key: 'shipmentNumber', direction: 'desc' }}
+        />
       )}
     </section>
   );

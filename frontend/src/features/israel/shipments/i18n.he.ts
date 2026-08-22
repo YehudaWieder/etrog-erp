@@ -20,6 +20,8 @@ export const ISRAEL_SHIPMENTS_I18N_HE: IsraelShipmentsI18n = {
       icon: 'fa-chart-bar',
       items: [
         { id: 'shipment-items-summary', label: 'סיכום משלוחים', href: '/shipments/shipment-items-summary', icon: 'fa-chart-bar' },
+        { id: 'shipment-items-summary-traders', label: 'סיכום פריטי משלוח סוחרים', href: '/shipments/shipment-items-summary-traders', icon: 'fa-handshake' },
+        { id: 'shipment-items-summary-customers', label: 'סיכום פריטי משלוח לקוחות', href: '/shipments/shipment-items-summary-customers', icon: 'fa-users' },
       ],
     },
     {
@@ -61,6 +63,14 @@ export const ISRAEL_SHIPMENTS_I18N_HE: IsraelShipmentsI18n = {
     },
     'shipment-items-summary': {
       title: 'סיכום פריטי משלוח',
+      description: 'בקרוב...',
+    },
+    'shipment-items-summary-traders': {
+      title: 'סיכום פריטי משלוח סוחרים',
+      description: 'בקרוב...',
+    },
+    'shipment-items-summary-customers': {
+      title: 'סיכום פריטי משלוח לקוחות',
       description: 'בקרוב...',
     },
     'shipment-items': {

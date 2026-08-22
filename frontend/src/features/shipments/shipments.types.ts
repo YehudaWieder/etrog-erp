@@ -25,10 +25,13 @@ export type ShipmentItemsTableRow = {
   boxNumber: number;
   boxStatus: BoxStatus;
   shipmentNumber: number;
+  shipmentStatus: ShipmentStatus;
   category: string;
   quantity: number;
   ownership: string;
   ownershipType: ItemOwnership;
+  traderId: number | null;
+  customerId: number | null;
   isPrivateSelection: boolean;
   grade: string | null;
   customGrade: string | null;
@@ -50,6 +53,8 @@ export type ShipmentsTableLabels = {
   colShipmentNumber: string;
   colBoxCount: string;
   colQuantity: string;
+  colTraderQuantity: string;
+  colCustomerQuantity: string;
   colStatus: string;
   colShippedAt: string;
   detailsButtonAriaLabel: string;
@@ -198,6 +203,13 @@ export type ShipmentItemsTableLabels = {
   colOwnership: string;
   colStockSource: string;
   stockSourceLabels: { GENERAL: string; PRIVATE_SELECTION: string };
+  traderFilterLabel: string;
+  customerFilterLabel: string;
+  stockSourceFilterLabel: string;
+  allStockSourceOption: string;
+  stockStatusFilterLabel: string;
+  allStockStatusOption: string;
+  stockStatusLabels: { PREPARING: string; SHIPPED: string; DELIVERED: string };
   detailsButtonAriaLabel: string;
   detailsPanelTitle: (itemId?: number) => string;
   detailsPanelCloseLabel: string;

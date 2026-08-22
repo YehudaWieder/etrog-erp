@@ -13,6 +13,8 @@ import { AllBoxesTable } from './components/AllBoxesTable';
 import { ShipmentItemsTable } from './components/ShipmentItemsTable';
 import { DeletedShipmentItemsTable } from './components/DeletedShipmentItemsTable';
 import { ShipmentItemsSummary } from './components/ShipmentItemsSummary';
+import { TraderShipmentItemsSummarySection } from './components/TraderShipmentItemsSummarySection';
+import { CustomerShipmentItemsSummarySection } from './components/CustomerShipmentItemsSummarySection';
 import { ShipmentsPageHeaderActions } from './components/shared/ShipmentsPageHeaderActions';
 import { NewShipmentFormModal } from './components/NewShipmentFormModal';
 import { NewBoxFormModal } from './components/NewBoxFormModal';
@@ -168,7 +170,12 @@ export function ShipmentsPage() {
       return t.pageControls.addBox;
     }
 
-    if (activeSidebarId === 'shipment-items' || activeSidebarId === 'shipment-items-summary') {
+    if (
+      activeSidebarId === 'shipment-items' ||
+      activeSidebarId === 'shipment-items-summary' ||
+      activeSidebarId === 'shipment-items-summary-traders' ||
+      activeSidebarId === 'shipment-items-summary-customers'
+    ) {
       return t.pageControls.packItems;
     }
 
@@ -179,7 +186,12 @@ export function ShipmentsPage() {
   const isBoxesTableActive = activeSidebarId === 'all-boxes';
   const isShipmentItemsTableActive = activeSidebarId === 'shipment-items';
   const isTrashActive = activeSidebarId === 'shipment-items-trash';
-  const isShipmentItemsSummaryActive = activeSidebarId === 'shipment-items-summary';
+  const isShipmentItemsSummaryActive =
+    activeSidebarId === 'shipment-items-summary' ||
+    activeSidebarId === 'shipment-items-summary-traders' ||
+    activeSidebarId === 'shipment-items-summary-customers';
+  const isTraderShipmentItemsSummaryActive = activeSidebarId === 'shipment-items-summary-traders';
+  const isCustomerShipmentItemsSummaryActive = activeSidebarId === 'shipment-items-summary-customers';
   const selectedBoxIds = useMemo(() => selectedBoxRows.map((row) => row.id), [selectedBoxRows]);
   const selectedBoxRow = selectedBoxRows.length === 1 ? selectedBoxRows[0] : null;
   const isViewingNonActiveSeason =
@@ -344,7 +356,12 @@ export function ShipmentsPage() {
       setIsNewShipmentModalOpen(true);
     } else if (activeSidebarId === 'all-boxes') {
       setIsNewBoxModalOpen(true);
-    } else if (activeSidebarId === 'shipment-items' || activeSidebarId === 'shipment-items-summary') {
+    } else if (
+      activeSidebarId === 'shipment-items' ||
+      activeSidebarId === 'shipment-items-summary' ||
+      activeSidebarId === 'shipment-items-summary-traders' ||
+      activeSidebarId === 'shipment-items-summary-customers'
+    ) {
       setIsPackingModalOpen(true);
     } else {
       handleCreateAction(addActionLabel);
@@ -838,10 +855,26 @@ export function ShipmentsPage() {
           onRowCountChange={setTableRowCount}
           onSeasonInfoChange={setCurrentTabSeasonInfo}
         />
+      ) : isTraderShipmentItemsSummaryActive ? (
+        <TraderShipmentItemsSummarySection
+          lang={lang}
+          labels={t.shipmentItemsTableLabels}
+          description={content.description}
+          refreshKey={itemsRefreshKey}
+          onSeasonInfoChange={setCurrentTabSeasonInfo}
+        />
+      ) : isCustomerShipmentItemsSummaryActive ? (
+        <CustomerShipmentItemsSummarySection
+          lang={lang}
+          labels={t.shipmentItemsTableLabels}
+          description={content.description}
+          refreshKey={itemsRefreshKey}
+          onSeasonInfoChange={setCurrentTabSeasonInfo}
+        />
       ) : isShipmentItemsSummaryActive ? (
         <ShipmentItemsSummary
           lang={lang}
-          labels={t.shipmentItemsTableLabels}
+          labels={t.tableLabels}
           description={content.description}
           refreshKey={itemsRefreshKey}
           onSeasonInfoChange={setCurrentTabSeasonInfo}

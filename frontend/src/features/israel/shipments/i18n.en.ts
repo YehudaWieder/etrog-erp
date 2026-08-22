@@ -20,6 +20,8 @@ export const ISRAEL_SHIPMENTS_I18N_EN: IsraelShipmentsI18n = {
       icon: 'fa-chart-bar',
       items: [
         { id: 'shipment-items-summary', label: 'Shipments Summary', href: '/shipments/shipment-items-summary', icon: 'fa-chart-bar' },
+        { id: 'shipment-items-summary-traders', label: 'Trader Shipment Items Summary', href: '/shipments/shipment-items-summary-traders', icon: 'fa-handshake' },
+        { id: 'shipment-items-summary-customers', label: 'Customer Shipment Items Summary', href: '/shipments/shipment-items-summary-customers', icon: 'fa-users' },
       ],
     },
     {
@@ -61,6 +63,14 @@ export const ISRAEL_SHIPMENTS_I18N_EN: IsraelShipmentsI18n = {
     },
     'shipment-items-summary': {
       title: 'Shipment Items Summary',
+      description: 'Coming soon...',
+    },
+    'shipment-items-summary-traders': {
+      title: 'Trader Shipment Items Summary',
+      description: 'Coming soon...',
+    },
+    'shipment-items-summary-customers': {
+      title: 'Customer Shipment Items Summary',
       description: 'Coming soon...',
     },
     'shipment-items': {

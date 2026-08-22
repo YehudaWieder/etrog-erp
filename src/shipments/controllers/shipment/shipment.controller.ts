@@ -47,6 +47,15 @@ export class ShipmentController {
     return this.shipmentService.findAllBySeason(seasonId);
   }
 
+  @Get('summary')
+  @ApiOperation({ summary: 'Retrieve a lightweight per-shipment summary (boxes, quantity, trader/customer split, status) for a season' })
+  @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season to filter shipments by.' })
+  @ApiResponse({ status: 200, description: 'List of shipment summaries returned successfully.' })
+  @ApiResponse({ status: 400, description: 'Invalid or missing seasonId query parameter.' })
+  findSummary(@Query('seasonId', ParseIntPipe) seasonId: number) {
+    return this.shipmentService.findSummaryBySeason(seasonId);
+  }
+
   @Get('by-number')
   @ApiOperation({ summary: 'Find a shipment by its sequential shipment number within a season. Unique constraint: [seasonId, shipmentNumber].' })
   @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season.' })

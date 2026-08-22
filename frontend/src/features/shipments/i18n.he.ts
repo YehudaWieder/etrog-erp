@@ -18,6 +18,8 @@ export const SHIPMENTS_I18N_HE = {
       icon: 'fa-chart-bar',
       items: [
         { id: 'shipment-items-summary', label: 'סיכום משלוחים', href: '/shipments/shipment-items-summary', icon: 'fa-chart-bar' },
+        { id: 'shipment-items-summary-traders', label: 'סיכום פריטי משלוח סוחרים', href: '/shipments/shipment-items-summary-traders', icon: 'fa-handshake' },
+        { id: 'shipment-items-summary-customers', label: 'סיכום פריטי משלוח לקוחות', href: '/shipments/shipment-items-summary-customers', icon: 'fa-users' },
       ],
     },
     {
@@ -84,8 +86,16 @@ export const SHIPMENTS_I18N_HE = {
       description: 'כאן מוצגים כל הקרטונים במערכת.',
     },
     'shipment-items-summary': {
-      title: 'סיכום פריטי משלוח',
-      description: 'כאן יוצג סיכום פריטי המשלוחים לפי קטגוריות ומשלוחים.',
+      title: 'סיכום משלוחים',
+      description: 'תצוגה מרוכזת של כל משלוחי העונה — כמות קרטונים ואתרוגים, פילוח בין סוחרים ללקוחות וסטטוס עדכני לכל משלוח.',
+    },
+    'shipment-items-summary-traders': {
+      title: 'סיכום פריטי משלוח סוחרים',
+      description: 'כאן יוצג סיכום פריטי המשלוחים ששייכים לסוחרים.',
+    },
+    'shipment-items-summary-customers': {
+      title: 'סיכום פריטי משלוח לקוחות',
+      description: 'טבלת סיכום פריטי המשלוחים ששייכים ללקוחות, עם סינון לפי עונה, מספר משלוח, לקוח וסטטוס משלוח.',
     },
     'shipment-items': {
       title: 'רשימת תנועות פריטים',
@@ -544,6 +554,8 @@ export const SHIPMENTS_I18N_HE = {
     colShipmentNumber: 'מס\' משלוח',
     colBoxCount: 'כמות קרטונים',
     colQuantity: 'כמות אתרוגים',
+    colTraderQuantity: 'כמות אתרוגים סוחרים',
+    colCustomerQuantity: 'כמות אתרוגים לקוחות',
     colStatus: 'סטטוס',
     colShippedAt: 'תאריך משלוח',
     detailsButtonAriaLabel: 'פתיחת פרטי משלוח',
@@ -763,6 +775,17 @@ export const SHIPMENTS_I18N_HE = {
     stockSourceLabels: {
       GENERAL: 'כללי',
       PRIVATE_SELECTION: 'מיון פרטי',
+    },
+    traderFilterLabel: 'סוחר',
+    customerFilterLabel: 'לקוח',
+    stockSourceFilterLabel: 'מקור מלאי',
+    allStockSourceOption: 'כל מקורות המלאי',
+    stockStatusFilterLabel: 'סטטוס מלאי',
+    allStockStatusOption: 'כל הסטטוסים',
+    stockStatusLabels: {
+      PREPARING: 'נארז',
+      SHIPPED: 'נשלח',
+      DELIVERED: 'נמסר',
     },
     detailsButtonAriaLabel: 'פתיחת פרטי פריט משלוח',
     detailsPanelTitle: (itemId?: number) => (itemId ? `פרטי פריט ${itemId}` : 'פרטי פריט'),

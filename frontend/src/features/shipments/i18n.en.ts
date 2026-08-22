@@ -18,6 +18,8 @@ export const SHIPMENTS_I18N_EN = {
       icon: 'fa-chart-bar',
       items: [
         { id: 'shipment-items-summary', label: 'Shipments Summary', href: '/shipments/shipment-items-summary', icon: 'fa-chart-bar' },
+        { id: 'shipment-items-summary-traders', label: 'Trader Shipment Items Summary', href: '/shipments/shipment-items-summary-traders', icon: 'fa-handshake' },
+        { id: 'shipment-items-summary-customers', label: 'Customer Shipment Items Summary', href: '/shipments/shipment-items-summary-customers', icon: 'fa-users' },
       ],
     },
     {
@@ -81,8 +83,16 @@ export const SHIPMENTS_I18N_EN = {
       description: 'All boxes in the system are displayed here.',
     },
     'shipment-items-summary': {
-      title: 'Shipment Items Summary',
-      description: 'An overview of shipment items by category and shipment will be shown here.',
+      title: 'Shipments Summary',
+      description: 'A consolidated overview of every shipment in the season — box and quantity totals, the trader/customer split, and each shipment\'s current status.',
+    },
+    'shipment-items-summary-traders': {
+      title: 'Trader Shipment Items Summary',
+      description: 'An overview of shipment items owned by traders will be shown here.',
+    },
+    'shipment-items-summary-customers': {
+      title: 'Customer Shipment Items Summary',
+      description: 'A summary table of shipment items owned by customers, filterable by season, shipment number, customer, and shipment status.',
     },
     'shipment-items': {
       title: 'Items Movement List',
@@ -542,6 +552,8 @@ export const SHIPMENTS_I18N_EN = {
     colShipmentNumber: 'Shipment #',
     colBoxCount: 'Boxes',
     colQuantity: 'Quantity',
+    colTraderQuantity: 'Trader Quantity',
+    colCustomerQuantity: 'Customer Quantity',
     colStatus: 'Status',
     colShippedAt: 'Shipped At',
     detailsButtonAriaLabel: 'Open shipment details',
@@ -761,6 +773,17 @@ export const SHIPMENTS_I18N_EN = {
     stockSourceLabels: {
       GENERAL: 'General',
       PRIVATE_SELECTION: 'Private Selection',
+    },
+    traderFilterLabel: 'Trader',
+    customerFilterLabel: 'Customer',
+    stockSourceFilterLabel: 'Stock Source',
+    allStockSourceOption: 'All stock sources',
+    stockStatusFilterLabel: 'Stock Status',
+    allStockStatusOption: 'All statuses',
+    stockStatusLabels: {
+      PREPARING: 'Packaged',
+      SHIPPED: 'Shipped',
+      DELIVERED: 'Delivered',
     },
     detailsButtonAriaLabel: 'Open shipment item details',
     detailsPanelTitle: (itemId?: number) => (itemId ? `Item ${itemId} Details` : 'Item Details'),
