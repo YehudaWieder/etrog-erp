@@ -9,7 +9,7 @@ import {
   type CreateIsraelSortCategoryPayload,
   type IsraelSortCategory,
   type UpdateIsraelSortCategoryPayload,
-} from '../services/israelSortCategoriesApi';
+} from '../services/israel/israelSortCategoriesApi';
 
 type IsraelSortCategoriesState = {
   items: IsraelSortCategory[];

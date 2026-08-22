@@ -4,7 +4,7 @@ import { GlobalDataTable } from '../../../../../components/ui/GlobalDataTable';
 import { GlobalLeftDetailsPanel } from '../../../../../components/ui/GlobalLeftDetailsPanel';
 import workspaceStyles from '../../../../../components/ui/styles/WorkspaceSection.module.css';
 import { ShipmentsSummaryCards } from '../../../../shipments/components/shared/ShipmentsSummaryCards';
-import type { IsraelShipmentRecord } from '../../../../../services/israelShipmentsApi';
+import type { IsraelShipmentRecord } from '../../../../../services/israel/israelShipmentsApi';
 import type { IsraelAllShipmentsTableLabels } from '../../israelShipments.types';
 import { useIsraelAllShipmentsFilters } from '../../hooks/useIsraelAllShipmentsFilters';
 import { useIsraelAllShipmentsTable } from '../../hooks/useIsraelAllShipmentsTable';

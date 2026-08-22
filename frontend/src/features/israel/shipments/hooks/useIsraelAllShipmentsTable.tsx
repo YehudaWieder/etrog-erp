@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FaFileInvoice } from 'react-icons/fa6';
 import { type GlobalDataTableColumn } from '../../../../components/ui/GlobalDataTable';
-import { getIsraelShipmentsBySeason, type IsraelShipmentRecord } from '../../../../services/israelShipmentsApi';
+import { getIsraelShipmentsBySeason, type IsraelShipmentRecord } from '../../../../services/israel/israelShipmentsApi';
 import type { IsraelAllShipmentsTableLabels } from '../israelShipments.types';
 import { formatIsraelShipmentDate, resolveIsraelShipmentStatusClass } from '../utils/israelShipments.util';
 import styles from '../components/all-shipments/IsraelAllShipmentsSection.module.css';
@@ -16,7 +16,7 @@ type UseIsraelAllShipmentsTableResult = {
 export function useIsraelAllShipmentsTable(
   labels: IsraelAllShipmentsTableLabels,
   seasonId: number | null,
-  statusFilter: 'all' | import('../../../../services/israelShipmentsApi').IsraelShipmentStatus,
+  statusFilter: 'all' | import('../../../../services/israel/israelShipmentsApi').IsraelShipmentStatus,
   refreshKey?: number,
   onOpenDetails?: (row: IsraelShipmentRecord) => void,
 ): UseIsraelAllShipmentsTableResult {

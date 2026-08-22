@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { GlobalScopedFilterConfig, GlobalScopedFiltersApi } from '../../../../components/ui/GlobalScopedFilters';
 import { getActiveSeason, getSeasons, type Season } from '../../../../services/seasonsApi';
-import { getIsraelShipmentsBySeason } from '../../../../services/israelShipmentsApi';
-import type { IsraelBoxStatus } from '../../../../services/israelBoxesApi';
+import { getIsraelShipmentsBySeason } from '../../../../services/israel/israelShipmentsApi';
+import type { IsraelBoxStatus } from '../../../../services/israel/israelBoxesApi';
 import type { IsraelAllBoxesTableLabels } from '../israelShipments.types';
 import {
   parseIsraelShipmentSeasonFilterId,

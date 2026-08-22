@@ -20,18 +20,18 @@ import {
 import {
   getIsraelFields,
   type IsraelField,
-} from '../../../services/israelFieldsApi';
+} from '../../../services/israel/israelFieldsApi';
 import {
   getIsraelFieldCategoriesBySeason,
   type IsraelFieldCategory,
-} from '../../../services/israelFieldCategoriesApi';
+} from '../../../services/israel/israelFieldCategoriesApi';
 import {
   createIsraelHarvest,
   deleteIsraelHarvest,
   getIsraelHarvestsBySeason,
   updateIsraelHarvest,
   type IsraelHarvestRecord,
-} from '../../../services/israelHarvestsApi';
+} from '../../../services/israel/israelHarvestsApi';
 import {
   createIsraelClassification,
   deleteIsraelClassification,
@@ -40,13 +40,13 @@ import {
   updateIsraelClassification,
   type IsraelClassificationRecord,
   type IsraelClassificationSeasonRecord,
-} from '../../../services/israelClassificationsApi';
+} from '../../../services/israel/israelClassificationsApi';
 import { ApiError } from '../../../services/apiClient';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import {
   getIsraelSortCategories,
   type IsraelSortCategory,
-} from '../../../services/israelSortCategoriesApi';
+} from '../../../services/israel/israelSortCategoriesApi';
 import type { GlobalScopedFilterConfig } from '../../../components/ui/GlobalScopedFilters';
 import { HarvestPageHeaderActions } from '../../harvest/components/shared/HarvestPageHeaderActions';
 import { IsraelHarvestFieldReportSection } from './components/field-report/IsraelHarvestFieldReportSection';

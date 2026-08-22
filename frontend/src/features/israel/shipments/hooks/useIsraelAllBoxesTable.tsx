@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FaFileInvoice } from 'react-icons/fa6';
 import { type GlobalDataTableColumn } from '../../../../components/ui/GlobalDataTable';
-import { getIsraelBoxesBySeason, type IsraelBoxStatus } from '../../../../services/israelBoxesApi';
+import { getIsraelBoxesBySeason, type IsraelBoxStatus } from '../../../../services/israel/israelBoxesApi';
 import type { IsraelAllBoxesTableLabels, IsraelBoxesTableRow } from '../israelShipments.types';
 import { resolveIsraelBoxStatusClass } from '../utils/israelShipments.util';
 import styles from '../components/all-boxes/IsraelAllBoxesSection.module.css';

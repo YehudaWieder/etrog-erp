@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { ApiError } from '../../../../services/apiClient';
-import { deleteIsraelShipment, type IsraelShipmentRecord } from '../../../../services/israelShipmentsApi';
+import { deleteIsraelShipment, type IsraelShipmentRecord } from '../../../../services/israel/israelShipmentsApi';
 
 type DeleteIsraelShipmentDialogText = {
   conflictError: string;

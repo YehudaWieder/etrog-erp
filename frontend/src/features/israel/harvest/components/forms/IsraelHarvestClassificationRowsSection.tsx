@@ -1,6 +1,6 @@
 import { CustomSelect } from '../../../../../components/ui/CustomSelect';
-import type { IsraelFieldCategory } from '../../../../../services/israelFieldCategoriesApi';
-import type { IsraelSortCategory } from '../../../../../services/israelSortCategoriesApi';
+import type { IsraelFieldCategory } from '../../../../../services/israel/israelFieldCategoriesApi';
+import type { IsraelSortCategory } from '../../../../../services/israel/israelSortCategoriesApi';
 import type { IsraelHarvestFormClassificationDraft } from '../../israelHarvestPage.types';
 import type { IsraelHarvestI18n } from '../../i18n';
 import {

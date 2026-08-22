@@ -1,4 +1,4 @@
-import { apiClient, type ApiClientInit } from './apiClient';
+import { apiClient, type ApiClientInit } from '../apiClient';
 import type { IsraelPitamStatus } from './israelClassificationsApi';
 
 export type IsraelShipmentItemRecord = {

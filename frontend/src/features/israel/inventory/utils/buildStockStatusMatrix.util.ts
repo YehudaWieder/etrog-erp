@@ -1,4 +1,4 @@
-import type { IsraelStockRecord } from '../../../../services/israelStockApi';
+import type { IsraelStockRecord } from '../../../../services/israel/israelStockApi';
 import { HARVEST_GRADE_OPTIONS } from '../../../harvest/utils/harvestPage.utils';
 import type {
   MatrixRow,

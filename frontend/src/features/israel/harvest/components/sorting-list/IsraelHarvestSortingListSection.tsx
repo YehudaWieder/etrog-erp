@@ -9,7 +9,7 @@ import {
 } from '../../../../../components/ui/GlobalScopedFilters';
 import { HarvestPrintExportActions } from '../../../../harvest/components/shared/HarvestPrintExportActions';
 import { formatHarvestGregorianDate } from '../../../../harvest/services/harvestDisplayFormatters.service';
-import type { IsraelClassificationSeasonRecord } from '../../../../../services/israelClassificationsApi';
+import type { IsraelClassificationSeasonRecord } from '../../../../../services/israel/israelClassificationsApi';
 import type { IsraelHarvestI18n } from '../../i18n';
 import workspaceStyles from '../../../../../components/ui/styles/WorkspaceSection.module.css';
 import panelStyles from '../../../../harvest/components/styles/HarvestPanels.module.css';

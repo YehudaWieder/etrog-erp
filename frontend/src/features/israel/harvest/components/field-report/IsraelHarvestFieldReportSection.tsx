@@ -16,7 +16,7 @@ import {
   GlobalScopedFilters,
   type GlobalScopedFilterConfig,
 } from '../../../../../components/ui/GlobalScopedFilters';
-import type { IsraelHarvestRecord } from '../../../../../services/israelHarvestsApi';
+import type { IsraelHarvestRecord } from '../../../../../services/israel/israelHarvestsApi';
 import { HarvestDetailsTriggerButton } from '../../../../harvest/components/shared/HarvestDetailsTriggerButton';
 import { HarvestPrintExportActions } from '../../../../harvest/components/shared/HarvestPrintExportActions';
 import { HarvestStatCardGrid } from '../../../../harvest/components/shared/HarvestStatCard';

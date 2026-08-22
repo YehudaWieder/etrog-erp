@@ -6,8 +6,8 @@ import {
   FaBoxesStacked,
   FaTruckFast,
 } from 'react-icons/fa6';
-import type { IsraelStockRecord } from '../../../../../services/israelStockApi';
-import type { IsraelSortCategory } from '../../../../../services/israelSortCategoriesApi';
+import type { IsraelStockRecord } from '../../../../../services/israel/israelStockApi';
+import type { IsraelSortCategory } from '../../../../../services/israel/israelSortCategoriesApi';
 import type { IsraelInventoryI18n } from '../../i18n';
 import { HARVEST_GRADE_OPTIONS } from '../../../../harvest/utils/harvestPage.utils';
 import { CategoryGradeMatrixTable } from '../../../../harvest/components/shared/CategoryGradeMatrixTable';

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../../../../services/apiClient';
-import { createIsraelBox, createIsraelBoxesBulk } from '../../../../services/israelBoxesApi';
-import { getIsraelShipmentsBySeason, type IsraelShipmentRecord } from '../../../../services/israelShipmentsApi';
+import { createIsraelBox, createIsraelBoxesBulk } from '../../../../services/israel/israelBoxesApi';
+import { getIsraelShipmentsBySeason, type IsraelShipmentRecord } from '../../../../services/israel/israelShipmentsApi';
 
 export type NewIsraelBoxFormMode = 'SINGLE' | 'BULK';
 

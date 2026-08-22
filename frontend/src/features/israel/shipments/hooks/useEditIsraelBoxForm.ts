@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../../../../services/apiClient';
-import { getIsraelBoxById, updateIsraelBox, type IsraelBoxStatus } from '../../../../services/israelBoxesApi';
-import { getIsraelShipmentsBySeason, type IsraelShipmentRecord } from '../../../../services/israelShipmentsApi';
+import { getIsraelBoxById, updateIsraelBox, type IsraelBoxStatus } from '../../../../services/israel/israelBoxesApi';
+import { getIsraelShipmentsBySeason, type IsraelShipmentRecord } from '../../../../services/israel/israelShipmentsApi';
 import type { IsraelBoxesTableRow } from '../israelShipments.types';
 
 type EditIsraelBoxFormText = {

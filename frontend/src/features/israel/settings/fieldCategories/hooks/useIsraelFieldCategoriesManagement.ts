@@ -9,7 +9,7 @@ import {
   removeIsraelFieldCategory,
 } from '../../../../../store/israelFieldCategoriesSlice';
 import type { AppDispatch, RootState } from '../../../../../store';
-import type { Currency } from '../../../../../services/israelFieldCategoriesApi';
+import type { Currency } from '../../../../../services/israel/israelFieldCategoriesApi';
 import { getIsraelFieldCategoriesI18n } from '../i18n';
 import {
   buildIsraelFieldCategoriesFiltersConfig,

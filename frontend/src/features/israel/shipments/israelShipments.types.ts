@@ -1,7 +1,7 @@
-export type { IsraelShipmentRecord, IsraelShipmentStatus } from '../../../services/israelShipmentsApi';
-export type { IsraelBoxRecord, IsraelBoxStatus } from '../../../services/israelBoxesApi';
-export type { IsraelShipmentItemRecord } from '../../../services/israelShipmentItemsApi';
-export type { IsraelPitamStatus } from '../../../services/israelClassificationsApi';
+export type { IsraelShipmentRecord, IsraelShipmentStatus } from '../../../services/israel/israelShipmentsApi';
+export type { IsraelBoxRecord, IsraelBoxStatus } from '../../../services/israel/israelBoxesApi';
+export type { IsraelShipmentItemRecord } from '../../../services/israel/israelShipmentItemsApi';
+export type { IsraelPitamStatus } from '../../../services/israel/israelClassificationsApi';
 
 export type IsraelAllShipmentsTableLabels = {
   description: string;
@@ -29,7 +29,7 @@ export type IsraelAllShipmentsTableLabels = {
     totalBoxes: string;
     totalQuantity: string;
   };
-  statusLabels: Record<import('../../../services/israelShipmentsApi').IsraelShipmentStatus, string>;
+  statusLabels: Record<import('../../../services/israel/israelShipmentsApi').IsraelShipmentStatus, string>;
 };
 
 export type IsraelBoxesTableRow = {
@@ -37,7 +37,7 @@ export type IsraelBoxesTableRow = {
   boxNumber: number;
   shipmentNumber: number | null;
   itemsCount: number;
-  status: import('../../../services/israelBoxesApi').IsraelBoxStatus;
+  status: import('../../../services/israel/israelBoxesApi').IsraelBoxStatus;
   updatedByName: string;
   notes: string | null;
 };
@@ -74,7 +74,7 @@ export type IsraelAllBoxesTableLabels = {
     notShipped: string;
     shipped: string;
   };
-  statusLabels: Record<import('../../../services/israelBoxesApi').IsraelBoxStatus, string>;
+  statusLabels: Record<import('../../../services/israel/israelBoxesApi').IsraelBoxStatus, string>;
 };
 
 export type IsraelShipmentItemsTableRow = {
@@ -85,7 +85,7 @@ export type IsraelShipmentItemsTableRow = {
   categoryId: number;
   category: string;
   grade: string;
-  pitamStatus: import('../../../services/israelClassificationsApi').IsraelPitamStatus;
+  pitamStatus: import('../../../services/israel/israelClassificationsApi').IsraelPitamStatus;
   quantity: number;
   notes: string | null;
   updatedByName: string;

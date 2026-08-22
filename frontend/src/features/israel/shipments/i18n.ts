@@ -1,7 +1,7 @@
 import type { NavItem, SidebarSection } from '../../../types/navigation';
-import type { IsraelShipmentStatus } from '../../../services/israelShipmentsApi';
-import type { IsraelBoxStatus } from '../../../services/israelBoxesApi';
-import type { IsraelPitamStatus } from '../../../services/israelClassificationsApi';
+import type { IsraelShipmentStatus } from '../../../services/israel/israelShipmentsApi';
+import type { IsraelBoxStatus } from '../../../services/israel/israelBoxesApi';
+import type { IsraelPitamStatus } from '../../../services/israel/israelClassificationsApi';
 import type { IsraelAllShipmentsTableLabels, IsraelAllBoxesTableLabels, IsraelShipmentItemsTableLabels } from './israelShipments.types';
 import { ISRAEL_SHIPMENTS_I18N_EN } from './i18n.en';
 import { ISRAEL_SHIPMENTS_I18N_HE } from './i18n.he';

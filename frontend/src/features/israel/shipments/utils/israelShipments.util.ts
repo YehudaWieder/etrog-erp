@@ -1,5 +1,5 @@
-import type { IsraelShipmentStatus } from '../../../../services/israelShipmentsApi';
-import type { IsraelBoxStatus } from '../../../../services/israelBoxesApi';
+import type { IsraelShipmentStatus } from '../../../../services/israel/israelShipmentsApi';
+import type { IsraelBoxStatus } from '../../../../services/israel/israelBoxesApi';
 
 export const ISRAEL_SHIPMENT_STATUS_CSS_CLASS: Record<IsraelShipmentStatus, string> = {
   PREPARING: 'status-preparing',

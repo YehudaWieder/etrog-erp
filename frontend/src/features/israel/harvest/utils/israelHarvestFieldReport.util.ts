@@ -1,4 +1,4 @@
-import type { IsraelHarvestRecord } from '../../../../services/israelHarvestsApi';
+import type { IsraelHarvestRecord } from '../../../../services/israel/israelHarvestsApi';
 import type { IsraelHarvestFieldReportRow } from '../israelHarvestPage.types';
 
 export function buildIsraelHarvestFieldReportRows(

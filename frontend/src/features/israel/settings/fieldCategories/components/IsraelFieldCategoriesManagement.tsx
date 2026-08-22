@@ -7,7 +7,7 @@ import ManagementCardsGrid from '../../../../../components/ui/ManagementCardsGri
 import ManagementSelectableCard from '../../../../../components/ui/ManagementSelectableCard';
 import SettingsInnerTemplate from '../../../../../components/ui/SettingsInnerTemplate';
 import { SubmitButton } from '../../../../../components/ui/SubmitButton';
-import type { Currency } from '../../../../../services/israelFieldCategoriesApi';
+import type { Currency } from '../../../../../services/israel/israelFieldCategoriesApi';
 import type { IsraelFieldCategoriesManagementProps } from '../israelFieldCategoriesPage.types';
 import { useIsraelFieldCategoriesManagement } from '../hooks/useIsraelFieldCategoriesManagement';
 import styles from './styles/IsraelFieldCategoriesShared.module.css';

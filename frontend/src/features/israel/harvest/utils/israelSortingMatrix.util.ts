@@ -1,4 +1,4 @@
-import type { IsraelClassificationSeasonRecord } from '../../../../services/israelClassificationsApi';
+import type { IsraelClassificationSeasonRecord } from '../../../../services/israel/israelClassificationsApi';
 import { HARVEST_GRADE_OPTIONS } from '../../../harvest/utils/harvestPage.utils';
 import type {
   MatrixRow,

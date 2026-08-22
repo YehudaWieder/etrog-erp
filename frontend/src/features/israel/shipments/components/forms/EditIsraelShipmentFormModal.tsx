@@ -1,7 +1,7 @@
 import { FaXmark } from 'react-icons/fa6';
 import { SubmitButton } from '../../../../../components/ui/SubmitButton';
 import { CustomSelect } from '../../../../../components/ui/CustomSelect';
-import type { IsraelShipmentStatus } from '../../../../../services/israelShipmentsApi';
+import type { IsraelShipmentStatus } from '../../../../../services/israel/israelShipmentsApi';
 import styles from './styles/ShipmentFormModal.module.css';
 
 const STATUS_ORDER: IsraelShipmentStatus[] = ['PREPARING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];

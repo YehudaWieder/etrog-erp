@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FaFileInvoice } from 'react-icons/fa6';
 import { type GlobalDataTableColumn } from '../../../../components/ui/GlobalDataTable';
-import { getIsraelShipmentItemsBySeason } from '../../../../services/israelShipmentItemsApi';
+import { getIsraelShipmentItemsBySeason } from '../../../../services/israel/israelShipmentItemsApi';
 import type { IsraelShipmentItemsTableLabels, IsraelShipmentItemsTableRow } from '../israelShipments.types';
 import styles from '../components/all-items/IsraelShipmentItemsSection.module.css';
 

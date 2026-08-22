@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ApiError } from '../../../../services/apiClient';
-import { packIsraelShipmentItems } from '../../../../services/israelShipmentItemsApi';
-import { getIsraelBoxesBySeason, type IsraelBoxRecord } from '../../../../services/israelBoxesApi';
-import { getIsraelSortCategories, type IsraelSortCategory } from '../../../../services/israelSortCategoriesApi';
-import { getIsraelStockBySeason, type IsraelStockRecord } from '../../../../services/israelStockApi';
-import type { IsraelPitamStatus } from '../../../../services/israelClassificationsApi';
+import { packIsraelShipmentItems } from '../../../../services/israel/israelShipmentItemsApi';
+import { getIsraelBoxesBySeason, type IsraelBoxRecord } from '../../../../services/israel/israelBoxesApi';
+import { getIsraelSortCategories, type IsraelSortCategory } from '../../../../services/israel/israelSortCategoriesApi';
+import { getIsraelStockBySeason, type IsraelStockRecord } from '../../../../services/israel/israelStockApi';
+import type { IsraelPitamStatus } from '../../../../services/israel/israelClassificationsApi';
 
 const PITAM_STATUSES: IsraelPitamStatus[] = ['WITH_PITAM', 'WITHOUT_PITAM', 'MIXED'];
 

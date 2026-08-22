@@ -1,4 +1,4 @@
-import type { IsraelClassificationSeasonRecord } from '../../../../services/israelClassificationsApi';
+import type { IsraelClassificationSeasonRecord } from '../../../../services/israel/israelClassificationsApi';
 
 export type IsraelSortingDailyRow = {
   harvestId: number;

@@ -1,5 +1,5 @@
-import type { IsraelSortCategory } from '../../../../services/israelSortCategoriesApi';
-import type { IsraelClassificationRecord } from '../../../../services/israelClassificationsApi';
+import type { IsraelSortCategory } from '../../../../services/israel/israelSortCategoriesApi';
+import type { IsraelClassificationRecord } from '../../../../services/israel/israelClassificationsApi';
 import {
   createEmptyGradeQuantityMatrix,
   getMatrixTotalQuantity,

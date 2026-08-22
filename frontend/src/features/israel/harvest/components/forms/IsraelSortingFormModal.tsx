@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { CustomSelect } from '../../../../../components/ui/CustomSelect';
 import { SubmitButton } from '../../../../../components/ui/SubmitButton';
 import { TopLoadingBar } from '../../../../../components/ui/TopLoadingBar';
-import type { IsraelHarvestRecord } from '../../../../../services/israelHarvestsApi';
-import type { IsraelFieldCategory } from '../../../../../services/israelFieldCategoriesApi';
-import type { IsraelSortCategory } from '../../../../../services/israelSortCategoriesApi';
+import type { IsraelHarvestRecord } from '../../../../../services/israel/israelHarvestsApi';
+import type { IsraelFieldCategory } from '../../../../../services/israel/israelFieldCategoriesApi';
+import type { IsraelSortCategory } from '../../../../../services/israel/israelSortCategoriesApi';
 import {
   getIsraelClassificationsByHarvest,
   type IsraelPitamStatus,
-} from '../../../../../services/israelClassificationsApi';
+} from '../../../../../services/israel/israelClassificationsApi';
 import { getFilledMatrixEntries } from '../../../../harvest/utils/harvestClassificationMatrix.util';
 import type { PitamRowKey } from '../../../../harvest/utils/harvestClassificationMatrix.util';
 import type { IsraelHarvestFormClassificationDraft } from '../../israelHarvestPage.types';

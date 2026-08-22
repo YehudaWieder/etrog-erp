@@ -1,8 +1,8 @@
 import { FaXmark } from 'react-icons/fa6';
 import { SubmitButton } from '../../../../../components/ui/SubmitButton';
 import { CustomSelect } from '../../../../../components/ui/CustomSelect';
-import type { IsraelBoxStatus } from '../../../../../services/israelBoxesApi';
-import type { IsraelShipmentRecord } from '../../../../../services/israelShipmentsApi';
+import type { IsraelBoxStatus } from '../../../../../services/israel/israelBoxesApi';
+import type { IsraelShipmentRecord } from '../../../../../services/israel/israelShipmentsApi';
 import styles from './styles/BoxFormModal.module.css';
 
 const STATUS_ORDER: IsraelBoxStatus[] = ['OPEN', 'CLOSED', 'SHIPPED', 'DELIVERED'];

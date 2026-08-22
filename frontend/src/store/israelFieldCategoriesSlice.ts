@@ -8,7 +8,7 @@ import {
   type CreateIsraelFieldCategoryPayload,
   type IsraelFieldCategory,
   type UpdateIsraelFieldCategoryPayload,
-} from '../services/israelFieldCategoriesApi';
+} from '../services/israel/israelFieldCategoriesApi';
 
 type IsraelFieldCategoriesState = {
   items: IsraelFieldCategory[];

@@ -1,4 +1,4 @@
-import type { Currency } from '../../../../services/israelFieldCategoriesApi';
+import type { Currency } from '../../../../services/israel/israelFieldCategoriesApi';
 
 export type IsraelFieldCategoriesHeaderState = {
   count: number;

@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CustomSelect } from '../../../../../components/ui/CustomSelect';
 import { SubmitButton } from '../../../../../components/ui/SubmitButton';
-import type { IsraelField } from '../../../../../services/israelFieldsApi';
-import type { IsraelFieldCategory } from '../../../../../services/israelFieldCategoriesApi';
-import type { IsraelSortCategory } from '../../../../../services/israelSortCategoriesApi';
-import type { IsraelHarvestRecord } from '../../../../../services/israelHarvestsApi';
+import type { IsraelField } from '../../../../../services/israel/israelFieldsApi';
+import type { IsraelFieldCategory } from '../../../../../services/israel/israelFieldCategoriesApi';
+import type { IsraelSortCategory } from '../../../../../services/israel/israelSortCategoriesApi';
+import type { IsraelHarvestRecord } from '../../../../../services/israel/israelHarvestsApi';
 import type {
   IsraelClassificationRecord,
   IsraelPitamStatus,
-} from '../../../../../services/israelClassificationsApi';
+} from '../../../../../services/israel/israelClassificationsApi';
 import { formatHebrewDateFromGregorianInput } from '../../../../harvest/utils/harvestPage.utils';
 import {
   getFilledMatrixEntries,

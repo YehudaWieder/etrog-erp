@@ -3,14 +3,14 @@ import { FaArrowLeft, FaArrowRight } from 'react-icons/fa6';
 import { CustomSelect } from '../../../../../components/ui/CustomSelect';
 import { SubmitButton } from '../../../../../components/ui/SubmitButton';
 import { TopLoadingBar } from '../../../../../components/ui/TopLoadingBar';
-import type { IsraelField } from '../../../../../services/israelFieldsApi';
-import type { IsraelSortCategory } from '../../../../../services/israelSortCategoriesApi';
+import type { IsraelField } from '../../../../../services/israel/israelFieldsApi';
+import type { IsraelSortCategory } from '../../../../../services/israel/israelSortCategoriesApi';
 import type {
   CreateIsraelStockMovementPayload,
   IsraelManualMovementType,
   IsraelStockRecord,
-} from '../../../../../services/israelStockApi';
-import type { IsraelPitamStatus } from '../../../../../services/israelClassificationsApi';
+} from '../../../../../services/israel/israelStockApi';
+import type { IsraelPitamStatus } from '../../../../../services/israel/israelClassificationsApi';
 import type { IsraelInventoryI18n } from '../../i18n';
 import styles from '../../../../harvest/components/forms/styles/HarvestBulkFormModal.module.css';
 import typePickerStyles from '../../../../traders/components/styles/MovementTypePicker.module.css';

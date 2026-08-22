@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { ApiError } from '../../../../services/apiClient';
-import { createIsraelShipment } from '../../../../services/israelShipmentsApi';
+import { createIsraelShipment } from '../../../../services/israel/israelShipmentsApi';
 
 type NewIsraelShipmentFormText = {
   validationRequired: string;

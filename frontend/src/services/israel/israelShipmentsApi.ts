@@ -1,4 +1,4 @@
-import { apiClient, type ApiClientInit } from './apiClient';
+import { apiClient, type ApiClientInit } from '../apiClient';
 
 export type IsraelShipmentStatus = 'PREPARING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
 

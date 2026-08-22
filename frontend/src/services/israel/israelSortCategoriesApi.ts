@@ -1,5 +1,5 @@
-import { apiClient } from './apiClient';
-import type { GradeGroup } from './traderCategoriesApi';
+import { apiClient } from '../apiClient';
+import type { GradeGroup } from '../traderCategoriesApi';
 
 export type IsraelSortCategory = {
   id: number;

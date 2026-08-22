@@ -4,8 +4,8 @@ import {
   GlobalScopedFilters,
   type GlobalScopedFilterConfig,
 } from '../../../../../components/ui/GlobalScopedFilters';
-import type { IsraelClassificationSeasonRecord } from '../../../../../services/israelClassificationsApi';
-import type { IsraelSortCategory } from '../../../../../services/israelSortCategoriesApi';
+import type { IsraelClassificationSeasonRecord } from '../../../../../services/israel/israelClassificationsApi';
+import type { IsraelSortCategory } from '../../../../../services/israel/israelSortCategoriesApi';
 import type { IsraelHarvestI18n } from '../../i18n';
 import { HARVEST_GRADE_OPTIONS } from '../../../../harvest/utils/harvestPage.utils';
 import {

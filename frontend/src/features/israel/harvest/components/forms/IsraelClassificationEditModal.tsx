@@ -1,6 +1,6 @@
 import { SubmitButton } from '../../../../../components/ui/SubmitButton';
 import { formatHarvestGregorianDate } from '../../../../harvest/services/harvestDisplayFormatters.service';
-import type { IsraelClassificationSeasonRecord } from '../../../../../services/israelClassificationsApi';
+import type { IsraelClassificationSeasonRecord } from '../../../../../services/israel/israelClassificationsApi';
 import type { IsraelHarvestI18n } from '../../i18n';
 import styles from '../../../../harvest/components/forms/styles/HarvestBulkFormModal.module.css';
 

@@ -26,15 +26,15 @@ import {
   createIsraelStockMovement,
   type IsraelStockRecord,
   type CreateIsraelStockMovementPayload,
-} from '../../../services/israelStockApi';
+} from '../../../services/israel/israelStockApi';
 import {
   getIsraelSortCategories,
   type IsraelSortCategory,
-} from '../../../services/israelSortCategoriesApi';
+} from '../../../services/israel/israelSortCategoriesApi';
 import {
   getIsraelFields,
   type IsraelField,
-} from '../../../services/israelFieldsApi';
+} from '../../../services/israel/israelFieldsApi';
 import { IsraelInventoryAllSection } from './components/all-inventory/IsraelInventoryAllSection';
 import { IsraelStockMovementModal } from './components/all-inventory/IsraelStockMovementModal';
 import { IsraelMovementsSection } from './components/movements/IsraelMovementsSection';

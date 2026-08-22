@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ApiError } from '../../../../services/apiClient';
-import { updateIsraelShipmentItem } from '../../../../services/israelShipmentItemsApi';
-import { getIsraelStockBySeason, type IsraelStockRecord } from '../../../../services/israelStockApi';
+import { updateIsraelShipmentItem } from '../../../../services/israel/israelShipmentItemsApi';
+import { getIsraelStockBySeason, type IsraelStockRecord } from '../../../../services/israel/israelStockApi';
 import type { IsraelShipmentItemsTableRow } from '../israelShipments.types';
 
 type EditIsraelShipmentItemFormText = {

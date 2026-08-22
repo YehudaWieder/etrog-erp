@@ -1,6 +1,6 @@
 import { FaXmark } from 'react-icons/fa6';
 import { SubmitButton } from '../../../../../components/ui/SubmitButton';
-import type { IsraelPitamStatus } from '../../../../../services/israelClassificationsApi';
+import type { IsraelPitamStatus } from '../../../../../services/israel/israelClassificationsApi';
 import styles from './styles/BoxFormModal.module.css';
 
 type EditIsraelShipmentItemFormModalText = {

@@ -8,7 +8,7 @@ import {
   type CreateIsraelFieldPayload,
   type IsraelField,
   type UpdateIsraelFieldPayload,
-} from '../services/israelFieldsApi';
+} from '../services/israel/israelFieldsApi';
 
 type IsraelFieldsState = {
   items: IsraelField[];

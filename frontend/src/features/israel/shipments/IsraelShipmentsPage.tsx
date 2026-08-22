@@ -9,7 +9,7 @@ import type { NavItem } from '../../../types/navigation';
 import { getCurrentUser, isAuthenticated, logout } from '../../../services/authService';
 import { getActiveSeason } from '../../../services/seasonsApi';
 import { useActiveModule } from '../../../hooks/useActiveModule';
-import type { IsraelShipmentRecord } from '../../../services/israelShipmentsApi';
+import type { IsraelShipmentRecord } from '../../../services/israel/israelShipmentsApi';
 import type { IsraelBoxesTableRow, IsraelShipmentItemsTableRow } from './israelShipments.types';
 import { IsraelAllShipmentsSection } from './components/all-shipments/IsraelAllShipmentsSection';
 import { IsraelAllBoxesSection } from './components/all-boxes/IsraelAllBoxesSection';

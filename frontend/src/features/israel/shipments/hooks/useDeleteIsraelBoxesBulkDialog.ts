@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { ApiError } from '../../../../services/apiClient';
-import { deleteIsraelBoxesBulk } from '../../../../services/israelBoxesApi';
+import { deleteIsraelBoxesBulk } from '../../../../services/israel/israelBoxesApi';
 import type { IsraelBoxesTableRow } from '../israelShipments.types';
 
 type DeleteIsraelBoxesBulkDialogText = {

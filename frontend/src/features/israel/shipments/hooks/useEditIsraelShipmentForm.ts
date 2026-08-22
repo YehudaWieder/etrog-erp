@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../../../../services/apiClient';
-import { updateIsraelShipment, type IsraelShipmentRecord, type IsraelShipmentStatus } from '../../../../services/israelShipmentsApi';
+import { updateIsraelShipment, type IsraelShipmentRecord, type IsraelShipmentStatus } from '../../../../services/israel/israelShipmentsApi';
 
 type EditIsraelShipmentFormText = {
   shipmentNumberRequired: string;

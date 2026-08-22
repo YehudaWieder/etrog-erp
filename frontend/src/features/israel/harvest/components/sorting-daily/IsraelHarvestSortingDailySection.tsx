@@ -10,8 +10,8 @@ import {
   GlobalScopedFilters,
   type GlobalScopedFilterConfig,
 } from '../../../../../components/ui/GlobalScopedFilters';
-import type { IsraelClassificationSeasonRecord } from '../../../../../services/israelClassificationsApi';
-import type { IsraelSortCategory } from '../../../../../services/israelSortCategoriesApi';
+import type { IsraelClassificationSeasonRecord } from '../../../../../services/israel/israelClassificationsApi';
+import type { IsraelSortCategory } from '../../../../../services/israel/israelSortCategoriesApi';
 import { HarvestDetailsTriggerButton } from '../../../../harvest/components/shared/HarvestDetailsTriggerButton';
 import { HarvestPrintExportActions } from '../../../../harvest/components/shared/HarvestPrintExportActions';
 import { HarvestStatCardGrid } from '../../../../harvest/components/shared/HarvestStatCard';

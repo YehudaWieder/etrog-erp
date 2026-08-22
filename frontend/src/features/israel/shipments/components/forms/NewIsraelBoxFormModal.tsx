@@ -1,7 +1,7 @@
 import { FaXmark } from 'react-icons/fa6';
 import { SubmitButton } from '../../../../../components/ui/SubmitButton';
 import { CustomSelect } from '../../../../../components/ui/CustomSelect';
-import type { IsraelShipmentRecord } from '../../../../../services/israelShipmentsApi';
+import type { IsraelShipmentRecord } from '../../../../../services/israel/israelShipmentsApi';
 import type { NewIsraelBoxFormMode } from '../../hooks/useNewIsraelBoxForm';
 import styles from './styles/BoxFormModal.module.css';
 
