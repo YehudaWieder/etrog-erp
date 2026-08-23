@@ -2,8 +2,12 @@ import { BadRequestException } from '@nestjs/common';
 import { Grade, Prisma, Role } from '@prisma/client';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import type { TraderShareRowDto } from '../dto/trader-share-row.dto';
+import {
+  SHARE_PERCENT_TOTAL_EPSILON,
+  validateSharePercentRows,
+} from 'src/categories/utils/share-percent-validation.util';
 
-export const CATEGORY_TOTAL_EPSILON = 0.001;
+export const CATEGORY_TOTAL_EPSILON = SHARE_PERCENT_TOTAL_EPSILON;
 
 export type TraderCategoryWithSharesRecord = {
   id: number;
@@ -20,6 +24,21 @@ export type TraderCategoryWithSharesRecord = {
     percent: Prisma.Decimal;
     trader: { name: string };
   }>;
+  traderCategoryShareConditions: Array<{
+    id: number;
+    name: string;
+    startDate: Date;
+    endDate: Date | null;
+    endQuantityThreshold: number | null;
+    endConditionMode: string;
+    status: string;
+    shares: Array<{
+      traderId: number;
+      percent: Prisma.Decimal;
+      trader: { name: string };
+    }>;
+    _count: { traderStock: number };
+  }>;
 };
 
 export type TraderShareWorkerViewRecord = {
@@ -31,36 +50,7 @@ export type TraderShareWorkerViewRecord = {
 };
 
 export function validateSharesPayload(shares: TraderShareRowDto[]) {
-  if (!shares?.length) {
-    throw new BadRequestException('At least one trader share row is required.');
-  }
-
-  const seenTraderIds = new Set<number>();
-  let totalPercent = 0;
-
-  for (const share of shares) {
-    const traderId = Number(share.traderId);
-    const percent = Number(share.percent);
-
-    if (!Number.isInteger(traderId) || traderId <= 0) {
-      throw new BadRequestException('Each share row must include a valid trader ID.');
-    }
-
-    if (!Number.isFinite(percent) || percent <= 0 || percent > 100) {
-      throw new BadRequestException('Each share percent must be a number greater than 0 and up to 100.');
-    }
-
-    if (seenTraderIds.has(traderId)) {
-      throw new BadRequestException('Trader rows must be unique within a category.');
-    }
-
-    seenTraderIds.add(traderId);
-    totalPercent += percent;
-  }
-
-  if (Math.abs(totalPercent - 100) > CATEGORY_TOTAL_EPSILON) {
-    throw new BadRequestException(`Total share percent must be exactly 100%. Current total is ${totalPercent.toFixed(2)}%.`);
-  }
+  validateSharePercentRows(shares);
 }
 
 export function transformCategoryWithShares(record: TraderCategoryWithSharesRecord) {
@@ -75,6 +65,22 @@ export function transformCategoryWithShares(record: TraderCategoryWithSharesReco
     };
   });
 
+  const conditions = record.traderCategoryShareConditions.map((conditionRecord) => ({
+    id: conditionRecord.id,
+    name: conditionRecord.name,
+    startDate: conditionRecord.startDate,
+    endDate: conditionRecord.endDate,
+    endQuantityThreshold: conditionRecord.endQuantityThreshold,
+    endConditionMode: conditionRecord.endConditionMode,
+    status: conditionRecord.status,
+    hasLinkedStock: conditionRecord._count.traderStock > 0,
+    shares: conditionRecord.shares.map((share) => ({
+      traderId: share.traderId,
+      traderName: share.trader.name,
+      percent: Number(share.percent),
+    })),
+  }));
+
   return {
     id: record.id,
     seasonId: record.seasonId,
@@ -85,6 +91,7 @@ export function transformCategoryWithShares(record: TraderCategoryWithSharesReco
     orderIndex: record.orderIndex,
     shares,
     totalPercent: Number(totalPercent.toFixed(2)),
+    conditions,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
   };

@@ -1,5 +1,6 @@
 ﻿import {
   InventoryOwnerScope,
+  InventoryShareConditionScope,
   InventoryShipmentScope,
   InventorySortBy,
   InventorySourceScope,
@@ -14,6 +15,8 @@ export function buildTraderStockSummaryQuery(input: {
   ownerScope?: InventoryOwnerScope;
   shipmentScope?: InventoryShipmentScope;
   sourceScope?: InventorySourceScope;
+  shareConditionScope?: InventoryShareConditionScope;
+  shareConditionId?: string;
   traderCategoryId?: string;
   grade?: Grade;
   pitamStatus?: PitamStatus;
@@ -26,6 +29,8 @@ export function buildTraderStockSummaryQuery(input: {
     ownerScope: input.ownerScope,
     shipmentScope: input.shipmentScope,
     sourceScope: input.sourceScope,
+    shareConditionScope: input.shareConditionScope,
+    shareConditionId: parseOptionalInt(input.shareConditionId),
     traderCategoryId: parseOptionalInt(input.traderCategoryId),
     grade: input.grade,
     pitamStatus: input.pitamStatus,

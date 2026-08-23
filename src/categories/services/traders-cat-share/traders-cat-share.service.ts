@@ -13,6 +13,7 @@ import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interf
 import { CreateTraderCategoryWithSharesDto } from './dto/create-trader-category-with-shares.dto';
 import { UpdateTraderCategoryWithSharesDto } from './dto/update-trader-category-with-shares.dto';
 import { SetTraderCategoryShareDto } from './dto/set-trader-category-share.dto';
+import { TraderCategoryShareConditionDto } from './dto/trader-category-share-condition.dto';
 import {
   extractPercentValue,
   isManagerOrAbove,
@@ -21,6 +22,29 @@ import {
   validateSharesPayload,
 } from './utils/traders-cat-share.utils';
 import { validateGradeGroups } from '../../utils/trader-category-grade-groups.util';
+import { validateSharePercentRows } from '../../utils/share-percent-validation.util';
+
+const CATEGORY_WITH_SHARES_INCLUDE = {
+  traderCategoryShares: {
+    where: { shareConditionId: null },
+    orderBy: { traderId: 'asc' as const },
+    include: {
+      trader: { select: { name: true } },
+    },
+  },
+  traderCategoryShareConditions: {
+    // Every condition ever created, including ENDED ones — shown read-only in the category form
+    // so the history stays visible instead of silently disappearing once a condition finishes.
+    orderBy: { createdAt: 'asc' as const },
+    include: {
+      shares: {
+        orderBy: { traderId: 'asc' as const },
+        include: { trader: { select: { name: true } } },
+      },
+      _count: { select: { traderStock: true } },
+    },
+  },
+};
 
 @Injectable()
 export class TraderCatShareService {
@@ -113,6 +137,14 @@ export class TraderCatShareService {
         })),
       });
 
+      for (const condition of dto.conditions ?? []) {
+        await this.applyConditionInTransaction(tx, {
+          seasonId: dto.seasonId,
+          traderCategoryId: createdCategory.id,
+          condition,
+        });
+      }
+
       return createdCategory.id;
     });
   }
@@ -133,10 +165,13 @@ export class TraderCatShareService {
         },
       });
 
+      // Only the default rows (shareConditionId: null) are replaced here — rows belonging to a
+      // TraderCategoryShareCondition are untouched unless dto.condition explicitly targets them.
       await tx.traderCategoryShare.deleteMany({
         where: {
           traderCategoryId: dto.id,
           seasonId,
+          shareConditionId: null,
         },
       });
 
@@ -148,20 +183,167 @@ export class TraderCatShareService {
           percent: Number(share.percent),
         })),
       });
+
+      for (const condition of dto.conditions ?? []) {
+        await this.applyConditionInTransaction(tx, {
+          seasonId,
+          traderCategoryId: dto.id,
+          condition,
+        });
+      }
     });
+  }
+
+  // Handles create/update/disable/delete of one of a category's distribution conditions, staged
+  // entirely client-side until the category form itself is saved (see
+  // TraderCategoryShareConditionDto). Called once per submitted condition, inside the same
+  // transaction as the default shares, so a failed condition never leaves the default shares
+  // partially replaced. Runs sequentially so two new conditions submitted together are checked for
+  // overlap against each other too (each write becomes visible to the next iteration's query,
+  // since both run inside the same transaction).
+  private async applyConditionInTransaction(
+    tx: Prisma.TransactionClient,
+    params: {
+      seasonId: number;
+      traderCategoryId: number;
+      condition: TraderCategoryShareConditionDto;
+    },
+  ) {
+    const { condition } = params;
+
+    if (condition.action === 'DELETE') {
+      if (!condition.id) {
+        throw new BadRequestException('Cannot delete a distribution condition that was never saved.');
+      }
+
+      const linkedStockCount = await tx.traderStock.count({ where: { shareConditionId: condition.id } });
+      if (linkedStockCount > 0) {
+        throw new BadRequestException(
+          'Cannot delete a distribution condition that already has linked inventory movements. Disable it instead.',
+        );
+      }
+
+      await tx.traderCategoryShare.deleteMany({ where: { shareConditionId: condition.id } });
+      await tx.traderCategoryShareCondition.delete({ where: { id: condition.id } });
+      return;
+    }
+
+    if (condition.id) {
+      const existing = await tx.traderCategoryShareCondition.findUnique({
+        where: { id: condition.id },
+        select: { status: true },
+      });
+      if (existing?.status === 'ENDED') {
+        throw new BadRequestException(
+          'This distribution condition has already ended and can no longer be edited — "if it\'s ended, it\'s ended".',
+        );
+      }
+    }
+
+    validateSharePercentRows(condition.shares);
+
+    const startDate = new Date(condition.startDate);
+    const endDate = condition.endDate ? new Date(condition.endDate) : null;
+
+    if (Number.isNaN(startDate.getTime()) || (endDate && Number.isNaN(endDate.getTime()))) {
+      throw new BadRequestException('Invalid start/end date for the distribution condition.');
+    }
+    if (endDate && endDate <= startDate) {
+      throw new BadRequestException('The condition end date must be after its start date.');
+    }
+
+    if (condition.status === 'ACTIVE') {
+      await this.assertNoOverlappingActiveCondition(tx, {
+        seasonId: params.seasonId,
+        traderCategoryId: params.traderCategoryId,
+        startDate,
+        endDate,
+        excludeConditionId: condition.id,
+      });
+    }
+
+    const traderIds = this.getUniqueTraderIds(condition.shares);
+    await this.assertTradersExist(traderIds);
+
+    const conditionRow = condition.id
+      ? await tx.traderCategoryShareCondition.update({
+          where: { id: condition.id },
+          data: {
+            name: condition.name,
+            startDate,
+            endDate,
+            endQuantityThreshold: condition.endQuantityThreshold ?? null,
+            endConditionMode: condition.endConditionMode,
+            status: condition.status,
+          },
+        })
+      : await tx.traderCategoryShareCondition.create({
+          data: {
+            seasonId: params.seasonId,
+            traderCategoryId: params.traderCategoryId,
+            name: condition.name,
+            startDate,
+            endDate,
+            endQuantityThreshold: condition.endQuantityThreshold ?? null,
+            endConditionMode: condition.endConditionMode,
+            status: condition.status,
+          },
+        });
+
+    await tx.traderCategoryShare.deleteMany({ where: { shareConditionId: conditionRow.id } });
+    await tx.traderCategoryShare.createMany({
+      data: condition.shares.map((share) => ({
+        seasonId: params.seasonId,
+        traderCategoryId: params.traderCategoryId,
+        traderId: Number(share.traderId),
+        percent: Number(share.percent),
+        shareConditionId: conditionRow.id,
+      })),
+    });
+  }
+
+  // Blocks creating/re-activating a condition whose [startDate, endDate ?? ∞) range overlaps an
+  // existing ACTIVE condition for the same category+season — the resolver assumes at most one
+  // ACTIVE condition can match a given date.
+  private async assertNoOverlappingActiveCondition(
+    tx: Prisma.TransactionClient,
+    params: {
+      seasonId: number;
+      traderCategoryId: number;
+      startDate: Date;
+      endDate: Date | null;
+      excludeConditionId?: number;
+    },
+  ) {
+    const OPEN_ENDED = new Date(8640000000000000);
+    const newEnd = params.endDate ?? OPEN_ENDED;
+
+    const activeConditions = await tx.traderCategoryShareCondition.findMany({
+      where: {
+        seasonId: params.seasonId,
+        traderCategoryId: params.traderCategoryId,
+        status: 'ACTIVE',
+        ...(params.excludeConditionId ? { id: { not: params.excludeConditionId } } : {}),
+      },
+      select: { id: true, startDate: true, endDate: true },
+    });
+
+    const overlapping = activeConditions.find((existing) => {
+      const existingEnd = existing.endDate ?? OPEN_ENDED;
+      return existing.startDate <= newEnd && params.startDate <= existingEnd;
+    });
+
+    if (overlapping) {
+      throw new BadRequestException(
+        `This condition's date range overlaps with an existing active condition (#${overlapping.id}) for this category. Disable or adjust the other condition first.`,
+      );
+    }
   }
 
   private async findCategoryWithSharesById(id: number) {
     return this.prisma.tradersCategories.findUnique({
       where: { id },
-      include: {
-        traderCategoryShares: {
-          orderBy: { traderId: 'asc' },
-          include: {
-            trader: { select: { name: true } },
-          },
-        },
-      },
+      include: CATEGORY_WITH_SHARES_INCLUDE,
     });
   }
 
@@ -192,6 +374,7 @@ export class TraderCatShareService {
       where: {
         seasonId,
         traderCategoryId,
+        shareConditionId: null,
       },
       select: {
         traderId: true,
@@ -202,7 +385,7 @@ export class TraderCatShareService {
 
   private async findAllSharesManagerViewBySeason(seasonId: number) {
     return this.prisma.traderCategoryShare.findMany({
-      where: { seasonId },
+      where: { seasonId, shareConditionId: null },
       include: {
         trader: { select: { name: true } },
         traderCategory: { select: { name: true } },
@@ -216,7 +399,7 @@ export class TraderCatShareService {
 
   private async findAllSharesWorkerViewBySeason(seasonId: number) {
     return this.prisma.traderCategoryShare.findMany({
-      where: { seasonId },
+      where: { seasonId, shareConditionId: null },
       select: {
         id: true,
         traderId: true,
@@ -329,17 +512,38 @@ export class TraderCatShareService {
     const categories = await this.prisma.tradersCategories.findMany({
       where: { seasonId },
       orderBy: [{ orderIndex: 'asc' }, { name: 'asc' }],
-      include: {
-        traderCategoryShares: {
-          orderBy: { traderId: 'asc' },
-          include: {
-            trader: { select: { name: true } },
-          },
-        },
-      },
+      include: CATEGORY_WITH_SHARES_INCLUDE,
     });
 
     return categories.map((category) => transformCategoryWithShares(category));
+  }
+
+  // Every distribution condition ever created for the season, including ENDED ones — unlike
+  // CATEGORY_WITH_SHARES_INCLUDE (which drops ENDED so they don't clutter the category edit form),
+  // this powers the trader-inventory "distribution method" filter, where historical/ended
+  // conditions must still be selectable to filter past stock.
+  async findAllConditionsBySeason(seasonId: number) {
+    await this.seasonsService.assertSeasonExists(seasonId);
+
+    const conditions = await this.prisma.traderCategoryShareCondition.findMany({
+      where: { seasonId },
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        traderCategoryId: true,
+        traderCategory: { select: { name: true } },
+      },
+      orderBy: [{ traderCategory: { name: 'asc' } }, { startDate: 'asc' }],
+    });
+
+    return conditions.map((condition) => ({
+      id: condition.id,
+      name: condition.name,
+      status: condition.status,
+      traderCategoryId: condition.traderCategoryId,
+      traderCategoryName: condition.traderCategory.name,
+    }));
   }
 
   private async validateCategoryTotalPercent(
@@ -379,28 +583,40 @@ export class TraderCatShareService {
       data.traderId,
     );
 
-    const share = await this.prisma.traderCategoryShare.upsert({
+    // Prisma's compound-unique lookup can't match a nullable column via `= NULL`, so the
+    // default row (shareConditionId: null) can't be targeted through `upsert`'s `where` directly
+    // — find it first, then update/create by id.
+    const existingDefaultShare = await this.prisma.traderCategoryShare.findFirst({
       where: {
-        traderId_traderCategoryId_seasonId: {
-          traderId: data.traderId,
-          traderCategoryId: data.traderCategoryId,
-          seasonId,
-        },
-      },
-      update: {
-        percent: data.percent,
-      },
-      create: {
-        seasonId,
         traderId: data.traderId,
         traderCategoryId: data.traderCategoryId,
-        percent: data.percent,
+        seasonId,
+        shareConditionId: null,
       },
-      include: {
-        trader: { select: { id: true, name: true } },
-        traderCategory: { select: { id: true, name: true } },
-      },
+      select: { id: true },
     });
+
+    const share = existingDefaultShare
+      ? await this.prisma.traderCategoryShare.update({
+          where: { id: existingDefaultShare.id },
+          data: { percent: data.percent },
+          include: {
+            trader: { select: { id: true, name: true } },
+            traderCategory: { select: { id: true, name: true } },
+          },
+        })
+      : await this.prisma.traderCategoryShare.create({
+          data: {
+            seasonId,
+            traderId: data.traderId,
+            traderCategoryId: data.traderCategoryId,
+            percent: data.percent,
+          },
+          include: {
+            trader: { select: { id: true, name: true } },
+            traderCategory: { select: { id: true, name: true } },
+          },
+        });
 
     return {
       id: share.id,
@@ -452,24 +668,22 @@ export class TraderCatShareService {
     const managerOrAbove = isManagerOrAbove(actor);
 
     if (managerOrAbove) {
-      return this.prisma.traderCategoryShare.findUnique({
+      return this.prisma.traderCategoryShare.findFirst({
         where: {
-          traderId_traderCategoryId_seasonId: {
-            traderId,
-            traderCategoryId,
-            seasonId,
-          },
+          traderId,
+          traderCategoryId,
+          seasonId,
+          shareConditionId: null,
         },
       });
     }
 
-    const share = await this.prisma.traderCategoryShare.findUnique({
+    const share = await this.prisma.traderCategoryShare.findFirst({
       where: {
-        traderId_traderCategoryId_seasonId: {
-          traderId,
-          traderCategoryId,
-          seasonId,
-        },
+        traderId,
+        traderCategoryId,
+        seasonId,
+        shareConditionId: null,
       },
       select: {
         id: true,

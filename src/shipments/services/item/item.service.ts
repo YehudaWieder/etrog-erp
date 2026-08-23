@@ -13,6 +13,7 @@ import {
   validateUpdateShipmentItemInput,
 } from './utils/item.utils';
 import { distributeQuantityByTraderSharesCapped } from 'src/inventory/services/validation/trader-share-distribution';
+import { resolveTraderCategoryShares } from 'src/inventory/services/validation/trader-category-share-resolver';
 import { AuditLogService } from 'src/audit/audit.service';
 
 @Injectable()
@@ -159,11 +160,12 @@ export class ItemService {
   ): Promise<{
     traderDeductions: Array<{ traderId: number; quantity: number }>;
     moduloDeduction: number;
+    shareConditionId: number | null;
   }> {
-    const shares = await tx.traderCategoryShare.findMany({
-      where: { seasonId: params.seasonId, traderCategoryId: params.traderCategoryId },
-      select: { traderId: true, percent: true },
-      orderBy: { traderId: 'asc' },
+    const { shares, shareConditionId } = await resolveTraderCategoryShares(tx, {
+      seasonId: params.seasonId,
+      traderCategoryId: params.traderCategoryId,
+      date: new Date(),
     });
 
     if (shares.length === 0) {
@@ -186,11 +188,13 @@ export class ItemService {
     });
     const availability = new Map(availabilityRows.map((r) => [r.traderId, r.available]));
 
-    return distributeQuantityByTraderSharesCapped({
+    const distribution = distributeQuantityByTraderSharesCapped({
       quantity: params.quantity,
       shares: positiveShares,
       availability,
     });
+
+    return { ...distribution, shareConditionId };
   }
 
   private async ensureEnoughAvailableStock(
@@ -407,7 +411,7 @@ export class ItemService {
       }
 
       if (params.boxOwnership === BoxOwnership.SHARED || params.boxOwnership === BoxOwnership.GENERAL) {
-        const { traderDeductions, moduloDeduction } = await this.buildUnassignedTraderDeductions(tx, {
+        const { traderDeductions, moduloDeduction, shareConditionId } = await this.buildUnassignedTraderDeductions(tx, {
           seasonId: params.seasonId,
           traderCategoryId: params.traderCategoryId,
           grade: params.grade,
@@ -436,6 +440,7 @@ export class ItemService {
               MovementReferenceId: params.itemId,
               shipmentId: params.shipmentId,
               boxId: params.boxId,
+              shareConditionId,
               notes: `Packed by share allocation for shipment item #${params.itemId} [packing-movement]`,
               updatedById: params.updatedById,
             },

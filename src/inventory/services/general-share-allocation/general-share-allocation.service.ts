@@ -5,25 +5,16 @@ import {
   calculateMaximalDistributableByShares,
   calculateMinimalGrossByShares,
 } from '../validation/share-math';
+import {
+  resolveTraderCategoryShareAllocationSegments,
+  resolveTraderCategoryShares,
+  ShareAllocationSegment,
+} from '../validation/trader-category-share-resolver';
 import { InventoryAvailabilityService } from '../inventory-availability.service';
 
 @Injectable()
 export class GeneralShareAllocationService {
   constructor(private readonly inventoryAvailabilityService: InventoryAvailabilityService) {}
-
-  private async getTraderCategoryShares(
-    tx: Prisma.TransactionClient,
-    seasonId: number,
-    traderCategoryId: number,
-  ) {
-    return tx.traderCategoryShare.findMany({
-      where: {
-        seasonId,
-        traderCategoryId,
-      },
-      orderBy: { traderId: 'asc' },
-    });
-  }
 
   // Splits `quantity` into whole "fair packages" only (e.g. for 40/40/20 shares, every full
   // group of 5 splits exactly into 2/2/1). Whatever doesn't complete a full package stays
@@ -72,12 +63,39 @@ export class GeneralShareAllocationService {
       return;
     }
 
-    const shares = await this.getTraderCategoryShares(tx, params.seasonId, params.traderCategoryId);
-    if (shares.length === 0) {
+    // Always a positive (modulo -> trader) movement, so it always splits precisely at a
+    // condition's quantity threshold - regardless of whether this sweep was triggered by an
+    // allocation or as a side effect of a deduction's modulo-remainder cleanup.
+    const segments = await resolveTraderCategoryShareAllocationSegments(
+      tx,
+      { seasonId: params.seasonId, traderCategoryId: params.traderCategoryId, date: params.date },
+      availableQty,
+    );
+
+    for (const segment of segments) {
+      await this.assignModuloSegment(tx, params, segment);
+    }
+  }
+
+  private async assignModuloSegment(
+    tx: Prisma.TransactionClient,
+    params: {
+      seasonId: number;
+      date: Date;
+      traderCategoryId: number;
+      grade: Grade;
+      pitamStatus: PitamStatus;
+      updatedById: number;
+      notes?: string;
+      movementReferenceId?: number;
+    },
+    segment: ShareAllocationSegment,
+  ) {
+    if (segment.quantity <= 0 || segment.shares.length === 0) {
       return;
     }
 
-    const allocations = this.calculateShareAllocations(availableQty, shares).map((allocation) => ({
+    const allocations = this.calculateShareAllocations(segment.quantity, segment.shares).map((allocation) => ({
       traderId: allocation.share.traderId,
       quantity: allocation.quantity,
     }));
@@ -88,15 +106,13 @@ export class GeneralShareAllocationService {
     }
 
     const totalAssigned = allocations.reduce((sum, allocation) => sum + allocation.quantity, 0);
-    const moduloRemainder = availableQty - totalAssigned;
-
     if (totalAssigned <= 0) {
       return;
     }
 
-    if (moduloRemainder < 0) {
+    if (totalAssigned > segment.quantity) {
       throw new BadRequestException(
-        `Invalid trader shares configuration for category ${params.traderCategoryId}: total assigned (${totalAssigned}) exceeds available modulo (${availableQty})`,
+        `Invalid trader shares configuration for category ${params.traderCategoryId}: total assigned (${totalAssigned}) exceeds available modulo segment (${segment.quantity})`,
       );
     }
 
@@ -113,6 +129,7 @@ export class GeneralShareAllocationService {
           isModulo: false,
           type: MovementType.ASSIGNED,
           MovementReferenceId: params.movementReferenceId,
+          shareConditionId: segment.shareConditionId,
           updatedById: params.updatedById,
           notes: params.notes,
         },
@@ -158,36 +175,58 @@ export class GeneralShareAllocationService {
     },
   ) {
     const type = params.type ?? MovementType.HARVEST_IN;
-    const shares = await this.getTraderCategoryShares(tx, params.seasonId, params.traderCategoryId);
-    if (shares.length === 0) {
+
+    // Positive (incoming) movement, so it splits precisely at a condition's quantity threshold
+    // instead of letting a single large allocation overshoot it.
+    const segments = await resolveTraderCategoryShareAllocationSegments(
+      tx,
+      { seasonId: params.seasonId, traderCategoryId: params.traderCategoryId, date: params.date },
+      params.quantity,
+    );
+
+    if (segments.every((segment) => segment.shares.length === 0)) {
       throw new BadRequestException(
         `No trader shares found for category ${params.traderCategoryId} in season ${params.seasonId}`,
       );
     }
 
-    const allocations = this.calculateShareAllocations(params.quantity, shares);
-    const canDistributeToAll = allocations.every((allocation) => allocation.quantity > 0);
     let didAddModulo = false;
 
-    if (!canDistributeToAll) {
-      await tx.traderStock.create({
-        data: {
-          seasonId: params.seasonId,
-          date: params.date,
-          traderId: null,
-          traderCategoryId: params.traderCategoryId,
-          grade: params.grade,
-          pitamStatus: params.pitamStatus,
-          quantity: params.quantity,
-          isModulo: true,
-          type,
-          MovementReferenceId: params.movementReferenceId,
-          updatedById: params.updatedById,
-          notes: params.notes,
-        },
-      });
-      didAddModulo = true;
-    } else {
+    for (const segment of segments) {
+      if (segment.quantity <= 0) {
+        continue;
+      }
+
+      if (segment.shares.length === 0) {
+        throw new BadRequestException(
+          `No trader shares found for category ${params.traderCategoryId} in season ${params.seasonId}`,
+        );
+      }
+
+      const allocations = this.calculateShareAllocations(segment.quantity, segment.shares);
+      const canDistributeToAll = allocations.every((allocation) => allocation.quantity > 0);
+
+      if (!canDistributeToAll) {
+        await tx.traderStock.create({
+          data: {
+            seasonId: params.seasonId,
+            date: params.date,
+            traderId: null,
+            traderCategoryId: params.traderCategoryId,
+            grade: params.grade,
+            pitamStatus: params.pitamStatus,
+            quantity: segment.quantity,
+            isModulo: true,
+            type,
+            MovementReferenceId: params.movementReferenceId,
+            updatedById: params.updatedById,
+            notes: params.notes,
+          },
+        });
+        didAddModulo = true;
+        continue;
+      }
+
       let totalAllocated = 0;
 
       for (const allocation of allocations) {
@@ -203,6 +242,7 @@ export class GeneralShareAllocationService {
             isModulo: false,
             type,
             MovementReferenceId: params.movementReferenceId,
+            shareConditionId: segment.shareConditionId,
             updatedById: params.updatedById,
             notes: params.notes,
           },
@@ -211,7 +251,7 @@ export class GeneralShareAllocationService {
         totalAllocated += allocation.quantity;
       }
 
-      const remainder = params.quantity - totalAllocated;
+      const remainder = segment.quantity - totalAllocated;
       if (remainder > 0) {
         await tx.traderStock.create({
           data: {
@@ -309,9 +349,10 @@ export class GeneralShareAllocationService {
     }
 
     if (deficit > 0) {
-      const shares = await tx.traderCategoryShare.findMany({
-        where: { seasonId: params.seasonId, traderCategoryId: params.traderCategoryId },
-        orderBy: { traderId: 'asc' },
+      const { shares, shareConditionId } = await resolveTraderCategoryShares(tx, {
+        seasonId: params.seasonId,
+        traderCategoryId: params.traderCategoryId,
+        date: params.date,
       });
 
       if (shares.length === 0) {
@@ -374,6 +415,7 @@ export class GeneralShareAllocationService {
               isModulo: false,
               type: params.type,
               MovementReferenceId: params.movementReferenceId,
+              shareConditionId,
               updatedById: params.updatedById,
               notes: params.notes,
             },

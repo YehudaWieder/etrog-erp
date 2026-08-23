@@ -155,10 +155,11 @@ model TradersCategories {
 
   isDefault Boolean @default(false) // true = created by SeedService bootstrap, false = manually added
 
-  traderCategoryShares TraderCategoryShare[]
-  classifications      Classification[]
-  traderStocks         TraderStock[]
-  shipmentItems        ShipmentItem[]
+  traderCategoryShares          TraderCategoryShare[]
+  traderCategoryShareConditions TraderCategoryShareCondition[]
+  classifications               Classification[]
+  traderStocks                  TraderStock[]
+  shipmentItems                 ShipmentItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -209,14 +210,44 @@ model TraderCategoryShare {
 
   percent Decimal
 
+  shareConditionId Int?
+  shareCondition   TraderCategoryShareCondition? @relation(fields: [shareConditionId], references: [id])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([traderId, traderCategoryId, seasonId])
+  @@unique([traderId, traderCategoryId, seasonId, shareConditionId])
 }
 
 // -----------------------------------------------------------------------------
-// 11. Field Operations
+// 11. Trader Category Share Condition
+// -----------------------------------------------------------------------------
+model TraderCategoryShareCondition {
+  id Int @id @default(autoincrement())
+
+  seasonId Int
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  traderCategoryId Int
+  traderCategory   TradersCategories @relation(fields: [traderCategoryId], references: [id])
+
+  name String
+
+  startDate            DateTime
+  endDate              DateTime?
+  endQuantityThreshold Int?
+  endConditionMode     ShareConditionEndMode @default(EITHER)
+  status               ShareConditionStatus  @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shares      TraderCategoryShare[]
+  traderStock TraderStock[]
+}
+
+// -----------------------------------------------------------------------------
+// 12. Field Operations
 // -----------------------------------------------------------------------------
 model FieldHarvest {
   id Int @id @default(autoincrement())
@@ -271,7 +302,7 @@ model FieldHarvest {
 }
 
 // -----------------------------------------------------------------------------
-// 12. Grading & Classification
+// 13. Grading & Classification
 // -----------------------------------------------------------------------------
 model Classification {
   id Int @id @default(autoincrement())
@@ -320,7 +351,7 @@ model Classification {
 }
 
 // -----------------------------------------------------------------------------
-// 13. Trader Inventory & Buffer Management
+// 14. Trader Inventory & Buffer Management
 // -----------------------------------------------------------------------------
 model TraderStock {
   id Int @id @default(autoincrement())
@@ -347,10 +378,10 @@ model TraderStock {
 
   MovementReferenceId Int? // classificationId, shipmentItemId or customerAllocationsId
 
-  // Groups every row created by a single pitam-split resolve() call (one negative/positive triple
-  // per affected trader, plus modulo) so the whole action can be undone in one shot. Null for
-  // every other movement type.
   pitamSplitBatchId String? @db.Uuid
+
+  shareConditionId Int?
+  shareCondition   TraderCategoryShareCondition? @relation(fields: [shareConditionId], references: [id])
 
   shipmentId Int?
   boxId      Int?
@@ -371,10 +402,11 @@ model TraderStock {
   @@index([traderCategoryId, grade, pitamStatus, type])
   @@index([isDeleted])
   @@index([pitamSplitBatchId])
+  @@index([seasonId, shareConditionId])
 }
 
 // -----------------------------------------------------------------------------
-// 14. Customer Allocations (Sales)
+// 15. Customer Allocations (Sales)
 // -----------------------------------------------------------------------------
 model CustomerAllocation {
   id Int @id @default(autoincrement())
@@ -423,7 +455,7 @@ model CustomerAllocation {
 }
 
 // -----------------------------------------------------------------------------
-// 15. Shipment
+// 16. Shipment
 // -----------------------------------------------------------------------------
 model Shipment {
   id Int @id @default(autoincrement())
@@ -462,7 +494,7 @@ model Shipment {
 }
 
 // -----------------------------------------------------------------------------
-// 16. Box - Container
+// 17. Box - Container
 // -----------------------------------------------------------------------------
 model Box {
   id         Int      @id @default(autoincrement())
@@ -512,7 +544,7 @@ model Box {
 }
 
 // -----------------------------------------------------------------------------
-// 17. Items - Products
+// 18. Items - Products
 // -----------------------------------------------------------------------------
 model ShipmentItem {
   id         Int      @id @default(autoincrement())
@@ -641,4 +673,15 @@ enum ItemOwnership {
   CUSTOMER
   GENERAL
   CUSTOM
+}
+
+enum ShareConditionEndMode {
+  EITHER
+  BOTH
+}
+
+enum ShareConditionStatus {
+  ACTIVE
+  DISABLED
+  ENDED
 }

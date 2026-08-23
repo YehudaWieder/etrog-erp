@@ -2,7 +2,7 @@
 import { MovementType } from '@prisma/client';
 import { CombinedInventorySummaryQuery } from 'src/inventory/services/inventory-core/dto/combined-inventory-summary.dto';
 import { CustomerInventoryShipmentScope, CustomerInventorySortBy, CustomerInventorySortOrder } from 'src/inventory/services/customer-allocation/dto/customer-inventory-summary.dto';
-import { InventorySourceScope, InventorySummaryQuery } from 'src/inventory/services/trader-stock/dto/inventory-summary.dto';
+import { InventoryShareConditionScope, InventorySourceScope, InventorySummaryQuery } from 'src/inventory/services/trader-stock/dto/inventory-summary.dto';
 import { InventoryMovementScope, InventoryOwnerScope, InventorySortOrder, InventoryTraderSortBy } from 'src/inventory/services/inventory-core/types/inventory-query.types';
 
 export function validateTraderSummaryQuery(
@@ -12,7 +12,13 @@ export function validateTraderSummaryQuery(
   sourceScope: InventorySourceScope,
   sortBy: InventoryTraderSortBy,
   sortOrder: InventorySortOrder,
+  shareConditionScope: InventoryShareConditionScope = 'ALL',
 ) {
+  const validShareConditionScopes: InventoryShareConditionScope[] = ['ALL', 'DEFAULT_ONLY'];
+  if (!validShareConditionScopes.includes(shareConditionScope)) {
+    throw new BadRequestException('shareConditionScope must be one of: ALL, DEFAULT_ONLY');
+  }
+
   if (!['ALL', 'TRADER', 'MODULO'].includes(ownerScope)) {
     throw new BadRequestException('ownerScope must be ALL, TRADER, or MODULO');
   }

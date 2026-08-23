@@ -4,6 +4,21 @@ export type ShareRow = {
   percent: string;
 };
 
+export type ConditionDraft = {
+  id?: number;
+  name: string;
+  startDate: string;
+  endDate: string;
+  endQuantityThreshold: string;
+  endConditionMode: 'EITHER' | 'BOTH';
+  // ENDED is read-only, set by the backend once a condition's own end criteria are met — never
+  // something the form itself can set. Draft rows in that state are display-only in the UI.
+  status: 'ACTIVE' | 'DISABLED' | 'ENDED';
+  shares: ShareRow[];
+  hasLinkedStock: boolean;
+  markedForDeletion: boolean;
+};
+
 export type TradersHeaderState = {
   count: number;
   isEditDisabled: boolean;

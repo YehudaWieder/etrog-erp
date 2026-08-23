@@ -1,8 +1,12 @@
 import { BadRequestException } from '@nestjs/common';
 import { Grade, Prisma } from '@prisma/client';
 import { CreateDefaultTraderCategoryWithSharesDto } from '../dto/create-default-trader-category-with-shares.dto';
+import {
+  SHARE_PERCENT_TOTAL_EPSILON,
+  validateSharePercentRows,
+} from 'src/categories/utils/share-percent-validation.util';
 
-export const DEFAULT_CATEGORY_TOTAL_EPSILON = 0.001;
+export const DEFAULT_CATEGORY_TOTAL_EPSILON = SHARE_PERCENT_TOTAL_EPSILON;
 
 type SharePreviewRow = {
   traderId: number;
@@ -29,36 +33,7 @@ export function normalizeCategoryName(name: string): string {
 }
 
 export function validateCreateWithSharesPayload(dto: CreateDefaultTraderCategoryWithSharesDto): void {
-  if (!dto.shares?.length) {
-    throw new BadRequestException('At least one trader share row is required.');
-  }
-
-  const seenTraderIds = new Set<number>();
-  let totalPercent = 0;
-
-  for (const share of dto.shares) {
-    const traderId = Number(share.traderId);
-    const percent = Number(share.percent);
-
-    if (!Number.isInteger(traderId) || traderId <= 0) {
-      throw new BadRequestException('Each share row must include a valid trader ID.');
-    }
-
-    if (!Number.isFinite(percent) || percent <= 0 || percent > 100) {
-      throw new BadRequestException('Each share percent must be a number greater than 0 and up to 100.');
-    }
-
-    if (seenTraderIds.has(traderId)) {
-      throw new BadRequestException('Trader rows must be unique within a category.');
-    }
-
-    seenTraderIds.add(traderId);
-    totalPercent += percent;
-  }
-
-  if (Math.abs(totalPercent - 100) > DEFAULT_CATEGORY_TOTAL_EPSILON) {
-    throw new BadRequestException(`Total share percent must be exactly 100%. Current total is ${totalPercent.toFixed(2)}%.`);
-  }
+  validateSharePercentRows(dto.shares ?? []);
 }
 
 export function toApprovalResponse(category: ApprovalPreviewCategory) {

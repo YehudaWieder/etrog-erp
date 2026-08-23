@@ -58,6 +58,15 @@ export class TraderCatShareController {
     return this.shareService.findAllBySeason(seasonId, req.user as AuthenticatedUser);
   }
 
+  @Get('conditions')
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
+  @ApiOperation({ summary: 'Retrieve every distribution condition (any status, including ended) for a season, for use in filters.' })
+  @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season.' })
+  @ApiResponse({ status: 200, description: 'List of distribution conditions returned successfully.' })
+  findAllConditions(@Query('seasonId', ParseIntPipe) seasonId: number) {
+    return this.shareService.findAllConditionsBySeason(seasonId);
+  }
+
   @Get('by-trader-category')
   @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
   @ApiOperation({ summary: 'Retrieve share record by trader, category, and season (composite key lookup)' })

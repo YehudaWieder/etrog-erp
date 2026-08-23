@@ -6,6 +6,7 @@ import { SeasonsService } from 'src/seasons/seasons.service';
 import { InventoryAvailabilityService } from '../inventory-availability.service';
 import { GeneralShareAllocationService } from '../general-share-allocation/general-share-allocation.service';
 import { calculateExactShareQuantity, calculateMinimalGrossByShares } from '../validation/share-math';
+import { resolveTraderCategoryShares } from '../validation/trader-category-share-resolver';
 import { ResolvePitamSplitDto } from './dto/resolve-pitam-split.dto';
 import { groupPitamSplitRowsIntoBatches } from './utils/pitam-split-batch.util';
 
@@ -221,6 +222,7 @@ export class PitamSplitService {
       date: Date;
       notes?: string;
       updatedById: number;
+      shareConditionId?: number | null;
     },
   ) {
     const totalQty = params.withQty + params.withoutQty;
@@ -251,6 +253,7 @@ export class PitamSplitService {
         isModulo: params.isModulo,
         type: MovementType.PITAM_SPLIT,
         pitamSplitBatchId: params.batchId,
+        shareConditionId: params.shareConditionId ?? null,
         notes: params.notes,
         updatedById: params.updatedById,
       },
@@ -273,6 +276,7 @@ export class PitamSplitService {
             type: MovementType.PITAM_SPLIT,
             pitamSplitBatchId: params.batchId,
             MovementReferenceId: negative.id,
+            shareConditionId: params.shareConditionId ?? null,
             notes: params.notes,
             updatedById: params.updatedById,
           },
@@ -295,6 +299,7 @@ export class PitamSplitService {
             type: MovementType.PITAM_SPLIT,
             pitamSplitBatchId: params.batchId,
             MovementReferenceId: negative.id,
+            shareConditionId: params.shareConditionId ?? null,
             notes: params.notes,
             updatedById: params.updatedById,
           },
@@ -350,10 +355,10 @@ export class PitamSplitService {
   ) {
     const totalQty = params.withQty + params.withoutQty;
 
-    const shares = await tx.traderCategoryShare.findMany({
-      where: { seasonId: params.seasonId, traderCategoryId: params.traderCategoryId },
-      select: { traderId: true, percent: true },
-      orderBy: { traderId: 'asc' },
+    const { shares, shareConditionId } = await resolveTraderCategoryShares(tx, {
+      seasonId: params.seasonId,
+      traderCategoryId: params.traderCategoryId,
+      date: params.date,
     });
 
     if (shares.length === 0) {
@@ -454,6 +459,7 @@ export class PitamSplitService {
         date: params.date,
         notes: params.notes,
         updatedById: params.updatedById,
+        shareConditionId: party.isModulo ? null : shareConditionId,
       });
       results.push(...rows);
     }

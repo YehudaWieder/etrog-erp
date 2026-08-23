@@ -14,6 +14,7 @@ import {
   calculateExactShareQuantity,
   calculateMinimalGrossByShares,
 } from '../validation/share-math';
+import { resolveTraderCategoryShares } from '../validation/trader-category-share-resolver';
 
 @Injectable()
 export class CustomerGeneralTransferService {
@@ -213,12 +214,10 @@ export class CustomerGeneralTransferService {
     let moduloRemainder = 0;
 
     if (deficit > 0) {
-      const shares = await tx.traderCategoryShare.findMany({
-        where: {
-          seasonId,
-          traderCategoryId: data.traderCategoryId,
-        },
-        orderBy: { traderId: 'asc' },
+      const { shares, shareConditionId } = await resolveTraderCategoryShares(tx, {
+        seasonId,
+        traderCategoryId: data.traderCategoryId,
+        date: new Date(data.date),
       });
 
       if (shares.length === 0) {
@@ -292,6 +291,7 @@ export class CustomerGeneralTransferService {
             MovementReferenceId: movementReferenceId,
             shipmentId: null,
             boxId: null,
+            shareConditionId,
             updatedById: actorId,
             notes: data.notes,
           },

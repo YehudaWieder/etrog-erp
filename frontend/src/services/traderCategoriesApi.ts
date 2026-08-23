@@ -11,6 +11,38 @@ export type GradeGroup = {
   grades: string[];
 };
 
+export type ShareConditionEndMode = 'EITHER' | 'BOTH';
+// Submittable via the form. ENDED is a terminal state the backend sets on its own — it's never
+// something the client sends.
+export type ShareConditionStatus = 'ACTIVE' | 'DISABLED';
+
+export type TraderCategoryShareCondition = {
+  id: number;
+  name: string;
+  startDate: string;
+  endDate: string | null;
+  endQuantityThreshold: number | null;
+  endConditionMode: ShareConditionEndMode;
+  status: ShareConditionStatus | 'ENDED';
+  hasLinkedStock: boolean;
+  shares: TraderCategoryShare[];
+};
+
+export type TraderCategoryShareConditionPayload = {
+  id?: number;
+  name: string;
+  startDate: string;
+  endDate?: string;
+  endQuantityThreshold?: number;
+  endConditionMode: ShareConditionEndMode;
+  status: ShareConditionStatus;
+  action?: 'DELETE';
+  shares: Array<{
+    traderId: number;
+    percent: number;
+  }>;
+};
+
 export type TraderCategoryWithShares = {
   id: number;
   seasonId: number;
@@ -21,6 +53,7 @@ export type TraderCategoryWithShares = {
   orderIndex: number;
   shares: TraderCategoryShare[];
   totalPercent: number;
+  conditions: TraderCategoryShareCondition[];
   createdAt: string;
   updatedAt: string;
 };
@@ -35,6 +68,7 @@ export type CreateTraderCategoryWithSharesPayload = {
     traderId: number;
     percent: number;
   }>;
+  conditions?: TraderCategoryShareConditionPayload[];
 };
 
 export type UpdateTraderCategoryWithSharesPayload = {
@@ -47,6 +81,7 @@ export type UpdateTraderCategoryWithSharesPayload = {
     traderId: number;
     percent: number;
   }>;
+  conditions?: TraderCategoryShareConditionPayload[];
 };
 
 type LegacyTraderCategory = {
@@ -106,6 +141,7 @@ function mapLegacyToWithShares(
       orderIndex: category.orderIndex ?? index,
       shares: categoryShares,
       totalPercent: Number(totalPercent.toFixed(2)),
+      conditions: [],
       createdAt: category.createdAt ?? '',
       updatedAt: category.updatedAt ?? '',
     };
@@ -151,6 +187,18 @@ export async function deleteTraderCategory(categoryId: number): Promise<{ id: nu
   return apiClient<{ id: number }>(`/traders-categories/${categoryId}`, {
     method: 'DELETE',
   });
+}
+
+export type TraderCategoryShareConditionSummary = {
+  id: number;
+  name: string;
+  status: ShareConditionStatus | 'ENDED';
+  traderCategoryId: number;
+  traderCategoryName: string;
+};
+
+export async function getTraderCategoryShareConditions(seasonId: number): Promise<TraderCategoryShareConditionSummary[]> {
+  return apiClient<TraderCategoryShareConditionSummary[]>(`/trader-shares/conditions?seasonId=${seasonId}`);
 }
 
 export async function reorderTraderCategories(

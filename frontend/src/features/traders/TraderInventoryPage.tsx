@@ -21,7 +21,12 @@ import { getCurrentUser, isAuthenticated, isWorkerRole, logout } from '../../ser
 import { NoPermissionBanner } from '../../components/ui/NoPermissionBanner';
 import { getActiveSeason, getSeasons, type Season } from '../../services/seasonsApi';
 import { getTraders, type Trader } from '../../services/tradersApi';
-import { getTraderCategoriesWithShares, type TraderCategoryWithShares } from '../../services/traderCategoriesApi';
+import {
+  getTraderCategoriesWithShares,
+  getTraderCategoryShareConditions,
+  type TraderCategoryWithShares,
+  type TraderCategoryShareConditionSummary,
+} from '../../services/traderCategoriesApi';
 import { getCustomers, type Customer } from '../../services/customersApi';
 import { getCustomerCategoriesBySeason, type CustomerCategory } from '../../services/customerCategoriesApi';
 
@@ -31,6 +36,7 @@ const DEFAULT_FILTER_VALUES: Record<string, string> = {
   traderId: 'ALL',
   inventoryStatus: 'ALL',
   inventorySource: 'ALL',
+  shareConditionScope: 'ALL',
   movementStatus: 'ALL',
   movementCategory: 'ALL',
   movementGrade: 'ALL',
@@ -52,6 +58,7 @@ export function TraderInventoryPage() {
   const matrixTableRef = useRef<HTMLTableElement>(null);
   const [isAddMovementModalOpen, setIsAddMovementModalOpen] = useState(false);
   const [traderCategories, setTraderCategories] = useState<TraderCategoryWithShares[]>([]);
+  const [shareConditions, setShareConditions] = useState<TraderCategoryShareConditionSummary[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [customerCategories, setCustomerCategories] = useState<CustomerCategory[]>([]);
   const traderCategoryOrder = useMemo(() => {
@@ -156,6 +163,22 @@ export function TraderInventoryPage() {
     return 'ALL';
   }, [filterValues.inventorySource]);
 
+  // The filter's raw value is 'ALL', 'DEFAULT', or `cond-<id>` for a specific distribution
+  // condition — encoded as one string so it fits the existing single-value scoped-filter model.
+  const selectedShareCondition = useMemo<{ scope: 'ALL' | 'DEFAULT_ONLY'; id?: number }>(() => {
+    const raw = filterValues.shareConditionScope || 'ALL';
+    if (raw === 'DEFAULT') {
+      return { scope: 'DEFAULT_ONLY' };
+    }
+    if (raw.startsWith('cond-')) {
+      const id = Number.parseInt(raw.slice(5), 10);
+      if (Number.isFinite(id)) {
+        return { scope: 'ALL', id };
+      }
+    }
+    return { scope: 'ALL' };
+  }, [filterValues.shareConditionScope]);
+
   const summaryFilters = useMemo(
     () => ({
       seasonId: selectedSeasonId,
@@ -163,8 +186,10 @@ export function TraderInventoryPage() {
       ownerScope: selectedOwnerScope,
       shipmentScope: selectedShipmentScope,
       sourceScope: selectedSourceScope,
+      shareConditionScope: selectedShareCondition.scope,
+      shareConditionId: selectedShareCondition.id,
     }),
-    [selectedOwnerScope, selectedSeasonId, selectedTraderId, selectedShipmentScope, selectedSourceScope],
+    [selectedOwnerScope, selectedSeasonId, selectedTraderId, selectedShipmentScope, selectedSourceScope, selectedShareCondition],
   );
 
   const traderInventorySummary = useTraderInventorySummary(isAllInventoryTab, summaryFilters);
@@ -301,6 +326,20 @@ export function TraderInventoryPage() {
     [t.summary.filters.inventorySourceAllOption, t.summary.filters.inventorySourceGeneralOption, t.summary.filters.privateSelectionOption],
   );
 
+  const shareConditionOptions = useMemo(
+    () => [
+      { value: 'ALL', label: t.summary.filters.shareConditionAllOption },
+      { value: 'DEFAULT', label: t.summary.filters.shareConditionDefaultOption },
+      ...[...shareConditions]
+        .sort((left, right) => left.traderCategoryName.localeCompare(right.traderCategoryName, undefined, { sensitivity: 'base' }))
+        .map((condition) => ({
+          value: `cond-${condition.id}`,
+          label: `${condition.name} (${condition.traderCategoryName})`,
+        })),
+    ],
+    [t.summary.filters.shareConditionAllOption, t.summary.filters.shareConditionDefaultOption, shareConditions],
+  );
+
   useEffect(() => {
     if ((!isMovementsTab && !isAllInventoryTab) || !activeSeasonId) {
       return;
@@ -312,18 +351,21 @@ export function TraderInventoryPage() {
       getTraderCategoriesWithShares(activeSeasonId),
       getCustomers(),
       getCustomerCategoriesBySeason(activeSeasonId),
+      getTraderCategoryShareConditions(activeSeasonId),
     ])
-      .then(([nextTraderCategories, nextCustomers, nextCustomerCategories]) => {
+      .then(([nextTraderCategories, nextCustomers, nextCustomerCategories, nextShareConditions]) => {
         if (!isActive) return;
         setTraderCategories(nextTraderCategories);
         setCustomers(nextCustomers);
         setCustomerCategories(nextCustomerCategories);
+        setShareConditions(nextShareConditions);
       })
       .catch(() => {
         if (!isActive) return;
         setTraderCategories([]);
         setCustomers([]);
         setCustomerCategories([]);
+        setShareConditions([]);
       });
 
     return () => {
@@ -367,13 +409,20 @@ export function TraderInventoryPage() {
         disabled: isRemainsInItalyFilter,
       },
       {
+        key: 'shareConditionScope',
+        label: t.summary.filters.shareConditionLabel,
+        defaultValue: 'ALL',
+        options: shareConditionOptions,
+        disabled: isRemainsInItalyFilter,
+      },
+      {
         key: 'inventoryStatus',
         label: t.summary.filters.inventoryStatusLabel,
         defaultValue: 'ALL',
         options: inventoryStatusOptions,
       },
     ],
-    [activeSeasonId, seasonOptions, t.summary.filters.seasonLabel, t.summary.filters.traderLabel, traderOptions, t.summary.filters.inventoryStatusLabel, inventoryStatusOptions, t.summary.filters.inventorySourceLabel, inventorySourceOptions, isRemainsInItalyFilter],
+    [activeSeasonId, seasonOptions, t.summary.filters.seasonLabel, t.summary.filters.traderLabel, traderOptions, t.summary.filters.inventoryStatusLabel, inventoryStatusOptions, t.summary.filters.inventorySourceLabel, inventorySourceOptions, t.summary.filters.shareConditionLabel, shareConditionOptions, isRemainsInItalyFilter],
   );
 
   // "נשאר באיטליה" is never trader-owned or private-selection-scoped - the trader and source
@@ -391,7 +440,11 @@ export function TraderInventoryPage() {
     if (filterValues.inventorySource !== 'ALL') {
       filtersApiRef.current.setFilterValue('inventorySource', 'ALL');
     }
-  }, [isRemainsInItalyFilter, filterValues.traderId, filterValues.inventorySource]);
+
+    if (filterValues.shareConditionScope !== 'ALL') {
+      filtersApiRef.current.setFilterValue('shareConditionScope', 'ALL');
+    }
+  }, [isRemainsInItalyFilter, filterValues.traderId, filterValues.inventorySource, filterValues.shareConditionScope]);
 
   const handlePrintInventoryTable = useCallback(() => {
     if (!matrixTableRef.current) {

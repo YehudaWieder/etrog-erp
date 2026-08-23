@@ -1,5 +1,5 @@
 ﻿import { Prisma, MovementType } from '@prisma/client';
-import { InventorySourceScope, InventorySummaryQuery } from 'src/inventory/services/trader-stock/dto/inventory-summary.dto';
+import { InventoryShareConditionScope, InventorySourceScope, InventorySummaryQuery } from 'src/inventory/services/trader-stock/dto/inventory-summary.dto';
 import { InventoryMovementScope, InventoryOwnerScope } from 'src/inventory/services/inventory-core/types/inventory-query.types';
 
 export function buildTraderStockSummaryWhere(
@@ -45,6 +45,7 @@ export function buildTraderStockSummaryWhere(
   }
 
   applySourceScope(where, sourceScope);
+  applyShareConditionScope(where, query.shareConditionScope ?? 'ALL', query.shareConditionId);
 
   // For non-box-based filters, apply type filter
   // For box-based filters (PACKED_SHIPPED, SHIPPED, UNSHIPPED),
@@ -85,6 +86,23 @@ function applySourceScope(where: Prisma.TraderStockWhereInput, sourceScope: Inve
   }
 
   // ALL: no source restriction.
+}
+
+function applyShareConditionScope(
+  where: Prisma.TraderStockWhereInput,
+  shareConditionScope: InventoryShareConditionScope,
+  shareConditionId?: number,
+) {
+  if (shareConditionId != null) {
+    where.shareConditionId = shareConditionId;
+    return;
+  }
+
+  if (shareConditionScope === 'DEFAULT_ONLY') {
+    where.shareConditionId = null;
+  }
+
+  // ALL: no restriction.
 }
 
 function applyOwnerScope(

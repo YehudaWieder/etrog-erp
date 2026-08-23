@@ -30,7 +30,7 @@ import {
   parseTraderCategorySeasonFilterId,
   parseTraderFilterId,
 } from '../utils/traderCategoriesFilters.util';
-import type { ShareRow, TraderCategoriesManagementProps } from '../tradersManagement.types';
+import type { ConditionDraft, ShareRow, TraderCategoriesManagementProps } from '../tradersManagement.types';
 import {
   calculateTotalPercent,
   createEmptyShareRow,
@@ -38,6 +38,14 @@ import {
   isValidSharePercent,
   TOTAL_EPSILON,
 } from '../utils/traderShares.util';
+import {
+  createEmptyConditionDraft,
+  findOverlappingActiveCondition,
+  isConditionDraftSubmittable,
+  mapConditionDraftToPayload,
+  mapConditionToDraft,
+  validateConditionDraft,
+} from '../utils/traderCategoryShareCondition.util';
 
 const FILTER_SCOPE = 'trader-categories-management';
 const EMPTY_FILTERS: Record<string, string> = {};
@@ -69,6 +77,16 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
   const [gradeGroupRows, setGradeGroupRows] = useState<GradeGroupRow[]>([]);
   const [shareRows, setShareRows] = useState<ShareRow[]>([createEmptyShareRow(1)]);
   const [showAddRowBlockReason, setShowAddRowBlockReason] = useState(false);
+  const [conditionDrafts, setConditionDrafts] = useState<ConditionDraft[]>([]);
+  const [editingConditionIndex, setEditingConditionIndex] = useState<number | null>(null);
+  const [isConditionPopupOpen, setIsConditionPopupOpen] = useState(false);
+  const [conditionError, setConditionError] = useState<string | null>(null);
+  // ENDED conditions are read-only history — left out of every save payload since nothing about
+  // them can change.
+  const submittableConditionDrafts = useMemo(
+    () => conditionDrafts.filter(isConditionDraftSubmittable),
+    [conditionDrafts],
+  );
 
   const [addError, setAddError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
@@ -251,6 +269,99 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
     setGradeGroupRows([]);
     setShareRows([createEmptyShareRow(1)]);
     setShowAddRowBlockReason(false);
+    setConditionDrafts([]);
+    setEditingConditionIndex(null);
+    setIsConditionPopupOpen(false);
+    setConditionError(null);
+  };
+
+  // undefined = add a new condition; a number = re-open an existing draft (by index) for editing.
+  const openConditionPopup = (index?: number) => {
+    setConditionError(null);
+    setEditingConditionIndex(index ?? null);
+    setIsConditionPopupOpen(true);
+  };
+
+  const closeConditionPopup = () => {
+    setIsConditionPopupOpen(false);
+    setEditingConditionIndex(null);
+    setConditionError(null);
+  };
+
+  const stageCondition = (draft: ConditionDraft): string | null => {
+    const otherDrafts = conditionDrafts.filter((_, index) => index !== editingConditionIndex);
+    const validationMessage = validateConditionDraft(
+      draft,
+      {
+        missingName: t.shareCondition.missingName,
+        missingStartDate: t.shareCondition.missingStartDate,
+        invalidDateRange: t.shareCondition.invalidDateRange,
+        missingEndCondition: t.shareCondition.missingEndCondition,
+        atLeastOneShare: t.atLeastOneShare,
+        selectTrader: t.selectTrader,
+        uniqueTraders: t.uniqueTraders,
+        invalidPercent: t.invalidPercent,
+        totalMustBeHundred: t.totalMustBeHundred,
+        overlappingCondition: t.shareCondition.overlappingCondition,
+      },
+      otherDrafts,
+    );
+
+    if (validationMessage) {
+      setConditionError(validationMessage);
+      return validationMessage;
+    }
+
+    setConditionError(null);
+    setConditionDrafts((current) => {
+      if (editingConditionIndex !== null) {
+        return current.map((item, index) => (index === editingConditionIndex ? draft : item));
+      }
+      return [...current, draft];
+    });
+    setIsConditionPopupOpen(false);
+    setEditingConditionIndex(null);
+    return null;
+  };
+
+  const toggleConditionDraftStatus = (index: number) => {
+    const target = conditionDrafts[index];
+    if (!target || target.status === 'ENDED') {
+      return;
+    }
+
+    const nextStatus = target.status === 'ACTIVE' ? 'DISABLED' : 'ACTIVE';
+
+    if (nextStatus === 'ACTIVE') {
+      const otherDrafts = conditionDrafts.filter((_, itemIndex) => itemIndex !== index);
+      const overlapping = findOverlappingActiveCondition({ ...target, status: 'ACTIVE' }, otherDrafts);
+      if (overlapping) {
+        setConditionError(t.shareCondition.overlappingCondition(overlapping.name));
+        return;
+      }
+    }
+
+    setConditionError(null);
+    setConditionDrafts((current) =>
+      current.map((item, itemIndex) => (itemIndex === index ? { ...item, status: nextStatus } : item)),
+    );
+  };
+
+  const deleteConditionDraft = (index: number) => {
+    setConditionDrafts((current) => {
+      const target = current[index];
+      if (!target || target.hasLinkedStock) {
+        return current;
+      }
+
+      if (!target.id) {
+        return current.filter((_, itemIndex) => itemIndex !== index);
+      }
+
+      return current.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, markedForDeletion: true } : item,
+      );
+    });
   };
 
   const validateBeforeSubmit = (): string | null => {
@@ -322,6 +433,10 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
     setSupportedGrades(selectedCategory.supportedGrades ?? []);
     setGradeGroupRows(gradeGroupsToRows(selectedCategory.gradeGroups));
     setShowAddRowBlockReason(false);
+    setConditionDrafts((selectedCategory.conditions ?? []).map(mapConditionToDraft));
+    setEditingConditionIndex(null);
+    setIsConditionPopupOpen(false);
+    setConditionError(null);
     setShareRows(
       selectedCategory.shares.length > 0
         ? selectedCategory.shares.map((share, index) => ({
@@ -371,6 +486,7 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
           traderId: shareRow.traderId as number,
           percent: Number(shareRow.percent),
         })),
+        conditions: submittableConditionDrafts.length > 0 ? submittableConditionDrafts.map(mapConditionDraftToPayload) : undefined,
       });
 
       setCategories((current) => sortByOrderIndex([...current.filter((item) => item.id !== createdCategory.id), createdCategory]));
@@ -410,6 +526,7 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
           traderId: shareRow.traderId as number,
           percent: Number(shareRow.percent),
         })),
+        conditions: submittableConditionDrafts.length > 0 ? submittableConditionDrafts.map(mapConditionDraftToPayload) : undefined,
       });
 
       setCategories((current) => sortByOrderIndex([...current.filter((item) => item.id !== updated.id), updated]));
@@ -537,6 +654,15 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
     addError,
     editError,
     isSubmitting,
+    conditionDrafts,
+    editingConditionIndex,
+    isConditionPopupOpen,
+    conditionError,
+    openConditionPopup,
+    closeConditionPopup,
+    stageCondition,
+    toggleConditionDraftStatus,
+    deleteConditionDraft,
     handleDeleteCategory,
     closeDialogs: () => {
       setIsAddDialogOpen(false);

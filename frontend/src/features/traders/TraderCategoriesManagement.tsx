@@ -50,6 +50,15 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
     addError,
     editError,
     isSubmitting,
+    conditionDrafts,
+    editingConditionIndex,
+    isConditionPopupOpen,
+    conditionError,
+    openConditionPopup,
+    closeConditionPopup,
+    stageCondition,
+    toggleConditionDraftStatus,
+    deleteConditionDraft,
     handleDeleteCategory,
     closeDialogs,
     onSaveFromModal,
@@ -116,30 +125,7 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
         isAddDialogOpen={isAddDialogOpen}
         isEditDialogOpen={isEditDialogOpen}
         selectedCategoryName={selectedCategory?.name ?? ''}
-        t={{
-          cancel: t.cancel,
-          addTitle: t.addTitle,
-          editTitle: t.editTitle,
-          addMessage: t.addMessage,
-          editMessage: t.editMessage,
-          categoryNameLabel: t.categoryNameLabel,
-          categoryNamePlaceholder: t.categoryNamePlaceholder,
-          notesLabel: t.notesLabel,
-          notesPlaceholder: t.notesPlaceholder,
-          allocationSectionTitle: t.allocationSectionTitle,
-          supportedGradesLabel: t.supportedGradesLabel,
-          gradeGroupsLabel: t.gradeGroupsLabel,
-          addGroupLabel: t.addGroupLabel,
-          removeGroupLabel: t.removeGroupLabel,
-          groupNamePlaceholder: t.groupNamePlaceholder,
-          selectTraderOption: t.selectTraderOption,
-          percentPlaceholder: t.percentPlaceholder,
-          removeRow: t.removeRow,
-          addRow: t.addRow,
-          totalPercentLabel: t.totalPercentLabel,
-          save: t.save,
-          saving: t.saving,
-        }}
+        t={t}
         categoryName={categoryName}
         setCategoryName={setCategoryName}
         categoryNotes={categoryNotes}
@@ -152,6 +138,7 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
         renameGradeGroup={renameGradeGroup}
         toggleGradeInGroup={toggleGradeInGroup}
         shareRows={shareRows}
+        traders={sortedTraders}
         getAvailableTradersForRow={getRowAvailableTraders}
         updateShareRow={updateShareRow}
         removeShareRow={removeShareRow}
@@ -163,6 +150,15 @@ const TraderCategoriesManagement: React.FC<TraderCategoriesManagementProps> = ({
         addError={addError}
         editError={editError}
         isSubmitting={isSubmitting}
+        conditionDrafts={conditionDrafts}
+        editingConditionIndex={editingConditionIndex}
+        isConditionPopupOpen={isConditionPopupOpen}
+        conditionError={conditionError}
+        openConditionPopup={openConditionPopup}
+        closeConditionPopup={closeConditionPopup}
+        stageCondition={stageCondition}
+        toggleConditionDraftStatus={toggleConditionDraftStatus}
+        deleteConditionDraft={deleteConditionDraft}
         onClose={closeDialogs}
         onSave={onSaveFromModal}
       />

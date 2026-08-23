@@ -32,8 +32,9 @@ export class TraderStockSummaryService {
     const sourceScope = query.sourceScope ?? 'ALL';
     const sortBy = query.sortBy ?? 'category';
     const sortOrder = query.sortOrder ?? 'asc';
+    const shareConditionScope = query.shareConditionScope ?? 'ALL';
 
-    validateTraderSummaryQuery(query, ownerScope, shipmentScope, sourceScope, sortBy, sortOrder);
+    validateTraderSummaryQuery(query, ownerScope, shipmentScope, sourceScope, sortBy, sortOrder, shareConditionScope);
 
     const [remainsInItalyCustomerAnchorIds, transferredToCustomerModuloRefundIds] =
       shipmentScope === 'TRANSFERRED_TO_CUSTOMER'

@@ -22,18 +22,19 @@ model Season {
   slug String @unique // URL-friendly slug
 
   // Italy module
-  systemConfigs        SystemConfig[]
-  TradersCategories    TradersCategories[]
-  customerCategories   CustomerCategories[]
-  traderCategoryShares TraderCategoryShare[]
-  fieldHarvests        FieldHarvest[]
-  classifications      Classification[]
-  traderStocks         TraderStock[]
-  customerAllocations  CustomerAllocation[]
-  shipment             Shipment[]
-  box                  Box[]
-  shipmentItem         ShipmentItem[]
-  traderSeasonSettings TraderSeasonSettings[]
+  systemConfigs                 SystemConfig[]
+  TradersCategories             TradersCategories[]
+  customerCategories            CustomerCategories[]
+  traderCategoryShares          TraderCategoryShare[]
+  traderCategoryShareConditions TraderCategoryShareCondition[]
+  fieldHarvests                 FieldHarvest[]
+  classifications               Classification[]
+  traderStocks                  TraderStock[]
+  customerAllocations           CustomerAllocation[]
+  shipment                      Shipment[]
+  box                           Box[]
+  shipmentItem                  ShipmentItem[]
+  traderSeasonSettings          TraderSeasonSettings[]
 
   // Israel module
   israelFieldCategories IsraelFieldCategory[]

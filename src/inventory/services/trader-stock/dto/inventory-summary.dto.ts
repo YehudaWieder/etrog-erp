@@ -9,6 +9,9 @@ import {
 
 export type InventoryShipmentScope = InventoryMovementScope;
 export type InventorySourceScope = 'ALL' | 'GENERAL' | 'PRIVATE_SELECTION';
+// ALL = no filter, DEFAULT_ONLY = rows split by the season's default shares (shareConditionId
+// null). A specific condition is selected via `shareConditionId` instead of a scope value.
+export type InventoryShareConditionScope = 'ALL' | 'DEFAULT_ONLY';
 export type InventorySortBy = InventoryTraderSortBy;
 export type {
   InventoryOwnerScope,
@@ -19,6 +22,9 @@ export interface InventorySummaryQuery extends InventorySummaryBaseFilters {
   ownerScope?: InventoryOwnerScope;
   shipmentScope?: InventoryShipmentScope;
   sourceScope?: InventorySourceScope;
+  shareConditionScope?: InventoryShareConditionScope;
+  // When set, filters to this exact TraderCategoryShareCondition, overriding shareConditionScope.
+  shareConditionId?: number;
   sortBy?: InventorySortBy;
   sortOrder?: InventorySortOrder;
 }

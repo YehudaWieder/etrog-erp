@@ -1,10 +1,13 @@
 import { FaXmark } from 'react-icons/fa6';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
 import { CustomSelect } from '../../../components/ui/CustomSelect';
-import type { ShareRow } from '../tradersManagement.types';
+import type { ConditionDraft, ShareRow } from '../tradersManagement.types';
 import { DEFAULT_PERCENT_STEP } from '../utils/traderShares.util';
+import { createEmptyConditionDraft, formatConditionSharesBreakdown } from '../utils/traderCategoryShareCondition.util';
 import { TRADER_CATEGORY_GRADE_OPTIONS } from '../utils/traderCategoryGrades.util';
 import type { GradeGroupRow } from '../utils/traderCategoryGradeGroups.util';
+import type { TraderCategoriesI18n } from '../i18n';
+import { TraderCategoryShareConditionModal } from './TraderCategoryShareConditionModal';
 import styles from './styles/TraderCategoriesShared.module.css';
 
 type TraderOption = {
@@ -12,7 +15,10 @@ type TraderOption = {
   name: string;
 };
 
-type TraderCategoryFormModalText = {
+// A subset of TraderCategoriesI18n. shareRows/shareCondition are optional because this modal is
+// also reused by DefaultTraderCategoriesManagement (season-agnostic templates), which has no
+// concept of distribution conditions — omitting them there simply hides the condition UI below.
+export type TraderCategoryFormModalText = {
   cancel: string;
   addTitle: string;
   editTitle: string;
@@ -35,6 +41,13 @@ type TraderCategoryFormModalText = {
   totalPercentLabel: string;
   save: string;
   saving: string;
+  atLeastOneShare?: string;
+  selectTrader?: string;
+  uniqueTraders?: string;
+  invalidPercent?: string;
+  totalMustBeHundred?: string;
+  shareRows?: TraderCategoriesI18n['shareRows'];
+  shareCondition?: TraderCategoriesI18n['shareCondition'];
 };
 
 type TraderCategoryFormModalProps = {
@@ -54,6 +67,7 @@ type TraderCategoryFormModalProps = {
   renameGradeGroup: (localId: number, name: string) => void;
   toggleGradeInGroup: (localId: number, grade: string) => void;
   shareRows: ShareRow[];
+  traders?: TraderOption[];
   getAvailableTradersForRow: (row: ShareRow) => TraderOption[];
   updateShareRow: (rowId: number, changes: Partial<ShareRow>) => void;
   removeShareRow: (rowId: number) => void;
@@ -65,6 +79,15 @@ type TraderCategoryFormModalProps = {
   addError: string | null;
   editError: string | null;
   isSubmitting: boolean;
+  conditionDrafts?: ConditionDraft[];
+  editingConditionIndex?: number | null;
+  isConditionPopupOpen?: boolean;
+  conditionError?: string | null;
+  openConditionPopup?: (index?: number) => void;
+  closeConditionPopup?: () => void;
+  stageCondition?: (draft: ConditionDraft) => string | null;
+  toggleConditionDraftStatus?: (index: number) => void;
+  deleteConditionDraft?: (index: number) => void;
   onClose: () => void;
   onSave: () => void;
 };
@@ -86,6 +109,7 @@ export function TraderCategoryFormModal({
   renameGradeGroup,
   toggleGradeInGroup,
   shareRows,
+  traders,
   getAvailableTradersForRow,
   updateShareRow,
   removeShareRow,
@@ -97,12 +121,26 @@ export function TraderCategoryFormModal({
   addError,
   editError,
   isSubmitting,
+  conditionDrafts,
+  editingConditionIndex,
+  isConditionPopupOpen,
+  conditionError,
+  openConditionPopup,
+  closeConditionPopup,
+  stageCondition,
+  toggleConditionDraftStatus,
+  deleteConditionDraft,
   onClose,
   onSave,
 }: TraderCategoryFormModalProps): JSX.Element | null {
   if (!isAddDialogOpen && !isEditDialogOpen) {
     return null;
   }
+
+  const conditionEnabled = Boolean(
+    t.shareCondition && openConditionPopup && closeConditionPopup && stageCondition && toggleConditionDraftStatus && deleteConditionDraft,
+  );
+  const conditionT = conditionEnabled ? (t as Required<Pick<typeof t, 'shareCondition' | 'shareRows'>> & typeof t) : null;
 
   return (
     <div className="modal-overlay">
@@ -250,6 +288,89 @@ export function TraderCategoryFormModal({
           {showAddRowBlockReason && addRowBlockReason ? <p className="seasons-manager__error">{addRowBlockReason}</p> : null}
         </div>
 
+        {conditionEnabled && conditionT ? (
+          <>
+            <p className={styles.sharesSubtitle}>{conditionT.shareCondition.sectionTitle}</p>
+            <div className={styles.conditionArea}>
+              {(conditionDrafts ?? [])
+                .map((draft, index) => ({ draft, index }))
+                .filter(({ draft }) => !draft.markedForDeletion)
+                .map(({ draft, index }) => (
+                  <div key={draft.id ?? `new-${index}`} className={styles.conditionSummaryRow}>
+                    <div className={styles.conditionSummaryTop}>
+                      <div className={styles.conditionSummaryHead}>
+                        <strong className={styles.shareName}>{draft.name}</strong>
+                      </div>
+                      <span
+                        className={`${styles.statusBadge} ${
+                          draft.status === 'ACTIVE'
+                            ? styles.statusBadgeActive
+                            : draft.status === 'DISABLED'
+                              ? styles.statusBadgeDisabled
+                              : styles.statusBadgeEnded
+                        }`}
+                      >
+                        {draft.status === 'ACTIVE'
+                          ? conditionT.shareCondition.statusActiveBadge
+                          : draft.status === 'DISABLED'
+                            ? conditionT.shareCondition.statusDisabledBadge
+                            : conditionT.shareCondition.statusEndedBadge}
+                      </span>
+                    </div>
+                    <div className={styles.conditionSummaryBottom}>
+                      <div className={styles.conditionSummaryDetails}>
+                        <span>
+                          {draft.endDate
+                            ? conditionT.shareCondition.summaryDateRange(draft.startDate, draft.endDate)
+                            : conditionT.shareCondition.summaryDateRangeOpenEnded(draft.startDate)}
+                        </span>
+                        {draft.endQuantityThreshold ? (
+                          <span>{conditionT.shareCondition.summaryQuantityThreshold(Number(draft.endQuantityThreshold))}</span>
+                        ) : null}
+                        <span>
+                          {conditionT.shareCondition.summarySharesBreakdown(
+                            formatConditionSharesBreakdown(draft.shares, traders ?? []),
+                          )}
+                        </span>
+                      </div>
+                      {draft.status === 'ENDED' ? null : (
+                        <div className={styles.conditionSummaryActions}>
+                          <button type="button" className="btn btn-primary" onClick={() => openConditionPopup?.(index)}>
+                            {conditionT.shareCondition.editButton}
+                          </button>
+                          <button type="button" className="btn btn-secondary" onClick={() => toggleConditionDraftStatus?.(index)}>
+                            {draft.status === 'ACTIVE'
+                              ? conditionT.shareCondition.disableButton
+                              : conditionT.shareCondition.enableButton}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-danger"
+                            onClick={() => deleteConditionDraft?.(index)}
+                            disabled={draft.hasLinkedStock}
+                            title={draft.hasLinkedStock ? conditionT.shareCondition.deleteBlockedTooltip : undefined}
+                          >
+                            {conditionT.shareCondition.deleteButton}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+              <button
+                type="button"
+                className={`btn btn-primary ${styles.conditionAddButton}`}
+                onClick={() => openConditionPopup?.()}
+              >
+                {conditionT.shareCondition.addButton}
+              </button>
+
+              {!isConditionPopupOpen && conditionError ? <p className="seasons-manager__error">{conditionError}</p> : null}
+            </div>
+          </>
+        ) : null}
+
         {isAddDialogOpen && addError ? <p className="seasons-manager__error">{addError}</p> : null}
         {isEditDialogOpen && editError ? <p className="seasons-manager__error">{editError}</p> : null}
 
@@ -268,6 +389,24 @@ export function TraderCategoryFormModal({
           </SubmitButton>
         </div>
       </div>
+
+      {conditionEnabled && conditionT ? (
+        <TraderCategoryShareConditionModal
+          isOpen={Boolean(isConditionPopupOpen)}
+          initialDraft={
+            editingConditionIndex != null && conditionDrafts?.[editingConditionIndex]
+              ? conditionDrafts[editingConditionIndex]
+              : createEmptyConditionDraft()
+          }
+          traders={traders ?? []}
+          t={conditionT}
+          error={conditionError ?? null}
+          onCancel={closeConditionPopup!}
+          onSave={(draft) => {
+            stageCondition!(draft);
+          }}
+        />
+      ) : null}
     </div>
   );
 }
