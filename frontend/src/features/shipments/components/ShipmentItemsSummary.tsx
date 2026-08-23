@@ -68,7 +68,7 @@ export function ShipmentItemsSummary({ lang, labels, description, refreshKey, on
   const rows = allRows;
 
   const sortedShipmentNumbers = useMemo(
-    () => [...rows].map((row) => row.shipmentNumber).sort((a, b) => b - a),
+    () => [...rows].map((row) => row.shipmentNumber).sort((a, b) => a - b),
     [rows],
   );
 
