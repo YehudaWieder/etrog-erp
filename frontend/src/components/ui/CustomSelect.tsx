@@ -85,8 +85,8 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         left: rect.left,
         width: rect.width,
         ...(openUpwards
-          ? { bottom: viewportHeight - rect.top + 6 }
-          : { top: rect.bottom + 6 }),
+          ? { top: 'auto', bottom: viewportHeight - rect.top + 6 }
+          : { top: rect.bottom + 6, bottom: 'auto' }),
         maxHeight: Math.max(160, (openUpwards ? rect.top : spaceBelow) - 16),
       });
     };
