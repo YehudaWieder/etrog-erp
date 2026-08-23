@@ -650,6 +650,17 @@ export const SHIPMENTS_I18N_HE = {
     tableExportTitle: 'הורדת משלוחים',
     tableExportAriaLabel: 'הורדת כל המשלוחים כקובץ Excel',
     tableExportError: 'ייצוא נכשל. נסה שוב.',
+    ownerCategoryMatrix: {
+      title: 'פילוח סוחרים ולקוחות לפי קטגוריה',
+      ownerColumn: 'סוחר / לקוח',
+      uncategorizedColumn: 'ללא קטגוריה',
+      privateSelectionColumn: 'מיון פרטי',
+      customerColumn: 'מיון לקוחות',
+      totalQuantityColumn: 'סה"כ אתרוגים',
+      totalBoxesColumn: 'סה"כ קרטונים',
+      grandTotalLabel: 'סה"כ',
+      empty: 'אין נתונים להצגה',
+    },
   },
   boxesTableLabels: {
     title: 'כל הקרטונים',

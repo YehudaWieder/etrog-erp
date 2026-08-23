@@ -648,6 +648,17 @@ export const SHIPMENTS_I18N_EN = {
     tableExportTitle: 'Download shipments',
     tableExportAriaLabel: 'Download all shipments as Excel',
     tableExportError: 'Export failed. Please try again.',
+    ownerCategoryMatrix: {
+      title: 'Trader & Customer Breakdown by Category',
+      ownerColumn: 'Trader / Customer',
+      uncategorizedColumn: 'Uncategorized',
+      privateSelectionColumn: 'Private Selection',
+      customerColumn: 'Customer Stock',
+      totalQuantityColumn: 'Total Etrogs',
+      totalBoxesColumn: 'Total Boxes',
+      grandTotalLabel: 'Total',
+      empty: 'No data to display',
+    },
   },
   boxesTableLabels: {
     title: 'All Boxes',

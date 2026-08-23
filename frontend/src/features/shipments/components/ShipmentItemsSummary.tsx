@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { GlobalScopedFilters } from '../../../components/ui/GlobalScopedFilters';
 import { GlobalDataTable, type GlobalDataTableColumn } from '../../../components/ui/GlobalDataTable';
 import { ShipmentsSummaryCards } from './shared/ShipmentsSummaryCards';
-import { useAllShipmentsFilters } from '../hooks/useAllShipmentsFilters';
+import { OwnerCategoryMatrixSection } from './OwnerCategoryMatrixSection';
+import { useShipmentsSummaryFilters } from '../hooks/useShipmentsSummaryFilters';
 import { getShipmentsSummaryBySeason, type ShipmentSummaryRecord } from '../../../services/shipmentsApi';
 import type { ShipmentsTableLabels } from '../shipments.types';
 import workspaceStyles from '../../../components/ui/styles/WorkspaceSection.module.css';
@@ -21,10 +22,9 @@ export function ShipmentItemsSummary({ lang, labels, description, refreshKey, on
     filters,
     activeSeasonId,
     selectedSeasonId,
-    selectedStatus,
     handleFilterValuesChange,
     handleFiltersApiReady,
-  } = useAllShipmentsFilters(labels);
+  } = useShipmentsSummaryFilters(labels);
 
   useEffect(() => {
     onSeasonInfoChange?.({ selectedSeasonId, activeSeasonId });
@@ -65,9 +65,11 @@ export function ShipmentItemsSummary({ lang, labels, description, refreshKey, on
     };
   }, [selectedSeasonId, labels.error, refreshKey]);
 
-  const rows = useMemo(
-    () => allRows.filter((row) => selectedStatus === 'all' || row.status === selectedStatus),
-    [allRows, selectedStatus],
+  const rows = allRows;
+
+  const sortedShipmentNumbers = useMemo(
+    () => [...rows].map((row) => row.shipmentNumber).sort((a, b) => b - a),
+    [rows],
   );
 
   const summaryTotals = useMemo(
@@ -183,6 +185,26 @@ export function ShipmentItemsSummary({ lang, labels, description, refreshKey, on
           defaultSortState={{ key: 'shipmentNumber', direction: 'desc' }}
         />
       )}
+      <div className={styles.ownerMatrixSection}>
+        <OwnerCategoryMatrixSection
+          lang={lang}
+          labels={labels}
+          selectedSeasonId={selectedSeasonId}
+          refreshKey={refreshKey}
+        />
+      </div>
+      {sortedShipmentNumbers.map((shipmentNumber) => (
+        <div key={shipmentNumber} className={styles.ownerMatrixSection}>
+          <OwnerCategoryMatrixSection
+            lang={lang}
+            labels={labels}
+            selectedSeasonId={selectedSeasonId}
+            selectedShipmentNumber={shipmentNumber}
+            titleOverride={`${labels.ownerCategoryMatrix.title} — ${labels.colShipmentNumber} ${shipmentNumber}`}
+            refreshKey={refreshKey}
+          />
+        </div>
+      ))}
     </section>
   );
 }

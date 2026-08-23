@@ -79,6 +79,11 @@
   font-weight: 700;
 }
 
+.matrixSubtotalCell {
+  background: rgba(228, 240, 231, 0.98);
+  font-weight: 700;
+}
+
 .matrixTable tbody tr:nth-child(odd) {
   background: rgba(250, 252, 250, 0.93);
 }

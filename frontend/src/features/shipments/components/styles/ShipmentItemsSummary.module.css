@@ -10,6 +10,10 @@
   margin-right: auto;
 }
 
+.ownerMatrixSection {
+  margin-top: 56px;
+}
+
 .categoriesTitle {
   margin: 0 0 24px;
   font-size: 1.25rem;

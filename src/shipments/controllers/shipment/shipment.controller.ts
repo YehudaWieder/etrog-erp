@@ -56,6 +56,23 @@ export class ShipmentController {
     return this.shipmentService.findSummaryBySeason(seasonId);
   }
 
+  @Get('owner-category-summary')
+  @ApiOperation({ summary: 'Retrieve a per-trader/customer category breakdown (quantities by trader category, private selection, and total boxes) for a season, optionally scoped to one shipment' })
+  @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season to filter shipments by.' })
+  @ApiQuery({ name: 'shipmentNumber', type: Number, required: false, description: 'Optional shipment number to scope the breakdown to a single shipment.' })
+  @ApiResponse({ status: 200, description: 'List of owner category summary rows returned successfully.' })
+  @ApiResponse({ status: 400, description: 'Invalid or missing seasonId query parameter.' })
+  findOwnerCategorySummary(
+    @Query('seasonId', ParseIntPipe) seasonId: number,
+    @Query('shipmentNumber') shipmentNumber?: string,
+  ) {
+    const parsedShipmentNumber = shipmentNumber !== undefined ? Number.parseInt(shipmentNumber, 10) : undefined;
+    return this.shipmentService.findOwnerCategorySummaryBySeason(
+      seasonId,
+      Number.isFinite(parsedShipmentNumber) ? parsedShipmentNumber : undefined,
+    );
+  }
+
   @Get('by-number')
   @ApiOperation({ summary: 'Find a shipment by its sequential shipment number within a season. Unique constraint: [seasonId, shipmentNumber].' })
   @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season.' })

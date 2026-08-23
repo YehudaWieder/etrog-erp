@@ -146,6 +146,127 @@ export class ShipmentService {
     });
   }
 
+  // Per-owner (trader/customer) category breakdown for a season: rows are traders and customers,
+  // columns are trader categories + private selection + customer stock. Computed via a handful of
+  // groupBy queries instead of loading every item, so it stays fast for the shipments-summary page.
+  async findOwnerCategorySummaryBySeason(seasonId: number, shipmentNumber?: number) {
+    await this.seasonsService.assertSeasonExists(seasonId);
+
+    const itemWhereBase = {
+      shipment: { seasonId, isDeleted: false, ...(shipmentNumber !== undefined ? { shipmentNumber } : {}) },
+      isDeleted: false,
+    };
+
+    const [generalByTraderCategory, privateByTrader, customerTotals, traderBoxRows, customerBoxRows, traders, customers] =
+      await Promise.all([
+        this.prisma.shipmentItem.groupBy({
+          by: ['traderId', 'traderCategoryId'],
+          where: { ...itemWhereBase, ownershipType: 'TRADER', isPrivateSelection: false, traderId: { not: null } },
+          _sum: { quantity: true },
+        }),
+        this.prisma.shipmentItem.groupBy({
+          by: ['traderId'],
+          where: { ...itemWhereBase, ownershipType: 'TRADER', isPrivateSelection: true, traderId: { not: null } },
+          _sum: { quantity: true },
+        }),
+        this.prisma.shipmentItem.groupBy({
+          by: ['customerId'],
+          where: { ...itemWhereBase, ownershipType: 'CUSTOMER', customerId: { not: null } },
+          _sum: { quantity: true },
+        }),
+        this.prisma.shipmentItem.findMany({
+          where: { ...itemWhereBase, ownershipType: 'TRADER', traderId: { not: null } },
+          select: { traderId: true, boxId: true },
+          distinct: ['traderId', 'boxId'],
+        }),
+        this.prisma.shipmentItem.findMany({
+          where: { ...itemWhereBase, ownershipType: 'CUSTOMER', customerId: { not: null } },
+          select: { customerId: true, boxId: true },
+          distinct: ['customerId', 'boxId'],
+        }),
+        this.prisma.trader.findMany({ select: { id: true, name: true } }),
+        this.prisma.customer.findMany({ select: { id: true, customerName: true } }),
+      ]);
+
+    const traderNameById = new Map(traders.map((t) => [t.id, t.name]));
+    const customerNameById = new Map(customers.map((c) => [c.id, c.customerName]));
+
+    const traderBoxSets = new Map<number, Set<number>>();
+    for (const row of traderBoxRows) {
+      if (row.traderId === null) continue;
+      if (!traderBoxSets.has(row.traderId)) traderBoxSets.set(row.traderId, new Set());
+      traderBoxSets.get(row.traderId)!.add(row.boxId);
+    }
+
+    const customerBoxSets = new Map<number, Set<number>>();
+    for (const row of customerBoxRows) {
+      if (row.customerId === null) continue;
+      if (!customerBoxSets.has(row.customerId)) customerBoxSets.set(row.customerId, new Set());
+      customerBoxSets.get(row.customerId)!.add(row.boxId);
+    }
+
+    type TraderAcc = { categoryQuantities: Record<string, number>; privateSelectionQuantity: number };
+    const traderAcc = new Map<number, TraderAcc>();
+    const ensureTrader = (id: number): TraderAcc => {
+      if (!traderAcc.has(id)) traderAcc.set(id, { categoryQuantities: {}, privateSelectionQuantity: 0 });
+      return traderAcc.get(id)!;
+    };
+
+    for (const row of generalByTraderCategory) {
+      if (row.traderId === null) continue;
+      const key = row.traderCategoryId === null ? 'uncategorized' : String(row.traderCategoryId);
+      const acc = ensureTrader(row.traderId);
+      acc.categoryQuantities[key] = (acc.categoryQuantities[key] ?? 0) + (row._sum.quantity ?? 0);
+    }
+
+    for (const row of privateByTrader) {
+      if (row.traderId === null) continue;
+      ensureTrader(row.traderId).privateSelectionQuantity = row._sum.quantity ?? 0;
+    }
+
+    const rows: Array<{
+      ownerType: 'TRADER' | 'CUSTOMER';
+      ownerId: number;
+      ownerName: string;
+      categoryQuantities: Record<string, number>;
+      privateSelectionQuantity: number;
+      customerQuantity: number;
+      totalQuantity: number;
+      totalBoxes: number;
+    }> = [];
+
+    for (const [traderId, acc] of traderAcc) {
+      const categoryTotal = Object.values(acc.categoryQuantities).reduce((sum, v) => sum + v, 0);
+      rows.push({
+        ownerType: 'TRADER',
+        ownerId: traderId,
+        ownerName: traderNameById.get(traderId) ?? `#${traderId}`,
+        categoryQuantities: acc.categoryQuantities,
+        privateSelectionQuantity: acc.privateSelectionQuantity,
+        customerQuantity: 0,
+        totalQuantity: categoryTotal + acc.privateSelectionQuantity,
+        totalBoxes: traderBoxSets.get(traderId)?.size ?? 0,
+      });
+    }
+
+    for (const row of customerTotals) {
+      if (row.customerId === null) continue;
+      const totalQuantity = row._sum.quantity ?? 0;
+      rows.push({
+        ownerType: 'CUSTOMER',
+        ownerId: row.customerId,
+        ownerName: customerNameById.get(row.customerId) ?? `#${row.customerId}`,
+        categoryQuantities: {},
+        privateSelectionQuantity: 0,
+        customerQuantity: totalQuantity,
+        totalQuantity,
+        totalBoxes: customerBoxSets.get(row.customerId)?.size ?? 0,
+      });
+    }
+
+    return rows;
+  }
+
   // Get full shipment details including boxes and items
   async findOne(id: number) {
     const shipment = await this.prisma.shipment.findFirst({

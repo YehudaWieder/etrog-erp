@@ -48,6 +48,25 @@ export async function getShipmentsSummaryBySeason(seasonId: number): Promise<Shi
   return apiClient<ShipmentSummaryRecord[]>(`/shipments/summary?seasonId=${seasonId}`);
 }
 
+export type OwnerCategorySummaryRow = {
+  ownerType: 'TRADER' | 'CUSTOMER';
+  ownerId: number;
+  ownerName: string;
+  categoryQuantities: Record<string, number>;
+  privateSelectionQuantity: number;
+  customerQuantity: number;
+  totalQuantity: number;
+  totalBoxes: number;
+};
+
+export async function getShipmentsOwnerCategorySummaryBySeason(
+  seasonId: number,
+  shipmentNumber?: number,
+): Promise<OwnerCategorySummaryRow[]> {
+  const query = shipmentNumber !== undefined ? `&shipmentNumber=${shipmentNumber}` : '';
+  return apiClient<OwnerCategorySummaryRow[]>(`/shipments/owner-category-summary?seasonId=${seasonId}${query}`);
+}
+
 export async function updateShipment(
   payload: UpdateShipmentPayload,
   init?: Pick<ApiClientInit, 'suppressGlobalFeedback'>,

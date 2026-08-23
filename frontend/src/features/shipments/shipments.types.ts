@@ -124,6 +124,17 @@ export type ShipmentsTableLabels = {
   tableExportTitle: string;
   tableExportAriaLabel: string;
   tableExportError: string;
+  ownerCategoryMatrix: {
+    title: string;
+    ownerColumn: string;
+    uncategorizedColumn: string;
+    privateSelectionColumn: string;
+    customerColumn: string;
+    totalQuantityColumn: string;
+    totalBoxesColumn: string;
+    grandTotalLabel: string;
+    empty: string;
+  };
 };
 
 export type BoxesTableLabels = {
