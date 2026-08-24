@@ -10,8 +10,10 @@ import {
 export type InventoryShipmentScope = InventoryMovementScope;
 export type InventorySourceScope = 'ALL' | 'GENERAL' | 'PRIVATE_SELECTION';
 // ALL = no filter, DEFAULT_ONLY = rows split by the season's default shares (shareConditionId
-// null). A specific condition is selected via `shareConditionId` instead of a scope value.
-export type InventoryShareConditionScope = 'ALL' | 'DEFAULT_ONLY';
+// null AND isModulo false), UNASSIGNED_ONLY = pending modulo stock that hasn't been split under
+// any scheme yet (isModulo true). A specific condition is selected via `shareConditionId` instead
+// of a scope value.
+export type InventoryShareConditionScope = 'ALL' | 'DEFAULT_ONLY' | 'UNASSIGNED_ONLY';
 export type InventorySortBy = InventoryTraderSortBy;
 export type {
   InventoryOwnerScope,

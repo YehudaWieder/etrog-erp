@@ -31,6 +31,6 @@ export type TraderInventorySummaryFilters = {
   ownerScope: 'ALL' | 'TRADER' | 'MODULO';
   shipmentScope?: 'ALL' | 'UNSHIPPED' | 'PACKED_SHIPPED' | 'SHIPPED' | 'SELF_PICKUP' | 'HARVEST_IN' | 'INTERNAL_TRANSFER' | 'TRANSFERRED_TO_CUSTOMER' | 'OWNERSHIP_TRANSFER' | 'ASSIGNED' | 'WASTE' | 'ADJUSTMENT' | 'REMAINS_IN_ITALY' | 'PRIVATE_SELECTION';
   sourceScope?: 'ALL' | 'GENERAL' | 'PRIVATE_SELECTION';
-  shareConditionScope?: 'ALL' | 'DEFAULT_ONLY';
+  shareConditionScope?: 'ALL' | 'DEFAULT_ONLY' | 'UNASSIGNED_ONLY';
   shareConditionId?: number;
 };

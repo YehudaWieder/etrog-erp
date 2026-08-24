@@ -100,6 +100,18 @@ function applyShareConditionScope(
 
   if (shareConditionScope === 'DEFAULT_ONLY') {
     where.shareConditionId = null;
+    // Pending modulo (unassigned) stock also carries shareConditionId=null - it hasn't actually
+    // been split under the default shares (or any shares) yet, it's just waiting in the pool for
+    // a future sweep. Only rows truly distributed under the default split belong here; modulo
+    // stock has its own scope below.
+    where.isModulo = false;
+    return;
+  }
+
+  if (shareConditionScope === 'UNASSIGNED_ONLY') {
+    where.shareConditionId = null;
+    where.isModulo = true;
+    return;
   }
 
   // ALL: no restriction.

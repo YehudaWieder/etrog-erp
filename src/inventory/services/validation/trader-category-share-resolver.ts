@@ -137,10 +137,13 @@ export async function resolveTraderCategoryShares(
 
 // Choke point for a POSITIVE (trader-increasing) quantity movement — the only direction that ever
 // splits at a condition's quantity threshold. Deductions never call this: "if it's ended, it's
-// ended" — only inbound quantity gets capped precisely at the threshold and rolled over into the
-// default segment, regardless of which of the 8 operations the quantity movement belongs to (e.g.
-// tryAssignFromModuloPool splits the same way whether it was triggered by an allocation or as a
-// side effect of a deduction's modulo-remainder sweep).
+// ended" — only inbound quantity gets capped precisely at the threshold. A leftover that merely
+// fails to complete a full fair-share step (rather than overshooting the cap) only rolls over into
+// the default segment once this movement actually ends the condition; otherwise it stays tagged to
+// the condition and falls into the modulo pool to wait for more quantity. This applies regardless
+// of which of the 8 operations the quantity movement belongs to (e.g. tryAssignFromModuloPool
+// splits the same way whether it was triggered by an allocation or as a side effect of a
+// deduction's modulo-remainder sweep).
 //
 // Returns 1 segment in the common case (no active condition, or the whole quantity fits under/over
 // the threshold on one side), or 2 segments when `quantity` straddles the threshold - the caller
@@ -177,7 +180,10 @@ export async function resolveTraderCategoryShareAllocationSegments(
   const room = Math.max(0, effectiveThreshold - accumulated);
   const conditionPortion =
     room > 0 ? calculateMaximalDistributableByShares(Math.min(quantity, room), conditionShares.map((share) => share.percent.toString())) : 0;
-  const defaultPortion = quantity - conditionPortion;
+  const leftover = quantity - conditionPortion;
+
+  const quantityReachedAfter = accumulated + conditionPortion >= effectiveThreshold;
+  const endReached = candidate.endConditionMode === 'BOTH' ? dateReached && quantityReachedAfter : dateReached || quantityReachedAfter;
 
   const segments: ShareAllocationSegment[] = [];
 
@@ -185,12 +191,22 @@ export async function resolveTraderCategoryShareAllocationSegments(
     segments.push({ quantity: conditionPortion, shares: conditionShares, shareConditionId: candidate.id });
   }
 
-  if (defaultPortion > 0) {
-    segments.push({ quantity: defaultPortion, shares: await findDefaultShares(tx, params), shareConditionId: null });
+  if (leftover > 0) {
+    // A leftover that doesn't complete a full "fair step" under the condition's own percentages
+    // (e.g. 10 of a 50-unit harvest at 35/35/30, step 20) is not the same as quantity that
+    // overshot the cap. While the condition still has room for another full step, this leftover
+    // must stay pending rather than default immediately - tagging it with the condition's own
+    // shares means it will fail canDistributeToAll and fall into the modulo pool (see
+    // general-share-allocation.service.ts), where the next harvest's sweep re-resolves it against
+    // the (still active) condition and may complete a fresh step. Only once this movement actually
+    // ends the condition (cap fully reached, or date reached) is there nothing left to wait for,
+    // so the leftover defaults immediately instead of sitting in modulo forever.
+    if (endReached) {
+      segments.push({ quantity: leftover, shares: await findDefaultShares(tx, params), shareConditionId: null });
+    } else {
+      segments.push({ quantity: leftover, shares: conditionShares, shareConditionId: candidate.id });
+    }
   }
-
-  const quantityReachedAfter = accumulated + conditionPortion >= effectiveThreshold;
-  const endReached = candidate.endConditionMode === 'BOTH' ? dateReached && quantityReachedAfter : dateReached || quantityReachedAfter;
 
   if (endReached) {
     await endCondition(tx, candidate.id);

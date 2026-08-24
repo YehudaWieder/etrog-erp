@@ -163,12 +163,16 @@ export function TraderInventoryPage() {
     return 'ALL';
   }, [filterValues.inventorySource]);
 
-  // The filter's raw value is 'ALL', 'DEFAULT', or `cond-<id>` for a specific distribution
-  // condition — encoded as one string so it fits the existing single-value scoped-filter model.
-  const selectedShareCondition = useMemo<{ scope: 'ALL' | 'DEFAULT_ONLY'; id?: number }>(() => {
+  // The filter's raw value is 'ALL', 'DEFAULT', 'UNASSIGNED', or `cond-<id>` for a specific
+  // distribution condition — encoded as one string so it fits the existing single-value
+  // scoped-filter model.
+  const selectedShareCondition = useMemo<{ scope: 'ALL' | 'DEFAULT_ONLY' | 'UNASSIGNED_ONLY'; id?: number }>(() => {
     const raw = filterValues.shareConditionScope || 'ALL';
     if (raw === 'DEFAULT') {
       return { scope: 'DEFAULT_ONLY' };
+    }
+    if (raw === 'UNASSIGNED') {
+      return { scope: 'UNASSIGNED_ONLY' };
     }
     if (raw.startsWith('cond-')) {
       const id = Number.parseInt(raw.slice(5), 10);
@@ -330,6 +334,7 @@ export function TraderInventoryPage() {
     () => [
       { value: 'ALL', label: t.summary.filters.shareConditionAllOption },
       { value: 'DEFAULT', label: t.summary.filters.shareConditionDefaultOption },
+      { value: 'UNASSIGNED', label: t.summary.filters.shareConditionUnassignedOption },
       ...[...shareConditions]
         .sort((left, right) => left.traderCategoryName.localeCompare(right.traderCategoryName, undefined, { sensitivity: 'base' }))
         .map((condition) => ({
@@ -337,7 +342,7 @@ export function TraderInventoryPage() {
           label: `${condition.name} (${condition.traderCategoryName})`,
         })),
     ],
-    [t.summary.filters.shareConditionAllOption, t.summary.filters.shareConditionDefaultOption, shareConditions],
+    [t.summary.filters.shareConditionAllOption, t.summary.filters.shareConditionDefaultOption, t.summary.filters.shareConditionUnassignedOption, shareConditions],
   );
 
   useEffect(() => {

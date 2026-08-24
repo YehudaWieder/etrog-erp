@@ -50,6 +50,7 @@ export const TRADER_INVENTORY_I18N_EN: TraderInventoryI18n = {
 			shareConditionLabel: 'Distribution Method',
 			shareConditionAllOption: 'All',
 			shareConditionDefaultOption: 'Default',
+			shareConditionUnassignedOption: 'Not yet distributed',
 			unboxedOption: 'Unboxed',
 			boxedOption: 'Boxed',
 			shippedOption: 'Shipped',

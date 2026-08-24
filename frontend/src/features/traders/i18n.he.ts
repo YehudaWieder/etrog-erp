@@ -50,6 +50,7 @@ export const TRADER_INVENTORY_I18N_HE: TraderInventoryI18n = {
 			shareConditionLabel: 'שיטת חלוקה',
 			shareConditionAllOption: 'הכל',
 			shareConditionDefaultOption: 'ברירת מחדל',
+			shareConditionUnassignedOption: 'לא חולק עדיין',
 			unboxedOption: 'שלא נארז',
 			boxedOption: 'שנארז',
 			shippedOption: 'שנשלח',

@@ -55,6 +55,7 @@ export type TraderInventoryI18n = {
 				shareConditionLabel: string;
 				shareConditionAllOption: string;
 				shareConditionDefaultOption: string;
+				shareConditionUnassignedOption: string;
 				unboxedOption: string;
 				boxedOption: string;
 				shippedOption: string;

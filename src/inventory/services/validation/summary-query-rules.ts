@@ -14,9 +14,9 @@ export function validateTraderSummaryQuery(
   sortOrder: InventorySortOrder,
   shareConditionScope: InventoryShareConditionScope = 'ALL',
 ) {
-  const validShareConditionScopes: InventoryShareConditionScope[] = ['ALL', 'DEFAULT_ONLY'];
+  const validShareConditionScopes: InventoryShareConditionScope[] = ['ALL', 'DEFAULT_ONLY', 'UNASSIGNED_ONLY'];
   if (!validShareConditionScopes.includes(shareConditionScope)) {
-    throw new BadRequestException('shareConditionScope must be one of: ALL, DEFAULT_ONLY');
+    throw new BadRequestException('shareConditionScope must be one of: ALL, DEFAULT_ONLY, UNASSIGNED_ONLY');
   }
 
   if (!['ALL', 'TRADER', 'MODULO'].includes(ownerScope)) {
