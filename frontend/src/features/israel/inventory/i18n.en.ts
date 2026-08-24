@@ -77,6 +77,12 @@ export const ISRAEL_INVENTORY_I18N_EN: IsraelInventoryI18n = {
       mixed: 'Mixed',
       total: 'Total',
     },
+    printTitle: 'Print',
+    printAriaLabel: 'Print table',
+    exportTitle: 'Export to Excel',
+    exportAriaLabel: 'Export table to Excel',
+    tableActionsLabel: 'Table Actions',
+    filtersTitle: 'Active Filters',
   },
   movements: {
     description:

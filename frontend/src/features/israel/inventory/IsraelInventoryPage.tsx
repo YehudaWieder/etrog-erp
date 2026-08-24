@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FaCirclePlus } from 'react-icons/fa6';
 import { AppShell } from '../../../app/layout/AppShell';
@@ -38,7 +38,14 @@ import {
 import { IsraelInventoryAllSection } from './components/all-inventory/IsraelInventoryAllSection';
 import { IsraelStockMovementModal } from './components/all-inventory/IsraelStockMovementModal';
 import { IsraelMovementsSection } from './components/movements/IsraelMovementsSection';
-import type { IsraelInventoryStatusScope } from './utils/buildStockStatusMatrix.util';
+import {
+  buildStockStatusMatrix,
+  type IsraelInventoryStatusScope,
+} from './utils/buildStockStatusMatrix.util';
+import { HARVEST_GRADE_OPTIONS } from '../../harvest/utils/harvestPage.utils';
+import { TraderPrintExportActions } from '../../traders/components/TraderPrintExportActions';
+import { openPrintableWindow } from '../../../services/printWindow';
+import { downloadStyledExcel } from '../../../services/exportExcel';
 
 const DEFAULT_SIDEBAR_ITEM_ID = 'all-inventory';
 
@@ -284,12 +291,232 @@ export function IsraelInventoryPage() {
   const isViewingNonActiveSeason =
     seasonFilterId !== null && seasonFilterId !== activeSeasonId;
 
+  const matrixTableRef = useRef<HTMLTableElement>(null);
+
+  const allInventoryCategoryOrder = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const category of sortCategories) {
+      map.set(category.name, category.orderIndex);
+    }
+    return map;
+  }, [sortCategories]);
+
+  const allInventoryCategoryNames = useMemo(
+    () => sortCategories.map((category) => category.name),
+    [sortCategories],
+  );
+
+  const allInventoryMatrix = useMemo(
+    () =>
+      buildStockStatusMatrix(
+        filteredStockRows,
+        statusFilterId,
+        t.allInventory.totals.totalQuantity,
+        t.allInventory.noGradeLabel,
+        allInventoryCategoryOrder,
+        allInventoryCategoryNames,
+        HARVEST_GRADE_OPTIONS,
+      ),
+    [
+      filteredStockRows,
+      statusFilterId,
+      t.allInventory.totals.totalQuantity,
+      t.allInventory.noGradeLabel,
+      allInventoryCategoryOrder,
+      allInventoryCategoryNames,
+    ],
+  );
+
+  const allInventoryFilterDetails = useMemo(() => {
+    const details: string[] = [];
+    const seasonLabel =
+      seasons.find((season) => String(season.id) === String(seasonFilterId))
+        ?.yearName || String(seasonFilterId ?? '');
+    if (seasonLabel) {
+      details.push(`${t.allInventory.seasonFilterLabel}: ${seasonLabel}`);
+    }
+    if (fieldFilterId !== 'all') {
+      const fieldLabel =
+        fields.find((field) => field.id === fieldFilterId)?.name ||
+        String(fieldFilterId);
+      details.push(`${t.allInventory.fieldFilterLabel}: ${fieldLabel}`);
+    }
+    const statusLabels: Record<IsraelInventoryStatusScope, string> = {
+      ALL: t.allInventory.statusOptions.all,
+      NOT_PACKED: t.allInventory.statusOptions.notPacked,
+      PACKED: t.allInventory.statusOptions.packed,
+      SENT: t.allInventory.statusOptions.sent,
+      SELF_PICKUP: t.allInventory.statusOptions.selfPickup,
+      WASTE: t.allInventory.statusOptions.waste,
+    };
+    details.push(
+      `${t.allInventory.statusFilterLabel}: ${statusLabels[statusFilterId]}`,
+    );
+    return details;
+  }, [seasons, seasonFilterId, fieldFilterId, fields, statusFilterId, t.allInventory]);
+
+  const handlePrintAllInventoryTable = useCallback(() => {
+    if (!matrixTableRef.current) {
+      return;
+    }
+
+    const escapeHtml = (text: string): string =>
+      String(text).replace(
+        /[&<>"']/g,
+        (char) =>
+          ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;',
+          })[char] || char,
+      );
+
+    const filterDetailsHtml = `
+      <div style="margin-bottom: 20px; padding: 12px; background: #f5f5f5; border-radius: 4px; font-size: 12px; border: 1px solid #ddd;">
+        <strong>${escapeHtml(t.allInventory.filtersTitle)}:</strong><br/>
+        ${allInventoryFilterDetails.map((f) => `<div style="margin-top: 4px;">${escapeHtml(f)}</div>`).join('')}
+      </div>
+    `;
+
+    const tableStyles = `
+      @page {
+        size: landscape;
+        margin: 10mm;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      th, td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: center;
+      }
+      thead th {
+        background-color: #1f5a32;
+        color: white;
+        font-weight: bold;
+      }
+      tbody th {
+        background-color: #f0f6f1;
+        font-weight: bold;
+        text-align: start;
+      }
+      tbody tr:nth-child(odd) {
+        background-color: #fafcfa;
+      }
+      tbody tr:nth-child(even) {
+        background-color: #f3f8f4;
+      }
+      tfoot th, tfoot td {
+        background-color: #e1f0e5;
+        font-weight: bold;
+        border-top: 2px solid #8cb494;
+      }
+    `;
+
+    openPrintableWindow({
+      title: t.allInventory.tableTitle,
+      heading: t.allInventory.tableTitle,
+      html: filterDetailsHtml + matrixTableRef.current.outerHTML,
+      direction: lang === 'he' ? 'rtl' : 'ltr',
+      width: 1280,
+      height: 900,
+      extraStyles: tableStyles,
+    });
+  }, [lang, t.allInventory, allInventoryFilterDetails]);
+
+  const handleExportAllInventoryTable = useCallback(async () => {
+    try {
+      const header = [
+        [
+          t.allInventory.columns.category,
+          ...allInventoryMatrix.grades.flatMap((grade) => [grade, '', '']),
+          t.allInventory.columns.total,
+        ],
+        [
+          '',
+          ...allInventoryMatrix.grades.flatMap(() => [
+            t.allInventory.columns.withPitam,
+            t.allInventory.columns.withoutPitam,
+            t.allInventory.columns.mixed,
+          ]),
+          '',
+        ],
+      ];
+
+      const rowTotal = (cells: Record<string, { withPitam: number; withoutPitam: number; mixed: number }>) =>
+        allInventoryMatrix.grades.reduce((sum, grade) => {
+          const cell = cells[grade];
+          return sum + (cell ? cell.withPitam + cell.withoutPitam + cell.mixed : 0);
+        }, 0);
+
+      const dataRows = allInventoryMatrix.rows.map((row) => [
+        row.label,
+        ...allInventoryMatrix.grades.flatMap((grade) => {
+          const cell = row.cells[grade] ?? { withPitam: 0, withoutPitam: 0, mixed: 0 };
+          return [cell.withPitam, cell.withoutPitam, cell.mixed];
+        }),
+        rowTotal(row.cells),
+      ]);
+
+      dataRows.push([
+        allInventoryMatrix.grandTotalRow.label,
+        ...allInventoryMatrix.grades.flatMap((grade) => {
+          const cell = allInventoryMatrix.grandTotalRow.cells[grade] ?? {
+            withPitam: 0,
+            withoutPitam: 0,
+            mixed: 0,
+          };
+          return [cell.withPitam, cell.withoutPitam, cell.mixed];
+        }),
+        rowTotal(allInventoryMatrix.grandTotalRow.cells),
+      ]);
+
+      const filterRows = allInventoryFilterDetails.map((detail) => [detail]);
+      const rows = [...filterRows, [], ...dataRows];
+
+      const dateStamp = new Date().toISOString().slice(0, 10);
+
+      await downloadStyledExcel({
+        sheetName: t.allInventory.tableTitle,
+        fileName: `israel-inventory-${dateStamp}.xlsx`,
+        header,
+        rows,
+        rightToLeft: lang === 'he',
+        filterRowCount: filterRows.length + 1,
+      });
+    } catch (err) {
+      console.error('Export failed:', err);
+      window.alert(
+        lang === 'he' ? 'לא ניתן לייצא כעת' : 'Could not export right now',
+      );
+    }
+  }, [lang, t.allInventory, allInventoryMatrix, allInventoryFilterDetails]);
+
   const allInventoryFiltersBar = isAllInventoryTab ? (
     <GlobalScopedFilters
       scope="israel-inventory-all"
       filters={allInventoryFilters}
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       onValuesChange={handleAllInventoryFiltersChange}
+      actions={
+        allInventoryMatrix.rows.length > 0 ? (
+          <TraderPrintExportActions
+            lang={lang}
+            tableActionsLabel={t.allInventory.tableActionsLabel}
+            onPrint={handlePrintAllInventoryTable}
+            onExport={handleExportAllInventoryTable}
+            printAriaLabel={t.allInventory.printAriaLabel}
+            printTitle={t.allInventory.printTitle}
+            exportAriaLabel={t.allInventory.exportAriaLabel}
+            exportTitle={t.allInventory.exportTitle}
+          />
+        ) : null
+      }
     />
   ) : null;
 
@@ -417,6 +644,7 @@ export function IsraelInventoryPage() {
           loadError={stockLoadError}
           onRetry={loadStock}
           sortCategories={sortCategories}
+          matrixTableRef={matrixTableRef}
         />
       ) : isMovementsTab ? (
         <IsraelMovementsSection

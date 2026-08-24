@@ -77,6 +77,12 @@ export const ISRAEL_INVENTORY_I18N_HE: IsraelInventoryI18n = {
       mixed: 'מעורב',
       total: 'סה"כ',
     },
+    printTitle: 'הדפסה',
+    printAriaLabel: 'הדפס טבלה',
+    exportTitle: 'ייצוא ל-Excel',
+    exportAriaLabel: 'ייצא טבלה ל-Excel',
+    tableActionsLabel: 'פעולות טבלה',
+    filtersTitle: 'סינונים פעילים',
   },
   movements: {
     description:

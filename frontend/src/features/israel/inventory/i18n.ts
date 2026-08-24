@@ -44,6 +44,12 @@ export type IsraelInventoryI18n = {
       mixed: string;
       total: string;
     };
+    printTitle: string;
+    printAriaLabel: string;
+    exportTitle: string;
+    exportAriaLabel: string;
+    tableActionsLabel: string;
+    filtersTitle: string;
   };
   movements: {
     description: string;

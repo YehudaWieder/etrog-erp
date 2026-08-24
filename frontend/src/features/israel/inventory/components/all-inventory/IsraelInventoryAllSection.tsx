@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import {
   FaScaleBalanced,
   FaBoxOpen,
@@ -39,6 +39,7 @@ type IsraelInventoryAllSectionProps = {
   loadError: string;
   onRetry?: () => void;
   sortCategories?: IsraelSortCategory[];
+  matrixTableRef?: RefObject<HTMLTableElement>;
 };
 
 export function IsraelInventoryAllSection({
@@ -51,6 +52,7 @@ export function IsraelInventoryAllSection({
   loadError,
   onRetry,
   sortCategories = [],
+  matrixTableRef,
 }: IsraelInventoryAllSectionProps) {
   const locale = lang === 'he' ? 'he-IL' : 'en-US';
   const numberFormatter = useMemo(
@@ -230,6 +232,7 @@ export function IsraelInventoryAllSection({
               mixed: labels.columns.mixed,
             }}
             collapseEmptyPitamColumns={false}
+            tableRef={matrixTableRef}
           />
         </section>
       ) : null}
