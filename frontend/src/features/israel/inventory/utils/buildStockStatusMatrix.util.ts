@@ -125,13 +125,27 @@ const TYPES_BY_SCOPE: Record<IsraelInventoryStatusScope, string[]> = {
     'SELF_PICKUP',
     'ADJUSTMENT',
   ],
-  // No dedicated "packed" ledger entry exists yet (packing into a box happens
-  // in the not-yet-built shipments module) — this scope stays empty until then.
-  PACKED: [],
+  // PACKED shows every PACKED_SHIPPED record (a sent box was necessarily
+  // packed first). SENT narrows that down to boxes that actually shipped
+  // (see matchesBoxStatus below).
+  PACKED: ['PACKED_SHIPPED'],
   SENT: ['PACKED_SHIPPED'],
   WASTE: ['WASTE'],
   SELF_PICKUP: ['SELF_PICKUP'],
 };
+
+const SENT_BOX_STATUSES = new Set(['SHIPPED', 'DELIVERED']);
+
+function matchesBoxStatus(
+  record: IsraelStockRecord,
+  statusScope: IsraelInventoryStatusScope,
+): boolean {
+  if (statusScope !== 'SENT') return true;
+  const isSent = record.box?.status
+    ? SENT_BOX_STATUSES.has(record.box.status)
+    : false;
+  return isSent;
+}
 
 export type StockStatusMatrix = {
   rows: MatrixRow[];
@@ -155,6 +169,7 @@ export function buildStockStatusMatrix(
   for (const record of records) {
     if (!includedTypes.has(record.type)) continue;
     if (record.quantity === 0) continue;
+    if (!matchesBoxStatus(record, statusScope)) continue;
 
     const key = normalizePitamKey(record.pitamStatus);
     const grade = (record.grade || '').trim() || gradeFallback;
@@ -164,18 +179,15 @@ export function buildStockStatusMatrix(
 
   const cellTransform = isIsolatedScope ? absCell : clampCell;
 
-  const usedGrades = new Set<string>();
+  const gradeNames = new Set<string>(fallbackGrades);
   for (const gradeMap of catGradeMap.values()) {
-    for (const grade of gradeMap.keys()) usedGrades.add(grade);
+    for (const grade of gradeMap.keys()) gradeNames.add(grade);
   }
-  const grades =
-    usedGrades.size > 0
-      ? sortGrades([...usedGrades], gradeFallback)
-      : sortGrades([...fallbackGrades], gradeFallback);
+  const grades = sortGrades([...gradeNames], gradeFallback);
 
-  const catNames =
-    catGradeMap.size > 0 ? [...catGradeMap.keys()] : allCategoryNames;
-  const sortedCats = sortCategoryNames(catNames, categoryOrder);
+  const catNames = new Set<string>(allCategoryNames);
+  for (const cat of catGradeMap.keys()) catNames.add(cat);
+  const sortedCats = sortCategoryNames([...catNames], categoryOrder);
   const rows: MatrixRow[] = sortedCats.map((cat) => ({
     key: cat,
     label: cat,

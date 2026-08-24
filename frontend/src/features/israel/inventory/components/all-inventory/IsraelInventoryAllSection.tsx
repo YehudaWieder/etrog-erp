@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import {
   FaScaleBalanced,
@@ -93,6 +93,11 @@ export function IsraelInventoryAllSection({
   );
 
   const hasData = matrix.rows.length > 0;
+
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  useEffect(() => {
+    if (!isLoading) setHasLoadedOnce(true);
+  }, [isLoading]);
 
   const totalQuantity = useMemo(() => sumMatrixTotal(matrix), [matrix]);
 
@@ -200,15 +205,15 @@ export function IsraelInventoryAllSection({
         <section className={styles.filtersBarSection}>{filtersBar}</section>
       ) : null}
 
-      {isLoading && rows.length === 0 ? (
+      {!hasLoadedOnce && isLoading ? (
         <div className={styles.loadingText}>{labels.loading}</div>
       ) : null}
 
-      {!isLoading && !hasData && !loadError ? (
+      {hasLoadedOnce && !isLoading && !hasData && !loadError ? (
         <div className={styles.statusBox}>{labels.empty}</div>
       ) : null}
 
-      {hasData ? (
+      {hasLoadedOnce && hasData ? (
         <section className={styles.matrixSection}>
           <h3 className={styles.matrixTitle}>{labels.tableTitle}</h3>
           <CategoryGradeMatrixTable
@@ -224,6 +229,7 @@ export function IsraelInventoryAllSection({
               withoutPitam: labels.columns.withoutPitam,
               mixed: labels.columns.mixed,
             }}
+            collapseEmptyPitamColumns={false}
           />
         </section>
       ) : null}

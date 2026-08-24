@@ -24,6 +24,7 @@ export type IsraelStockRecord = {
   type: IsraelStockMovementType;
   notes: string | null;
   movementReferenceId: number | null;
+  box?: { id: number; status: 'OPEN' | 'CLOSED' | 'SHIPPED' | 'DELIVERED' } | null;
 };
 
 export type CreateIsraelStockMovementPayload = {
