@@ -83,6 +83,7 @@ model User {
   israelBoxes           IsraelBox[]
   israelShipmentItems   IsraelShipmentItem[]
   israelStocks          IsraelStock[]
+  israelSettings        IsraelSettings[]
 
   auditLogs AuditLog[]
 }

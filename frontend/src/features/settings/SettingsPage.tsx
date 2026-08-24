@@ -32,6 +32,7 @@ import {
 import type { IsraelFieldsHeaderState } from '../israel/settings/fields/components/IsraelFieldsManagement';
 import type { IsraelFieldCategoriesHeaderState } from '../israel/settings/fieldCategories/components/IsraelFieldCategoriesManagement';
 import type { IsraelSortCategoriesHeaderState } from '../israel/settings/sortCategories/components/IsraelSortCategoriesManagement';
+import type { IsraelCartonCapacityHeaderState } from '../israel/settings/cartonCapacity/components/IsraelCartonCapacitySettings';
 import { fetchSeasons } from '../../store/seasonsSlice';
 import type { AppDispatch, RootState } from '../../store';
 import feedbackStyles from './styles/SettingsWorkspaceFeedback.module.css';
@@ -52,6 +53,8 @@ export default function SettingsPage(): JSX.Element {
   ] = useState<IsraelFieldCategoriesHeaderState | null>(null);
   const [israelSortCategoriesHeaderState, setIsraelSortCategoriesHeaderState] =
     useState<IsraelSortCategoriesHeaderState | null>(null);
+  const [israelCartonCapacityHeaderState, setIsraelCartonCapacityHeaderState] =
+    useState<IsraelCartonCapacityHeaderState | null>(null);
 
   const seasons = useSelector((state: RootState) => state.seasons.items);
   const activeSeasonYearName = useMemo(
@@ -193,6 +196,7 @@ export default function SettingsPage(): JSX.Element {
       fieldsHeaderState={israelFieldsHeaderState}
       fieldCategoriesHeaderState={israelFieldCategoriesHeaderState}
       sortCategoriesHeaderState={israelSortCategoriesHeaderState}
+      cartonCapacityHeaderState={israelCartonCapacityHeaderState}
     />
   ) : (
     <SettingsSeasonsHeaderActions
@@ -255,6 +259,9 @@ export default function SettingsPage(): JSX.Element {
               }
               onSortCategoriesHeaderStateChange={
                 setIsraelSortCategoriesHeaderState
+              }
+              onCartonCapacityHeaderStateChange={
+                setIsraelCartonCapacityHeaderState
               }
             />
           </>

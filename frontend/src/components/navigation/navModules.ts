@@ -22,15 +22,35 @@ export function filterNavByModule(items: NavItem[], module: AppModule): NavItem[
 }
 
 const SETTINGS_SECTION_MODULE: Record<string, AppModule> = {
-  system: 'italy',
   traders: 'italy',
   customers: 'italy',
   israelHarvest: 'israel',
 };
 
+const SYSTEM_SECTION_ITEM_ALLOWLIST: Record<AppModule, string[] | null> = {
+  italy: ['seasons', 'fields', 'cartons', 'pricing', 'defaultTraderCategories'],
+  israel: ['seasons', 'harvestCartonCapacity'],
+};
+
 export function filterSidebarByModule(sections: SidebarSection[], module: AppModule): SidebarSection[] {
-  return sections.filter((section) => {
-    const sectionModule = SETTINGS_SECTION_MODULE[section.id];
-    return !sectionModule || sectionModule === module;
-  });
+  return sections
+    .filter((section) => {
+      const sectionModule = SETTINGS_SECTION_MODULE[section.id];
+      return !sectionModule || sectionModule === module;
+    })
+    .map((section) => {
+      if (section.id !== 'system') {
+        return section;
+      }
+
+      const allowlist = SYSTEM_SECTION_ITEM_ALLOWLIST[module];
+      if (!allowlist) {
+        return section;
+      }
+
+      return {
+        ...section,
+        items: section.items.filter((item) => allowlist.includes(item.id)),
+      };
+    });
 }

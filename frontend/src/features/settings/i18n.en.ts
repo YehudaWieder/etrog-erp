@@ -62,6 +62,7 @@ export const SETTINGS_I18N_EN: SettingsI18n = {
       icon: 'fa-cog',
       items: [
         { id: 'seasons', label: 'Seasons', href: '/settings/system/seasons', icon: 'fa-calendar' },
+        { id: 'harvestCartonCapacity', label: 'Carton Capacity', href: '/settings/system/carton-capacity', icon: 'fa-box' },
         { id: 'fields', label: 'Fields', href: '/settings/system/fields', icon: 'fa-grip' },
         { id: 'cartons', label: 'Cartons', href: '/settings/system/cartons', icon: 'fa-box' },
         { id: 'pricing', label: 'Pricing', href: '/settings/system/pricing', icon: 'fa-money-bill' },

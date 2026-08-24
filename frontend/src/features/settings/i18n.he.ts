@@ -62,6 +62,7 @@ export const SETTINGS_I18N_HE: SettingsI18n = {
       icon: 'fa-cog',
       items: [
         { id: 'seasons', label: 'עונות', href: '/settings/system/seasons', icon: 'fa-calendar' },
+        { id: 'harvestCartonCapacity', label: 'קיבולת קרטון', href: '/settings/system/carton-capacity', icon: 'fa-box' },
         { id: 'fields', label: 'שדות', href: '/settings/system/fields', icon: 'fa-grip' },
         { id: 'cartons', label: 'קרטונים', href: '/settings/system/cartons', icon: 'fa-box' },
         { id: 'pricing', label: 'מחירים', href: '/settings/system/pricing', icon: 'fa-money-bill' },

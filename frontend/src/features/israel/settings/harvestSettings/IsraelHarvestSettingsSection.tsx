@@ -8,6 +8,9 @@ import IsraelFieldCategoriesManagement, {
 import IsraelSortCategoriesManagement, {
   type IsraelSortCategoriesHeaderState,
 } from '../sortCategories/components/IsraelSortCategoriesManagement';
+import IsraelCartonCapacitySettings, {
+  type IsraelCartonCapacityHeaderState,
+} from '../cartonCapacity/components/IsraelCartonCapacitySettings';
 import {
   getIsraelHarvestSettingsChildId,
   getIsraelHarvestSettingsTitle,
@@ -22,6 +25,9 @@ type IsraelHarvestSettingsSectionProps = {
   onSortCategoriesHeaderStateChange?: (
     state: IsraelSortCategoriesHeaderState | null,
   ) => void;
+  onCartonCapacityHeaderStateChange?: (
+    state: IsraelCartonCapacityHeaderState | null,
+  ) => void;
 };
 
 export function IsraelHarvestSettingsSection({
@@ -29,6 +35,7 @@ export function IsraelHarvestSettingsSection({
   onFieldsHeaderStateChange,
   onFieldCategoriesHeaderStateChange,
   onSortCategoriesHeaderStateChange,
+  onCartonCapacityHeaderStateChange,
 }: IsraelHarvestSettingsSectionProps) {
   const location = useLocation();
   const childId = getIsraelHarvestSettingsChildId(location.pathname);
@@ -57,6 +64,15 @@ export function IsraelHarvestSettingsSection({
       <IsraelSortCategoriesManagement
         lang={lang}
         onHeaderStateChange={onSortCategoriesHeaderStateChange}
+      />
+    );
+  }
+
+  if (childId === 'harvestCartonCapacity') {
+    return (
+      <IsraelCartonCapacitySettings
+        lang={lang}
+        onHeaderStateChange={onCartonCapacityHeaderStateChange}
       />
     );
   }
