@@ -903,6 +903,8 @@ export function IsraelHarvestPage() {
   const [sortingFieldFilterId, setSortingFieldFilterId] = useState<
     number | 'all'
   >('all');
+  const [sortingFieldCategoryFilterId, setSortingFieldCategoryFilterId] =
+    useState<number | 'all'>('all');
 
   const sortingHarvestDateOptions = useMemo(() => {
     const uniqueDates = [
@@ -944,9 +946,20 @@ export function IsraelHarvestPage() {
       ) {
         return false;
       }
+      if (
+        sortingFieldCategoryFilterId !== 'all' &&
+        row.fieldCategoryId !== sortingFieldCategoryFilterId
+      ) {
+        return false;
+      }
       return true;
     });
-  }, [classificationRows, sortingDateFilterId, sortingFieldFilterId]);
+  }, [
+    classificationRows,
+    sortingDateFilterId,
+    sortingFieldFilterId,
+    sortingFieldCategoryFilterId,
+  ]);
 
   const sortingSummaryFilters = useMemo<GlobalScopedFilterConfig[]>(() => {
     const seasonFilter: GlobalScopedFilterConfig = {
@@ -995,10 +1008,25 @@ export function IsraelHarvestPage() {
       ],
     };
 
-    return [seasonFilter, dateFilter, fieldFilter];
+    const fieldCategoryFilter: GlobalScopedFilterConfig = {
+      key: 'fieldCategoryId',
+      label: t.sortingSummary.filters.fieldCategoryFilterLabel,
+      defaultValue: 'all',
+      queryParam: 'ihsFieldCategory',
+      options: [
+        { value: 'all', label: t.sortingSummary.filters.allFieldCategoriesOption },
+        ...fieldCategories.map((fieldCategory) => ({
+          value: String(fieldCategory.id),
+          label: fieldCategory.name,
+        })),
+      ],
+    };
+
+    return [seasonFilter, dateFilter, fieldFilter, fieldCategoryFilter];
   }, [
     activeSeasonId,
     fields,
+    fieldCategories,
     lang,
     seasons,
     sortingHarvestDateOptions,
@@ -1019,6 +1047,14 @@ export function IsraelHarvestPage() {
           values.fieldId !== 'all' &&
           Number.isFinite(parsedField)
           ? parsedField
+          : 'all',
+      );
+      const parsedFieldCategory = Number(values.fieldCategoryId);
+      setSortingFieldCategoryFilterId(
+        values.fieldCategoryId &&
+          values.fieldCategoryId !== 'all' &&
+          Number.isFinite(parsedFieldCategory)
+          ? parsedFieldCategory
           : 'all',
       );
     },

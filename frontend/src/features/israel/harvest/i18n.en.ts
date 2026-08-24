@@ -319,6 +319,8 @@ export const ISRAEL_HARVEST_I18N_EN: IsraelHarvestI18n = {
       allDatesOption: 'All dates',
       fieldFilterLabel: 'Field',
       allFieldsOption: 'All fields',
+      fieldCategoryFilterLabel: 'Seller category',
+      allFieldCategoriesOption: 'All categories',
     },
   },
   sortingList: {

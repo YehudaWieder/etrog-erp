@@ -309,6 +309,8 @@ export const ISRAEL_HARVEST_I18N_HE: IsraelHarvestI18n = {
       allDatesOption: 'כל התאריכים',
       fieldFilterLabel: 'שדה',
       allFieldsOption: 'כל השדות',
+      fieldCategoryFilterLabel: 'קטגוריית מוכר',
+      allFieldCategoriesOption: 'כל הקטגוריות',
     },
   },
   sortingList: {

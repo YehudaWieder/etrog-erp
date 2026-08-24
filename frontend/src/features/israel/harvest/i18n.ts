@@ -248,6 +248,8 @@ export type IsraelHarvestI18n = {
       allDatesOption: string;
       fieldFilterLabel: string;
       allFieldsOption: string;
+      fieldCategoryFilterLabel: string;
+      allFieldCategoriesOption: string;
     };
   };
   sortingList: {
