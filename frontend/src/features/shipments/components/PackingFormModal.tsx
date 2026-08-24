@@ -431,6 +431,10 @@ export function PackingFormModal({
   const isBoxSelected = selectedBoxId !== '';
   const isFieldsDisabled = !isBoxSelected || isLoadingOptions;
   const isBoxOpen = status === 'OPEN';
+  // Unlike isShipped (which also covers CLOSED, to freeze box type/ownership editing once full),
+  // the packed-items table itself must stay visible for a CLOSED box — only a true SHIPPED/DELIVERED
+  // box should hide it entirely.
+  const isBoxDispatched = status === 'SHIPPED' || status === 'DELIVERED';
   const boxCapacityMessage = isBoxOverCapacity
     ? t.boxOverCapacityHint(totalPackedQuantity - boxTotalQuantity, Math.max(0, (boxCapacity ?? 0) - boxTotalQuantity))
     : isBoxFull
@@ -495,7 +499,8 @@ export function PackingFormModal({
               onChange={(e) => onBoxNumberChange(e.target.value)}
               onWheel={(e) => e.currentTarget.blur()}
               placeholder={t.editBoxNumberPlaceholder}
-              disabled={isFieldsDisabled}
+              disabled
+              readOnly
             />
           </div>
 
@@ -537,12 +542,10 @@ export function PackingFormModal({
                 </div>
               ) : null}
 
-              {hasItems ? (
-                <div className={gridStyles.field}>
-                  <label className={gridStyles.label}>{itemFieldsT.boxCurrentQuantityLabel}</label>
-                  <div style={infoStyle}>{boxTotalQuantity}</div>
-                </div>
-              ) : null}
+              <div className={gridStyles.field}>
+                <label className={gridStyles.label}>{itemFieldsT.boxCurrentQuantityLabel}</label>
+                <div style={infoStyle}>{boxTotalQuantity}</div>
+              </div>
 
               <p
                 className="seasons-manager__hint"
@@ -655,36 +658,40 @@ export function PackingFormModal({
           <p className="seasons-manager__hint" style={{ margin: 0 }}>{t.noBoxSelectedHint}</p>
         ) : null}
 
-        {isBoxSelected && isLoadingOptions ? (
-          <p className="seasons-manager__hint" style={{ margin: 0 }}>{t.loadingBoxDetailsHint}</p>
-        ) : null}
+        {isBoxSelected ? (
+          <div className={gridStyles.rowsSection}>
+            {isLoadingOptions ? (
+              <p className="seasons-manager__hint" style={{ margin: 0 }}>{t.loadingBoxDetailsHint}</p>
+            ) : null}
 
-        {isBoxSelected && !isShipped && !isLoadingOptions ? (
-          <PackingItemRowsSection
-            rowsT={t.itemRows}
-            fieldsT={itemFieldsT}
-            boxOwnershipType={ownershipType}
-            boxTraderId={traderId}
-            boxCustomerId={customerId}
-            rows={itemRowsView}
-            traders={traders}
-            customers={customers}
-            isLoadingInventory={isLoadingRowInventory}
-            isBoxOpen={isBoxOpen && ownershipType !== 'EXTERNAL_TRADER'}
-            isBoxFull={isBoxFull}
-            boxCapacityMessage={boxCapacityMessage}
-            remainingCapacityMessage={remainingCapacityMessage}
-            addItemDisabledHint={ownershipType === 'EXTERNAL_TRADER' ? t.addItemDisabledExternalTraderHint : t.addItemDisabledHint}
-            totalPackedQuantity={totalPackedQuantity}
-            pendingExistingItemEdits={pendingExistingItemEdits}
-            onAddRow={onAddItemRow}
-            onRemoveRow={onRemoveItemRow}
-            onUpdateRow={onUpdateItemRow}
-            onUpdateRowQuantity={onUpdateItemRowQuantity}
-            onStageExistingItemEdit={onStageExistingItemEdit}
-            onInvalidateTraderInventory={onInvalidateTraderInventory}
-            onInvalidateAllTraderInventory={onInvalidateAllTraderInventory}
-          />
+            {!isBoxDispatched && !isLoadingOptions ? (
+              <PackingItemRowsSection
+                rowsT={t.itemRows}
+                fieldsT={itemFieldsT}
+                boxOwnershipType={ownershipType}
+                boxTraderId={traderId}
+                boxCustomerId={customerId}
+                rows={itemRowsView}
+                traders={traders}
+                customers={customers}
+                isLoadingInventory={isLoadingRowInventory}
+                isBoxOpen={isBoxOpen && ownershipType !== 'EXTERNAL_TRADER'}
+                isBoxFull={isBoxFull}
+                boxCapacityMessage={boxCapacityMessage}
+                remainingCapacityMessage={remainingCapacityMessage}
+                addItemDisabledHint={ownershipType === 'EXTERNAL_TRADER' ? t.addItemDisabledExternalTraderHint : t.addItemDisabledHint}
+                totalPackedQuantity={totalPackedQuantity}
+                pendingExistingItemEdits={pendingExistingItemEdits}
+                onAddRow={onAddItemRow}
+                onRemoveRow={onRemoveItemRow}
+                onUpdateRow={onUpdateItemRow}
+                onUpdateRowQuantity={onUpdateItemRowQuantity}
+                onStageExistingItemEdit={onStageExistingItemEdit}
+                onInvalidateTraderInventory={onInvalidateTraderInventory}
+                onInvalidateAllTraderInventory={onInvalidateAllTraderInventory}
+              />
+            ) : null}
+          </div>
         ) : null}
 
         {isBoxSelected && removedItemGroups.length ? (
@@ -722,7 +729,7 @@ export function PackingFormModal({
           <SubmitButton
             className="btn btn-success"
             onClick={onSave}
-            disabled={isLoadingOptions || !isBoxSelected}
+            disabled={isLoadingOptions || !isBoxSelected || isBoxOverCapacity}
             isLoading={isSubmitting}
             loadingText={t.saving}
           >

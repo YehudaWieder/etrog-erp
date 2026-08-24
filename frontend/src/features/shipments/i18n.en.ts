@@ -789,7 +789,7 @@ export const SHIPMENTS_I18N_EN = {
     customerFilterLabel: 'Customer',
     stockSourceFilterLabel: 'Stock Source',
     allStockSourceOption: 'All stock sources',
-    stockStatusFilterLabel: 'Stock Status',
+    stockStatusFilterLabel: 'Shipment Status',
     allStockStatusOption: 'All statuses',
     stockStatusLabels: {
       PREPARING: 'Packaged',

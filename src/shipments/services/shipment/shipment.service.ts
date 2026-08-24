@@ -357,8 +357,8 @@ export class ShipmentService {
           },
         });
       });
-    } else if (effectiveStatus === ShipmentStatus.PREPARING) {
-      // Reverting to PREPARING: restore each box status based on fill level
+    } else if (effectiveStatus === ShipmentStatus.PREPARING || effectiveStatus === ShipmentStatus.CANCELLED) {
+      // Reverting to PREPARING or CANCELLED: restore each box status based on fill level
       updated = await this.prisma.$transaction(async (tx) => {
         const systemConfig = await tx.systemConfig.findFirst({
           where: { seasonId: existing.seasonId },

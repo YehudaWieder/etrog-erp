@@ -1,5 +1,6 @@
 import { FaXmark } from 'react-icons/fa6';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
+import { TopLoadingBar } from '../../../components/ui/TopLoadingBar';
 import { CustomSelect } from '../../../components/ui/CustomSelect';
 import type { BoxOwnership } from '../../../services/boxesApi';
 import type { ShipmentRecord } from '../../../services/shipmentsApi';
@@ -133,7 +134,10 @@ export function NewBoxFormModal({
           <FaXmark />
         </button>
 
-        <h3 className="modal-title">{t.title}</h3>
+        <h3 className="modal-title" style={{ position: 'relative' }}>
+          {t.title}
+          <TopLoadingBar isLoading={isLoadingOptions} />
+        </h3>
         <p className="modal-message">{t.description}</p>
 
         <div className={styles.modeToggle}>

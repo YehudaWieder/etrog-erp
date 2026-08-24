@@ -5,6 +5,12 @@
   margin-block: 1.25rem;
 }
 
+.rowsSection {
+  margin-block-start: 1rem;
+  border-top: 1px dashed rgba(208, 220, 211, 0.95);
+  padding-top: 0.75rem;
+}
+
 .field {
   display: flex;
   flex-direction: column;

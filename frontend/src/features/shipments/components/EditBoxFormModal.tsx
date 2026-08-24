@@ -1,5 +1,6 @@
 import { FaXmark } from 'react-icons/fa6';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
+import { TopLoadingBar } from '../../../components/ui/TopLoadingBar';
 import { CustomSelect } from '../../../components/ui/CustomSelect';
 import type { BoxStatus } from '../../../services/boxesApi';
 import type { ShipmentRecord } from '../../../services/shipmentsApi';
@@ -140,7 +141,10 @@ export function EditBoxFormModal({
           <FaXmark />
         </button>
 
-        <h3 className="modal-title">{t.title(originalBoxNumber)}</h3>
+        <h3 className="modal-title" style={{ position: 'relative' }}>
+          {t.title(originalBoxNumber)}
+          <TopLoadingBar isLoading={isLoadingOptions} />
+        </h3>
 
         <div className={styles.formGrid}>
           <div className={styles.field}>

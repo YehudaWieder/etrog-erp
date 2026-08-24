@@ -791,7 +791,7 @@ export const SHIPMENTS_I18N_HE = {
     customerFilterLabel: 'לקוח',
     stockSourceFilterLabel: 'מקור מלאי',
     allStockSourceOption: 'כל מקורות המלאי',
-    stockStatusFilterLabel: 'סטטוס מלאי',
+    stockStatusFilterLabel: 'סטטוס משלוח',
     allStockStatusOption: 'כל הסטטוסים',
     stockStatusLabels: {
       PREPARING: 'נארז',
