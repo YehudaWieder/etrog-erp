@@ -30,6 +30,8 @@ export class IsraelHarvestService {
       throw new BadRequestException('Quantity must be a non-negative number.');
     }
 
+    await this.assertDateMatchesSeason(dto.seasonId, dto.dateGregorian);
+
     try {
       const created = await this.prisma.israelHarvest.create({
         data: {
@@ -69,6 +71,10 @@ export class IsraelHarvestService {
 
     if (dto.quantity !== undefined && (!Number.isFinite(dto.quantity) || dto.quantity < 0)) {
       throw new BadRequestException('Quantity must be a non-negative number.');
+    }
+
+    if (dto.dateGregorian) {
+      await this.assertDateMatchesSeason(current.seasonId, dto.dateGregorian);
     }
 
     const updated = await this.prisma.israelHarvest.update({
@@ -119,6 +125,20 @@ export class IsraelHarvestService {
         throw new ConflictException('Cannot delete a harvest that has related sorting records.');
       }
       throw error;
+    }
+  }
+
+  private async assertDateMatchesSeason(seasonId: number, dateGregorian: string) {
+    const season = await this.prisma.season.findUnique({ where: { id: seasonId } });
+    if (!season) {
+      throw new BadRequestException('Invalid season reference.');
+    }
+
+    const harvestYear = new Date(dateGregorian).getUTCFullYear();
+    if (harvestYear !== season.yearName) {
+      throw new BadRequestException(
+        `Harvest date year (${harvestYear}) does not match the selected season (${season.yearName}).`,
+      );
     }
   }
 }

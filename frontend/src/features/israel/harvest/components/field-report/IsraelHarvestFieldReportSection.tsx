@@ -95,7 +95,6 @@ export function IsraelHarvestFieldReportSection({
         id: 'recordCount',
         header: t.fieldReport.columns.recordCount,
         sortKey: 'recordCount',
-        align: 'end',
         sortAccessor: (row) => row.recordCount,
         render: (row) => numberFormatter.format(row.recordCount),
       },
@@ -103,7 +102,6 @@ export function IsraelHarvestFieldReportSection({
         id: 'totalQuantity',
         header: t.fieldReport.columns.totalQuantity,
         sortKey: 'totalQuantity',
-        align: 'end',
         sortAccessor: (row) => row.totalQuantity,
         render: (row) => numberFormatter.format(row.totalQuantity),
       },
@@ -111,7 +109,6 @@ export function IsraelHarvestFieldReportSection({
         id: 'avgQuantityPerHarvest',
         header: t.fieldReport.columns.avgQuantityPerHarvest,
         sortKey: 'avgQuantityPerHarvest',
-        align: 'end',
         sortAccessor: (row) => row.avgQuantityPerHarvest,
         render: (row) =>
           numberFormatter.format(Math.round(row.avgQuantityPerHarvest)),

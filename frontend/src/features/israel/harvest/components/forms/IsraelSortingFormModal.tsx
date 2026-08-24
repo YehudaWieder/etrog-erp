@@ -7,6 +7,7 @@ import type { IsraelFieldCategory } from '../../../../../services/israel/israelF
 import type { IsraelSortCategory } from '../../../../../services/israel/israelSortCategoriesApi';
 import {
   getIsraelClassificationsByHarvest,
+  type IsraelClassificationRecord,
   type IsraelPitamStatus,
 } from '../../../../../services/israel/israelClassificationsApi';
 import { getFilledMatrixEntries } from '../../../../harvest/utils/harvestClassificationMatrix.util';
@@ -14,6 +15,7 @@ import type { PitamRowKey } from '../../../../harvest/utils/harvestClassificatio
 import type { IsraelHarvestFormClassificationDraft } from '../../israelHarvestPage.types';
 import type { IsraelHarvestI18n } from '../../i18n';
 import {
+  buildInitialIsraelClassificationDraftsFromExisting,
   createEmptyIsraelHarvestClassificationDraft,
   getIsraelHarvestDraftsTotalQuantity,
 } from '../../utils/israelHarvestClassificationMatrix.util';
@@ -29,6 +31,10 @@ export type IsraelSortingFormSubmitPayload = {
     pitamStatus: IsraelPitamStatus;
     quantity: number;
     notes: string;
+  }>;
+  existingClassificationUpdates: Array<{
+    id: number;
+    quantity: number;
   }>;
 };
 
@@ -67,7 +73,11 @@ export function IsraelSortingFormModal({
     [],
   );
   const [error, setError] = useState('');
-  const [alreadyClassifiedTotal, setAlreadyClassifiedTotal] = useState(0);
+  const [existingClassifications, setExistingClassifications] = useState<
+    IsraelClassificationRecord[]
+  >([]);
+  const [pendingExistingClassificationEdits, setPendingExistingClassificationEdits] =
+    useState<Record<number, string>>({});
   const [isLoadingExisting, setIsLoadingExisting] = useState(false);
 
   useEffect(() => {
@@ -76,27 +86,36 @@ export function IsraelSortingFormModal({
       setIsPartialClassification(false);
       setDrafts([]);
       setError('');
-      setAlreadyClassifiedTotal(0);
+      setExistingClassifications([]);
+      setPendingExistingClassificationEdits({});
     }
   }, [isOpen]);
 
   useEffect(() => {
     const parsedHarvestId = Number(harvestId);
     if (!parsedHarvestId) {
-      setAlreadyClassifiedTotal(0);
+      setExistingClassifications([]);
       return;
     }
 
     setIsLoadingExisting(true);
     getIsraelClassificationsByHarvest(parsedHarvestId)
       .then((records) => {
-        setAlreadyClassifiedTotal(
-          records.reduce((sum, record) => sum + record.quantity, 0),
-        );
+        setExistingClassifications(records);
+        setDrafts(buildInitialIsraelClassificationDraftsFromExisting(records));
       })
-      .catch(() => setAlreadyClassifiedTotal(0))
+      .catch(() => setExistingClassifications([]))
       .finally(() => setIsLoadingExisting(false));
   }, [harvestId]);
+
+  const alreadyClassifiedTotal = useMemo(
+    () =>
+      existingClassifications.reduce(
+        (sum, record) => sum + record.quantity,
+        0,
+      ),
+    [existingClassifications],
+  );
 
   const selectedHarvest = useMemo(
     () => harvests.find((harvest) => harvest.id === Number(harvestId)) ?? null,
@@ -123,6 +142,20 @@ export function IsraelSortingFormModal({
     setHarvestId(value);
     setDrafts([]);
     setError('');
+    setPendingExistingClassificationEdits({});
+  };
+
+  const handleStageExistingClassificationQuantity = (
+    classificationId: number,
+    value: string | null,
+  ) => {
+    setPendingExistingClassificationEdits((current) => {
+      if (value === null) {
+        const { [classificationId]: _removed, ...rest } = current;
+        return rest;
+      }
+      return { ...current, [classificationId]: value };
+    });
   };
 
   const handleAddDraft = () => {
@@ -179,26 +212,36 @@ export function IsraelSortingFormModal({
     }
 
     const relevantDrafts = drafts.filter(
-      (draft) => draft.fieldCategoryId && draft.categoryId,
+      (draft) => !draft.isExistingScaffold && draft.fieldCategoryId && draft.categoryId,
     );
-    if (relevantDrafts.length === 0) {
+    const existingClassificationUpdates = Object.entries(
+      pendingExistingClassificationEdits,
+    ).map(([id, value]) => ({ id: Number(id), quantity: Number(value) }));
+
+    if (relevantDrafts.length === 0 && existingClassificationUpdates.length === 0) {
       setError(form.addSortingRowBlockedError);
       return;
     }
 
+    const parsedHarvestQuantity = selectedHarvest?.quantity ?? 0;
+    const existingEffectiveTotal = existingClassifications.reduce((sum, record) => {
+      const pendingValue = pendingExistingClassificationEdits[record.id];
+      const value = pendingValue !== undefined ? Number(pendingValue) : record.quantity;
+      return sum + (Number.isFinite(value) ? value : 0);
+    }, 0);
     const totalSortingQuantity =
-      getIsraelHarvestDraftsTotalQuantity(relevantDrafts);
+      existingEffectiveTotal + getIsraelHarvestDraftsTotalQuantity(relevantDrafts);
 
     if (isPartialClassification) {
-      if (totalSortingQuantity >= remainingQuantity) {
+      if (totalSortingQuantity >= parsedHarvestQuantity) {
         setError(
-          form.sortingTotalMustBeLessForPartialSorting(remainingQuantity),
+          form.sortingTotalMustBeLessForPartialSorting(parsedHarvestQuantity),
         );
         return;
       }
-    } else if (totalSortingQuantity !== remainingQuantity) {
+    } else if (totalSortingQuantity !== parsedHarvestQuantity) {
       setError(
-        form.sortingTotalMustMatchAvailableForFullSorting(remainingQuantity),
+        form.sortingTotalMustMatchAvailableForFullSorting(parsedHarvestQuantity),
       );
       return;
     }
@@ -215,7 +258,11 @@ export function IsraelSortingFormModal({
     );
 
     setError('');
-    onSubmit({ harvestId: parsedHarvestId, classifications });
+    onSubmit({
+      harvestId: parsedHarvestId,
+      classifications,
+      existingClassificationUpdates,
+    });
   };
 
   return (
@@ -365,13 +412,18 @@ export function IsraelSortingFormModal({
               form={form}
               fieldCategories={availableFieldCategories}
               categories={categories}
-              quantity={String(remainingQuantity)}
+              quantity={String(selectedHarvest.quantity)}
               isPartialClassification={isPartialClassification}
               drafts={drafts}
+              existingHarvestClassifications={existingClassifications}
+              pendingExistingClassificationEdits={pendingExistingClassificationEdits}
+              allowSubtractExistingQuantity
+              canRemoveExistingScaffold={false}
               onAddDraft={handleAddDraft}
               onRemoveDraft={handleRemoveDraft}
               onUpdateDraft={handleUpdateDraft}
               onUpdateDraftQuantity={handleUpdateDraftQuantity}
+              onStageExistingClassificationQuantity={handleStageExistingClassificationQuantity}
             />
           </>
         )}

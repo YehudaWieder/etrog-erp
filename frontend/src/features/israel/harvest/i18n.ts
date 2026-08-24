@@ -108,6 +108,28 @@ export type IsraelHarvestI18n = {
     fullSortingMatchHint: string;
     duplicateSortingRowError: string;
     addSortingRowBlockedError: string;
+    existingClassificationCellBlockedHint: string;
+    existingClassificationRowHint: string;
+    addExistingClassificationQuantityLabel: string;
+    cancelExistingClassificationCellLabel: string;
+    addExistingClassificationQuantityPopupTitle: string;
+    addExistingClassificationQuantityPopupPrefix: string;
+    addExistingClassificationQuantityPopupGradeWord: string;
+    addExistingClassificationQuantityPopupInstruction: string;
+    addExistingClassificationQuantityConfirmLabel: string;
+    addExistingClassificationQuantityInvalidError: string;
+    editExistingClassificationQuantityLabel: string;
+    editExistingClassificationQuantityPopupTitle: string;
+    editExistingClassificationQuantityPopupInstruction: string;
+    existingClassificationQuantityAddModeLabel: string;
+    existingClassificationQuantitySubtractModeLabel: string;
+    subtractExistingClassificationQuantityConfirmLabel: string;
+    subtractExistingClassificationQuantityInvalidError: string;
+    subtractExistingClassificationQuantityExceedsBaseError: (
+      baseQuantity: number,
+    ) => string;
+    existingClassificationCellInvalidQuantityError: string;
+    existingClassificationCellSaveError: string;
     cancel: string;
     save: string;
     saving: string;
@@ -283,6 +305,7 @@ export type IsraelHarvestI18n = {
       printLabel: string;
       printWindowTitle: string;
       openDetailsAriaLabel: string;
+      sortingDetailsTitle: string;
       matrixTitle: string;
       matrixColumns: {
         category: string;
@@ -327,6 +350,7 @@ export type IsraelHarvestI18n = {
       dateGregorian: string;
       dateHebrew: string;
       quantity: string;
+      totalSorted: string;
       notes: string;
       updatedBy: string;
     };
@@ -357,6 +381,12 @@ export type IsraelHarvestI18n = {
         pitamStatus: string;
         quantity: string;
         notes: string;
+      };
+      gradeGroups: {
+        title: string;
+        groupColumn: string;
+        percentColumn: string;
+        ungrouped: string;
       };
     };
   };

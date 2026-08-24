@@ -144,7 +144,7 @@
   width: max-content;
   border-collapse: collapse;
   table-layout: fixed;
-  min-width: 0;
+  min-width: 100%;
   font-size: 0.82rem;
 }
 

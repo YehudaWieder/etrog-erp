@@ -215,6 +215,7 @@ export function IsraelHarvestSortingSummarySection({
                 withoutPitam: labels.columns.withoutPitam,
                 mixed: labels.columns.mixed,
               }}
+              collapseEmptyPitamColumns={false}
             />
           </section>
 

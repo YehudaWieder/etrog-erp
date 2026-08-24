@@ -115,7 +115,6 @@ export function IsraelHarvestSortingListSection({
         id: 'quantity',
         header: sl.columns.quantity,
         sortKey: 'quantity',
-        align: 'end',
         sortAccessor: (row) => row.quantity,
         render: (row) => numberFormatter.format(row.quantity),
       },

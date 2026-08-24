@@ -160,6 +160,34 @@ export const ISRAEL_HARVEST_I18N_HE: IsraelHarvestI18n = {
     duplicateSortingRowError: 'קטגוריה זו כבר נבחרה בשורת מיון קודמת.',
     addSortingRowBlockedError:
       'יש למלא את שורת המיון האחרונה לפני הוספת שורה חדשה.',
+    existingClassificationCellBlockedHint:
+      'תא זה חסום כי כבר קיים מיון עם אותה קטגוריה, דרגה וסטטוס פיטם. ניתן ללחוץ על סמל הפלוס כדי לשנות את הכמות במיון הקיים - השינוי יישמר יחד עם שאר הטבלה בלחיצה על שמירה.',
+    existingClassificationRowHint:
+      'חלק מהשדות חסומים עקב דרגות לא נתמכות או מיונים שכבר קיימים להם. ניתן להוסיף כמות למיון הקיים.',
+    addExistingClassificationQuantityLabel: 'הוספת כמות',
+    cancelExistingClassificationCellLabel: 'ביטול הכמות שנוספה',
+    addExistingClassificationQuantityPopupTitle: 'הוספת כמות למיון קיים',
+    addExistingClassificationQuantityPopupPrefix: 'הכמות הנוכחית בקטגוריה',
+    addExistingClassificationQuantityPopupGradeWord: 'דרגה',
+    addExistingClassificationQuantityPopupInstruction:
+      'יש להזין את הכמות שברצונך להוסיף למיון זה.',
+    addExistingClassificationQuantityConfirmLabel: 'הוספה',
+    addExistingClassificationQuantityInvalidError:
+      'יש להזין כמות תקינה להוספה.',
+    editExistingClassificationQuantityLabel: 'עריכת כמות',
+    editExistingClassificationQuantityPopupTitle: 'עדכון כמות למיון קיים',
+    editExistingClassificationQuantityPopupInstruction:
+      'יש לבחור אם להוסיף או להוריד כמות, ולהזין את הכמות הרצויה.',
+    existingClassificationQuantityAddModeLabel: 'הוספה',
+    existingClassificationQuantitySubtractModeLabel: 'הורדה',
+    subtractExistingClassificationQuantityConfirmLabel: 'הורדה',
+    subtractExistingClassificationQuantityInvalidError:
+      'יש להזין כמות תקינה להורדה.',
+    subtractExistingClassificationQuantityExceedsBaseError: (baseQuantity) =>
+      `לא ניתן להוריד יותר מהכמות הקיימת (${baseQuantity}).`,
+    existingClassificationCellInvalidQuantityError:
+      'יש להזין כמות תקינה עבור המיון הקיים שנערך.',
+    existingClassificationCellSaveError: 'עדכון הכמות הקיימת נכשל. נסו שוב.',
     cancel: 'ביטול',
     save: 'שמירת קטיף',
     saving: 'שומר...',
@@ -338,6 +366,7 @@ export const ISRAEL_HARVEST_I18N_HE: IsraelHarvestI18n = {
       printLabel: 'הדפסה',
       printWindowTitle: 'פירוט מיון יומי',
       openDetailsAriaLabel: 'הצג פירוט מיון',
+      sortingDetailsTitle: 'פירוט מיונים',
       matrixTitle: 'פילוח לפי קטגוריה ודרגה',
       matrixColumns: {
         category: 'קטגוריה',
@@ -381,7 +410,8 @@ export const ISRAEL_HARVEST_I18N_HE: IsraelHarvestI18n = {
       fieldName: 'שדה',
       dateGregorian: 'תאריך לועזי',
       dateHebrew: 'תאריך עברי',
-      quantity: 'כמות',
+      quantity: 'כמות קטיף',
+      totalSorted: 'סה"כ מוין',
       notes: 'הערות',
       updatedBy: 'עודכן ע"י',
     },
@@ -412,6 +442,12 @@ export const ISRAEL_HARVEST_I18N_HE: IsraelHarvestI18n = {
         pitamStatus: 'פיטם',
         quantity: 'כמות',
         notes: 'הערות',
+      },
+      gradeGroups: {
+        title: 'פילוח אחוזים לפי קבוצות דרגות',
+        groupColumn: 'קבוצה',
+        percentColumn: 'אחוז',
+        ungrouped: 'ללא קיבוץ',
       },
     },
   },

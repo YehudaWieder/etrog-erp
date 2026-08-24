@@ -19,4 +19,10 @@ export type IsraelHarvestFormClassificationDraft = {
   categoryId: string;
   notes: string;
   quantities: GradeQuantityMatrix;
+  // True for a scaffold row auto-populated for an already-saved (fieldCategory, category) combo (see
+  // buildInitialIsraelClassificationDraftsFromExisting). Its quantities stay empty on purpose: already-saved
+  // cells are rendered from existingClassificationIds/existingHarvestClassifications as locked cells with an
+  // add/subtract popup, not from this draft's own quantities matrix.
+  isExistingScaffold?: boolean;
+  existingClassificationIds?: number[];
 };

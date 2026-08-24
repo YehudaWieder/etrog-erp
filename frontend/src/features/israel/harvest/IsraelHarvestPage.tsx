@@ -185,6 +185,18 @@ export function IsraelHarvestPage() {
   const [isDeletingSorting, setIsDeletingSorting] = useState(false);
 
   useEffect(() => {
+    const state = location.state as Record<string, unknown> | null;
+    if (state?.openHarvestForm) {
+      setIsHarvestFormOpen(true);
+      navigate(location.pathname, { replace: true, state: null });
+    } else if (state?.openSortingForm) {
+      setIsSortingFormOpen(true);
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
+
+  useEffect(() => {
     if (
       !isHarvestSummaryTab &&
       !isSortingSummaryTab &&
@@ -239,7 +251,10 @@ export function IsraelHarvestPage() {
 
   useEffect(() => {
     if (
-      (!isSortingSummaryTab && !isSortingListTab && !isSortingDailyDetailsTab) ||
+      (!isSortingSummaryTab &&
+        !isSortingListTab &&
+        !isSortingDailyDetailsTab &&
+        !isDailyDetailsTab) ||
       seasonFilterId === null
     ) {
       return;
@@ -250,6 +265,7 @@ export function IsraelHarvestPage() {
     isSortingSummaryTab,
     isSortingListTab,
     isSortingDailyDetailsTab,
+    isDailyDetailsTab,
     seasonFilterId,
     loadClassifications,
   ]);
@@ -378,11 +394,14 @@ export function IsraelHarvestPage() {
 
   const [selectedSortingDailyHarvestId, setSelectedSortingDailyHarvestId] =
     useState<number | null>(null);
+  const [isSortingDailyDetailsPanelOpen, setIsSortingDailyDetailsPanelOpen] =
+    useState(false);
   const sortingDailyDetailsPrintRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!isSortingDailyDetailsTab) {
       setSelectedSortingDailyHarvestId(null);
+      setIsSortingDailyDetailsPanelOpen(false);
     }
   }, [isSortingDailyDetailsTab]);
 
@@ -595,6 +614,8 @@ export function IsraelHarvestPage() {
 
   const [selectedDailyHarvest, setSelectedDailyHarvest] =
     useState<IsraelHarvestRecord | null>(null);
+  const [isDailyDetailsPanelOpen, setIsDailyDetailsPanelOpen] =
+    useState(false);
   const [dailyRelatedSortings, setDailyRelatedSortings] = useState<
     IsraelClassificationRecord[]
   >([]);
@@ -613,6 +634,7 @@ export function IsraelHarvestPage() {
   useEffect(() => {
     if (!isDailyDetailsTab) {
       setSelectedDailyHarvest(null);
+      setIsDailyDetailsPanelOpen(false);
     }
   }, [isDailyDetailsTab]);
 
@@ -645,6 +667,7 @@ export function IsraelHarvestPage() {
       t.dailyDetails.columns.dateGregorian,
       t.dailyDetails.columns.dateHebrew,
       t.dailyDetails.columns.quantity,
+      t.dailyDetails.columns.totalSorted,
       t.dailyDetails.columns.updatedBy,
       t.dailyDetails.columns.notes,
     ];
@@ -653,6 +676,7 @@ export function IsraelHarvestPage() {
       formatHarvestGregorianDate(row.dateGregorian, lang),
       row.dateHebrew,
       numberFormatter.format(row.quantity),
+      numberFormatter.format(sortedQuantityByHarvestId.get(row.id) ?? 0),
       row.updatedBy?.name ?? '',
       row.notes ?? '',
     ]);
@@ -703,6 +727,7 @@ export function IsraelHarvestPage() {
       t.dailyDetails.columns.dateGregorian,
       t.dailyDetails.columns.dateHebrew,
       t.dailyDetails.columns.quantity,
+      t.dailyDetails.columns.totalSorted,
       t.dailyDetails.columns.updatedBy,
       t.dailyDetails.columns.notes,
     ];
@@ -711,6 +736,7 @@ export function IsraelHarvestPage() {
       formatHarvestGregorianDate(row.dateGregorian, lang),
       row.dateHebrew,
       row.quantity,
+      sortedQuantityByHarvestId.get(row.id) ?? 0,
       row.updatedBy?.name ?? '',
       row.notes ?? '',
     ]);
@@ -896,6 +922,14 @@ export function IsraelHarvestPage() {
     ];
   }, [classificationRows, t.sortingSummary.filters.allDatesOption, lang]);
 
+  const sortedQuantityByHarvestId = useMemo(() => {
+    const totals = new Map<number, number>();
+    for (const row of classificationRows) {
+      totals.set(row.harvestId, (totals.get(row.harvestId) ?? 0) + row.quantity);
+    }
+    return totals;
+  }, [classificationRows]);
+
   const filteredClassificationRows = useMemo(() => {
     return classificationRows.filter((row) => {
       if (
@@ -1073,6 +1107,11 @@ export function IsraelHarvestPage() {
   const handleAddSorting = async (payload: IsraelSortingFormSubmitPayload) => {
     setIsSubmittingSorting(true);
     try {
+      for (const update of payload.existingClassificationUpdates) {
+        await updateIsraelClassification(update.id, {
+          quantity: update.quantity,
+        });
+      }
       for (const classification of payload.classifications) {
         await createIsraelClassification({
           harvestId: payload.harvestId,
@@ -1488,6 +1527,12 @@ export function IsraelHarvestPage() {
             onExport={handleExportSortingDailyTableToExcel}
             selectedHarvestId={selectedSortingDailyHarvestId}
             onSelectHarvestId={setSelectedSortingDailyHarvestId}
+            isDetailsPanelOpen={isSortingDailyDetailsPanelOpen}
+            onOpenDetails={(harvestId) => {
+              setSelectedSortingDailyHarvestId(harvestId);
+              setIsSortingDailyDetailsPanelOpen(true);
+            }}
+            onCloseDetailsPanel={() => setIsSortingDailyDetailsPanelOpen(false)}
             detailsPrintRef={sortingDailyDetailsPrintRef}
             onPrintDetails={handlePrintSortingDailyDetails}
           />
@@ -1610,8 +1655,16 @@ export function IsraelHarvestPage() {
             onPrint={handlePrintDailyDetailsTable}
             onExport={handleExportDailyDetailsTableToExcel}
             numberFormatter={numberFormatter}
+            sortedQuantityByHarvestId={sortedQuantityByHarvestId}
+            sortCategories={sortCategories}
             selectedRow={selectedDailyHarvest}
             onSelectRow={setSelectedDailyHarvest}
+            isDetailsPanelOpen={isDailyDetailsPanelOpen}
+            onOpenDetails={(row) => {
+              setSelectedDailyHarvest(row);
+              setIsDailyDetailsPanelOpen(true);
+            }}
+            onCloseDetailsPanel={() => setIsDailyDetailsPanelOpen(false)}
             relatedSortings={dailyRelatedSortings}
             isRelatedSortingsLoading={isDailyRelatedSortingsLoading}
             relatedSortingsLoadError={dailyRelatedSortingsLoadError}

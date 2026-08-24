@@ -32,15 +32,7 @@ import type { IsraelHarvestI18n } from '../../i18n';
 import workspaceStyles from '../../../../../components/ui/styles/WorkspaceSection.module.css';
 import panelStyles from '../../../../harvest/components/styles/HarvestPanels.module.css';
 import sheetStyles from '../../../../harvest/components/styles/HarvestDetailsSheet.module.css';
-
-function pitamStatusLabel(
-  status: IsraelClassificationSeasonRecord['pitamStatus'] | undefined,
-  labels: IsraelHarvestI18n['harvestForm']['pitamOptions'],
-): string {
-  if (status === 'WITH_PITAM') return labels.withPitam;
-  if (status === 'WITHOUT_PITAM') return labels.withoutPitam;
-  return labels.mixed;
-}
+import breakdownStyles from '../../../../harvest/components/sorting-daily/HarvestSortingDailyCategoryBreakdown.module.css';
 
 type IsraelHarvestSortingDailySectionProps = {
   lang: 'he' | 'en';
@@ -56,6 +48,9 @@ type IsraelHarvestSortingDailySectionProps = {
   onExport: () => void;
   selectedHarvestId: number | null;
   onSelectHarvestId: Dispatch<SetStateAction<number | null>>;
+  isDetailsPanelOpen: boolean;
+  onOpenDetails: (harvestId: number) => void;
+  onCloseDetailsPanel: () => void;
   detailsPrintRef?: RefObject<HTMLDivElement>;
   onPrintDetails: () => void;
 };
@@ -74,6 +69,9 @@ export function IsraelHarvestSortingDailySection({
   onExport,
   selectedHarvestId,
   onSelectHarvestId,
+  isDetailsPanelOpen,
+  onOpenDetails,
+  onCloseDetailsPanel,
   detailsPrintRef,
   onPrintDetails,
 }: IsraelHarvestSortingDailySectionProps) {
@@ -121,7 +119,7 @@ export function IsraelHarvestSortingDailySection({
         render: (row) => (
           <HarvestDetailsTriggerButton
             ariaLabel={dp.openDetailsAriaLabel}
-            onClick={() => onSelectHarvestId(row.harvestId)}
+            onClick={() => onOpenDetails(row.harvestId)}
           />
         ),
       },
@@ -154,7 +152,6 @@ export function IsraelHarvestSortingDailySection({
         id: `category-${category}`,
         header: category,
         sortKey: `category-${category}`,
-        align: 'end',
         sortAccessor: (row) => row.categoryTotals[category] ?? 0,
         render: (row) => numberFormatter.format(row.categoryTotals[category] ?? 0),
       }));
@@ -163,13 +160,12 @@ export function IsraelHarvestSortingDailySection({
       id: 'total',
       header: sd.columns.total,
       sortKey: 'total',
-      align: 'end',
       sortAccessor: (row) => row.totalSorted,
       render: (row) => numberFormatter.format(row.totalSorted),
     };
 
     return [...base, ...categoryColumns, totalColumn];
-  }, [sd.columns, sd.detailsColumnHeader, dp.openDetailsAriaLabel, categories, lang, numberFormatter, onSelectHarvestId]);
+  }, [sd.columns, sd.detailsColumnHeader, dp.openDetailsAriaLabel, categories, lang, numberFormatter, onOpenDetails]);
 
   const selectedHarvestRow = useMemo(
     () => dailyRows.find((row) => row.harvestId === selectedHarvestId) ?? null,
@@ -184,18 +180,26 @@ export function IsraelHarvestSortingDailySection({
     [rows, selectedHarvestId],
   );
 
-  const detailsMatrix = useMemo(
-    () =>
-      buildSortingMatrix(
-        selectedHarvestClassifications,
-        dp.grandTotalLabel,
-        dp.breakdown.grade,
-        categoryOrder,
-        [],
-        HARVEST_GRADE_OPTIONS,
-      ),
-    [selectedHarvestClassifications, dp.grandTotalLabel, dp.breakdown.grade, categoryOrder],
-  );
+  const detailsMatrix = useMemo(() => {
+    const matrix = buildSortingMatrix(
+      selectedHarvestClassifications,
+      dp.grandTotalLabel,
+      dp.breakdown.grade,
+      categoryOrder,
+      [],
+      HARVEST_GRADE_OPTIONS,
+    );
+
+    const visibilityRows = [...matrix.rows, matrix.grandTotalRow];
+    const gradesWithData = matrix.grades.filter((grade) =>
+      visibilityRows.some((row) => {
+        const cell = row.cells[grade];
+        return cell ? cell.withPitam > 0 || cell.withoutPitam > 0 || cell.mixed > 0 : false;
+      }),
+    );
+
+    return { ...matrix, grades: gradesWithData.length > 0 ? gradesWithData : matrix.grades };
+  }, [selectedHarvestClassifications, dp.grandTotalLabel, dp.breakdown.grade, categoryOrder]);
 
   const gradeGroupSplits = useMemo(() => {
     const categoryGradeTotals = new Map<string, Map<string, number>>();
@@ -280,14 +284,18 @@ export function IsraelHarvestSortingDailySection({
               emptyLabel={sd.empty}
               defaultSortState={{ key: 'dateGregorian', direction: 'desc' }}
               selectedRowKey={selectedHarvestId}
-              onRowClick={(row) => onSelectHarvestId(row.harvestId)}
+              onRowClick={(row) =>
+                onSelectHarvestId((previous) =>
+                  previous === row.harvestId ? null : row.harvestId,
+                )
+              }
             />
 
             <GlobalLeftDetailsPanel
-              isOpen={selectedHarvestRow !== null}
+              isOpen={isDetailsPanelOpen}
               title={dp.title}
               closeLabel={dp.closeLabel}
-              onClose={() => onSelectHarvestId(null)}
+              onClose={onCloseDetailsPanel}
               headerActions={
                 <button
                   type="button"
@@ -302,28 +310,24 @@ export function IsraelHarvestSortingDailySection({
               {selectedHarvestRow ? (
                 <div ref={detailsPrintRef} style={{ display: 'grid', gap: 14 }}>
                   <div className={sheetStyles.sheetCard}>
-                    <div className={sheetStyles.sheetTableWrap}>
-                      <table className={sheetStyles.sheetTable}>
-                        <tbody>
-                          <tr>
-                            <th>{sd.columns.dateGregorian}</th>
-                            <td>{formatHarvestGregorianDate(selectedHarvestRow.dateGregorian, lang)}</td>
-                            <th>{sd.columns.dateHebrew}</th>
-                            <td>{selectedHarvestRow.dateHebrew}</td>
-                          </tr>
-                          <tr>
-                            <th>{sd.columns.fieldName}</th>
-                            <td>{selectedHarvestRow.fieldName}</td>
-                            <th>{sd.columns.total}</th>
-                            <td>{numberFormatter.format(selectedHarvestRow.totalSorted)}</td>
-                          </tr>
-                        </tbody>
-                      </table>
+                    <div className={sheetStyles.sheetHead}>
+                      <p>{formatHarvestGregorianDate(selectedHarvestRow.dateGregorian, lang)}</p>
+                      <p>{selectedHarvestRow.dateHebrew}</p>
+                      <p>
+                        <strong>{sd.columns.fieldName}:</strong> {selectedHarvestRow.fieldName}
+                      </p>
+                      <p>
+                        <strong>{sd.columns.total}:</strong> {numberFormatter.format(selectedHarvestRow.totalSorted)}
+                      </p>
                     </div>
                   </div>
 
-                  <section>
-                    <h4 className={sheetStyles.relatedSortingsTitle}>{dp.matrixTitle}</h4>
+                  <div
+                    className={`${sheetStyles.sheetCard} ${sheetStyles.sheetCardBorderless} ${sheetStyles.sheetCardCategoryBreakdown} ${breakdownStyles.panelMatrix}`}
+                  >
+                    <h4 className={sheetStyles.relatedSortingsTitle} style={{ marginTop: 0 }}>
+                      {dp.sortingDetailsTitle}
+                    </h4>
                     <CategoryGradeMatrixTable
                       lang={lang}
                       rows={detailsMatrix.rows}
@@ -338,7 +342,7 @@ export function IsraelHarvestSortingDailySection({
                         mixed: dp.matrixColumns.mixed,
                       }}
                     />
-                  </section>
+                  </div>
 
                   <GradeGroupSplitCards
                     title={dp.gradeGroups.title}
@@ -348,45 +352,6 @@ export function IsraelHarvestSortingDailySection({
                     locale={lang === 'he' ? 'he-IL' : 'en-US'}
                     compact
                   />
-
-                  <div className={sheetStyles.relatedSortingsCard}>
-                    <h4 className={sheetStyles.relatedSortingsTitle}>
-                      {t.dailyDetails.detailsPanel.relatedSortingsTitle}
-                    </h4>
-
-                    {selectedHarvestClassifications.length === 0 ? (
-                      <p className={sheetStyles.relatedSortingsState}>
-                        {t.dailyDetails.detailsPanel.relatedSortingsEmpty}
-                      </p>
-                    ) : (
-                      <div className={sheetStyles.relatedSortingsTableWrap}>
-                        <table className={sheetStyles.relatedSortingsTable}>
-                          <thead>
-                            <tr>
-                              <th>{t.dailyDetails.detailsPanel.relatedSortingsColumns.fieldCategory}</th>
-                              <th>{t.dailyDetails.detailsPanel.relatedSortingsColumns.category}</th>
-                              <th>{t.dailyDetails.detailsPanel.relatedSortingsColumns.grade}</th>
-                              <th>{t.dailyDetails.detailsPanel.relatedSortingsColumns.pitamStatus}</th>
-                              <th>{t.dailyDetails.detailsPanel.relatedSortingsColumns.quantity}</th>
-                              <th>{t.dailyDetails.detailsPanel.relatedSortingsColumns.notes}</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {selectedHarvestClassifications.map((record) => (
-                              <tr key={record.id}>
-                                <td>{record.fieldCategory?.name ?? ''}</td>
-                                <td>{record.category?.name ?? ''}</td>
-                                <td>{record.grade}</td>
-                                <td>{pitamStatusLabel(record.pitamStatus, t.harvestForm.pitamOptions)}</td>
-                                <td>{numberFormatter.format(record.quantity)}</td>
-                                <td>{record.notes || ''}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
                 </div>
               ) : null}
             </GlobalLeftDetailsPanel>

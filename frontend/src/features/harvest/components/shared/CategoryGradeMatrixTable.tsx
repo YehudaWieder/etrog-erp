@@ -30,6 +30,8 @@ type CategoryGradeMatrixTableProps = {
   };
   /** Skip the top grade-label header row, for matrices with a single implicit grade (no grade dimension). */
   hideGradeHeader?: boolean;
+  /** Hide the withPitam/withoutPitam/mixed sub-columns for a grade when no row has data in them. Default true. */
+  collapseEmptyPitamColumns?: boolean;
   tableRef?: RefObject<HTMLTableElement>;
 };
 
@@ -51,6 +53,7 @@ export function CategoryGradeMatrixTable({
   emptyLabel,
   columnLabels,
   hideGradeHeader = false,
+  collapseEmptyPitamColumns = true,
   tableRef,
 }: CategoryGradeMatrixTableProps): JSX.Element {
   const locale = lang === 'he' ? 'he-IL' : 'en-US';
@@ -80,8 +83,12 @@ export function CategoryGradeMatrixTable({
   const gradeColumns = useMemo(() => {
     const result: Record<string, GradeColumns> = {};
     for (const grade of grades) {
-      if (!hasAnyValue) {
-        result[grade] = { withPitam: true, withoutPitam: true, mixed: false };
+      const hasMixed =
+        hasAnyValue &&
+        visibilityRows.some((r) => (r.cells[grade]?.mixed ?? 0) > 0);
+
+      if (!collapseEmptyPitamColumns || !hasAnyValue) {
+        result[grade] = { withPitam: true, withoutPitam: true, mixed: hasMixed };
         continue;
       }
       const hasWithPitam = visibilityRows.some(
@@ -90,9 +97,6 @@ export function CategoryGradeMatrixTable({
       const hasWithoutPitam = visibilityRows.some(
         (r) => (r.cells[grade]?.withoutPitam ?? 0) > 0,
       );
-      const hasMixed = visibilityRows.some(
-        (r) => (r.cells[grade]?.mixed ?? 0) > 0,
-      );
       result[grade] = {
         withPitam: hasWithPitam,
         withoutPitam: hasWithoutPitam,
@@ -100,7 +104,7 @@ export function CategoryGradeMatrixTable({
       };
     }
     return result;
-  }, [visibilityRows, grades, hasAnyValue]);
+  }, [visibilityRows, grades, hasAnyValue, collapseEmptyPitamColumns]);
 
   if (rows.length === 0 || grades.length === 0) {
     return <p className={styles.emptyMessage}>{emptyLabel}</p>;
@@ -113,8 +117,9 @@ export function CategoryGradeMatrixTable({
 
   const colSpanOf = (grade: string) => {
     const cols = gradeColumns[grade];
-    return (
-      Number(cols.withPitam) + Number(cols.withoutPitam) + Number(cols.mixed)
+    return Math.max(
+      1,
+      Number(cols.withPitam) + Number(cols.withoutPitam) + Number(cols.mixed),
     );
   };
 
@@ -141,6 +146,14 @@ export function CategoryGradeMatrixTable({
   const renderDataCells = (cells: Record<string, PitamGradeCell>) =>
     grades.map((grade) => {
       const cell = cellOf(cells, grade);
+      const cols = gradeColumns[grade];
+      if (!cols.withPitam && !cols.withoutPitam && !cols.mixed) {
+        return (
+          <td key={grade} className={styles.gradeDivider}>
+            {formatter.format(0)}
+          </td>
+        );
+      }
       return (
         <Fragment key={grade}>
           {gradeColumns[grade].withPitam ? (
@@ -189,25 +202,33 @@ export function CategoryGradeMatrixTable({
             {hideGradeHeader ? (
               <th className={styles.categoryHead}>{categoryColumnLabel}</th>
             ) : null}
-            {grades.map((grade) => (
-              <Fragment key={grade}>
-                {gradeColumns[grade].withPitam ? (
-                  <th className={dividerClass(grade, 'withPitam')}>
-                    {columnLabels.withPitam}
-                  </th>
-                ) : null}
-                {gradeColumns[grade].withoutPitam ? (
-                  <th className={dividerClass(grade, 'withoutPitam')}>
-                    {columnLabels.withoutPitam}
-                  </th>
-                ) : null}
-                {gradeColumns[grade].mixed ? (
-                  <th className={dividerClass(grade, 'mixed')}>
-                    {columnLabels.mixed}
-                  </th>
-                ) : null}
-              </Fragment>
-            ))}
+            {grades.map((grade) => {
+              const cols = gradeColumns[grade];
+              if (!cols.withPitam && !cols.withoutPitam && !cols.mixed) {
+                return (
+                  <th key={grade} className={styles.gradeDivider}></th>
+                );
+              }
+              return (
+                <Fragment key={grade}>
+                  {cols.withPitam ? (
+                    <th className={dividerClass(grade, 'withPitam')}>
+                      {columnLabels.withPitam}
+                    </th>
+                  ) : null}
+                  {cols.withoutPitam ? (
+                    <th className={dividerClass(grade, 'withoutPitam')}>
+                      {columnLabels.withoutPitam}
+                    </th>
+                  ) : null}
+                  {cols.mixed ? (
+                    <th className={dividerClass(grade, 'mixed')}>
+                      {columnLabels.mixed}
+                    </th>
+                  ) : null}
+                </Fragment>
+              );
+            })}
             {hideGradeHeader ? (
               <th className={styles.totalHead}>{totalColumnLabel}</th>
             ) : null}

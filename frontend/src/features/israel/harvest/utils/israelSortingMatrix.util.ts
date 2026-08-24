@@ -120,13 +120,14 @@ export function buildSortingMatrix(
   for (const gradeMap of catGradeMap.values()) {
     for (const grade of gradeMap.keys()) usedGrades.add(grade);
   }
-  const grades =
-    usedGrades.size > 0
-      ? sortGrades([...usedGrades], gradeFallback)
-      : sortGrades([...fallbackGrades], gradeFallback);
+  // Always show the full set of grade columns, regardless of whether every grade has data yet,
+  // so the table's shape stays consistent instead of columns appearing/disappearing as data comes in.
+  const grades = sortGrades(
+    [...new Set([...fallbackGrades, ...usedGrades])],
+    gradeFallback,
+  );
 
-  const catNames =
-    catGradeMap.size > 0 ? [...catGradeMap.keys()] : allCategoryNames;
+  const catNames = [...new Set([...allCategoryNames, ...catGradeMap.keys()])];
   const sortedCats = sortCategoryNames(catNames, categoryOrder);
   const rows: MatrixRow[] = sortedCats.map((cat) => ({
     key: cat,

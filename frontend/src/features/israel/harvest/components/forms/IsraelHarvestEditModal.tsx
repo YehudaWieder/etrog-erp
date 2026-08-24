@@ -19,7 +19,6 @@ import type { IsraelHarvestI18n } from '../../i18n';
 import {
   buildInitialIsraelClassificationDraftsFromExisting,
   createEmptyIsraelHarvestClassificationDraft,
-  getIsraelHarvestDraftsTotalQuantity,
 } from '../../utils/israelHarvestClassificationMatrix.util';
 import { IsraelHarvestClassificationRowsSection } from './IsraelHarvestClassificationRowsSection';
 import styles from '../../../../harvest/components/forms/styles/HarvestBulkFormModal.module.css';
@@ -85,6 +84,8 @@ export function IsraelHarvestEditModal({
   const [removedDrafts, setRemovedDrafts] = useState<
     IsraelHarvestFormClassificationDraft[]
   >([]);
+  const [pendingExistingClassificationEdits, setPendingExistingClassificationEdits] =
+    useState<Record<number, string>>({});
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -105,11 +106,25 @@ export function IsraelHarvestEditModal({
       setNotes(harvest.notes ?? '');
       setDrafts(initialDrafts);
       setRemovedDrafts([]);
+      setPendingExistingClassificationEdits({});
       setIsPartialClassification(initialClassifiedTotal < initialQuantity);
       setError('');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, harvest]);
+
+  const handleStageExistingClassificationQuantity = (
+    classificationId: number,
+    value: string | null,
+  ) => {
+    setPendingExistingClassificationEdits((current) => {
+      if (value === null) {
+        const { [classificationId]: _removed, ...rest } = current;
+        return rest;
+      }
+      return { ...current, [classificationId]: value };
+    });
+  };
 
   const availableFieldCategories = useMemo(
     () =>
@@ -134,23 +149,19 @@ export function IsraelHarvestEditModal({
   };
 
   const handleRemoveDraft = (draftId: string) => {
-    setDrafts((current) => {
-      const draftToRemove = current.find((draft) => draft.id === draftId);
-      if (draftToRemove) {
-        setRemovedDrafts((removed) => [...removed, draftToRemove]);
-      }
-      return current.filter((draft) => draft.id !== draftId);
-    });
+    const draftToRemove = drafts.find((draft) => draft.id === draftId);
+    if (draftToRemove) {
+      setRemovedDrafts((removed) => [...removed, draftToRemove]);
+    }
+    setDrafts((current) => current.filter((draft) => draft.id !== draftId));
   };
 
   const handleRestoreDraft = (draftId: string) => {
-    setRemovedDrafts((current) => {
-      const draftToRestore = current.find((draft) => draft.id === draftId);
-      if (draftToRestore) {
-        setDrafts((drafts) => [...drafts, draftToRestore]);
-      }
-      return current.filter((draft) => draft.id !== draftId);
-    });
+    const draftToRestore = removedDrafts.find((draft) => draft.id === draftId);
+    if (draftToRestore) {
+      setDrafts((drafts) => [...drafts, draftToRestore]);
+    }
+    setRemovedDrafts((current) => current.filter((draft) => draft.id !== draftId));
   };
 
   const getDraftLabel = (draft: IsraelHarvestFormClassificationDraft) => {
@@ -221,8 +232,53 @@ export function IsraelHarvestEditModal({
     const relevantDrafts = drafts.filter(
       (draft) => draft.fieldCategoryId && draft.categoryId,
     );
-    const totalSortingQuantity =
-      getIsraelHarvestDraftsTotalQuantity(relevantDrafts);
+
+    const existingById = new Map(
+      existingClassifications.map((record) => [record.id, record]),
+    );
+
+    // For a scaffold row (representing an already-saved combo), the cells that were never touched
+    // through the add/subtract popup keep their saved quantity; a staged popup edit overrides it.
+    // New rows (and any newly filled cell within a scaffold row) come straight from the draft's own
+    // quantities matrix.
+    const classifications = relevantDrafts.flatMap((draft) => {
+      const existingEntries = (draft.existingClassificationIds ?? [])
+        .map((id) => {
+          const record = existingById.get(id);
+          if (!record) return null;
+          const pendingValue = pendingExistingClassificationEdits[id];
+          const effectiveQuantity =
+            pendingValue !== undefined ? Number(pendingValue) : record.quantity;
+          if (!Number.isFinite(effectiveQuantity) || effectiveQuantity <= 0) {
+            return null;
+          }
+          return {
+            fieldCategoryId: Number(draft.fieldCategoryId),
+            categoryId: Number(draft.categoryId),
+            grade: record.grade,
+            pitamStatus: record.pitamStatus,
+            quantity: effectiveQuantity,
+            notes: draft.notes,
+          };
+        })
+        .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
+
+      const newEntries = getFilledMatrixEntries(draft.quantities).map((entry) => ({
+        fieldCategoryId: Number(draft.fieldCategoryId),
+        categoryId: Number(draft.categoryId),
+        grade: entry.grade ?? '',
+        pitamStatus: entry.pitamStatus,
+        quantity: entry.quantity,
+        notes: draft.notes,
+      }));
+
+      return [...existingEntries, ...newEntries];
+    });
+
+    const totalSortingQuantity = classifications.reduce(
+      (sum, entry) => sum + entry.quantity,
+      0,
+    );
 
     if (relevantDrafts.length > 0) {
       if (isPartialClassification) {
@@ -243,17 +299,6 @@ export function IsraelHarvestEditModal({
         return;
       }
     }
-
-    const classifications = relevantDrafts.flatMap((draft) =>
-      getFilledMatrixEntries(draft.quantities).map((entry) => ({
-        fieldCategoryId: Number(draft.fieldCategoryId),
-        categoryId: Number(draft.categoryId),
-        grade: entry.grade ?? '',
-        pitamStatus: entry.pitamStatus,
-        quantity: entry.quantity,
-        notes: draft.notes,
-      })),
-    );
 
     setError('');
     onSubmit({
@@ -387,16 +432,21 @@ export function IsraelHarvestEditModal({
         </div>
 
         <IsraelHarvestClassificationRowsSection
+          isOpen={isOpen}
           form={classificationForm}
           fieldCategories={availableFieldCategories}
           categories={categories}
           quantity={quantity}
           isPartialClassification={isPartialClassification}
           drafts={drafts}
+          existingHarvestClassifications={existingClassifications}
+          pendingExistingClassificationEdits={pendingExistingClassificationEdits}
+          allowSubtractExistingQuantity
           onAddDraft={handleAddDraft}
           onRemoveDraft={handleRemoveDraft}
           onUpdateDraft={handleUpdateDraft}
           onUpdateDraftQuantity={handleUpdateDraftQuantity}
+          onStageExistingClassificationQuantity={handleStageExistingClassificationQuantity}
         />
 
         {removedDrafts.length ? (

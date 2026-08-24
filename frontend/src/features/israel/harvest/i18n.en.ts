@@ -165,6 +165,37 @@ export const ISRAEL_HARVEST_I18N_EN: IsraelHarvestI18n = {
       'This category was already selected in another sorting row.',
     addSortingRowBlockedError:
       'Complete the last sorting row before adding a new one.',
+    existingClassificationCellBlockedHint:
+      'This cell is locked because a sorting already exists with the same category, grade, and pitam status. Click the plus icon to change the quantity on the existing sorting - the change is saved together with the rest of the table when you click save.',
+    existingClassificationRowHint:
+      'Some fields are locked due to unsupported grades or sortings that already exist for them. You can add quantity to the existing sorting.',
+    addExistingClassificationQuantityLabel: 'Add quantity',
+    cancelExistingClassificationCellLabel: 'Cancel the added quantity',
+    addExistingClassificationQuantityPopupTitle:
+      'Add quantity to existing sorting',
+    addExistingClassificationQuantityPopupPrefix: 'Current quantity in',
+    addExistingClassificationQuantityPopupGradeWord: 'grade',
+    addExistingClassificationQuantityPopupInstruction:
+      'Enter the quantity you want to add to this sorting.',
+    addExistingClassificationQuantityConfirmLabel: 'Add',
+    addExistingClassificationQuantityInvalidError:
+      'Please enter a valid quantity to add.',
+    editExistingClassificationQuantityLabel: 'Edit quantity',
+    editExistingClassificationQuantityPopupTitle:
+      'Update quantity for existing sorting',
+    editExistingClassificationQuantityPopupInstruction:
+      'Choose whether to add or subtract quantity, and enter the desired amount.',
+    existingClassificationQuantityAddModeLabel: 'Add',
+    existingClassificationQuantitySubtractModeLabel: 'Subtract',
+    subtractExistingClassificationQuantityConfirmLabel: 'Subtract',
+    subtractExistingClassificationQuantityInvalidError:
+      'Please enter a valid quantity to subtract.',
+    subtractExistingClassificationQuantityExceedsBaseError: (baseQuantity) =>
+      `You can't subtract more than the existing quantity (${baseQuantity}).`,
+    existingClassificationCellInvalidQuantityError:
+      'Please enter a valid quantity for the existing sorting you edited.',
+    existingClassificationCellSaveError:
+      'Updating the existing quantity failed. Please try again.',
     cancel: 'Cancel',
     save: 'Save harvest',
     saving: 'Saving...',
@@ -345,6 +376,7 @@ export const ISRAEL_HARVEST_I18N_EN: IsraelHarvestI18n = {
       printLabel: 'Print',
       printWindowTitle: 'Daily Sorting Details',
       openDetailsAriaLabel: 'View sorting details',
+      sortingDetailsTitle: 'Sorting Details',
       matrixTitle: 'Breakdown by category and grade',
       matrixColumns: {
         category: 'Category',
@@ -388,7 +420,8 @@ export const ISRAEL_HARVEST_I18N_EN: IsraelHarvestI18n = {
       fieldName: 'Field',
       dateGregorian: 'Gregorian date',
       dateHebrew: 'Hebrew date',
-      quantity: 'Quantity',
+      quantity: 'Harvest Quantity',
+      totalSorted: 'Total Sorted',
       notes: 'Notes',
       updatedBy: 'Updated by',
     },
@@ -419,6 +452,12 @@ export const ISRAEL_HARVEST_I18N_EN: IsraelHarvestI18n = {
         pitamStatus: 'Pitam',
         quantity: 'Quantity',
         notes: 'Notes',
+      },
+      gradeGroups: {
+        title: 'Grade group percentage breakdown',
+        groupColumn: 'Group',
+        percentColumn: 'Percent',
+        ungrouped: 'Ungrouped',
       },
     },
   },
