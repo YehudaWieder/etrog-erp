@@ -24,6 +24,7 @@ export type IsraelAllShipmentsTableLabels = {
   detailsPanelCloseLabel: string;
   detailsUpdatedByLabel: string;
   detailsNotesLabel: string;
+  detailsPrintLabel: string;
   empty: string;
   loading: string;
   error: string;
@@ -33,6 +34,12 @@ export type IsraelAllShipmentsTableLabels = {
     totalQuantity: string;
   };
   statusLabels: Record<import('../../../services/israel/israelShipmentsApi').IsraelShipmentStatus, string>;
+  tableActionsLabel: string;
+  tablePrintTitle: string;
+  tablePrintAriaLabel: string;
+  tableExportTitle: string;
+  tableExportAriaLabel: string;
+  tableExportError: string;
 };
 
 export type IsraelBoxesTableRow = {
@@ -73,6 +80,7 @@ export type IsraelAllBoxesTableLabels = {
   detailsPanelCloseLabel: string;
   detailsUpdatedByLabel: string;
   detailsNotesLabel: string;
+  detailsPrintLabel: string;
   unassignedShipmentLabel: string;
   empty: string;
   loading: string;
@@ -83,6 +91,12 @@ export type IsraelAllBoxesTableLabels = {
     shipped: string;
   };
   statusLabels: Record<import('../../../services/israel/israelBoxesApi').IsraelBoxStatus, string>;
+  tableActionsLabel: string;
+  tablePrintTitle: string;
+  tablePrintAriaLabel: string;
+  tableExportTitle: string;
+  tableExportAriaLabel: string;
+  tableExportError: string;
 };
 
 export type IsraelShipmentItemsTableRow = {
@@ -193,6 +207,7 @@ export type IsraelShipmentItemsTableLabels = {
   detailsPanelCloseLabel: string;
   detailsUpdatedByLabel: string;
   detailsNotesLabel: string;
+  detailsPrintLabel: string;
   pitamStatusLabels: Record<'WITH_PITAM' | 'WITHOUT_PITAM' | 'MIXED', string>;
   unassignedShipmentLabel: string;
   empty: string;
@@ -202,4 +217,10 @@ export type IsraelShipmentItemsTableLabels = {
     totalItems: string;
     totalQuantity: string;
   };
+  tableActionsLabel: string;
+  tablePrintTitle: string;
+  tablePrintAriaLabel: string;
+  tableExportTitle: string;
+  tableExportAriaLabel: string;
+  tableExportError: string;
 };

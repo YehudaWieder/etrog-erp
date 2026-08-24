@@ -20,6 +20,7 @@ type UseIsraelShipmentItemsFiltersResult = {
   selectedShipmentNumber: 'all' | number;
   selectedBoxNumber: string;
   selectedFieldId: 'all' | number;
+  filterDisplayValues: { seasonLabel: string | null; shipmentNumberLabel: string | null; boxNumberLabel: string | null; fieldLabel: string | null };
   handleFilterValuesChange: (values: Record<string, string>) => void;
   handleFiltersApiReady: (api: GlobalScopedFiltersApi) => void;
 };
@@ -180,6 +181,16 @@ export function useIsraelShipmentItemsFilters(labels: IsraelShipmentItemsTableLa
   const selectedBoxNumber = useMemo(() => filterValues.boxNumber.trim(), [filterValues.boxNumber]);
   const selectedFieldId = useMemo(() => parseFieldFilter(filterValues.fieldId), [filterValues.fieldId]);
 
+  const filterDisplayValues = useMemo(() => {
+    const seasonRecord = filterValues.seasonId ? seasons.find((s) => String(s.id) === filterValues.seasonId) : null;
+    const seasonLabel = seasonRecord ? String(seasonRecord.yearName) : null;
+    const shipmentNumberLabel = filterValues.shipmentNumber !== 'all' ? filterValues.shipmentNumber : null;
+    const boxNumberLabel = filterValues.boxNumber.trim() ? filterValues.boxNumber.trim() : null;
+    const fieldLabel =
+      filterValues.fieldId !== 'all' ? (fields.find((f) => String(f.id) === filterValues.fieldId)?.name ?? null) : null;
+    return { seasonLabel, shipmentNumberLabel, boxNumberLabel, fieldLabel };
+  }, [filterValues, seasons, fields]);
+
   return {
     filters,
     activeSeasonId,
@@ -187,6 +198,7 @@ export function useIsraelShipmentItemsFilters(labels: IsraelShipmentItemsTableLa
     selectedShipmentNumber,
     selectedBoxNumber,
     selectedFieldId,
+    filterDisplayValues,
     handleFilterValuesChange,
     handleFiltersApiReady,
   };

@@ -1,14 +1,19 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FaFileArrowDown, FaPrint } from 'react-icons/fa6';
 import { GlobalScopedFilters } from '../../../../../components/ui/GlobalScopedFilters';
 import { GlobalDataTable } from '../../../../../components/ui/GlobalDataTable';
 import { GlobalLeftDetailsPanel } from '../../../../../components/ui/GlobalLeftDetailsPanel';
 import workspaceStyles from '../../../../../components/ui/styles/WorkspaceSection.module.css';
 import { ShipmentsSummaryCards } from '../../../../shipments/components/shared/ShipmentsSummaryCards';
+import { SHIPMENT_DETAILS_PRINT_EXTRA_STYLES } from '../../../../shipments/services/shipmentDetailsPrintStyles';
+import { openPrintableWindow } from '../../../../../services/printWindow';
 import type { IsraelShipmentRecord } from '../../../../../services/israel/israelShipmentsApi';
 import type { IsraelAllShipmentsTableLabels } from '../../israelShipments.types';
 import { useIsraelAllShipmentsFilters } from '../../hooks/useIsraelAllShipmentsFilters';
 import { useIsraelAllShipmentsTable } from '../../hooks/useIsraelAllShipmentsTable';
 import { formatIsraelShipmentDate } from '../../utils/israelShipments.util';
+import { printIsraelAllShipments, exportIsraelAllShipmentsToExcel } from '../../services/israelAllShipmentsExport.service';
+import sharedFilterStyles from '../../../../../components/ui/styles/GlobalFiltersBar.module.css';
 import styles from './IsraelAllShipmentsSection.module.css';
 
 function toSafeNumber(value: unknown): number {
@@ -42,6 +47,7 @@ export function IsraelAllShipmentsSection({
     selectedSeasonId,
     selectedStatus,
     selectedFieldId,
+    filterDisplayValues,
     handleFilterValuesChange,
     handleFiltersApiReady,
   } = useIsraelAllShipmentsFilters(labels);
@@ -68,6 +74,36 @@ export function IsraelAllShipmentsSection({
     }
     return { totalShipments: rows.length, totalBoxes, totalQuantity };
   }, [rows]);
+
+  const detailsPrintRef = useRef<HTMLDivElement>(null);
+
+  const handlePrintTable = useCallback(() => {
+    printIsraelAllShipments({ lang, labels, rows, filterDisplayValues });
+  }, [lang, labels, rows, filterDisplayValues]);
+
+  const handleExportTable = useCallback(async () => {
+    try {
+      await exportIsraelAllShipmentsToExcel({ lang, labels, rows, filterDisplayValues });
+    } catch {
+      window.alert(labels.tableExportError);
+    }
+  }, [lang, labels, rows, filterDisplayValues]);
+
+  const handlePrintDetails = () => {
+    const printableNode = detailsPrintRef.current;
+    if (!printableNode) {
+      return;
+    }
+
+    const heading = labels.detailsPanelTitle(detailsRow?.shipmentNumber);
+    openPrintableWindow({
+      title: heading,
+      heading,
+      direction: lang === 'he' ? 'rtl' : 'ltr',
+      html: printableNode.outerHTML,
+      extraStyles: SHIPMENT_DETAILS_PRINT_EXTRA_STYLES,
+    });
+  };
 
   useEffect(() => {
     if (!isLoading) {
@@ -124,6 +160,28 @@ export function IsraelAllShipmentsSection({
         filters={filters}
         onValuesChange={handleFilterValuesChange}
         onApiReady={handleFiltersApiReady}
+        actions={rows.length > 0 ? (
+          <div className={`global-filters-bar__icon-actions ${sharedFilterStyles.iconActions}`} aria-label={labels.tableActionsLabel}>
+            <button
+              type="button"
+              className={`global-filters-bar__icon-btn ${sharedFilterStyles.iconBtn}`}
+              onClick={handlePrintTable}
+              aria-label={labels.tablePrintAriaLabel}
+              title={labels.tablePrintTitle}
+            >
+              <FaPrint />
+            </button>
+            <button
+              type="button"
+              className={`global-filters-bar__icon-btn ${sharedFilterStyles.iconBtn}`}
+              onClick={() => { void handleExportTable(); }}
+              aria-label={labels.tableExportAriaLabel}
+              title={labels.tableExportTitle}
+            >
+              <FaFileArrowDown />
+            </button>
+          </div>
+        ) : undefined}
       />
 
       {error ? (
@@ -147,11 +205,21 @@ export function IsraelAllShipmentsSection({
             title={labels.detailsPanelTitle(detailsRow?.shipmentNumber)}
             closeLabel={labels.detailsPanelCloseLabel}
             onClose={() => setDetailsRow(null)}
+            headerActions={
+              <button
+                type="button"
+                className="global-left-details-panel__print"
+                onClick={handlePrintDetails}
+              >
+                <FaPrint aria-hidden="true" />
+                <span>{labels.detailsPrintLabel}</span>
+              </button>
+            }
           >
             {detailsRow ? (
-              <div className={styles.detailsBody}>
-                <div className={styles.detailsCard}>
-                  <div className={styles.detailsCardHead}>
+              <div ref={detailsPrintRef} className={`shipment-details-print__content ${styles.detailsBody}`}>
+                <div className={`shipment-details-print__card ${styles.detailsCard}`}>
+                  <div className={`shipment-details-print__card-head ${styles.detailsCardHead}`}>
                     <p>
                       <strong>{labels.seasonFilterLabel}:</strong> {detailsSeasonName ?? '—'}
                     </p>
@@ -180,7 +248,7 @@ export function IsraelAllShipmentsSection({
                   </div>
 
                   {detailsRow.notes ? (
-                    <p className={styles.detailsCardNote}>
+                    <p className={`shipment-details-print__card-note ${styles.detailsCardNote}`}>
                       <strong>{labels.detailsNotesLabel}:</strong> {detailsRow.notes}
                     </p>
                   ) : null}
