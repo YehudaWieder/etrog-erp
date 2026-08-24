@@ -1,14 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { ItemOwnership, MovementType, ShipmentStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { addToPitamMatrix, categoriesUsedIn, flattenPitamMatrix, gradesUsedIn, pct, type PitamGradeCell } from './pitam-matrix.util';
 
 type DailyDataPoint = { label: string; value: number };
 
 type MetricGauge = { value: number; percent: number };
-
-function pct(n: number, d: number): number {
-  return d > 0 ? Math.round((n / d) * 100) : 0;
-}
 
 @Injectable()
 export class DashboardService {
@@ -211,54 +208,10 @@ export class DashboardService {
       }),
     ]);
 
-    const GRADE_ORDER = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ללא'];
-
-    type PitamGradeCell = { withPitam: number; withoutPitam: number; mixed: number };
-    type PitamStatusLike = 'WITH_PITAM' | 'WITHOUT_PITAM' | 'MIXED';
-
-    const addToPitamMatrix = (
-      matrix: Map<string, Map<string, PitamGradeCell>>,
-      cat: string,
-      grade: string,
-      pitamStatus: PitamStatusLike,
-      quantity: number,
-    ) => {
-      if (!matrix.has(cat)) matrix.set(cat, new Map());
-      const row = matrix.get(cat)!;
-      if (!row.has(grade)) row.set(grade, { withPitam: 0, withoutPitam: 0, mixed: 0 });
-      const cell = row.get(grade)!;
-      if (pitamStatus === 'WITH_PITAM') cell.withPitam += quantity;
-      else if (pitamStatus === 'WITHOUT_PITAM') cell.withoutPitam += quantity;
-      else cell.mixed += quantity;
-    };
-
-    const flattenPitamMatrix = (matrix: Map<string, Map<string, PitamGradeCell>>): Record<string, Record<string, PitamGradeCell>> => {
-      const result: Record<string, Record<string, PitamGradeCell>> = {};
-      for (const [cat, row] of matrix.entries()) {
-        result[cat] = Object.fromEntries(row);
-      }
-      return result;
-    };
-
-    const gradesUsedIn = (matrix: Map<string, Map<string, PitamGradeCell>>): string[] => {
-      const used = new Set<string>();
-      for (const row of matrix.values()) {
-        for (const g of row.keys()) used.add(g);
-      }
-      return GRADE_ORDER.filter((g) => used.has(g));
-    };
-
     // Category rows must follow the priority order configured in category settings
     // (TradersCategories.orderIndex), not the order categories happened to first appear
     // in the underlying query results.
     const categoryOrder = categoryOrderRecords.map((c) => c.name);
-    const categoriesUsedIn = (matrix: Map<string, Map<string, PitamGradeCell>>): string[] => {
-      const used = matrix.keys();
-      const usedSet = new Set(used);
-      const ordered = categoryOrder.filter((c) => usedSet.has(c));
-      const unordered = Array.from(usedSet).filter((c) => !categoryOrder.includes(c));
-      return [...ordered, ...unordered];
-    };
 
     const traderMap = new Map<number, { total: number; byCategory: Map<string, number>; privateSort: number }>(
       allTraders.map((t) => [t.id, { total: 0, byCategory: new Map(), privateSort: 0 }]),
@@ -315,12 +268,12 @@ export class DashboardService {
     }
 
     const generalInventoryGrades = gradesUsedIn(generalInventoryMatrix);
-    const generalInventoryCategories = categoriesUsedIn(generalInventoryMatrix);
+    const generalInventoryCategories = categoriesUsedIn(generalInventoryMatrix, categoryOrder);
     const generalInventoryMatrixFlat = flattenPitamMatrix(generalInventoryMatrix);
 
     const buildInventorySummary = (bucket: InventoryBucket) => ({
       total: bucket.total,
-      categories: categoriesUsedIn(bucket.matrix),
+      categories: categoriesUsedIn(bucket.matrix, categoryOrder),
       grades: gradesUsedIn(bucket.matrix),
       matrix: flattenPitamMatrix(bucket.matrix),
       privateTotal: bucket.privateTotal,
@@ -338,7 +291,7 @@ export class DashboardService {
       addToPitamMatrix(moduloMatrix, cat, r.grade, r.pitamStatus, r.quantity);
     }
     const moduloGrades = gradesUsedIn(moduloMatrix);
-    const moduloCategories = categoriesUsedIn(moduloMatrix);
+    const moduloCategories = categoriesUsedIn(moduloMatrix, categoryOrder);
     const moduloMatrixFlat = flattenPitamMatrix(moduloMatrix);
 
     const traderDistributionGeneral: DailyDataPoint[] = [];
@@ -500,7 +453,7 @@ export class DashboardService {
     }
 
     const classificationGrades = gradesUsedIn(classificationGeneralMatrix);
-    const classificationCategories = categoriesUsedIn(classificationGeneralMatrix);
+    const classificationCategories = categoriesUsedIn(classificationGeneralMatrix, categoryOrder);
     const classificationMatrixFlat = flattenPitamMatrix(classificationGeneralMatrix);
 
     type ShipmentBucket = { matrix: Map<string, Map<string, PitamGradeCell>>; customerTotal: number };
@@ -530,7 +483,7 @@ export class DashboardService {
 
     const buildShipmentStatusSummary = (total: number, bucket: ShipmentBucket) => ({
       total: total - bucket.customerTotal,
-      categories: categoriesUsedIn(bucket.matrix),
+      categories: categoriesUsedIn(bucket.matrix, categoryOrder),
       grades: gradesUsedIn(bucket.matrix),
       matrix: flattenPitamMatrix(bucket.matrix),
       customerTotal: bucket.customerTotal,

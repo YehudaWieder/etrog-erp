@@ -8,7 +8,7 @@ import type { NavItem } from '../../types/navigation';
 import { getCurrentUser, isAuthenticated, isWorkerRole, logout } from '../../services/authService';
 import { NoPermissionBanner } from '../../components/ui/NoPermissionBanner';
 import { HomeDashboard } from './dashboard/components/HomeDashboard';
-import { IsraelDashboardPlaceholder } from './dashboard/components/IsraelDashboardPlaceholder';
+import { IsraelHomeDashboard } from '../israel/dashboard/components/IsraelHomeDashboard';
 import { DashboardHeaderActions } from './dashboard/components/DashboardHeaderActions';
 import { useActiveModule } from '../../hooks/useActiveModule';
 
@@ -117,7 +117,7 @@ export function HomePage() {
       {isWorker ? (
         <NoPermissionBanner message={lang === 'he' ? 'אין לך הרשאת גישה לאזור זה.' : "You don't have permission to access this area."} />
       ) : activeModule === 'israel' ? (
-        <IsraelDashboardPlaceholder lang={lang} />
+        <IsraelHomeDashboard lang={lang} />
       ) : (
         <HomeDashboard lang={lang} />
       )}

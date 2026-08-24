@@ -20,6 +20,8 @@ import { IsraelShipmentItemService } from './shipment-item/israel-shipment-item.
 import { IsraelShipmentItemController } from './shipment-item/israel-shipment-item.controller';
 import { IsraelSettingsService } from './settings/services/general/israel-settings.service';
 import { IsraelSettingsController } from './settings/controllers/general/israel-settings.controller';
+import { IsraelDashboardService } from './dashboard/israel-dashboard.service';
+import { IsraelDashboardController } from './dashboard/israel-dashboard.controller';
 
 @Module({
   imports: [SeasonsModule],
@@ -34,6 +36,7 @@ import { IsraelSettingsController } from './settings/controllers/general/israel-
     IsraelBoxController,
     IsraelShipmentItemController,
     IsraelSettingsController,
+    IsraelDashboardController,
   ],
   providers: [
     IsraelFieldsService,
@@ -46,6 +49,7 @@ import { IsraelSettingsController } from './settings/controllers/general/israel-
     IsraelBoxService,
     IsraelShipmentItemService,
     IsraelSettingsService,
+    IsraelDashboardService,
   ],
 })
 export class IsraelModule {}
