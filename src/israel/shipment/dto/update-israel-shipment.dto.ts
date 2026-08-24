@@ -8,6 +8,9 @@ export class UpdateIsraelShipmentDto {
   @ApiPropertyOptional({ description: 'Sequential shipment number, unique within the season.', example: 1 })
   shipmentNumber?: number;
 
+  @ApiPropertyOptional({ description: 'Field (seller) this shipment belongs to. Only editable while the shipment has no boxes.', example: 1 })
+  fieldId?: number;
+
   @ApiPropertyOptional({ description: 'Shipment status.', enum: ShipmentStatus })
   status?: ShipmentStatus;
 

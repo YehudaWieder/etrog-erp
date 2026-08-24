@@ -3,6 +3,7 @@ import type { GlobalScopedFilterConfig, GlobalScopedFiltersApi } from '../../../
 import { getActiveSeason, getSeasons, type Season } from '../../../../services/seasonsApi';
 import { getIsraelShipmentsBySeason } from '../../../../services/israel/israelShipmentsApi';
 import type { IsraelBoxStatus } from '../../../../services/israel/israelBoxesApi';
+import { getIsraelFields, type IsraelField } from '../../../../services/israel/israelFieldsApi';
 import type { IsraelAllBoxesTableLabels } from '../israelShipments.types';
 import {
   parseIsraelShipmentSeasonFilterId,
@@ -16,6 +17,7 @@ type AllBoxesFilterValues = {
   shipmentNumber: string;
   boxNumber: string;
   status: string;
+  fieldId: string;
 };
 
 type UseIsraelAllBoxesFiltersResult = {
@@ -25,10 +27,24 @@ type UseIsraelAllBoxesFiltersResult = {
   selectedShipmentNumber: 'all' | 'unassigned' | number;
   selectedBoxNumber: string;
   selectedStatus: 'all' | IsraelBoxStatus;
-  filterDisplayValues: { seasonLabel: string | null; shipmentNumberLabel: string | null; boxNumberLabel: string | null; statusLabel: string | null };
+  selectedFieldId: 'all' | number;
+  filterDisplayValues: { seasonLabel: string | null; shipmentNumberLabel: string | null; boxNumberLabel: string | null; statusLabel: string | null; fieldLabel: string | null };
   handleFilterValuesChange: (values: Record<string, string>) => void;
   handleFiltersApiReady: (api: GlobalScopedFiltersApi) => void;
 };
+
+function parseFieldFilter(value: string): 'all' | number {
+  if (value === 'all') {
+    return 'all';
+  }
+
+  const parsedValue = Number.parseInt(value, 10);
+  if (Number.isNaN(parsedValue) || parsedValue <= 0) {
+    return 'all';
+  }
+
+  return parsedValue;
+}
 
 function parseShipmentNumberFilter(value: string): 'all' | 'unassigned' | number {
   if (value === 'all' || value === UNASSIGNED_SHIPMENT_VALUE) {
@@ -47,11 +63,13 @@ export function useIsraelAllBoxesFilters(labels: IsraelAllBoxesTableLabels): Use
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [activeSeasonId, setActiveSeasonId] = useState<number | null>(null);
   const [shipmentNumbers, setShipmentNumbers] = useState<number[]>([]);
+  const [fields, setFields] = useState<IsraelField[]>([]);
   const [filterValues, setFilterValues] = useState<AllBoxesFilterValues>({
     seasonId: '',
     shipmentNumber: 'all',
     boxNumber: '',
     status: 'all',
+    fieldId: 'all',
   });
   const filtersApiRef = useRef<GlobalScopedFiltersApi | null>(null);
 
@@ -60,7 +78,7 @@ export function useIsraelAllBoxesFilters(labels: IsraelAllBoxesTableLabels): Use
 
     const loadSeasons = async () => {
       try {
-        const [nextSeasons, nextActiveSeason] = await Promise.all([getSeasons(), getActiveSeason()]);
+        const [nextSeasons, nextActiveSeason, nextFields] = await Promise.all([getSeasons(), getActiveSeason(), getIsraelFields()]);
 
         if (!isMounted) {
           return;
@@ -68,6 +86,7 @@ export function useIsraelAllBoxesFilters(labels: IsraelAllBoxesTableLabels): Use
 
         setSeasons(nextSeasons);
         setActiveSeasonId(nextActiveSeason.id);
+        setFields(nextFields);
       } catch {
         if (!isMounted) {
           return;
@@ -75,6 +94,7 @@ export function useIsraelAllBoxesFilters(labels: IsraelAllBoxesTableLabels): Use
 
         setSeasons([]);
         setActiveSeasonId(null);
+        setFields([]);
       }
     };
 
@@ -166,6 +186,18 @@ export function useIsraelAllBoxesFilters(labels: IsraelAllBoxesTableLabels): Use
         options: [],
       },
       {
+        key: 'fieldId',
+        label: labels.fieldFilterLabel,
+        defaultValue: 'all',
+        queryParam: 'ishBoxesField',
+        options: [
+          { value: 'all', label: labels.allFieldsOption },
+          ...[...fields]
+            .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+            .map((field) => ({ value: String(field.id), label: field.name })),
+        ],
+      },
+      {
         key: 'status',
         label: labels.boxStatusFilterLabel,
         defaultValue: 'all',
@@ -179,7 +211,7 @@ export function useIsraelAllBoxesFilters(labels: IsraelAllBoxesTableLabels): Use
         ],
       },
     ];
-  }, [activeSeasonId, labels, seasons, shipmentNumbers]);
+  }, [activeSeasonId, fields, labels, seasons, shipmentNumbers]);
 
   const handleFilterValuesChange = useCallback((values: Record<string, string>) => {
     setFilterValues({
@@ -187,6 +219,7 @@ export function useIsraelAllBoxesFilters(labels: IsraelAllBoxesTableLabels): Use
       shipmentNumber: values.shipmentNumber ?? 'all',
       boxNumber: values.boxNumber ?? '',
       status: values.status ?? 'all',
+      fieldId: values.fieldId ?? 'all',
     });
   }, []);
 
@@ -197,6 +230,7 @@ export function useIsraelAllBoxesFilters(labels: IsraelAllBoxesTableLabels): Use
   const selectedShipmentNumber = useMemo(() => parseShipmentNumberFilter(filterValues.shipmentNumber), [filterValues.shipmentNumber]);
   const selectedBoxNumber = useMemo(() => filterValues.boxNumber.trim(), [filterValues.boxNumber]);
   const selectedStatus = useMemo(() => parseIsraelBoxStatusFilter(filterValues.status), [filterValues.status]);
+  const selectedFieldId = useMemo(() => parseFieldFilter(filterValues.fieldId), [filterValues.fieldId]);
 
   const filterDisplayValues = useMemo(() => {
     const seasonRecord = filterValues.seasonId ? seasons.find((s) => String(s.id) === filterValues.seasonId) : null;
@@ -209,8 +243,10 @@ export function useIsraelAllBoxesFilters(labels: IsraelAllBoxesTableLabels): Use
           : null;
     const boxNumberLabel = filterValues.boxNumber.trim() ? filterValues.boxNumber.trim() : null;
     const statusLabel = filterValues.status !== 'all' ? (labels.statusLabels[filterValues.status as IsraelBoxStatus] ?? null) : null;
-    return { seasonLabel, shipmentNumberLabel, boxNumberLabel, statusLabel };
-  }, [filterValues, labels, seasons]);
+    const fieldLabel =
+      filterValues.fieldId !== 'all' ? (fields.find((f) => String(f.id) === filterValues.fieldId)?.name ?? null) : null;
+    return { seasonLabel, shipmentNumberLabel, boxNumberLabel, statusLabel, fieldLabel };
+  }, [filterValues, labels, seasons, fields]);
 
   return {
     filters,
@@ -219,6 +255,7 @@ export function useIsraelAllBoxesFilters(labels: IsraelAllBoxesTableLabels): Use
     selectedShipmentNumber,
     selectedBoxNumber,
     selectedStatus,
+    selectedFieldId,
     filterDisplayValues,
     handleFilterValuesChange,
     handleFiltersApiReady,

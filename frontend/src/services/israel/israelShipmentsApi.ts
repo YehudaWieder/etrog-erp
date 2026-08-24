@@ -6,6 +6,8 @@ export type IsraelShipmentRecord = {
   id: number;
   shipmentNumber: number;
   seasonId: number;
+  fieldId: number;
+  field?: { id: number; name: string };
   totalBoxes: number;
   totalQuantity: number;
   status: IsraelShipmentStatus;
@@ -19,12 +21,14 @@ export type IsraelShipmentRecord = {
 export type CreateIsraelShipmentPayload = {
   seasonId: number;
   shipmentNumber: number;
+  fieldId: number;
   notes?: string;
 };
 
 export type UpdateIsraelShipmentPayload = {
   id: number;
   shipmentNumber?: number;
+  fieldId?: number;
   status?: IsraelShipmentStatus;
   shippedAt?: string | null;
   notes?: string | null;

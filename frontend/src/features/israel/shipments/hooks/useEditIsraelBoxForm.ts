@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ApiError } from '../../../../services/apiClient';
 import { getIsraelBoxById, updateIsraelBox, type IsraelBoxStatus } from '../../../../services/israel/israelBoxesApi';
 import { getIsraelShipmentsBySeason, type IsraelShipmentRecord } from '../../../../services/israel/israelShipmentsApi';
+import { getIsraelFields, type IsraelField } from '../../../../services/israel/israelFieldsApi';
 import type { IsraelBoxesTableRow } from '../israelShipments.types';
 
 type EditIsraelBoxFormText = {
   validationBoxNumberRequired: string;
   validationBoxNumberPositive: string;
+  validationFieldRequired: string;
   duplicateBoxNumber: string;
   genericError: string;
 };
@@ -20,10 +22,14 @@ type UseEditIsraelBoxFormProps = {
 };
 
 type UseEditIsraelBoxFormResult = {
+  fields: IsraelField[];
+  fieldId: string;
+  onFieldIdChange: (v: string) => void;
+  isFieldLocked: boolean;
   shipments: IsraelShipmentRecord[];
   isLoadingOptions: boolean;
   selectedShipmentId: string;
-  setSelectedShipmentId: (v: string) => void;
+  onShipmentIdChange: (v: string) => void;
   boxNumber: string;
   setBoxNumber: (v: string) => void;
   status: IsraelBoxStatus;
@@ -37,15 +43,19 @@ type UseEditIsraelBoxFormResult = {
 };
 
 export function useEditIsraelBoxForm({ boxRow, seasonId, t, onSuccess, onClose }: UseEditIsraelBoxFormProps): UseEditIsraelBoxFormResult {
-  const [shipments, setShipments] = useState<IsraelShipmentRecord[]>([]);
+  const [allFields, setAllFields] = useState<IsraelField[]>([]);
+  const [allShipments, setAllShipments] = useState<IsraelShipmentRecord[]>([]);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 
+  const [fieldId, setFieldId] = useState('');
   const [selectedShipmentId, setSelectedShipmentId] = useState('');
   const [boxNumber, setBoxNumber] = useState('');
   const [status, setStatus] = useState<IsraelBoxStatus>('OPEN');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isFieldLocked = (boxRow?.itemsCount ?? 0) > 0;
 
   useEffect(() => {
     if (!boxRow || !seasonId) {
@@ -56,14 +66,19 @@ export function useEditIsraelBoxForm({ boxRow, seasonId, t, onSuccess, onClose }
     setIsLoadingOptions(true);
     setError(null);
 
-    Promise.all([getIsraelShipmentsBySeason(seasonId), getIsraelBoxById(boxRow.id)])
-      .then(([nextShipments, fullBox]) => {
+    Promise.all([getIsraelShipmentsBySeason(seasonId), getIsraelFields(), getIsraelBoxById(boxRow.id)])
+      .then(([nextShipments, nextFields, fullBox]) => {
         if (!isMounted) return;
-        setShipments(nextShipments);
+        setAllShipments(nextShipments);
+        setAllFields(nextFields);
         setSelectedShipmentId(fullBox.shipmentId !== null ? String(fullBox.shipmentId) : '');
+        setFieldId(String(fullBox.fieldId));
       })
       .catch(() => {
-        if (isMounted) setShipments([]);
+        if (isMounted) {
+          setAllShipments([]);
+          setAllFields([]);
+        }
       })
       .finally(() => {
         if (isMounted) setIsLoadingOptions(false);
@@ -77,6 +92,28 @@ export function useEditIsraelBoxForm({ boxRow, seasonId, t, onSuccess, onClose }
       isMounted = false;
     };
   }, [boxRow, seasonId]);
+
+  const shipments = useMemo(
+    () => (fieldId ? allShipments.filter((s) => s.fieldId === Number(fieldId)) : allShipments),
+    [allShipments, fieldId],
+  );
+
+  const handleFieldIdChange = useCallback((value: string) => {
+    setFieldId(value);
+  }, []);
+
+  const handleShipmentIdChange = useCallback(
+    (value: string) => {
+      setSelectedShipmentId(value);
+      if (value) {
+        const shipment = allShipments.find((s) => String(s.id) === value);
+        if (shipment) {
+          setFieldId(String(shipment.fieldId));
+        }
+      }
+    },
+    [allShipments],
+  );
 
   const handleClose = useCallback(() => {
     setError(null);
@@ -99,6 +136,11 @@ export function useEditIsraelBoxForm({ boxRow, seasonId, t, onSuccess, onClose }
       return;
     }
 
+    if (!fieldId) {
+      setError(t.validationFieldRequired);
+      return;
+    }
+
     setError(null);
     setIsSubmitting(true);
 
@@ -107,6 +149,7 @@ export function useEditIsraelBoxForm({ boxRow, seasonId, t, onSuccess, onClose }
         {
           id: boxRow.id,
           boxNumber: boxNumberValue,
+          fieldId: !isFieldLocked && Number(fieldId) !== boxRow.fieldId ? Number(fieldId) : undefined,
           shipmentId: selectedShipmentId ? Number(selectedShipmentId) : null,
           status,
           notes: notes.trim() || null,
@@ -122,13 +165,17 @@ export function useEditIsraelBoxForm({ boxRow, seasonId, t, onSuccess, onClose }
     } finally {
       setIsSubmitting(false);
     }
-  }, [boxNumber, boxRow, notes, onClose, onSuccess, selectedShipmentId, status, t]);
+  }, [boxNumber, boxRow, fieldId, isFieldLocked, notes, onClose, onSuccess, selectedShipmentId, status, t]);
 
   return {
+    fields: allFields,
+    fieldId,
+    onFieldIdChange: handleFieldIdChange,
+    isFieldLocked,
     shipments,
     isLoadingOptions,
     selectedShipmentId,
-    setSelectedShipmentId,
+    onShipmentIdChange: handleShipmentIdChange,
     boxNumber,
     setBoxNumber,
     status,

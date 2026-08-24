@@ -8,6 +8,9 @@ export class UpdateIsraelBoxDto {
   @ApiPropertyOptional({ description: 'Sequential box number, unique within the season.', example: 1 })
   boxNumber?: number;
 
+  @ApiPropertyOptional({ description: 'Field (seller) this box belongs to. Only editable while the box has no items.', example: 1 })
+  fieldId?: number;
+
   @ApiPropertyOptional({ description: 'Shipment to attach this box to, or null to unassign it.', example: 1, nullable: true })
   shipmentId?: number | null;
 

@@ -17,6 +17,7 @@ export function useIsraelAllShipmentsTable(
   labels: IsraelAllShipmentsTableLabels,
   seasonId: number | null,
   statusFilter: 'all' | import('../../../../services/israel/israelShipmentsApi').IsraelShipmentStatus,
+  fieldFilter: 'all' | number,
   refreshKey?: number,
   onOpenDetails?: (row: IsraelShipmentRecord) => void,
 ): UseIsraelAllShipmentsTableResult {
@@ -61,12 +62,10 @@ export function useIsraelAllShipmentsTable(
   }, [labels.error, refreshKey, seasonId]);
 
   const filteredRows = useMemo(() => {
-    if (statusFilter === 'all') {
-      return rows;
-    }
-
-    return rows.filter((row) => row.status === statusFilter);
-  }, [rows, statusFilter]);
+    return rows
+      .filter((row) => statusFilter === 'all' || row.status === statusFilter)
+      .filter((row) => fieldFilter === 'all' || row.fieldId === fieldFilter);
+  }, [rows, statusFilter, fieldFilter]);
 
   const columns = useMemo<GlobalDataTableColumn<IsraelShipmentRecord>[]>(() => [
     {
@@ -94,6 +93,15 @@ export function useIsraelAllShipmentsTable(
       defaultSortDirection: 'asc',
       align: 'center',
       render: (row) => <strong>{row.shipmentNumber}</strong>,
+    },
+    {
+      id: 'field',
+      header: labels.colField,
+      headerLabel: labels.colField,
+      sortKey: 'field',
+      sortAccessor: (row) => row.field?.name ?? '',
+      align: 'center',
+      render: (row) => row.field?.name ?? '—',
     },
     {
       id: 'totalBoxes',

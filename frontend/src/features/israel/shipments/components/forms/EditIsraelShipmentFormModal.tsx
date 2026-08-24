@@ -2,6 +2,7 @@ import { FaXmark } from 'react-icons/fa6';
 import { SubmitButton } from '../../../../../components/ui/SubmitButton';
 import { CustomSelect } from '../../../../../components/ui/CustomSelect';
 import type { IsraelShipmentStatus } from '../../../../../services/israel/israelShipmentsApi';
+import type { IsraelField } from '../../../../../services/israel/israelFieldsApi';
 import styles from './styles/ShipmentFormModal.module.css';
 
 const STATUS_ORDER: IsraelShipmentStatus[] = ['PREPARING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
@@ -9,6 +10,9 @@ const STATUS_ORDER: IsraelShipmentStatus[] = ['PREPARING', 'SHIPPED', 'DELIVERED
 type EditIsraelShipmentFormModalText = {
   title: (num: number) => string;
   shipmentNumberLabel: string;
+  fieldLabel: string;
+  fieldPlaceholder: string;
+  fieldLockedHint: string;
   statusLabel: string;
   shippedAtLabel: string;
   notesLabel: string;
@@ -25,6 +29,10 @@ type EditIsraelShipmentFormModalProps = {
   shipmentNumber: string;
   onShipmentNumberChange: (v: string) => void;
   t: EditIsraelShipmentFormModalText;
+  fields: IsraelField[];
+  fieldId: string;
+  onFieldIdChange: (v: string) => void;
+  isFieldLocked: boolean;
   status: IsraelShipmentStatus;
   onStatusChange: (v: IsraelShipmentStatus) => void;
   shippedAt: string;
@@ -45,6 +53,10 @@ export function EditIsraelShipmentFormModal({
   shipmentNumber,
   onShipmentNumberChange,
   t,
+  fields,
+  fieldId,
+  onFieldIdChange,
+  isFieldLocked,
   status,
   onStatusChange,
   shippedAt,
@@ -87,9 +99,22 @@ export function EditIsraelShipmentFormModal({
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label}>{t.statusLabel}</label>
+            <label className={styles.label}>{t.fieldLabel}</label>
             <CustomSelect
               className="seasons-manager__year-input"
+              value={fieldId}
+              onChange={onFieldIdChange}
+              disabled={isFieldLocked}
+              placeholder={t.fieldPlaceholder}
+              options={fields.map((f) => ({ value: String(f.id), label: f.name }))}
+            />
+            {isFieldLocked ? <p className="seasons-manager__hint">{t.fieldLockedHint}</p> : null}
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.label}>{t.statusLabel}</label>
+            <CustomSelect
+              className={`seasons-manager__year-input ${styles.statusSelect}`}
               value={status}
               onChange={(value) => onStatusChange(value as IsraelShipmentStatus)}
               options={STATUS_ORDER.map((s) => ({ value: s, label: t.statusOptions[s] }))}

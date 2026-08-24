@@ -35,6 +35,7 @@ export function IsraelShipmentItemsSection({
     selectedSeasonId,
     selectedShipmentNumber,
     selectedBoxNumber,
+    selectedFieldId,
     handleFilterValuesChange,
     handleFiltersApiReady,
   } = useIsraelShipmentItemsFilters(labels);
@@ -44,6 +45,7 @@ export function IsraelShipmentItemsSection({
     selectedSeasonId,
     selectedShipmentNumber,
     selectedBoxNumber,
+    selectedFieldId,
     refreshKey,
     setDetailsRow,
   );

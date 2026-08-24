@@ -8,7 +8,7 @@ export const TRADER_INVENTORY_I18N_HE: TraderInventoryI18n = {
 		{ id: 'traders', label: 'מלאי סוחרים', icon: 'fa-handshake', href: '/traders' },
 		{ id: 'customers', label: 'מלאי לקוחות', icon: 'fa-users' },
 		{ id: 'workers', label: 'קטיף א"י', icon: 'fa-person', href: '/harvest' },
-		{ id: 'israel-shipments', label: 'משלוחים א"י', icon: 'fa-truck-fast', href: '/shipments' },
+		{ id: 'israel-shipments', label: 'משלוחים א"י', icon: 'fa-truck-fast', href: '/shipments/shipment-items-summary' },
 		{ id: 'israel-inventory', label: 'מלאי א"י', icon: 'fa-warehouse', href: '/inventory' },
 		{ id: 'israel-payments', label: 'הוצאות ותשלומים א"י', icon: 'fa-file-invoice-dollar', href: '/payments' },
 		{ id: 'payments', label: 'הוצאות ותשלומים', icon: 'fa-money-bill' },

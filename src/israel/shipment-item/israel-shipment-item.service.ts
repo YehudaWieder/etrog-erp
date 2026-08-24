@@ -5,6 +5,7 @@ import { AuditLogService } from 'src/audit/audit.service';
 import { CreateIsraelShipmentItemDto } from './dto/create-israel-shipment-item.dto';
 import { UpdateIsraelShipmentItemDto } from './dto/update-israel-shipment-item.dto';
 import { PackIsraelShipmentItemsDto } from './dto/pack-israel-shipment-items.dto';
+import { IsraelBoxService } from '../box/israel-box.service';
 
 const itemInclude = {
   category: { select: { id: true, name: true } },
@@ -13,7 +14,14 @@ const itemInclude = {
 
 const itemWithBoxInclude = {
   ...itemInclude,
-  box: { select: { id: true, boxNumber: true, shipment: { select: { id: true, shipmentNumber: true } } } },
+  box: {
+    select: {
+      id: true,
+      boxNumber: true,
+      fieldId: true,
+      shipment: { select: { id: true, shipmentNumber: true, status: true } },
+    },
+  },
 } satisfies Prisma.IsraelShipmentItemInclude;
 
 type IsraelShipmentItemWithCategory = Prisma.IsraelShipmentItemGetPayload<{ include: typeof itemInclude }>;
@@ -23,16 +31,18 @@ export class IsraelShipmentItemService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditLog: AuditLogService,
+    private readonly boxService: IsraelBoxService,
   ) {}
 
   private async getAvailableQuantity(
     tx: Prisma.TransactionClient,
-    filter: { seasonId: number; categoryId: number; grade: Grade; pitamStatus: PitamStatus },
+    filter: { seasonId: number; fieldId: number; categoryId: number; grade: Grade; pitamStatus: PitamStatus },
     excludeItemId?: number,
   ): Promise<number> {
     const result = await tx.israelStock.aggregate({
       where: {
         seasonId: filter.seasonId,
+        fieldId: filter.fieldId,
         categoryId: filter.categoryId,
         grade: filter.grade,
         pitamStatus: filter.pitamStatus,
@@ -48,8 +58,28 @@ export class IsraelShipmentItemService {
   }
 
   private async syncBoxItemsCount(tx: Prisma.TransactionClient, boxId: number) {
-    const itemsCount = await tx.israelShipmentItem.count({ where: { boxId } });
-    await tx.israelBox.update({ where: { id: boxId }, data: { itemsCount } });
+    const [result, currentBox, settings] = await Promise.all([
+      tx.israelShipmentItem.aggregate({ where: { boxId }, _sum: { quantity: true } }),
+      tx.israelBox.findUniqueOrThrow({ where: { id: boxId }, select: { status: true } }),
+      tx.israelSettings.findFirst({ select: { cartonCapacity: true } }),
+    ]);
+    const itemsCount = result._sum.quantity ?? 0;
+    const capacity = settings?.cartonCapacity ?? 50;
+
+    // Mirrors Italy's box auto-close/auto-reopen: only OPEN/CLOSED boxes are capacity-driven,
+    // SHIPPED/DELIVERED boxes are left untouched.
+    let nextStatus: BoxStatus | undefined;
+    if (currentBox.status === BoxStatus.OPEN && itemsCount >= capacity) {
+      nextStatus = BoxStatus.CLOSED;
+    } else if (currentBox.status === BoxStatus.CLOSED && itemsCount < capacity) {
+      nextStatus = BoxStatus.OPEN;
+    }
+
+    const box = await tx.israelBox.update({
+      where: { id: boxId },
+      data: { itemsCount, ...(nextStatus ? { status: nextStatus } : {}) },
+    });
+    await this.boxService.syncShipmentTotals(tx, box.shipmentId);
   }
 
   async findAllBySeason(seasonId: number) {
@@ -98,6 +128,7 @@ export class IsraelShipmentItemService {
     const created = await this.prisma.$transaction(async (tx) => {
       const available = await this.getAvailableQuantity(tx, {
         seasonId: box.seasonId,
+        fieldId: box.fieldId,
         categoryId: dto.categoryId,
         grade: dto.grade,
         pitamStatus: dto.pitamStatus,
@@ -197,6 +228,7 @@ export class IsraelShipmentItemService {
         for (const row of dto.items) {
           const available = await this.getAvailableQuantity(tx, {
             seasonId: box.seasonId,
+            fieldId: box.fieldId,
             categoryId: row.categoryId,
             grade: row.grade,
             pitamStatus: row.pitamStatus,
@@ -283,15 +315,15 @@ export class IsraelShipmentItemService {
       throw new NotFoundException(`Israel box #${current.boxId} not found`);
     }
 
-    if (box.status !== BoxStatus.OPEN) {
-      throw new BadRequestException('Cannot edit items in a box that is not open');
+    if (box.status === BoxStatus.SHIPPED || box.status === BoxStatus.DELIVERED) {
+      throw new BadRequestException('Cannot edit items in a box that has already been shipped or delivered');
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {
       if (dto.quantity !== undefined && dto.quantity !== current.quantity) {
         const available = await this.getAvailableQuantity(
           tx,
-          { seasonId: current.seasonId, categoryId: current.categoryId, grade: current.grade, pitamStatus: current.pitamStatus },
+          { seasonId: current.seasonId, fieldId: box.fieldId, categoryId: current.categoryId, grade: current.grade, pitamStatus: current.pitamStatus },
           current.id,
         );
 
@@ -310,7 +342,7 @@ export class IsraelShipmentItemService {
         });
       }
 
-      return tx.israelShipmentItem.update({
+      const item = await tx.israelShipmentItem.update({
         where: { id },
         data: {
           ...(dto.quantity !== undefined ? { quantity: dto.quantity } : {}),
@@ -319,6 +351,12 @@ export class IsraelShipmentItemService {
         },
         include: itemInclude,
       });
+
+      if (dto.quantity !== undefined && dto.quantity !== current.quantity) {
+        await this.syncBoxItemsCount(tx, current.boxId);
+      }
+
+      return item;
     });
 
     await this.auditLog.record({

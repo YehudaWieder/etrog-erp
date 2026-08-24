@@ -5,6 +5,8 @@ export type IsraelBoxStatus = 'OPEN' | 'CLOSED' | 'SHIPPED' | 'DELIVERED';
 export type IsraelBoxRecord = {
   id: number;
   seasonId: number;
+  fieldId: number;
+  field?: { id: number; name: string };
   shipmentId: number | null;
   shipment?: { id: number; shipmentNumber: number } | null;
   boxNumber: number;
@@ -18,6 +20,7 @@ export type IsraelBoxRecord = {
 
 export type CreateIsraelBoxPayload = {
   seasonId: number;
+  fieldId: number;
   boxNumber: number;
   shipmentId?: number;
   notes?: string;
@@ -25,6 +28,7 @@ export type CreateIsraelBoxPayload = {
 
 export type CreateIsraelBoxesBulkPayload = {
   seasonId: number;
+  fieldId: number;
   shipmentId?: number;
   startNumber: number;
   endNumber: number;
@@ -33,6 +37,7 @@ export type CreateIsraelBoxesBulkPayload = {
 export type UpdateIsraelBoxPayload = {
   id: number;
   boxNumber?: number;
+  fieldId?: number;
   shipmentId?: number | null;
   status?: IsraelBoxStatus;
   notes?: string | null;

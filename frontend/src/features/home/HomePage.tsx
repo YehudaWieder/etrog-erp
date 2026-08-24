@@ -60,8 +60,8 @@ export function HomePage() {
 
   const quickActions = activeModule === 'israel'
     ? [
-        { label: qa.addHarvest, icon: <FaLeaf />, onClick: () => navigate('/israel/harvest') },
-        { label: qa.packItems, icon: <FaBoxesPacking />, onClick: () => navigate('/israel/shipments') },
+        { label: qa.addHarvest, icon: <FaLeaf />, onClick: () => navigate('/israel/harvest', { state: { openHarvestForm: true } }) },
+        { label: qa.packItems, icon: <FaBoxesPacking />, onClick: () => navigate('/israel/shipments', { state: { openPacking: true } }) },
         { label: qa.settings, icon: <FaGear />, onClick: () => navigate('/israel/settings') },
       ]
     : [

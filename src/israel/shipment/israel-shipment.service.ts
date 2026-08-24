@@ -35,6 +35,7 @@ export class IsraelShipmentService {
     return this.prisma.israelShipment.findMany({
       where: { seasonId },
       include: {
+        field: { select: { id: true, name: true } },
         updatedBy: { select: { name: true } },
         _count: { select: { boxes: true } },
       },
@@ -46,6 +47,7 @@ export class IsraelShipmentService {
     const shipment = await this.prisma.israelShipment.findUnique({
       where: { id },
       include: {
+        field: { select: { id: true, name: true } },
         boxes: true,
         updatedBy: { select: { name: true } },
       },
@@ -58,9 +60,20 @@ export class IsraelShipmentService {
     return shipment;
   }
 
+  private async assertFieldExists(fieldId: number) {
+    const field = await this.prisma.israelField.findUnique({ where: { id: fieldId }, select: { id: true } });
+    if (!field) {
+      throw new NotFoundException(`Israel field #${fieldId} not found`);
+    }
+  }
+
   async create(dto: CreateIsraelShipmentDto, actorId: number) {
     if (!Number.isInteger(dto.shipmentNumber) || dto.shipmentNumber <= 0) {
       throw new BadRequestException('shipmentNumber must be a positive integer');
+    }
+
+    if (!Number.isInteger(dto.fieldId)) {
+      throw new BadRequestException('fieldId is required');
     }
 
     if (dto.notes !== undefined && typeof dto.notes !== 'string') {
@@ -68,6 +81,7 @@ export class IsraelShipmentService {
     }
 
     await this.seasonsService.assertSeasonExists(dto.seasonId);
+    await this.assertFieldExists(dto.fieldId);
 
     const existing = await this.prisma.israelShipment.findUnique({
       where: {
@@ -84,6 +98,7 @@ export class IsraelShipmentService {
       data: {
         seasonId: dto.seasonId,
         shipmentNumber: dto.shipmentNumber,
+        fieldId: dto.fieldId,
         status: ShipmentStatus.PREPARING,
         totalBoxes: 0,
         totalQuantity: 0,
@@ -110,6 +125,10 @@ export class IsraelShipmentService {
 
     if (dto.shipmentNumber !== undefined && (!Number.isInteger(dto.shipmentNumber) || dto.shipmentNumber <= 0)) {
       throw new BadRequestException('shipmentNumber must be a positive integer');
+    }
+
+    if (dto.fieldId !== undefined && !Number.isInteger(dto.fieldId)) {
+      throw new BadRequestException('fieldId must be a valid integer');
     }
 
     if (dto.status !== undefined && !Object.values(ShipmentStatus).includes(dto.status)) {
@@ -142,6 +161,14 @@ export class IsraelShipmentService {
       }
     }
 
+    if (dto.fieldId !== undefined && dto.fieldId !== existing.fieldId) {
+      const boxCount = await this.prisma.israelBox.count({ where: { shipmentId: id } });
+      if (boxCount > 0) {
+        throw new BadRequestException('Cannot change the field of a shipment that already has boxes attached');
+      }
+      await this.assertFieldExists(dto.fieldId);
+    }
+
     const effectiveStatus = dto.status ?? existing.status;
     const nextShippedAt = resolveShippedAt(effectiveStatus, dto.shippedAt !== undefined ? dto.shippedAt : existing.shippedAt);
 
@@ -155,25 +182,37 @@ export class IsraelShipmentService {
       }
     }
 
-    const boxStatusByShipmentStatus: Partial<Record<ShipmentStatus, BoxStatus>> = {
+    const flatBoxStatusByShipmentStatus: Partial<Record<ShipmentStatus, BoxStatus>> = {
       [ShipmentStatus.SHIPPED]: BoxStatus.SHIPPED,
       [ShipmentStatus.DELIVERED]: BoxStatus.DELIVERED,
-      [ShipmentStatus.PREPARING]: BoxStatus.OPEN,
     };
-    const nextBoxStatus = boxStatusByShipmentStatus[effectiveStatus];
+    const nextFlatBoxStatus = flatBoxStatusByShipmentStatus[effectiveStatus];
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      if (nextBoxStatus) {
+      if (nextFlatBoxStatus) {
         await tx.israelBox.updateMany({
           where: { shipmentId: id },
-          data: { status: nextBoxStatus },
+          data: { status: nextFlatBoxStatus },
         });
+      } else if (effectiveStatus === ShipmentStatus.PREPARING || effectiveStatus === ShipmentStatus.CANCELLED) {
+        // Reverting to preparation or cancelling: each box goes back to CLOSED or OPEN depending on
+        // whether it's still at/over capacity, instead of flatly reopening every box.
+        const settings = await tx.israelSettings.findFirst({ select: { cartonCapacity: true } });
+        const capacity = settings?.cartonCapacity ?? 50;
+        const boxes = await tx.israelBox.findMany({ where: { shipmentId: id }, select: { id: true, itemsCount: true } });
+        for (const box of boxes) {
+          await tx.israelBox.update({
+            where: { id: box.id },
+            data: { status: box.itemsCount >= capacity ? BoxStatus.CLOSED : BoxStatus.OPEN },
+          });
+        }
       }
 
       return tx.israelShipment.update({
         where: { id },
         data: {
           ...(dto.shipmentNumber !== undefined ? { shipmentNumber: dto.shipmentNumber } : {}),
+          ...(dto.fieldId !== undefined ? { fieldId: dto.fieldId } : {}),
           ...(dto.notes !== undefined ? { notes: dto.notes } : {}),
           status: effectiveStatus,
           shippedAt: nextShippedAt,

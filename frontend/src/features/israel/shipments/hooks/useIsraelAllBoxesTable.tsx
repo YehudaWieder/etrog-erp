@@ -19,6 +19,7 @@ export function useIsraelAllBoxesTable(
   shipmentNumber: 'all' | 'unassigned' | number,
   boxNumber: string,
   status: 'all' | IsraelBoxStatus,
+  fieldId: 'all' | number,
   refreshKey?: number,
   onOpenDetails?: (row: IsraelBoxesTableRow) => void,
 ): UseIsraelAllBoxesTableResult {
@@ -46,6 +47,8 @@ export function useIsraelAllBoxesTable(
             boxes.map((box) => ({
               id: box.id,
               boxNumber: box.boxNumber,
+              fieldId: box.fieldId,
+              fieldName: box.field?.name ?? '—',
               shipmentNumber: box.shipment?.shipmentNumber ?? null,
               itemsCount: box.itemsCount,
               status: box.status,
@@ -83,8 +86,9 @@ export function useIsraelAllBoxesTable(
         return row.shipmentNumber === shipmentNumber;
       })
       .filter((row) => !boxNumberQuery || String(row.boxNumber).includes(boxNumberQuery))
-      .filter((row) => status === 'all' || row.status === status);
-  }, [boxNumber, rawRows, shipmentNumber, status]);
+      .filter((row) => status === 'all' || row.status === status)
+      .filter((row) => fieldId === 'all' || row.fieldId === fieldId);
+  }, [boxNumber, rawRows, shipmentNumber, status, fieldId]);
 
   const columns = useMemo<GlobalDataTableColumn<IsraelBoxesTableRow>[]>(() => [
     {
@@ -112,6 +116,15 @@ export function useIsraelAllBoxesTable(
       defaultSortDirection: 'asc',
       align: 'center',
       render: (row) => <strong>{row.boxNumber}</strong>,
+    },
+    {
+      id: 'field',
+      header: labels.colField,
+      headerLabel: labels.colField,
+      sortKey: 'field',
+      sortAccessor: (row) => row.fieldName,
+      align: 'center',
+      render: (row) => row.fieldName,
     },
     {
       id: 'shipmentNumber',

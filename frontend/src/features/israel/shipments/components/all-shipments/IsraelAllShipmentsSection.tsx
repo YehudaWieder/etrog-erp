@@ -41,6 +41,7 @@ export function IsraelAllShipmentsSection({
     activeSeasonId,
     selectedSeasonId,
     selectedStatus,
+    selectedFieldId,
     handleFilterValuesChange,
     handleFiltersApiReady,
   } = useIsraelAllShipmentsFilters(labels);
@@ -50,7 +51,14 @@ export function IsraelAllShipmentsSection({
     () => (detailsRow ? seasons.find((season) => season.id === detailsRow.seasonId)?.yearName ?? null : null),
     [detailsRow, seasons],
   );
-  const { rows, columns, isLoading, error } = useIsraelAllShipmentsTable(labels, selectedSeasonId, selectedStatus, refreshKey, setDetailsRow);
+  const { rows, columns, isLoading, error } = useIsraelAllShipmentsTable(
+    labels,
+    selectedSeasonId,
+    selectedStatus,
+    selectedFieldId,
+    refreshKey,
+    setDetailsRow,
+  );
   const summaryTotals = useMemo(() => {
     let totalBoxes = 0;
     let totalQuantity = 0;
@@ -149,6 +157,9 @@ export function IsraelAllShipmentsSection({
                     </p>
                     <p>
                       <strong>{labels.colShipmentNumber}:</strong> {detailsRow.shipmentNumber}
+                    </p>
+                    <p>
+                      <strong>{labels.colField}:</strong> {detailsRow.field?.name ?? '—'}
                     </p>
                     <p>
                       <strong>{labels.statusFilterLabel}:</strong> {labels.statusLabels[detailsRow.status]}

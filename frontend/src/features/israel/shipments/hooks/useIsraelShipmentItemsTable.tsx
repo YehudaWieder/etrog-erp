@@ -17,6 +17,7 @@ export function useIsraelShipmentItemsTable(
   seasonId: number | null,
   shipmentNumber: 'all' | number,
   boxNumber: string,
+  fieldId: 'all' | number,
   refreshKey?: number,
   onOpenDetails?: (row: IsraelShipmentItemsTableRow) => void,
 ): UseIsraelShipmentItemsTableResult {
@@ -44,6 +45,7 @@ export function useIsraelShipmentItemsTable(
             id: item.id,
             boxId: item.boxId,
             boxNumber: item.box?.boxNumber ?? 0,
+            fieldId: item.box?.fieldId ?? null,
             shipmentNumber: item.box?.shipment?.shipmentNumber ?? null,
             categoryId: item.categoryId,
             category: item.category?.name ?? '—',
@@ -74,8 +76,9 @@ export function useIsraelShipmentItemsTable(
 
     return rawRows
       .filter((row) => shipmentNumber === 'all' || row.shipmentNumber === shipmentNumber)
-      .filter((row) => !boxNumberQuery || String(row.boxNumber).includes(boxNumberQuery));
-  }, [boxNumber, rawRows, shipmentNumber]);
+      .filter((row) => !boxNumberQuery || String(row.boxNumber).includes(boxNumberQuery))
+      .filter((row) => fieldId === 'all' || row.fieldId === fieldId);
+  }, [boxNumber, rawRows, shipmentNumber, fieldId]);
 
   const columns = useMemo<GlobalDataTableColumn<IsraelShipmentItemsTableRow>[]>(() => [
     {

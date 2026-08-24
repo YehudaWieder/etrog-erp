@@ -2,29 +2,30 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { GlobalScopedFilterConfig, GlobalScopedFiltersApi } from '../../../../components/ui/GlobalScopedFilters';
 import { getActiveSeason, getSeasons, type Season } from '../../../../services/seasonsApi';
 import { getIsraelShipmentsBySeason } from '../../../../services/israel/israelShipmentsApi';
+import type { IsraelShipmentStatus } from '../../../../services/israel/israelShipmentsApi';
 import { getIsraelFields, type IsraelField } from '../../../../services/israel/israelFieldsApi';
-import type { IsraelShipmentItemsTableLabels } from '../israelShipments.types';
-import { parseIsraelShipmentSeasonFilterId } from '../utils/israelShipments.util';
+import type { IsraelFieldShipmentItemsTableLabels } from '../israelShipments.types';
+import { parseIsraelShipmentSeasonFilterId, parseIsraelShipmentStatusFilter } from '../utils/israelShipments.util';
 
-type ItemsFilterValues = {
+type FieldShipmentItemsFilterValues = {
   seasonId: string;
   shipmentNumber: string;
-  boxNumber: string;
   fieldId: string;
+  shipmentStatus: string;
 };
 
-type UseIsraelShipmentItemsFiltersResult = {
+type UseIsraelFieldShipmentItemsFiltersResult = {
   filters: GlobalScopedFilterConfig[];
   activeSeasonId: number | null;
   selectedSeasonId: number | null;
   selectedShipmentNumber: 'all' | number;
-  selectedBoxNumber: string;
   selectedFieldId: 'all' | number;
+  selectedShipmentStatus: 'all' | IsraelShipmentStatus;
   handleFilterValuesChange: (values: Record<string, string>) => void;
   handleFiltersApiReady: (api: GlobalScopedFiltersApi) => void;
 };
 
-function parseFieldFilter(value: string): 'all' | number {
+function parseNumericFilter(value: string): 'all' | number {
   if (value === 'all') {
     return 'all';
   }
@@ -37,25 +38,21 @@ function parseFieldFilter(value: string): 'all' | number {
   return parsedValue;
 }
 
-function parseShipmentNumberFilter(value: string): 'all' | number {
-  if (value === 'all') {
-    return 'all';
-  }
+const SHIPMENT_STATUSES: IsraelShipmentStatus[] = ['PREPARING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
 
-  const parsedValue = Number.parseInt(value, 10);
-  if (Number.isNaN(parsedValue) || parsedValue <= 0) {
-    return 'all';
-  }
-
-  return parsedValue;
-}
-
-export function useIsraelShipmentItemsFilters(labels: IsraelShipmentItemsTableLabels): UseIsraelShipmentItemsFiltersResult {
+export function useIsraelFieldShipmentItemsFilters(
+  labels: IsraelFieldShipmentItemsTableLabels,
+): UseIsraelFieldShipmentItemsFiltersResult {
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [activeSeasonId, setActiveSeasonId] = useState<number | null>(null);
   const [shipmentNumbers, setShipmentNumbers] = useState<number[]>([]);
   const [fields, setFields] = useState<IsraelField[]>([]);
-  const [filterValues, setFilterValues] = useState<ItemsFilterValues>({ seasonId: '', shipmentNumber: 'all', boxNumber: '', fieldId: 'all' });
+  const [filterValues, setFilterValues] = useState<FieldShipmentItemsFilterValues>({
+    seasonId: '',
+    shipmentNumber: 'all',
+    fieldId: 'all',
+    shipmentStatus: 'all',
+  });
   const filtersApiRef = useRef<GlobalScopedFiltersApi | null>(null);
 
   useEffect(() => {
@@ -104,10 +101,11 @@ export function useIsraelShipmentItemsFilters(labels: IsraelShipmentItemsTableLa
     getIsraelShipmentsBySeason(selectedSeasonId)
       .then((shipments) => {
         if (!isMounted) return;
-        setShipmentNumbers(Array.from(new Set(shipments.map((s) => s.shipmentNumber))).sort((a, b) => b - a));
+        setShipmentNumbers(Array.from(new Set(shipments.map((shipment) => shipment.shipmentNumber))).sort((a, b) => b - a));
       })
       .catch(() => {
-        if (isMounted) setShipmentNumbers([]);
+        if (!isMounted) return;
+        setShipmentNumbers([]);
       });
 
     return () => {
@@ -115,13 +113,18 @@ export function useIsraelShipmentItemsFilters(labels: IsraelShipmentItemsTableLa
     };
   }, [selectedSeasonId]);
 
-  const filters = useMemo<GlobalScopedFilterConfig[]>(() => {
-    return [
+  const fieldOptions = useMemo(
+    () => [...fields].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })),
+    [fields],
+  );
+
+  const filters = useMemo<GlobalScopedFilterConfig[]>(
+    () => [
       {
         key: 'seasonId',
         label: labels.seasonFilterLabel,
         defaultValue: activeSeasonId ? String(activeSeasonId) : '',
-        queryParam: 'ishItemsSeason',
+        queryParam: 'ishFieldSummarySeason',
         options:
           seasons.length > 0
             ? seasons.map((season) => ({
@@ -134,41 +137,42 @@ export function useIsraelShipmentItemsFilters(labels: IsraelShipmentItemsTableLa
         key: 'shipmentNumber',
         label: labels.shipmentNumberFilterLabel,
         defaultValue: 'all',
-        queryParam: 'ishItemsShipmentNumber',
+        queryParam: 'ishFieldSummaryShipmentNumber',
         options: [
           { value: 'all', label: labels.allShipmentNumbersOption },
           ...shipmentNumbers.map((shipmentNumber) => ({ value: String(shipmentNumber), label: String(shipmentNumber) })),
         ],
       },
       {
-        key: 'boxNumber',
-        label: labels.boxNumberFilterLabel,
-        defaultValue: '',
-        queryParam: 'ishItemsBoxNumber',
-        type: 'text',
-        options: [],
-      },
-      {
         key: 'fieldId',
         label: labels.fieldFilterLabel,
         defaultValue: 'all',
-        queryParam: 'ishItemsField',
+        queryParam: 'ishFieldSummaryField',
         options: [
           { value: 'all', label: labels.allFieldsOption },
-          ...[...fields]
-            .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
-            .map((field) => ({ value: String(field.id), label: field.name })),
+          ...fieldOptions.map((field) => ({ value: String(field.id), label: field.name })),
         ],
       },
-    ];
-  }, [activeSeasonId, fields, labels, seasons, shipmentNumbers]);
+      {
+        key: 'shipmentStatus',
+        label: labels.shipmentStatusFilterLabel,
+        defaultValue: 'all',
+        queryParam: 'ishFieldSummaryShipmentStatus',
+        options: [
+          { value: 'all', label: labels.allShipmentStatusesOption },
+          ...SHIPMENT_STATUSES.map((status) => ({ value: status, label: labels.shipmentStatusLabels[status] })),
+        ],
+      },
+    ],
+    [activeSeasonId, fieldOptions, labels, seasons, shipmentNumbers],
+  );
 
   const handleFilterValuesChange = useCallback((values: Record<string, string>) => {
     setFilterValues({
       seasonId: values.seasonId ?? '',
       shipmentNumber: values.shipmentNumber ?? 'all',
-      boxNumber: values.boxNumber ?? '',
       fieldId: values.fieldId ?? 'all',
+      shipmentStatus: values.shipmentStatus ?? 'all',
     });
   }, []);
 
@@ -176,17 +180,21 @@ export function useIsraelShipmentItemsFilters(labels: IsraelShipmentItemsTableLa
     filtersApiRef.current = api;
   }, []);
 
-  const selectedShipmentNumber = useMemo(() => parseShipmentNumberFilter(filterValues.shipmentNumber), [filterValues.shipmentNumber]);
-  const selectedBoxNumber = useMemo(() => filterValues.boxNumber.trim(), [filterValues.boxNumber]);
-  const selectedFieldId = useMemo(() => parseFieldFilter(filterValues.fieldId), [filterValues.fieldId]);
+  const selectedShipmentNumber = useMemo(() => parseNumericFilter(filterValues.shipmentNumber), [filterValues.shipmentNumber]);
+  const selectedFieldId = useMemo(() => parseNumericFilter(filterValues.fieldId), [filterValues.fieldId]);
+
+  const selectedShipmentStatus = useMemo(
+    () => parseIsraelShipmentStatusFilter(filterValues.shipmentStatus),
+    [filterValues.shipmentStatus],
+  );
 
   return {
     filters,
     activeSeasonId,
     selectedSeasonId,
     selectedShipmentNumber,
-    selectedBoxNumber,
     selectedFieldId,
+    selectedShipmentStatus,
     handleFilterValuesChange,
     handleFiltersApiReady,
   };

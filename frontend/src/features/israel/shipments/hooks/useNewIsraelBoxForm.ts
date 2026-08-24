@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ApiError } from '../../../../services/apiClient';
 import { createIsraelBox, createIsraelBoxesBulk } from '../../../../services/israel/israelBoxesApi';
 import { getIsraelShipmentsBySeason, type IsraelShipmentRecord } from '../../../../services/israel/israelShipmentsApi';
+import { getIsraelFields, type IsraelField } from '../../../../services/israel/israelFieldsApi';
 
 export type NewIsraelBoxFormMode = 'SINGLE' | 'BULK';
 
@@ -14,6 +15,7 @@ type NewIsraelBoxFormText = {
   validationEndNumberRequired: string;
   validationRangeInvalid: string;
   validationRangeTooLarge: (max: number) => string;
+  validationFieldRequired: string;
   duplicateBoxNumber: string;
   duplicateBoxNumbersInRange: (numbers: string) => string;
   genericError: string;
@@ -30,10 +32,14 @@ type UseNewIsraelBoxFormProps = {
 type UseNewIsraelBoxFormResult = {
   mode: NewIsraelBoxFormMode;
   setMode: (v: NewIsraelBoxFormMode) => void;
+  fields: IsraelField[];
+  fieldId: string;
+  onFieldIdChange: (v: string) => void;
+  isFieldLocked: boolean;
   shipments: IsraelShipmentRecord[];
   isLoadingOptions: boolean;
   selectedShipmentId: string;
-  setSelectedShipmentId: (v: string) => void;
+  onShipmentIdChange: (v: string) => void;
   boxNumber: string;
   setBoxNumber: (v: string) => void;
   notes: string;
@@ -49,10 +55,12 @@ type UseNewIsraelBoxFormResult = {
 };
 
 export function useNewIsraelBoxForm({ isOpen, seasonId, t, onSuccess, onClose }: UseNewIsraelBoxFormProps): UseNewIsraelBoxFormResult {
-  const [shipments, setShipments] = useState<IsraelShipmentRecord[]>([]);
+  const [allFields, setAllFields] = useState<IsraelField[]>([]);
+  const [allShipments, setAllShipments] = useState<IsraelShipmentRecord[]>([]);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 
   const [mode, setMode] = useState<NewIsraelBoxFormMode>('SINGLE');
+  const [fieldId, setFieldId] = useState('');
   const [selectedShipmentId, setSelectedShipmentId] = useState('');
   const [boxNumber, setBoxNumber] = useState('');
   const [notes, setNotes] = useState('');
@@ -69,15 +77,17 @@ export function useNewIsraelBoxForm({ isOpen, seasonId, t, onSuccess, onClose }:
     let isMounted = true;
     setIsLoadingOptions(true);
 
-    getIsraelShipmentsBySeason(seasonId)
-      .then((nextShipments) => {
+    Promise.all([getIsraelShipmentsBySeason(seasonId), getIsraelFields()])
+      .then(([nextShipments, nextFields]) => {
         if (isMounted) {
-          setShipments(nextShipments.filter((s) => s.status !== 'SHIPPED' && s.status !== 'DELIVERED'));
+          setAllShipments(nextShipments.filter((s) => s.status !== 'SHIPPED' && s.status !== 'DELIVERED'));
+          setAllFields(nextFields);
         }
       })
       .catch(() => {
         if (isMounted) {
-          setShipments([]);
+          setAllShipments([]);
+          setAllFields([]);
         }
       })
       .finally(() => {
@@ -91,8 +101,33 @@ export function useNewIsraelBoxForm({ isOpen, seasonId, t, onSuccess, onClose }:
     };
   }, [isOpen, seasonId]);
 
+  const isFieldLocked = selectedShipmentId !== '';
+
+  const shipments = useMemo(
+    () => (fieldId ? allShipments.filter((s) => s.fieldId === Number(fieldId)) : allShipments),
+    [allShipments, fieldId],
+  );
+
+  const handleFieldIdChange = useCallback((value: string) => {
+    setFieldId(value);
+  }, []);
+
+  const handleShipmentIdChange = useCallback(
+    (value: string) => {
+      setSelectedShipmentId(value);
+      if (value) {
+        const shipment = allShipments.find((s) => String(s.id) === value);
+        if (shipment) {
+          setFieldId(String(shipment.fieldId));
+        }
+      }
+    },
+    [allShipments],
+  );
+
   const resetForm = useCallback(() => {
     setMode('SINGLE');
+    setFieldId('');
     setSelectedShipmentId('');
     setBoxNumber('');
     setNotes('');
@@ -139,6 +174,11 @@ export function useNewIsraelBoxForm({ isOpen, seasonId, t, onSuccess, onClose }:
       return;
     }
 
+    if (!fieldId) {
+      setError(t.validationFieldRequired);
+      return;
+    }
+
     setError(null);
     setIsSubmitting(true);
 
@@ -146,6 +186,7 @@ export function useNewIsraelBoxForm({ isOpen, seasonId, t, onSuccess, onClose }:
       await createIsraelBoxesBulk(
         {
           seasonId,
+          fieldId: Number(fieldId),
           shipmentId: selectedShipmentId ? Number(selectedShipmentId) : undefined,
           startNumber: startNumberValue,
           endNumber: endNumberValue,
@@ -166,7 +207,7 @@ export function useNewIsraelBoxForm({ isOpen, seasonId, t, onSuccess, onClose }:
     } finally {
       setIsSubmitting(false);
     }
-  }, [endNumber, onClose, onSuccess, resetForm, seasonId, selectedShipmentId, startNumber, t]);
+  }, [endNumber, fieldId, onClose, onSuccess, resetForm, seasonId, selectedShipmentId, startNumber, t]);
 
   const handleSaveSingle = useCallback(async () => {
     if (!seasonId) {
@@ -185,6 +226,11 @@ export function useNewIsraelBoxForm({ isOpen, seasonId, t, onSuccess, onClose }:
       return;
     }
 
+    if (!fieldId) {
+      setError(t.validationFieldRequired);
+      return;
+    }
+
     setError(null);
     setIsSubmitting(true);
 
@@ -192,6 +238,7 @@ export function useNewIsraelBoxForm({ isOpen, seasonId, t, onSuccess, onClose }:
       await createIsraelBox(
         {
           seasonId,
+          fieldId: Number(fieldId),
           boxNumber: boxNumberValue,
           shipmentId: selectedShipmentId ? Number(selectedShipmentId) : undefined,
           notes: notes.trim() || undefined,
@@ -208,7 +255,7 @@ export function useNewIsraelBoxForm({ isOpen, seasonId, t, onSuccess, onClose }:
     } finally {
       setIsSubmitting(false);
     }
-  }, [boxNumber, notes, onClose, onSuccess, resetForm, seasonId, selectedShipmentId, t]);
+  }, [boxNumber, fieldId, notes, onClose, onSuccess, resetForm, seasonId, selectedShipmentId, t]);
 
   const handleSave = useCallback(async () => {
     if (mode === 'BULK') {
@@ -221,10 +268,14 @@ export function useNewIsraelBoxForm({ isOpen, seasonId, t, onSuccess, onClose }:
   return {
     mode,
     setMode,
+    fields: allFields,
+    fieldId,
+    onFieldIdChange: handleFieldIdChange,
+    isFieldLocked,
     shipments,
     isLoadingOptions,
     selectedShipmentId,
-    setSelectedShipmentId,
+    onShipmentIdChange: handleShipmentIdChange,
     boxNumber,
     setBoxNumber,
     notes,

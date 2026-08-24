@@ -14,6 +14,8 @@ import type { IsraelBoxesTableRow, IsraelShipmentItemsTableRow } from './israelS
 import { IsraelAllShipmentsSection } from './components/all-shipments/IsraelAllShipmentsSection';
 import { IsraelAllBoxesSection } from './components/all-boxes/IsraelAllBoxesSection';
 import { IsraelShipmentItemsSection } from './components/all-items/IsraelShipmentItemsSection';
+import { IsraelFieldShipmentItemsSummarySection } from './components/field-summary/IsraelFieldShipmentItemsSummarySection';
+import { IsraelShipmentItemsSummarySection } from './components/shipment-items-summary/IsraelShipmentItemsSummarySection';
 import { NewIsraelShipmentFormModal } from './components/forms/NewIsraelShipmentFormModal';
 import { EditIsraelShipmentFormModal } from './components/forms/EditIsraelShipmentFormModal';
 import { NewIsraelBoxFormModal } from './components/forms/NewIsraelBoxFormModal';
@@ -75,6 +77,8 @@ export function IsraelShipmentsPage() {
   const isAllShipmentsTab = activeSidebarId === 'all-shipments';
   const isAllBoxesTab = activeSidebarId === 'all-boxes';
   const isShipmentItemsTab = activeSidebarId === 'shipment-items';
+  const isFieldShipmentItemsSummaryTab = activeSidebarId === 'shipment-items-summary-traders';
+  const isShipmentItemsSummaryTab = activeSidebarId === 'shipment-items-summary';
 
   const content = useMemo(() => {
     return t.emptyState[activeSidebarId] ?? t.emptyState.default;
@@ -98,6 +102,16 @@ export function IsraelShipmentsPage() {
 
   const [tableRowCount, setTableRowCount] = useState<number | null>(null);
   const [activeSeasonYearName, setActiveSeasonYearName] = useState<number | null>(null);
+
+  useEffect(() => {
+    const state = location.state as Record<string, unknown> | null;
+    if (state?.openPacking) {
+      setPackItemsBoxId(null);
+      setIsPackItemsModalOpen(true);
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
   const [currentTabSeasonInfo, setCurrentTabSeasonInfo] = useState<{
     selectedSeasonId: number | null;
     activeSeasonId: number | null;
@@ -151,6 +165,7 @@ export function IsraelShipmentsPage() {
   };
 
   const newShipmentForm = useNewIsraelShipmentForm({
+    isOpen: isNewShipmentModalOpen,
     seasonId: currentTabSeasonInfo.activeSeasonId,
     t: t.newShipmentModal,
     onSuccess: handleShipmentsRefresh,
@@ -158,6 +173,7 @@ export function IsraelShipmentsPage() {
   });
 
   const editShipmentForm = useEditIsraelShipmentForm({
+    isOpen: isEditShipmentModalOpen,
     shipment: isEditShipmentModalOpen ? selectedShipmentRow : null,
     t: t.editShipmentModal,
     onSuccess: handleShipmentsRefresh,
@@ -328,7 +344,11 @@ export function IsraelShipmentsPage() {
           packAction={{
             label: t.pageControls.packItems,
             onClick: handleOpenPackItems,
-            disabled: isViewingNonActiveSeason || selectedBoxRow === null || selectedBoxRow?.status !== 'OPEN',
+            disabled:
+              isViewingNonActiveSeason ||
+              selectedBoxRow === null ||
+              selectedBoxRow?.status === 'SHIPPED' ||
+              selectedBoxRow?.status === 'DELIVERED',
           }}
         />
       ) : isShipmentItemsTab ? (
@@ -393,8 +413,11 @@ export function IsraelShipmentsPage() {
       <NewIsraelShipmentFormModal
         isOpen={isNewShipmentModalOpen}
         t={t.newShipmentModal}
+        fields={newShipmentForm.fields}
         shipmentNumber={newShipmentForm.shipmentNumber}
         onShipmentNumberChange={newShipmentForm.setShipmentNumber}
+        fieldId={newShipmentForm.fieldId}
+        onFieldIdChange={newShipmentForm.setFieldId}
         notes={newShipmentForm.notes}
         onNotesChange={newShipmentForm.setNotes}
         isSubmitting={newShipmentForm.isSubmitting}
@@ -409,6 +432,10 @@ export function IsraelShipmentsPage() {
         shipmentNumber={editShipmentForm.shipmentNumber}
         onShipmentNumberChange={editShipmentForm.setShipmentNumber}
         t={t.editShipmentModal}
+        fields={editShipmentForm.fields}
+        fieldId={editShipmentForm.fieldId}
+        onFieldIdChange={editShipmentForm.setFieldId}
+        isFieldLocked={editShipmentForm.isFieldLocked}
         status={editShipmentForm.status}
         onStatusChange={editShipmentForm.handleStatusChange}
         shippedAt={editShipmentForm.shippedAt}
@@ -443,10 +470,14 @@ export function IsraelShipmentsPage() {
         t={t.newBoxModal}
         mode={newBoxForm.mode}
         onModeChange={newBoxForm.setMode}
+        fields={newBoxForm.fields}
+        fieldId={newBoxForm.fieldId}
+        onFieldIdChange={newBoxForm.onFieldIdChange}
+        isFieldLocked={newBoxForm.isFieldLocked}
         shipments={newBoxForm.shipments}
         isLoadingOptions={newBoxForm.isLoadingOptions}
         selectedShipmentId={newBoxForm.selectedShipmentId}
-        onShipmentIdChange={newBoxForm.setSelectedShipmentId}
+        onShipmentIdChange={newBoxForm.onShipmentIdChange}
         boxNumber={newBoxForm.boxNumber}
         onBoxNumberChange={newBoxForm.setBoxNumber}
         notes={newBoxForm.notes}
@@ -465,10 +496,14 @@ export function IsraelShipmentsPage() {
         isOpen={isEditBoxModalOpen}
         originalBoxNumber={selectedBoxRow?.boxNumber ?? 0}
         t={t.editBoxModal}
+        fields={editBoxForm.fields}
+        fieldId={editBoxForm.fieldId}
+        onFieldIdChange={editBoxForm.onFieldIdChange}
+        isFieldLocked={editBoxForm.isFieldLocked}
         shipments={editBoxForm.shipments}
         isLoadingOptions={editBoxForm.isLoadingOptions}
         selectedShipmentId={editBoxForm.selectedShipmentId}
-        onShipmentIdChange={editBoxForm.setSelectedShipmentId}
+        onShipmentIdChange={editBoxForm.onShipmentIdChange}
         boxNumber={editBoxForm.boxNumber}
         onBoxNumberChange={editBoxForm.setBoxNumber}
         status={editBoxForm.status}
@@ -517,11 +552,17 @@ export function IsraelShipmentsPage() {
         pitamStatusLabels={t.editShipmentItemModal.pitamStatusLabels}
         boxStatusLabels={t.allBoxesTableLabels.statusLabels}
         boxes={packItemsForm.boxes}
+        shipments={packItemsForm.shipments}
         sortCategories={packItemsForm.sortCategories}
         isLoadingOptions={packItemsForm.isLoadingOptions}
         boxId={packItemsForm.boxId}
         onBoxIdChange={packItemsForm.onBoxIdChange}
         selectedBox={packItemsForm.selectedBox}
+        onBoxStatusChange={packItemsForm.onBoxStatusChange}
+        onBoxShipmentChange={packItemsForm.onBoxShipmentChange}
+        boxNotesDraft={packItemsForm.boxNotesDraft}
+        onBoxNotesChange={packItemsForm.onBoxNotesChange}
+        onBoxNotesBlur={packItemsForm.onBoxNotesBlur}
         rows={packItemsForm.rows}
         onAddRow={packItemsForm.onAddRow}
         onRemoveRow={packItemsForm.onRemoveRow}
@@ -529,7 +570,13 @@ export function IsraelShipmentsPage() {
         onRowNotesChange={packItemsForm.onRowNotesChange}
         onCellQuantityChange={packItemsForm.onCellQuantityChange}
         availableFor={packItemsForm.availableFor}
+        existingItemFor={packItemsForm.existingItemFor}
+        pendingExistingItemEdits={packItemsForm.pendingExistingItemEdits}
+        onStageExistingItemEdit={packItemsForm.onStageExistingItemEdit}
         totalPackedQuantity={packItemsForm.totalPackedQuantity}
+        remainingCapacity={packItemsForm.remainingCapacity}
+        isBoxOverCapacity={packItemsForm.isBoxOverCapacity}
+        boxOverCapacityMessage={packItemsForm.boxOverCapacityMessage}
         isSubmitting={packItemsForm.isSubmitting}
         error={packItemsForm.error}
         onSave={packItemsForm.handleSave}
@@ -599,6 +646,20 @@ export function IsraelShipmentsPage() {
           onSelectItem={handleItemRowSelect}
           refreshKey={itemsRefreshKey}
           onRowCountChange={setTableRowCount}
+          onSeasonInfoChange={setCurrentTabSeasonInfo}
+        />
+      ) : isFieldShipmentItemsSummaryTab ? (
+        <IsraelFieldShipmentItemsSummarySection
+          lang={lang}
+          labels={t.fieldShipmentItemsTableLabels}
+          refreshKey={itemsRefreshKey}
+          onSeasonInfoChange={setCurrentTabSeasonInfo}
+        />
+      ) : isShipmentItemsSummaryTab ? (
+        <IsraelShipmentItemsSummarySection
+          lang={lang}
+          labels={t.shipmentItemsSummaryTableLabels}
+          refreshKey={shipmentsRefreshKey}
           onSeasonInfoChange={setCurrentTabSeasonInfo}
         />
       ) : (

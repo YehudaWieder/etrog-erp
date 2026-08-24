@@ -41,6 +41,7 @@ export function IsraelAllBoxesSection({
     selectedShipmentNumber,
     selectedBoxNumber,
     selectedStatus,
+    selectedFieldId,
     handleFilterValuesChange,
     handleFiltersApiReady,
   } = useIsraelAllBoxesFilters(labels);
@@ -51,6 +52,7 @@ export function IsraelAllBoxesSection({
     selectedShipmentNumber,
     selectedBoxNumber,
     selectedStatus,
+    selectedFieldId,
     refreshKey,
     setDetailsRow,
   );
@@ -147,6 +149,9 @@ export function IsraelAllBoxesSection({
                   <div className={styles.detailsCardHead}>
                     <p>
                       <strong>{labels.colBoxNumber}:</strong> {detailsRow.boxNumber}
+                    </p>
+                    <p>
+                      <strong>{labels.colField}:</strong> {detailsRow.fieldName}
                     </p>
                     <p>
                       <strong>{labels.colShipmentNumber}:</strong> {detailsRow.shipmentNumber ?? labels.unassignedShipmentLabel}

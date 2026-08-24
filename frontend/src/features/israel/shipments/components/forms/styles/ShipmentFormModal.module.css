@@ -24,3 +24,8 @@
   field-sizing: content;
   padding-block: 10px;
 }
+
+.statusSelect {
+  width: 240px;
+  max-width: 100%;
+}

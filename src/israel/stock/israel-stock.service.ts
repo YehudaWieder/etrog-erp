@@ -12,6 +12,7 @@ import { UpdateIsraelStockMovementDto } from './dto/update-israel-stock-movement
 const stockInclude = {
   category: { select: { id: true, name: true } },
   field: { select: { id: true, name: true } },
+  box: { select: { id: true, status: true } },
 } satisfies Prisma.IsraelStockInclude;
 
 const MANUAL_MOVEMENT_TYPES = ['SELF_PICKUP', 'WASTE'] as const;

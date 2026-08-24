@@ -1,10 +1,16 @@
 import { apiClient, type ApiClientInit } from '../apiClient';
 import type { IsraelPitamStatus } from './israelClassificationsApi';
+import type { IsraelShipmentStatus } from './israelShipmentsApi';
 
 export type IsraelShipmentItemRecord = {
   id: number;
   boxId: number;
-  box?: { id: number; boxNumber: number; shipment: { id: number; shipmentNumber: number } | null };
+  box?: {
+    id: number;
+    boxNumber: number;
+    fieldId: number;
+    shipment: { id: number; shipmentNumber: number; status: IsraelShipmentStatus } | null;
+  };
   seasonId: number;
   categoryId: number;
   category?: { id: number; name: string };

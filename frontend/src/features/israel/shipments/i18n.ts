@@ -2,7 +2,13 @@ import type { NavItem, SidebarSection } from '../../../types/navigation';
 import type { IsraelShipmentStatus } from '../../../services/israel/israelShipmentsApi';
 import type { IsraelBoxStatus } from '../../../services/israel/israelBoxesApi';
 import type { IsraelPitamStatus } from '../../../services/israel/israelClassificationsApi';
-import type { IsraelAllShipmentsTableLabels, IsraelAllBoxesTableLabels, IsraelShipmentItemsTableLabels } from './israelShipments.types';
+import type {
+  IsraelAllShipmentsTableLabels,
+  IsraelAllBoxesTableLabels,
+  IsraelShipmentItemsTableLabels,
+  IsraelFieldShipmentItemsTableLabels,
+  IsraelShipmentItemsSummaryTableLabels,
+} from './israelShipments.types';
 import { ISRAEL_SHIPMENTS_I18N_EN } from './i18n.en';
 import { ISRAEL_SHIPMENTS_I18N_HE } from './i18n.he';
 
@@ -33,6 +39,8 @@ export type IsraelShipmentsI18n = {
     description: string;
     shipmentNumberLabel: string;
     shipmentNumberPlaceholder: string;
+    fieldLabel: string;
+    fieldPlaceholder: string;
     notesLabel: string;
     notesPlaceholder: string;
     save: string;
@@ -40,12 +48,16 @@ export type IsraelShipmentsI18n = {
     cancel: string;
     validationRequired: string;
     validationPositive: string;
+    validationFieldRequired: string;
     duplicateShipmentNumber: string;
     genericError: string;
   };
   editShipmentModal: {
     title: (num: number) => string;
     shipmentNumberLabel: string;
+    fieldLabel: string;
+    fieldPlaceholder: string;
+    fieldLockedHint: string;
     statusLabel: string;
     shippedAtLabel: string;
     notesLabel: string;
@@ -56,6 +68,7 @@ export type IsraelShipmentsI18n = {
     statusOptions: Record<IsraelShipmentStatus, string>;
     shipmentNumberRequired: string;
     shipmentNumberInvalid: string;
+    validationFieldRequired: string;
     shippedAtRequired: string;
     shippedAtYearMismatch: string;
     duplicateShipmentNumber: string;
@@ -78,6 +91,8 @@ export type IsraelShipmentsI18n = {
     shipmentNumberLabel: string;
     shipmentNumberPlaceholder: string;
     unassignedOption: string;
+    fieldLabel: string;
+    fieldPlaceholder: string;
     boxNumberLabel: string;
     boxNumberPlaceholder: string;
     notesLabel: string;
@@ -95,6 +110,7 @@ export type IsraelShipmentsI18n = {
     validationEndNumberRequired: string;
     validationRangeInvalid: string;
     validationRangeTooLarge: (max: number) => string;
+    validationFieldRequired: string;
     duplicateBoxNumber: string;
     duplicateBoxNumbersInRange: (numbers: string) => string;
     genericError: string;
@@ -104,6 +120,9 @@ export type IsraelShipmentsI18n = {
     shipmentLabel: string;
     shipmentPlaceholder: string;
     unassignedOption: string;
+    fieldLabel: string;
+    fieldPlaceholder: string;
+    fieldLockedHint: string;
     boxNumberLabel: string;
     statusLabel: string;
     notesLabel: string;
@@ -114,6 +133,7 @@ export type IsraelShipmentsI18n = {
     statusOptions: Record<IsraelBoxStatus, string>;
     validationBoxNumberRequired: string;
     validationBoxNumberPositive: string;
+    validationFieldRequired: string;
     duplicateBoxNumber: string;
     genericError: string;
   };
@@ -147,12 +167,33 @@ export type IsraelShipmentsI18n = {
     shipmentDisplayLabel: string;
     boxNumberDisplayLabel: string;
     statusDisplayLabel: string;
+    itemsInBoxDisplayLabel: string;
+    boxNotesDisplayLabel: string;
     unassignedShipmentValue: string;
     categoryLabel: string;
     categoryPlaceholder: string;
     pitamStatusColumnLabel: string;
+    noGradeColumnLabel: string;
     quantityPlaceholder: string;
     availableQuantityHint: (n: number) => string;
+    existingQuantityHint: (n: number) => string;
+    addExistingItemQuantityLabel: string;
+    cancelExistingItemEditLabel: string;
+    addExistingItemQuantityPopupTitle: string;
+    addExistingItemQuantityPopupPrefix: string;
+    addExistingItemQuantityPopupGradeWord: string;
+    addExistingItemQuantityPopupInstruction: string;
+    addExistingItemQuantityConfirmLabel: string;
+    addExistingItemQuantityInvalidError: string;
+    existingItemQuantityAddModeLabel: string;
+    existingItemQuantitySubtractModeLabel: string;
+    subtractExistingItemQuantityConfirmLabel: string;
+    subtractExistingItemQuantityInvalidError: string;
+    subtractExistingItemQuantityExceedsBaseError: (n: number) => string;
+    addExistingItemQuantityAvailableHint: (n: number) => string;
+    addExistingItemQuantityExceedsAvailableError: (n: number) => string;
+    subtractExistingItemQuantityToZeroHint: string;
+    cellQuantityExceedsAvailableHint: (n: number) => string;
     notesLabel: string;
     notesPlaceholder: string;
     save: string;
@@ -160,6 +201,7 @@ export type IsraelShipmentsI18n = {
     cancel: string;
     validationBoxRequired: string;
     validationRowsRequired: string;
+    boxOverCapacityHint: (entered: number, remaining: number) => string;
     boxNotOpenError: string;
     genericError: string;
     itemRows: {
@@ -168,7 +210,9 @@ export type IsraelShipmentsI18n = {
       removeRow: string;
       rowPrefix: (index: number) => string;
       emptyHint: string;
+      addRowDisabledHint: string;
       totalPackedQuantityLabel: string;
+      remainingCapacityHint: (n: number) => string;
     };
   };
   editShipmentItemModal: {
@@ -200,6 +244,8 @@ export type IsraelShipmentsI18n = {
     genericError: string;
   };
   shipmentItemsTableLabels: IsraelShipmentItemsTableLabels;
+  fieldShipmentItemsTableLabels: IsraelFieldShipmentItemsTableLabels;
+  shipmentItemsSummaryTableLabels: IsraelShipmentItemsSummaryTableLabels;
 };
 
 export const ISRAEL_SHIPMENTS_I18N: Record<'he' | 'en', IsraelShipmentsI18n> = {

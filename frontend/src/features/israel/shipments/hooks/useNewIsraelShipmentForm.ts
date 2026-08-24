@@ -1,15 +1,18 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../../../../services/apiClient';
 import { createIsraelShipment } from '../../../../services/israel/israelShipmentsApi';
+import { getIsraelFields, type IsraelField } from '../../../../services/israel/israelFieldsApi';
 
 type NewIsraelShipmentFormText = {
   validationRequired: string;
   validationPositive: string;
+  validationFieldRequired: string;
   duplicateShipmentNumber: string;
   genericError: string;
 };
 
 type UseNewIsraelShipmentFormProps = {
+  isOpen: boolean;
   seasonId: number | null;
   t: NewIsraelShipmentFormText;
   onSuccess: () => void;
@@ -17,8 +20,11 @@ type UseNewIsraelShipmentFormProps = {
 };
 
 type UseNewIsraelShipmentFormResult = {
+  fields: IsraelField[];
   shipmentNumber: string;
   setShipmentNumber: (v: string) => void;
+  fieldId: string;
+  setFieldId: (v: string) => void;
   notes: string;
   setNotes: (v: string) => void;
   isSubmitting: boolean;
@@ -28,18 +34,41 @@ type UseNewIsraelShipmentFormResult = {
 };
 
 export function useNewIsraelShipmentForm({
+  isOpen,
   seasonId,
   t,
   onSuccess,
   onClose,
 }: UseNewIsraelShipmentFormProps): UseNewIsraelShipmentFormResult {
+  const [fields, setFields] = useState<IsraelField[]>([]);
   const [shipmentNumber, setShipmentNumber] = useState('');
+  const [fieldId, setFieldId] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    let isMounted = true;
+    getIsraelFields()
+      .then((nextFields) => {
+        if (isMounted) setFields(nextFields);
+      })
+      .catch(() => {
+        if (isMounted) setFields([]);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
+
   const handleClose = useCallback(() => {
     setShipmentNumber('');
+    setFieldId('');
     setNotes('');
     setError(null);
     onClose();
@@ -62,15 +91,21 @@ export function useNewIsraelShipmentForm({
       return;
     }
 
+    if (!fieldId) {
+      setError(t.validationFieldRequired);
+      return;
+    }
+
     setError(null);
     setIsSubmitting(true);
 
     try {
       await createIsraelShipment(
-        { seasonId, shipmentNumber: numValue, notes: notes.trim() || undefined },
+        { seasonId, shipmentNumber: numValue, fieldId: Number(fieldId), notes: notes.trim() || undefined },
         { suppressGlobalFeedback: true },
       );
       setShipmentNumber('');
+      setFieldId('');
       setNotes('');
       onSuccess();
       onClose();
@@ -80,11 +115,14 @@ export function useNewIsraelShipmentForm({
     } finally {
       setIsSubmitting(false);
     }
-  }, [notes, onClose, onSuccess, seasonId, shipmentNumber, t]);
+  }, [fieldId, notes, onClose, onSuccess, seasonId, shipmentNumber, t]);
 
   return {
+    fields,
     shipmentNumber,
     setShipmentNumber,
+    fieldId,
+    setFieldId,
     notes,
     setNotes,
     isSubmitting,

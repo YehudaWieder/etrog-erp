@@ -1,7 +1,9 @@
 import { FaXmark } from 'react-icons/fa6';
 import { SubmitButton } from '../../../../../components/ui/SubmitButton';
+import { TopLoadingBar } from '../../../../../components/ui/TopLoadingBar';
 import { CustomSelect } from '../../../../../components/ui/CustomSelect';
 import type { IsraelShipmentRecord } from '../../../../../services/israel/israelShipmentsApi';
+import type { IsraelField } from '../../../../../services/israel/israelFieldsApi';
 import type { NewIsraelBoxFormMode } from '../../hooks/useNewIsraelBoxForm';
 import styles from './styles/BoxFormModal.module.css';
 
@@ -12,6 +14,8 @@ type NewIsraelBoxFormModalText = {
   bulkModeLabel: string;
   shipmentNumberLabel: string;
   shipmentNumberPlaceholder: string;
+  fieldLabel: string;
+  fieldPlaceholder: string;
   boxNumberLabel: string;
   boxNumberPlaceholder: string;
   notesLabel: string;
@@ -30,6 +34,10 @@ type NewIsraelBoxFormModalProps = {
   t: NewIsraelBoxFormModalText;
   mode: NewIsraelBoxFormMode;
   onModeChange: (v: NewIsraelBoxFormMode) => void;
+  fields: IsraelField[];
+  fieldId: string;
+  onFieldIdChange: (v: string) => void;
+  isFieldLocked: boolean;
   shipments: IsraelShipmentRecord[];
   isLoadingOptions: boolean;
   selectedShipmentId: string;
@@ -53,6 +61,10 @@ export function NewIsraelBoxFormModal({
   t,
   mode,
   onModeChange,
+  fields,
+  fieldId,
+  onFieldIdChange,
+  isFieldLocked,
   shipments,
   isLoadingOptions,
   selectedShipmentId,
@@ -81,7 +93,10 @@ export function NewIsraelBoxFormModal({
           <FaXmark />
         </button>
 
-        <h3 className="modal-title">{t.title}</h3>
+        <h3 className="modal-title" style={{ position: 'relative' }}>
+          {t.title}
+          <TopLoadingBar isLoading={isLoadingOptions} />
+        </h3>
         <p className="modal-message">{t.description}</p>
 
         <div className={styles.modeToggle}>
@@ -104,6 +119,18 @@ export function NewIsraelBoxFormModal({
         <div className={styles.formGrid}>
           {mode === 'BULK' ? (
             <div className={styles.topRow}>
+              <div className={styles.field}>
+                <label className={styles.label}>{t.fieldLabel}</label>
+                <CustomSelect
+                  className="seasons-manager__year-input"
+                  value={fieldId}
+                  onChange={onFieldIdChange}
+                  disabled={isFieldLocked}
+                  placeholder={t.fieldPlaceholder}
+                  options={fields.map((f) => ({ value: String(f.id), label: f.name }))}
+                />
+              </div>
+
               <div className={styles.field}>
                 <label className={styles.label}>{t.shipmentNumberLabel}</label>
                 <CustomSelect
@@ -146,6 +173,18 @@ export function NewIsraelBoxFormModal({
             </div>
           ) : (
             <div className={styles.topRow}>
+              <div className={styles.field}>
+                <label className={styles.label}>{t.fieldLabel}</label>
+                <CustomSelect
+                  className="seasons-manager__year-input"
+                  value={fieldId}
+                  onChange={onFieldIdChange}
+                  disabled={isFieldLocked}
+                  placeholder={t.fieldPlaceholder}
+                  options={fields.map((f) => ({ value: String(f.id), label: f.name }))}
+                />
+              </div>
+
               <div className={styles.field}>
                 <label className={styles.label}>{t.shipmentNumberLabel}</label>
                 <CustomSelect

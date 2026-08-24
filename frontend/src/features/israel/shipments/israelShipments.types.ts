@@ -8,10 +8,13 @@ export type IsraelAllShipmentsTableLabels = {
   seasonFilterLabel: string;
   statusFilterLabel: string;
   allStatusesOption: string;
+  fieldFilterLabel: string;
+  allFieldsOption: string;
   activeSeasonBadge: string;
   noActiveSeason: string;
   colDetails: string;
   colShipmentNumber: string;
+  colField: string;
   colBoxCount: string;
   colQuantity: string;
   colStatus: string;
@@ -35,6 +38,8 @@ export type IsraelAllShipmentsTableLabels = {
 export type IsraelBoxesTableRow = {
   id: number;
   boxNumber: number;
+  fieldId: number;
+  fieldName: string;
   shipmentNumber: number | null;
   itemsCount: number;
   status: import('../../../services/israel/israelBoxesApi').IsraelBoxStatus;
@@ -49,6 +54,8 @@ export type IsraelAllBoxesTableLabels = {
   boxNumberFilterLabel: string;
   boxNumberFilterPlaceholder: string;
   boxStatusFilterLabel: string;
+  fieldFilterLabel: string;
+  allFieldsOption: string;
   allShipmentNumbersOption: string;
   unassignedShipmentOption: string;
   allBoxStatusesOption: string;
@@ -56,6 +63,7 @@ export type IsraelAllBoxesTableLabels = {
   noActiveSeason: string;
   colDetails: string;
   colBoxNumber: string;
+  colField: string;
   colShipmentNumber: string;
   colItemsCount: string;
   colStatus: string;
@@ -81,6 +89,7 @@ export type IsraelShipmentItemsTableRow = {
   id: number;
   boxId: number;
   boxNumber: number;
+  fieldId: number | null;
   shipmentNumber: number | null;
   categoryId: number;
   category: string;
@@ -91,6 +100,75 @@ export type IsraelShipmentItemsTableRow = {
   updatedByName: string;
 };
 
+export type IsraelFieldShipmentItemsTableRow = {
+  id: number;
+  boxId: number;
+  boxNumber: number;
+  fieldId: number | null;
+  shipmentNumber: number | null;
+  shipmentStatus: import('../../../services/israel/israelShipmentsApi').IsraelShipmentStatus | null;
+  categoryId: number;
+  category: string;
+  grade: string;
+  pitamStatus: import('../../../services/israel/israelClassificationsApi').IsraelPitamStatus;
+  quantity: number;
+};
+
+export type IsraelFieldShipmentItemsTableLabels = {
+  description: string;
+  seasonFilterLabel: string;
+  shipmentNumberFilterLabel: string;
+  allShipmentNumbersOption: string;
+  fieldFilterLabel: string;
+  allFieldsOption: string;
+  shipmentStatusFilterLabel: string;
+  allShipmentStatusesOption: string;
+  shipmentStatusLabels: Record<import('../../../services/israel/israelShipmentsApi').IsraelShipmentStatus, string>;
+  activeSeasonBadge: string;
+  noActiveSeason: string;
+  colCategory: string;
+  noGrade: string;
+  pitamStatusLabels: Record<'WITH_PITAM' | 'WITHOUT_PITAM' | 'MIXED', string>;
+  empty: string;
+  loading: string;
+  error: string;
+  summary: {
+    totalShipments: string;
+    totalBoxes: string;
+    totalQuantity: string;
+    total: string;
+  };
+};
+
+export type IsraelShipmentItemsSummaryTableLabels = {
+  description: string;
+  seasonFilterLabel: string;
+  activeSeasonBadge: string;
+  noActiveSeason: string;
+  colShipmentNumber: string;
+  colField: string;
+  colBoxCount: string;
+  colQuantity: string;
+  colStatus: string;
+  empty: string;
+  loading: string;
+  error: string;
+  summary: {
+    totalShipments: string;
+    totalBoxes: string;
+    totalQuantity: string;
+  };
+  statusLabels: Record<import('../../../services/israel/israelShipmentsApi').IsraelShipmentStatus, string>;
+  fieldCategoryMatrix: {
+    title: string;
+    fieldColumn: string;
+    totalQuantityColumn: string;
+    totalBoxesColumn: string;
+    grandTotalLabel: string;
+    empty: string;
+  };
+};
+
 export type IsraelShipmentItemsTableLabels = {
   description: string;
   seasonFilterLabel: string;
@@ -98,10 +176,13 @@ export type IsraelShipmentItemsTableLabels = {
   shipmentNumberFilterLabel: string;
   allBoxNumbersOption: string;
   allShipmentNumbersOption: string;
+  fieldFilterLabel: string;
+  allFieldsOption: string;
   activeSeasonBadge: string;
   noActiveSeason: string;
   colDetails: string;
   colBoxNumber: string;
+  colField: string;
   colShipmentNumber: string;
   colCategory: string;
   colGrade: string;

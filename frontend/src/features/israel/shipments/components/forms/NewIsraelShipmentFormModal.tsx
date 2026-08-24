@@ -1,5 +1,7 @@
 import { FaXmark } from 'react-icons/fa6';
 import { SubmitButton } from '../../../../../components/ui/SubmitButton';
+import { CustomSelect } from '../../../../../components/ui/CustomSelect';
+import type { IsraelField } from '../../../../../services/israel/israelFieldsApi';
 import styles from './styles/ShipmentFormModal.module.css';
 
 type NewIsraelShipmentFormModalText = {
@@ -7,6 +9,8 @@ type NewIsraelShipmentFormModalText = {
   description: string;
   shipmentNumberLabel: string;
   shipmentNumberPlaceholder: string;
+  fieldLabel: string;
+  fieldPlaceholder: string;
   notesLabel: string;
   notesPlaceholder: string;
   save: string;
@@ -17,8 +21,11 @@ type NewIsraelShipmentFormModalText = {
 type NewIsraelShipmentFormModalProps = {
   isOpen: boolean;
   t: NewIsraelShipmentFormModalText;
+  fields: IsraelField[];
   shipmentNumber: string;
   onShipmentNumberChange: (v: string) => void;
+  fieldId: string;
+  onFieldIdChange: (v: string) => void;
   notes: string;
   onNotesChange: (v: string) => void;
   isSubmitting: boolean;
@@ -30,8 +37,11 @@ type NewIsraelShipmentFormModalProps = {
 export function NewIsraelShipmentFormModal({
   isOpen,
   t,
+  fields,
   shipmentNumber,
   onShipmentNumberChange,
+  fieldId,
+  onFieldIdChange,
   notes,
   onNotesChange,
   isSubmitting,
@@ -66,6 +76,17 @@ export function NewIsraelShipmentFormModal({
               onWheel={(e) => e.currentTarget.blur()}
               placeholder={t.shipmentNumberPlaceholder}
               autoFocus
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.label}>{t.fieldLabel}</label>
+            <CustomSelect
+              className="seasons-manager__year-input"
+              value={fieldId}
+              onChange={onFieldIdChange}
+              placeholder={t.fieldPlaceholder}
+              options={fields.map((f) => ({ value: String(f.id), label: f.name }))}
             />
           </div>
 

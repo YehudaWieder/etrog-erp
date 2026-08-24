@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../../../../services/apiClient';
 import { updateIsraelShipment, type IsraelShipmentRecord, type IsraelShipmentStatus } from '../../../../services/israel/israelShipmentsApi';
+import { getIsraelFields, type IsraelField } from '../../../../services/israel/israelFieldsApi';
 
 type EditIsraelShipmentFormText = {
   shipmentNumberRequired: string;
   shipmentNumberInvalid: string;
+  validationFieldRequired: string;
   shippedAtRequired: string;
   shippedAtYearMismatch: string;
   duplicateShipmentNumber: string;
@@ -12,6 +14,7 @@ type EditIsraelShipmentFormText = {
 };
 
 type UseEditIsraelShipmentFormProps = {
+  isOpen: boolean;
   shipment: IsraelShipmentRecord | null;
   t: EditIsraelShipmentFormText;
   onSuccess: () => void;
@@ -19,8 +22,12 @@ type UseEditIsraelShipmentFormProps = {
 };
 
 type UseEditIsraelShipmentFormResult = {
+  fields: IsraelField[];
   shipmentNumber: string;
   setShipmentNumber: (v: string) => void;
+  fieldId: string;
+  setFieldId: (v: string) => void;
+  isFieldLocked: boolean;
   status: IsraelShipmentStatus;
   handleStatusChange: (v: IsraelShipmentStatus) => void;
   shippedAt: string;
@@ -39,17 +46,41 @@ function toDateInputValue(iso: string | null): string {
 }
 
 export function useEditIsraelShipmentForm({
+  isOpen,
   shipment,
   t,
   onSuccess,
   onClose,
 }: UseEditIsraelShipmentFormProps): UseEditIsraelShipmentFormResult {
+  const [fields, setFields] = useState<IsraelField[]>([]);
   const [shipmentNumber, setShipmentNumber] = useState('');
+  const [fieldId, setFieldId] = useState('');
   const [status, setStatus] = useState<IsraelShipmentStatus>('PREPARING');
   const [shippedAt, setShippedAt] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isFieldLocked = (shipment?.totalBoxes ?? 0) > 0;
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    let isMounted = true;
+    getIsraelFields()
+      .then((nextFields) => {
+        if (isMounted) setFields(nextFields);
+      })
+      .catch(() => {
+        if (isMounted) setFields([]);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
 
   const handleStatusChange = useCallback((v: IsraelShipmentStatus) => {
     setStatus(v);
@@ -59,6 +90,7 @@ export function useEditIsraelShipmentForm({
   useEffect(() => {
     if (!shipment) return;
     setShipmentNumber(String(shipment.shipmentNumber));
+    setFieldId(String(shipment.fieldId));
     setStatus(shipment.status);
     setShippedAt(shipment.status === 'PREPARING' || shipment.status === 'CANCELLED' ? '' : toDateInputValue(shipment.shippedAt));
     setNotes(shipment.notes ?? '');
@@ -84,6 +116,11 @@ export function useEditIsraelShipmentForm({
       return;
     }
 
+    if (!fieldId) {
+      setError(t.validationFieldRequired);
+      return;
+    }
+
     if (status === 'SHIPPED' && !shippedAt) {
       setError(t.shippedAtRequired);
       return;
@@ -97,6 +134,7 @@ export function useEditIsraelShipmentForm({
         {
           id: shipment.id,
           shipmentNumber: numValue !== shipment.shipmentNumber ? numValue : undefined,
+          fieldId: !isFieldLocked && Number(fieldId) !== shipment.fieldId ? Number(fieldId) : undefined,
           status,
           shippedAt: shippedAt ? new Date(shippedAt).toISOString() : null,
           notes: notes.trim() || null,
@@ -118,11 +156,15 @@ export function useEditIsraelShipmentForm({
     } finally {
       setIsSubmitting(false);
     }
-  }, [notes, onClose, onSuccess, shipment, shipmentNumber, shippedAt, status, t]);
+  }, [fieldId, isFieldLocked, notes, onClose, onSuccess, shipment, shipmentNumber, shippedAt, status, t]);
 
   return {
+    fields,
     shipmentNumber,
     setShipmentNumber,
+    fieldId,
+    setFieldId,
+    isFieldLocked,
     status,
     handleStatusChange,
     shippedAt,

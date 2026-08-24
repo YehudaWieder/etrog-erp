@@ -16,6 +16,8 @@ model IsraelField {
   categories IsraelFieldCategory[]
   harvests   IsraelHarvest[]
   stocks     IsraelStock[]
+  shipments  IsraelShipment[]
+  boxes      IsraelBox[]
 
   @@index([name])
 }
@@ -155,6 +157,9 @@ model IsraelShipment {
   seasonId Int
   season   Season @relation(fields: [seasonId], references: [id])
 
+  fieldId Int
+  field   IsraelField @relation(fields: [fieldId], references: [id])
+
   totalBoxes    Int @default(0)
   totalQuantity Int @default(0)
 
@@ -174,6 +179,7 @@ model IsraelShipment {
   @@unique([seasonId, shipmentNumber])
   @@index([seasonId])
   @@index([seasonId, status])
+  @@index([fieldId])
 }
 
 // -----------------------------------------------------------------------------
@@ -184,6 +190,9 @@ model IsraelBox {
 
   seasonId Int
   season   Season @relation(fields: [seasonId], references: [id])
+
+  fieldId Int
+  field   IsraelField @relation(fields: [fieldId], references: [id])
 
   shipmentId Int?
   shipment   IsraelShipment? @relation(fields: [shipmentId], references: [id])
@@ -207,6 +216,7 @@ model IsraelBox {
   @@index([seasonId])
   @@index([shipmentId])
   @@index([seasonId, status])
+  @@index([fieldId])
 }
 
 // -----------------------------------------------------------------------------

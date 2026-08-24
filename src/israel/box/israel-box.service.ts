@@ -10,6 +10,7 @@ import { UpdateIsraelBoxDto } from './dto/update-israel-box.dto';
 const MAX_BULK_BOX_RANGE = 100;
 
 const boxInclude = {
+  field: { select: { id: true, name: true } },
   shipment: { select: { id: true, shipmentNumber: true } },
   updatedBy: { select: { name: true } },
   _count: { select: { items: true } },
@@ -27,19 +28,26 @@ export class IsraelBoxService {
     private readonly auditLog: AuditLogService,
   ) {}
 
-  private async syncShipmentBoxCount(tx: Prisma.TransactionClient, shipmentId: number | null) {
+  async syncShipmentTotals(tx: Prisma.TransactionClient, shipmentId: number | null) {
     if (shipmentId === null) {
       return;
     }
 
-    const totalBoxes = await tx.israelBox.count({ where: { shipmentId } });
-    await tx.israelShipment.update({ where: { id: shipmentId }, data: { totalBoxes } });
+    const [totalBoxes, itemsAgg] = await Promise.all([
+      tx.israelBox.count({ where: { shipmentId } }),
+      tx.israelShipmentItem.aggregate({ where: { box: { shipmentId } }, _sum: { quantity: true } }),
+    ]);
+
+    await tx.israelShipment.update({
+      where: { id: shipmentId },
+      data: { totalBoxes, totalQuantity: itemsAgg._sum.quantity ?? 0 },
+    });
   }
 
   private async assertShipmentAssignable(seasonId: number, shipmentId: number) {
     const shipment = await this.prisma.israelShipment.findFirst({
       where: { id: shipmentId, seasonId },
-      select: { id: true, status: true },
+      select: { id: true, status: true, fieldId: true },
     });
 
     if (!shipment) {
@@ -51,6 +59,13 @@ export class IsraelBoxService {
     }
 
     return shipment;
+  }
+
+  private async assertFieldExists(fieldId: number) {
+    const field = await this.prisma.israelField.findUnique({ where: { id: fieldId }, select: { id: true } });
+    if (!field) {
+      throw new NotFoundException(`Israel field #${fieldId} not found`);
+    }
   }
 
   async findAllBySeason(seasonId: number) {
@@ -81,6 +96,10 @@ export class IsraelBoxService {
       throw new BadRequestException('boxNumber must be a positive integer');
     }
 
+    if (!Number.isInteger(dto.fieldId)) {
+      throw new BadRequestException('fieldId is required');
+    }
+
     if (dto.notes !== undefined && typeof dto.notes !== 'string') {
       throw new BadRequestException('notes must be a string');
     }
@@ -88,7 +107,12 @@ export class IsraelBoxService {
     await this.seasonsService.assertSeasonExists(dto.seasonId);
 
     if (dto.shipmentId !== undefined) {
-      await this.assertShipmentAssignable(dto.seasonId, dto.shipmentId);
+      const shipment = await this.assertShipmentAssignable(dto.seasonId, dto.shipmentId);
+      if (dto.fieldId !== shipment.fieldId) {
+        throw new BadRequestException('Box field must match the field of the shipment it is attached to');
+      }
+    } else {
+      await this.assertFieldExists(dto.fieldId);
     }
 
     const existing = await this.prisma.israelBox.findUnique({
@@ -104,6 +128,7 @@ export class IsraelBoxService {
       const box = await tx.israelBox.create({
         data: {
           seasonId: dto.seasonId,
+          fieldId: dto.fieldId,
           shipmentId: dto.shipmentId ?? null,
           boxNumber: dto.boxNumber,
           status: BoxStatus.OPEN,
@@ -113,7 +138,7 @@ export class IsraelBoxService {
         },
       });
 
-      await this.syncShipmentBoxCount(tx, box.shipmentId);
+      await this.syncShipmentTotals(tx, box.shipmentId);
 
       return box;
     });
@@ -142,10 +167,19 @@ export class IsraelBoxService {
       throw new BadRequestException(`Cannot create more than ${MAX_BULK_BOX_RANGE} boxes at once`);
     }
 
+    if (!Number.isInteger(dto.fieldId)) {
+      throw new BadRequestException('fieldId is required');
+    }
+
     await this.seasonsService.assertSeasonExists(dto.seasonId);
 
     if (dto.shipmentId !== undefined) {
-      await this.assertShipmentAssignable(dto.seasonId, dto.shipmentId);
+      const shipment = await this.assertShipmentAssignable(dto.seasonId, dto.shipmentId);
+      if (dto.fieldId !== shipment.fieldId) {
+        throw new BadRequestException('Box field must match the field of the shipment it is attached to');
+      }
+    } else {
+      await this.assertFieldExists(dto.fieldId);
     }
 
     const boxNumbers = Array.from({ length: dto.endNumber - dto.startNumber + 1 }, (_, i) => dto.startNumber + i);
@@ -168,6 +202,7 @@ export class IsraelBoxService {
           await tx.israelBox.create({
             data: {
               seasonId: dto.seasonId,
+              fieldId: dto.fieldId,
               shipmentId: dto.shipmentId ?? null,
               boxNumber,
               status: BoxStatus.OPEN,
@@ -178,7 +213,7 @@ export class IsraelBoxService {
         );
       }
 
-      await this.syncShipmentBoxCount(tx, dto.shipmentId ?? null);
+      await this.syncShipmentTotals(tx, dto.shipmentId ?? null);
 
       return boxes;
     });
@@ -207,6 +242,10 @@ export class IsraelBoxService {
       throw new BadRequestException('status is invalid');
     }
 
+    if (dto.fieldId !== undefined && !Number.isInteger(dto.fieldId)) {
+      throw new BadRequestException('fieldId must be a valid integer');
+    }
+
     if (dto.notes !== undefined && dto.notes !== null && typeof dto.notes !== 'string') {
       throw new BadRequestException('notes must be a string');
     }
@@ -225,11 +264,22 @@ export class IsraelBoxService {
       }
     }
 
+    if (dto.fieldId !== undefined && dto.fieldId !== current.fieldId) {
+      if (current.itemsCount > 0) {
+        throw new BadRequestException('Cannot change the field of a box that already has items');
+      }
+      await this.assertFieldExists(dto.fieldId);
+    }
+
+    const effectiveFieldId = dto.fieldId ?? current.fieldId;
     const isChangingShipment = dto.shipmentId !== undefined && dto.shipmentId !== current.shipmentId;
     let derivedStatus: BoxStatus | undefined;
 
     if (isChangingShipment && dto.shipmentId !== null) {
-      await this.assertShipmentAssignable(current.seasonId, dto.shipmentId as number);
+      const shipment = await this.assertShipmentAssignable(current.seasonId, dto.shipmentId as number);
+      if (effectiveFieldId !== shipment.fieldId) {
+        throw new BadRequestException('Box field must match the field of the shipment it is attached to');
+      }
       derivedStatus = current.itemsCount > 0 ? BoxStatus.CLOSED : BoxStatus.OPEN;
     } else if (isChangingShipment && dto.shipmentId === null) {
       derivedStatus = current.itemsCount > 0 ? BoxStatus.CLOSED : BoxStatus.OPEN;
@@ -246,6 +296,7 @@ export class IsraelBoxService {
         where: { id },
         data: {
           ...(dto.boxNumber !== undefined ? { boxNumber: dto.boxNumber } : {}),
+          ...(dto.fieldId !== undefined ? { fieldId: dto.fieldId } : {}),
           ...(dto.shipmentId !== undefined ? { shipmentId: dto.shipmentId } : {}),
           ...(dto.notes !== undefined ? { notes: dto.notes } : {}),
           status: derivedStatus ?? dto.status ?? current.status,
@@ -254,8 +305,8 @@ export class IsraelBoxService {
       });
 
       if (isChangingShipment) {
-        await this.syncShipmentBoxCount(tx, current.shipmentId);
-        await this.syncShipmentBoxCount(tx, dto.shipmentId ?? null);
+        await this.syncShipmentTotals(tx, current.shipmentId);
+        await this.syncShipmentTotals(tx, dto.shipmentId ?? null);
       }
 
       return box;
@@ -288,7 +339,7 @@ export class IsraelBoxService {
       }
 
       await tx.israelBox.delete({ where: { id } });
-      await this.syncShipmentBoxCount(tx, box.shipmentId);
+      await this.syncShipmentTotals(tx, box.shipmentId);
 
       return box;
     });
@@ -334,7 +385,7 @@ export class IsraelBoxService {
 
       const shipmentIds = [...new Set(boxes.map((box) => box.shipmentId))];
       for (const shipmentId of shipmentIds) {
-        await this.syncShipmentBoxCount(tx, shipmentId);
+        await this.syncShipmentTotals(tx, shipmentId);
       }
 
       return boxes;

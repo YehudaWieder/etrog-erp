@@ -1,8 +1,10 @@
 import { FaXmark } from 'react-icons/fa6';
 import { SubmitButton } from '../../../../../components/ui/SubmitButton';
+import { TopLoadingBar } from '../../../../../components/ui/TopLoadingBar';
 import { CustomSelect } from '../../../../../components/ui/CustomSelect';
 import type { IsraelBoxStatus } from '../../../../../services/israel/israelBoxesApi';
 import type { IsraelShipmentRecord } from '../../../../../services/israel/israelShipmentsApi';
+import type { IsraelField } from '../../../../../services/israel/israelFieldsApi';
 import styles from './styles/BoxFormModal.module.css';
 
 const STATUS_ORDER: IsraelBoxStatus[] = ['OPEN', 'CLOSED', 'SHIPPED', 'DELIVERED'];
@@ -11,6 +13,9 @@ type EditIsraelBoxFormModalText = {
   title: (num: number) => string;
   shipmentLabel: string;
   shipmentPlaceholder: string;
+  fieldLabel: string;
+  fieldPlaceholder: string;
+  fieldLockedHint: string;
   boxNumberLabel: string;
   statusLabel: string;
   notesLabel: string;
@@ -25,6 +30,10 @@ type EditIsraelBoxFormModalProps = {
   isOpen: boolean;
   originalBoxNumber: number;
   t: EditIsraelBoxFormModalText;
+  fields: IsraelField[];
+  fieldId: string;
+  onFieldIdChange: (v: string) => void;
+  isFieldLocked: boolean;
   shipments: IsraelShipmentRecord[];
   isLoadingOptions: boolean;
   selectedShipmentId: string;
@@ -45,6 +54,10 @@ export function EditIsraelBoxFormModal({
   isOpen,
   originalBoxNumber,
   t,
+  fields,
+  fieldId,
+  onFieldIdChange,
+  isFieldLocked,
   shipments,
   isLoadingOptions,
   selectedShipmentId,
@@ -71,10 +84,26 @@ export function EditIsraelBoxFormModal({
           <FaXmark />
         </button>
 
-        <h3 className="modal-title">{t.title(originalBoxNumber)}</h3>
+        <h3 className="modal-title" style={{ position: 'relative' }}>
+          {t.title(originalBoxNumber)}
+          <TopLoadingBar isLoading={isLoadingOptions} />
+        </h3>
 
         <div className={styles.formGrid}>
           <div className={styles.topRow}>
+            <div className={styles.field}>
+              <label className={styles.label}>{t.fieldLabel}</label>
+              <CustomSelect
+                className="seasons-manager__year-input"
+                value={fieldId}
+                onChange={onFieldIdChange}
+                disabled={isFieldLocked}
+                placeholder={t.fieldPlaceholder}
+                options={fields.map((f) => ({ value: String(f.id), label: f.name }))}
+              />
+              {isFieldLocked ? <p className="seasons-manager__hint">{t.fieldLockedHint}</p> : null}
+            </div>
+
             <div className={styles.field}>
               <label className={styles.label}>{t.shipmentLabel}</label>
               <CustomSelect
