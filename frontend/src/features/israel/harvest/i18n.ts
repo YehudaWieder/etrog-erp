@@ -252,6 +252,28 @@ export type IsraelHarvestI18n = {
       allFieldCategoriesOption: string;
     };
   };
+  fieldCategorySummary: {
+    description: string;
+    loading: string;
+    loadError: string;
+    empty: string;
+    seasonFilterLabel: string;
+    actionsLabel: string;
+    printTitle: string;
+    printAriaLabel: string;
+    printWindowTitle: string;
+    exportTitle: string;
+    exportAriaLabel: string;
+    exportError: string;
+    columns: {
+      fieldCategory: string;
+      quantity: string;
+      breakdown: string;
+      price: string;
+      total: string;
+    };
+    ungroupedLabel: string;
+  };
   sortingList: {
     description: string;
     loading: string;

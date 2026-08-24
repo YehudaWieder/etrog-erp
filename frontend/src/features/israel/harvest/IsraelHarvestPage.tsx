@@ -37,9 +37,11 @@ import {
   deleteIsraelClassification,
   getIsraelClassificationsByHarvest,
   getIsraelClassificationsBySeason,
+  getIsraelFieldCategorySummaryBySeason,
   updateIsraelClassification,
   type IsraelClassificationRecord,
   type IsraelClassificationSeasonRecord,
+  type IsraelFieldCategorySummaryField,
 } from '../../../services/israel/israelClassificationsApi';
 import { ApiError } from '../../../services/apiClient';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
@@ -51,6 +53,7 @@ import type { GlobalScopedFilterConfig } from '../../../components/ui/GlobalScop
 import { HarvestPageHeaderActions } from '../../harvest/components/shared/HarvestPageHeaderActions';
 import { IsraelHarvestFieldReportSection } from './components/field-report/IsraelHarvestFieldReportSection';
 import { IsraelHarvestSortingSummarySection } from './components/sorting-summary/IsraelHarvestSortingSummarySection';
+import { IsraelHarvestFieldCategorySummarySection } from './components/field-category-summary/IsraelHarvestFieldCategorySummarySection';
 import { IsraelHarvestSortingListSection } from './components/sorting-list/IsraelHarvestSortingListSection';
 import { IsraelHarvestSortingDailySection } from './components/sorting-daily/IsraelHarvestSortingDailySection';
 import { IsraelHarvestDailyDetailsSection } from './components/daily-details/IsraelHarvestDailyDetailsSection';
@@ -130,6 +133,8 @@ export function IsraelHarvestPage() {
 
   const isHarvestSummaryTab = activeSidebarId === 'harvest-summary';
   const isSortingSummaryTab = activeSidebarId === 'sorting-summary';
+  const isFieldCategorySummaryTab =
+    activeSidebarId === 'sorting-summary-field-categories';
   const isDailyDetailsTab = activeSidebarId === 'harvest-daily-details';
   const isSortingListTab = activeSidebarId === 'sorting-list';
   const isSortingDailyDetailsTab = activeSidebarId === 'sorting-daily-details';
@@ -172,6 +177,13 @@ export function IsraelHarvestPage() {
   const [isClassificationsLoading, setIsClassificationsLoading] =
     useState(false);
   const [classificationsLoadError, setClassificationsLoadError] = useState('');
+  const [fieldCategorySummary, setFieldCategorySummary] = useState<
+    IsraelFieldCategorySummaryField[]
+  >([]);
+  const [isFieldCategorySummaryLoading, setIsFieldCategorySummaryLoading] =
+    useState(false);
+  const [fieldCategorySummaryLoadError, setFieldCategorySummaryLoadError] =
+    useState('');
   const [selectedSortingListRow, setSelectedSortingListRow] =
     useState<IsraelClassificationSeasonRecord | null>(null);
   const [isEditSortingOpen, setIsEditSortingOpen] = useState(false);
@@ -200,6 +212,7 @@ export function IsraelHarvestPage() {
     if (
       !isHarvestSummaryTab &&
       !isSortingSummaryTab &&
+      !isFieldCategorySummaryTab &&
       !isDailyDetailsTab &&
       !isSortingListTab &&
       !isSortingDailyDetailsTab
@@ -231,10 +244,26 @@ export function IsraelHarvestPage() {
   }, [
     isHarvestSummaryTab,
     isSortingSummaryTab,
+    isFieldCategorySummaryTab,
     isDailyDetailsTab,
     isSortingListTab,
     isSortingDailyDetailsTab,
   ]);
+
+  useEffect(() => {
+    if (!isFieldCategorySummaryTab || seasonFilterId === null) {
+      return;
+    }
+
+    setIsFieldCategorySummaryLoading(true);
+    setFieldCategorySummaryLoadError('');
+    getIsraelFieldCategorySummaryBySeason(seasonFilterId)
+      .then((records) => setFieldCategorySummary(records))
+      .catch(() =>
+        setFieldCategorySummaryLoadError(t.fieldCategorySummary.loadError),
+      )
+      .finally(() => setIsFieldCategorySummaryLoading(false));
+  }, [isFieldCategorySummaryTab, seasonFilterId, t.fieldCategorySummary.loadError]);
 
   const loadClassifications = useCallback(() => {
     if (seasonFilterId === null) {
@@ -1061,6 +1090,47 @@ export function IsraelHarvestPage() {
     [],
   );
 
+  const fieldCategorySummaryFilters = useMemo<GlobalScopedFilterConfig[]>(() => {
+    const seasonFilter: GlobalScopedFilterConfig = {
+      key: 'seasonId',
+      label: t.fieldCategorySummary.seasonFilterLabel,
+      defaultValue: activeSeasonId ? String(activeSeasonId) : '',
+      queryParam: 'ihfcsSeason',
+      options:
+        seasons.length > 0
+          ? seasons.map((season) => ({
+              value: String(season.id),
+              label: `${season.yearName}${season.isActive ? ` (${lang === 'he' ? 'פעילה' : 'Active'})` : ''}`,
+            }))
+          : [
+              {
+                value: '',
+                label:
+                  lang === 'he'
+                    ? 'אין עונה פעילה כרגע'
+                    : 'No active season right now',
+              },
+            ],
+    };
+
+    return [seasonFilter];
+  }, [
+    activeSeasonId,
+    lang,
+    seasons,
+    t.fieldCategorySummary.seasonFilterLabel,
+  ]);
+
+  const handleFieldCategorySummaryFiltersChange = useCallback(
+    (values: Record<string, string>) => {
+      const parsedSeason = Number(values.seasonId);
+      setSeasonFilterId(
+        Number.isFinite(parsedSeason) && parsedSeason > 0 ? parsedSeason : null,
+      );
+    },
+    [],
+  );
+
   const filters = useMemo<GlobalScopedFilterConfig[]>(() => {
     const seasonFilter: GlobalScopedFilterConfig = {
       key: 'seasonId',
@@ -1547,6 +1617,22 @@ export function IsraelHarvestPage() {
             onSubmit={handleAddSorting}
           />
         </>
+      ) : isFieldCategorySummaryTab ? (
+        <IsraelHarvestFieldCategorySummarySection
+          lang={lang}
+          labels={t.fieldCategorySummary}
+          filters={fieldCategorySummaryFilters}
+          fields={fieldCategorySummary}
+          isLoading={isFieldCategorySummaryLoading}
+          loadError={fieldCategorySummaryLoadError}
+          seasonLabel={(() => {
+            const yearName = seasons.find(
+              (season) => season.id === seasonFilterId,
+            )?.yearName;
+            return yearName !== undefined ? String(yearName) : null;
+          })()}
+          onFiltersChange={handleFieldCategorySummaryFiltersChange}
+        />
       ) : isSortingDailyDetailsTab ? (
         <>
           <IsraelHarvestSortingDailySection

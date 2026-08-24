@@ -69,6 +69,25 @@ export class IsraelClassificationController {
     return this.israelClassificationService.findAllBySeason(seasonId);
   }
 
+  @Get('field-category-summary')
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
+  @ApiOperation({
+    summary:
+      'Retrieve, per field, a quantity/price/grade-group summary for each seller (field) category with data in a season',
+  })
+  @ApiQuery({ name: 'seasonId', type: Number })
+  @ApiResponse({
+    status: 200,
+    description: 'Field category summary returned successfully.',
+  })
+  getFieldCategorySummaryBySeason(
+    @Query('seasonId', ParseIntPipe) seasonId: number,
+  ) {
+    return this.israelClassificationService.getFieldCategorySummaryBySeason(
+      seasonId,
+    );
+  }
+
   @Post()
   @ApiOperation({
     summary: 'Create a new Israel sorting (classification) record',

@@ -73,6 +73,36 @@ export async function getIsraelClassificationsBySeason(
   );
 }
 
+export type IsraelFieldCategorySummaryGradeGroupSplit = {
+  groupName: string | null;
+  quantity: number;
+  percent: number;
+};
+
+export type IsraelFieldCategorySummaryCategory = {
+  fieldCategoryId: number;
+  fieldCategoryName: string;
+  quantity: number;
+  price: number;
+  currency: 'ILS' | 'USD' | 'EUR';
+  total: number;
+  gradeGroupSplits: IsraelFieldCategorySummaryGradeGroupSplit[];
+};
+
+export type IsraelFieldCategorySummaryField = {
+  fieldId: number;
+  fieldName: string;
+  categories: IsraelFieldCategorySummaryCategory[];
+};
+
+export async function getIsraelFieldCategorySummaryBySeason(
+  seasonId: number,
+): Promise<IsraelFieldCategorySummaryField[]> {
+  return apiClient<IsraelFieldCategorySummaryField[]>(
+    `/israel/classifications/field-category-summary?seasonId=${seasonId}`,
+  );
+}
+
 export async function createIsraelClassification(
   payload: CreateIsraelClassificationPayload,
 ): Promise<IsraelClassificationRecord> {

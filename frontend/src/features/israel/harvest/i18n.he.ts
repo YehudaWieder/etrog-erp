@@ -22,6 +22,12 @@ export const ISRAEL_HARVEST_I18N_HE: IsraelHarvestI18n = {
           href: '/harvest/sorting-summary',
           icon: 'fa-grip',
         },
+        {
+          id: 'sorting-summary-field-categories',
+          label: 'סיכום לפי קטגוריות מוכר',
+          href: '/harvest/sorting-summary-field-categories',
+          icon: 'fa-layer-group',
+        },
       ],
     },
     {
@@ -313,6 +319,28 @@ export const ISRAEL_HARVEST_I18N_HE: IsraelHarvestI18n = {
       allFieldCategoriesOption: 'כל הקטגוריות',
     },
   },
+  fieldCategorySummary: {
+    description: 'סיכום כמויות, מחיר ופילוח דרגות לכל קטגוריית מוכר בעונה.',
+    loading: 'טוען נתונים...',
+    loadError: 'טעינת הנתונים נכשלה. נסה שוב.',
+    empty: 'אין נתוני מיון לקטגוריות מוכר בעונה זו.',
+    seasonFilterLabel: 'עונה',
+    actionsLabel: 'פעולות',
+    printTitle: 'הדפסה',
+    printAriaLabel: 'הדפסת סיכום קטגוריות מוכר',
+    printWindowTitle: 'סיכום לפי קטגוריות מוכר',
+    exportTitle: 'ייצוא לאקסל',
+    exportAriaLabel: 'ייצוא סיכום קטגוריות מוכר לאקסל',
+    exportError: 'ייצוא הנתונים לאקסל נכשל.',
+    columns: {
+      fieldCategory: 'קטגוריה',
+      quantity: 'כמות',
+      breakdown: 'פילוח לפי דרגות',
+      price: 'מחיר',
+      total: 'סה"כ',
+    },
+    ungroupedLabel: 'ללא קיבוץ',
+  },
   sortingList: {
     description: 'רשימה מלאה של כל רשומות המיון לעונה הנבחרת.',
     loading: 'טוען רשימת מיונים...',
@@ -461,6 +489,10 @@ export const ISRAEL_HARVEST_I18N_HE: IsraelHarvestI18n = {
     'sorting-summary': {
       title: 'סיכום מיונים יוצג כאן',
       description: 'כאן יוצג סיכום כלל המיונים לפי קטגוריות ועונות.',
+    },
+    'sorting-summary-field-categories': {
+      title: 'סיכום לפי קטגוריות מוכר יוצג כאן',
+      description: 'כאן יוצג סיכום כמויות, מחיר ופילוח דרגות לכל מוכר וקטגוריה.',
     },
     'harvest-daily-details': {
       title: 'פירוט קטיפים לפי ימים יוצג כאן',

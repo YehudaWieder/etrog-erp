@@ -60,6 +60,136 @@ export class IsraelClassificationService {
     });
   }
 
+  async getFieldCategorySummaryBySeason(seasonId: number) {
+    const classifications = await this.prisma.israelClassification.findMany({
+      where: { seasonId },
+      select: {
+        grade: true,
+        quantity: true,
+        category: { select: { gradeGroups: true } },
+        fieldCategory: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            currency: true,
+            field: { select: { id: true, name: true } },
+          },
+        },
+      },
+    });
+
+    type FieldCategoryAgg = {
+      fieldId: number;
+      fieldName: string;
+      fieldCategoryId: number;
+      fieldCategoryName: string;
+      price: number;
+      currency: string;
+      quantity: number;
+      gradeGroupTotals: Map<string, number>;
+    };
+
+    const byFieldCategory = new Map<number, FieldCategoryAgg>();
+
+    for (const record of classifications) {
+      const fieldCategory = record.fieldCategory;
+      if (!fieldCategory) continue;
+
+      let agg = byFieldCategory.get(fieldCategory.id);
+      if (!agg) {
+        agg = {
+          fieldId: fieldCategory.field.id,
+          fieldName: fieldCategory.field.name,
+          fieldCategoryId: fieldCategory.id,
+          fieldCategoryName: fieldCategory.name,
+          price: Number(fieldCategory.price),
+          currency: fieldCategory.currency,
+          quantity: 0,
+          gradeGroupTotals: new Map(),
+        };
+        byFieldCategory.set(fieldCategory.id, agg);
+      }
+
+      agg.quantity += record.quantity;
+
+      const gradeGroups =
+        (record.category?.gradeGroups as
+          | { name: string; grades: string[] }[]
+          | null) ?? [];
+      const groupName =
+        gradeGroups.find((group) => group.grades.includes(record.grade))
+          ?.name ?? null;
+      const groupKey = groupName ?? '';
+      agg.gradeGroupTotals.set(
+        groupKey,
+        (agg.gradeGroupTotals.get(groupKey) ?? 0) + record.quantity,
+      );
+    }
+
+    const byField = new Map<
+      number,
+      {
+        fieldId: number;
+        fieldName: string;
+        categories: {
+          fieldCategoryId: number;
+          fieldCategoryName: string;
+          quantity: number;
+          price: number;
+          currency: string;
+          total: number;
+          gradeGroupSplits: {
+            groupName: string | null;
+            quantity: number;
+            percent: number;
+          }[];
+        }[];
+      }
+    >();
+
+    for (const agg of byFieldCategory.values()) {
+      if (agg.quantity <= 0) continue;
+
+      let fieldEntry = byField.get(agg.fieldId);
+      if (!fieldEntry) {
+        fieldEntry = {
+          fieldId: agg.fieldId,
+          fieldName: agg.fieldName,
+          categories: [],
+        };
+        byField.set(agg.fieldId, fieldEntry);
+      }
+
+      const gradeGroupSplits = [...agg.gradeGroupTotals.entries()].map(
+        ([groupKey, quantity]) => ({
+          groupName: groupKey === '' ? null : groupKey,
+          quantity,
+          percent: agg.quantity > 0 ? (quantity / agg.quantity) * 100 : 0,
+        }),
+      );
+
+      fieldEntry.categories.push({
+        fieldCategoryId: agg.fieldCategoryId,
+        fieldCategoryName: agg.fieldCategoryName,
+        quantity: agg.quantity,
+        price: agg.price,
+        currency: agg.currency,
+        total: agg.quantity * agg.price,
+        gradeGroupSplits,
+      });
+    }
+
+    return [...byField.values()]
+      .map((field) => ({
+        ...field,
+        categories: field.categories.sort((a, b) =>
+          a.fieldCategoryName.localeCompare(b.fieldCategoryName, 'he'),
+        ),
+      }))
+      .sort((a, b) => a.fieldName.localeCompare(b.fieldName, 'he'));
+  }
+
   async create(dto: CreateIsraelClassificationDto, actorId: number) {
     if (!Number.isFinite(dto.quantity) || dto.quantity <= 0) {
       throw new BadRequestException('Quantity must be greater than zero.');

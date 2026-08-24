@@ -22,6 +22,12 @@ export const ISRAEL_HARVEST_I18N_EN: IsraelHarvestI18n = {
           href: '/harvest/sorting-summary',
           icon: 'fa-grip',
         },
+        {
+          id: 'sorting-summary-field-categories',
+          label: 'Summary by Seller Category',
+          href: '/harvest/sorting-summary-field-categories',
+          icon: 'fa-layer-group',
+        },
       ],
     },
     {
@@ -323,6 +329,29 @@ export const ISRAEL_HARVEST_I18N_EN: IsraelHarvestI18n = {
       allFieldCategoriesOption: 'All categories',
     },
   },
+  fieldCategorySummary: {
+    description:
+      'Quantity, price, and grade breakdown for each seller category this season.',
+    loading: 'Loading data...',
+    loadError: 'Failed to load data. Please try again.',
+    empty: 'No sorting data for seller categories this season.',
+    seasonFilterLabel: 'Season',
+    actionsLabel: 'Actions',
+    printTitle: 'Print',
+    printAriaLabel: 'Print seller category summary',
+    printWindowTitle: 'Summary by Seller Category',
+    exportTitle: 'Export to Excel',
+    exportAriaLabel: 'Export seller category summary to Excel',
+    exportError: 'Failed to export the data to Excel.',
+    columns: {
+      fieldCategory: 'Category',
+      quantity: 'Quantity',
+      breakdown: 'Grade breakdown',
+      price: 'Price',
+      total: 'Total',
+    },
+    ungroupedLabel: 'Ungrouped',
+  },
   sortingList: {
     description: 'A full list of all sorting records for the selected season.',
     loading: 'Loading sorting list...',
@@ -468,6 +497,11 @@ export const ISRAEL_HARVEST_I18N_EN: IsraelHarvestI18n = {
       title: 'Harvest summary will appear here',
       description:
         'A summary of all harvests by field for the selected season will be shown here.',
+    },
+    'sorting-summary-field-categories': {
+      title: 'Summary by seller category will appear here',
+      description:
+        'Quantity, price, and grade breakdown for each seller and category will be shown here.',
     },
     'sorting-summary': {
       title: 'Sorting summary will appear here',

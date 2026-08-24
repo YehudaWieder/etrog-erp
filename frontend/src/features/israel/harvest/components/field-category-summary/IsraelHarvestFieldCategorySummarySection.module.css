@@ -1,0 +1,63 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.loadingText {
+  padding: 24px 0;
+  color: var(--color-text-main);
+}
+
+.statusBox {
+  border-radius: 16px;
+  border: 1px solid rgba(204, 219, 208, 0.95);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 10px 24px rgba(20, 56, 35, 0.06);
+  padding: 24px;
+  color: var(--color-text-main);
+}
+
+.statusError {
+  border-color: rgba(188, 83, 83, 0.35);
+  background: rgba(255, 244, 244, 0.96);
+}
+
+.fieldSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-block-end: 12px;
+  border-bottom: 1px solid rgba(204, 219, 208, 0.6);
+}
+
+.fieldSection:last-of-type {
+  border-bottom: none;
+}
+
+.fieldTitle {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.breakdownHead {
+  min-width: 220px;
+}
+
+.breakdownCell {
+  white-space: normal !important;
+  text-align: start !important;
+  min-width: 220px;
+}
+
+.breakdownLine {
+  display: flex;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.breakdownLine + .breakdownLine {
+  margin-top: 6px;
+}
