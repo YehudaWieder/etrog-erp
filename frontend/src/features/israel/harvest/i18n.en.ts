@@ -351,6 +351,7 @@ export const ISRAEL_HARVEST_I18N_EN: IsraelHarvestI18n = {
       total: 'Total',
     },
     ungroupedLabel: 'Ungrouped',
+    totalRowLabel: 'Total',
   },
   sortingList: {
     description: 'A full list of all sorting records for the selected season.',

@@ -273,6 +273,7 @@ export type IsraelHarvestI18n = {
       total: string;
     };
     ungroupedLabel: string;
+    totalRowLabel: string;
   };
   sortingList: {
     description: string;

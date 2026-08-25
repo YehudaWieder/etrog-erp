@@ -3,7 +3,11 @@ import { FaPrint, FaLeaf, FaArrowsUpDown, FaBox, FaTruck, FaCircleCheck, FaHandH
 import styles from '../../../home/dashboard/styles/HomeDashboard.module.css';
 import { ChartPanel } from '../../../home/dashboard/components/ChartPanel';
 import { SummarySection } from '../../../home/dashboard/components/SummarySection';
-import { IsraelHarvestSortingSummary, ISRAEL_SORTING_GENERAL_KEY } from './IsraelHarvestSortingSummary';
+import {
+  IsraelHarvestSortingSummary,
+  ISRAEL_SORTING_GENERAL_KEY,
+  ISRAEL_SORTING_FIELD_CATEGORY_GENERAL_KEY,
+} from './IsraelHarvestSortingSummary';
 import { IsraelShipmentsSummary, ISRAEL_SHIPMENTS_GENERAL_KEY, type IsraelShipmentStatusKey } from './IsraelShipmentsSummary';
 import { IsraelInventorySummary, ISRAEL_GENERAL_KEY } from './IsraelInventorySummary';
 import { SvgLineChart } from '../../../home/dashboard/components/SvgLineChart';
@@ -38,7 +42,12 @@ export function IsraelHomeDashboard({ lang }: IsraelHomeDashboardProps): JSX.Ele
 
   const { data, loading, error } = useIsraelDashboardData(resolvedSeasonId);
 
-  const [sortingKey, setSortingKey] = useState<string>(ISRAEL_SORTING_GENERAL_KEY);
+  const [sortingKey, setSortingKeyState] = useState<string>(ISRAEL_SORTING_GENERAL_KEY);
+  const [sortingFieldCategoryKey, setSortingFieldCategoryKey] = useState<string>(ISRAEL_SORTING_FIELD_CATEGORY_GENERAL_KEY);
+  const setSortingKey = (key: string) => {
+    setSortingKeyState(key);
+    setSortingFieldCategoryKey(ISRAEL_SORTING_FIELD_CATEGORY_GENERAL_KEY);
+  };
   const [shipmentsStatus, setShipmentsStatus] = useState<IsraelShipmentStatusKey>('packaged');
   const [shipmentsFieldKey, setShipmentsFieldKey] = useState<string>(ISRAEL_SHIPMENTS_GENERAL_KEY);
   const [inventoryKey, setInventoryKey] = useState<string>(ISRAEL_GENERAL_KEY);
@@ -242,10 +251,10 @@ export function IsraelHomeDashboard({ lang }: IsraelHomeDashboardProps): JSX.Ele
   const gaugeCards = [
     { title: t.gauges.harvest, ...metrics.harvest, icon: <FaLeaf />, maxValue: metrics.harvest.value },
     { title: t.gauges.sorted, ...metrics.sorted, icon: <FaArrowsUpDown />, maxValue: metrics.harvest.value },
+    { title: t.gauges.selfPickup, ...metrics.selfPickup, icon: <FaHandHolding />, maxValue: metrics.harvest.value },
     { title: t.gauges.packaged, ...metrics.packaged, icon: <FaBox />, maxValue: calcMax(metrics.packaged.value, metrics.packaged.percent) ?? shippableBase },
     { title: t.gauges.shipped, ...metrics.shipped, icon: <FaTruck />, maxValue: calcMax(metrics.shipped.value, metrics.shipped.percent) ?? shippableBase },
     { title: t.gauges.delivered, ...metrics.delivered, icon: <FaCircleCheck />, maxValue: calcMax(metrics.delivered.value, metrics.delivered.percent) ?? shippableBase },
-    { title: t.gauges.selfPickup, ...metrics.selfPickup, icon: <FaHandHolding />, maxValue: metrics.harvest.value },
   ];
 
   const selectedSeasonLabel = seasonOptions.find((s) => s.value === String(resolvedSeasonId))?.label ?? '';
@@ -261,6 +270,8 @@ export function IsraelHomeDashboard({ lang }: IsraelHomeDashboardProps): JSX.Ele
           unit={t.unit}
           activeKey={sortingKey}
           onActiveKeyChange={setSortingKey}
+          activeFieldCategoryKey={sortingFieldCategoryKey}
+          onActiveFieldCategoryKeyChange={setSortingFieldCategoryKey}
           labels={t.summary.harvestSorting}
         />
       ),

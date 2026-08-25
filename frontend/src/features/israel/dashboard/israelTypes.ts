@@ -40,6 +40,8 @@ export type IsraelFieldSummaryBucket = {
   categories: string[];
   grades: string[];
   matrix: Record<string, Record<string, PitamGradeCell>>;
+  fieldCategoryNames?: string[];
+  byFieldCategory?: Record<string, IsraelFieldSummaryBucket>;
 };
 
 export type IsraelFieldSummaryGroup = {

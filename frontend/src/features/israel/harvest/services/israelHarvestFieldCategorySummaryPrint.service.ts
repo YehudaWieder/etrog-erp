@@ -65,6 +65,28 @@ function breakdownText(
     .join('');
 }
 
+function fieldTotalsHtml(
+  field: IsraelFieldCategorySummaryField,
+  labels: IsraelHarvestI18n['fieldCategorySummary'],
+): string {
+  const totalQuantity = field.categories.reduce(
+    (sum, category) => sum + category.quantity,
+    0,
+  );
+  const totalsByCurrency = new Map<string, number>();
+  for (const category of field.categories) {
+    totalsByCurrency.set(
+      category.currency,
+      (totalsByCurrency.get(category.currency) ?? 0) + category.total,
+    );
+  }
+  const totalLabel = Array.from(totalsByCurrency.entries())
+    .map(([currency, total]) => `${fmt(total)} ${esc(currency)}`)
+    .join(' + ');
+
+  return `<tr><th class="row-label">${esc(labels.totalRowLabel)}</th><td>${fmt(totalQuantity)}</td><td class="breakdown-cell"></td><td></td><td>${totalLabel}</td></tr>`;
+}
+
 function fieldTableHtml(
   field: IsraelFieldCategorySummaryField,
   labels: IsraelHarvestI18n['fieldCategorySummary'],
@@ -76,7 +98,7 @@ function fieldTableHtml(
     )
     .join('');
 
-  return `<table><thead><tr><th class="row-label">${esc(labels.columns.fieldCategory)}</th><th>${esc(labels.columns.quantity)}</th><th>${esc(labels.columns.breakdown)}</th><th>${esc(labels.columns.price)}</th><th>${esc(labels.columns.total)}</th></tr></thead><tbody>${rows}</tbody></table>`;
+  return `<table><thead><tr><th class="row-label">${esc(labels.columns.fieldCategory)}</th><th>${esc(labels.columns.quantity)}</th><th>${esc(labels.columns.breakdown)}</th><th>${esc(labels.columns.price)}</th><th>${esc(labels.columns.total)}</th></tr></thead><tbody>${rows}${fieldTotalsHtml(field, labels)}</tbody></table>`;
 }
 
 function fieldPageHtml(
@@ -132,7 +154,8 @@ type RowMeta =
   | { type: 'filter' | 'blank' }
   | { type: 'sectionTitle' }
   | { type: 'tableHeader' }
-  | { type: 'data' };
+  | { type: 'data' }
+  | { type: 'totalRow' };
 
 export async function exportIsraelHarvestFieldCategorySummaryToExcel({
   lang,
@@ -187,6 +210,26 @@ export async function exportIsraelHarvestFieldCategorySummaryToExcel({
         { type: 'data' },
       );
     }
+
+    const totalQuantity = field.categories.reduce(
+      (sum, category) => sum + category.quantity,
+      0,
+    );
+    const totalsByCurrency = new Map<string, number>();
+    for (const category of field.categories) {
+      totalsByCurrency.set(
+        category.currency,
+        (totalsByCurrency.get(category.currency) ?? 0) + category.total,
+      );
+    }
+    const totalLabel = Array.from(totalsByCurrency.entries())
+      .map(([currency, total]) => `${total} ${currency}`)
+      .join(' + ');
+
+    push(
+      [labels.totalRowLabel, totalQuantity, '', '', totalLabel],
+      { type: 'totalRow' },
+    );
 
     if (fieldIndex < fields.length - 1) {
       push([], { type: 'blank' });
@@ -246,6 +289,18 @@ export async function exportIsraelHarvestFieldCategorySummaryToExcel({
           fgColor: { argb: FILTER_BG },
         };
         cell.font = { italic: true };
+      } else if (meta.type === 'totalRow') {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: ZEBRA_BG },
+        };
+        cell.font = { bold: true };
+        cell.alignment = {
+          horizontal: 'center',
+          vertical: 'middle',
+          wrapText: true,
+        };
       }
     });
 

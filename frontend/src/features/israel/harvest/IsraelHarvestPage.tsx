@@ -250,8 +250,8 @@ export function IsraelHarvestPage() {
     isSortingDailyDetailsTab,
   ]);
 
-  useEffect(() => {
-    if (!isFieldCategorySummaryTab || seasonFilterId === null) {
+  const loadFieldCategorySummary = useCallback(() => {
+    if (seasonFilterId === null) {
       return;
     }
 
@@ -263,7 +263,15 @@ export function IsraelHarvestPage() {
         setFieldCategorySummaryLoadError(t.fieldCategorySummary.loadError),
       )
       .finally(() => setIsFieldCategorySummaryLoading(false));
-  }, [isFieldCategorySummaryTab, seasonFilterId, t.fieldCategorySummary.loadError]);
+  }, [seasonFilterId, t.fieldCategorySummary.loadError]);
+
+  useEffect(() => {
+    if (!isFieldCategorySummaryTab) {
+      return;
+    }
+
+    loadFieldCategorySummary();
+  }, [isFieldCategorySummaryTab, loadFieldCategorySummary]);
 
   const loadClassifications = useCallback(() => {
     if (seasonFilterId === null) {
@@ -305,7 +313,8 @@ export function IsraelHarvestPage() {
         !isSortingSummaryTab &&
         !isDailyDetailsTab &&
         !isSortingListTab &&
-        !isSortingDailyDetailsTab) ||
+        !isSortingDailyDetailsTab &&
+        !isFieldCategorySummaryTab) ||
       seasonFilterId === null
     ) {
       return;
@@ -320,6 +329,7 @@ export function IsraelHarvestPage() {
     isDailyDetailsTab,
     isSortingListTab,
     isSortingDailyDetailsTab,
+    isFieldCategorySummaryTab,
     seasonFilterId,
   ]);
 
@@ -342,7 +352,8 @@ export function IsraelHarvestPage() {
         !isSortingSummaryTab &&
         !isDailyDetailsTab &&
         !isSortingListTab &&
-        !isSortingDailyDetailsTab) ||
+        !isSortingDailyDetailsTab &&
+        !isFieldCategorySummaryTab) ||
       seasonFilterId === null
     ) {
       return;
@@ -355,6 +366,7 @@ export function IsraelHarvestPage() {
     isDailyDetailsTab,
     isSortingListTab,
     isSortingDailyDetailsTab,
+    isFieldCategorySummaryTab,
     seasonFilterId,
     loadHarvestRecords,
   ]);
@@ -1203,6 +1215,9 @@ export function IsraelHarvestPage() {
       if (isSortingSummaryTab || isSortingListTab || isSortingDailyDetailsTab) {
         loadClassifications();
       }
+      if (isFieldCategorySummaryTab) {
+        loadFieldCategorySummary();
+      }
     } catch {
       window.alert(t.harvestForm.saveFailedError);
     } finally {
@@ -1233,6 +1248,9 @@ export function IsraelHarvestPage() {
       loadHarvestRecords();
       if (isSortingSummaryTab || isSortingListTab || isSortingDailyDetailsTab) {
         loadClassifications();
+      }
+      if (isFieldCategorySummaryTab) {
+        loadFieldCategorySummary();
       }
     } catch {
       window.alert(t.sortingForm.saveFailedError);
@@ -1444,7 +1462,10 @@ export function IsraelHarvestPage() {
   };
 
   const pageHeaderActions =
-    isHarvestSummaryTab || isSortingSummaryTab || isSortingDailyDetailsTab ? (
+    isHarvestSummaryTab ||
+    isSortingSummaryTab ||
+    isSortingDailyDetailsTab ||
+    isFieldCategorySummaryTab ? (
       <HarvestSummaryHeaderActions
         addHarvestLabel={t.pageControls.addHarvest}
         addSortingLabel={t.pageControls.addSorting}
@@ -1618,21 +1639,49 @@ export function IsraelHarvestPage() {
           />
         </>
       ) : isFieldCategorySummaryTab ? (
-        <IsraelHarvestFieldCategorySummarySection
-          lang={lang}
-          labels={t.fieldCategorySummary}
-          filters={fieldCategorySummaryFilters}
-          fields={fieldCategorySummary}
-          isLoading={isFieldCategorySummaryLoading}
-          loadError={fieldCategorySummaryLoadError}
-          seasonLabel={(() => {
-            const yearName = seasons.find(
-              (season) => season.id === seasonFilterId,
-            )?.yearName;
-            return yearName !== undefined ? String(yearName) : null;
-          })()}
-          onFiltersChange={handleFieldCategorySummaryFiltersChange}
-        />
+        <>
+          <IsraelHarvestFieldCategorySummarySection
+            lang={lang}
+            labels={t.fieldCategorySummary}
+            filters={fieldCategorySummaryFilters}
+            fields={fieldCategorySummary}
+            isLoading={isFieldCategorySummaryLoading}
+            loadError={fieldCategorySummaryLoadError}
+            seasonLabel={(() => {
+              const yearName = seasons.find(
+                (season) => season.id === seasonFilterId,
+              )?.yearName;
+              return yearName !== undefined ? String(yearName) : null;
+            })()}
+            onFiltersChange={handleFieldCategorySummaryFiltersChange}
+          />
+
+          <IsraelHarvestBulkFormModal
+            isOpen={isHarvestFormOpen}
+            t={t}
+            activeSeasonYearName={
+              seasons.find((season) => season.id === seasonFilterId)
+                ?.yearName ?? null
+            }
+            fields={fields}
+            fieldCategories={fieldCategories}
+            categories={sortCategories}
+            isSubmitting={isSubmittingHarvest}
+            onClose={() => setIsHarvestFormOpen(false)}
+            onSubmit={handleAddHarvest}
+          />
+
+          <IsraelSortingFormModal
+            isOpen={isSortingFormOpen}
+            t={t}
+            harvests={harvestRecords}
+            fieldCategories={fieldCategories}
+            categories={sortCategories}
+            isSubmitting={isSubmittingSorting}
+            onClose={() => setIsSortingFormOpen(false)}
+            onSubmit={handleAddSorting}
+          />
+        </>
       ) : isSortingDailyDetailsTab ? (
         <>
           <IsraelHarvestSortingDailySection

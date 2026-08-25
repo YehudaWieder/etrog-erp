@@ -25,6 +25,7 @@ export const ISRAEL_DASHBOARD_I18N_EN = {
     harvestSorting: {
       netHarvest: 'Harvest',
       generalTab: 'General',
+      fieldCategoryGeneralTab: 'All categories',
       totalLabel: 'Total',
       categoryColumn: 'Category',
       totalColumn: 'Total',

@@ -44,6 +44,30 @@ export function IsraelHarvestFieldCategorySummarySection({
 
   const hasData = fields.length > 0;
 
+  const fieldTotals = useCallback(
+    (categories: IsraelFieldCategorySummaryField['categories']) => {
+      const totalQuantity = categories.reduce(
+        (sum, category) => sum + category.quantity,
+        0,
+      );
+      const totalsByCurrency = new Map<string, number>();
+      for (const category of categories) {
+        totalsByCurrency.set(
+          category.currency,
+          (totalsByCurrency.get(category.currency) ?? 0) + category.total,
+        );
+      }
+      const totalLabel = Array.from(totalsByCurrency.entries())
+        .map(
+          ([currency, total]) =>
+            `${numberFormatter.format(total)} ${currency}`,
+        )
+        .join(' + ');
+      return { totalQuantity, totalLabel };
+    },
+    [numberFormatter],
+  );
+
   const breakdownLines = useCallback(
     (
       splits: IsraelFieldCategorySummaryField['categories'][number]['gradeGroupSplits'],
@@ -132,59 +156,77 @@ export function IsraelHarvestFieldCategorySummarySection({
       ) : null}
 
       {!isLoading && hasData
-        ? fields.map((field) => (
-            <section key={field.fieldId} className={styles.fieldSection}>
-              <h3 className={styles.fieldTitle}>{field.fieldName}</h3>
+        ? fields.map((field) => {
+            const { totalQuantity, totalLabel } = fieldTotals(
+              field.categories,
+            );
+            return (
+              <section key={field.fieldId} className={styles.fieldSection}>
+                <h3 className={styles.fieldTitle}>{field.fieldName}</h3>
 
-              <div className={matrixStyles.tableViewport}>
-                <table className={matrixStyles.table}>
-                  <thead>
-                    <tr>
-                      <th className={matrixStyles.categoryHead}>
-                        {labels.columns.fieldCategory}
-                      </th>
-                      <th>{labels.columns.quantity}</th>
-                      <th className={styles.breakdownHead}>
-                        {labels.columns.breakdown}
-                      </th>
-                      <th>{labels.columns.price}</th>
-                      <th className={matrixStyles.totalHead}>
-                        {labels.columns.total}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {field.categories.map((category) => (
-                      <tr key={category.fieldCategoryId}>
-                        <th className={matrixStyles.categoryCell}>
-                          {category.fieldCategoryName}
+                <div className={matrixStyles.tableViewport}>
+                  <table className={matrixStyles.table}>
+                    <thead>
+                      <tr>
+                        <th className={matrixStyles.categoryHead}>
+                          {labels.columns.fieldCategory}
                         </th>
-                        <td>{numberFormatter.format(category.quantity)}</td>
-                        <td className={styles.breakdownCell}>
-                          {breakdownLines(category.gradeGroupSplits).map(
-                            (line) => (
-                              <div key={line.name} className={styles.breakdownLine}>
-                                <span>{line.name}</span>
-                                <span>{line.percent}</span>
-                              </div>
-                            ),
-                          )}
-                        </td>
-                        <td>
-                          {numberFormatter.format(category.price)}{' '}
-                          {category.currency}
-                        </td>
+                        <th>{labels.columns.quantity}</th>
+                        <th className={styles.breakdownHead}>
+                          {labels.columns.breakdown}
+                        </th>
+                        <th>{labels.columns.price}</th>
+                        <th className={matrixStyles.totalHead}>
+                          {labels.columns.total}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {field.categories.map((category) => (
+                        <tr key={category.fieldCategoryId}>
+                          <th className={matrixStyles.categoryCell}>
+                            {category.fieldCategoryName}
+                          </th>
+                          <td>{numberFormatter.format(category.quantity)}</td>
+                          <td className={styles.breakdownCell}>
+                            {breakdownLines(category.gradeGroupSplits).map(
+                              (line) => (
+                                <div key={line.name} className={styles.breakdownLine}>
+                                  <span>{line.name}</span>
+                                  <span>{line.percent}</span>
+                                </div>
+                              ),
+                            )}
+                          </td>
+                          <td>
+                            {numberFormatter.format(category.price)}{' '}
+                            {category.currency}
+                          </td>
+                          <td className={matrixStyles.totalCell}>
+                            {numberFormatter.format(category.total)}{' '}
+                            {category.currency}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <th className={matrixStyles.categoryCell}>
+                          {labels.totalRowLabel}
+                        </th>
+                        <td>{numberFormatter.format(totalQuantity)}</td>
+                        <td className={styles.breakdownCell} />
+                        <td />
                         <td className={matrixStyles.totalCell}>
-                          {numberFormatter.format(category.total)}{' '}
-                          {category.currency}
+                          {totalLabel}
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          ))
+                    </tfoot>
+                  </table>
+                </div>
+              </section>
+            );
+          })
         : null}
 
       {loadError ? (

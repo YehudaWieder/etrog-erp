@@ -5,6 +5,7 @@ import styles from '../../../home/dashboard/styles/HarvestSortingSummary.module.
 import inventoryStyles from '../../../home/dashboard/styles/InventorySummary.module.css';
 
 export const ISRAEL_SORTING_GENERAL_KEY = '__general__';
+export const ISRAEL_SORTING_FIELD_CATEGORY_GENERAL_KEY = '__general__';
 
 type IsraelHarvestSortingSummaryProps = {
   lang: 'he' | 'en';
@@ -12,9 +13,12 @@ type IsraelHarvestSortingSummaryProps = {
   unit: string;
   activeKey: string;
   onActiveKeyChange: (key: string) => void;
+  activeFieldCategoryKey: string;
+  onActiveFieldCategoryKeyChange: (key: string) => void;
   labels: {
     netHarvest: string;
     generalTab: string;
+    fieldCategoryGeneralTab: string;
     totalLabel: string;
     categoryColumn: string;
     totalColumn: string;
@@ -27,12 +31,28 @@ type IsraelHarvestSortingSummaryProps = {
   };
 };
 
-export function IsraelHarvestSortingSummary({ lang, data, unit, activeKey, onActiveKeyChange, labels }: IsraelHarvestSortingSummaryProps): JSX.Element {
+export function IsraelHarvestSortingSummary({
+  lang,
+  data,
+  unit,
+  activeKey,
+  onActiveKeyChange,
+  activeFieldCategoryKey,
+  onActiveFieldCategoryKeyChange,
+  labels,
+}: IsraelHarvestSortingSummaryProps): JSX.Element {
   const locale = lang === 'he' ? 'he-IL' : 'en-US';
   const formatter = useMemo(() => new Intl.NumberFormat(locale), [locale]);
 
   const isGeneral = activeKey === ISRAEL_SORTING_GENERAL_KEY;
-  const activeData = isGeneral ? data.general : data.byField[activeKey];
+  const fieldData = isGeneral ? data.general : data.byField[activeKey];
+
+  const fieldCategoryNames = !isGeneral ? fieldData?.fieldCategoryNames ?? [] : [];
+  const isFieldCategoryGeneral = activeFieldCategoryKey === ISRAEL_SORTING_FIELD_CATEGORY_GENERAL_KEY;
+  const activeData =
+    fieldCategoryNames.length > 0 && !isFieldCategoryGeneral
+      ? fieldData?.byFieldCategory?.[activeFieldCategoryKey]
+      : fieldData;
 
   return (
     <div className={styles.section}>
@@ -59,6 +79,28 @@ export function IsraelHarvestSortingSummary({ lang, data, unit, activeKey, onAct
           </button>
         ))}
       </div>
+
+      {fieldCategoryNames.length > 0 && (
+        <div className={inventoryStyles.tabsBar}>
+          <button
+            type="button"
+            className={`${inventoryStyles.tabBtn} ${isFieldCategoryGeneral ? inventoryStyles.activeTab : ''}`}
+            onClick={() => onActiveFieldCategoryKeyChange(ISRAEL_SORTING_FIELD_CATEGORY_GENERAL_KEY)}
+          >
+            {labels.fieldCategoryGeneralTab}
+          </button>
+          {fieldCategoryNames.map((name) => (
+            <button
+              key={name}
+              type="button"
+              className={`${inventoryStyles.tabBtn} ${name === activeFieldCategoryKey ? inventoryStyles.activeTab : ''}`}
+              onClick={() => onActiveFieldCategoryKeyChange(name)}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {activeData && (
         <>

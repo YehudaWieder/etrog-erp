@@ -6,9 +6,16 @@ import { addToPitamMatrix, categoriesUsedIn, flattenPitamMatrix, gradesUsedIn, p
 type DailyDataPoint = { label: string; value: number };
 type MetricGauge = { value: number; percent: number };
 
-type FieldSummaryBucket = { total: number; categories: string[]; grades: string[]; matrix: Record<string, Record<string, PitamGradeCell>> };
+export type FieldSummaryBucket = {
+  total: number;
+  categories: string[];
+  grades: string[];
+  matrix: Record<string, Record<string, PitamGradeCell>>;
+  fieldCategoryNames?: string[];
+  byFieldCategory?: Record<string, FieldSummaryBucket>;
+};
 type FieldSummaryGroup = { general: FieldSummaryBucket; byField: Record<string, FieldSummaryBucket>; fieldNames: string[] };
-type SummaryItem = { quantity: number; grade: string; pitamStatus: PitamStatusLike; categoryName: string; fieldName: string | null };
+type SummaryItem = { quantity: number; grade: string; pitamStatus: PitamStatusLike; categoryName: string; fieldName: string | null; fieldCategoryName?: string | null };
 
 @Injectable()
 export class IsraelDashboardService {
@@ -59,20 +66,32 @@ export class IsraelDashboardService {
   // Builds a {general, byField, fieldNames} group from a flat list of category/grade/pitam items
   // that each optionally carry the seller/field they came from - shared by sortingSummary and
   // each shipmentsSummary status bucket so both get the same "by seller" breakdown as inventory.
-  private buildFieldSummaryGroup(items: SummaryItem[], categoryOrder: string[], allFields: { name: string }[]): FieldSummaryGroup {
+  private buildFieldSummaryGroup(
+    items: SummaryItem[],
+    categoryOrder: string[],
+    allFields: { name: string }[],
+    fieldCategoriesByField?: Map<string, string[]>,
+  ): FieldSummaryGroup {
     const generalMatrix: PitamMatrix = new Map();
     let generalTotal = 0;
-    const perField = new Map<string, { total: number; matrix: PitamMatrix }>();
+    const perField = new Map<string, { total: number; matrix: PitamMatrix; byFieldCategory: Map<string, { total: number; matrix: PitamMatrix }> }>();
 
     for (const item of items) {
       if (item.quantity <= 0) continue;
       addToPitamMatrix(generalMatrix, item.categoryName, item.grade, item.pitamStatus, item.quantity);
       generalTotal += item.quantity;
       if (item.fieldName != null) {
-        if (!perField.has(item.fieldName)) perField.set(item.fieldName, { total: 0, matrix: new Map() });
+        if (!perField.has(item.fieldName)) perField.set(item.fieldName, { total: 0, matrix: new Map(), byFieldCategory: new Map() });
         const entry = perField.get(item.fieldName)!;
         entry.total += item.quantity;
         addToPitamMatrix(entry.matrix, item.categoryName, item.grade, item.pitamStatus, item.quantity);
+
+        if (item.fieldCategoryName != null) {
+          if (!entry.byFieldCategory.has(item.fieldCategoryName)) entry.byFieldCategory.set(item.fieldCategoryName, { total: 0, matrix: new Map() });
+          const catEntry = entry.byFieldCategory.get(item.fieldCategoryName)!;
+          catEntry.total += item.quantity;
+          addToPitamMatrix(catEntry.matrix, item.categoryName, item.grade, item.pitamStatus, item.quantity);
+        }
       }
     }
 
@@ -81,14 +100,36 @@ export class IsraelDashboardService {
     for (const field of allFields) {
       fieldNames.push(field.name);
       const entry = perField.get(field.name);
+      const allFieldCategoryNames = fieldCategoriesByField?.get(field.name) ?? [];
+      const fieldCategoryNames = allFieldCategoryNames.filter((catName) => (entry?.byFieldCategory.get(catName)?.total ?? 0) > 0);
+      const fieldCategoryExtras: Pick<FieldSummaryBucket, 'fieldCategoryNames' | 'byFieldCategory'> = fieldCategoryNames.length
+        ? {
+            fieldCategoryNames,
+            byFieldCategory: Object.fromEntries(
+              fieldCategoryNames.map((catName) => {
+                const catEntry = entry!.byFieldCategory.get(catName)!;
+                return [
+                  catName,
+                  {
+                    total: catEntry.total,
+                    categories: categoriesUsedIn(catEntry.matrix, categoryOrder),
+                    grades: gradesUsedIn(catEntry.matrix),
+                    matrix: flattenPitamMatrix(catEntry.matrix),
+                  },
+                ];
+              }),
+            ),
+          }
+        : {};
       byField[field.name] = entry
         ? {
             total: entry.total,
             categories: categoriesUsedIn(entry.matrix, categoryOrder),
             grades: gradesUsedIn(entry.matrix),
             matrix: flattenPitamMatrix(entry.matrix),
+            ...fieldCategoryExtras,
           }
-        : { total: 0, categories: [], grades: [], matrix: {} };
+        : { total: 0, categories: [], grades: [], matrix: {}, ...fieldCategoryExtras };
     }
 
     return {
@@ -130,12 +171,17 @@ export class IsraelDashboardService {
       this.buildPackagedSeries(seasonId),
     ]);
 
-    const [allFields, categoryOrderRecords, harvestAgg, classificationRecords, shipmentItemRecords, shipmentRecords, stockRecords, selfPickupAgg] =
+    const [allFields, categoryOrderRecords, fieldCategoryRecords, harvestAgg, classificationRecords, shipmentItemRecords, shipmentRecords, stockRecords, selfPickupAgg] =
       await Promise.all([
         this.prisma.israelField.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
         this.prisma.israelSortCategory.findMany({
           select: { name: true },
           orderBy: [{ orderIndex: 'asc' }, { name: 'asc' }],
+        }),
+        this.prisma.israelFieldCategory.findMany({
+          where: { seasonId },
+          select: { name: true, field: { select: { name: true } } },
+          orderBy: { name: 'asc' },
         }),
         this.prisma.israelHarvest.aggregate({ where: { seasonId }, _sum: { quantity: true } }),
         this.prisma.israelClassification.findMany({
@@ -146,6 +192,7 @@ export class IsraelDashboardService {
             pitamStatus: true,
             category: { select: { name: true } },
             harvest: { select: { field: { select: { name: true } } } },
+            fieldCategory: { select: { name: true } },
           },
         }),
         this.prisma.israelShipmentItem.findMany({
@@ -189,6 +236,13 @@ export class IsraelDashboardService {
     const categoryOrder = categoryOrderRecords.map((c) => c.name);
     const grandHarvest = harvestAgg._sum.quantity ?? 0;
 
+    const fieldCategoriesByField = new Map<string, string[]>();
+    for (const fc of fieldCategoryRecords) {
+      const list = fieldCategoriesByField.get(fc.field.name) ?? [];
+      list.push(fc.name);
+      fieldCategoriesByField.set(fc.field.name, list);
+    }
+
     // --- sortingSummary: category x grade x pitam breakdown of what was sorted, plus by-seller split ---
     const sortingItems: SummaryItem[] = classificationRecords.map((r) => ({
       quantity: r.quantity,
@@ -196,8 +250,9 @@ export class IsraelDashboardService {
       pitamStatus: r.pitamStatus,
       categoryName: r.category.name,
       fieldName: r.harvest.field.name,
+      fieldCategoryName: r.fieldCategory.name,
     }));
-    const sortingGroup = this.buildFieldSummaryGroup(sortingItems, categoryOrder, allFields);
+    const sortingGroup = this.buildFieldSummaryGroup(sortingItems, categoryOrder, allFields, fieldCategoriesByField);
     const grandSorted = classificationRecords.reduce((sum, r) => sum + r.quantity, 0);
 
     // --- shipmentsSummary: packaged/shipped/delivered status funnel, each with a by-seller split ---

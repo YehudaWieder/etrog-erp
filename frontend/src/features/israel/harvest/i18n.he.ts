@@ -340,6 +340,7 @@ export const ISRAEL_HARVEST_I18N_HE: IsraelHarvestI18n = {
       total: 'סה"כ',
     },
     ungroupedLabel: 'ללא קיבוץ',
+    totalRowLabel: 'סה"כ',
   },
   sortingList: {
     description: 'רשימה מלאה של כל רשומות המיון לעונה הנבחרת.',

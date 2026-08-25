@@ -25,6 +25,7 @@ export const ISRAEL_DASHBOARD_I18N_HE = {
     harvestSorting: {
       netHarvest: 'קטיף',
       generalTab: 'כללי',
+      fieldCategoryGeneralTab: 'כל הקטגוריות',
       totalLabel: 'סך הכל',
       categoryColumn: 'קטגוריה',
       totalColumn: 'סה"כ',
