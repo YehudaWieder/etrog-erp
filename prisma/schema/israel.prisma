@@ -68,7 +68,7 @@ model IsraelSortCategory {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  supportedGrades Grade[]
+  supportedGrades String[]
   gradeGroups     Json    @default("[]")
   orderIndex      Int     @default(0)
 
@@ -128,7 +128,7 @@ model IsraelClassification {
   categoryId Int
   category   IsraelSortCategory @relation(fields: [categoryId], references: [id])
 
-  grade       Grade
+  grade       String
   pitamStatus PitamStatus
   quantity    Int         @default(0)
 
@@ -234,7 +234,7 @@ model IsraelShipmentItem {
   categoryId Int
   category   IsraelSortCategory @relation(fields: [categoryId], references: [id])
 
-  grade       Grade
+  grade       String
   pitamStatus PitamStatus
   quantity    Int         @default(0)
 
@@ -268,7 +268,7 @@ model IsraelStock {
   categoryId Int
   category   IsraelSortCategory @relation(fields: [categoryId], references: [id])
 
-  grade       Grade
+  grade       String
   pitamStatus PitamStatus
   quantity    Int         @default(0)
 

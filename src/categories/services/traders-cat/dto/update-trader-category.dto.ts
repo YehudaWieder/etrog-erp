@@ -6,5 +6,5 @@ export interface UpdateTraderCategoryDto {
   name?: string;
   notes?: string;
   supportedGrades?: Grade[];
-  gradeGroups?: GradeGroup[];
+  gradeGroups?: GradeGroup<Grade>[];
 }

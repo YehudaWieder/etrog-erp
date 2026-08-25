@@ -34,7 +34,7 @@ export class CreateDefaultTraderCategoryWithSharesDto {
     description: 'Groups of grades used to display percentage splits. Each grade may belong to at most one group.',
     example: [{ name: 'Premium', grades: ['א', 'ב'] }],
   })
-  gradeGroups?: GradeGroup[];
+  gradeGroups?: GradeGroup<Grade>[];
 
   @ApiProperty({
     type: [CreateDefaultTraderCategoryWithSharesItemDto],

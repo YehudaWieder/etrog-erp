@@ -31,6 +31,9 @@ const IsraelSortCategoriesManagement: React.FC<
     formState,
     setFormState,
     toggleFormGrade,
+    addFormCustomGrade,
+    removeFormCustomGrade,
+    customGradeError,
     addFormGradeGroup,
     removeFormGradeGroup,
     renameFormGradeGroup,
@@ -46,6 +49,17 @@ const IsraelSortCategoriesManagement: React.FC<
 
   const [draggedId, setDraggedId] = useState<number | null>(null);
   const [dragOverId, setDragOverId] = useState<number | null>(null);
+  const [customGradeInput, setCustomGradeInput] = useState('');
+
+  const handleAddCustomGrade = () => {
+    addFormCustomGrade(customGradeInput);
+    setCustomGradeInput('');
+  };
+
+  const customGrades = formState.supportedGrades.filter(
+    (grade) =>
+      !(TRADER_CATEGORY_GRADE_OPTIONS as readonly string[]).includes(grade),
+  );
 
   const handleDrop = (targetId: number) => {
     if (draggedId === null || draggedId === targetId) {
@@ -235,6 +249,46 @@ const IsraelSortCategoriesManagement: React.FC<
                 </label>
               ))}
             </div>
+
+            <p className={gradeStyles.sharesSubtitle}>{t.customGradesLabel}</p>
+            <div className={gradeStyles.gradesChecklist}>
+              {customGrades.map((grade) => (
+                <span key={grade} className={gradeStyles.gradeCheckboxItem}>
+                  <span>{grade}</span>
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    onClick={() => removeFormCustomGrade(grade)}
+                    aria-label={t.removeCustomGradeLabel}
+                    title={t.removeCustomGradeLabel}
+                  >
+                    <FaXmark />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className={gradeStyles.gradeGroupsArea}>
+              <div className={gradeStyles.gradeGroupRowHead}>
+                <input
+                  className="seasons-manager__year-input"
+                  style={{ minWidth: 220 }}
+                  type="text"
+                  value={customGradeInput}
+                  onChange={(event) => setCustomGradeInput(event.target.value)}
+                  placeholder={t.customGradePlaceholder}
+                />
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleAddCustomGrade}
+                >
+                  {t.addCustomGradeLabel}
+                </button>
+              </div>
+            </div>
+            {customGradeError ? (
+              <p className="seasons-manager__error">{customGradeError}</p>
+            ) : null}
 
             <p className={gradeStyles.sharesSubtitle}>{t.gradeGroupsLabel}</p>
             <div className={gradeStyles.gradeGroupsArea}>

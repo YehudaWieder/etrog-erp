@@ -1,7 +1,7 @@
 // src/israel/settings/services/sort-categories/sort-categories.service.ts
 
 import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
-import { Grade, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { GradeGroup, validateGradeGroups } from 'src/categories/utils/trader-category-grade-groups.util';
 import { normalizeIsraelSortCategoryName } from './utils/israel-sort-categories.utils';
@@ -20,7 +20,7 @@ export class IsraelSortCategoriesService {
   async addCategory(
     name: string,
     updatedById: number,
-    supportedGrades: Grade[] = [],
+    supportedGrades: string[] = [],
     gradeGroups: GradeGroup[] = [],
     notes?: string,
   ) {
@@ -60,7 +60,7 @@ export class IsraelSortCategoriesService {
     id: number,
     newName: string,
     updatedById: number,
-    supportedGrades: Grade[] = [],
+    supportedGrades: string[] = [],
     gradeGroups: GradeGroup[] = [],
     notes?: string,
   ) {

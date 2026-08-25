@@ -1,21 +1,23 @@
 import { BadRequestException } from '@nestjs/common';
-import { Grade } from '@prisma/client';
 
-export type GradeGroup = {
+// Generic over the grade type so Italy/trader-category callers can keep the fixed `Grade` enum
+// checked at compile time (GradeGroup<Grade>), while Israel sort categories — which support
+// free-text custom grades — use the string default.
+export type GradeGroup<TGrade extends string = string> = {
   name: string;
-  grades: Grade[];
+  grades: TGrade[];
 };
 
-export function validateGradeGroups(
-  gradeGroups: GradeGroup[] | undefined,
-  supportedGrades: Grade[],
+export function validateGradeGroups<TGrade extends string>(
+  gradeGroups: GradeGroup<TGrade>[] | undefined,
+  supportedGrades: TGrade[],
 ): void {
   if (!gradeGroups || gradeGroups.length === 0) {
     return;
   }
 
   const supportedSet = new Set(supportedGrades);
-  const seenGrades = new Set<Grade>();
+  const seenGrades = new Set<TGrade>();
 
   for (const group of gradeGroups) {
     if (!group.name?.trim()) {

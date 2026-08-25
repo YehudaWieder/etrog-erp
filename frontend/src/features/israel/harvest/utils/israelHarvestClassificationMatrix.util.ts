@@ -1,6 +1,7 @@
 import type { IsraelSortCategory } from '../../../../services/israel/israelSortCategoriesApi';
 import type { IsraelClassificationRecord } from '../../../../services/israel/israelClassificationsApi';
 import {
+  ALL_GRADE_COLUMNS,
   createEmptyGradeQuantityMatrix,
   getMatrixTotalQuantity,
 } from '../../../harvest/utils/harvestClassificationMatrix.util';
@@ -29,6 +30,19 @@ export function getIsraelCategoryEnabledGrades(
   const parsedCategoryId = Number(categoryId);
   const category = categories.find((c) => c.id === parsedCategoryId);
   return category?.supportedGrades ?? [];
+}
+
+// The matrix always shows the fixed baseline grade columns, plus any custom grades the selected
+// category supports (so a category with a custom grade actually has a cell to enter it into).
+export function getIsraelDraftGradeColumns(
+  categories: IsraelSortCategory[],
+  categoryId: string,
+): string[] {
+  const enabledGrades = getIsraelCategoryEnabledGrades(categories, categoryId);
+  const extraGrades = enabledGrades.filter(
+    (grade) => !ALL_GRADE_COLUMNS.includes(grade),
+  );
+  return [...ALL_GRADE_COLUMNS, ...extraGrades];
 }
 
 export function isIsraelClassificationDraftComplete(

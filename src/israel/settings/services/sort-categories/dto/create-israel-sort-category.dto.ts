@@ -1,5 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Grade } from '@prisma/client';
 import { GradeGroup } from 'src/categories/utils/trader-category-grade-groups.util';
 
 export class CreateIsraelSortCategoryDto {
@@ -10,11 +9,10 @@ export class CreateIsraelSortCategoryDto {
   notes?: string;
 
   @ApiPropertyOptional({
-    enum: Grade,
     isArray: true,
-    description: 'Grades this category supports.',
+    description: 'Grades this category supports (built-in or custom free-text grades).',
   })
-  supportedGrades?: Grade[];
+  supportedGrades?: string[];
 
   @ApiPropertyOptional({
     description: 'Optional named sub-groupings of the supported grades.',

@@ -8,13 +8,13 @@ import type { IsraelClassificationRecord } from '../../../../../services/israel/
 import type { IsraelHarvestFormClassificationDraft } from '../../israelHarvestPage.types';
 import type { IsraelHarvestI18n } from '../../i18n';
 import {
-  ALL_GRADE_COLUMNS,
   PITAM_ROW_KEYS,
   type PitamRowKey,
 } from '../../../../harvest/utils/harvestClassificationMatrix.util';
 import {
   buildIsraelExistingCellRecords,
   getIsraelCategoryEnabledGrades,
+  getIsraelDraftGradeColumns,
   getIsraelHarvestDraftsTotalQuantity,
   isIsraelDraftComboDuplicate,
   isIsraelDraftEffectivelyComplete,
@@ -225,6 +225,10 @@ export function IsraelHarvestClassificationRowsSection({
           categories,
           draft.categoryId,
         );
+        const gradeColumns = getIsraelDraftGradeColumns(
+          categories,
+          draft.categoryId,
+        );
         const isDuplicate = isIsraelDraftComboDuplicate(draft, drafts);
         const isLastRow = index === drafts.length - 1;
         const draftCategoryName =
@@ -289,7 +293,7 @@ export function IsraelHarvestClassificationRowsSection({
                 <thead>
                   <tr>
                     <th>{form.pitamStatusLabel}</th>
-                    {ALL_GRADE_COLUMNS.map((gradeKey) => (
+                    {gradeColumns.map((gradeKey) => (
                       <th
                         key={`israel-harvest-form-grade-col-${draft.id}-${gradeKey}`}
                       >
@@ -304,7 +308,7 @@ export function IsraelHarvestClassificationRowsSection({
                       key={`israel-harvest-form-pitam-row-${draft.id}-${pitamKey}`}
                     >
                       <th>{form.pitamOptions[pitamLabelKey[pitamKey]]}</th>
-                      {ALL_GRADE_COLUMNS.map((gradeKey) => {
+                      {gradeColumns.map((gradeKey) => {
                         const existingRecord = getDraftCellExistingRecord(
                           draft,
                           pitamKey,

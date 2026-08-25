@@ -8,7 +8,7 @@ export interface CreateTraderCategoryWithSharesDto {
   name: string;
   notes?: string;
   supportedGrades?: Grade[];
-  gradeGroups?: GradeGroup[];
+  gradeGroups?: GradeGroup<Grade>[];
   shares: TraderShareRowDto[];
   conditions?: TraderCategoryShareConditionDto[];
 }

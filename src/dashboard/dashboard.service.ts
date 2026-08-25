@@ -362,10 +362,9 @@ export class DashboardService {
 
     for (const customer of allCustomers) {
       const entry = customerMap.get(customer.id)!;
+      if (entry.total <= 0) continue;
       customerNames.push(customer.customerName);
-      if (entry.total > 0) {
-        customerDistributionGeneral.push({ label: customer.customerName, value: entry.total });
-      }
+      customerDistributionGeneral.push({ label: customer.customerName, value: entry.total });
       byCustomer[customer.customerName] = Array.from(entry.byCategory.entries())
         .filter(([, v]) => v > 0)
         .map(([cat, qty]) => ({ label: cat, value: qty }));

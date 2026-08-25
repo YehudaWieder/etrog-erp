@@ -31,4 +31,10 @@ export const ISRAEL_SORT_CATEGORIES_I18N_EN: IsraelSortCategoriesI18n = {
   groupNamePlaceholder: 'Group name',
   priorityLabel: 'Display priority',
   dragHandleLabel: 'Drag to reorder',
+  customGradesLabel: 'Custom grades',
+  customGradePlaceholder: 'New grade name',
+  addCustomGradeLabel: 'Add grade',
+  removeCustomGradeLabel: 'Remove grade',
+  emptyCustomGradeError: 'Enter a name for the custom grade.',
+  duplicateCustomGradeError: 'This grade already exists in the supported grades list.',
 };

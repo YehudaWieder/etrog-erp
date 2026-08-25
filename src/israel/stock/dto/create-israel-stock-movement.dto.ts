@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Grade, PitamStatus } from '@prisma/client';
+import { PitamStatus } from '@prisma/client';
 
 export type IsraelManualMovementType = 'SELF_PICKUP' | 'WASTE';
 
@@ -23,10 +23,9 @@ export class CreateIsraelStockMovementDto {
   categoryId!: number;
 
   @ApiProperty({
-    enum: Grade,
-    description: 'Grade code within the chosen category.',
+    description: 'Grade code within the chosen category (built-in or custom free-text grade).',
   })
-  grade!: Grade;
+  grade!: string;
 
   @ApiProperty({
     enum: PitamStatus,

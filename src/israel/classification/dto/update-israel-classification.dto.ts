@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Grade, PitamStatus } from '@prisma/client';
+import { PitamStatus } from '@prisma/client';
 
 export class UpdateIsraelClassificationDto {
   @ApiPropertyOptional({
@@ -13,10 +13,9 @@ export class UpdateIsraelClassificationDto {
   categoryId?: number;
 
   @ApiPropertyOptional({
-    enum: Grade,
-    description: 'Grade code within the chosen category.',
+    description: 'Grade code within the chosen category (built-in or custom free-text grade).',
   })
-  grade?: Grade;
+  grade?: string;
 
   @ApiPropertyOptional({
     enum: PitamStatus,

@@ -31,6 +31,12 @@ export type IsraelSortCategoriesI18n = {
   groupNamePlaceholder: string;
   priorityLabel: string;
   dragHandleLabel: string;
+  customGradesLabel: string;
+  customGradePlaceholder: string;
+  addCustomGradeLabel: string;
+  removeCustomGradeLabel: string;
+  emptyCustomGradeError: string;
+  duplicateCustomGradeError: string;
 };
 
 const ISRAEL_SORT_CATEGORIES_I18N: Record<

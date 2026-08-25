@@ -52,6 +52,9 @@ export function useIsraelSortCategoriesManagement({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [addError, setAddError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
+  const [customGradeError, setCustomGradeError] = useState<string | null>(
+    null,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const t = getIsraelSortCategoriesI18n(lang);
 
@@ -115,6 +118,37 @@ export function useIsraelSortCategoriesManagement({
     }));
   };
 
+  const addFormCustomGrade = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      setCustomGradeError(t.emptyCustomGradeError);
+      return;
+    }
+
+    const isDuplicate = formState.supportedGrades.some(
+      (grade) => grade.toLowerCase() === trimmed.toLowerCase(),
+    );
+    if (isDuplicate) {
+      setCustomGradeError(t.duplicateCustomGradeError);
+      return;
+    }
+
+    setCustomGradeError(null);
+    setFormState((current) => ({
+      ...current,
+      supportedGrades: [...current.supportedGrades, trimmed],
+    }));
+  };
+
+  const removeFormCustomGrade = (grade: string) => {
+    setFormState((current) => ({
+      ...current,
+      supportedGrades: current.supportedGrades.filter(
+        (item) => item !== grade,
+      ),
+    }));
+  };
+
   const toggleFormGradeInGroup = (localId: number, grade: string) => {
     setFormState((current) => ({
       ...current,
@@ -128,6 +162,7 @@ export function useIsraelSortCategoriesManagement({
 
   const handleOpenAddDialog = () => {
     setAddError(null);
+    setCustomGradeError(null);
     setFormState(createInitialFormState());
     setIsAddDialogOpen(true);
   };
@@ -138,6 +173,7 @@ export function useIsraelSortCategoriesManagement({
     }
 
     setEditError(null);
+    setCustomGradeError(null);
     setFormState({
       name: selectedCategory.name,
       notes: selectedCategory.notes ?? '',
@@ -320,6 +356,9 @@ export function useIsraelSortCategoriesManagement({
     formState,
     setFormState,
     toggleFormGrade,
+    addFormCustomGrade,
+    removeFormCustomGrade,
+    customGradeError,
     addFormGradeGroup,
     removeFormGradeGroup,
     renameFormGradeGroup,

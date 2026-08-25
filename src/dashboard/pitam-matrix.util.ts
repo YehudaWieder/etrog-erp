@@ -31,7 +31,11 @@ export function gradesUsedIn(matrix: PitamMatrix): string[] {
   for (const row of matrix.values()) {
     for (const g of row.keys()) used.add(g);
   }
-  return GRADE_ORDER.filter((g) => used.has(g));
+  const known = GRADE_ORDER.filter((g) => used.has(g));
+  const extra = [...used]
+    .filter((g) => !GRADE_ORDER.includes(g))
+    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+  return [...known, ...extra];
 }
 
 // Category rows must follow the priority order configured in category settings (orderIndex),

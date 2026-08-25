@@ -3,7 +3,7 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { Grade, PitamStatus, Prisma } from '@prisma/client';
+import { PitamStatus, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AuditLogService } from 'src/audit/audit.service';
 import { CreateIsraelStockMovementDto } from './dto/create-israel-stock-movement.dto';
@@ -219,7 +219,7 @@ export class IsraelStockService {
     filter: {
       seasonId: number;
       categoryId: number;
-      grade: Grade;
+      grade: string;
       pitamStatus: PitamStatus;
       fieldId?: number;
     },

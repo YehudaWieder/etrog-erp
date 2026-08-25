@@ -31,4 +31,10 @@ export const ISRAEL_SORT_CATEGORIES_I18N_HE: IsraelSortCategoriesI18n = {
   groupNamePlaceholder: 'שם הקבוצה',
   priorityLabel: 'עדיפות תצוגה',
   dragHandleLabel: 'גרירה לשינוי סדר',
+  customGradesLabel: 'דרגות מותאמות אישית',
+  customGradePlaceholder: 'שם דרגה חדשה',
+  addCustomGradeLabel: 'הוסף דרגה',
+  removeCustomGradeLabel: 'הסר דרגה',
+  emptyCustomGradeError: 'יש להזין שם לדרגה המותאמת אישית.',
+  duplicateCustomGradeError: 'הדרגה כבר קיימת ברשימת הדרגות הנתמכות.',
 };

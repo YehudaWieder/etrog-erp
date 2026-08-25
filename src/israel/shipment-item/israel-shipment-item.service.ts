@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
-import { BoxStatus, Grade, PitamStatus, Prisma } from '@prisma/client';
+import { BoxStatus, PitamStatus, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AuditLogService } from 'src/audit/audit.service';
 import { CreateIsraelShipmentItemDto } from './dto/create-israel-shipment-item.dto';
@@ -36,7 +36,7 @@ export class IsraelShipmentItemService {
 
   private async getAvailableQuantity(
     tx: Prisma.TransactionClient,
-    filter: { seasonId: number; fieldId: number; categoryId: number; grade: Grade; pitamStatus: PitamStatus },
+    filter: { seasonId: number; fieldId: number; categoryId: number; grade: string; pitamStatus: PitamStatus },
     excludeItemId?: number,
   ): Promise<number> {
     const result = await tx.israelStock.aggregate({

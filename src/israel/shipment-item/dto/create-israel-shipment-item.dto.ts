@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Grade, PitamStatus } from '@prisma/client';
+import { PitamStatus } from '@prisma/client';
 
 export class CreateIsraelShipmentItemDto {
   @ApiProperty({ description: 'Box to pack this item into. Must be OPEN.', example: 1 })
@@ -8,8 +8,8 @@ export class CreateIsraelShipmentItemDto {
   @ApiProperty({ description: 'Israel sort category for this item.', example: 1 })
   categoryId!: number;
 
-  @ApiProperty({ description: 'Grade, must be supported by the chosen category.', enum: Grade })
-  grade!: Grade;
+  @ApiProperty({ description: 'Grade, must be supported by the chosen category.' })
+  grade!: string;
 
   @ApiProperty({ description: 'Pitam status.', enum: PitamStatus })
   pitamStatus!: PitamStatus;

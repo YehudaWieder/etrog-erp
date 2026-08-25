@@ -5,5 +5,5 @@ export interface CreateTraderCategoryDto {
   name: string;
   notes?: string;
   supportedGrades?: Grade[];
-  gradeGroups?: GradeGroup[];
+  gradeGroups?: GradeGroup<Grade>[];
 }
