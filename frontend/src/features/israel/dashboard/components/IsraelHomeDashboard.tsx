@@ -244,17 +244,15 @@ export function IsraelHomeDashboard({ lang }: IsraelHomeDashboardProps): JSX.Ele
     })),
   ];
 
-  const calcMax = (value: number, percent: number) => (percent > 0 ? Math.round((value * 100) / percent) : undefined);
-
   const shippableBase = metrics.harvest.value - metrics.selfPickup.value;
 
   const gaugeCards = [
     { title: t.gauges.harvest, ...metrics.harvest, icon: <FaLeaf />, maxValue: metrics.harvest.value },
     { title: t.gauges.sorted, ...metrics.sorted, icon: <FaArrowsUpDown />, maxValue: metrics.harvest.value },
     { title: t.gauges.selfPickup, ...metrics.selfPickup, icon: <FaHandHolding />, maxValue: metrics.harvest.value },
-    { title: t.gauges.packaged, ...metrics.packaged, icon: <FaBox />, maxValue: calcMax(metrics.packaged.value, metrics.packaged.percent) ?? shippableBase },
-    { title: t.gauges.shipped, ...metrics.shipped, icon: <FaTruck />, maxValue: calcMax(metrics.shipped.value, metrics.shipped.percent) ?? shippableBase },
-    { title: t.gauges.delivered, ...metrics.delivered, icon: <FaCircleCheck />, maxValue: calcMax(metrics.delivered.value, metrics.delivered.percent) ?? shippableBase },
+    { title: t.gauges.packaged, ...metrics.packaged, icon: <FaBox />, maxValue: shippableBase },
+    { title: t.gauges.shipped, ...metrics.shipped, icon: <FaTruck />, maxValue: shippableBase },
+    { title: t.gauges.delivered, ...metrics.delivered, icon: <FaCircleCheck />, maxValue: shippableBase },
   ];
 
   const selectedSeasonLabel = seasonOptions.find((s) => s.value === String(resolvedSeasonId))?.label ?? '';
