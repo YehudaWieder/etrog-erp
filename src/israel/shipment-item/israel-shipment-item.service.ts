@@ -155,6 +155,7 @@ export class IsraelShipmentItemService {
       await tx.israelStock.create({
         data: {
           seasonId: box.seasonId,
+          fieldId: box.fieldId,
           date: new Date(),
           categoryId: dto.categoryId,
           grade: dto.grade,
@@ -258,6 +259,7 @@ export class IsraelShipmentItemService {
           await tx.israelStock.create({
             data: {
               seasonId: box.seasonId,
+              fieldId: box.fieldId,
               date: new Date(),
               categoryId: row.categoryId,
               grade: row.grade,
