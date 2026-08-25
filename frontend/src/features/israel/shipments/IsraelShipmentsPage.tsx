@@ -369,6 +369,35 @@ export function IsraelShipmentsPage() {
           editTitle={isViewingNonActiveSeason ? t.pageControls.nonActiveSeasonDisabled : undefined}
           deleteTitle={isViewingNonActiveSeason ? t.pageControls.nonActiveSeasonDisabled : undefined}
         />
+      ) : isShipmentItemsSummaryTab || isFieldShipmentItemsSummaryTab ? (
+        <ShipmentsPageHeaderActions
+          addActionLabel={t.pageControls.packItems}
+          editActionLabel={t.pageControls.edit}
+          deleteActionLabel={t.pageControls.delete}
+          onAdd={() => {
+            setPackItemsBoxId(null);
+            setIsPackItemsModalOpen(true);
+          }}
+          onEdit={() => {}}
+          onDelete={() => {}}
+          addDisabled={isViewingNonActiveSeason}
+          editDisabled
+          deleteDisabled
+          addTitle={isViewingNonActiveSeason ? t.pageControls.nonActiveSeasonDisabled : undefined}
+          showRowActions={false}
+          extraActions={[
+            {
+              label: t.pageControls.addShipment,
+              onClick: () => setIsNewShipmentModalOpen(true),
+              disabled: isViewingNonActiveSeason,
+            },
+            {
+              label: t.pageControls.addBox,
+              onClick: () => setIsNewBoxModalOpen(true),
+              disabled: isViewingNonActiveSeason,
+            },
+          ]}
+        />
       ) : null}
       topNav={t.topNav}
       activeTopNavId={activeTopId}

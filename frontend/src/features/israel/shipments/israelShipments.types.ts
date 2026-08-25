@@ -25,6 +25,21 @@ export type IsraelAllShipmentsTableLabels = {
   detailsUpdatedByLabel: string;
   detailsNotesLabel: string;
   detailsPrintLabel: string;
+  detailsItemsLoading: string;
+  detailsItemsEmpty: string;
+  detailsItemsError: string;
+  detailsItemsTable: {
+    title: string;
+    colBoxNumber: string;
+    colCategory: string;
+    colGrade: string;
+    colPitamStatus: string;
+    colQuantity: string;
+    colNotes: string;
+    uncategorized: string;
+    noGrade: string;
+    pitamStatusLabels: Record<'WITH_PITAM' | 'WITHOUT_PITAM' | 'MIXED', string>;
+  };
   empty: string;
   loading: string;
   error: string;
@@ -81,6 +96,21 @@ export type IsraelAllBoxesTableLabels = {
   detailsUpdatedByLabel: string;
   detailsNotesLabel: string;
   detailsPrintLabel: string;
+  detailsItemsLoading: string;
+  detailsItemsEmpty: string;
+  detailsItemsError: string;
+  detailsItemsTable: {
+    title: string;
+    colBoxNumber: string;
+    colCategory: string;
+    colGrade: string;
+    colPitamStatus: string;
+    colQuantity: string;
+    colNotes: string;
+    uncategorized: string;
+    noGrade: string;
+    pitamStatusLabels: Record<'WITH_PITAM' | 'WITHOUT_PITAM' | 'MIXED', string>;
+  };
   unassignedShipmentLabel: string;
   empty: string;
   loading: string;

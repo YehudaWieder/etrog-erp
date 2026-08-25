@@ -11,8 +11,12 @@ import type { IsraelBoxesTableRow } from '../../israelShipments.types';
 import type { IsraelAllBoxesTableLabels } from '../../israelShipments.types';
 import { useIsraelAllBoxesFilters } from '../../hooks/useIsraelAllBoxesFilters';
 import { useIsraelAllBoxesTable } from '../../hooks/useIsraelAllBoxesTable';
+import { useIsraelBoxDetailsItems } from '../../hooks/useIsraelBoxDetailsItems';
+import { IsraelShipmentItemsDetailTable } from '../shared/IsraelShipmentItemsDetailTable';
+import { buildIsraelShipmentItemDetailRows } from '../../services/israelShipmentItemsDetailRows.service';
 import { printIsraelAllBoxes, exportIsraelAllBoxesToExcel } from '../../services/israelAllBoxesExport.service';
 import sharedFilterStyles from '../../../../../components/ui/styles/GlobalFiltersBar.module.css';
+import sharedDetailsStyles from '../../../../shipments/components/styles/AllShipmentsTable.module.css';
 import styles from './IsraelAllBoxesSection.module.css';
 
 type IsraelAllBoxesSectionProps = {
@@ -66,6 +70,16 @@ export function IsraelAllBoxesSection({
     const shipped = rows.filter((row) => row.status === 'SHIPPED' || row.status === 'DELIVERED').length;
     return { totalBoxes: rows.length, notShipped: rows.length - shipped, shipped };
   }, [rows]);
+
+  const {
+    items: detailsItems,
+    isLoading: isDetailsItemsLoading,
+    error: detailsItemsError,
+  } = useIsraelBoxDetailsItems(detailsRow?.id ?? null, labels.detailsItemsError);
+  const detailsItemsRows = useMemo(
+    () => buildIsraelShipmentItemDetailRows(detailsItems, labels.detailsItemsTable),
+    [detailsItems, labels.detailsItemsTable],
+  );
 
   const detailsPrintRef = useRef<HTMLDivElement>(null);
 
@@ -241,6 +255,16 @@ export function IsraelAllBoxesSection({
                     </p>
                   ) : null}
                 </div>
+
+                {isDetailsItemsLoading ? (
+                  <p className={sharedDetailsStyles.detailsSummaryState}>{labels.detailsItemsLoading}</p>
+                ) : detailsItemsError ? (
+                  <p className={`${sharedDetailsStyles.detailsSummaryState} ${sharedDetailsStyles.detailsSummaryStateError}`}>{detailsItemsError}</p>
+                ) : detailsItemsRows.length === 0 ? (
+                  <p className={sharedDetailsStyles.detailsSummaryState}>{labels.detailsItemsEmpty}</p>
+                ) : (
+                  <IsraelShipmentItemsDetailTable rows={detailsItemsRows} labels={labels.detailsItemsTable} showBoxNumber={false} />
+                )}
               </div>
             ) : null}
           </GlobalLeftDetailsPanel>
