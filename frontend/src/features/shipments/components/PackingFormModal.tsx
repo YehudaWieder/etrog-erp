@@ -431,10 +431,6 @@ export function PackingFormModal({
   const isBoxSelected = selectedBoxId !== '';
   const isFieldsDisabled = !isBoxSelected || isLoadingOptions;
   const isBoxOpen = status === 'OPEN';
-  // Unlike isShipped (which also covers CLOSED, to freeze box type/ownership editing once full),
-  // the packed-items table itself must stay visible for a CLOSED box — only a true SHIPPED/DELIVERED
-  // box should hide it entirely.
-  const isBoxDispatched = status === 'SHIPPED' || status === 'DELIVERED';
   const boxCapacityMessage = isBoxOverCapacity
     ? t.boxOverCapacityHint(totalPackedQuantity - boxTotalQuantity, Math.max(0, (boxCapacity ?? 0) - boxTotalQuantity))
     : isBoxFull
@@ -664,7 +660,7 @@ export function PackingFormModal({
               <p className="seasons-manager__hint" style={{ margin: 0 }}>{t.loadingBoxDetailsHint}</p>
             ) : null}
 
-            {!isBoxDispatched && !isLoadingOptions ? (
+            {!isLoadingOptions ? (
               <PackingItemRowsSection
                 rowsT={t.itemRows}
                 fieldsT={itemFieldsT}
