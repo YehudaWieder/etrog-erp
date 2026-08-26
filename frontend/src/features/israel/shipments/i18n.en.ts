@@ -396,6 +396,7 @@ export const ISRAEL_SHIPMENTS_I18N_EN: IsraelShipmentsI18n = {
     validationBoxRequired: 'A box must be selected',
     validationRowsRequired: 'Enter a quantity in at least one cell before saving',
     boxOverCapacityHint: (entered: number, remaining: number) => `The entered quantity (${entered}) exceeds the remaining space in the box (${remaining}).`,
+    boxFullHint: 'Adding these items will fill the box, and no further items will be able to be added to it afterward.',
     boxNotOpenError: 'Cannot add items — the box is not open.',
     genericError: 'An error occurred. Please try again.',
     itemRows: {

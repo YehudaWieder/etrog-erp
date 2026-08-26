@@ -32,6 +32,7 @@ type PackIsraelShipmentItemsFormText = {
   validationBoxRequired: string;
   validationRowsRequired: string;
   boxOverCapacityHint: (entered: number, remaining: number) => string;
+  boxFullHint: string;
   boxNotOpenError: string;
   genericError: string;
 };
@@ -95,7 +96,7 @@ export function usePackIsraelShipmentItemsForm({
     ])
       .then(([nextBoxes, nextShipments, nextCategories, nextStock, settings]) => {
         if (!isMounted) return;
-        setBoxes(nextBoxes.filter((b) => b.status === 'OPEN' || b.status === 'CLOSED'));
+        setBoxes(nextBoxes);
         setShipments(nextShipments);
         setSortCategories(nextCategories);
         setStockRows(nextStock);
@@ -123,6 +124,13 @@ export function usePackIsraelShipmentItemsForm({
   }, [isOpen, seasonId]);
 
   const selectedBox = useMemo(() => boxes.find((box) => String(box.id) === boxId) ?? null, [boxes, boxId]);
+
+  // The box picker (typeahead) only lists OPEN boxes, mirroring the Italy packing form's
+  // boxOptions — mixing in closed/shipped/delivered boxes there would let a fresh "pack items"
+  // entry (from the items page/summary/dashboard) target a box that can't actually be packed.
+  // `boxes` itself stays unfiltered so a box preselected directly from the boxes page (initialBoxId,
+  // any status) still resolves correctly above.
+  const openBoxOptions = useMemo(() => boxes.filter((box) => box.status === 'OPEN'), [boxes]);
 
   useEffect(() => {
     setBoxNotesDraft(selectedBox?.notes ?? '');
@@ -245,15 +253,20 @@ export function usePackIsraelShipmentItemsForm({
     cartonCapacity !== null && selectedBox && effectiveExistingQuantity + totalPackedQuantity > cartonCapacity,
   );
 
+  const isBoxFull = Boolean(
+    cartonCapacity !== null && selectedBox && effectiveExistingQuantity + totalPackedQuantity >= cartonCapacity,
+  );
+
   const boxCapacityRemainingBeforeThisPacking = useMemo(() => {
     if (cartonCapacity === null || !selectedBox) return null;
     return Math.max(0, cartonCapacity - effectiveExistingQuantity);
   }, [cartonCapacity, selectedBox, effectiveExistingQuantity]);
 
   const boxOverCapacityMessage = useMemo(() => {
-    if (!isBoxOverCapacity) return null;
-    return t.boxOverCapacityHint(totalPackedQuantity, boxCapacityRemainingBeforeThisPacking ?? 0);
-  }, [isBoxOverCapacity, t, totalPackedQuantity, boxCapacityRemainingBeforeThisPacking]);
+    if (isBoxOverCapacity) return t.boxOverCapacityHint(totalPackedQuantity, boxCapacityRemainingBeforeThisPacking ?? 0);
+    if (isBoxFull) return t.boxFullHint;
+    return null;
+  }, [isBoxOverCapacity, isBoxFull, t, totalPackedQuantity, boxCapacityRemainingBeforeThisPacking]);
 
   const resetForm = useCallback(() => {
     setBoxId('');
@@ -423,7 +436,7 @@ export function usePackIsraelShipmentItemsForm({
   }, [boxId, boxOverCapacityMessage, isBoxOverCapacity, onClose, onSuccess, pendingExistingItemEdits, resetForm, rows, t]);
 
   return {
-    boxes,
+    boxes: openBoxOptions,
     shipments,
     sortCategories: availableCategoriesForBox,
     isLoadingOptions,

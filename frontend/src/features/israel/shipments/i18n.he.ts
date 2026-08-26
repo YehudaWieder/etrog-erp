@@ -396,6 +396,7 @@ export const ISRAEL_SHIPMENTS_I18N_HE: IsraelShipmentsI18n = {
     validationBoxRequired: 'יש לבחור קרטון',
     validationRowsRequired: 'יש להזין כמות לפחות בתא אחד לפני השמירה',
     boxOverCapacityHint: (entered: number, remaining: number) => `הכמות שהוזנה (${entered}) חורגת מהמקום הפנוי בקרטון (${remaining}).`,
+    boxFullHint: 'הוספת הפריטים הללו תמלא את הקרטון, ולא ניתן יהיה להוסיף אליו פריטים נוספים בהמשך.',
     boxNotOpenError: 'לא ניתן להוסיף פריטים — הקרטון אינו פתוח.',
     genericError: 'אירעה שגיאה. נסה שוב.',
     itemRows: {

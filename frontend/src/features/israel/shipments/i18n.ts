@@ -202,6 +202,7 @@ export type IsraelShipmentsI18n = {
     validationBoxRequired: string;
     validationRowsRequired: string;
     boxOverCapacityHint: (entered: number, remaining: number) => string;
+    boxFullHint: string;
     boxNotOpenError: string;
     genericError: string;
     itemRows: {
