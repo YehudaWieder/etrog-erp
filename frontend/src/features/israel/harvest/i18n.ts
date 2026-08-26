@@ -365,6 +365,12 @@ export type IsraelHarvestI18n = {
     printWindowTitle: string;
     sheetName: string;
     seasonFilterLabel: string;
+    filters: {
+      dateFilterLabel: string;
+      allDatesOption: string;
+      fieldFilterLabel: string;
+      allFieldsOption: string;
+    };
     summary: {
       totalQuantity: string;
       totalRecordCount: string;

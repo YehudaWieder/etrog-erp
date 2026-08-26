@@ -443,6 +443,12 @@ export const ISRAEL_HARVEST_I18N_EN: IsraelHarvestI18n = {
     printWindowTitle: 'Daily Harvest Breakdown',
     sheetName: 'Daily Breakdown',
     seasonFilterLabel: 'Filter by season',
+    filters: {
+      dateFilterLabel: 'Harvest date',
+      allDatesOption: 'All dates',
+      fieldFilterLabel: 'Field',
+      allFieldsOption: 'All fields',
+    },
     summary: {
       totalQuantity: 'Total Harvested',
       totalRecordCount: 'Total Harvests',

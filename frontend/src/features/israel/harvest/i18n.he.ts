@@ -432,6 +432,12 @@ export const ISRAEL_HARVEST_I18N_HE: IsraelHarvestI18n = {
     printWindowTitle: 'פירוט קטיפים לפי ימים',
     sheetName: 'פירוט יומי',
     seasonFilterLabel: 'סינון לפי עונה',
+    filters: {
+      dateFilterLabel: 'תאריך קטיף',
+      allDatesOption: 'כל התאריכים',
+      fieldFilterLabel: 'שדה',
+      allFieldsOption: 'כל השדות',
+    },
     summary: {
       totalQuantity: 'סה"כ קטיף',
       totalRecordCount: 'סה"כ קטיפים',

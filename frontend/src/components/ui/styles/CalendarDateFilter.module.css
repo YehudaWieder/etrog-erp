@@ -61,6 +61,46 @@
   box-shadow: 0 18px 40px rgba(16, 50, 23, 0.16);
 }
 
+/* Mode toggle */
+.modeToggle {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.modeBtn {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid rgba(211, 220, 214, 0.8);
+  border-radius: 8px;
+  background: transparent;
+  color: #214229;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.modeBtn:hover {
+  background: rgba(243, 197, 47, 0.18);
+  border-color: #f3c52f;
+}
+
+.modeBtnActive {
+  background: #29540f;
+  border-color: #29540f;
+  color: #fff;
+}
+
+.rangeHint {
+  margin-bottom: 8px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #7a9a7a;
+  text-align: center;
+}
+
 /* Header */
 .header {
   display: flex;
@@ -157,6 +197,12 @@
 
 .daySelected .dot {
   background: rgba(255, 255, 255, 0.7) !important;
+}
+
+.dayInRange {
+  background: rgba(41, 84, 15, 0.14);
+  border-color: transparent;
+  border-radius: 0;
 }
 
 .dot {

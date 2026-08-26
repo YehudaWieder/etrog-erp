@@ -6,7 +6,7 @@ import { useActiveModule } from '../../hooks/useActiveModule';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import type { NavItem } from '../../types/navigation';
 import { ApiError } from '../../services/apiClient';
-import { getCurrentUser, isAuthenticated, isWorkerRole, logout } from '../../services/authService';
+import { getCurrentUser, isAuthenticated, isWorkerRole, isReadOnlyRole, logout } from '../../services/authService';
 import { NoPermissionBanner } from '../../components/ui/NoPermissionBanner';
 import type { Season } from '../../services/seasonsApi';
 import type { Field } from '../../services/fieldsApi';
@@ -91,6 +91,7 @@ import {
   formatHebrewDateFromGregorianInput,
   buildInitialClassificationDraftsFromExisting,
 } from './utils/harvestPage.utils';
+import { matchesDayFilterValue, parseDayFilterValue } from '../../utils/dayRangeFilter.util';
 
 const EMPTY_FILTERS: Record<string, string> = {};
 
@@ -186,6 +187,7 @@ export function HarvestPage() {
   );
   const currentUser = getCurrentUser();
   const isWorker = isWorkerRole(currentUser?.role);
+  const isReadOnly = isReadOnlyRole(currentUser?.role);
   const alertsCount = useHarvestPageLifecycle({ navigate });
 
   const lang = useMemo<'he' | 'en'>(() => {
@@ -263,7 +265,7 @@ export function HarvestPage() {
     return parseFieldFilterId(globalFilterValues.fieldId ?? 'all');
   }, [globalFilterValues.fieldId]);
 
-  const harvestDateFilterId = useMemo<string | 'all'>(() => {
+  const harvestDateFilterId = useMemo<string>(() => {
     return parseHarvestDateFilter(globalFilterValues.harvestDate ?? 'all');
   }, [globalFilterValues.harvestDate]);
 
@@ -457,7 +459,8 @@ export function HarvestPage() {
   }, [isSortingListTab, isSortingListTrashTab, isSortingSummaryTab, sortingListRows, deletedSortingListRows, harvestRows, formatGregorianDate, t.dailyDetails.filters.allDatesOption, t.sortingList.filters.allDatesOption]);
 
   useEffect(() => {
-    if (harvestDateFilterId === 'all') return;
+    const parsedDateFilter = parseDayFilterValue(harvestDateFilterId);
+    if (parsedDateFilter.mode !== 'day') return; // 'all' and ranges aren't validated against the exact-day option list
     if (harvestDateOptions.length <= 1) return; // data not loaded yet
     const validValues = new Set(harvestDateOptions.map((o) => o.value));
     if (!validValues.has(harvestDateFilterId)) {
@@ -883,7 +886,7 @@ export function HarvestPage() {
       if (fieldFilterId !== 'all' && row.fieldId !== fieldFilterId) {
         return false;
       }
-      if (harvestDateFilterId !== 'all' && (row.dateGregorian ?? '').slice(0, 10) !== harvestDateFilterId) {
+      if (!matchesDayFilterValue(row.dateGregorian, harvestDateFilterId)) {
         return false;
       }
       return true;
@@ -999,7 +1002,7 @@ export function HarvestPage() {
     return sortingDailyRows
       .filter((row) => {
         if (fieldFilterId !== 'all' && row.fieldId !== fieldFilterId) return false;
-        if (harvestDateFilterId !== 'all' && (row.dateGregorian ?? '').slice(0, 10) !== harvestDateFilterId) return false;
+        if (!matchesDayFilterValue(row.dateGregorian, harvestDateFilterId)) return false;
         return true;
       })
       .map((row) => {
@@ -1032,7 +1035,7 @@ export function HarvestPage() {
 
   const filteredDeletedSortingListRows = useMemo<ClassificationListRecord[]>(() => {
     return deletedSortingListRows.filter((row) => {
-      if (harvestDateFilterId !== 'all' && (row.fieldHarvest?.dateGregorian ?? '').slice(0, 10) !== harvestDateFilterId) return false;
+      if (!matchesDayFilterValue(row.fieldHarvest?.dateGregorian, harvestDateFilterId)) return false;
       if (sortingAssignmentFilter !== 'all') {
         const ownerType: 'GENERAL' | 'TRADER' | 'CUSTOMER' =
           row.assignmentType === 'TRADER' ? 'TRADER' :
@@ -1050,7 +1053,7 @@ export function HarvestPage() {
 
   const filteredSortingListRows = useMemo<ClassificationListRecord[]>(() => {
     return sortingListRows.filter((row) => {
-      if (harvestDateFilterId !== 'all' && (row.fieldHarvest?.dateGregorian ?? '').slice(0, 10) !== harvestDateFilterId) return false;
+      if (!matchesDayFilterValue(row.fieldHarvest?.dateGregorian, harvestDateFilterId)) return false;
       if (sortingAssignmentFilter !== 'all') {
         const ownerType: 'GENERAL' | 'TRADER' | 'CUSTOMER' =
           row.assignmentType === 'TRADER' ? 'TRADER' :
@@ -1068,7 +1071,7 @@ export function HarvestPage() {
 
   const filteredSortingSummaryRows = useMemo<ClassificationListRecord[]>(() => {
     return sortingListRows.filter((row) => {
-      if (harvestDateFilterId !== 'all' && (row.fieldHarvest?.dateGregorian ?? '').slice(0, 10) !== harvestDateFilterId) return false;
+      if (!matchesDayFilterValue(row.fieldHarvest?.dateGregorian, harvestDateFilterId)) return false;
       if (fieldFilterId !== 'all' && row.fieldHarvest?.fieldId !== fieldFilterId) return false;
       return true;
     });
@@ -1580,7 +1583,7 @@ export function HarvestPage() {
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
       pageTitle={pageTitleWithCount}
-      pageHeaderActions={isWorker ? null : pageHeaderActions}
+      pageHeaderActions={isReadOnly ? null : pageHeaderActions}
       topNav={t.topNav}
       activeTopNavId={activeTopId}
       sidebarSections={t.sidebar}

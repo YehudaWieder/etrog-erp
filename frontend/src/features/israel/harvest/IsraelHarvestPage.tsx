@@ -7,8 +7,10 @@ import type { NavItem } from '../../../types/navigation';
 import {
   getCurrentUser,
   isAuthenticated,
+  isWorkerRole,
   logout,
 } from '../../../services/authService';
+import { NoPermissionBanner } from '../../../components/ui/NoPermissionBanner';
 import { useActiveModule } from '../../../hooks/useActiveModule';
 import { SettingsIcon } from '../../../components/ui/SettingsIcon';
 import { HarvestSummaryHeaderActions } from '../../harvest/components/shared/HarvestSummaryHeaderActions';
@@ -76,6 +78,7 @@ import type { IsraelHarvestFieldReportRow } from './israelHarvestPage.types';
 import { downloadStyledExcel } from '../../../services/exportExcel';
 import { HARVEST_PRINT_BASE_STYLE } from '../../harvest/services/harvestPrintStyles';
 import { formatHarvestGregorianDate } from '../../harvest/services/harvestDisplayFormatters.service';
+import { matchesDayFilterValue } from '../../../utils/dayRangeFilter.util';
 
 const DEFAULT_SIDEBAR_ITEM_ID = 'harvest-summary';
 
@@ -94,6 +97,7 @@ export function IsraelHarvestPage() {
   const activeModule = useActiveModule();
   const [activeTopId, setActiveTopId] = useState('workers');
   const currentUser = getCurrentUser();
+  const isWorker = isWorkerRole(currentUser?.role);
   const [alertsCount, setAlertsCount] = useState<number>(0);
 
   useEffect(() => {
@@ -712,7 +716,7 @@ export function IsraelHarvestPage() {
       t.dailyDetails.columns.updatedBy,
       t.dailyDetails.columns.notes,
     ];
-    const rows = harvestRecords.map((row) => [
+    const rows = filteredHarvestRecords.map((row) => [
       row.field?.name ?? '',
       formatHarvestGregorianDate(row.dateGregorian, lang),
       row.dateHebrew,
@@ -772,7 +776,7 @@ export function IsraelHarvestPage() {
       t.dailyDetails.columns.updatedBy,
       t.dailyDetails.columns.notes,
     ];
-    const rows = harvestRecords.map((row) => [
+    const rows = filteredHarvestRecords.map((row) => [
       row.field?.name ?? '',
       formatHarvestGregorianDate(row.dateGregorian, lang),
       row.dateHebrew,
@@ -975,10 +979,7 @@ export function IsraelHarvestPage() {
 
   const filteredClassificationRows = useMemo(() => {
     return classificationRows.filter((row) => {
-      if (
-        sortingDateFilterId !== 'all' &&
-        (row.harvest?.dateGregorian ?? '').slice(0, 10) !== sortingDateFilterId
-      ) {
+      if (!matchesDayFilterValue(row.harvest?.dateGregorian, sortingDateFilterId)) {
         return false;
       }
       if (
@@ -1049,6 +1050,13 @@ export function IsraelHarvestPage() {
       ],
     };
 
+    const fieldCategoriesForFilter =
+      sortingFieldFilterId === 'all'
+        ? fieldCategories
+        : fieldCategories.filter(
+            (fieldCategory) => fieldCategory.fieldId === sortingFieldFilterId,
+          );
+
     const fieldCategoryFilter: GlobalScopedFilterConfig = {
       key: 'fieldCategoryId',
       label: t.sortingSummary.filters.fieldCategoryFilterLabel,
@@ -1056,7 +1064,7 @@ export function IsraelHarvestPage() {
       queryParam: 'ihsFieldCategory',
       options: [
         { value: 'all', label: t.sortingSummary.filters.allFieldCategoriesOption },
-        ...fieldCategories.map((fieldCategory) => ({
+        ...fieldCategoriesForFilter.map((fieldCategory) => ({
           value: String(fieldCategory.id),
           label: fieldCategory.name,
         })),
@@ -1071,6 +1079,7 @@ export function IsraelHarvestPage() {
     lang,
     seasons,
     sortingHarvestDateOptions,
+    sortingFieldFilterId,
     t.sortingSummary.seasonFilterLabel,
     t.sortingSummary.filters,
   ]);
@@ -1091,15 +1100,25 @@ export function IsraelHarvestPage() {
           : 'all',
       );
       const parsedFieldCategory = Number(values.fieldCategoryId);
-      setSortingFieldCategoryFilterId(
+      const selectedFieldId =
+        values.fieldId && values.fieldId !== 'all' && Number.isFinite(parsedField)
+          ? parsedField
+          : 'all';
+      const isFieldCategoryValid =
         values.fieldCategoryId &&
-          values.fieldCategoryId !== 'all' &&
-          Number.isFinite(parsedFieldCategory)
-          ? parsedFieldCategory
-          : 'all',
+        values.fieldCategoryId !== 'all' &&
+        Number.isFinite(parsedFieldCategory) &&
+        (selectedFieldId === 'all' ||
+          fieldCategories.some(
+            (fieldCategory) =>
+              fieldCategory.id === parsedFieldCategory &&
+              fieldCategory.fieldId === selectedFieldId,
+          ));
+      setSortingFieldCategoryFilterId(
+        isFieldCategoryValid ? parsedFieldCategory : 'all',
       );
     },
-    [],
+    [fieldCategories],
   );
 
   const fieldCategorySummaryFilters = useMemo<GlobalScopedFilterConfig[]>(() => {
@@ -1173,6 +1192,132 @@ export function IsraelHarvestPage() {
     const parsed = Number(values.seasonId);
     setSeasonFilterId(Number.isFinite(parsed) && parsed > 0 ? parsed : null);
   }, []);
+
+  const [dailyDetailsDateFilter, setDailyDetailsDateFilter] = useState<string>('all');
+  const [dailyDetailsFieldFilterId, setDailyDetailsFieldFilterId] = useState<
+    number | 'all'
+  >('all');
+
+  const dailyDetailsHarvestDateOptions = useMemo(() => {
+    const uniqueDates = [
+      ...new Set(
+        harvestRecords
+          .map((row) => (row.dateGregorian ?? '').slice(0, 10))
+          .filter((date) => date !== ''),
+      ),
+    ];
+    uniqueDates.sort((a, b) => b.localeCompare(a));
+    return [
+      { value: 'all', label: t.dailyDetails.filters.allDatesOption },
+      ...uniqueDates.map((date) => ({
+        value: date,
+        label: formatHarvestGregorianDate(date, lang),
+      })),
+    ];
+  }, [harvestRecords, t.dailyDetails.filters.allDatesOption, lang]);
+
+  const filteredHarvestRecords = useMemo(() => {
+    return harvestRecords.filter((row) => {
+      if (!matchesDayFilterValue(row.dateGregorian, dailyDetailsDateFilter)) {
+        return false;
+      }
+      if (
+        dailyDetailsFieldFilterId !== 'all' &&
+        row.fieldId !== dailyDetailsFieldFilterId
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [harvestRecords, dailyDetailsDateFilter, dailyDetailsFieldFilterId]);
+
+  useEffect(() => {
+    if (!selectedDailyHarvest) {
+      return;
+    }
+    const isSelectedRowVisible = filteredHarvestRecords.some(
+      (row) => row.id === selectedDailyHarvest.id,
+    );
+    if (!isSelectedRowVisible) {
+      setSelectedDailyHarvest(null);
+      setIsDailyDetailsPanelOpen(false);
+    }
+  }, [selectedDailyHarvest, filteredHarvestRecords]);
+
+  const dailyDetailsFilters = useMemo<GlobalScopedFilterConfig[]>(() => {
+    const seasonFilter: GlobalScopedFilterConfig = {
+      key: 'seasonId',
+      label: t.fieldReport.seasonFilterLabel,
+      defaultValue: activeSeasonId ? String(activeSeasonId) : '',
+      queryParam: 'ihdSeason',
+      options:
+        seasons.length > 0
+          ? seasons.map((season) => ({
+              value: String(season.id),
+              label: `${season.yearName}${season.isActive ? ` (${lang === 'he' ? 'פעילה' : 'Active'})` : ''}`,
+            }))
+          : [
+              {
+                value: '',
+                label:
+                  lang === 'he'
+                    ? 'אין עונה פעילה כרגע'
+                    : 'No active season right now',
+              },
+            ],
+    };
+
+    const dateFilter: GlobalScopedFilterConfig = {
+      key: 'harvestDate',
+      label: t.dailyDetails.filters.dateFilterLabel,
+      defaultValue: 'all',
+      queryParam: 'ihdDate',
+      options: dailyDetailsHarvestDateOptions,
+      type: 'calendar',
+      lang,
+    };
+
+    const fieldFilter: GlobalScopedFilterConfig = {
+      key: 'fieldId',
+      label: t.dailyDetails.filters.fieldFilterLabel,
+      defaultValue: 'all',
+      queryParam: 'ihdField',
+      options: [
+        { value: 'all', label: t.dailyDetails.filters.allFieldsOption },
+        ...fields.map((field) => ({
+          value: String(field.id),
+          label: field.name,
+        })),
+      ],
+    };
+
+    return [seasonFilter, dateFilter, fieldFilter];
+  }, [
+    activeSeasonId,
+    fields,
+    lang,
+    seasons,
+    dailyDetailsHarvestDateOptions,
+    t.fieldReport.seasonFilterLabel,
+    t.dailyDetails.filters,
+  ]);
+
+  const handleDailyDetailsFiltersChange = useCallback(
+    (values: Record<string, string>) => {
+      const parsedSeason = Number(values.seasonId);
+      setSeasonFilterId(
+        Number.isFinite(parsedSeason) && parsedSeason > 0 ? parsedSeason : null,
+      );
+      setDailyDetailsDateFilter(values.harvestDate || 'all');
+      const parsedField = Number(values.fieldId);
+      setDailyDetailsFieldFilterId(
+        values.fieldId && values.fieldId !== 'all' && Number.isFinite(parsedField)
+          ? parsedField
+          : 'all',
+      );
+    },
+    [],
+  );
 
   const handleAddHarvest = async (
     payload: IsraelHarvestBulkFormSubmitPayload,
@@ -1506,7 +1651,7 @@ export function IsraelHarvestPage() {
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
       pageTitle={t.pageTitle}
-      pageHeaderActions={pageHeaderActions}
+      pageHeaderActions={isWorker ? null : pageHeaderActions}
       topNav={topNavT.topNav}
       activeTopNavId={activeTopId}
       sidebarSections={t.sidebar}
@@ -1547,7 +1692,9 @@ export function IsraelHarvestPage() {
         </button>
       }
     >
-      {isHarvestSummaryTab ? (
+      {isWorker ? (
+        <NoPermissionBanner message={lang === 'he' ? 'אין לך הרשאת גישה לאזור זה.' : "You don't have permission to access this area."} />
+      ) : isHarvestSummaryTab ? (
         <>
           <IsraelHarvestFieldReportSection
             lang={lang}
@@ -1818,11 +1965,11 @@ export function IsraelHarvestPage() {
           <IsraelHarvestDailyDetailsSection
             lang={lang}
             t={t}
-            filters={filters}
+            filters={dailyDetailsFilters}
             isLoading={isHarvestLoading}
             loadError={harvestLoadError}
-            rows={harvestRecords}
-            onFiltersChange={handleFiltersChange}
+            rows={filteredHarvestRecords}
+            onFiltersChange={handleDailyDetailsFiltersChange}
             onPrint={handlePrintDailyDetailsTable}
             onExport={handleExportDailyDetailsTableToExcel}
             numberFormatter={numberFormatter}

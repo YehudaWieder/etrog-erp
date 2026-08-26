@@ -8,6 +8,7 @@ import type {
   SortingAssignmentFilter,
 } from '../harvestPage.types';
 import { createEmptyGradeQuantityMatrix } from './harvestClassificationMatrix.util';
+import { normalizeDayFilterValue } from '../../../utils/dayRangeFilter.util';
 
 export const DEFAULT_SIDEBAR_ITEM_ID = 'harvest-daily-details';
 export const HARVEST_DAILY_FILTER_SCOPE = 'harvest-daily-details';
@@ -27,11 +28,8 @@ export function parseSeasonFilterId(value: string): number | null {
   return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : null;
 }
 
-export function parseHarvestDateFilter(value: string): string | 'all' {
-  if (!value || value === 'all') {
-    return 'all';
-  }
-  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : 'all';
+export function parseHarvestDateFilter(value: string): string {
+  return normalizeDayFilterValue(value);
 }
 
 export function parseFieldFilterId(value: string): number | 'all' {
