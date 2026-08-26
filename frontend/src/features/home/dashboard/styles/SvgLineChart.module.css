@@ -52,11 +52,19 @@
   height: 100%;
   overflow-x: auto;
   overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+.chartArea::-webkit-scrollbar {
+  height: 6px;
+}
+
+.chartArea::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
 }
 
 .svg {
-  width: 100%;
-  height: 100%;
   display: block;
   overflow: visible;
 }
