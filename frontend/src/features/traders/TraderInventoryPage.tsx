@@ -17,7 +17,7 @@ import { TRADER_INVENTORY_I18N, getTraderMovementsI18n } from './i18n';
 import { buildTraderInventorySummaryMatrix } from './utils/traderInventorySummaryMatrix.util';
 import { getTraderInventoryPitamStatusLabel } from './utils/traderInventorySummary.util';
 import type { NavItem } from '../../types/navigation';
-import { getCurrentUser, isAuthenticated, isWorkerRole, logout } from '../../services/authService';
+import { getCurrentUser, isAuthenticated, isWorkerRole, isReadOnlyRole, logout } from '../../services/authService';
 import { NoPermissionBanner } from '../../components/ui/NoPermissionBanner';
 import { getActiveSeason, getSeasons, type Season } from '../../services/seasonsApi';
 import { getTraders, type Trader } from '../../services/tradersApi';
@@ -78,6 +78,7 @@ export function TraderInventoryPage() {
 
   const currentUser = getCurrentUser();
   const isWorker = isWorkerRole(currentUser?.role);
+  const isReadOnly = isReadOnlyRole(currentUser?.role);
 
   useEffect(() => {
     // load unread messages count - only if authenticated
@@ -391,6 +392,11 @@ export function TraderInventoryPage() {
 
   const isRemainsInItalyFilter = filterValues.inventoryStatus === 'REMAINS_IN_ITALY';
 
+  // Inventory status and distribution method are mutually exclusive: picking one locks the
+  // other back to "all" and disables it, in both directions.
+  const isStatusFilterActive = filterValues.inventoryStatus !== 'ALL';
+  const isShareConditionFilterActive = filterValues.shareConditionScope !== 'ALL';
+
   const scopedFilters = useMemo<GlobalScopedFilterConfig[]>(
     () => [
       {
@@ -418,16 +424,17 @@ export function TraderInventoryPage() {
         label: t.summary.filters.shareConditionLabel,
         defaultValue: 'ALL',
         options: shareConditionOptions,
-        disabled: isRemainsInItalyFilter,
+        disabled: isRemainsInItalyFilter || isStatusFilterActive,
       },
       {
         key: 'inventoryStatus',
         label: t.summary.filters.inventoryStatusLabel,
         defaultValue: 'ALL',
         options: inventoryStatusOptions,
+        disabled: isShareConditionFilterActive,
       },
     ],
-    [activeSeasonId, seasonOptions, t.summary.filters.seasonLabel, t.summary.filters.traderLabel, traderOptions, t.summary.filters.inventoryStatusLabel, inventoryStatusOptions, t.summary.filters.inventorySourceLabel, inventorySourceOptions, t.summary.filters.shareConditionLabel, shareConditionOptions, isRemainsInItalyFilter],
+    [activeSeasonId, seasonOptions, t.summary.filters.seasonLabel, t.summary.filters.traderLabel, traderOptions, t.summary.filters.inventoryStatusLabel, inventoryStatusOptions, t.summary.filters.inventorySourceLabel, inventorySourceOptions, t.summary.filters.shareConditionLabel, shareConditionOptions, isRemainsInItalyFilter, isStatusFilterActive, isShareConditionFilterActive],
   );
 
   // "נשאר באיטליה" is never trader-owned or private-selection-scoped - the trader and source
@@ -450,6 +457,29 @@ export function TraderInventoryPage() {
       filtersApiRef.current.setFilterValue('shareConditionScope', 'ALL');
     }
   }, [isRemainsInItalyFilter, filterValues.traderId, filterValues.inventorySource, filterValues.shareConditionScope]);
+
+  // Inventory status and distribution method are mutually exclusive (see the disabled flags
+  // above) - if one becomes active while the other still holds a stale non-ALL value (e.g. from
+  // a shared URL), clear the other back to ALL instead of leaving an unreachable selection.
+  useEffect(() => {
+    if (!filtersApiRef.current) {
+      return;
+    }
+
+    if (isStatusFilterActive && filterValues.shareConditionScope !== 'ALL') {
+      filtersApiRef.current.setFilterValue('shareConditionScope', 'ALL');
+      return;
+    }
+
+    if (isShareConditionFilterActive && filterValues.inventoryStatus !== 'ALL') {
+      filtersApiRef.current.setFilterValue('inventoryStatus', 'ALL');
+    }
+  }, [
+    isStatusFilterActive,
+    isShareConditionFilterActive,
+    filterValues.inventoryStatus,
+    filterValues.shareConditionScope,
+  ]);
 
   const handlePrintInventoryTable = useCallback(() => {
     if (!matrixTableRef.current) {
@@ -711,7 +741,7 @@ export function TraderInventoryPage() {
       topNav={t.topNav}
       activeTopNavId={activeTopId}
       pageHeaderActions={
-        !isWorker && (isMovementsTab || isAllInventoryTab) ? (
+        !isReadOnly && (isMovementsTab || isAllInventoryTab) ? (
           <div className="action-buttons">
             <button
               className="btn btn-primary"
