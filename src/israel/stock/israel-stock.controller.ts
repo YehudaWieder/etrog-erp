@@ -36,7 +36,7 @@ import { UpdateIsraelStockMovementDto } from './dto/update-israel-stock-movement
 @ApiForbiddenResponse({
   description: 'Access denied due to insufficient role or inactive user.',
 })
-@Roles(Role.OWNER, Role.MANAGER)
+@Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
 @Controller('israel/stock')
 export class IsraelStockController {
   constructor(private readonly israelStockService: IsraelStockService) {}

@@ -103,6 +103,7 @@ export type ProfileI18n = {
       editor: string;
       manager: string;
       owner: string;
+      ownerViewer: string;
     };
   };
 };

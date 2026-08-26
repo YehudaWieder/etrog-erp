@@ -1,4 +1,5 @@
 import type { AppModule } from '../../utils/activeModule';
+import { getCurrentUser, isOwnerViewerRole } from '../../services/authService';
 import styles from './styles/ModuleSwitcher.module.css';
 
 type ModuleSwitcherProps = {
@@ -10,6 +11,11 @@ type ModuleSwitcherProps = {
 export function ModuleSwitcher({ lang, activeModule, onChange }: ModuleSwitcherProps) {
   const italyLabel = lang === 'he' ? 'איטליה' : 'Italy';
   const israelLabel = lang === 'he' ? 'ישראל' : 'Israel';
+  const hasNoIsraelAccess = isOwnerViewerRole(getCurrentUser()?.role);
+
+  if (hasNoIsraelAccess) {
+    return null;
+  }
 
   return (
     <div className={styles.switcher} role="group" aria-label={lang === 'he' ? 'החלפת מודול' : 'Switch module'}>

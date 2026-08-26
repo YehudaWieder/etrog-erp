@@ -118,7 +118,7 @@ export class TradersCatController {
   }
 
   @Get()
-  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.OWNER_VIEWER)
   @ApiOperation({ summary: 'Retrieve all trader categories for a specific season' })
   @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season to filter categories by.' })
   @ApiResponse({ status: 200, description: 'List of trader categories returned successfully.' })
@@ -128,7 +128,7 @@ export class TradersCatController {
   }
 
   @Get('with-shares')
-  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.OWNER_VIEWER)
   @ApiOperation({ summary: 'Retrieve trader categories with full shares for a selected season.' })
   @ApiQuery({ name: 'seasonId', type: Number, description: 'The season ID to load category shares from.' })
   @ApiResponse({ status: 200, description: 'Trader categories with shares returned successfully.' })
@@ -138,7 +138,7 @@ export class TradersCatController {
   }
 
   @Get('by-name')
-  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.OWNER_VIEWER)
   @ApiOperation({ summary: 'Find a trader category by name within a season (composite key lookup)' })
   @ApiQuery({ name: 'name', type: String, description: 'The name of the trader category.' })
   @ApiQuery({ name: 'seasonId', type: Number, description: 'The ID of the season.' })
@@ -153,7 +153,7 @@ export class TradersCatController {
   }
 
   @Get(':id')
-  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.OWNER_VIEWER)
   @ApiOperation({ summary: 'Retrieve a single trader category by ID' })
   @ApiParam({ name: 'id', type: Number, description: 'The numeric ID of the trader category.' })
   @ApiResponse({ status: 200, description: 'Trader category returned successfully.' })

@@ -6,7 +6,8 @@ import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { ShipmentsPageHeaderActions } from '../../shipments/components/shared/ShipmentsPageHeaderActions';
 import { ISRAEL_SHIPMENTS_I18N } from './i18n';
 import type { NavItem } from '../../../types/navigation';
-import { getCurrentUser, isAuthenticated, logout } from '../../../services/authService';
+import { getCurrentUser, isAuthenticated, isWorkerRole, logout } from '../../../services/authService';
+import { NoPermissionBanner } from '../../../components/ui/NoPermissionBanner';
 import { getActiveSeason } from '../../../services/seasonsApi';
 import { useActiveModule } from '../../../hooks/useActiveModule';
 import type { IsraelShipmentRecord } from '../../../services/israel/israelShipmentsApi';
@@ -41,6 +42,7 @@ export function IsraelShipmentsPage() {
   const activeModule = useActiveModule();
   const [activeTopId, setActiveTopId] = useState('israel-shipments');
   const currentUser = getCurrentUser();
+  const isWorker = isWorkerRole(currentUser?.role);
   const [alertsCount, setAlertsCount] = useState<number>(0);
 
   useEffect(() => {
@@ -312,7 +314,7 @@ export function IsraelShipmentsPage() {
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
       pageTitle={pageTitleWithCount}
-      pageHeaderActions={isAllShipmentsTab ? (
+      pageHeaderActions={isWorker ? null : isAllShipmentsTab ? (
         <ShipmentsPageHeaderActions
           addActionLabel={t.pageControls.addShipment}
           editActionLabel={t.pageControls.edit}
@@ -645,7 +647,9 @@ export function IsraelShipmentsPage() {
         ) : null}
       </ConfirmDialog>
 
-      {isAllShipmentsTab ? (
+      {isWorker ? (
+        <NoPermissionBanner message={lang === 'he' ? 'אין לך הרשאת גישה לאזור זה.' : "You don't have permission to access this area."} />
+      ) : isAllShipmentsTab ? (
         <IsraelAllShipmentsSection
           lang={lang}
           labels={t.allShipmentsTableLabels}

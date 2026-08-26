@@ -85,6 +85,7 @@ export function ManagedProfileEditModal({
                 { value: 'EDITOR', label: t.managedEditProfile.roleLabels.editor },
                 { value: 'MANAGER', label: t.managedEditProfile.roleLabels.manager },
                 { value: 'OWNER', label: t.managedEditProfile.roleLabels.owner },
+                { value: 'OWNER_VIEWER', label: t.managedEditProfile.roleLabels.ownerViewer },
               ]}
             />
           </label>

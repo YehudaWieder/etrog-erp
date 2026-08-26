@@ -5,7 +5,7 @@ import { AppShell } from '../../app/layout/AppShell';
 import { SHIPMENTS_I18N } from '../shipments/i18n';
 import { HOME_I18N } from './i18n';
 import type { NavItem } from '../../types/navigation';
-import { getCurrentUser, isAuthenticated, isWorkerRole, logout } from '../../services/authService';
+import { getCurrentUser, isAuthenticated, isWorkerRole, isReadOnlyRole, logout } from '../../services/authService';
 import { NoPermissionBanner } from '../../components/ui/NoPermissionBanner';
 import { HomeDashboard } from './dashboard/components/HomeDashboard';
 import { IsraelHomeDashboard } from '../israel/dashboard/components/IsraelHomeDashboard';
@@ -18,6 +18,7 @@ export function HomePage() {
   const [activeTopId, setActiveTopId] = useState('home');
   const currentUser = getCurrentUser();
   const isWorker = isWorkerRole(currentUser?.role);
+  const isReadOnly = isReadOnlyRole(currentUser?.role);
   const [alertsCount, setAlertsCount] = useState<number>(0);
 
   useEffect(() => {
@@ -85,7 +86,7 @@ export function HomePage() {
       pageTitle={dashboardLabels.title}
       pageSubtitle={dashboardLabels.subtitle}
       pageHeaderActions={
-        !isWorker ? (
+        !isReadOnly ? (
           <DashboardHeaderActions
             quickActionsLabel={qa.label}
             actions={quickActions}

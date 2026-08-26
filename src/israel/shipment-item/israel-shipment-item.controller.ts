@@ -33,7 +33,7 @@ import { PackIsraelShipmentItemsDto } from './dto/pack-israel-shipment-items.dto
 @ApiBearerAuth('access-token')
 @ApiUnauthorizedResponse({ description: 'JWT authentication failed or token is missing.' })
 @ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
-@Roles(Role.OWNER, Role.MANAGER)
+@Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
 @Controller('israel/shipment-items')
 export class IsraelShipmentItemController {
   constructor(private readonly israelShipmentItemService: IsraelShipmentItemService) {}

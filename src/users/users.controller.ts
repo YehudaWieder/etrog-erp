@@ -82,7 +82,7 @@ export class UsersController {
   }
 
   @Get()
-  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.WORKER)
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.WORKER, Role.OWNER_VIEWER)
   @ApiOperation({ summary: 'Retrieve a list of all system users' })
   @ApiResponse({
     status: 200,
@@ -93,7 +93,7 @@ export class UsersController {
   }
 
   @Get(':idOrSlug')
-  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.WORKER)
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.WORKER, Role.OWNER_VIEWER)
   @ApiOperation({
     summary: 'Retrieve a single user by ID or slug (manager/owner or the user themself)',
   })
@@ -112,7 +112,7 @@ export class UsersController {
   }
 
   @Patch()
-  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.WORKER)
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.WORKER, Role.OWNER_VIEWER)
   @ApiOperation({ summary: "Update a user's name, phone, role, or isActive status" })
   @ApiBody({
     type: UpdateUserDto,
@@ -139,7 +139,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.WORKER)
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.WORKER, Role.OWNER_VIEWER)
   @ApiOperation({
     summary: 'Remove a user by ID (manager/owner or the user themself)',
   })

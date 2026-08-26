@@ -40,7 +40,7 @@ export class FieldController {
   constructor(private readonly fieldService: FieldService) {}
 
   @Get()
-  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.OWNER_VIEWER)
   @ApiOperation({ summary: 'Retrieve a list of all registered harvest fields' })
   @ApiResponse({
     status: 200,

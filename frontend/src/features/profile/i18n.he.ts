@@ -123,6 +123,7 @@ export const PROFILE_I18N_HE: ProfileI18n = {
       editor: 'עורך',
       manager: 'מנהל',
       owner: 'בעלים',
+      ownerViewer: 'בעלים - צפייה',
     },
   },
   emptyState: {

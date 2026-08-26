@@ -36,7 +36,7 @@ import { UpdateIsraelClassificationDto } from './dto/update-israel-classificatio
 @ApiForbiddenResponse({
   description: 'Access denied due to insufficient role or inactive user.',
 })
-@Roles(Role.OWNER, Role.MANAGER)
+@Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
 @Controller('israel/classifications')
 export class IsraelClassificationController {
   constructor(

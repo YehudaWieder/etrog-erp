@@ -67,7 +67,7 @@ export class DefaultTraderCategoryController {
       'Default trader categories with complete share breakdown returned successfully.',
     type: [DefaultTraderCategoryApprovalResponseDto],
   })
-  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.OWNER_VIEWER)
   @Get()
   async getDefaultCategories() {
     return this.defaultTraderCategoryService.findAll();
@@ -92,7 +92,7 @@ export class DefaultTraderCategoryController {
     status: 404,
     description: 'Default trader category not found.',
   })
-  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.OWNER_VIEWER)
   @Get(':id')
   async getDefaultCategory(@Param('id', ParseIntPipe) id: number) {
     return this.defaultTraderCategoryService.findOne(id);

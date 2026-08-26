@@ -18,7 +18,7 @@ import { exportCustomerInventoryExcel } from './services/customerInventoryExport
 import { buildCustomerInventorySummaryMatrixByCustomer } from './utils/customerInventorySummaryMatrix.util';
 import { TraderPrintExportActions } from '../traders/components/TraderPrintExportActions';
 import type { NavItem } from '../../types/navigation';
-import { getCurrentUser, isAuthenticated, isWorkerRole, logout } from '../../services/authService';
+import { getCurrentUser, isAuthenticated, isWorkerRole, isReadOnlyRole, logout } from '../../services/authService';
 import { NoPermissionBanner } from '../../components/ui/NoPermissionBanner';
 import { getActiveSeason, getSeasons, type Season } from '../../services/seasonsApi';
 import { getCustomers, type Customer } from '../../services/customersApi';
@@ -65,6 +65,7 @@ export function CustomerInventoryPage() {
 
   const currentUser = getCurrentUser();
   const isWorker = isWorkerRole(currentUser?.role);
+  const isReadOnly = isReadOnlyRole(currentUser?.role);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -571,7 +572,7 @@ export function CustomerInventoryPage() {
       topNav={t.topNav}
       activeTopNavId={activeTopId}
       pageHeaderActions={
-        !isWorker && (isInventoryTab || isMovementsTab) ? (
+        !isReadOnly && (isInventoryTab || isMovementsTab) ? (
           <div className="action-buttons">
             <button
               className="btn btn-primary"

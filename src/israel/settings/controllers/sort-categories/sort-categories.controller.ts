@@ -38,7 +38,7 @@ import { ReorderIsraelSortCategoriesDto } from 'src/israel/settings/services/sor
 @ApiForbiddenResponse({
   description: 'Access denied due to insufficient role or inactive user.',
 })
-@Roles(Role.OWNER, Role.MANAGER)
+@Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
 @Controller('israel/sort-categories')
 export class IsraelSortCategoriesController {
   constructor(private readonly israelSortCategoriesService: IsraelSortCategoriesService) {}

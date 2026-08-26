@@ -32,7 +32,7 @@ import { UpdateIsraelHarvestDto } from './dto/update-israel-harvest.dto';
 @ApiBearerAuth('access-token')
 @ApiUnauthorizedResponse({ description: 'JWT authentication failed or token is missing.' })
 @ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
-@Roles(Role.OWNER, Role.MANAGER)
+@Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
 @Controller('israel/harvests')
 export class IsraelHarvestController {
   constructor(private readonly israelHarvestService: IsraelHarvestService) {}

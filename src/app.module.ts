@@ -20,6 +20,7 @@ import { AuthorizationModule } from './authorization/authorization.module';
 import { RolesGuard } from './authorization/guards/roles.guard';
 import { ActiveGuard } from './authorization/guards/active.guard';
 import { WorkerAccessGuard } from './authorization/guards/worker-access.guard';
+import { OwnerViewerAccessGuard } from './authorization/guards/owner-viewer-access.guard';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { IsraelModule } from './israel/israel.module';
 import { AuditModule } from './audit/audit.module';
@@ -54,6 +55,10 @@ import { AuditModule } from './audit/audit.module';
     {
       provide: APP_GUARD,
       useClass: WorkerAccessGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: OwnerViewerAccessGuard,
     },
     {
       provide: APP_GUARD,

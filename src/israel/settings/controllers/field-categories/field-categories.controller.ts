@@ -39,7 +39,7 @@ import { UpdateIsraelFieldCategoryDto } from 'src/israel/settings/services/field
 @ApiForbiddenResponse({
   description: 'Access denied due to insufficient role or inactive user.',
 })
-@Roles(Role.OWNER, Role.MANAGER)
+@Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
 @Controller('israel/field-categories')
 export class IsraelFieldCategoriesController {
   constructor(private readonly israelFieldCategoriesService: IsraelFieldCategoriesService) {}

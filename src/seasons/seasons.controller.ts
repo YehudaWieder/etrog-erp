@@ -60,7 +60,7 @@ export class SeasonsController {
   }
 
   @Get()
-  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.OWNER_VIEWER)
   @ApiOperation({ summary: 'Retrieve all seasons' })
   @ApiResponse({ status: 200, description: 'List of all seasons returned successfully.' })
   findAll() {
@@ -68,7 +68,7 @@ export class SeasonsController {
   }
 
   @Get('active')
-  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.OWNER_VIEWER)
   @ApiOperation({ summary: 'Retrieve the currently active season' })
   @ApiResponse({ status: 200, description: 'Active season returned successfully.' })
   @ApiResponse({ status: 404, description: 'Active season not found.' })
@@ -77,7 +77,7 @@ export class SeasonsController {
   }
 
   @Get(':idOrSlug')
-  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
+  @Roles(Role.OWNER, Role.MANAGER, Role.EDITOR, Role.OWNER_VIEWER)
   @ApiOperation({ summary: 'Retrieve a season by its numeric ID or URL-friendly slug' })
   @ApiParam({ name: 'idOrSlug', type: String, description: 'The numeric ID or slug of the season.' })
   @ApiResponse({ status: 200, description: 'Season returned successfully.' })

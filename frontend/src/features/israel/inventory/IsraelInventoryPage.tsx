@@ -8,8 +8,10 @@ import type { NavItem } from '../../../types/navigation';
 import {
   getCurrentUser,
   isAuthenticated,
+  isWorkerRole,
   logout,
 } from '../../../services/authService';
+import { NoPermissionBanner } from '../../../components/ui/NoPermissionBanner';
 import { useActiveModule } from '../../../hooks/useActiveModule';
 import { SettingsIcon } from '../../../components/ui/SettingsIcon';
 import {
@@ -55,6 +57,7 @@ export function IsraelInventoryPage() {
   const activeModule = useActiveModule();
   const [activeTopId, setActiveTopId] = useState('israel-inventory');
   const currentUser = getCurrentUser();
+  const isWorker = isWorkerRole(currentUser?.role);
   const [alertsCount, setAlertsCount] = useState<number>(0);
 
   useEffect(() => {
@@ -571,7 +574,7 @@ export function IsraelInventoryPage() {
       brandName="Wieders etrogs"
       pageTitle={t.pageTitle}
       pageHeaderActions={
-        isAllInventoryTab || isMovementsTab ? (
+        isWorker ? null : isAllInventoryTab || isMovementsTab ? (
           <div className="action-buttons">
             <button
               className="btn btn-primary"
@@ -633,7 +636,9 @@ export function IsraelInventoryPage() {
         </button>
       }
     >
-      {isAllInventoryTab ? (
+      {isWorker ? (
+        <NoPermissionBanner message={lang === 'he' ? 'אין לך הרשאת גישה לאזור זה.' : "You don't have permission to access this area."} />
+      ) : isAllInventoryTab ? (
         <IsraelInventoryAllSection
           lang={lang}
           labels={t.allInventory}

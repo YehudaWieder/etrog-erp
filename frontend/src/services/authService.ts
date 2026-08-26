@@ -174,6 +174,7 @@ export { isAuthenticated };
 
 const MANAGER_ROLES = new Set(['manager', 'owner', 'admin']);
 const WORKER_ROLE = 'worker';
+const OWNER_VIEWER_ROLE = 'owner_viewer';
 
 export function isManagerRole(role: string | undefined): boolean {
   return MANAGER_ROLES.has((role ?? '').trim().toLowerCase());
@@ -181,4 +182,14 @@ export function isManagerRole(role: string | undefined): boolean {
 
 export function isWorkerRole(role: string | undefined): boolean {
   return (role ?? '').trim().toLowerCase() === WORKER_ROLE;
+}
+
+export function isOwnerViewerRole(role: string | undefined): boolean {
+  return (role ?? '').trim().toLowerCase() === OWNER_VIEWER_ROLE;
+}
+
+// True for any role that must not see edit/add/delete controls: worker has no
+// Italy access at all, owner-viewer has view-only access to Italy.
+export function isReadOnlyRole(role: string | undefined): boolean {
+  return isWorkerRole(role) || isOwnerViewerRole(role);
 }

@@ -32,7 +32,7 @@ import { AUTH_SESSION_EXPIRED_EVENT } from './services/apiClient';
 import { SessionExpiryDialog } from './components/ui/SessionExpiryDialog';
 import { useSessionExpiryWarning } from './hooks/useSessionExpiryWarning';
 import SettingsPage from './features/settings/SettingsPage';
-import { isAuthenticated, getCurrentUser, isManagerRole } from './services/authService';
+import { isAuthenticated, getCurrentUser, isManagerRole, isOwnerViewerRole } from './services/authService';
 import { getSetupStatus } from './services/setupApi';
 import { getLastActiveModule } from './utils/activeModule';
 
@@ -109,6 +109,27 @@ function AuthGuard({ children }: { children: React.ReactNode }): JSX.Element | n
   }, [authed, isExempt, location.pathname, navigate]);
 
   if (!authed && !isExempt) {
+    return null;
+  }
+
+  return <>{children}</>;
+}
+
+// Owner-viewer accounts have no access to Israel data (cosmetic mirror of the
+// backend OwnerViewerAccessGuard, which is the actual security boundary).
+function ModuleAccessGuard({ children }: { children: React.ReactNode }): JSX.Element | null {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const user = getCurrentUser();
+  const blocked = isAuthenticated() && isOwnerViewerRole(user?.role) && location.pathname.startsWith('/israel');
+
+  useEffect(() => {
+    if (blocked) {
+      navigate('/italy/home', { replace: true });
+    }
+  }, [blocked, navigate]);
+
+  if (blocked) {
     return null;
   }
 
@@ -201,33 +222,35 @@ function AppRouter(): JSX.Element {
 
   return (
     <AuthGuard>
-      <SetupGuard>
-        <Routes>
-          <Route path="/login" element={<LoginRoute />} />
-          <Route path="/register" element={<RegisterRoute />} />
-          <Route path="/auth/callback" element={<AuthCallbackRoute />} />
-          <Route path="/auth/reset-password" element={<ResetPasswordRoute />} />
-          <Route path="/profile/*" element={<ProfileRoute />} />
-          <Route path="/messages/*" element={<MessagesRoute />} />
+      <ModuleAccessGuard>
+        <SetupGuard>
+          <Routes>
+            <Route path="/login" element={<LoginRoute />} />
+            <Route path="/register" element={<RegisterRoute />} />
+            <Route path="/auth/callback" element={<AuthCallbackRoute />} />
+            <Route path="/auth/reset-password" element={<ResetPasswordRoute />} />
+            <Route path="/profile/*" element={<ProfileRoute />} />
+            <Route path="/messages/*" element={<MessagesRoute />} />
 
-          <Route path="/italy/home" element={<HomeRoute />} />
-          <Route path="/italy/harvest/*" element={<HarvestRoute />} />
-          <Route path="/italy/traders/*" element={<TraderInventoryRoute />} />
-          <Route path="/italy/customers/*" element={<CustomerInventoryRoute />} />
-          <Route path="/italy/shipments/*" element={<ShipmentsRoute />} />
-          <Route path="/italy/payments/*" element={<PaymentsRoute />} />
-          <Route path="/italy/settings/*" element={<SettingsPage />} />
+            <Route path="/italy/home" element={<HomeRoute />} />
+            <Route path="/italy/harvest/*" element={<HarvestRoute />} />
+            <Route path="/italy/traders/*" element={<TraderInventoryRoute />} />
+            <Route path="/italy/customers/*" element={<CustomerInventoryRoute />} />
+            <Route path="/italy/shipments/*" element={<ShipmentsRoute />} />
+            <Route path="/italy/payments/*" element={<PaymentsRoute />} />
+            <Route path="/italy/settings/*" element={<SettingsPage />} />
 
-          <Route path="/israel/home" element={<HomeRoute />} />
-          <Route path="/israel/harvest/*" element={<IsraelHarvestRoute />} />
-          <Route path="/israel/shipments/*" element={<IsraelShipmentsRoute />} />
-          <Route path="/israel/inventory/*" element={<IsraelInventoryRoute />} />
-          <Route path="/israel/payments/*" element={<IsraelPaymentsRoute />} />
-          <Route path="/israel/settings/*" element={<SettingsPage />} />
+            <Route path="/israel/home" element={<HomeRoute />} />
+            <Route path="/israel/harvest/*" element={<IsraelHarvestRoute />} />
+            <Route path="/israel/shipments/*" element={<IsraelShipmentsRoute />} />
+            <Route path="/israel/inventory/*" element={<IsraelInventoryRoute />} />
+            <Route path="/israel/payments/*" element={<IsraelPaymentsRoute />} />
+            <Route path="/israel/settings/*" element={<SettingsPage />} />
 
-          <Route path="*" element={<DefaultHomeRedirect />} />
-        </Routes>
-      </SetupGuard>
+            <Route path="*" element={<DefaultHomeRedirect />} />
+          </Routes>
+        </SetupGuard>
+      </ModuleAccessGuard>
     </AuthGuard>
   );
 }

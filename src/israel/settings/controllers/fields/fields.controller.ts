@@ -37,7 +37,7 @@ import { UpdateIsraelFieldDto } from 'src/israel/settings/services/fields/dto/up
 @ApiForbiddenResponse({
   description: 'Access denied due to insufficient role or inactive user.',
 })
-@Roles(Role.OWNER, Role.MANAGER)
+@Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
 @Controller('israel/fields')
 export class IsraelFieldsController {
   constructor(private readonly israelFieldsService: IsraelFieldsService) {}

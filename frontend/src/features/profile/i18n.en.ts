@@ -123,6 +123,7 @@ export const PROFILE_I18N_EN: ProfileI18n = {
       editor: 'Editor',
       manager: 'Manager',
       owner: 'Owner',
+      ownerViewer: 'Owner - View Only',
     },
   },
   emptyState: {

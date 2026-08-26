@@ -34,7 +34,7 @@ import { DeleteIsraelBoxesBulkDto } from './dto/delete-israel-boxes-bulk.dto';
 @ApiBearerAuth('access-token')
 @ApiUnauthorizedResponse({ description: 'JWT authentication failed or token is missing.' })
 @ApiForbiddenResponse({ description: 'Access denied due to insufficient role or inactive user.' })
-@Roles(Role.OWNER, Role.MANAGER)
+@Roles(Role.OWNER, Role.MANAGER, Role.EDITOR)
 @Controller('israel/boxes')
 export class IsraelBoxController {
   constructor(private readonly israelBoxService: IsraelBoxService) {}

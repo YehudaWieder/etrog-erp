@@ -5,7 +5,7 @@ import { useActiveModule } from '../../hooks/useActiveModule';
 import { SettingsIcon } from '../../components/ui/SettingsIcon';
 import { SHIPMENTS_I18N } from './i18n';
 import type { NavItem } from '../../types/navigation';
-import { getCurrentUser, isAuthenticated, isWorkerRole, logout } from '../../services/authService';
+import { getCurrentUser, isAuthenticated, isWorkerRole, isReadOnlyRole, logout } from '../../services/authService';
 import { getActiveSeason } from '../../services/seasonsApi';
 import { NoPermissionBanner } from '../../components/ui/NoPermissionBanner';
 import { AllShipmentsTable } from './components/AllShipmentsTable';
@@ -85,6 +85,7 @@ export function ShipmentsPage() {
   const [lastActionText, setLastActionText] = useState<string>('');
   const currentUser = getCurrentUser();
   const isWorker = isWorkerRole(currentUser?.role);
+  const isReadOnly = isReadOnlyRole(currentUser?.role);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -416,7 +417,7 @@ export function ShipmentsPage() {
       direction={lang === 'he' ? 'rtl' : 'ltr'}
       brandName="Wieders etrogs"
       pageTitle={pageTitleWithCount}
-      pageHeaderActions={!isWorker ? (
+      pageHeaderActions={!isReadOnly ? (
         <ShipmentsPageHeaderActions
           addActionLabel={addActionLabel}
           editActionLabel={isTrashActive ? t.pageControls.restore : t.pageControls.edit}
