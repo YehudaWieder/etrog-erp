@@ -279,7 +279,8 @@ export function useDefaultTraderCategoriesManagement({ onHeaderStateChange }: De
         })),
       });
 
-      setCategories((current) => sortByOrderIndex([...current.filter((item) => item.id !== createdCategory.id), createdCategory]));
+      const refreshed = await getDefaultTraderCategories();
+      setCategories(sortByOrderIndex(refreshed));
       setSelectedCategoryId(createdCategory.id);
       setIsAddDialogOpen(false);
       resetForm();
@@ -338,7 +339,8 @@ export function useDefaultTraderCategoriesManagement({ onHeaderStateChange }: De
 
     try {
       await deleteDefaultTraderCategory(selectedCategory.id);
-      setCategories((current) => current.filter((item) => item.id !== selectedCategory.id));
+      const refreshed = await getDefaultTraderCategories();
+      setCategories(sortByOrderIndex(refreshed));
       setSelectedCategoryId(null);
     } catch (requestError) {
       const message = requestError instanceof Error ? requestError.message : t.deleteFailed;

@@ -114,14 +114,34 @@ export function IsraelHarvestClassificationRowsSection({
   const hasValidQuantity =
     Number.isFinite(parsedQuantity) && parsedQuantity > 0;
 
+  // Only count existing records still represented by a scaffold draft — once its "table" (row) is
+  // removed via onRemoveDraft, its saved quantity must drop out of the running total too, otherwise
+  // the displayed total stays stale even though handleSubmit already excludes it on save.
+  const activeExistingClassificationIds = useMemo(() => {
+    const ids = new Set<number>();
+    for (const draft of drafts) {
+      for (const id of draft.existingClassificationIds ?? []) {
+        ids.add(id);
+      }
+    }
+    return ids;
+  }, [drafts]);
+
   const existingTotalQuantity = useMemo(
     () =>
       existingHarvestClassifications.reduce((sum, record) => {
+        if (!activeExistingClassificationIds.has(record.id)) {
+          return sum;
+        }
         const pendingValue = pendingExistingClassificationEdits[record.id];
         const value = pendingValue !== undefined ? Number(pendingValue) : record.quantity;
         return sum + (Number.isFinite(value) ? value : 0);
       }, 0),
-    [existingHarvestClassifications, pendingExistingClassificationEdits],
+    [
+      existingHarvestClassifications,
+      pendingExistingClassificationEdits,
+      activeExistingClassificationIds,
+    ],
   );
 
   const totalSortingQuantity =

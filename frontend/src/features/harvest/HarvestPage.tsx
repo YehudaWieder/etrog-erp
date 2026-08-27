@@ -781,6 +781,7 @@ export function HarvestPage() {
     setSortingDailyRows,
     setSortingDailyCategories,
     setSortingDailyLoadError,
+    setSortingListRows,
     traderCategories: harvestFormTraderCategories,
   });
 
@@ -835,6 +836,9 @@ export function HarvestPage() {
       if (seasonFilterId !== null) {
         getClassificationsBySeason(seasonFilterId)
           .then((data) => setSortingListRows(data))
+          .catch(() => undefined);
+        getDeletedClassificationsBySeason(seasonFilterId)
+          .then((data) => setDeletedSortingListRows(data))
           .catch(() => undefined);
       }
     },
@@ -1226,10 +1230,10 @@ export function HarvestPage() {
     setIsDeletingHarvest(true);
     try {
       await deleteHarvest(selectedHarvestRow.id);
-      setHarvestRows((rows) => rows.filter((row) => row.id !== selectedHarvestRow.id));
       setSelectedHarvestRow(null);
       setDetailsRecord(null);
       setIsDeleteHarvestDialogOpen(false);
+      await refreshHarvestWorkspaceDataAfterEdit();
     } catch {
       setIsDeleteHarvestDialogOpen(false);
     } finally {
@@ -1446,6 +1450,7 @@ export function HarvestPage() {
       );
       setSelectedSortingListRow((prev) => (prev ? { ...prev, quantity: editQuantityValue } : prev));
       setIsEditSortingListDialogOpen(false);
+      await refreshHarvestWorkspaceDataAfterEdit();
     } catch (error) {
       if (error instanceof ApiError && error.status === 400) {
         setEditSortingListError(error.message);
@@ -1479,6 +1484,7 @@ export function HarvestPage() {
       setSortingListRows((rows) => rows.filter((row) => row.id !== selectedSortingListRow.id));
       setSelectedSortingListRow(null);
       setIsDeleteSortingListDialogOpen(false);
+      await refreshHarvestWorkspaceDataAfterEdit();
     } catch (error) {
       if (error instanceof ApiError && error.status === 400) {
         setDeleteSortingListError(error.message);
@@ -1524,9 +1530,13 @@ export function HarvestPage() {
     setPermanentDeleteSortingError('');
     try {
       await permanentDeleteHarvestClassification(selectedDeletedSortingListRow.id);
-      setDeletedSortingListRows((rows) => rows.filter((r) => r.id !== selectedDeletedSortingListRow.id));
       setSelectedDeletedSortingListRow(null);
       setIsPermanentDeleteSortingDialogOpen(false);
+      if (seasonFilterId !== null) {
+        getDeletedClassificationsBySeason(seasonFilterId)
+          .then((data) => setDeletedSortingListRows(data))
+          .catch(() => undefined);
+      }
     } catch {
       setIsPermanentDeleteSortingDialogOpen(false);
     } finally {

@@ -489,7 +489,7 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
         conditions: submittableConditionDrafts.length > 0 ? submittableConditionDrafts.map(mapConditionDraftToPayload) : undefined,
       });
 
-      setCategories((current) => sortByOrderIndex([...current.filter((item) => item.id !== createdCategory.id), createdCategory]));
+      await loadCategories(seasonFilterId);
       setSelectedCategoryId(createdCategory.id);
       setIsAddDialogOpen(false);
       resetForm();
@@ -529,7 +529,9 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
         conditions: submittableConditionDrafts.length > 0 ? submittableConditionDrafts.map(mapConditionDraftToPayload) : undefined,
       });
 
-      setCategories((current) => sortByOrderIndex([...current.filter((item) => item.id !== updated.id), updated]));
+      if (seasonFilterId) {
+        await loadCategories(seasonFilterId);
+      }
       setSelectedCategoryId(updated.id);
       setIsEditDialogOpen(false);
     } catch (requestError) {
@@ -549,7 +551,9 @@ export function useTraderCategoriesManagement({ onHeaderStateChange }: TraderCat
 
     try {
       await deleteTraderCategory(selectedCategory.id);
-      setCategories((current) => current.filter((item) => item.id !== selectedCategory.id));
+      if (seasonFilterId) {
+        await loadCategories(seasonFilterId);
+      }
       setSelectedCategoryId(null);
     } catch (requestError) {
       const message = requestError instanceof Error ? requestError.message : t.deleteFailed;

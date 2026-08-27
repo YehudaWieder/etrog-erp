@@ -909,6 +909,7 @@ export function IsraelHarvestPage() {
       );
       setSelectedDailyHarvest(updated);
       setIsEditHarvestFormOpen(false);
+      loadClassifications();
 
       if (hasClassificationError) {
         window.alert(t.editHarvestForm.classificationsSaveFailedError);
@@ -1357,7 +1358,12 @@ export function IsraelHarvestPage() {
 
       setIsHarvestFormOpen(false);
       loadHarvestRecords();
-      if (isSortingSummaryTab || isSortingListTab || isSortingDailyDetailsTab) {
+      if (
+        isSortingSummaryTab ||
+        isSortingListTab ||
+        isSortingDailyDetailsTab ||
+        isDailyDetailsTab
+      ) {
         loadClassifications();
       }
       if (isFieldCategorySummaryTab) {
@@ -1391,7 +1397,12 @@ export function IsraelHarvestPage() {
       }
       setIsSortingFormOpen(false);
       loadHarvestRecords();
-      if (isSortingSummaryTab || isSortingListTab || isSortingDailyDetailsTab) {
+      if (
+        isSortingSummaryTab ||
+        isSortingListTab ||
+        isSortingDailyDetailsTab ||
+        isDailyDetailsTab
+      ) {
         loadClassifications();
       }
       if (isFieldCategorySummaryTab) {

@@ -684,6 +684,7 @@ export function CustomerInventoryPage() {
       onSaved={() => {
         setIsAddMovementModalOpen(false);
         customerMovements.reload();
+        customerInventorySummary.reload();
       }}
     />
     </>

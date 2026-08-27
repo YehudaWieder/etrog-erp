@@ -244,14 +244,18 @@ export function ShipmentsPage() {
 
   const handleShipmentsRefresh = useCallback(() => {
     setShipmentsRefreshKey((k) => k + 1);
+    setBoxesRefreshKey((k) => k + 1);
+    setItemsRefreshKey((k) => k + 1);
   }, []);
 
   const handleBoxesRefresh = useCallback(() => {
     setBoxesRefreshKey((k) => k + 1);
+    setItemsRefreshKey((k) => k + 1);
   }, []);
 
   const handleItemsRefresh = useCallback(() => {
     setItemsRefreshKey((k) => k + 1);
+    setBoxesRefreshKey((k) => k + 1);
   }, []);
 
   const newShipmentForm = useNewShipmentForm({

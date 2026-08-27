@@ -7,8 +7,10 @@ import {
 } from '../../../../services/harvestsApi';
 import {
   getClassificationDailySummaryBySeason,
+  getClassificationsBySeason,
   type ClassificationDailySummaryCategory,
   type ClassificationDailySummaryRow,
+  type ClassificationListRecord,
 } from '../../../../services/classificationsApi';
 import type { TraderCategoryWithShares } from '../../../../services/traderCategoriesApi';
 import type { HarvestI18n } from '../../i18n';
@@ -45,6 +47,7 @@ type UseHarvestFormSubmissionParams = {
   setSortingDailyRows: (rows: ClassificationDailySummaryRow[]) => void;
   setSortingDailyCategories: (rows: ClassificationDailySummaryCategory[]) => void;
   setSortingDailyLoadError: (value: string) => void;
+  setSortingListRows?: (rows: ClassificationListRecord[]) => void;
   traderCategories?: TraderCategoryWithShares[];
 };
 
@@ -62,6 +65,7 @@ export function useHarvestFormSubmission({
   setSortingDailyRows,
   setSortingDailyCategories,
   setSortingDailyLoadError,
+  setSortingListRows,
   traderCategories = [],
 }: UseHarvestFormSubmissionParams) {
   const traderCategoryOrder = useMemo(() => {
@@ -118,6 +122,14 @@ export function useHarvestFormSubmission({
     } catch {
       // Keep current sorting summary when refresh fallback endpoint fails.
     }
+
+    if (setSortingListRows) {
+      try {
+        setSortingListRows(await getClassificationsBySeason(seasonFilterId));
+      } catch {
+        // Keep current sorting list when refresh fallback endpoint fails.
+      }
+    }
   }, [
     seasonFilterId,
     setFieldReportRows,
@@ -125,6 +137,7 @@ export function useHarvestFormSubmission({
     setSortingDailyCategories,
     setSortingDailyLoadError,
     setSortingDailyRows,
+    setSortingListRows,
     traderCategoryOrder,
   ]);
 
