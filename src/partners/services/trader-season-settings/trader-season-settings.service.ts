@@ -56,6 +56,7 @@ export class TraderSeasonSettingsService {
         pricePerEtrog: data.pricePerEtrog,
         currency,
       },
+      include: { trader: { select: { name: true } } },
     });
   }
 
