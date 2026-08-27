@@ -1,5 +1,7 @@
 import { useState, type Dispatch, type SetStateAction } from 'react';
-import { deleteMyProfile, updateManagedProfile, type AuthProfile, type AuthUserListItem } from '../../../services/authService';
+import { useNavigate } from 'react-router-dom';
+import { patchStoredAuthUser } from '../../../services/apiClient';
+import { deleteMyProfile, logout, updateManagedProfile, type AuthProfile, type AuthUserListItem } from '../../../services/authService';
 import type { ProfileI18nLabels, ProfileLang } from '../profilePage.types';
 
 type UseManagedProfilesActionsParams = {
@@ -33,6 +35,7 @@ export function useManagedProfilesActions({
   const [managedEditMessage, setManagedEditMessage] = useState('');
   const [isUpdatingManagedProfile, setIsUpdatingManagedProfile] = useState(false);
   const [isDeletingManagedProfile, setIsDeletingManagedProfile] = useState(false);
+  const navigate = useNavigate();
 
   const handleDeleteManagedProfile = async () => {
     if (!selectedManagedProfileId) {
@@ -44,6 +47,13 @@ export function useManagedProfilesActions({
 
     try {
       await deleteMyProfile(selectedManagedProfileId);
+
+      if (profile && profile.id === selectedManagedProfileId) {
+        await logout();
+        navigate('/login');
+        return;
+      }
+
       setProfilesList((prev) => prev.filter((item) => item.id !== selectedManagedProfileId));
       setSelectedManagedProfileId(null);
     } catch {
@@ -96,6 +106,7 @@ export function useManagedProfilesActions({
 
       if (profile && profile.id === updated.id) {
         setProfile((prev) => (prev ? { ...prev, role: updated.role, isActive: updated.isActive, updatedAt: updated.updatedAt } : prev));
+        patchStoredAuthUser({ role: updated.role, isActive: updated.isActive });
       }
 
       setManagedEditMessage(t.editProfile.messages.updateSuccess);
