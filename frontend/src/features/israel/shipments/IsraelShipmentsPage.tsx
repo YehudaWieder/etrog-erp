@@ -155,10 +155,13 @@ export function IsraelShipmentsPage() {
 
   const handleShipmentsRefresh = () => {
     setShipmentsRefreshKey((k) => k + 1);
+    setBoxesRefreshKey((k) => k + 1);
+    setItemsRefreshKey((k) => k + 1);
   };
 
   const handleBoxesRefresh = () => {
     setBoxesRefreshKey((k) => k + 1);
+    setItemsRefreshKey((k) => k + 1);
   };
 
   const handleItemsRefresh = () => {
@@ -585,6 +588,7 @@ export function IsraelShipmentsPage() {
         boxes={packItemsForm.boxes}
         shipments={packItemsForm.shipments}
         sortCategories={packItemsForm.sortCategories}
+        allSortCategories={packItemsForm.allSortCategories}
         isLoadingOptions={packItemsForm.isLoadingOptions}
         boxId={packItemsForm.boxId}
         onBoxIdChange={packItemsForm.onBoxIdChange}
@@ -595,8 +599,10 @@ export function IsraelShipmentsPage() {
         onBoxNotesChange={packItemsForm.onBoxNotesChange}
         onBoxNotesBlur={packItemsForm.onBoxNotesBlur}
         rows={packItemsForm.rows}
+        removedRows={packItemsForm.removedRows}
         onAddRow={packItemsForm.onAddRow}
         onRemoveRow={packItemsForm.onRemoveRow}
+        onRestoreRow={packItemsForm.onRestoreRow}
         onRowCategoryChange={packItemsForm.onRowCategoryChange}
         onRowNotesChange={packItemsForm.onRowNotesChange}
         onCellQuantityChange={packItemsForm.onCellQuantityChange}
@@ -692,7 +698,7 @@ export function IsraelShipmentsPage() {
         <IsraelShipmentItemsSummarySection
           lang={lang}
           labels={t.shipmentItemsSummaryTableLabels}
-          refreshKey={shipmentsRefreshKey}
+          refreshKey={itemsRefreshKey + shipmentsRefreshKey}
           onSeasonInfoChange={setCurrentTabSeasonInfo}
         />
       ) : (

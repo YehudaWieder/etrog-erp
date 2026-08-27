@@ -73,6 +73,7 @@ export function usePackIsraelShipmentItemsForm({
 
   const [boxId, setBoxId] = useState('');
   const [rows, setRows] = useState<PackIsraelShipmentItemRowDraft[]>([]);
+  const [removedRows, setRemovedRows] = useState<PackIsraelShipmentItemRowDraft[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [boxNotesDraft, setBoxNotesDraft] = useState('');
@@ -271,6 +272,7 @@ export function usePackIsraelShipmentItemsForm({
   const resetForm = useCallback(() => {
     setBoxId('');
     setRows([]);
+    setRemovedRows([]);
     setError(null);
     setExistingItems([]);
     setPendingExistingItemEdits({});
@@ -284,6 +286,7 @@ export function usePackIsraelShipmentItemsForm({
   const handleBoxIdChange = useCallback((value: string) => {
     setBoxId(value);
     setRows([]);
+    setRemovedRows([]);
     setError(null);
     setPendingExistingItemEdits({});
   }, []);
@@ -346,9 +349,69 @@ export function usePackIsraelShipmentItemsForm({
     setRows((current) => [...current, { id: nextRowId(), categoryId: '', notes: '', quantities: {} }]);
   }, []);
 
-  const handleRemoveRow = useCallback((rowId: string) => {
-    setRows((current) => current.filter((row) => row.id !== rowId));
-  }, []);
+  const handleRemoveRow = useCallback(
+    (rowId: string) => {
+      setRows((current) => {
+        const rowToRemove = current.find((row) => row.id === rowId);
+        if (rowToRemove) {
+          setRemovedRows((removed) => [...removed, rowToRemove]);
+        }
+        // Removing a row for a category that already has packed items stages those items for
+        // deletion (quantity '0', same as the existing-item add/subtract popup's delete path) so
+        // the displayed total drops immediately, mirroring the harvest edit form's removed-drafts
+        // behavior. Restoring the row (see handleRestoreRow) un-stages the deletion.
+        if (rowToRemove?.categoryId) {
+          const categoryId = Number(rowToRemove.categoryId);
+          const itemIdsToDelete = existingItems
+            .filter((item) => item.categoryId === categoryId)
+            .map((item) => item.id);
+          if (itemIdsToDelete.length > 0) {
+            setPendingExistingItemEdits((edits) => {
+              const next = { ...edits };
+              for (const id of itemIdsToDelete) {
+                next[id] = '0';
+              }
+              return next;
+            });
+          }
+        }
+        return current.filter((row) => row.id !== rowId);
+      });
+    },
+    [existingItems],
+  );
+
+  const handleRestoreRow = useCallback(
+    (rowId: string) => {
+      setRemovedRows((current) => {
+        const rowToRestore = current.find((row) => row.id === rowId);
+        if (rowToRestore) {
+          setRows((rows) => [...rows, rowToRestore]);
+          if (rowToRestore.categoryId) {
+            const categoryId = Number(rowToRestore.categoryId);
+            const itemIdsToRestore = existingItems
+              .filter((item) => item.categoryId === categoryId)
+              .map((item) => item.id);
+            if (itemIdsToRestore.length > 0) {
+              setPendingExistingItemEdits((edits) => {
+                let changed = false;
+                const next = { ...edits };
+                for (const id of itemIdsToRestore) {
+                  if (id in next) {
+                    delete next[id];
+                    changed = true;
+                  }
+                }
+                return changed ? next : edits;
+              });
+            }
+          }
+        }
+        return current.filter((row) => row.id !== rowId);
+      });
+    },
+    [existingItems],
+  );
 
   const handleRowCategoryChange = useCallback((rowId: string, categoryId: string) => {
     setRows((current) => current.map((row) => (row.id === rowId ? { ...row, categoryId, quantities: {} } : row)));
@@ -439,6 +502,7 @@ export function usePackIsraelShipmentItemsForm({
     boxes: openBoxOptions,
     shipments,
     sortCategories: availableCategoriesForBox,
+    allSortCategories: sortCategories,
     isLoadingOptions,
     boxId,
     onBoxIdChange: handleBoxIdChange,
@@ -449,8 +513,10 @@ export function usePackIsraelShipmentItemsForm({
     onBoxNotesChange: handleBoxNotesChange,
     onBoxNotesBlur: handleBoxNotesBlur,
     rows,
+    removedRows,
     onAddRow: handleAddRow,
     onRemoveRow: handleRemoveRow,
+    onRestoreRow: handleRestoreRow,
     onRowCategoryChange: handleRowCategoryChange,
     onRowNotesChange: handleRowNotesChange,
     onCellQuantityChange: handleCellQuantityChange,

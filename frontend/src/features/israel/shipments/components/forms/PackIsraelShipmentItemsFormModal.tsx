@@ -73,6 +73,9 @@ type PackIsraelShipmentItemsFormModalText = {
     addRowDisabledHint: string;
     totalPackedQuantityLabel: string;
     remainingCapacityHint: (n: number) => string;
+    pendingRemovedItemRowsTitle: string;
+    pendingRemovedItemRowsHint: string;
+    restorePendingRemovedItemRow: string;
   };
 };
 
@@ -84,6 +87,7 @@ type PackIsraelShipmentItemsFormModalProps = {
   boxes: IsraelBoxRecord[];
   shipments: IsraelShipmentRecord[];
   sortCategories: IsraelSortCategory[];
+  allSortCategories: IsraelSortCategory[];
   isLoadingOptions: boolean;
   boxId: string;
   onBoxIdChange: (v: string) => void;
@@ -94,8 +98,10 @@ type PackIsraelShipmentItemsFormModalProps = {
   onBoxNotesChange: (v: string) => void;
   onBoxNotesBlur: () => void;
   rows: PackIsraelShipmentItemRowDraft[];
+  removedRows: PackIsraelShipmentItemRowDraft[];
   onAddRow: () => void;
   onRemoveRow: (rowId: string) => void;
+  onRestoreRow: (rowId: string) => void;
   onRowCategoryChange: (rowId: string, categoryId: string) => void;
   onRowNotesChange: (rowId: string, notes: string) => void;
   onCellQuantityChange: (rowId: string, grade: string, pitamStatus: IsraelPitamStatus, value: string) => void;
@@ -121,6 +127,7 @@ export function PackIsraelShipmentItemsFormModal({
   boxes,
   shipments,
   sortCategories,
+  allSortCategories,
   isLoadingOptions,
   boxId,
   onBoxIdChange,
@@ -131,8 +138,10 @@ export function PackIsraelShipmentItemsFormModal({
   onBoxNotesChange,
   onBoxNotesBlur,
   rows,
+  removedRows,
   onAddRow,
   onRemoveRow,
+  onRestoreRow,
   onRowCategoryChange,
   onRowNotesChange,
   onCellQuantityChange,
@@ -574,6 +583,29 @@ export function PackIsraelShipmentItemsFormModal({
 
           {boxOverCapacityMessage ? (
             <p className="seasons-manager__error" style={{ margin: '0.5rem 0 0' }}>{boxOverCapacityMessage}</p>
+          ) : null}
+
+          {removedRows.length ? (
+            <div style={{ marginTop: '1rem' }}>
+              <h4 className={styles.rowsTitle}>{t.itemRows.pendingRemovedItemRowsTitle}</h4>
+              <p className={styles.rowsEmptyHint}>{t.itemRows.pendingRemovedItemRowsHint}</p>
+              {removedRows.map((row) => {
+                const categoryName =
+                  allSortCategories.find((category) => String(category.id) === row.categoryId)?.name ??
+                  row.categoryId;
+                return (
+                  <div
+                    key={row.id}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0' }}
+                  >
+                    <span>{categoryName}</span>
+                    <button type="button" className="btn btn-secondary" onClick={() => onRestoreRow(row.id)}>
+                      {t.itemRows.restorePendingRemovedItemRow}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
           ) : null}
         </div>
 

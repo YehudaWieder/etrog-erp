@@ -408,6 +408,10 @@ export const ISRAEL_SHIPMENTS_I18N_HE: IsraelShipmentsI18n = {
       addRowDisabledHint: 'יש לבחור קטגוריה ולהזין כמות לפריט הנוכחי לפני הוספת פריט נוסף',
       totalPackedQuantityLabel: 'סך הכל נארז',
       remainingCapacityHint: (n: number) => `מקום פנוי בקרטון: ${n}`,
+      pendingRemovedItemRowsTitle: 'פריטים שהוסרו (טרם נשמר)',
+      pendingRemovedItemRowsHint:
+        'פריטים אלו יימחקו מהקרטון בעת השמירה. ניתן לשחזר אותם לפני השמירה.',
+      restorePendingRemovedItemRow: 'שחזור',
     },
   },
   editShipmentItemModal: {

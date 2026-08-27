@@ -408,6 +408,10 @@ export const ISRAEL_SHIPMENTS_I18N_EN: IsraelShipmentsI18n = {
       addRowDisabledHint: 'Select a category and enter a quantity for the current item before adding another',
       totalPackedQuantityLabel: 'Total packed',
       remainingCapacityHint: (n: number) => `Available space in carton: ${n}`,
+      pendingRemovedItemRowsTitle: 'Removed items (not saved yet)',
+      pendingRemovedItemRowsHint:
+        'These items will be deleted from the box on save. You can restore them before saving.',
+      restorePendingRemovedItemRow: 'Restore',
     },
   },
   editShipmentItemModal: {

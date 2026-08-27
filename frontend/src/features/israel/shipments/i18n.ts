@@ -214,6 +214,9 @@ export type IsraelShipmentsI18n = {
       addRowDisabledHint: string;
       totalPackedQuantityLabel: string;
       remainingCapacityHint: (n: number) => string;
+      pendingRemovedItemRowsTitle: string;
+      pendingRemovedItemRowsHint: string;
+      restorePendingRemovedItemRow: string;
     };
   };
   editShipmentItemModal: {
