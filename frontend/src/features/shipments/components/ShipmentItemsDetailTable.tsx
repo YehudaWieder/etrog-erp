@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { ShipmentItemDetailRow } from '../services/shipmentItemsDetailRows.service';
+import { computeMergedRowSpans, type ShipmentItemDetailRow } from '../services/shipmentItemsDetailRows.service';
 import type { ShipmentsTableLabels } from '../shipments.types';
 import styles from './styles/AllShipmentsTable.module.css';
 
@@ -7,49 +7,54 @@ type ShipmentItemsDetailTableProps = {
   rows: ShipmentItemDetailRow[];
   labels: ShipmentsTableLabels['detailsItemsTable'];
   showBoxNumber?: boolean;
+  shipmentNumberColumnLabel?: string;
+  mergeRepeatedCells?: boolean;
 };
 
-// For each row: the number of rows to merge into it (rowSpan) if it starts a run of
-// consecutive rows sharing the same key, or 0 if it's part of the previous row's merged cell.
-function computeMergedRowSpans(rows: ShipmentItemDetailRow[], getKey: (row: ShipmentItemDetailRow) => string): number[] {
-  const spans = new Array(rows.length).fill(0);
-  let groupStart = 0;
-
-  while (groupStart < rows.length) {
-    let groupEnd = groupStart;
-    while (groupEnd + 1 < rows.length && getKey(rows[groupEnd + 1]) === getKey(rows[groupStart])) {
-      groupEnd++;
-    }
-
-    spans[groupStart] = groupEnd - groupStart + 1;
-    groupStart = groupEnd + 1;
+// A rowSpan cell can't be split across a printed page, so the browser keeps its whole
+// merged group together — a long merged group can force blank pages before it. When
+// mergeRepeatedCells is off, every row gets its own cell (rowSpan of 1) so pagination
+// can break anywhere.
+function computeRowSpans(
+  rows: ShipmentItemDetailRow[],
+  getKey: (row: ShipmentItemDetailRow) => string,
+  mergeRepeatedCells: boolean,
+): number[] {
+  if (!mergeRepeatedCells) {
+    return rows.map(() => 1);
   }
 
-  return spans;
+  return computeMergedRowSpans(rows, getKey);
 }
 
-export function ShipmentItemsDetailTable({ rows, labels, showBoxNumber = true }: ShipmentItemsDetailTableProps): JSX.Element {
+export function ShipmentItemsDetailTable({ rows, labels, showBoxNumber = true, shipmentNumberColumnLabel, mergeRepeatedCells = true }: ShipmentItemsDetailTableProps): JSX.Element {
+  const showShipmentNumber = Boolean(shipmentNumberColumnLabel);
   const boxNumberRowSpans = useMemo(
-    () => computeMergedRowSpans(rows, (row) => String(row.boxNumber)),
-    [rows],
+    () => computeRowSpans(rows, (row) => `${row.shipmentNumber ?? ''}|${row.boxNumber}`, mergeRepeatedCells),
+    [rows, mergeRepeatedCells],
   );
   const ownershipRowSpans = useMemo(
-    () => computeMergedRowSpans(rows, (row) => `${row.boxNumber}|${row.ownership}`),
-    [rows],
+    () => computeRowSpans(rows, (row) => `${row.shipmentNumber ?? ''}|${row.boxNumber}|${row.ownership}`, mergeRepeatedCells),
+    [rows, mergeRepeatedCells],
   );
   const stockSourceRowSpans = useMemo(
-    () => computeMergedRowSpans(rows, (row) => `${row.boxNumber}|${row.ownership}|${row.stockSource}`),
-    [rows],
+    () => computeRowSpans(rows, (row) => `${row.shipmentNumber ?? ''}|${row.boxNumber}|${row.ownership}|${row.stockSource}`, mergeRepeatedCells),
+    [rows, mergeRepeatedCells],
+  );
+  const categoryRowSpans = useMemo(
+    () => computeRowSpans(rows, (row) => `${row.shipmentNumber ?? ''}|${row.boxNumber}|${row.ownership}|${row.stockSource}|${row.category}`, mergeRepeatedCells),
+    [rows, mergeRepeatedCells],
   );
 
   return (
-    <div className={`shipment-details-print__card ${styles.detailsSummaryCard}`}>
+    <div className={`shipment-details-print__table-card ${styles.detailsSummaryCard}`}>
       <h4 className={`shipment-details-print__title ${styles.detailsSummaryTitle}`}>{labels.title}</h4>
 
       <div className={`shipment-details-print__table-wrap ${styles.detailsSummaryTableWrap}`}>
         <table className={`shipment-details-print__table ${styles.detailsSummaryTable}`}>
           <thead>
             <tr>
+              {showShipmentNumber ? <th scope="col">{shipmentNumberColumnLabel}</th> : null}
               {showBoxNumber ? <th scope="col">{labels.colBoxNumber}</th> : null}
               <th scope="col">{labels.colOwnership}</th>
               <th scope="col">{labels.colStockSource}</th>
@@ -64,6 +69,9 @@ export function ShipmentItemsDetailTable({ rows, labels, showBoxNumber = true }:
           <tbody>
             {rows.map((row, rowIndex) => (
               <tr key={row.id}>
+                {showShipmentNumber ? (
+                  <td className={`shipment-details-print__row-label ${styles.detailsSummaryRowLabel}`}>{row.shipmentNumber}</td>
+                ) : null}
                 {showBoxNumber && boxNumberRowSpans[rowIndex] > 0 ? (
                   <td className={`shipment-details-print__row-label ${styles.detailsSummaryRowLabel}`} rowSpan={boxNumberRowSpans[rowIndex]}>{row.boxNumber}</td>
                 ) : null}
@@ -73,7 +81,9 @@ export function ShipmentItemsDetailTable({ rows, labels, showBoxNumber = true }:
                 {stockSourceRowSpans[rowIndex] > 0 ? (
                   <td rowSpan={stockSourceRowSpans[rowIndex]}>{row.stockSource}</td>
                 ) : null}
-                <td>{row.category}</td>
+                {categoryRowSpans[rowIndex] > 0 ? (
+                  <td rowSpan={categoryRowSpans[rowIndex]}>{row.category}</td>
+                ) : null}
                 <td>{row.grade}</td>
                 <td>{row.pitamStatus}</td>
                 <td>{row.quantity.toLocaleString()}</td>

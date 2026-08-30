@@ -7,6 +7,7 @@ export async function downloadStyledExcel({
   rows,
   rightToLeft,
   filterRowCount = 0,
+  mergeColumns,
 }: {
   sheetName: string;
   fileName: string;
@@ -14,6 +15,7 @@ export async function downloadStyledExcel({
   rows: Array<Array<string | number>>;
   rightToLeft: boolean;
   filterRowCount?: number;
+  mergeColumns?: Array<{ colIndex: number; rowSpans: number[] }>;
 }) {
   if (typeof window === 'undefined') {
     return;
@@ -81,6 +83,21 @@ export async function downloadStyledExcel({
   // Add data rows (everything after filter rows)
   for (let i = filterRowCount; i < rows.length; i++) {
     worksheet.addRow(rows[i]);
+  }
+
+  // Merge vertically-repeated cells within data rows (e.g. grouped shipment/box/category columns)
+  if (mergeColumns) {
+    const dataStartRow = filterRowCount + headerRowCount + 1;
+    for (const { colIndex, rowSpans } of mergeColumns) {
+      let rowOffset = 0;
+      while (rowOffset < rowSpans.length) {
+        const span = rowSpans[rowOffset] || 1;
+        if (span > 1) {
+          worksheet.mergeCells(dataStartRow + rowOffset, colIndex, dataStartRow + rowOffset + span - 1, colIndex);
+        }
+        rowOffset += span;
+      }
+    }
   }
 
   const headerBg = 'FF1F5A32';

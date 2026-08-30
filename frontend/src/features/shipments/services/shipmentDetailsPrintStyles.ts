@@ -11,6 +11,13 @@ export const SHIPMENT_DETAILS_PRINT_EXTRA_STYLES = `
     break-inside: avoid;
     page-break-inside: avoid;
   }
+  .shipment-details-print__table-card {
+    border: 1px solid #d6e0d8;
+    border-radius: 14px;
+    background: #fff;
+    padding: 12px;
+    margin-bottom: 14px;
+  }
   .shipment-details-print__card-head {
     display: flex;
     flex-direction: column;
@@ -53,6 +60,9 @@ export const SHIPMENT_DETAILS_PRINT_EXTRA_STYLES = `
     border-collapse: collapse;
     table-layout: fixed;
     font-size: 12px;
+  }
+  .shipment-details-print__table thead {
+    display: table-header-group;
   }
   .shipment-details-print__table th,
   .shipment-details-print__table td {

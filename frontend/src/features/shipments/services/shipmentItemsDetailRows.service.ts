@@ -4,6 +4,7 @@ import type { ShipmentsTableLabels } from '../shipments.types';
 
 export type ShipmentItemDetailRow = {
   id: number;
+  shipmentNumber?: number;
   boxNumber: number;
   ownership: string;
   stockSource: string;
@@ -80,6 +81,7 @@ export function buildBoxItemsDetailRows(
   boxNumber: number,
   labels: ShipmentsTableLabels['detailsItemsTable'],
   categoryOrderByName?: Map<string, number> | null,
+  shipmentNumber?: number,
 ): ShipmentItemDetailRow[] {
   const rows = items.map((item) => {
     const ownership = item.ownershipType === 'TRADER'
@@ -105,6 +107,7 @@ export function buildBoxItemsDetailRows(
 
     return {
       id: item.id,
+      shipmentNumber,
       boxNumber,
       ownership,
       stockSource,
@@ -118,10 +121,49 @@ export function buildBoxItemsDetailRows(
   });
 
   return rows.sort((a, b) => {
+    if ((a.shipmentNumber ?? 0) !== (b.shipmentNumber ?? 0)) return (a.shipmentNumber ?? 0) - (b.shipmentNumber ?? 0);
+    if (a.boxNumber !== b.boxNumber) return a.boxNumber - b.boxNumber;
     if (a.ownership !== b.ownership) return a.ownership.localeCompare(b.ownership);
     if (a.stockSource !== b.stockSource) return a.stockSource.localeCompare(b.stockSource);
     const categoryCompare = compareCategoryNames(a.category, b.category, categoryOrderByName) || a.grade.localeCompare(b.grade);
     if (categoryCompare !== 0) return categoryCompare;
     return a.pitamStatus.localeCompare(b.pitamStatus);
   });
+}
+
+// For each row: the number of rows to merge into it (rowSpan) if it starts a run of
+// consecutive rows sharing the same key, or 0 if it's part of the previous row's merged cell.
+export function computeMergedRowSpans(rows: ShipmentItemDetailRow[], getKey: (row: ShipmentItemDetailRow) => string): number[] {
+  const spans = new Array(rows.length).fill(0);
+  let groupStart = 0;
+
+  while (groupStart < rows.length) {
+    let groupEnd = groupStart;
+    while (groupEnd + 1 < rows.length && getKey(rows[groupEnd + 1]) === getKey(rows[groupStart])) {
+      groupEnd++;
+    }
+
+    spans[groupStart] = groupEnd - groupStart + 1;
+    groupStart = groupEnd + 1;
+  }
+
+  return spans;
+}
+
+export type ShipmentItemDetailRowSpans = {
+  shipmentNumber: number[];
+  boxNumber: number[];
+  ownership: number[];
+  stockSource: number[];
+  category: number[];
+};
+
+export function computeShipmentItemDetailRowSpans(rows: ShipmentItemDetailRow[]): ShipmentItemDetailRowSpans {
+  return {
+    shipmentNumber: computeMergedRowSpans(rows, (row) => String(row.shipmentNumber ?? '')),
+    boxNumber: computeMergedRowSpans(rows, (row) => `${row.shipmentNumber ?? ''}|${row.boxNumber}`),
+    ownership: computeMergedRowSpans(rows, (row) => `${row.shipmentNumber ?? ''}|${row.boxNumber}|${row.ownership}`),
+    stockSource: computeMergedRowSpans(rows, (row) => `${row.shipmentNumber ?? ''}|${row.boxNumber}|${row.ownership}|${row.stockSource}`),
+    category: computeMergedRowSpans(rows, (row) => `${row.shipmentNumber ?? ''}|${row.boxNumber}|${row.ownership}|${row.stockSource}|${row.category}`),
+  };
 }

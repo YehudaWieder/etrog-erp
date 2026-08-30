@@ -14,8 +14,10 @@ import { buildAllBoxesSummaryTotals } from '../services/shipmentsSummary.service
 import { buildBoxItemsDetailRows } from '../services/shipmentItemsDetailRows.service';
 import { SHIPMENT_DETAILS_PRINT_EXTRA_STYLES } from '../services/shipmentDetailsPrintStyles';
 import { printAllBoxes, exportAllBoxesToExcel } from '../services/allBoxesExport.service';
+import { printAllBoxesItemsExtended, exportAllBoxesItemsExtendedToExcel } from '../services/allBoxesItemsExtended.service';
 import { openPrintableWindow } from '../../../services/printWindow';
 import { getTraderCategoriesWithShares } from '../../../services/traderCategoriesApi';
+import { useHoverDetailsMenu } from '../../../hooks/useHoverDetailsMenu';
 import sharedFilterStyles from '../../../components/ui/styles/GlobalFiltersBar.module.css';
 import styles from './styles/AllShipmentsTable.module.css';
 
@@ -93,9 +95,16 @@ export function AllBoxesTable({ lang, labels, selectedBoxIds, onSelectBox, onTog
   const onRowCountChangeRef = useRef(onRowCountChange);
   onRowCountChangeRef.current = onRowCountChange;
 
+  const printMenu = useHoverDetailsMenu();
+  const exportMenu = useHoverDetailsMenu();
+
   const handlePrintTable = useCallback(() => {
     printAllBoxes({ lang, labels, rows, filterDisplayValues });
   }, [lang, labels, rows, filterDisplayValues]);
+
+  const handlePrintTableExtended = useCallback(async () => {
+    await printAllBoxesItemsExtended({ lang, labels, rows, seasonId: selectedSeasonId, filterDisplayValues });
+  }, [lang, labels, rows, selectedSeasonId, filterDisplayValues]);
 
   const handleExportTable = useCallback(async () => {
     try {
@@ -104,6 +113,14 @@ export function AllBoxesTable({ lang, labels, selectedBoxIds, onSelectBox, onTog
       window.alert(labels.tableExportError);
     }
   }, [lang, labels, rows, filterDisplayValues]);
+
+  const handleExportTableExtended = useCallback(async () => {
+    try {
+      await exportAllBoxesItemsExtendedToExcel({ lang, labels, rows, seasonId: selectedSeasonId, filterDisplayValues });
+    } catch {
+      window.alert(labels.tableExtendedExportError);
+    }
+  }, [lang, labels, rows, selectedSeasonId, filterDisplayValues]);
 
   const handlePrintDetails = () => {
     const printableNode = detailsPrintRef.current;
@@ -179,24 +196,77 @@ export function AllBoxesTable({ lang, labels, selectedBoxIds, onSelectBox, onTog
         onApiReady={handleFiltersApiReady}
         actions={rows.length > 0 ? (
           <div className={`global-filters-bar__icon-actions ${sharedFilterStyles.iconActions}`} aria-label={labels.tableActionsLabel}>
-            <button
-              type="button"
-              className={`global-filters-bar__icon-btn ${sharedFilterStyles.iconBtn}`}
-              onClick={handlePrintTable}
-              aria-label={labels.tablePrintAriaLabel}
-              title={labels.tablePrintTitle}
+            <details
+              className={`global-filters-bar__icon-menu ${sharedFilterStyles.iconMenu}`}
+              onMouseEnter={printMenu.cancelMenuClose}
+              onMouseLeave={(event) => { printMenu.scheduleMenuClose(event.currentTarget); }}
             >
-              <FaPrint />
-            </button>
-            <button
-              type="button"
-              className={`global-filters-bar__icon-btn ${sharedFilterStyles.iconBtn}`}
-              onClick={() => { void handleExportTable(); }}
-              aria-label={labels.tableExportAriaLabel}
-              title={labels.tableExportTitle}
+              <summary
+                className={`global-filters-bar__icon-btn ${sharedFilterStyles.iconBtn} ${sharedFilterStyles.iconMenuSummary}`}
+                aria-label={labels.tablePrintAriaLabel}
+                title={labels.tablePrintTitle}
+              >
+                <FaPrint />
+              </summary>
+              <div className={`global-filters-bar__menu-list ${sharedFilterStyles.menuList}`} role="menu">
+                <button
+                  type="button"
+                  className={`global-filters-bar__menu-item ${sharedFilterStyles.menuItem}`}
+                  onClick={(event) => {
+                    printMenu.closeMenuFromTarget(event.currentTarget);
+                    handlePrintTable();
+                  }}
+                >
+                  {labels.tableStandardPrintOption}
+                </button>
+                <button
+                  type="button"
+                  className={`global-filters-bar__menu-item ${sharedFilterStyles.menuItem}`}
+                  onClick={(event) => {
+                    printMenu.closeMenuFromTarget(event.currentTarget);
+                    void handlePrintTableExtended();
+                  }}
+                >
+                  {labels.tableExtendedPrintOption}
+                </button>
+              </div>
+            </details>
+
+            <details
+              className={`global-filters-bar__icon-menu ${sharedFilterStyles.iconMenu}`}
+              onMouseEnter={exportMenu.cancelMenuClose}
+              onMouseLeave={(event) => { exportMenu.scheduleMenuClose(event.currentTarget); }}
             >
-              <FaFileArrowDown />
-            </button>
+              <summary
+                className={`global-filters-bar__icon-btn ${sharedFilterStyles.iconBtn} ${sharedFilterStyles.iconMenuSummary}`}
+                aria-label={labels.tableExportAriaLabel}
+                title={labels.tableExportTitle}
+              >
+                <FaFileArrowDown />
+              </summary>
+              <div className={`global-filters-bar__menu-list ${sharedFilterStyles.menuList}`} role="menu">
+                <button
+                  type="button"
+                  className={`global-filters-bar__menu-item ${sharedFilterStyles.menuItem}`}
+                  onClick={(event) => {
+                    exportMenu.closeMenuFromTarget(event.currentTarget);
+                    void handleExportTable();
+                  }}
+                >
+                  {labels.tableStandardExportOption}
+                </button>
+                <button
+                  type="button"
+                  className={`global-filters-bar__menu-item ${sharedFilterStyles.menuItem}`}
+                  onClick={(event) => {
+                    exportMenu.closeMenuFromTarget(event.currentTarget);
+                    void handleExportTableExtended();
+                  }}
+                >
+                  {labels.tableExtendedExportOption}
+                </button>
+              </div>
+            </details>
           </div>
         ) : undefined}
       />

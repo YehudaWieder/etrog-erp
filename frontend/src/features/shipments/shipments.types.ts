@@ -151,6 +151,8 @@ export type BoxesTableLabels = {
   allOwnershipOption: string;
   allTradersOption: string;
   allCustomersOption: string;
+  tradersGroupLabel: string;
+  customersGroupLabel: string;
   activeSeasonBadge: string;
   noActiveSeason: string;
   colDetails: string;
@@ -188,6 +190,12 @@ export type BoxesTableLabels = {
   tableExportTitle: string;
   tableExportAriaLabel: string;
   tableExportError: string;
+  tableStandardPrintOption: string;
+  tableExtendedPrintOption: string;
+  tableStandardExportOption: string;
+  tableExtendedExportOption: string;
+  tableExtendedPrintTitle: string;
+  tableExtendedExportError: string;
 };
 
 export type ShipmentItemsTableLabels = {
