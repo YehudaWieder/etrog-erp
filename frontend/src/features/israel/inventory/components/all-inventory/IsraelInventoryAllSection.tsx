@@ -5,6 +5,7 @@ import {
   FaBoxOpen,
   FaBoxesStacked,
   FaTruckFast,
+  FaPersonWalkingLuggage,
 } from 'react-icons/fa6';
 import type { IsraelStockRecord } from '../../../../../services/israel/israelStockApi';
 import type { IsraelSortCategory } from '../../../../../services/israel/israelSortCategoriesApi';
@@ -147,6 +148,17 @@ export function IsraelInventoryAllSection({
     ],
   );
 
+  const selfPickupQuantity = useMemo(
+    () => sumMatrixTotal(buildScopeMatrix('SELF_PICKUP')),
+    [
+      rows,
+      categoryOrder,
+      allCategoryNames,
+      labels.totals.totalQuantity,
+      labels.noGradeLabel,
+    ],
+  );
+
   return (
     <section className={styles.section}>
       <section className={styles.explainerSection}>
@@ -163,6 +175,18 @@ export function IsraelInventoryAllSection({
           </span>
           <strong className={styles.summaryValue}>
             {numberFormatter.format(totalQuantity)}
+          </strong>
+        </article>
+
+        <article className={styles.summaryCard}>
+          <div className={styles.summaryIcon}>
+            <FaPersonWalkingLuggage aria-hidden="true" />
+          </div>
+          <span className={styles.summaryLabel}>
+            {labels.statusOptions.selfPickup}
+          </span>
+          <strong className={styles.summaryValue}>
+            {numberFormatter.format(selfPickupQuantity)}
           </strong>
         </article>
 
