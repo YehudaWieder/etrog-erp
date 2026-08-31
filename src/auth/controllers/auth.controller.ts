@@ -31,9 +31,10 @@ export class AuthController {
   }
 
   @Post('logout')
-  @ApiOperation({ summary: 'Logout acknowledgment (revoke token client-side)' })
-  @ApiResponse({ status: 200, description: 'Logout acknowledged.' })
+  @ApiOperation({ summary: 'Logout and revoke the current access and refresh tokens' })
+  @ApiResponse({ status: 200, description: 'Logout acknowledged; tokens revoked.' })
   logout(@Req() req: Request) {
-    return this.authService.logout(req.user as AuthenticatedUser);
+    const token = req.headers.authorization?.slice('Bearer '.length) ?? '';
+    return this.authService.logout(req.user as AuthenticatedUser, token);
   }
 }

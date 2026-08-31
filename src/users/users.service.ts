@@ -240,6 +240,9 @@ export class UsersService {
 				data: {
 					...(role !== undefined ? { role } : {}),
 					...(isActive !== undefined ? { isActive } : {}),
+					// Role/status changes must take effect immediately, not once the
+					// user's current access token happens to expire.
+					sessionsInvalidatedAt: new Date(),
 				},
 			});
 

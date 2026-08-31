@@ -58,6 +58,15 @@ model User {
   role       Role    @default(WORKER)
   isActive   Boolean @default(false)
 
+  // Tokens issued before this timestamp are rejected by JwtAuthGuard, letting
+  // logout / force-disable revoke already-issued Supabase access tokens immediately
+  // instead of waiting for their natural expiry.
+  sessionsInvalidatedAt DateTime?
+
+  // Timestamp of the user's last authenticated request, updated by JwtAuthGuard.
+  // Used to enforce an inactivity timeout independent of the token's own expiry.
+  lastActiveAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
