@@ -31,6 +31,7 @@ type PackIsraelShipmentItemsFormModalText = {
   noBoxSelectedHint: string;
   shipmentDisplayLabel: string;
   boxNumberDisplayLabel: string;
+  fieldDisplayLabel: string;
   statusDisplayLabel: string;
   itemsInBoxDisplayLabel: string;
   boxNotesDisplayLabel: string;
@@ -320,6 +321,18 @@ export function PackIsraelShipmentItemsFormModal({
                 disabled
                 readOnly
                 value={selectedBox ? String(selectedBox.boxNumber) : ''}
+                placeholder={t.boxPlaceholder}
+              />
+            </div>
+
+            <div className={styles.field} style={STRETCH_FIELD_STYLE}>
+              <label className={boxFormStyles.label}>{t.fieldDisplayLabel}</label>
+              <input
+                className="seasons-manager__year-input"
+                type="text"
+                disabled
+                readOnly
+                value={selectedBox?.field?.name ?? ''}
                 placeholder={t.boxPlaceholder}
               />
             </div>

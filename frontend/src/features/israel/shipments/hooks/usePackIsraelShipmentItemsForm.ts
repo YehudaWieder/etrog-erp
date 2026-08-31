@@ -126,6 +126,14 @@ export function usePackIsraelShipmentItemsForm({
 
   const selectedBox = useMemo(() => boxes.find((box) => String(box.id) === boxId) ?? null, [boxes, boxId]);
 
+  // A box can only be assigned to a shipment from the same field/seller, so the shipment picker
+  // is scoped to the selected box's fieldId — otherwise the user could link a box to a shipment
+  // that belongs to a different seller entirely.
+  const shipmentsForSelectedBox = useMemo(
+    () => (selectedBox ? shipments.filter((shipment) => shipment.fieldId === selectedBox.fieldId) : []),
+    [shipments, selectedBox],
+  );
+
   // The box picker (typeahead) only lists OPEN boxes, mirroring the Italy packing form's
   // boxOptions — mixing in closed/shipped/delivered boxes there would let a fresh "pack items"
   // entry (from the items page/summary/dashboard) target a box that can't actually be packed.
@@ -321,6 +329,9 @@ export function usePackIsraelShipmentItemsForm({
       if (!selectedBox) return;
       const nextShipmentId = shipmentId ? Number(shipmentId) : null;
       if (nextShipmentId === (selectedBox.shipment?.id ?? null)) return;
+      if (nextShipmentId !== null && !shipmentsForSelectedBox.some((shipment) => shipment.id === nextShipmentId)) {
+        return;
+      }
       try {
         const updated = await updateIsraelBox({ id: selectedBox.id, shipmentId: nextShipmentId });
         setBoxes((current) => current.map((box) => (box.id === updated.id ? updated : box)));
@@ -328,7 +339,7 @@ export function usePackIsraelShipmentItemsForm({
         setError(t.genericError);
       }
     },
-    [selectedBox, t.genericError],
+    [selectedBox, shipmentsForSelectedBox, t.genericError],
   );
 
   const handleBoxNotesChange = useCallback((value: string) => {
@@ -500,7 +511,7 @@ export function usePackIsraelShipmentItemsForm({
 
   return {
     boxes: openBoxOptions,
-    shipments,
+    shipments: shipmentsForSelectedBox,
     sortCategories: availableCategoriesForBox,
     allSortCategories: sortCategories,
     isLoadingOptions,

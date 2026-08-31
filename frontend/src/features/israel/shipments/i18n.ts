@@ -166,6 +166,7 @@ export type IsraelShipmentsI18n = {
     noBoxSelectedHint: string;
     shipmentDisplayLabel: string;
     boxNumberDisplayLabel: string;
+    fieldDisplayLabel: string;
     statusDisplayLabel: string;
     itemsInBoxDisplayLabel: string;
     boxNotesDisplayLabel: string;

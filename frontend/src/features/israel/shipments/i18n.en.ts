@@ -360,6 +360,7 @@ export const ISRAEL_SHIPMENTS_I18N_EN: IsraelShipmentsI18n = {
     noBoxSelectedHint: 'Select a box number to start packing items into it.',
     shipmentDisplayLabel: 'Shipment',
     boxNumberDisplayLabel: 'Box Number',
+    fieldDisplayLabel: 'Seller/Field',
     statusDisplayLabel: 'Status',
     itemsInBoxDisplayLabel: 'Items in Box',
     boxNotesDisplayLabel: 'Box Notes',

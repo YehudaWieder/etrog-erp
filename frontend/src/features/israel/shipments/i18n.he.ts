@@ -360,6 +360,7 @@ export const ISRAEL_SHIPMENTS_I18N_HE: IsraelShipmentsI18n = {
     noBoxSelectedHint: 'בחר מספר קרטון כדי להתחיל לארוז אליו פריטים.',
     shipmentDisplayLabel: 'משלוח',
     boxNumberDisplayLabel: 'מספר קרטון',
+    fieldDisplayLabel: 'מוכר/שדה',
     statusDisplayLabel: 'סטטוס',
     itemsInBoxDisplayLabel: 'פריטים בקרטון',
     boxNotesDisplayLabel: 'הערות קרטון',
