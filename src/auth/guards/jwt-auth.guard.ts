@@ -59,9 +59,11 @@ export class JwtAuthGuard implements CanActivate {
 
     if (!user) throw new UnauthorizedException('User profile not found.');
 
+    const tokenIssuedAt = this.getTokenIssuedAt(token);
+
     if (
       user.sessionsInvalidatedAt &&
-      this.isTokenIssuedBefore(token, user.sessionsInvalidatedAt)
+      tokenIssuedAt < user.sessionsInvalidatedAt.getTime()
     ) {
       throw new UnauthorizedException(
         'Session has been revoked. Please log in again.',
@@ -69,19 +71,22 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     const now = Date.now();
-    if (
-      user.lastActiveAt &&
-      now - user.lastActiveAt.getTime() > INACTIVITY_TIMEOUT_MS
-    ) {
+    // A freshly issued token (e.g. a brand new login) counts as activity in
+    // its own right, even if lastActiveAt is stale from a previous session —
+    // otherwise logging back in after being away would be rejected as "inactive"
+    // before we ever get the chance to record the new activity below.
+    const effectiveLastActiveAt = Math.max(
+      user.lastActiveAt?.getTime() ?? 0,
+      tokenIssuedAt,
+    );
+
+    if (now - effectiveLastActiveAt > INACTIVITY_TIMEOUT_MS) {
       throw new UnauthorizedException(
         'Session expired due to inactivity. Please log in again.',
       );
     }
 
-    if (
-      !user.lastActiveAt ||
-      now - user.lastActiveAt.getTime() > ACTIVITY_UPDATE_THROTTLE_MS
-    ) {
+    if (now - effectiveLastActiveAt > ACTIVITY_UPDATE_THROTTLE_MS) {
       this.prisma.user
         .update({
           where: { id: user.id },
@@ -100,12 +105,10 @@ export class JwtAuthGuard implements CanActivate {
   }
 
   // Supabase's getUser() already verified the signature; we only decode the
-  // payload here to read `iat` and compare it against sessionsInvalidatedAt.
-  private isTokenIssuedBefore(token: string, cutoff: Date): boolean {
+  // payload here to read `iat` (in ms) for the revocation and inactivity checks.
+  private getTokenIssuedAt(token: string): number {
     const payload = decode(token);
-    const issuedAt =
-      typeof payload === 'object' && payload?.iat ? payload.iat * 1000 : 0;
-    return issuedAt < cutoff.getTime();
+    return typeof payload === 'object' && payload?.iat ? payload.iat * 1000 : 0;
   }
 
   private extractToken(request: Request): string | undefined {
