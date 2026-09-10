@@ -954,7 +954,7 @@ export function AddTraderMovementModal({
     ? Boolean(traderId)
     : remainsInItalyDestination === 'CUSTOMER'
       ? Boolean(customerId && customerCategoryId)
-      : remainsInItalyDestination === 'GENERAL' || remainsInItalyDestination === 'UNASSIGNED';
+      : remainsInItalyDestination === 'GENERAL';
   const isRiwCategoryEnabled = type === 'REMAINS_IN_ITALY_WITHDRAWAL' && isRiwDestinationReady && !isLoadingRemainsInItalyStock;
   const isRiwGradeEnabled = isRiwCategoryEnabled && Boolean(traderCategoryId);
   const isRiwPitamEnabled = isRiwGradeEnabled && Boolean(grade);
@@ -2274,7 +2274,6 @@ export function AddTraderMovementModal({
                       { value: 'TRADER', label: f.destinationOptions.TRADER },
                       { value: 'CUSTOMER', label: f.destinationOptions.CUSTOMER },
                       { value: 'GENERAL', label: f.destinationOptions.GENERAL },
-                      { value: 'UNASSIGNED', label: f.destinationOptions.UNASSIGNED },
                     ]}
                   />
                 </div>
@@ -2621,7 +2620,6 @@ export function AddTraderMovementModal({
                           { value: 'TRADER', label: f.destinationOptions.TRADER },
                           { value: 'CUSTOMER', label: f.destinationOptions.CUSTOMER },
                           { value: 'GENERAL', label: f.destinationOptions.GENERAL },
-                          { value: 'UNASSIGNED', label: f.destinationOptions.UNASSIGNED },
                         ]}
                       />
                     </div>

@@ -463,7 +463,7 @@ export const TRADER_MOVEMENTS_I18N_HE: TraderMovementsI18n = {
 		moduloOption: 'כללי',
 		destinationLabel: 'יעד',
 		destinationPlaceholder: 'בחר יעד',
-		destinationOptions: { TRADER: 'סוחר', CUSTOMER: 'לקוח', GENERAL: 'כללי (לפי אחוזים)', UNASSIGNED: 'לא משוייך' },
+		destinationOptions: { TRADER: 'סוחר', CUSTOMER: 'לקוח', GENERAL: 'כללי (לפי אחוזים)' },
 		wasteSourceLabel: 'מקור הפחת',
 		wasteSourcePlaceholder: 'בחר מקור',
 		itemStockSourceLabel: 'מקור המלאי',

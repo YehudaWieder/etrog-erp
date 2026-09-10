@@ -205,12 +205,6 @@
   color: var(--color-primary-strong);
 }
 
-/* Unassigned — neutral gray, since it belongs to no owner yet. */
-.badge_UNASSIGNED {
-  background: var(--color-bg-hover);
-  color: var(--color-text-muted);
-}
-
 :global(:root[data-dark-mode='true']) .badge_TRADER {
   background: rgba(45, 90, 39, 0.35);
   color: #9fd6a0;
@@ -224,11 +218,6 @@
 :global(:root[data-dark-mode='true']) .badge_GENERAL {
   background: rgba(230, 182, 32, 0.2);
   color: var(--color-primary);
-}
-
-:global(:root[data-dark-mode='true']) .badge_UNASSIGNED {
-  background: rgba(148, 163, 184, 0.2);
-  color: #cbd5e1;
 }
 
 :global(:root[data-dark-mode='true']) .rowSelected {

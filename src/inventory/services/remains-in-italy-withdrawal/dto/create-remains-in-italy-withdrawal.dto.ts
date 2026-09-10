@@ -1,14 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Grade, PitamStatus } from '@prisma/client';
 
-export type RemainsInItalyDestinationType = 'TRADER' | 'CUSTOMER' | 'GENERAL' | 'UNASSIGNED';
+export type RemainsInItalyDestinationType = 'TRADER' | 'CUSTOMER' | 'GENERAL';
 
 // Withdraws a quantity from the REMAINS_IN_ITALY bucket (traderId: null, isModulo: false) and routes
 // it to a destination. TRADER/CUSTOMER go directly into that owner's stock as a HARVEST_IN entry;
 // GENERAL re-runs the same trader-share split every GENERAL classification goes through
-// (GeneralShareAllocationService.allocateGeneralQuantity). UNASSIGNED drops the full quantity into
-// the modulo (unassigned) pool for the category, with no share split - it stays there until
-// manually assigned later. See remains-in-italy-withdrawal.service.ts.
+// (GeneralShareAllocationService.allocateGeneralQuantity). See remains-in-italy-withdrawal.service.ts.
 export class CreateRemainsInItalyWithdrawalDto {
   @ApiProperty({ description: 'Trader category the remains-in-Italy stock belongs to.' })
   traderCategoryId!: number;
@@ -23,11 +21,10 @@ export class CreateRemainsInItalyWithdrawalDto {
   quantity!: number;
 
   @ApiProperty({
-    enum: ['TRADER', 'CUSTOMER', 'GENERAL', 'UNASSIGNED'],
+    enum: ['TRADER', 'CUSTOMER', 'GENERAL'],
     description:
       'TRADER/CUSTOMER require traderId / (customerId + customerCategoryId) respectively. ' +
-      'GENERAL requires neither - the quantity is split across every trader in the category by their configured share. ' +
-      'UNASSIGNED requires neither - the full quantity is placed in the unassigned (modulo) pool for the category.',
+      'GENERAL requires neither - the quantity is split across every trader in the category by their configured share.',
   })
   destinationType!: RemainsInItalyDestinationType;
 

@@ -444,8 +444,7 @@ export class InventoryController {
 		summary:
 			'Withdraw a quantity from the REMAINS_IN_ITALY bucket (traderId: null, isModulo: false) and route it to a destination. ' +
 			'TRADER/CUSTOMER land directly in that owner\'s stock as a HARVEST_IN entry. ' +
-			'GENERAL re-runs the same trader-share split every GENERAL classification goes through. ' +
-			'UNASSIGNED places the full quantity in the unassigned (modulo) pool for the category.',
+			'GENERAL re-runs the same trader-share split every GENERAL classification goes through.',
 	})
 	@ApiBody({
 		type: CreateRemainsInItalyWithdrawalDto,
@@ -481,16 +480,6 @@ export class InventoryController {
 					pitamStatus: 'WITHOUT_PITAM',
 					quantity: 10,
 					destinationType: 'GENERAL',
-				},
-			},
-			toUnassigned: {
-				summary: 'Withdraw into the unassigned (modulo) pool for the category',
-				value: {
-					traderCategoryId: 3,
-					grade: 'ה',
-					pitamStatus: 'WITHOUT_PITAM',
-					quantity: 10,
-					destinationType: 'UNASSIGNED',
 				},
 			},
 		},

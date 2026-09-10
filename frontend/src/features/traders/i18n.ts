@@ -417,7 +417,7 @@ export type TraderMovementsI18n = {
 		moduloOption: string;
 		destinationLabel: string;
 		destinationPlaceholder: string;
-		destinationOptions: { TRADER: string; CUSTOMER: string; GENERAL: string; UNASSIGNED: string };
+		destinationOptions: { TRADER: string; CUSTOMER: string; GENERAL: string };
 		wasteSourceLabel: string;
 		wasteSourcePlaceholder: string;
 		itemStockSourceLabel: string;

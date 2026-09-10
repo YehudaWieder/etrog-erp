@@ -58,7 +58,7 @@ export class RemainsInItalyWithdrawalService {
         where: {
           MovementReferenceId: { in: anchorIds },
           isDeleted: false,
-          type: { in: [MovementType.HARVEST_IN, MovementType.ASSIGNED, MovementType.UNASSIGNED] },
+          type: { in: [MovementType.HARVEST_IN, MovementType.ASSIGNED] },
         },
         include: { trader: { select: { id: true, name: true } } },
       }),
@@ -89,25 +89,18 @@ export class RemainsInItalyWithdrawalService {
           customerId = linkedCustomerRows[0].customerId;
           customerCategoryId = linkedCustomerRows[0].customerCategoryId;
           customerName = linkedCustomerRows[0].customer.customerName;
-        } else if (linkedTraderRows.length === 1 && linkedTraderRows[0].traderId !== null) {
+        } else if (linkedTraderRows.length === 1) {
           destinationType = 'TRADER';
           traderId = linkedTraderRows[0].traderId;
           traderName = linkedTraderRows[0].trader?.name ?? null;
-        } else if (
-          linkedTraderRows.length === 1 &&
-          linkedTraderRows[0].traderId === null &&
-          linkedTraderRows[0].isModulo &&
-          linkedTraderRows[0].type === MovementType.UNASSIGNED
-        ) {
-          destinationType = 'UNASSIGNED';
         } else {
           destinationType = 'GENERAL';
         }
 
         const quantity = Math.abs(anchor.quantity);
 
-        // TRADER/CUSTOMER/UNASSIGNED destinations create exactly one positive row directly - a
-        // straightforward reduce. GENERAL fans the destination across multiple trader rows via
+        // TRADER/CUSTOMER destinations create exactly one positive row directly - a straightforward
+        // reduce. GENERAL fans the destination across multiple trader rows via
         // generalShareAllocationService.allocateGeneralQuantity - partial cancel isn't safe there,
         // so it's 0-or-full like the other GENERAL cases.
         let availableQuantity: number;
@@ -128,19 +121,6 @@ export class RemainsInItalyWithdrawalService {
             customerCategoryId: linkedCustomerRows[0].customerCategoryId,
             pitamStatus: linkedCustomerRows[0].pitamStatus,
             requestedQuantity: linkedCustomerRows[0].quantity,
-          });
-        } else if (destinationType === 'UNASSIGNED') {
-          // Scoped to this withdrawal's own UNASSIGNED-tagged balance only - not the whole modulo
-          // pool for the tuple, which may also hold unrelated GENERAL remainder activity.
-          availableQuantity = await this.inventoryAvailabilityService.getTraderAvailableToReduce(this.prisma, {
-            seasonId: linkedTraderRows[0].seasonId,
-            traderId: null,
-            traderCategoryId: linkedTraderRows[0].traderCategoryId,
-            grade: linkedTraderRows[0].grade,
-            pitamStatus: linkedTraderRows[0].pitamStatus,
-            isModulo: true,
-            type: MovementType.UNASSIGNED,
-            requestedQuantity: linkedTraderRows[0].quantity,
           });
         } else {
           const availabilities = await Promise.all(
@@ -266,23 +246,6 @@ export class RemainsInItalyWithdrawalService {
           notes: dto.notes,
         },
       });
-    } else if (dto.destinationType === 'UNASSIGNED') {
-      await tx.traderStock.create({
-        data: {
-          seasonId,
-          date,
-          traderId: null,
-          traderCategoryId: dto.traderCategoryId,
-          grade: dto.grade,
-          pitamStatus: dto.pitamStatus,
-          quantity: dto.quantity,
-          isModulo: true,
-          type: MovementType.UNASSIGNED,
-          MovementReferenceId: negative.id,
-          updatedById: actorId,
-          notes: dto.notes,
-        },
-      });
     } else {
       await this.generalShareAllocationService.allocateGeneralQuantity(tx, {
         seasonId,
@@ -316,10 +279,7 @@ export class RemainsInItalyWithdrawalService {
 
     const [traderRows, customerRows] = await Promise.all([
       tx.traderStock.findMany({
-        where: {
-          MovementReferenceId: anchorId,
-          type: { in: [MovementType.HARVEST_IN, MovementType.ASSIGNED, MovementType.UNASSIGNED] },
-        },
+        where: { MovementReferenceId: anchorId, type: { in: [MovementType.HARVEST_IN, MovementType.ASSIGNED] } },
       }),
       tx.customerAllocation.findMany({
         where: { MovementReferenceId: anchorId, type: MovementType.HARVEST_IN },
@@ -327,19 +287,10 @@ export class RemainsInItalyWithdrawalService {
     ]);
 
     const destinationType: RemainsInItalyDestinationType =
-      customerRows.length > 0
-        ? 'CUSTOMER'
-        : traderRows.length === 1 && traderRows[0].traderId !== null
-          ? 'TRADER'
-          : traderRows.length === 1 &&
-              traderRows[0].traderId === null &&
-              traderRows[0].isModulo &&
-              traderRows[0].type === MovementType.UNASSIGNED
-            ? 'UNASSIGNED'
-            : 'GENERAL';
+      customerRows.length > 0 ? 'CUSTOMER' : traderRows.length === 1 ? 'TRADER' : 'GENERAL';
     const fullQuantity = Math.abs(anchor.quantity);
 
-    if (destinationType === 'GENERAL' || destinationType === 'UNASSIGNED') {
+    if (destinationType === 'GENERAL') {
       for (const row of traderRows.filter((row) => row.quantity > 0)) {
         await this.inventoryAvailabilityService.assertTraderHasUnshippedStock(tx, {
           seasonId: row.seasonId,
@@ -350,9 +301,6 @@ export class RemainsInItalyWithdrawalService {
           isModulo: row.isModulo,
           requiredQuantity: row.quantity,
           contextLabel: 'Cancel withdrawal from remains in Italy',
-          // For UNASSIGNED, check only this withdrawal's own tagged balance, not the whole modulo
-          // pool for the tuple (which may hold unrelated GENERAL remainder activity).
-          type: destinationType === 'UNASSIGNED' ? MovementType.UNASSIGNED : undefined,
         });
       }
 
@@ -415,8 +363,8 @@ export class RemainsInItalyWithdrawalService {
       );
     }
 
-    if (!['TRADER', 'CUSTOMER', 'GENERAL', 'UNASSIGNED'].includes(dto.destinationType)) {
-      throw new BadRequestException('destinationType must be one of: TRADER, CUSTOMER, GENERAL, UNASSIGNED');
+    if (!['TRADER', 'CUSTOMER', 'GENERAL'].includes(dto.destinationType)) {
+      throw new BadRequestException('destinationType must be one of: TRADER, CUSTOMER, GENERAL');
     }
   }
 }

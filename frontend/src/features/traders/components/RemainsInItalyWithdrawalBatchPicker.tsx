@@ -7,7 +7,7 @@ import styles from './styles/RemainsInItalyWithdrawalBatchPicker.module.css';
 // Kept minimal so other features could reuse this picker's styling without pulling in
 // trader-specific i18n (mirrors PitamSplitUndoBatchPickerLabels).
 export type RemainsInItalyWithdrawalBatchPickerLabels = {
-  destinationOptions: Record<'TRADER' | 'CUSTOMER' | 'GENERAL' | 'UNASSIGNED', string>;
+  destinationOptions: Record<'TRADER' | 'CUSTOMER' | 'GENERAL', string>;
   riwUndoLoading: string;
   riwUndoNoBatches: string;
   riwUndoBatchPlaceholder: string;

@@ -151,7 +151,7 @@ export async function createCustomerAdjustmentMovement(payload: CreateCustomerAd
   });
 }
 
-export type RemainsInItalyDestinationType = 'TRADER' | 'CUSTOMER' | 'GENERAL' | 'UNASSIGNED';
+export type RemainsInItalyDestinationType = 'TRADER' | 'CUSTOMER' | 'GENERAL';
 
 export type CreateRemainsInItalyWithdrawalPayload = {
   date?: string;

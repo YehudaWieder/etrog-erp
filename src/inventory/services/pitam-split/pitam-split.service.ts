@@ -411,9 +411,6 @@ export class PitamSplitService {
         grade: params.grade,
         pitamStatus: PitamStatus.MIXED,
         isModulo: true,
-        // Stock manually parked as UNASSIGNED via remains-in-Italy withdrawal must not be silently
-        // consumed by an unrelated pitam split.
-        excludeUnassigned: true,
       });
 
       if (moduloAvailable < moduloRemainder) {

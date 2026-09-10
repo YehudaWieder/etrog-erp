@@ -55,10 +55,6 @@ export class GeneralShareAllocationService {
         grade: params.grade,
         pitamStatus: params.pitamStatus,
         isDeleted: false,
-        // Stock manually parked as UNASSIGNED (remains-in-Italy withdrawal) must not be swept into
-        // traders as a side effect of an unrelated GENERAL allocation - only an explicit cancel or
-        // manual assign-by-share action may move it.
-        type: { not: MovementType.UNASSIGNED },
       },
     });
 
@@ -446,9 +442,6 @@ export class GeneralShareAllocationService {
         grade: params.grade,
         pitamStatus: params.pitamStatus,
         isModulo: true,
-        // See tryAssignFromModuloPool: manually-parked UNASSIGNED stock isn't a fair-share
-        // remainder and must not be silently drained by an unrelated GENERAL deduction.
-        excludeUnassigned: true,
       }),
     );
     const moduloUsed = Math.min(moduloAvailable, params.quantity);

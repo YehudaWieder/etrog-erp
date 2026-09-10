@@ -1,4 +1,4 @@
-﻿import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Grade, MovementType, PitamStatus, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -17,30 +17,16 @@ export class InventoryAvailabilityService {
       isModulo: boolean;
       excludePrivateSelection?: boolean;
       onlyPrivateSelection?: boolean;
-      // Excludes rows manually parked as UNASSIGNED via remains-in-Italy withdrawal - those may
-      // only leave the modulo pool via an explicit cancel or manual assign-by-share action, never
-      // as a side effect of an unrelated GENERAL sweep/deduction.
-      excludeUnassigned?: boolean;
-      // Scopes the balance to exactly one movement type (e.g. checking a single withdrawal's own
-      // UNASSIGNED-tagged balance) instead of the whole modulo pool for the tuple.
-      type?: MovementType;
     },
   ) {
     // A "private selection pool" record is either:
     //   (a) a positive entry from harvest allocation (type = PRIVATE_SELECTION), or
     //   (b) a negative deduction explicitly tagged as taken from that pool.
-    const conditions: Prisma.TraderStockWhereInput[] = [];
-    if (query.onlyPrivateSelection) {
-      conditions.push({ OR: [{ type: MovementType.PRIVATE_SELECTION }, { isFromPrivateSelection: true }] });
-    } else if (query.excludePrivateSelection) {
-      conditions.push({ type: { not: MovementType.PRIVATE_SELECTION }, isFromPrivateSelection: false });
-    }
-    if (query.excludeUnassigned) {
-      conditions.push({ type: { not: MovementType.UNASSIGNED } });
-    }
-    if (query.type) {
-      conditions.push({ type: query.type });
-    }
+    const typeFilter = query.onlyPrivateSelection
+      ? { OR: [{ type: MovementType.PRIVATE_SELECTION }, { isFromPrivateSelection: true }] }
+      : query.excludePrivateSelection
+        ? { type: { not: MovementType.PRIVATE_SELECTION }, isFromPrivateSelection: false }
+        : {};
 
     const aggregation = await client.traderStock.aggregate({
       where: {
@@ -51,7 +37,7 @@ export class InventoryAvailabilityService {
         grade: query.grade,
         pitamStatus: query.pitamStatus,
         isModulo: query.isModulo,
-        ...(conditions.length > 0 ? { AND: conditions } : {}),
+        ...typeFilter,
       },
       _sum: { quantity: true },
     });
@@ -130,8 +116,6 @@ export class InventoryAvailabilityService {
       contextLabel: string;
       excludePrivateSelection?: boolean;
       onlyPrivateSelection?: boolean;
-      excludeUnassigned?: boolean;
-      type?: MovementType;
     },
   ) {
     const available = await this.getTraderUnshippedBalance(client, {
@@ -143,8 +127,6 @@ export class InventoryAvailabilityService {
       isModulo: params.isModulo,
       excludePrivateSelection: params.excludePrivateSelection,
       onlyPrivateSelection: params.onlyPrivateSelection,
-      excludeUnassigned: params.excludeUnassigned,
-      type: params.type,
     });
 
     const effectiveAvailable = available + (params.creditQuantity ?? 0);
@@ -197,8 +179,6 @@ export class InventoryAvailabilityService {
       requestedQuantity: number;
       excludePrivateSelection?: boolean;
       onlyPrivateSelection?: boolean;
-      excludeUnassigned?: boolean;
-      type?: MovementType;
     },
   ) {
     const available = await this.getTraderUnshippedBalance(client, {
@@ -210,8 +190,6 @@ export class InventoryAvailabilityService {
       isModulo: params.isModulo,
       excludePrivateSelection: params.excludePrivateSelection,
       onlyPrivateSelection: params.onlyPrivateSelection,
-      excludeUnassigned: params.excludeUnassigned,
-      type: params.type,
     });
 
     return Math.max(0, Math.min(params.requestedQuantity, available));

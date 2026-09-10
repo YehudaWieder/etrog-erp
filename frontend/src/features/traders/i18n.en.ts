@@ -463,7 +463,7 @@ export const TRADER_MOVEMENTS_I18N_EN: TraderMovementsI18n = {
 		moduloOption: 'General',
 		destinationLabel: 'Destination',
 		destinationPlaceholder: 'Select destination',
-		destinationOptions: { TRADER: 'Trader', CUSTOMER: 'Customer', GENERAL: 'General (by share)', UNASSIGNED: 'Unassigned' },
+		destinationOptions: { TRADER: 'Trader', CUSTOMER: 'Customer', GENERAL: 'General (by share)' },
 		wasteSourceLabel: 'Waste Source',
 		wasteSourcePlaceholder: 'Select source',
 		itemStockSourceLabel: 'Stock Source',

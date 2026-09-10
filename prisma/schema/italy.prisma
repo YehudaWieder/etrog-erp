@@ -651,8 +651,11 @@ enum MovementType {
   // --- Reclassification ---
   RECLASSIFICATION // Changes category/grade/pitamStatus and/or ownership (trader private selection <-> general pool) for a quantity (Positive/Negative)
 
-  // --- Regional Retention ---
-  UNASSIGNED // Withdrawn from remains-in-Italy and parked unassigned (Modulo) until manually assigned by share - excluded from automatic modulo sweeps
+  // --- Deprecated ---
+  // Postgres enums can't drop a value once added, so this stays defined even though no app code
+  // reads or writes it anymore - the remains-in-Italy withdrawal no longer supports an UNASSIGNED
+  // destination (reverted; see remains-in-italy-withdrawal.service.ts).
+  UNASSIGNED
 }
 
 enum BoxType {
