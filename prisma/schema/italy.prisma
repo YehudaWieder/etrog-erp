@@ -650,6 +650,9 @@ enum MovementType {
 
   // --- Reclassification ---
   RECLASSIFICATION // Changes category/grade/pitamStatus and/or ownership (trader private selection <-> general pool) for a quantity (Positive/Negative)
+
+  // --- Regional Retention ---
+  UNASSIGNED // Withdrawn from remains-in-Italy and parked unassigned (Modulo) until manually assigned by share - excluded from automatic modulo sweeps
 }
 
 enum BoxType {

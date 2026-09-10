@@ -184,6 +184,9 @@ export class CustomerGeneralTransferService {
         grade: data.grade,
         pitamStatus: data.pitamStatus,
         isModulo: true,
+        // Stock manually parked as UNASSIGNED via remains-in-Italy withdrawal must not be silently
+        // consumed by an unrelated customer-general transfer.
+        excludeUnassigned: true,
       }),
     );
     const moduloUsed = Math.min(moduloAvailable, requestQuantity);

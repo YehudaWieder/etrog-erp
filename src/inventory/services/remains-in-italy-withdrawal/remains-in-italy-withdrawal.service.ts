@@ -58,7 +58,7 @@ export class RemainsInItalyWithdrawalService {
         where: {
           MovementReferenceId: { in: anchorIds },
           isDeleted: false,
-          type: { in: [MovementType.HARVEST_IN, MovementType.ASSIGNED] },
+          type: { in: [MovementType.HARVEST_IN, MovementType.ASSIGNED, MovementType.UNASSIGNED] },
         },
         include: { trader: { select: { id: true, name: true } } },
       }),
@@ -93,7 +93,12 @@ export class RemainsInItalyWithdrawalService {
           destinationType = 'TRADER';
           traderId = linkedTraderRows[0].traderId;
           traderName = linkedTraderRows[0].trader?.name ?? null;
-        } else if (linkedTraderRows.length === 1 && linkedTraderRows[0].traderId === null && linkedTraderRows[0].isModulo) {
+        } else if (
+          linkedTraderRows.length === 1 &&
+          linkedTraderRows[0].traderId === null &&
+          linkedTraderRows[0].isModulo &&
+          linkedTraderRows[0].type === MovementType.UNASSIGNED
+        ) {
           destinationType = 'UNASSIGNED';
         } else {
           destinationType = 'GENERAL';
@@ -125,6 +130,8 @@ export class RemainsInItalyWithdrawalService {
             requestedQuantity: linkedCustomerRows[0].quantity,
           });
         } else if (destinationType === 'UNASSIGNED') {
+          // Scoped to this withdrawal's own UNASSIGNED-tagged balance only - not the whole modulo
+          // pool for the tuple, which may also hold unrelated GENERAL remainder activity.
           availableQuantity = await this.inventoryAvailabilityService.getTraderAvailableToReduce(this.prisma, {
             seasonId: linkedTraderRows[0].seasonId,
             traderId: null,
@@ -132,6 +139,7 @@ export class RemainsInItalyWithdrawalService {
             grade: linkedTraderRows[0].grade,
             pitamStatus: linkedTraderRows[0].pitamStatus,
             isModulo: true,
+            type: MovementType.UNASSIGNED,
             requestedQuantity: linkedTraderRows[0].quantity,
           });
         } else {
@@ -269,7 +277,7 @@ export class RemainsInItalyWithdrawalService {
           pitamStatus: dto.pitamStatus,
           quantity: dto.quantity,
           isModulo: true,
-          type: MovementType.HARVEST_IN,
+          type: MovementType.UNASSIGNED,
           MovementReferenceId: negative.id,
           updatedById: actorId,
           notes: dto.notes,
@@ -308,7 +316,10 @@ export class RemainsInItalyWithdrawalService {
 
     const [traderRows, customerRows] = await Promise.all([
       tx.traderStock.findMany({
-        where: { MovementReferenceId: anchorId, type: { in: [MovementType.HARVEST_IN, MovementType.ASSIGNED] } },
+        where: {
+          MovementReferenceId: anchorId,
+          type: { in: [MovementType.HARVEST_IN, MovementType.ASSIGNED, MovementType.UNASSIGNED] },
+        },
       }),
       tx.customerAllocation.findMany({
         where: { MovementReferenceId: anchorId, type: MovementType.HARVEST_IN },
@@ -320,7 +331,10 @@ export class RemainsInItalyWithdrawalService {
         ? 'CUSTOMER'
         : traderRows.length === 1 && traderRows[0].traderId !== null
           ? 'TRADER'
-          : traderRows.length === 1 && traderRows[0].traderId === null && traderRows[0].isModulo
+          : traderRows.length === 1 &&
+              traderRows[0].traderId === null &&
+              traderRows[0].isModulo &&
+              traderRows[0].type === MovementType.UNASSIGNED
             ? 'UNASSIGNED'
             : 'GENERAL';
     const fullQuantity = Math.abs(anchor.quantity);
@@ -336,6 +350,9 @@ export class RemainsInItalyWithdrawalService {
           isModulo: row.isModulo,
           requiredQuantity: row.quantity,
           contextLabel: 'Cancel withdrawal from remains in Italy',
+          // For UNASSIGNED, check only this withdrawal's own tagged balance, not the whole modulo
+          // pool for the tuple (which may hold unrelated GENERAL remainder activity).
+          type: destinationType === 'UNASSIGNED' ? MovementType.UNASSIGNED : undefined,
         });
       }
 

@@ -293,6 +293,9 @@ export class ItemService {
             isModulo: true,
             requiredQuantity: moduloDeduction,
             contextLabel: 'Packing GENERAL item (modulo fallback)',
+            // Stock manually parked as UNASSIGNED via remains-in-Italy withdrawal must not be
+            // silently consumed by packing an unrelated GENERAL item.
+            excludeUnassigned: true,
           });
         }
 
