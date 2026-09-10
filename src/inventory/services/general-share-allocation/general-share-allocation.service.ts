@@ -287,6 +287,128 @@ export class GeneralShareAllocationService {
     }
   }
 
+  // Manual counterpart to tryAssignFromModuloPool: instead of sweeping the entire modulo balance,
+  // assigns exactly `quantity` (validated against the available modulo balance up front) to every
+  // trader in the category by their configured share. Whatever doesn't complete a full fair-share
+  // round for every trader is left untouched in modulo rather than assigned unevenly - so the
+  // amount actually withdrawn from modulo (totalAssigned) can be less than the requested quantity.
+  // Throws if modulo doesn't hold enough for the request, or if the request can't put a positive
+  // share in every trader's hands at all (e.g. quantity too small to complete even one fair step).
+  async assignQuantityToTradersByShare(
+    tx: Prisma.TransactionClient,
+    params: {
+      seasonId: number;
+      date: Date;
+      traderCategoryId: number;
+      grade: Grade;
+      pitamStatus: PitamStatus;
+      quantity: number;
+      updatedById: number;
+      notes?: string;
+      movementReferenceId?: number;
+    },
+  ): Promise<{ totalAssigned: number; remainder: number }> {
+    if (!params.quantity || params.quantity <= 0) {
+      throw new BadRequestException('Quantity must be positive');
+    }
+
+    const moduloBalance = await tx.traderStock.aggregate({
+      _sum: { quantity: true },
+      where: {
+        seasonId: params.seasonId,
+        traderId: null,
+        isModulo: true,
+        traderCategoryId: params.traderCategoryId,
+        grade: params.grade,
+        pitamStatus: params.pitamStatus,
+        isDeleted: false,
+      },
+    });
+
+    const availableQty = moduloBalance._sum.quantity ?? 0;
+    if (availableQty < params.quantity) {
+      throw new BadRequestException(
+        `Insufficient unassigned stock: requested ${params.quantity}, available ${availableQty}`,
+      );
+    }
+
+    const segments = await resolveTraderCategoryShareAllocationSegments(
+      tx,
+      { seasonId: params.seasonId, traderCategoryId: params.traderCategoryId, date: params.date },
+      params.quantity,
+    );
+
+    let totalAssigned = 0;
+
+    for (const segment of segments) {
+      if (segment.quantity <= 0 || segment.shares.length === 0) {
+        continue;
+      }
+
+      const allocations = this.calculateShareAllocations(segment.quantity, segment.shares).map((allocation) => ({
+        traderId: allocation.share.traderId,
+        quantity: allocation.quantity,
+      }));
+
+      const canAssignToAll = allocations.every((allocation) => allocation.quantity > 0);
+      if (!canAssignToAll) {
+        continue;
+      }
+
+      const segmentTotal = allocations.reduce((sum, allocation) => sum + allocation.quantity, 0);
+      if (segmentTotal <= 0) {
+        continue;
+      }
+
+      for (const allocation of allocations) {
+        await tx.traderStock.create({
+          data: {
+            seasonId: params.seasonId,
+            date: params.date,
+            traderId: allocation.traderId,
+            traderCategoryId: params.traderCategoryId,
+            grade: params.grade,
+            pitamStatus: params.pitamStatus,
+            quantity: allocation.quantity,
+            isModulo: false,
+            type: MovementType.ASSIGNED,
+            MovementReferenceId: params.movementReferenceId,
+            shareConditionId: segment.shareConditionId,
+            updatedById: params.updatedById,
+            notes: params.notes,
+          },
+        });
+      }
+
+      totalAssigned += segmentTotal;
+    }
+
+    if (totalAssigned <= 0) {
+      throw new BadRequestException(
+        'Requested quantity cannot be fairly split across traders - no trader would receive a positive share',
+      );
+    }
+
+    await tx.traderStock.create({
+      data: {
+        seasonId: params.seasonId,
+        date: params.date,
+        traderId: null,
+        traderCategoryId: params.traderCategoryId,
+        grade: params.grade,
+        pitamStatus: params.pitamStatus,
+        quantity: -totalAssigned,
+        isModulo: true,
+        type: MovementType.ASSIGNED,
+        MovementReferenceId: params.movementReferenceId,
+        updatedById: params.updatedById,
+        notes: params.notes,
+      },
+    });
+
+    return { totalAssigned, remainder: params.quantity - totalAssigned };
+  }
+
   // Mirror image of allocateGeneralQuantity: drains MODULO first, then splits any deficit
   // across traders by their TraderCategoryShare percent (exact BigInt math, rounded up to the
   // minimal gross that splits evenly), excluding each trader's private-selection stock. A

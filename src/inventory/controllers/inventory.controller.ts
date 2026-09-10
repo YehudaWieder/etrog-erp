@@ -29,6 +29,7 @@ import { ReclassificationService } from 'src/inventory/services/reclassification
 import { ResolveReclassificationDto } from 'src/inventory/services/reclassification/dto/resolve-reclassification.dto';
 import { CustomerToGeneralTransferService } from 'src/inventory/services/customer-to-general-transfer/customer-to-general-transfer.service';
 import { CreateCustomerToGeneralTransferDto } from 'src/inventory/services/customer-to-general-transfer/dto/create-customer-to-general-transfer.dto';
+import { AssignGeneralByShareDto } from 'src/inventory/services/general-share-allocation/dto/assign-general-by-share.dto';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('access-token')
@@ -152,6 +153,34 @@ export class InventoryController {
 	create(@Body() data: InternalTransferRequestDto, @Req() req: Request) {
 		const actor = req.user as AuthenticatedUser;
 		return this.inventoryService.createInternalTransfer(data, actor.id);
+	}
+
+	@Post('general-share-allocation')
+	@ApiOperation({
+		summary:
+			'ASSIGNED - modulo to every trader in the category by their configured share, instead of a single trader. Assigns exactly the requested quantity if modulo can cover it; whatever cannot complete a full fair round for every trader is left unassigned in modulo.',
+	})
+	@ApiBody({
+		type: AssignGeneralByShareDto,
+		examples: {
+			default: {
+				summary: 'Assign modulo stock to all traders by share',
+				value: {
+					date: '2026-10-11T08:00:00.000Z',
+					quantity: 100,
+					pitamStatus: 'MIXED',
+					traderCategoryId: 3,
+					grade: 'ב',
+					notes: 'Assign modulo stock to all traders by share',
+				},
+			},
+		},
+	})
+	@ApiResponse({ status: 201, description: 'Modulo stock assigned to traders by share successfully.' })
+	@ApiResponse({ status: 400, description: 'Insufficient modulo stock, or the requested quantity cannot be fairly split.' })
+	assignGeneralByShare(@Body() data: AssignGeneralByShareDto, @Req() req: Request) {
+		const actor = req.user as AuthenticatedUser;
+		return this.inventoryService.assignGeneralByShare(data, actor.id);
 	}
 
 	@Post('customer-general-transfer')
@@ -415,7 +444,8 @@ export class InventoryController {
 		summary:
 			'Withdraw a quantity from the REMAINS_IN_ITALY bucket (traderId: null, isModulo: false) and route it to a destination. ' +
 			'TRADER/CUSTOMER land directly in that owner\'s stock as a HARVEST_IN entry. ' +
-			'GENERAL re-runs the same trader-share split every GENERAL classification goes through.',
+			'GENERAL re-runs the same trader-share split every GENERAL classification goes through. ' +
+			'UNASSIGNED places the full quantity in the unassigned (modulo) pool for the category.',
 	})
 	@ApiBody({
 		type: CreateRemainsInItalyWithdrawalDto,
@@ -451,6 +481,16 @@ export class InventoryController {
 					pitamStatus: 'WITHOUT_PITAM',
 					quantity: 10,
 					destinationType: 'GENERAL',
+				},
+			},
+			toUnassigned: {
+				summary: 'Withdraw into the unassigned (modulo) pool for the category',
+				value: {
+					traderCategoryId: 3,
+					grade: 'ה',
+					pitamStatus: 'WITHOUT_PITAM',
+					quantity: 10,
+					destinationType: 'UNASSIGNED',
 				},
 			},
 		},

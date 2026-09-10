@@ -68,6 +68,29 @@ export async function createInternalTransfer(payload: CreateInternalTransferPayl
   });
 }
 
+export type AssignGeneralByShareResult = {
+  totalAssigned: number;
+  remainder: number;
+};
+
+export type CreateAssignGeneralBySharePayload = {
+  date: string;
+  traderCategoryId: number;
+  grade: Grade;
+  pitamStatus: PitamStatus;
+  quantity: number;
+  notes?: string | null;
+};
+
+// ASSIGNED - modulo to every trader in the category by their configured share, instead of a
+// single trader. Whatever can't complete a full fair round for every trader stays unassigned.
+export async function assignGeneralByShare(payload: CreateAssignGeneralBySharePayload): Promise<AssignGeneralByShareResult> {
+  return apiClient('/inventory/general-share-allocation', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 export type CreateCustomerGeneralTransferPayload = {
   date: string;
   dateHebrew: string;
@@ -128,7 +151,7 @@ export async function createCustomerAdjustmentMovement(payload: CreateCustomerAd
   });
 }
 
-export type RemainsInItalyDestinationType = 'TRADER' | 'CUSTOMER' | 'GENERAL';
+export type RemainsInItalyDestinationType = 'TRADER' | 'CUSTOMER' | 'GENERAL' | 'UNASSIGNED';
 
 export type CreateRemainsInItalyWithdrawalPayload = {
   date?: string;

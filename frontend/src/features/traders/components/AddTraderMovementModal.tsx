@@ -16,6 +16,7 @@ import {
   createPitamSplitMovement,
   createReclassificationMovement,
   createRemainsInItalyWithdrawal,
+  assignGeneralByShare,
   createTraderAdjustmentMovement,
   undoPitamSplitBatch,
   undoReclassificationBatch,
@@ -127,6 +128,25 @@ function describeReclassificationError(
     : error.message;
 }
 
+// Same rationale as describePitamSplitError above — GeneralShareAllocationService.assignQuantityToTradersByShare
+// throws untranslated English BadRequestExceptions for both failure modes.
+function describeAssignGeneralError(
+  error: unknown,
+  f: { assignGeneralInsufficientStockError: string; assignGeneralCannotSplitError: string; validationRequired: string },
+): string {
+  if (!(error instanceof ApiError)) {
+    return f.validationRequired;
+  }
+  const message = error.message.toLowerCase();
+  if (message.includes('insufficient')) {
+    return f.assignGeneralInsufficientStockError;
+  }
+  if (message.includes('cannot be fairly split')) {
+    return f.assignGeneralCannotSplitError;
+  }
+  return error.message;
+}
+
 type AddTraderMovementModalProps = {
   lang: AppLang;
   isOpen: boolean;
@@ -155,6 +175,9 @@ export function AddTraderMovementModal({
 
   const [type, setType] = useState<MovementType | ''>('');
   const [fromTraderId, setFromTraderId] = useState('');
+  // For ASSIGNED, doubles as the destination picker: either a specific trader's id, or the
+  // literal 'GENERAL' sentinel meaning "split across the whole category by share" (see
+  // assignGeneralByShare) — mirrors the MODULO sentinel INTERNAL_TRANSFER's fromTraderId uses.
   const [toTraderId, setToTraderId] = useState('');
   const [traderId, setTraderId] = useState('');
   const [isModulo, setIsModulo] = useState(false);
@@ -931,7 +954,7 @@ export function AddTraderMovementModal({
     ? Boolean(traderId)
     : remainsInItalyDestination === 'CUSTOMER'
       ? Boolean(customerId && customerCategoryId)
-      : remainsInItalyDestination === 'GENERAL';
+      : remainsInItalyDestination === 'GENERAL' || remainsInItalyDestination === 'UNASSIGNED';
   const isRiwCategoryEnabled = type === 'REMAINS_IN_ITALY_WITHDRAWAL' && isRiwDestinationReady && !isLoadingRemainsInItalyStock;
   const isRiwGradeEnabled = isRiwCategoryEnabled && Boolean(traderCategoryId);
   const isRiwPitamEnabled = isRiwGradeEnabled && Boolean(grade);
@@ -1426,6 +1449,25 @@ export function AddTraderMovementModal({
           stockSource: stockSource || undefined,
           notes: notes || null,
         });
+      } else if (type === 'ASSIGNED' && toTraderId === 'GENERAL') {
+        if (!traderCategoryId || !grade || !pitamStatus) {
+          setError(f.validationRequired);
+          return;
+        }
+
+        try {
+          await assignGeneralByShare({
+            date: nowIso,
+            traderCategoryId: Number(traderCategoryId),
+            grade,
+            pitamStatus,
+            quantity: quantityNumber,
+            notes: notes || null,
+          });
+        } catch (assignGeneralError) {
+          setError(describeAssignGeneralError(assignGeneralError, f));
+          return;
+        }
       } else if (type === 'ASSIGNED') {
         if (!toTraderId || !traderCategoryId || !grade || !pitamStatus) {
           setError(f.validationRequired);
@@ -1723,13 +1765,16 @@ export function AddTraderMovementModal({
             <>
               <div style={ROW_STYLE}>
                 <div style={FIELD_STYLE}>
-                  <label style={LABEL_STYLE}>{f.toTraderLabel}</label>
+                  <label style={LABEL_STYLE}>{f.assignedDestinationLabel}</label>
                   <CustomSelect
                     className="seasons-manager__year-input"
                     value={toTraderId}
                     onChange={(value) => setToTraderId(value)}
-                    placeholder={f.traderPlaceholder}
-                    options={sortedTraders.map((trader) => ({ value: String(trader.id), label: trader.name }))}
+                    placeholder={f.assignedDestinationPlaceholder}
+                    options={[
+                      { value: 'GENERAL', label: f.assignedDestinationOptions.GENERAL },
+                      ...sortedTraders.map((trader) => ({ value: String(trader.id), label: trader.name })),
+                    ]}
                   />
                 </div>
               </div>
@@ -2229,6 +2274,7 @@ export function AddTraderMovementModal({
                       { value: 'TRADER', label: f.destinationOptions.TRADER },
                       { value: 'CUSTOMER', label: f.destinationOptions.CUSTOMER },
                       { value: 'GENERAL', label: f.destinationOptions.GENERAL },
+                      { value: 'UNASSIGNED', label: f.destinationOptions.UNASSIGNED },
                     ]}
                   />
                 </div>
@@ -2575,6 +2621,7 @@ export function AddTraderMovementModal({
                           { value: 'TRADER', label: f.destinationOptions.TRADER },
                           { value: 'CUSTOMER', label: f.destinationOptions.CUSTOMER },
                           { value: 'GENERAL', label: f.destinationOptions.GENERAL },
+                          { value: 'UNASSIGNED', label: f.destinationOptions.UNASSIGNED },
                         ]}
                       />
                     </div>

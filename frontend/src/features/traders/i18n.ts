@@ -407,12 +407,17 @@ export type TraderMovementsI18n = {
 		};
 		fromTraderLabel: string;
 		toTraderLabel: string;
+		assignedDestinationLabel: string;
+		assignedDestinationPlaceholder: string;
+		assignedDestinationOptions: { GENERAL: string };
+		assignGeneralInsufficientStockError: string;
+		assignGeneralCannotSplitError: string;
 		traderLabel: string;
 		traderPlaceholder: string;
 		moduloOption: string;
 		destinationLabel: string;
 		destinationPlaceholder: string;
-		destinationOptions: { TRADER: string; CUSTOMER: string; GENERAL: string };
+		destinationOptions: { TRADER: string; CUSTOMER: string; GENERAL: string; UNASSIGNED: string };
 		wasteSourceLabel: string;
 		wasteSourcePlaceholder: string;
 		itemStockSourceLabel: string;

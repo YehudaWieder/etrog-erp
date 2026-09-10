@@ -6,6 +6,9 @@ import { InternalTransferService } from 'src/inventory/services/internal-transfe
 import { CombinedInventorySummaryQuery } from 'src/inventory/services/inventory-core/dto/combined-inventory-summary.dto';
 import { CombinedSummaryService } from 'src/inventory/services/combined-summary/combined-summary.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { SeasonsService } from 'src/seasons/seasons.service';
+import { GeneralShareAllocationService } from 'src/inventory/services/general-share-allocation/general-share-allocation.service';
+import { AssignGeneralByShareDto } from 'src/inventory/services/general-share-allocation/dto/assign-general-by-share.dto';
 
 @Injectable()
 export class InventoryService {
@@ -14,10 +17,33 @@ export class InventoryService {
 		private readonly internalTransferService: InternalTransferService,
 		private readonly customerGeneralTransferService: CustomerGeneralTransferService,
 		private readonly prisma: PrismaService,
+		private readonly seasonsService: SeasonsService,
+		private readonly generalShareAllocationService: GeneralShareAllocationService,
 	) {}
 
 	async createInternalTransfer(data: InternalTransferRequestDto, actorId: number) {
 		return this.internalTransferService.create(data, actorId);
+	}
+
+	// ASSIGNED - modulo to every trader in the category by their configured share, instead of a
+	// single toTraderId. See GeneralShareAllocationService.assignQuantityToTradersByShare for the
+	// fairness rule: whatever can't complete a full round for every trader stays unassigned.
+	async assignGeneralByShare(dto: AssignGeneralByShareDto, actorId: number) {
+		const { id: seasonId } = await this.seasonsService.findActiveSeason();
+		const date = dto.date ? new Date(dto.date) : new Date();
+
+		return this.prisma.$transaction((tx) =>
+			this.generalShareAllocationService.assignQuantityToTradersByShare(tx, {
+				seasonId,
+				date,
+				traderCategoryId: dto.traderCategoryId,
+				grade: dto.grade,
+				pitamStatus: dto.pitamStatus,
+				quantity: dto.quantity,
+				updatedById: actorId,
+				notes: dto.notes,
+			}),
+		);
 	}
 
 	async createCustomerAllocationFromGeneral(data: CustomerGeneralAllocationRequestDto, actorId: number) {
